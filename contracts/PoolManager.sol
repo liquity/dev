@@ -1,20 +1,26 @@
-pragma solidity >0.5.0;
+pragma solidity ^0.5.11;
 
 import "./PriceFeed.sol";
-import "./Token.sol";
+import "./CLVToken.sol";
+import '../node_modules/@openzeppelin/contracts/ownership/Ownable.sol';
 
 // Maintains all pools and holds the ETH and CLV balances
-contract PoolManager {
+contract PoolManager is Ownable {
     struct Pool {
         uint CLV;
         uint ETH;   
     }
     
-    uint digits;
-    address owner;
-    ETHPriceFeed PriceFeed;
+    uint constant DIGITS = 1e18;
+
+    address public cdpManagerAddress;
+
+    PriceFeed priceFeed;
+    address public priceFeedAddress;
+
     CLVToken CLV; 
-    
+    address public clvAddress;
+
     Pool public Stability; // Stability Pool: Contains the deposited CLV and the collateral of closed CDPs
     Pool public Active; // Active Pool: Contains the total amount of active collateral and debt in the system
     Pool public Default; // Default Pool: Contains the the debt and collateral of closed CPDs that could not be absorbed by the Stability Pool
@@ -28,29 +34,35 @@ contract PoolManager {
     //uint256 public ETHShare;
     //uint256 public CLVShare; 
     
-    // Makes sure the caller is the owner
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Caller is not the owner");
+    
+    modifier onlyCDPManager() {
+        require(msg.sender == cdpManagerAddress, "Caller is not the CDPManager");
         _;
     }
     
-    constructor(uint _digits, address _PriceFeed, address _token) 
-        public
-    {
-        owner = msg.sender;
-        digits = _digits;
-        
-        CLV = CLVToken(_token);
-        PriceFeed = ETHPriceFeed(_PriceFeed);
+    constructor() public {}
+
+    // Contract setters
+    function setCLVToken(address _CLVAddress) public onlyOwner {
+        clvAddress = _CLVAddress;
+        CLV = CLVToken(_CLVAddress); 
     }
-    
+     function setPriceFeed(address _priceFeedAddress) public onlyOwner {
+        priceFeedAddress = _priceFeedAddress;
+        priceFeed = PriceFeed(_priceFeedAddress);
+    }
+
+    function setCDPManagerAddress(address _CDPManagerAddress) public onlyOwner {
+        cdpManagerAddress = _CDPManagerAddress;
+    }
+
     // Returns the total collateral ratio of the system
     function getTCR() 
         view 
         public 
         returns (uint) 
     {
-        return Active.ETH * PriceFeed.getPrice() / Active.CLV;
+        return Active.ETH * priceFeed.getPrice() / Active.CLV;
     }
     
     // Returns the current ETH balance of the TokenPools contract
@@ -112,7 +124,7 @@ contract PoolManager {
     function initializeCDP(address _account, uint _CLV)
         public
         payable
-        onlyOwner
+        onlyCDPManager
         returns (bool)
     {
         Active.CLV += _CLV;
@@ -125,7 +137,7 @@ contract PoolManager {
     // ***For testing purposes only***: Transfers the speficied amount of CLV from one account to another
     function transferCLV(address _from, address _to, uint _amount)
         public
-        onlyOwner
+        onlyCDPManager
         returns (bool)
     {
         CLV.burn(_from, _amount);
@@ -136,7 +148,7 @@ contract PoolManager {
     function addColl()
         public
         payable
-        onlyOwner
+        onlyCDPManager
         returns (bool)
     {
         Active.ETH += msg.value;
@@ -146,7 +158,7 @@ contract PoolManager {
     // Transfers the specified amount of ETH to _account and updates the total active collateral 
     function withdrawColl(uint _ETH, address payable _account)
         public
-        onlyOwner
+        onlyCDPManager
         returns (bool)
     {
         Active.ETH -= _ETH;
@@ -158,7 +170,7 @@ contract PoolManager {
     // Issues the specified amount of CLV to _account and updates the total active debt
     function withdrawCLV(uint _CLV, address _account)
         public
-        onlyOwner
+        onlyCDPManager
         returns (bool)
     {
         Active.CLV += _CLV;
@@ -170,7 +182,7 @@ contract PoolManager {
     // Burns the specified amount of CLV from _account and updates the total active debt
     function repayCLV(uint _CLV, address _account)
         public
-        onlyOwner
+        onlyCDPManager
         returns (bool)
     {
         Active.CLV -= _CLV;
@@ -182,7 +194,7 @@ contract PoolManager {
     // Updates the Active Pool and the Default Pool when a CDP gets closed
     function close(uint _CLV, uint _ETH)
         public
-        onlyOwner
+        onlyCDPManager
         returns (bool)
     {
         // Transfer the debt & coll from the Stability Pool to the Default Pool
@@ -197,7 +209,7 @@ contract PoolManager {
     // Updates the Active Pool and the Default Pool when a CDP obtains a default share
     function obtainDefaultShare(uint _CLV, uint _ETH)
         public
-        onlyOwner
+        onlyCDPManager
         returns (bool)
     {    
         // Transfer the debt & coll from the Default Pool to the Stability Pool
@@ -212,7 +224,7 @@ contract PoolManager {
     // Burns the received CLV, transfers the redeemed ETH to _account and updates the Active Pool
     function redeemCollateral(uint _CLV, uint _ETH, address payable _account)
         public
-        onlyOwner
+        onlyCDPManager
         returns (bool)
     {    
         Active.CLV -= _CLV;
@@ -256,7 +268,7 @@ contract PoolManager {
     function offset(uint _debt, uint _coll)
         public
         payable
-        onlyOwner
+        onlyCDPManager
         returns (uint[2] memory) // Note: it would be nicer to return this as a struct, but struct returns are still experimental
     {    
         require(Stability.CLV > 0, "Stability pool is empty");
@@ -264,12 +276,12 @@ contract PoolManager {
         // If the debt is larger than the deposited CLV, only offset an amount of debt corresponding to the latter
         uint debtToDistribute = getMin(_debt, Stability.CLV);
         // Determine the amount of collateral to be distributed in proportion to the debt that is distributed
-        uint collToDistribute = (((debtToDistribute * digits) / _debt) * _coll) / digits;
+        uint collToDistribute = (((debtToDistribute * DIGITS) / _debt) * _coll) / DIGITS;
         
         // Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool
-        S_CLV += (debtToDistribute * digits) / Stability.CLV;
+        S_CLV += (debtToDistribute * DIGITS) / Stability.CLV;
         // Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool
-        S_ETH += (collToDistribute * digits) / Stability.CLV;
+        S_ETH += (collToDistribute * DIGITS) / Stability.CLV;
         
         // Update the amount of ETH and CLV in the Stability Pool and the Active Pool
         Stability.ETH += collToDistribute; 
@@ -298,8 +310,8 @@ contract PoolManager {
         // Calculate the CLV and ETH shares to be retrieved according http://batog.info/papers/scalable-reward-distribution.pdf
         // TODO: Check for div/0
         // Problem: Rounding errors lead to results like 666666666666666600 instead of 666666666666666666 
-        uint CLVShare = deposit[msg.sender].CLV - (deposit[msg.sender].CLV * (S_CLV - snapshot[msg.sender].CLV)) / digits;
-        uint ETHShare = (deposit[msg.sender].CLV * (S_ETH - snapshot[msg.sender].ETH)) / digits;
+        uint CLVShare = deposit[msg.sender].CLV - (deposit[msg.sender].CLV * (S_CLV - snapshot[msg.sender].CLV)) / DIGITS;
+        uint ETHShare = (deposit[msg.sender].CLV * (S_ETH - snapshot[msg.sender].ETH)) / DIGITS;
         
         // Updates the amounts of ETH and CLV in the Stability Pool and the Active Pool
         Stability.ETH -= ETHShare; 
