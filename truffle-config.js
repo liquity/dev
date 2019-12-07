@@ -7,6 +7,18 @@ module.exports = {
   networks: {
     develop: {
       port: 7545
-    }
-  }
-};
+    },
+  },
+  settings: {
+    optimizer: {
+      enabled: true,
+      runs: 200
+    },
+  },
+  // use native binaries rather than solc.js 
+  // compilers: {
+  //   solc: {
+  //     version: "native",
+  //   }
+  // },
+}

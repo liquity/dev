@@ -10,7 +10,7 @@ import "./CLVTokenData.sol";
 contract CLVToken is IERC20, Ownable {
     using SafeMath for uint256;
     
-    address public poolAddress;
+    address public poolManagerAddress;
     bytes32 public name;
 
     uint256 public _totalSupply;
@@ -23,36 +23,36 @@ contract CLVToken is IERC20, Ownable {
         tokenDataAddress = address(clvTokenData);
     }    
 
-     modifier onlyPool {
-        require(msg.sender == poolAddress, "Only the pool is authorized");
+     modifier onlyPoolManager {
+        require(_msgSender() == poolManagerAddress, "CLVToken: Only the pool is authorized");
         _;
     }
 
-    function setPoolAddress(address _poolAddress) public onlyOwner {
-        poolAddress =  _poolAddress;
+    function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
+        poolManagerAddress =  _poolManagerAddress;
     }
     
     function setName(bytes32 _name) public onlyOwner {
         name = _name;
     }
 
-    function mint(address _account, uint256 _amount) public onlyPool returns (bool) {
+    function mint(address _account, uint256 _amount) public onlyPoolManager returns (bool) {
         _mint(_account, _amount);
         return true;
     }
     
-    function burn(address _account, uint256 _amount) public onlyPool returns (bool) {
+    function burn(address _account, uint256 _amount) public onlyPoolManager returns (bool) {
         _burn(_account, _amount);
         return true;
     }
     
-    function sendToPool(address _sender, uint256 _amount) public onlyPool returns (bool) {
+    function sendToPool(address _sender,  address poolAddress, uint256 _amount) public onlyPoolManager returns (bool) {
         _transfer(_sender, poolAddress, _amount);
         return true;
     }
     
-    function returnFromPool(address _destination, uint256 _amount) public onlyPool returns (bool) {
-        _transfer(poolAddress, _destination, _amount);
+    function returnFromPool(address poolAddress, address user, uint256 _amount ) public onlyPoolManager returns (bool) {
+        _transfer(poolAddress, user, _amount);
         return true;
     }
 
@@ -95,7 +95,7 @@ contract CLVToken is IERC20, Ownable {
      */
     function balanceOf(address account) public view returns (uint256) {
         uint balance = clvTokenData.getBalance(account); 
-        return balance; //DATA
+        return balance; 
     }
 
     /**

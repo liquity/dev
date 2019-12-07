@@ -20,7 +20,7 @@ contract CLVTokenData is Ownable {
     }
 
     modifier onlyCLVTokenAddress {
-        require(msg.sender == clvTokenAddress, "Only clvTokenAddress");
+        require(_msgSender() == clvTokenAddress, "CLVTokenData: only clvTokenAddress");
         _;
     }
     // balances

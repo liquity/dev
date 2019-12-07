@@ -8,12 +8,13 @@ import "./PoolManager.sol";
 import "../node_modules/@openzeppelin/contracts/ownership/Ownable.sol";
 
 contract CDPManager is Ownable {
+  
     using SortedDoublyLL for SortedDoublyLL.Data;
     string public name;
     uint constant DIGITS = 1e18; // Number of digits used for precision, e.g. when calculating redistribution shares. Equals "ether" unit.
     uint constant MCR = (11 * DIGITS) / 10; // Minimal collateral ratio (e.g. 110%). TODO: Allow variable MCR
     uint constant MAX_DRAWDOWN = 20; // Loans cannot be drawn down more than 5% (= 1/20) below the TCR when receiving redistribution shares
-    enum Status { inexistent, active, closed }
+    enum Status { inexistent, newBorn, active, closed }
     
     // Declare the Token, PriceFeed and PoolManager contracts
     CLVToken CLV; 
@@ -33,7 +34,9 @@ contract CDPManager is Ownable {
         Status status;
     }
     
-    mapping (address => CDP) public CDPs; // A map of all existing (active and closed) CDPs
+    mapping (address => CDP) public CDPs; // A map of all new CDPs: created but no initial collateral
+    // mapping (address => CDP) public activeCDPs; // A map of all existing (active and closed) CDPs
+    // mapping (address => CDP) public closedCDPs;
     SortedDoublyLL.Data public sortedCDPs; // A doubly linked CDP list sorted by the collateral ratio of the CDPs
 
     // Register the owner and the name of the CDP contract and install other contracts
@@ -56,8 +59,8 @@ contract CDPManager is Ownable {
         
         // CLV.registerPool(PoolAddress);
         
-        // Set maximum size for sortedCDPs
-        // sortedCDPs.setMaxSize(1000000);
+       // Set maximum size for sortedCDPs
+        sortedCDPs.setMaxSize(1000000);
 
         // TODO - EXTRACT TESTS
 
@@ -144,16 +147,24 @@ contract CDPManager is Ownable {
     }
     
     // Create a new CDP
-      // Create a new CDP
-    function create() 
+    function userCreateCDP() 
         public
         returns (bool) 
     {
-        // require(CDPs[msg.sender].status == Status.inexistent, "CDP already exists");
-        
-        CDPs[msg.sender].status = Status.active; 
-        sortedCDPs.insert(msg.sender, getCollRatio(msg.sender), msg.sender, msg.sender);
-        
+        address user = _msgSender();
+        createCDP(user);
+
+        return true;
+    }
+
+    function createCDP(address _account) 
+        internal 
+        returns (bool) 
+    {
+        require(CDPs[_account].status == Status.inexistent, "CDPManager: CDP already exists");
+        CDPs[_account].status = Status.newBorn; 
+        CDPs[_account].ICR = getCollRatio(_account);
+
         return true;
     }
     
@@ -163,28 +174,42 @@ contract CDPManager is Ownable {
         payable 
         returns (bool) 
     {
-        // Potential issue with using msg.sender as the key in the CDPs map: Users may not be able interact via other contracts since the 
-        // msg.sender would then be the contract rather than the transacting user. Beware of tx.origin.
-        require(CDPs[msg.sender].status != Status.closed, "CDP is closed");
+        address user = _msgSender();
+        bool firstCollateralDeposit;
+        // Potential issue with using _msgSender() as the key in the CDPs map: Users may not be able interact via other contracts since the 
+        // _msgSender() would then be the contract rather than the transacting user. Beware of tx.origin.
+        require(CDPs[user].status != Status.closed, "CDPManager: CDP is closed");
         
         // Create a CDP if it does not exist yet
-        if (CDPs[msg.sender].status == Status.inexistent) {
-            create();
+        if (CDPs[user].status == Status.inexistent) {
+            createCDP(user);
+            firstCollateralDeposit = true;
         }
-        
+            
+        // } else if (CDPs[user].status == Status.newBorn) {
+        //     isNewBornCDP = false;
+        // } else if (CDPs[user].status == Status.newBorn) {
+        //     isNewBornCDP = false;
+        // }
+
+        CDPs[user].status = Status.active;
+       
         // Add the received collateral to the CDP and calculate the new collateral ratio
-        CDPs[msg.sender].coll += msg.value;
-        
+        CDPs[user].coll += msg.value;
+
         // Add the received collateral to the ActivePool (note that transfer() does not work as it restricts gas usage to 2300)
         poolManager.addColl.value(msg.value)();
         
-        // Update entry in sortedCDPs
-        sortedCDPs.updateKey(msg.sender, getCollRatio(msg.sender), msg.sender, msg.sender);
+        // Insert or update entry in sortedCDPs
+        if (firstCollateralDeposit) {
+            sortedCDPs.insert(user, getCollRatio(user), user, user);
+        } else {
+            sortedCDPs.updateKey(user, getCollRatio(user), user, user);
+        }
         
         return true;
     }
-
-    /* **** DELETE AFTER CDP FUNCTIONALITY IMPLEMENTED **** 
+    /* --- MockAddCDP - DELETE AFTER CDP FUNCTIONALITY IMPLEMENTED --- *
     * temporary function, used by CLVToken test suite to easily add CDPs.
     Later, replace with full CDP creation process.
     */
@@ -194,7 +219,7 @@ contract CDPManager is Ownable {
         cdp.debt = 0;
         cdp.status = Status.active;
 
-        CDPs[msg.sender] = cdp;
+        CDPs[_msgSender()] = cdp;
     }
     
     // Withdraw ETH collateral from a CDP
@@ -203,18 +228,18 @@ contract CDPManager is Ownable {
         public 
         returns (bool) 
     {
-        require(CDPs[msg.sender].status == Status.active, "CDP does not exist or is closed");
-        require(CDPs[msg.sender].coll >= _amount, "Insufficient balance for ETH withdrawal");
-        require(getNewCollRatio(msg.sender, 0, -_amount) >= MCR, "Insufficient collateral ratio for ETH withdrawal");
+        require(CDPs[_msgSender()].status == Status.active, "CDPManager: CDP does not exist or is closed");
+        require(CDPs[_msgSender()].coll >= _amount, "CDPManager: Insufficient balance for ETH withdrawal");
+        require(getNewCollRatio(_msgSender(), 0, -_amount) >= MCR, "CDPManager: Insufficient collateral ratio for ETH withdrawal");
         
         // Reduce the ETH collateral by _amount
-        CDPs[msg.sender].coll -= _amount;
+        CDPs[_msgSender()].coll -= _amount;
         
         // Update entry in sortedCDPs
-        sortedCDPs.updateKey(msg.sender, getCollRatio(msg.sender), msg.sender, msg.sender);
+        sortedCDPs.updateKey(_msgSender(), getCollRatio(_msgSender()), _msgSender(), _msgSender());
         
-        // Remove _amount ETH from ActivePool and send it to the CDP owner (msg.sender)
-        poolManager.withdrawColl(_amount, msg.sender);
+        // Remove _amount ETH from ActivePool and send it to the CDP owner (_msgSender())
+        poolManager.withdrawColl( _msgSender(), _amount);
         
         return true;
     }
@@ -224,18 +249,18 @@ contract CDPManager is Ownable {
         public 
         returns (bool) 
     {
-        require(CDPs[msg.sender].status == Status.active, "CDP does not exist or is closed");
-        require(_amount > 0, "Amount to withdraw must be larger than 0");
-        // require(getNewCollRatio(msg.sender, _amount, 0) >= MCR, "Insufficient collateral ratio for CLV withdrawal");
+        require(CDPs[_msgSender()].status == Status.active, "CDPManager: CDP does not exist or is closed");
+        require(_amount > 0, "CDPManager: Amount to withdraw must be larger than 0");
+        // require(getNewCollRatio(_msgSender(), _amount, 0) >= MCR, "Insufficient collateral ratio for CLV withdrawal");
         
         // Increase the debt by the withdrawn amount of CLV
-        CDPs[msg.sender].debt += _amount;
+        CDPs[_msgSender()].debt += _amount;
 
         // Mint the given amount of CLV, add them to the ActivePool and send them to CDP owner's address 
-        poolManager.withdrawCLV(_amount, msg.sender);
+        poolManager.withdrawCLV(_msgSender(), _amount);
         
         // Update entry in sortedCDPs
-        // sortedCDPs.updateKey(msg.sender, getCollRatio(msg.sender), msg.sender, msg.sender);
+        // sortedCDPs.updateKey(_msgSender(), getCollRatio(_msgSender()), _msgSender(), _msgSender());
         
         return true; 
     }
@@ -245,20 +270,20 @@ contract CDPManager is Ownable {
         public 
         returns (bool) 
     {
-        require(CDPs[msg.sender].status == Status.active, "CDP does not exist or is closed");
-        require(_amount > 0, "Repaid amount must be larger than 0");
-        require(_amount <= CDPs[msg.sender].debt, "Repaid amount is larger than current debt");
-        require(CLV.balanceOf(msg.sender) >= _amount, "Sender has insufficient balance");
+        require(CDPs[_msgSender()].status == Status.active, "CDPManager: CDP does not exist or is closed");
+        require(_amount > 0, "CDPManager: Repaid amount must be larger than 0");
+        require(_amount <= CDPs[_msgSender()].debt, "CDPManager: Repaid amount is larger than current debt");
+        require(CLV.balanceOf(_msgSender()) >= _amount, "CDPManager: Sender has insufficient balance");
         // TODO: Maybe allow foreign accounts to repay loans
         
         // Reduce the debt and calculate the new collateral ratio
-        CDPs[msg.sender].debt -= _amount;
+        CDPs[_msgSender()].debt -= _amount;
         
         // Burn the received amount of CLV and remove them from the ActivePool
-        poolManager.repayCLV(_amount, msg.sender);
+        poolManager.repayCLV(_msgSender(), _amount);
 
         // Update entry in sortedCDPs
-        sortedCDPs.updateKey(msg.sender, getCollRatio(msg.sender), msg.sender, msg.sender);
+        sortedCDPs.updateKey(_msgSender(), getCollRatio(_msgSender()), _msgSender(), _msgSender());
         
         return true;
     }
@@ -269,8 +294,8 @@ contract CDPManager is Ownable {
         public 
         returns (bool) 
     {
-        require(CDPs[_debtor].status == Status.active, "CDP does not exist or is already closed");
-        require(getCollRatio(_debtor) < MCR, "CDP not undercollateralized");
+        require(CDPs[_debtor].status == Status.active, "CDPManager: CDP does not exist or is already closed");
+        require(getCollRatio(_debtor) < MCR, "CDPManager: CDP not undercollateralized");
         
         // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
         uint[2] memory remainder = poolManager.offset(CDPs[_debtor].debt, CDPs[_debtor].coll);
@@ -329,11 +354,11 @@ contract CDPManager is Ownable {
         public 
         returns (bool) 
     {
-        require(CDPs[_recipient].status == Status.active, "Recipient must own an active CDP");
-        require(_debt <= poolManager.closedDebt(), "Debt in the default pool smaller than the speficied debt share");
+        require(CDPs[_recipient].status == Status.active, "CDPManager: Recipient must own an active CDP");
+        require(_debt <= poolManager.getClosedDebt(), "CDPManager: Debt in the default pool smaller than the speficied debt share");
         
-        uint coll = (_debt * poolManager.closedColl()) / poolManager.closedDebt(); // Calculate collateral share coll from _debt
-        require(getNewCollRatio(_recipient, _debt, coll) > poolManager.getTCR() - poolManager.getTCR() / MAX_DRAWDOWN, "Collateral ratio would be drawn below maximum drawdown");
+        uint coll = (_debt * poolManager.getClosedColl()) / poolManager.getClosedDebt(); // Calculate collateral share coll from _debt
+        require(getNewCollRatio(_recipient, _debt, coll) > poolManager.getTCR() - poolManager.getTCR() / MAX_DRAWDOWN, "CDPManager: Collateral ratio would be drawn below maximum drawdown");
         
         // Add debt & coll share to the CDP and to the total and remove them from the default pool
         CDPs[_recipient].debt += _debt;
@@ -364,7 +389,7 @@ contract CDPManager is Ownable {
         public
         returns (bool)
     {
-        require(CLV.balanceOf(msg.sender) >= _amount, "Sender has insufficient balance");
+        require(CLV.balanceOf(_msgSender()) >= _amount, "CDPManager: Sender has insufficient balance");
         uint redeemed;
         
         // Loop through the CDPs starting from the one with lowest collateral ratio until _amount of CLV is exchanged for collateral
@@ -383,14 +408,14 @@ contract CDPManager is Ownable {
                 CDPs[currentCDP].debt -= lot;
                 CDPs[currentCDP].coll -= (lot * DIGITS) / priceFeed.getPrice();
 
-                // Burn the calculated lot of CLV and send the corresponding ETH to msg.sender
-                poolManager.redeemCollateral(lot, (lot * DIGITS) / priceFeed.getPrice(), msg.sender);
+                // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()
+                poolManager.redeemCollateral(_msgSender(), lot, (lot * DIGITS) / priceFeed.getPrice());
 
                 // Break the loop if there is no more active debt to redeem 
-                if (poolManager.activeDebt() == 0) break;    
+                if (poolManager.getActiveDebt() == 0) break;    
                     
                 // Update the sortedCDPs list and the redeemed amount
-                sortedCDPs.updateKey(currentCDP, getCollRatio(currentCDP), msg.sender, msg.sender); 
+                sortedCDPs.updateKey(currentCDP, getCollRatio(currentCDP), _msgSender(), _msgSender()); 
                 
                 redeemed += lot;
                 
