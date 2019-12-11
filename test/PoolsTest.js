@@ -20,23 +20,23 @@ contract('StabilityPool', async accounts => {
     recordedPMAddress = await stabilityPool.getPoolManagerAddress()
   })
 
-  it('poolManagerAddress: sets and gets the poolManager address', async () => {
+  it('poolManagerAddress(): sets and gets the poolManager address', async () => {
     await stabilityPool.setPoolManagerAddress(mockPoolManagerAddress)
     const recordedPMAddress = await stabilityPool.getPoolManagerAddress()
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
 
-  it('getETH: gets the recorded CLV balance', async () => {
+  it('getETH(): gets the recorded CLV balance', async () => {
     const recordedETHBalance = await stabilityPool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
 
-  it('getCLV: gets the recorded CLV balance', async () => {
+  it('getCLV(): gets the recorded CLV balance', async () => {
     const recordedETHBalance = await stabilityPool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
   // Increase records
-  it('increaseETH: increases the recorded ETH balance by the correct amount', async () => {
+  it('increaseETH(): increases the recorded ETH balance by the correct amount', async () => {
     const recordedETH_balanceBefore = await stabilityPool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETH_balanceBefore, 0)
 
@@ -45,7 +45,7 @@ contract('StabilityPool', async accounts => {
     assert.equal(recordedETH_balanceAfter, _1_Ether)
   })
 
-  it('increaseCLV: increases the recorded CLV balance by the correct amount', async () => {
+  it('increaseCLV(): increases the recorded CLV balance by the correct amount', async () => {
     const recordedCLV_balanceBefore = await stabilityPool.getCLV({ from: mockPoolManagerAddress })
     assert.equal(recordedCLV_balanceBefore, 0)
 
@@ -54,7 +54,7 @@ contract('StabilityPool', async accounts => {
     assert.equal(recordedCLV_balanceAfter, 100)
   })
   // Decrease
-  it('decreaseCLV: decreases the recorded CLV balance by the correct amount', async () => {
+  it('decreaseCLV(): decreases the recorded CLV balance by the correct amount', async () => {
     // start the pool on 100 wei
     stabilityPool.increaseCLV(100, { from: mockPoolManagerAddress })
 
@@ -67,7 +67,7 @@ contract('StabilityPool', async accounts => {
   })
 
   // send raw ether
-  it('sendETH: decreases the recorded ETH balance by the correct amount', async () => {
+  it('sendETH(): decreases the recorded ETH balance by the correct amount', async () => {
     // setup: give pool 2 ether
     stabilityPool_initialBalance = await web3.eth.getBalance(stabilityPool.address)
     assert.equal(stabilityPool_initialBalance, 0)
@@ -101,23 +101,23 @@ contract('ActivePool', async accounts => {
     recordedPMAddress = await activePool.getPoolManagerAddress()
   })
 
-  it('poolManagerAddress: sets and gets the poolManager address', async () => {
+  it('poolManagerAddress(): sets and gets the poolManager address', async () => {
     await activePool.setPoolManagerAddress(mockPoolManagerAddress)
     const recordedPMAddress = await activePool.getPoolManagerAddress()
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
 
-  it('getETH: gets the recorded CLV balance', async () => {
+  it('getETH(): gets the recorded CLV balance', async () => {
     const recordedETHBalance = await activePool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
 
-  it('getCLV: gets the recorded CLV balance', async () => {
+  it('getCLV(): gets the recorded CLV balance', async () => {
     const recordedETHBalance = await activePool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
   // Increase records
-  it('increaseETH: increases the recorded ETH balance by the correct amount', async () => {
+  it('increaseETH(): increases the recorded ETH balance by the correct amount', async () => {
     const recordedETH_balanceBefore = await activePool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETH_balanceBefore, 0)
 
@@ -126,7 +126,7 @@ contract('ActivePool', async accounts => {
     assert.equal(recordedETH_balanceAfter, _1_Ether)
   })
 
-  it('increaseCLV: increases the recorded CLV balance by the correct amount', async () => {
+  it('increaseCLV(): increases the recorded CLV balance by the correct amount', async () => {
     const recordedCLV_balanceBefore = await activePool.getCLV({ from: mockPoolManagerAddress })
     assert.equal(recordedCLV_balanceBefore, 0)
 
@@ -135,7 +135,7 @@ contract('ActivePool', async accounts => {
     assert.equal(recordedCLV_balanceAfter, 100)
   })
   // Decrease
-  it('decreaseCLV: decreases the recorded CLV balance by the correct amount', async () => {
+  it('decreaseCLV(): decreases the recorded CLV balance by the correct amount', async () => {
     // start the pool on 100 wei
     activePool.increaseCLV(100, { from: mockPoolManagerAddress })
 
@@ -148,7 +148,7 @@ contract('ActivePool', async accounts => {
   })
 
   // send raw ether
-  it('sendETH: decreases the recorded ETH balance by the correct amount', async () => {
+  it('sendETH(): decreases the recorded ETH balance by the correct amount', async () => {
     // setup: give pool 2 ether
     activePool_initialBalance = await web3.eth.getBalance(activePool.address)
     assert.equal(activePool_initialBalance, 0)
@@ -182,23 +182,23 @@ contract('DefaultPool', async accounts => {
     recordedPMAddress = await defaultPool.getPoolManagerAddress()
   })
 
-  it('poolManagerAddress: sets and gets the poolManager address', async () => {
+  it('poolManagerAddress(): sets and gets the poolManager address', async () => {
     await defaultPool.setPoolManagerAddress(mockPoolManagerAddress)
     const recordedPMAddress = await defaultPool.getPoolManagerAddress()
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
 
-  it('getETH: gets the recorded CLV balance', async () => {
+  it('getETH(): gets the recorded CLV balance', async () => {
     const recordedETHBalance = await defaultPool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
 
-  it('getCLV: gets the recorded CLV balance', async () => {
+  it('getCLV(): gets the recorded CLV balance', async () => {
     const recordedETHBalance = await defaultPool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
   // Increase records
-  it('increaseETH: increases the recorded ETH balance by the correct amount', async () => {
+  it('increaseETH(): increases the recorded ETH balance by the correct amount', async () => {
     const recordedETH_balanceBefore = await defaultPool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETH_balanceBefore, 0)
 
@@ -207,7 +207,7 @@ contract('DefaultPool', async accounts => {
     assert.equal(recordedETH_balanceAfter, 100)
   })
 
-  it('increaseCLV: increases the recorded CLV balance by the correct amount', async () => {
+  it('increaseCLV(): increases the recorded CLV balance by the correct amount', async () => {
     const recordedCLV_balanceBefore = await defaultPool.getCLV({ from: mockPoolManagerAddress })
     assert.equal(recordedCLV_balanceBefore, 0)
 
@@ -216,7 +216,7 @@ contract('DefaultPool', async accounts => {
     assert.equal(recordedCLV_balanceAfter, 100)
   })
   // Decrease
-  it('decreaseCLV: decreases the recorded CLV balance by the correct amount', async () => {
+  it('decreaseCLV(): decreases the recorded CLV balance by the correct amount', async () => {
     // start the pool on 100 wei
     defaultPool.increaseCLV(100, { from: mockPoolManagerAddress })
 
@@ -229,7 +229,7 @@ contract('DefaultPool', async accounts => {
   })
 
   // send raw ether
-  it('sendETH: decreases the recorded ETH balance by the correct amount', async () => {
+  it('sendETH(): decreases the recorded ETH balance by the correct amount', async () => {
     // setup: give pool 2 ether
     defaultPool_initialBalance = await web3.eth.getBalance(defaultPool.address)
     assert.equal(stabilityPool_initialBalance, 0)

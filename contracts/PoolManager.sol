@@ -1,23 +1,32 @@
 pragma solidity ^0.5.11;
 
-// import "./StabilityPool.sol";
-// import "./ActivePool.sol";
-// import "./DefaultPool.sol";
 import './IPool.sol';
 
 import "./PriceFeed.sol";
 import "./CLVToken.sol";
+import "./DeciMathBasic.sol";
+import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
 import '../node_modules/@openzeppelin/contracts/ownership/Ownable.sol';
 
-// Maintains all pools and holds the ETH and CLV balances
+// PoolManager maintains all pools 
 contract PoolManager is Ownable {
+    using SafeMath for uint;
 
-    struct Snapshot {
-        uint ETH;
-        uint CLV;
-    }
     uint constant DIGITS = 1e18;
 
+    // --- Events ---
+    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event PriceFeedAddressChanged(address _newPriceFeedAddress);
+    event CLVTokenAddressChanged(address _newCLVTokenAddress);
+    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
+    event ActivePoolAddressChanged(address _newActivePoolAddress);
+    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
+    event UserSnapshotUpdated(uint _CLV, uint _ETH);
+    event S_CLVUpdated(uint _S_CLV);
+    event S_ETHUpdated(uint _S_ETH);
+    event UserDepositChanged(address _user, uint _amount);
+
+    // --- Connected contract declarations ---
     address public cdpManagerAddress;
 
     PriceFeed priceFeed;
@@ -35,12 +44,19 @@ contract PoolManager is Ownable {
     IPool public defaultPool;
     address payable public defaultPoolAddress;
    
+   // --- Data structures ---
     mapping (address => uint) public deposit; // A map of all deposits
+
+      struct Snapshot {
+        uint ETH;
+        uint CLV;
+    }
     
     uint public S_CLV; // A running total of the CLV fractions for gas-efficient share calculation
     uint public S_ETH; // A running total of the ETH fractions for gas-efficient share calculation
     mapping (address => Snapshot) public snapshot; // A map of individual snapshots of the S_CLV and the current Stability.ETH values
     
+    // --- Modifiers ---
     modifier onlyCDPManager() {
         require(_msgSender() == cdpManagerAddress, "PoolManager: Caller is not the CDPManager");
         _;
@@ -50,35 +66,44 @@ contract PoolManager is Ownable {
     }
 
     // --- Dependency setters ---
-    function setCLVToken(address _CLVAddress) public onlyOwner {
-        clvAddress = _CLVAddress;
-        CLV = CLVToken(_CLVAddress); 
+    function setCDPManagerAddress(address _cdpManagerAddress) public onlyOwner {
+        cdpManagerAddress = _cdpManagerAddress;
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
     }
      function setPriceFeed(address _priceFeedAddress) public onlyOwner {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = PriceFeed(_priceFeedAddress);
+        emit PriceFeedAddressChanged(_priceFeedAddress);
     }
 
-    function setCDPManagerAddress(address _cdpManagerAddress) public onlyOwner {
-        cdpManagerAddress = _cdpManagerAddress;
+    function setCLVToken(address _CLVAddress) public onlyOwner {
+        clvAddress = _CLVAddress;
+        CLV = CLVToken(_CLVAddress); 
+        emit CLVTokenAddressChanged(_CLVAddress);
     }
 
     function setStabilityPool(address payable _stabilityPoolAddress) public onlyOwner {
         stabilityPoolAddress = _stabilityPoolAddress;
         stabilityPool = IPool(stabilityPoolAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
     }
 
     function setActivePool(address payable _activePoolAddress) public onlyOwner {
         activePoolAddress = _activePoolAddress;
         activePool = IPool(activePoolAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
     }
 
     function setDefaultPool(address payable _defaultPoolAddress) public onlyOwner {
         defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(defaultPoolAddress);
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
     }
 
     // --- Getters ---
+    function getAccurateMulDiv(uint x, uint y, uint z) public pure returns(uint) {
+        return DeciMathBasic.accurateMulDiv(x, y, z);
+    }
 
     // Returns the total collateral ratio of the system
     function getTCR() 
@@ -88,16 +113,17 @@ contract PoolManager is Ownable {
     {
         uint activePoolETH = activePool.getETH();
         uint activePoolCLV = activePool.getCLV();
-
+        uint price = priceFeed.getPrice();
+        
         // Handle edge cases of div by 0
         if(activePoolETH == 0 && activePoolCLV == 0 ) { 
             return 1;
         }  else if (activePoolETH != 0 && activePoolCLV == 0 ) {
             return 2**256 - 1; // TCR is technically infinite
-        } 
+        }
 
         // calculate TCR
-        return activePool.getETH() * priceFeed.getPrice() / activePool.getCLV();
+        return DeciMathBasic.accurateMulDiv(activePoolETH, price, activePoolCLV);
     }
     
     // Returns the current ETH balance of the TokenPools contract
@@ -154,30 +180,6 @@ contract PoolManager is Ownable {
         if (a <= b) return a;
         else return b;
     }    
-    
-    // ***For testing purposes only***: Initializes a CDP with the received ETH and the specified amount of CLV
-    // function initializeCDP(address _account, uint _CLV)
-    //     public
-    //     payable
-    //     onlyCDPManager
-    //     returns (bool)
-    // {
-    //     Active.CLV += _CLV;
-    //     Active.ETH += msg.value;
-    //     CLV.mint(_account, _CLV);
-        
-    //     return true;
-    // }
-    
-    // ***For testing purposes only***: Transfers the speficied amount of CLV from one account to another
-    // function transferCLV(address _from, address _to, uint _amount)
-    //     public
-    //     onlyCDPManager
-    //     returns (bool)
-    // {
-    //     CLV.burn(_from, _amount);
-    //     CLV.mint(_to, _amount);
-    // }    
     
     // Adds the received ETH to the total active collateral
     function addColl()
@@ -287,16 +289,16 @@ contract PoolManager is Ownable {
         
         // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
         CLV.sendToPool(user, stabilityPoolAddress, _amount);
-        // Stability.CLV += _amount;
         stabilityPool.increaseCLV(_amount);
         
         // Record the deposit made by user
-        deposit[user] += _amount;
+        deposit[user] = deposit[user].add(_amount);
+        emit StabilityPoolDepositMade(user, _amount);
         
         // Record an individual snapshot of the running totals S_CLV and S_ETH for the user
         snapshot[user].CLV = S_CLV;
         snapshot[user].ETH = stabilityPool.getETH();
-        
+        emit UserDepositChanged(user, _amount);
         return true;
     }   
     
@@ -311,18 +313,29 @@ contract PoolManager is Ownable {
         onlyCDPManager
         returns (uint[2] memory) // Note: it would be nicer to return this as a struct, but struct returns are still experimental
     {    
-        require(stabilityPool.getCLV() > 0, "PoolManager: stability pool is empty");
+        uint[2] memory remainder;
+        
+        // When Stability Pool has no CLV, return all debt and coll
+        if (stabilityPool.getCLV() == 0) {
+            remainder[0] = _debt;
+            remainder[1] = _coll;
+            return remainder;
+        }
+        // require(stabilityPool.getCLV() > 0, "PoolManager: stability pool is empty");
         
         // If the debt is larger than the deposited CLV, only offset an amount of debt corresponding to the latter
         uint debtToDistribute = getMin(_debt, stabilityPool.getCLV());
         // Determine the amount of collateral to be distributed in proportion to the debt that is distributed
-        uint collToDistribute = (((debtToDistribute * DIGITS) / _debt) * _coll) / DIGITS;
+        uint collToDistribute =  DeciMathBasic.accurateMulDiv(debtToDistribute, _coll, _debt);
         
         // Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool
-        S_CLV += (debtToDistribute * DIGITS) / stabilityPool.getCLV();
+        uint stabilityPoolCLV = stabilityPool.getCLV();
+        S_CLV = S_CLV.add( DeciMathBasic.accurateMulDiv(debtToDistribute,  DIGITS, stabilityPoolCLV) );
+        emit S_CLVUpdated(S_CLV);
         // Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool
-        S_ETH += (collToDistribute * DIGITS) / stabilityPool.getETH();
-        
+        uint stabilityPoolETH = stabilityPool.getETH();
+        S_ETH = S_ETH.add( DeciMathBasic.accurateMulDiv(collToDistribute, DIGITS, stabilityPoolETH) );
+        emit S_ETHUpdated(S_ETH);
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLV(debtToDistribute);  
         stabilityPool.decreaseCLV(debtToDistribute); 
@@ -334,9 +347,8 @@ contract PoolManager is Ownable {
         CLV.burn(stabilityPoolAddress, debtToDistribute);
         
         // Return the amount of debt & coll that could not be offset against the Stability Pool due to insufficiency
-        uint[2] memory remainder;
-        remainder[0] = _debt - debtToDistribute;
-        remainder[1] = _coll - collToDistribute;
+        remainder[0] = _debt.sub(debtToDistribute);
+        remainder[1] = _coll.sub(collToDistribute);
         return remainder;
     }
     
@@ -347,17 +359,21 @@ contract PoolManager is Ownable {
         returns (bool)
     {   
         address payable user = _msgSender();
-        require(deposit[user] > 0, "PoolManager: caller has no deposit");
+
+        uint userDeposit = deposit[user];
+        uint snapshotETH = snapshot[user].ETH;
+        uint snapshotCLV = snapshot[user].CLV;
+        require(userDeposit > 0, "PoolManager: caller has no deposit");
         
         // Calculate the CLV and ETH shares to be retrieved according http://batog.info/papers/scalable-reward-distribution.pdf
-        // TODO: Check for div/0
-        // Problem: Rounding errors lead to results like 666666666666666600 instead of 666666666666666666 
-        // TODO: check calculations
-        uint CLVShare = deposit[user] - (deposit[user] * (S_CLV - snapshot[user].CLV)) / DIGITS;
-        uint ETHShare = (deposit[user] * (S_ETH - snapshot[user].ETH)) / DIGITS;
+    
+        // TODO: Too dense. Extract temp variables and make this more readable
+        uint CLVShare = userDeposit.sub( DeciMathBasic.accurateMulDiv(userDeposit, (S_CLV.sub(snapshotCLV)), DIGITS) );
+        uint ETHShare = DeciMathBasic.accurateMulDiv(userDeposit, (S_ETH.sub(snapshotETH)), DIGITS);
         
         //update user's deposit record
         deposit[user] = 0;
+        emit UserDepositChanged(user, _amount);
         // TODO: Beware of rounding errors that may lead to underflows
 
         /* TODO: Calcs? Shouldn't max withdrawal calculation come earlier, and impact withdrawable CLV and ETH.

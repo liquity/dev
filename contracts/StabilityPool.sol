@@ -15,6 +15,7 @@ contract StabilityPool is Ownable, IPool {
 
     function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
         poolManagerAddress = _poolManagerAddress;
+        emit PoolManagerAddressChanged(_poolManagerAddress);
     }
 
     // --- Getters for public variables. Required by IPool interface ---
@@ -35,19 +36,24 @@ contract StabilityPool is Ownable, IPool {
         ETH = ETH.sub(_amount);
         (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
         require (success == true, 'StabilityPool: transaction reverted');
+        emit ETHBalanceUpdated(ETH);
+        emit EtherSent(_account, _amount);
         return success;
     }
 
      function increaseETH(uint _amount) public onlyPoolManager () {
         ETH = ETH.add(_amount);
+        emit ETHBalanceUpdated(ETH);
     }
 
     function increaseCLV(uint _amount) public onlyPoolManager () {
         CLV  = CLV.add(_amount);
+        emit CLVBalanceUpdated(CLV);
     }
 
     function decreaseCLV(uint _amount) public onlyPoolManager () {
         CLV = CLV.sub(_amount);
+        emit CLVBalanceUpdated(CLV);
     }
 
     /* Returns the raw ether balance at StabilityPool address.  

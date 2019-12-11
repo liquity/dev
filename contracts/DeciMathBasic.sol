@@ -1,0 +1,97 @@
+pragma solidity ^0.5.11;
+
+import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
+
+library DeciMathBasic {
+    /* 
+    DeciMath functions use the concept of a 'duint':
+    
+    A duint is a uint representation of an 18DP decimal number. The right-most 
+    18 digits correspond to the mantissa, i.e. the digits after the decimal point. 
+
+    Examples:
+       1000000000000000000   represents 1
+       5432100000000000000   represents 5.4321
+               34560000000   represents 0.00000003456
+     370000000000000000000   represents 370
+                         1   represents 1e-18
+
+     etc. 
+    */
+
+    uint constant _1E18 = 10**18;
+    uint constant _1E17 = 10**17;
+    uint constant _5E17 = 5*(10**17);
+
+    // --- Accurate decimal math functions ---
+
+    /* Accurately calculate (x * y) / z. Converts all arguments to 'duints', performs 
+    calculations, then converts the result back to uint before returning */
+    function accurateMulDiv(uint x, uint y, uint z) public pure returns (uint fraction) {
+    // convert all uint to duint
+        uint x_duint = toDuint(x);
+        uint y_duint = toDuint(y);
+        uint z_duint = toDuint(z);
+
+        // perform duint operations. 
+        uint prod_duint = decMul(x_duint, y_duint);    //  (x * y).  If y is guaranteed to be an integer (i.e. not duint) could use normalMul(x_duint, y) here to save gas.
+        uint res_duint = decDiv(prod_duint, z_duint);   // (x* y) / z
+
+        // convert result back to uint
+        uint result = fromDuint(res_duint);
+
+        return result;
+    }
+
+    // Accurately divides one 'duint' by another. Returns a 'duint'
+    function decDiv(uint x, uint y) public pure returns (uint quotient) {
+        uint prod_x_1E18 = SafeMath.mul(x, _1E18);
+        uint half_y = SafeMath.div(y, 2);
+
+        quotient = SafeMath.div(SafeMath.add( prod_x_1E18, half_y), y);
+        return quotient;
+    }
+
+     // Accurately multiplies two 'duints'. Returns a 'duint'
+    function decMul(uint x, uint y) public pure returns (uint prod) {
+        uint prod_xy = SafeMath.mul(x, y);
+       
+        prod = SafeMath.div(SafeMath.add(prod_xy, _5E17), _1E18 );
+        
+        return prod;
+    }
+
+     // --- Helpers. Convert to and from duints ---
+
+    function toDuint(uint integer) public pure returns(uint) {
+        return SafeMath.mul(integer, _1E18);
+    }
+
+    function fromDuint(uint duint) public pure returns(uint) {
+        // rounding: always round down
+        return SafeMath.div(duint, _1E18);
+    }
+
+    function fromDuint_commonRounding(uint duint) public pure returns(uint) {
+        // rounding: common rounding. If first mantissa digit >=5 round up, else round down.
+        uint integer;
+        uint firstDecimalDigit = SafeMath.div(duint % _1E18, _1E17); // grab 18th digit from-right
+        
+        if (firstDecimalDigit >= 5 ){
+            integer =  SafeMath.div(duint, _1E18) + 1;  // round up
+            return integer;
+        } else if (firstDecimalDigit < 5 ) {
+            integer =  SafeMath.div(duint, _1E18); // round down
+            return integer;
+        }
+    }
+
+     // --- Normal Solidity multiplication and floor division ---
+    function normalDiv(uint a, uint b) public pure returns(uint) {
+        return SafeMath.div(a, b);
+    }
+
+    function normalMul(uint a, uint b) public pure returns(uint) {
+        return SafeMath.mul(a, b);
+    }  
+}

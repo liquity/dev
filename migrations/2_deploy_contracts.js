@@ -7,6 +7,7 @@ const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const NameRegistry = artifacts.require("./NameRegistry.sol")
+const DeciMathBasic = artifacts.require("./DeciMathBasic.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 
@@ -19,6 +20,9 @@ module.exports =  function(deployer) {
     // Deploy contract bytecode to blockchain
     deployer.deploy(SortedDoublyLL)
     deployer.link(SortedDoublyLL, CDPManager)
+    deployer.deploy(DeciMathBasic)
+    deployer.link(DeciMathBasic, CDPManager)
+    deployer.link(DeciMathBasic, PoolManager)
     deployer.deploy(NameRegistry)
     deployer.deploy(PriceFeed)
     deployer.deploy(CLVToken)
@@ -27,6 +31,7 @@ module.exports =  function(deployer) {
     deployer.deploy(DefaultPool)
     deployer.deploy(StabilityPool)
     deployer.deploy(CDPManager)
+    deployer.deploy(DeciMathBasic)
 
   deployer.then (async () => {
    // Grab contract representations
