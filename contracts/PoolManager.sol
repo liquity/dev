@@ -293,7 +293,7 @@ contract PoolManager is Ownable {
         
         // Record the deposit made by user
         deposit[user] = deposit[user].add(_amount);
-        emit StabilityPoolDepositMade(user, _amount);
+        emit UserDepositChanged(user, _amount);
         
         // Record an individual snapshot of the running totals S_CLV and S_ETH for the user
         snapshot[user].CLV = S_CLV;
@@ -373,7 +373,7 @@ contract PoolManager is Ownable {
         
         //update user's deposit record
         deposit[user] = 0;
-        emit UserDepositChanged(user, _amount);
+        emit UserDepositChanged(user, 0);
         // TODO: Beware of rounding errors that may lead to underflows
 
         /* TODO: Calcs? Shouldn't max withdrawal calculation come earlier, and impact withdrawable CLV and ETH.

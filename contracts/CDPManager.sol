@@ -153,7 +153,7 @@ contract CDPManager is Ownable {
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
         else {
-            return 2**256.sub(1); 
+            return 2**256 - 1; 
         }
     }
     
@@ -361,7 +361,7 @@ contract CDPManager is Ownable {
         
         // Remove CDP from sortedCDPs
         sortedCDPs.remove(_debtor);
-        emit CDPClosed(_user);
+        emit CDPClosed(_debtor);
         return true;
     }
      

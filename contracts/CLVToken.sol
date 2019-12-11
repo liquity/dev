@@ -11,7 +11,7 @@ contract CLVToken is IERC20, Ownable {
     using SafeMath for uint256;
     
     event PoolManagerAddressChanged( address _newPoolManagerAddress);
-    event CLVBalanceUpdated(address _user, uint _amount);
+    event CLVTokenBalanceUpdated(address _user, uint _amount);
 
     address public poolManagerAddress;
     bytes32 public name;
@@ -54,13 +54,13 @@ contract CLVToken is IERC20, Ownable {
     
     function sendToPool(address _sender,  address poolAddress, uint256 _amount) public onlyPoolManager returns (bool) {
         _transfer(_sender, poolAddress, _amount);
-         emit CLVTokenBalanceUpdated(_account, _amount);
+         emit CLVTokenBalanceUpdated(poolAddress, _amount);
         return true;
     }
     
     function returnFromPool(address poolAddress, address user, uint256 _amount ) public onlyPoolManager returns (bool) {
         _transfer(poolAddress, user, _amount);
-        emit CLVTokenBalanceUpdated(_account, _amount);
+        emit CLVTokenBalanceUpdated(poolAddress, _amount);
         return true;
     }
 
