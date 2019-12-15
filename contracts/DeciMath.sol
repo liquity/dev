@@ -2,7 +2,7 @@ pragma solidity ^0.5.11;
 
 import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
 
-library DeciMathBasic {
+library DeciMath {
     /* 
     DeciMath functions use the concept of a 'duint':
     

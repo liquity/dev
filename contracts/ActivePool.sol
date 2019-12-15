@@ -8,17 +8,51 @@ contract ActivePool is Ownable, IPool {
     using SafeMath for uint256;
 
     address public poolManagerAddress;
+    address public stabilityPoolAddress;
+    address public defaultPoolAddress;
     uint256 public ETH;  // deposited ether tracker
     uint256 public CLV;  // total outstanding CDP debt
 
     constructor() public {}
 
+    // --- Contract setters ---
     function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
         poolManagerAddress = _poolManagerAddress;
         emit PoolManagerAddressChanged(_poolManagerAddress);
     }
 
+    function setDefaultPoolAddress(address _defaultPoolAddress) public onlyOwner {
+        defaultPoolAddress = _defaultPoolAddress; 
+        emit DefaultPoolAddressChanged(defaultPoolAddress);
+    }
+
+    function setStabilityPoolAddress(address _stabilityPoolAddress) public onlyOwner {
+        stabilityPoolAddress = _stabilityPoolAddress;
+        emit StabilityPoolAddressChanged(stabilityPoolAddress);
+    }
+
+    // Redundant function. Needed only to satisfy IPool interface
+   function setActivePoolAddress(address _activePoolAddress) public onlyOwner {
+   }
+
     // --- Getters for public variables. Required by IPool interface ---
+
+    function getActivePoolAddress() public view returns(address) {
+        return address(this);
+    }
+
+    function getStabilityPoolAddress() public view returns(address){
+        return stabilityPoolAddress;
+    }
+
+    function getDefaultPoolAddress() public view returns(address){
+        return defaultPoolAddress;
+    }
+
+    function getPoolManagerAddress() public view returns(address) {
+        return poolManagerAddress;
+    }
+
     function getETH() public view returns(uint) {
         return ETH;
     }
@@ -27,9 +61,7 @@ contract ActivePool is Ownable, IPool {
         return CLV;
     }
 
-    function getPoolManagerAddress() public view returns(address) {
-        return poolManagerAddress;
-    }
+    
 
     // --- Pool functionality ---
     function sendETH(address payable _account, uint _amount) public onlyPoolManager returns(bool) {
@@ -41,10 +73,11 @@ contract ActivePool is Ownable, IPool {
         return success;
     }
 
-     function increaseETH(uint _amount) public onlyPoolManager () {
-        ETH = ETH.add(_amount);
-        emit ETHBalanceUpdated(ETH);
-    }
+    // Deprecated
+    // function increaseETH(uint _amount) public onlyPoolManager () {
+    //     ETH = ETH.add(_amount);
+    //     emit ETHBalanceUpdated(ETH);
+    // }
 
     function increaseCLV(uint _amount) public onlyPoolManager () {
         CLV  = CLV.add(_amount);
@@ -67,5 +100,15 @@ contract ActivePool is Ownable, IPool {
         _;
     }
 
-    function () external payable {}
+    modifier onlyPoolManagerOrPool {
+        require(
+            _msgSender() == poolManagerAddress || 
+            _msgSender() == stabilityPoolAddress || 
+            _msgSender() == defaultPoolAddress, 
+            "ActivePool: only receive ETH from Pool or PoolManager");
+        ETH = ETH.add(msg.value);
+        _;
+    }
+
+    function () external payable onlyPoolManagerOrPool {}
 }

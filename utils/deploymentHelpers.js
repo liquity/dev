@@ -51,8 +51,16 @@ const connectContracts = async (contracts, registeredAddresses) => {
 
   // set PoolManager addr in the Pools
   await contracts.stabilityPool.setPoolManagerAddress(registeredAddresses.PoolManager)
+  await contracts.stabilityPool.setActivePoolAddress(registeredAddresses.ActivePool)
+  await contracts.stabilityPool.setDefaultPoolAddress(registeredAddresses.DefaultPool)
+
   await contracts.activePool.setPoolManagerAddress(registeredAddresses.PoolManager)
+  await contracts.activePool.setStabilityPoolAddress(registeredAddresses.StabilityPool)
+  await contracts.activePool.setDefaultPoolAddress(registeredAddresses.DefaultPool)
+
   await contracts.defaultPool.setPoolManagerAddress(registeredAddresses.PoolManager)
+  await contracts.defaultPool.setStabilityPoolAddress(registeredAddresses.StabilityPool)
+  await contracts.defaultPool.setActivePoolAddress(registeredAddresses.ActivePool)
 }
 
 module.exports = {

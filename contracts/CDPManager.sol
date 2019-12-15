@@ -5,7 +5,7 @@ import "./CLVToken.sol";
 import "./PriceFeed.sol";
 import "./SortedDoublyLL.sol";
 import "./PoolManager.sol";
-import "./DeciMathBasic.sol";
+import "./DeciMath.sol";
 import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
 import "../node_modules/@openzeppelin/contracts/ownership/Ownable.sol";
 
@@ -90,8 +90,14 @@ contract CDPManager is Ownable {
     }
 
     function getAccurateMulDiv(uint x, uint y, uint z) public pure returns(uint) {
-        return DeciMathBasic.accurateMulDiv(x, y, z);
+        return DeciMath.accurateMulDiv(x, y, z);
     }
+
+    // function userHasActiveCDP() public pure returns(bool) {
+    //     uint status = CDPs[user].status;
+    //     if (status == Status.Active) return true;
+    // }
+    
     /* --- SortedDoublyLinkedList (SDLL) getters and checkers. These enable public usage
     of the corresponding SDLL functions, operating on the sortedCDPs struct --- */
 
@@ -148,7 +154,7 @@ contract CDPManager is Ownable {
         uint price = priceFeed.getPrice();
         // Check if the total debt is higher than 0 to avoid division by 0
         if (newDebt > 0) {
-            uint newCollRatio = DeciMathBasic.accurateMulDiv(newColl, price, newDebt);
+            uint newCollRatio = DeciMath.accurateMulDiv(newColl, price, newDebt);
             return newCollRatio;
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
@@ -219,9 +225,6 @@ contract CDPManager is Ownable {
 
         // get user's new ICR
         uint newICR = getCollRatio(user);
-
-        // Get CDP debt
-        uint debt = CDPs[user].debt;
 
         // update the ICR in the CDP mapping
         CDPs[user].ICR = newICR;
@@ -409,7 +412,7 @@ contract CDPManager is Ownable {
         uint closedDebt = poolManager.getClosedDebt();
         uint closedColl = poolManager.getClosedColl();
         uint TCR = poolManager.getTCR();
-        uint collShare = DeciMathBasic.accurateMulDiv(_debtShare, closedColl, closedDebt); // Calculate collateral share coll from _debt
+        uint collShare = DeciMath.accurateMulDiv(_debtShare, closedColl, closedDebt); // Calculate collateral share coll from _debt
         uint newICR = getNewCollRatio(_user, _debtShare, collShare);
         
         require(CDPs[_user].status == Status.active, "CDPManager: Recipient must own an active CDP");
@@ -468,7 +471,7 @@ contract CDPManager is Ownable {
                 // Decrease the debt and collateral of the current CDP according to the lot
                 // TODO: Readability - too dense. Extract temp vars
                 CDPs[currentCDPuser].debt = (CDPs[currentCDPuser].debt).sub(lot);
-                CDPs[currentCDPuser].coll = (CDPs[currentCDPuser].coll).sub(DeciMathBasic.accurateMulDiv(lot, DIGITS, price));
+                CDPs[currentCDPuser].coll = (CDPs[currentCDPuser].coll).sub(DeciMath.accurateMulDiv(lot, DIGITS, price));
                 uint newCollRatio = getCollRatio(currentCDPuser);
 
                 // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()

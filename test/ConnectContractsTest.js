@@ -160,6 +160,24 @@ describe('Set correct contract addresses dependencies for after deployment', fun
       const recordedPoolManagerAddress = await activePool.getPoolManagerAddress()
       assert.equal(poolManagerAddress, recordedPoolManagerAddress)
     })
+
+    it('sets the correct DefaultPool address', async () => {
+      const deployed = await getDeployedContracts()
+      const activePool = deployed.activePool
+      const defaultPoolAddress = deployed.defaultPoolAddress
+
+      const recordedDefaultPoolAddress = await activePool.getDefaultPoolAddress()
+      assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
+    })
+
+    it('sets the correct StabilityPool address', async () => {
+      const deployed = await getDeployedContracts()
+      const activePool = deployed.activePool
+      const stabilityPoolAddress = deployed.stabilityPoolAddress
+
+      const recordedStabilityPoolAddress = await activePool.getStabilityPoolAddress()
+      assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
+    })
   })
 
   contract('StabilityPool', async () => {
@@ -171,6 +189,24 @@ describe('Set correct contract addresses dependencies for after deployment', fun
       const recordedPoolManagerAddress = await stabilityPool.getPoolManagerAddress()
       assert.equal(poolManagerAddress, recordedPoolManagerAddress)
     })
+
+    it('sets the correct DefaultPool address', async () => {
+      const deployed = await getDeployedContracts()
+      const stabilityPool = deployed.stabilityPool
+      const defaultPoolAddress = deployed.defaultPoolAddress
+
+      const recordedDefaultPoolAddress = await stabilityPool.getDefaultPoolAddress()
+      assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
+    })
+
+    it('sets the correct ActivePool address', async () => {
+      const deployed = await getDeployedContracts()
+      const stabilityPool = deployed.stabilityPool
+      const activePoolAddress = deployed.activePoolAddress
+
+      const recordedActivePoolAddress = await stabilityPool.getActivePoolAddress()
+      assert.equal(activePoolAddress, recordedActivePoolAddress)
+    })
   })
 
   contract('DefaultPool', async () => {
@@ -181,6 +217,24 @@ describe('Set correct contract addresses dependencies for after deployment', fun
 
       const recordedPoolManagerAddress = await defaultPool.getPoolManagerAddress()
       assert.equal(poolManagerAddress, recordedPoolManagerAddress)
+    })
+
+    it('sets the correct ActivePool address', async () => {
+      const deployed = await getDeployedContracts()
+      const defaultPool = deployed.defaultPool
+      const activePoolAddress = deployed.activePoolAddress
+
+      const recordedActivePoolAddress = await defaultPool.getActivePoolAddress()
+      assert.equal(activePoolAddress, recordedActivePoolAddress)
+    })
+
+    it('sets the correct StabilityPool address', async () => {
+      const deployed = await getDeployedContracts()
+      const defaultPool = deployed.defaultPool
+      const stabilityPoolAddress = deployed.stabilityPoolAddress
+
+      const recordedStabilityPoolAddress = await defaultPool.getStabilityPoolAddress()
+      assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
     })
   })
 })

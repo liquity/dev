@@ -8,27 +8,65 @@ contract StabilityPool is Ownable, IPool {
     using SafeMath for uint256;
 
     address public poolManagerAddress;
+    address public defaultPoolAddress;
+    address public activePoolAddress;
     uint256 public ETH;  // deposited ether tracker
-    uint256 public CLV;  // total outstanding CDP debt
+
+    // Total CLV held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.
+    uint256 public CLV;  
+    // Total user CLV deposits. Used in proportional reward calculation in PoolManager. 
+    //  Only changes when users deposit/withdraw.
+    uint256 public totalCLVDeposits; 
 
     constructor() public {}
 
+    // --- Contract setters ---
     function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
         poolManagerAddress = _poolManagerAddress;
-        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit PoolManagerAddressChanged(poolManagerAddress);
+    }
+
+    function setActivePoolAddress(address _activePoolAddress) public onlyOwner {
+        activePoolAddress = _activePoolAddress;
+        emit ActivePoolAddressChanged(activePoolAddress);
+    }
+    
+    function setDefaultPoolAddress(address _defaultPoolAddress) public onlyOwner {
+        defaultPoolAddress = _defaultPoolAddress; 
+        emit DefaultPoolAddressChanged(defaultPoolAddress);
+    }
+
+    // Redundant function. Needed only to satisfy IPool interface
+    function setStabilityPoolAddress(address _defaultPoolAddress) public onlyOwner {
     }
 
     // --- Getters for public variables. Required by IPool interface ---
-    function getETH() public view onlyPoolManager returns(uint) {
+    function getActivePoolAddress() public view returns(address) {
+        return activePoolAddress;
+    }
+
+    function getStabilityPoolAddress() public view returns(address){
+        return address(this);
+    }
+
+    function getDefaultPoolAddress() public view returns(address){
+        return defaultPoolAddress;
+    }
+   
+    function getPoolManagerAddress() public view returns(address) {
+        return poolManagerAddress;
+    }
+
+    function getETH() public view returns(uint) {
         return ETH;
     }
 
-    function getCLV() public view onlyPoolManager returns(uint) {
+    function getCLV() public view returns(uint) {
         return CLV;
     }
 
-    function getPoolManagerAddress() public view returns(address) {
-        return poolManagerAddress;
+    function getTotalCLVDeposits() public view returns(uint) {
+        return totalCLVDeposits;
     }
 
     // --- Pool functionality ---
@@ -41,10 +79,11 @@ contract StabilityPool is Ownable, IPool {
         return success;
     }
 
-     function increaseETH(uint _amount) public onlyPoolManager () {
-        ETH = ETH.add(_amount);
-        emit ETHBalanceUpdated(ETH);
-    }
+    // Deprecated
+    // function increaseETH(uint _amount) public onlyPoolManager () {
+    //     ETH = ETH.add(_amount);
+    //     emit ETHBalanceUpdated(ETH);
+    // }
 
     function increaseCLV(uint _amount) public onlyPoolManager () {
         CLV  = CLV.add(_amount);
@@ -54,6 +93,14 @@ contract StabilityPool is Ownable, IPool {
     function decreaseCLV(uint _amount) public onlyPoolManager () {
         CLV = CLV.sub(_amount);
         emit CLVBalanceUpdated(CLV);
+    }
+
+    function increaseTotalCLVDeposits(uint _amount) public onlyPoolManager () {
+        totalCLVDeposits = totalCLVDeposits.add(_amount);
+    }
+
+    function decreaseTotalCLVDeposits(uint _amount) public onlyPoolManager () {
+        totalCLVDeposits = totalCLVDeposits.sub(_amount);
     }
 
     /* Returns the raw ether balance at StabilityPool address.  
@@ -67,5 +114,15 @@ contract StabilityPool is Ownable, IPool {
         _;
     }
 
-    function () external payable {}
+    modifier onlyPoolManagerOrPool {
+        require(
+            _msgSender() == poolManagerAddress || 
+            _msgSender() == activePoolAddress || 
+            _msgSender() == defaultPoolAddress, 
+            "ActivePool: only receive ETH from Pool or PoolManager");
+        ETH = ETH.add(msg.value);
+        _;
+    }
+
+    function () external payable onlyPoolManagerOrPool {}
 }

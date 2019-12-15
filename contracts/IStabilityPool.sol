@@ -1,7 +1,7 @@
 pragma solidity ^0.5.11;
 
 // Common interface for the ETH/CLV pools.
-interface IPool {
+interface IStabilityPool {
     
     // Events
     event ETHBalanceUpdated(uint _newBalance);
@@ -18,10 +18,12 @@ interface IPool {
 
     event EtherSent(address _to, uint _amount);
 
-    // Functions
+    // --- Functions ---
     function getETH() external view returns(uint);
     
     function getCLV() external view returns(uint);
+
+    function getTotalCLVDeposits() external view returns(uint);
     
     function getPoolManagerAddress() external view returns(address);
     
@@ -39,6 +41,10 @@ interface IPool {
 
     function setDefaultPoolAddress(address _defaultPoolAddress) external;
     
+    function increaseTotalCLVDeposits(uint _amount) external;
+
+    function decreaseTotalCLVDeposits(uint _amount)  external;
+
     function sendETH(address payable _account, uint _amount) external returns(bool);
 
     // function increaseETH(uint _amount) external;
