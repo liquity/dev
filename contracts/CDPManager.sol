@@ -1,15 +1,16 @@
 pragma solidity ^0.5.11;
 
 // TODO: Use SafeMath
-import "./CLVToken.sol";
-import "./PriceFeed.sol";
+import "./ICDPManager.sol";
+import "./ICLVToken.sol";
+import "./IPriceFeed.sol";
 import "./SortedDoublyLL.sol";
-import "./PoolManager.sol";
+import "./IPoolManager.sol";
 import "./DeciMath.sol";
 import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
 import "../node_modules/@openzeppelin/contracts/ownership/Ownable.sol";
 
-contract CDPManager is Ownable {
+contract CDPManager is Ownable, ICDPManager {
     using SafeMath for uint;
     using SortedDoublyLL for SortedDoublyLL.Data;
 
@@ -35,13 +36,13 @@ contract CDPManager is Ownable {
     event CollateralRedeemed(address _user, uint redeemedAmount);
 
     // --- Connected contract declarations ---
-    PoolManager poolManager;
+    IPoolManager poolManager;
     address public poolManagerAddress;
 
-    CLVToken CLV; 
+    ICLVToken CLV; 
     address public clvTokenAddress;
 
-    PriceFeed priceFeed;
+    IPriceFeed priceFeed;
     address public priceFeedAddress;
 
     // --- Data structures ---
@@ -55,11 +56,13 @@ contract CDPManager is Ownable {
     }
     
     mapping (address => CDP) public CDPs; // A map of all new CDPs: created but no initial collateral
-    // mapping (address => CDP) public activeCDPs; // A map of all existing (active and closed) CDPs
-    // mapping (address => CDP) public closedCDPs;
     SortedDoublyLL.Data public sortedCDPs; // A doubly linked CDP list sorted by the collateral ratio of the CDPs
 
-    // Register the owner and the name of the CDP contract and install other contracts
+     // --- Modifiers ---
+    modifier onlyPoolManager {
+        require(_msgSender() == poolManagerAddress, "ActivePool: Only the poolManager is authorized");
+        _;
+    }
 
     constructor() public payable {
         sortedCDPs.setMaxSize(1000000);
@@ -68,19 +71,19 @@ contract CDPManager is Ownable {
     // --- Contract setters --- 
     function setPoolManager(address _poolManagerAddress) public onlyOwner {
         poolManagerAddress = _poolManagerAddress;
-        poolManager = PoolManager(_poolManagerAddress);
+        poolManager = IPoolManager(_poolManagerAddress);
         emit PoolManagerAddressChanged(_poolManagerAddress);
     }
 
     function setPriceFeed(address _priceFeedAddress) public onlyOwner {
         priceFeedAddress = _priceFeedAddress;
-        priceFeed = PriceFeed(priceFeedAddress);
+        priceFeed = IPriceFeed(priceFeedAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
     }
 
      function setCLVToken(address _clvTokenAddress) public onlyOwner {
         clvTokenAddress = _clvTokenAddress;
-        CLV = CLVToken(_clvTokenAddress);
+        CLV = ICLVToken(_clvTokenAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
     }
 
@@ -93,15 +96,18 @@ contract CDPManager is Ownable {
         return DeciMath.accurateMulDiv(x, y, z);
     }
 
-    // function userHasActiveCDP() public pure returns(bool) {
-    //     uint status = CDPs[user].status;
-    //     if (status == Status.Active) return true;
-    // }
+    function hasActiveCDP(address _user) public view returns(bool) {
+        if (CDPs[_user].status == Status.active) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     
     /* --- SortedDoublyLinkedList (SDLL) getters and checkers. These enable public usage
     of the corresponding SDLL functions, operating on the sortedCDPs struct --- */
 
-    function sortedCDPsContains(address id) public view returns (bool) {
+    function sortedCDPsContains(address id) public view returns(bool) {
         return sortedCDPs.contains(id);
     }
 
@@ -109,7 +115,7 @@ contract CDPManager is Ownable {
         return sortedCDPs.isEmpty();
     }
 
-    function sortedCDPsIsFull() public view returns (bool) {
+    function sortedCDPsIsFull() public view returns(bool) {
         return sortedCDPs.isFull();
     }
 
@@ -125,19 +131,19 @@ contract CDPManager is Ownable {
         return sortedCDPs.getKey(user);
     }
 
-    function sortedCDPsGetFirst() public view returns (address) {
+    function sortedCDPsGetFirst() public view returns(address) {
         return sortedCDPs.getFirst();
     }
 
-    function sortedCDPsGetLast() public view returns (address) {
+    function sortedCDPsGetLast() public view returns(address) {
         return sortedCDPs.getLast();
     }
 
-    function sortedCDPsGetNext(address user) public view returns (address) {
+    function sortedCDPsGetNext(address user) public view returns(address) {
         return sortedCDPs.getNext(user);
     }
 
-    function sortedCDPsGetPrev(address user) public view returns (address) {
+    function sortedCDPsGetPrev(address user) public view returns(address) {
         return sortedCDPs.getPrev(user);
     }
 
@@ -240,10 +246,12 @@ contract CDPManager is Ownable {
         emit CDPUpdated(user, CDPs[user].debt, CDPs[user].coll, CDPs[user].ICR);
         return true;
     }
+    
     /* --- MockAddCDP - DELETE AFTER CDP FUNCTIONALITY IMPLEMENTED --- *
     * temporary function, used by CLVToken test suite to easily add CDPs.
     Later, replace with full CDP creation process.
     */
+
     function mockAddCDP() public returns(bool) {
         CDP memory cdp;
         cdp.coll = 10e18;
@@ -251,6 +259,22 @@ contract CDPManager is Ownable {
         cdp.status = Status.active;
 
         CDPs[_msgSender()] = cdp;
+    }
+
+    // Top up collateral. Called by PoolManager::retrieve()
+    function redirectETHBalanceToCDP(address _user, uint ETHShare) public onlyPoolManager returns(bool) {
+        require(CDPs[_user].status == Status.active, 'CDPManager: CDP must be active');
+   
+        CDPs[_user].coll =  (CDPs[_user].coll).add(ETHShare);
+
+        uint newICR = getCollRatio(_user);
+        CDPs[_user].ICR = newICR;
+        
+        sortedCDPs.updateKey(_user, newICR, _user, _user);
+        
+        emit CollateralAdded(_user, ETHShare);
+        emit CDPUpdated(_user, CDPs[_user].debt, CDPs[_user].coll, CDPs[_user].ICR);
+        return true;
     }
     
     // Withdraw ETH collateral from a CDP

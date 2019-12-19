@@ -238,3 +238,5 @@ describe('Set correct contract addresses dependencies for after deployment', fun
     })
   })
 })
+
+contract('Reset chain state', async accounts => {})

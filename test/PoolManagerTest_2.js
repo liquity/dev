@@ -23,7 +23,7 @@ contract('PoolManager', async accounts => {
   const _100_Ether = web3.utils.toWei('100', 'ether')
   const _101_Ether = web3.utils.toWei('101', 'ether')
 
-  const [owner, mockCDPManagerAddress, mockPoolManagerAddress, defaulter_1, defaulter_2, defaulter_3, alice, whale, whale_2, whale_3, whale_4, whale_5, whale_6] = accounts;
+  const [owner, mockCDPManagerAddress, mockPoolManagerAddress, defaulter_1, defaulter_2, defaulter_3, alice, whale] = accounts;
   let priceFeed;
   let clvToken;
   let poolManager;
@@ -137,9 +137,9 @@ contract('PoolManager', async accounts => {
       await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
 
       // Whale opens CDP with 50 ETH, adds 2000 CLV to StabilityPool
-      await cdpManager.addColl({ from: whale_1, value: _50_Ether })
-      await cdpManager.withdrawCLV('2000000000000000000000', { from: whale_1 })
-      await poolManager.depositCLV('2000000000000000000000', { from: whale_1 })
+      await cdpManager.addColl({ from: whale, value: _50_Ether })
+      await cdpManager.withdrawCLV('2000000000000000000000', { from: whale })
+      await poolManager.depositCLV('2000000000000000000000', { from: whale })
 
       const totalCLVDeposits = await stabilityPool.getTotalCLVDeposits()
       assert.equal(totalCLVDeposits, '2000000000000000000000')
@@ -158,9 +158,9 @@ contract('PoolManager', async accounts => {
       await cdpManager.addColl({ from: alice, value: _1_Ether })
       await cdpManager.withdrawCLV(100, { from: alice })
       // Whale opens CDP with 50 ETH, adds 2000 CLV to StabilityPool
-      await cdpManager.addColl({ from: whale_2, value: _50_Ether })
-      await cdpManager.withdrawCLV('2000000000000000000000', { from: whale_2 })
-      await poolManager.depositCLV('2000000000000000000000', { from: whale_2 })
+      await cdpManager.addColl({ from: whale, value: _50_Ether })
+      await cdpManager.withdrawCLV('2000000000000000000000', { from: whale })
+      await poolManager.depositCLV('2000000000000000000000', { from: whale })
 
       // price drops: defaulter's CDPs fall below MCR, whale doesn't
       await priceFeed.setPrice(100);
@@ -238,21 +238,21 @@ contract('PoolManager', async accounts => {
       assert.equal(S_ETH_1, '1000000000000000')  // 0.001 Ether
 
       // check Alice's total pending changes are 0
-      const totalPendingCLVChange_1 = await poolManager.totalPendingCLVChange(alice);
-      const totalPendingETHChange_1 = await poolManager.totalPendingETHChange(alice);
-      assert.equal(totalPendingCLVChange_1, 0)
-      assert.equal(totalPendingETHChange_1, 0)
+      const totalPendingCLVLoss_1 = await poolManager.totalPendingCLVLoss(alice);
+      const totalPendingETHGain_1 = await poolManager.totalPendingETHGain(alice);
+      assert.equal(totalPendingCLVLoss_1, 0)
+      assert.equal(totalPendingETHGain_1, 0)
 
       // Alice makes deposit #2:  100CLV
       await cdpManager.withdrawCLV('100000000000000000000', { from: alice })
       await poolManager.depositCLV('100000000000000000000', { from: alice })
 
       // check Alice's total pending changes increase by deposit * [S-S(0)]:
-      const totalPendingCLVChange_2 = (await poolManager.totalPendingCLVChange(alice)).toString();
-      const totalPendingETHChange_2 = (await poolManager.totalPendingETHChange(alice)).toString();
+      const totalPendingCLVLoss_2 = (await poolManager.totalPendingCLVLoss(alice)).toString();
+      const totalPendingETHGain_2 = (await poolManager.totalPendingETHGain(alice)).toString();
 
-      assert.equal(totalPendingCLVChange_2, '27000000000000000000') // 27 CLV
-      assert.equal(totalPendingETHChange_2, '150000000000000000') // 0.15 Ether
+      assert.equal(totalPendingCLVLoss_2, '27000000000000000000') // 27 CLV
+      assert.equal(totalPendingETHGain_2, '150000000000000000') // 0.15 Ether
 
       // check Alice's deposit increases from 150 CLV to 250 CLV
       const newDeposit_alice = await poolManager.deposit(alice)
@@ -266,7 +266,7 @@ contract('PoolManager', async accounts => {
       assert.equal(alice_Snapshot_1_CLV, S_CLV_1)
 
       // Whale withdraws 100 CLV, bringing totalDepositedCLV back to 2000 CLV
-      await poolManager.retrieve('100000000000000000000', { from: whale })
+      await poolManager.retrieve('100000000000000000000', false, { from: whale })
       const totalCLVDeposits = (await stabilityPool.getTotalCLVDeposits()).toString()
       assert.equal(totalCLVDeposits, '2000000000000000000000')
 
@@ -285,11 +285,11 @@ contract('PoolManager', async accounts => {
       await poolManager.depositCLV('100000000000000000000', { from: alice })
 
       // check Alice's total pending changes increase by deposit * [S-S(0)]:
-      const totalPendingCLVChange_3 = (await poolManager.totalPendingCLVChange(alice)).toString();
-      const totalPendingETHChange_3 = (await poolManager.totalPendingETHChange(alice)).toString();
+      const totalPendingCLVLoss_3 = (await poolManager.totalPendingCLVLoss(alice)).toString();
+      const totalPendingETHGain_3 = (await poolManager.totalPendingETHGain(alice)).toString();
 
-      assert.equal(totalPendingCLVChange_3, '49500000000000000000') //27 +  22.5  = 49.5 CLV
-      assert.equal(totalPendingETHChange_3, '275000000000000000')  // 0.15 + 0.125 = 0.275 Ether
+      assert.equal(totalPendingCLVLoss_3, '49500000000000000000') //27 +  22.5  = 49.5 CLV
+      assert.equal(totalPendingETHGain_3, '275000000000000000')  // 0.15 + 0.125 = 0.275 Ether
 
       // check Alice's new snapshot is correct
       const alice_Snapshot_2 = await poolManager.snapshot(alice)
@@ -299,9 +299,9 @@ contract('PoolManager', async accounts => {
       assert.equal(alice_Snapshot_2_CLV, S_CLV_2)
     })
 
-    it.only("partial retrieve(): it retrieves the correct fraction of the deposit, the correct fraction of entitled rewards, and updates deposit and entitled rewards per unit staked", async () => {
+    it("partial retrieve(): it retrieves the correct fraction of the deposit, the correct fraction of entitled rewards, and updates deposit and entitled rewards per unit staked", async () => {
       // --- SETUP ---
-      // Whale deposits 2000 CLV in StabilityPool
+      // Whale deposits 1850 CLV in StabilityPool
       await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
       await cdpManager.addColl({ from: whale, value: _50_Ether })
       await cdpManager.withdrawCLV('1850000000000000000000', { from: whale })
@@ -328,7 +328,7 @@ contract('PoolManager', async accounts => {
       await cdpManager.close(defaulter_2, { from: owner }); // 180 CLV closed
 
       // Alice retrieves 60% of her deposit: 90 CLV
-      await poolManager.retrieve('90000000000000000000', { from: alice })
+      await poolManager.retrieve('90000000000000000000', 0, { from: alice })
 
       // check StabilityPool totalCLVDeposits decreased by 90 CLV to 1910 CLV
       const totalCLVDeposits = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -339,11 +339,250 @@ contract('PoolManager', async accounts => {
       assert.equal(newDeposit, '60000000000000000000')
 
       // Pending changes sums receive 40% of alice's accumulated total reward, for the previous deposit value
-      const totalPendingCLVChange = (await poolManager.totalPendingCLVChange(alice)).toString();
-      const totalPendingETHChange = (await poolManager.totalPendingETHChange(alice)).toString();
+      const totalPendingCLVLoss = (await poolManager.totalPendingCLVLoss(alice)).toString();
+      const totalPendingETHGain = (await poolManager.totalPendingETHGain(alice)).toString();
 
-      assert.equal(totalPendingCLVChange, '10800000000000000000')
-      assert.equal(totalPendingETHChange, '60000000000000000')
+      assert.equal(totalPendingCLVLoss, '10800000000000000000')
+      assert.equal(totalPendingETHGain, '60000000000000000')
+    })
+
+    it("retrieve(), to user's account: decreases StabilityPool ETH", async () => {
+      // --- SETUP ---
+      // Whale deposits 1850 CLV in StabilityPool
+      await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
+
+      await cdpManager.addColl({ from: whale, value: _50_Ether })
+      await cdpManager.withdrawCLV('1850000000000000000000', { from: whale })
+      await poolManager.depositCLV('1850000000000000000000', { from: whale })
+
+      // 1 CDP opened, 180 CLV withdrawn
+      await cdpManager.addColl({ from: defaulter_1, value: _1_Ether })
+      await cdpManager.withdrawCLV('180000000000000000000', { from: defaulter_1 })
+
+      // --- TEST --- 
+
+      // Alice makes deposit #1: 150 CLV
+      await cdpManager.addColl({ from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV('150000000000000000000', { from: alice })
+      await poolManager.depositCLV('150000000000000000000', { from: alice })
+
+      // check alice's CDP recorded ETH Before:
+      const aliceCDP_Before = await cdpManager.CDPs(alice)
+      const aliceCDP_ETH_Before = aliceCDP_Before[1]
+      assert.equal(aliceCDP_ETH_Before, _10_Ether)
+
+      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      await priceFeed.setPrice(100);
+
+      /* defaulter's CDP is closed.  
+      / Alice's expected rewards:
+      / CLV: 150 * 180/2000 = 13.5
+      / ETH: 150 * 1/2000 = 0.075 */
+      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
+
+      //check activePool and StabilityPool Ether before retrieval:
+      const active_ETH_Before = await activePool.getETH()
+      const stability_ETH_Before = await stabilityPool.getETH()
+
+      // Alice retrieves all of her deposit, 150CLV, choosing to retrieve ETH direct to her account
+      await poolManager.retrieve('150000000000000000000', 0, { from: alice })
+
+      const active_ETH_After = await activePool.getETH()
+      const stability_ETH_After = await stabilityPool.getETH()
+
+      const active_ETH_Difference = (active_ETH_After - active_ETH_Before).toString()
+      const stability_ETH_Difference = (stability_ETH_After - stability_ETH_Before).toString()
+
+      assert.equal(active_ETH_Difference, '0')
+      assert.equal(stability_ETH_Difference, '-75000000000000000')
+    })
+
+
+    it("retrieve(), to CDP: redirects ETH reward to user's CDP", async () => {
+      // --- SETUP ---
+      // Whale deposits 1850 CLV in StabilityPool
+      await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
+
+      await cdpManager.addColl({ from: whale, value: _50_Ether })
+      await cdpManager.withdrawCLV('1850000000000000000000', { from: whale })
+      await poolManager.depositCLV('1850000000000000000000', { from: whale })
+
+      // 1 CDP opened, 180 CLV withdrawn
+      await cdpManager.addColl({ from: defaulter_1, value: _1_Ether })
+      await cdpManager.withdrawCLV('180000000000000000000', { from: defaulter_1 })
+
+      // --- TEST --- 
+
+      // Alice makes deposit #1: 150 CLV
+      await cdpManager.addColl({ from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV('150000000000000000000', { from: alice })
+      await poolManager.depositCLV('150000000000000000000', { from: alice })
+
+      // check alice's CDP recorded ETH Before:
+      const aliceCDP_Before = await cdpManager.CDPs(alice)
+      const aliceCDP_ETH_Before = aliceCDP_Before[1]
+      assert.equal(aliceCDP_ETH_Before, _10_Ether)
+
+      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      await priceFeed.setPrice(100);
+
+      /* defaulter's CDP is closed.  
+      / Alice's expected rewards:
+      / CLV: 150 * 180/2000 = 13.5
+      / ETH: 150 * 1/2000 = 0.075 */
+      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
+
+      // Alice retrieves all of her deposit, 150CLV, choosing to redirect to her CDP
+      await poolManager.retrieve('150000000000000000000', 1, { from: alice })
+      // check alice's CDP recorded ETH has increased by the expected reward amount
+      const aliceCDP_After = await cdpManager.CDPs(alice)
+      const aliceCDP_ETH_After = aliceCDP_After[1]
+
+      const CDP_ETH_Increase = (aliceCDP_ETH_After - aliceCDP_ETH_Before).toString()
+
+      assert.equal(CDP_ETH_Increase, '75000000000000000') // expect gain of 0.075 Ether
+    })
+
+    it("retrieve(), to CDP: decreases StabilityPool ETH and increases activePool ETH", async () => {
+      // --- SETUP ---
+      // Whale deposits 1850 CLV in StabilityPool
+      await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
+
+      await cdpManager.addColl({ from: whale, value: _50_Ether })
+      await cdpManager.withdrawCLV('1850000000000000000000', { from: whale })
+      await poolManager.depositCLV('1850000000000000000000', { from: whale })
+
+      // 1 CDP opened, 180 CLV withdrawn
+      await cdpManager.addColl({ from: defaulter_1, value: _1_Ether })
+      await cdpManager.withdrawCLV('180000000000000000000', { from: defaulter_1 })
+
+      // --- TEST --- 
+
+      // Alice makes deposit #1: 150 CLV
+      await cdpManager.addColl({ from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV('150000000000000000000', { from: alice })
+      await poolManager.depositCLV('150000000000000000000', { from: alice })
+
+      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      await priceFeed.setPrice(100);
+
+      /* defaulter's CDP is closed.  
+      / Alice's expected rewards:
+      / CLV: 150 * 180/2000 = 13.5
+      / ETH: 150 * 1/2000 = 0.075 */
+      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
+
+      //check activePool and StabilityPool Ether before retrieval:
+      const active_ETH_Before = await activePool.getETH()
+      const stability_ETH_Before = await stabilityPool.getETH()
+
+      // Alice retrieves all of her deposit, 150CLV, choosing to redirect to her CDP
+      await poolManager.retrieve('150000000000000000000', 1, { from: alice })
+
+      const active_ETH_After = await activePool.getETH()
+      const stability_ETH_After = await stabilityPool.getETH()
+
+      const active_ETH_Difference = (active_ETH_After - active_ETH_Before).toString()
+      const stability_ETH_Difference = (stability_ETH_After - stability_ETH_Before).toString()
+
+      assert.equal(active_ETH_Difference, '75000000000000000')
+      assert.equal(stability_ETH_Difference, '-75000000000000000')
+    })
+
+    it("retrieve(), user leaves ETH in Pool: user's totalPendingETHGains decreases, and entitledETHGain increases", async () => {
+      // --- SETUP ---
+      // Whale deposits 1850 CLV in StabilityPool
+      await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
+
+      await cdpManager.addColl({ from: whale, value: _50_Ether })
+      await cdpManager.withdrawCLV('1850000000000000000000', { from: whale })
+      await poolManager.depositCLV('1850000000000000000000', { from: whale })
+
+      // 1 CDP opened, 180 CLV withdrawn
+      await cdpManager.addColl({ from: defaulter_1, value: _1_Ether })
+      await cdpManager.withdrawCLV('180000000000000000000', { from: defaulter_1 })
+
+      // --- TEST --- 
+
+      // Alice makes deposit #1: 150 CLV
+      await cdpManager.addColl({ from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV('150000000000000000000', { from: alice })
+      await poolManager.depositCLV('150000000000000000000', { from: alice })
+
+      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      await priceFeed.setPrice(100);
+
+      /* defaulter's CDP is closed.  
+      / Alice's expected rewards:
+      / CLV: 150 * 180/2000 = 13.5
+      / ETH: 150 * 1/2000 = 0.075 */
+      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
+
+      //check activePool and StabilityPool Ether before retrieval:
+      const active_ETH_Before = await activePool.getETH()
+      const stability_ETH_Before = await stabilityPool.getETH()
+      const alice_EntitledETH_Before = await poolManager.entitledETHGain(alice)
+
+      // Alice retrieves all of her deposit, 150CLV, choosing to leave her ETH gain in the Pool as entitled ETH
+      await poolManager.retrieve('150000000000000000000', 2, { from: alice })
+
+      const active_ETH_After = await activePool.getETH()
+      const stability_ETH_After = await stabilityPool.getETH()
+      const alice_EntitledETH_After = await poolManager.entitledETHGain(alice)
+
+      const active_ETH_Difference = (active_ETH_After - active_ETH_Before).toString()
+      const stability_ETH_Difference = (stability_ETH_After - stability_ETH_Before).toString()
+      const alice_EntitledETH_Difference = (alice_EntitledETH_After - alice_EntitledETH_Before)
+
+      assert.equal(active_ETH_Difference, '0')
+      assert.equal(stability_ETH_Difference, '0')
+      assert.equal(alice_EntitledETH_Difference, '75000000000000000')
+    })
+
+    it.only("retrieveEntitledETH(): user can retrieve their entitled ETH", async () => {
+      // --- SETUP ---
+      // Whale deposits 1850 CLV in StabilityPool
+      await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
+
+      await cdpManager.addColl({ from: whale, value: _50_Ether })
+      await cdpManager.withdrawCLV('1850000000000000000000', { from: whale })
+      await poolManager.depositCLV('1850000000000000000000', { from: whale })
+
+      // 1 CDP opened, 180 CLV withdrawn
+      await cdpManager.addColl({ from: defaulter_1, value: _1_Ether })
+      await cdpManager.withdrawCLV('180000000000000000000', { from: defaulter_1 })
+
+      // --- TEST --- 
+
+      // Alice makes deposit #1: 150 CLV
+      await cdpManager.addColl({ from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV('150000000000000000000', { from: alice })
+      await poolManager.depositCLV('150000000000000000000', { from: alice })
+
+      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      await priceFeed.setPrice(100);
+
+      /* defaulter's CDP is closed.  
+      / Alice's expected rewards:
+      / CLV: 150 * 180/2000 = 13.5
+      / ETH: 150 * 1/2000 = 0.075 */
+      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
+
+      // Alice retrieves first half of her deposit, 75CLV, choosing to leave her ETH gain in the Pool as entitled ETH
+      await poolManager.retrieve('75000000000000000000', 2, { from: alice })
+      const alice_EntitledETH_1 = (await poolManager.entitledETHGain(alice)).toString()
+      assert.equal(alice_EntitledETH_1, '37500000000000000')
+      // Alice retrieves last half her deposit, 75CLV, choosing to leave her ETH gain in the Pool as entitled ETH
+      await poolManager.retrieve('75000000000000000000', 2, { from: alice })
+      const alice_EntitledETH_2 = (await poolManager.entitledETHGain(alice)).toString()
+      assert.equal(alice_EntitledETH_2, '75000000000000000')
+
+      const tx = await poolManager.retrieveEntitledETH({ from: alice })
+     
+      const alice_entitledETH_After = await poolManager.entitledETHGain(alice)
+     
+      // check Alice retrieves all entitled ETH
+      assert.equal(alice_entitledETH_After, '0')
     })
 
     it("offset: increases S_ETH and S_CLV by correct amounts", async () => {
@@ -356,9 +595,9 @@ contract('PoolManager', async accounts => {
       await cdpManager.withdrawCLV('180000000000000000000', { from: defaulter_2 })
 
       // Whale opens CDP with 50 ETH, adds 2000 CLV to StabilityPool
-      await cdpManager.addColl({ from: whale_3, value: _50_Ether })
-      await cdpManager.withdrawCLV('2000000000000000000000', { from: whale_3 })
-      await poolManager.depositCLV('2000000000000000000000', { from: whale_3 })
+      await cdpManager.addColl({ from: whale, value: _50_Ether })
+      await cdpManager.withdrawCLV('2000000000000000000000', { from: whale })
+      await poolManager.depositCLV('2000000000000000000000', { from: whale })
 
       const S_CLV_Before = await poolManager.S_CLV()
       const S_ETH_Before = await poolManager.S_ETH()
@@ -389,3 +628,5 @@ contract('PoolManager', async accounts => {
     })
   })
 })
+
+contract('Reset chain state', async accounts => { })

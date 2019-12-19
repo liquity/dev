@@ -1,9 +1,8 @@
 pragma solidity ^0.5.11;
 
-// Common interface for the ETH/CLV pools.
 interface IStabilityPool {
     
-    // Events
+    // --- Events ---
     event ETHBalanceUpdated(uint _newBalance);
 
     event CLVBalanceUpdated(uint _newBalance);

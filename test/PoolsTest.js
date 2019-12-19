@@ -249,3 +249,5 @@ contract('DefaultPool', async accounts => {
     assert.equal(alice_Balance_AfterTx, _101_ether)
   })
 })
+
+contract('Reset chain state', async accounts => {})

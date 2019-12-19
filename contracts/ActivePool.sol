@@ -95,6 +95,7 @@ contract ActivePool is Ownable, IPool {
         return address(this).balance;
     }
 
+    // --- Modifiers ---
     modifier onlyPoolManager {
         require(_msgSender() == poolManagerAddress, "ActivePool: Only the poolManager is authorized");
         _;

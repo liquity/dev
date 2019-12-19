@@ -212,8 +212,7 @@ contract('CDPManager', async accounts => {
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const bob_CDP_After = await cdpManager.CDPs(bob)
     const carol_CDP_After = await cdpManager.CDPs(carol)
-    const dennis_CDP_After = await cdpManager.CDPs(dennis)
-   
+  
     const alice_debt_After = alice_CDP_After[0].toString()
     const bob_debt_After = bob_CDP_After[0].toString()
     const carol_debt_After = carol_CDP_After[0].toString()
@@ -229,3 +228,5 @@ contract('CDPManager', async accounts => {
     assert.equal(dennis_CLVBalance_After, '130000000000000000000')
   })
 })
+
+contract('Reset chain state', async accounts => {})

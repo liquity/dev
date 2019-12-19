@@ -87,3 +87,5 @@ contract('CDPManager', async accounts => {
     })
   })
 })
+
+contract('Reset chain state', async accounts => {})

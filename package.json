@@ -13,6 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@openzeppelin/contracts": "^2.4.0"
+    "@openzeppelin/contracts": "^2.4.0",
+    "ganache-core": "^2.8.0",
+    "truffle-ganache-test": "^1.1.0"
   }
 }

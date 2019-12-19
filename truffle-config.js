@@ -6,13 +6,19 @@ module.exports = {
   contracts_build_directory: path.join(__dirname, "client/src/contracts"),
   networks: {
     develop: {
-      port: 7545
+      port: 7545,
+      gas: 9000000,
+      network_id: 4447
     },
+    // test: {
+    //   gas: 9000000,
+    //   network_id: 4447
+    // },
   },
-  settings: {
+solc: {
     optimizer: {
       enabled: true,
-      runs: 200
+      runs: 1
     },
   },
   // use native binaries rather than solc.js 
@@ -21,4 +27,7 @@ module.exports = {
   //     version: "native",
   //   }
   // },
+  plugins: [
+    'truffle-ganache-test'
+]
 }
