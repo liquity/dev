@@ -246,7 +246,7 @@ contract CDPManager is Ownable, ICDPManager {
         emit CDPUpdated(user, CDPs[user].debt, CDPs[user].coll, CDPs[user].ICR);
         return true;
     }
-    
+
     /* --- MockAddCDP - DELETE AFTER CDP FUNCTIONALITY IMPLEMENTED --- *
     * temporary function, used by CLVToken test suite to easily add CDPs.
     Later, replace with full CDP creation process.
@@ -262,7 +262,7 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     // Top up collateral. Called by PoolManager::retrieve()
-    function redirectETHBalanceToCDP(address _user, uint ETHShare) public onlyPoolManager returns(bool) {
+    function sendETHGainToCDP(address _user, uint ETHShare) public onlyPoolManager returns(bool) {
         require(CDPs[_user].status == Status.active, 'CDPManager: CDP must be active');
    
         CDPs[_user].coll =  (CDPs[_user].coll).add(ETHShare);

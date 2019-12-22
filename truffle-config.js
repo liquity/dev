@@ -8,8 +8,13 @@ module.exports = {
     develop: {
       port: 7545,
       gas: 9000000,
-      network_id: 4447
+      network_id: 5777
     },
+    // test: {
+    //   port: 7545,
+    //   gas: 9000000,
+    //   network_id: 5777
+    // },
     // test: {
     //   gas: 9000000,
     //   network_id: 4447

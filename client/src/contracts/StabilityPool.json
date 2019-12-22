@@ -8269,12 +8269,12 @@
         }
       },
       "links": {},
-      "address": "0x5bB57D64800A09883da08B12020b01195B9Aa4d3",
-      "transactionHash": "0x96fa7d912669b807c6d086369725808688bcbe7c2622303d1eb99909421b0d66"
+      "address": "0xE461a07F670CF4B47A666538723735cB8C04B980",
+      "transactionHash": "0xeff12b8652db6add7aaa43cb695d07973e24f1c826d0fdad229589ec2472525c"
     }
   },
   "schemaVersion": "3.0.19",
-  "updatedAt": "2019-12-18T20:11:50.213Z",
+  "updatedAt": "2019-12-20T09:33:20.968Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {

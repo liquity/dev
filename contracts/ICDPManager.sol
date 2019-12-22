@@ -76,7 +76,7 @@ interface ICDPManager {
 
     function mockAddCDP() external returns(bool);
 
-    function redirectETHBalanceToCDP(address _user, uint _ETHShare) external returns(bool);
+    function sendETHGainToCDP(address _user, uint _ETHShare) external returns(bool);
 
     function obtainDefaultShare(address _user, uint _debtShare) external returns(bool);
 

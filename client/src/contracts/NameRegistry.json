@@ -3409,12 +3409,12 @@
         }
       },
       "links": {},
-      "address": "0x7C2106E00fe69172538a77a5D232e8c99b23DBBf",
-      "transactionHash": "0x3dc1e2cda1d9bcee6eeaa168c5036a895eacf740e873e4a8e6ded6fa921ce35b"
+      "address": "0x2fc3ed01D8ad4EB16366309Bb4Bca5B0666E67c6",
+      "transactionHash": "0xd426deb9cd666d25648d56b0b171d452112eda8d3c5fe8cee5b1f5f2bef12ea9"
     }
   },
   "schemaVersion": "3.0.19",
-  "updatedAt": "2019-12-18T20:11:50.275Z",
+  "updatedAt": "2019-12-20T09:33:21.023Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {

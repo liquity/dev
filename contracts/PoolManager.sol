@@ -27,7 +27,7 @@ contract PoolManager is Ownable, IPoolManager {
     event S_CLVUpdated(uint _S_CLV);
     event S_ETHUpdated(uint _S_ETH);
     event UserDepositChanged(address _user, uint _amount);
-    event EntitledETHRetrieved(address user, uint entitledETH);
+    event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
     // --- Connected contract declarations ---
     address public cdpManagerAddress;
@@ -294,64 +294,29 @@ contract PoolManager is Ownable, IPoolManager {
         return true;
     }    
 
-    // Deposits the specified amount to the Stability Pool using the algorithm from http://batog.info/papers/scalable-reward-distribution.pdf
-    // Can be called directly by anybody, not just by the owner (CDP contract) 
-    // TODO: Support multiple deposits by the same address
-    function depositCLV( uint _amount) 
-        public
-        returns (bool)
-    {
-        address user = _msgSender();
-        require(_amount > 0, "PoolManager: deposited amount must be larger than 0");
-        require(CLV.balanceOf(user) >= _amount, "PoolManager: user has insufficient balance");
-        
-        // get cumulative changes earned by the most recent deposit
-        uint recentCumulativeCLVChange = getCurrentCumulativeCLVChange(user, deposit[user]);
-        uint recentCumulativeETHChange = getCurrentCumulativeETHChange(user, deposit[user]);
+    // return the accumulated change, for the user, for the duration that this deposit was held
 
-        // add cumulative changes to the total pending changes
-        totalPendingCLVLoss[user] = totalPendingCLVLoss[user].add(recentCumulativeCLVChange);
-        totalPendingETHGain[user] = totalPendingETHGain[user].add(recentCumulativeETHChange);
-
-        // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
-        CLV.sendToPool(user, stabilityPoolAddress, _amount);
-        stabilityPool.increaseCLV(_amount);
-        stabilityPool.increaseTotalCLVDeposits(_amount);
-        
-        // Record the deposit made by user
-        deposit[user] = deposit[user].add(_amount);
-    
-        // Record new individual snapshots of the running totals S_CLV and S_ETH for the user
-        snapshot[user].CLV = S_CLV;
-        snapshot[user].ETH = S_ETH;  // Should this be S_ETH?  Snapshot current accumulated proportional rewards?
-        emit UserDepositChanged(user, _amount);
-        return true;
-    }   
-
-
-    // return the accumulated proportional change, for the user, for the duration that this deposit was held
-    function getCurrentCumulativeETHChange(address _user, uint _userDeposit) internal view returns(uint) {
-       uint snapshotETH = snapshot[_user].ETH;
+    function getCurrentETHGain(address _user) internal view returns(uint) {
+        uint userDeposit = deposit[_user];
+        uint snapshotETH = snapshot[_user].ETH;
         uint rewardPerUnitStaked = S_ETH.sub(snapshotETH);
-        return DeciMath.accurateMulDiv(_userDeposit, rewardPerUnitStaked, DIGITS);
+        return DeciMath.accurateMulDiv(userDeposit, rewardPerUnitStaked, DIGITS);
     }
 
-    function getCurrentCumulativeCLVChange(address _user, uint _userDeposit) internal view returns(uint) {
+    function getCurrentCLVLoss(address _user) internal view returns(uint) {
+        uint userDeposit = deposit[_user];
         uint snapshotCLV = snapshot[_user].CLV;
         uint rewardPerUnitStaked = S_CLV.sub(snapshotCLV);
-        return DeciMath.accurateMulDiv(_userDeposit, rewardPerUnitStaked, DIGITS);
+        return DeciMath.accurateMulDiv(userDeposit, rewardPerUnitStaked, DIGITS);
     }
 
-    // TODO - rename.  "offsetAndLiquidate()" ?
-    // Cancels out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
-    // and transfers the CDP's ETH collateral from Active Pool to Stability Pool. 
-    // Returns the amount of debt that could not be cancelled, and the corresponding ether.
-    // Can only be called via the close(...) and closeCDPs(... ) functions in CDPManager
-    function offset(uint _debt, uint _coll)
-        public
-        payable
-        onlyCDPManager
-        returns (uint[2] memory) // Note: it would be nicer to return this as a struct, but struct returns are still experimental
+    // --- Internal  StabilityPool functions --- 
+
+    /* Cancels out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
+    and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
+    Returns the amount of debt that could not be cancelled, and the corresponding ether.
+    Only callable from close() and closeCDPs() functions in CDPManager */
+    function offset(uint _debt, uint _coll) external payable onlyCDPManager returns (uint[2] memory) 
     {    
         uint[2] memory remainder;
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
@@ -390,84 +355,207 @@ contract PoolManager is Ownable, IPoolManager {
         return remainder;
     }
     
-    // Retrieves the caller's funds from the Stability Pool
-    function retrieve(uint _amount, uint _destination ) 
-        public
-        returns (bool)
-    {   
-        address payable user = _msgSender();
+    // Deposit _amount CLV from _address, to the Stability Pool.
+    function depositCLV(address _address, uint _amount) internal returns(bool) {
+        require(deposit[_address] == 0, "PoolManager: user already has a StabilityPool deposit");
+        require(CLV.balanceOf(_address) >= _amount, "PoolManager: user has insufficient CLV balance to make deposit");
         
-        uint userDeposit = deposit[user];
-        require(userDeposit > 0, "PoolManager: caller has no deposit");
-        require (_amount <= userDeposit, "PoolManager: caller may not withdraw more than their deposit");
-        // Calculate the CLV and ETH shares to be retrieved according http://batog.info/papers/scalable-reward-distribution.pdf
-
-        uint fractionToRetrieve = (_amount.mul(DIGITS)).div(userDeposit);
-
-        // get the cumulative changes for the user's most recent deposit value
-        uint currentCLVLoss = getCurrentCumulativeCLVChange(user, userDeposit);
-        uint currentETHGain = getCurrentCumulativeETHChange(user, userDeposit);
-        // update totalPending CLV and ETH changes
-        totalPendingCLVLoss[user] = totalPendingCLVLoss[user].add(currentCLVLoss);
-        totalPendingETHGain[user] = totalPendingETHGain[user].add(currentETHGain);
-
-        // get the fraction
-        uint CLVShare = (fractionToRetrieve * userDeposit.sub(totalPendingCLVLoss[user])).div(DIGITS);
-        uint ETHShare = (fractionToRetrieve * totalPendingETHGain[user]).div(DIGITS);
+        // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
+        CLV.sendToPool(_address, stabilityPoolAddress, _amount);
+        stabilityPool.increaseCLV(_amount);
+        stabilityPool.increaseTotalCLVDeposits(_amount);
         
-        /* update the total pending changes: reduce them by the right proportion, and add the remainder 
-        // of the most recent cumulative change, that did not get fully paid out. */
-        totalPendingCLVLoss[user] = ((DIGITS - fractionToRetrieve) * (totalPendingCLVLoss[user])).div(DIGITS);
-        totalPendingETHGain[user] = ((DIGITS - fractionToRetrieve) * (totalPendingETHGain[user])).div(DIGITS);
+        // Record the deposit made by user
+        deposit[_address] = _amount;
+    
+        // Record new individual snapshots of the running totals S_CLV and S_ETH for the user
+        snapshot[_address].CLV = S_CLV;
+        snapshot[_address].ETH = S_ETH;
 
-        //update user's deposit record
-        deposit[user] = ((DIGITS - fractionToRetrieve) * userDeposit).div(DIGITS);
-        
-        // record new snapshots 
-        snapshot[user].CLV = S_CLV;
-        snapshot[user].ETH = S_ETH;
+        emit UserSnapshotUpdated(S_CLV, S_ETH);
+        emit UserDepositChanged(_address, _amount);
+        return true;
+    }
+
+   // Transfers _address's entitled CLV (CLVDeposit - CLVLoss) and their ETHGain, to _address.
+    function retrieveToUser(address payable _address) internal returns(uint[2] memory) {
+        uint userDeposit = deposit[_address];
+
+        uint ETHShare = getCurrentETHGain(_address);
+        uint CLVLoss = getCurrentCLVLoss(_address);
+        uint CLVShare;
+
+        // If user's deposit is an 'overstay', they retrieve 0 CLV
+        if (CLVLoss > userDeposit) {
+            CLVShare = 0;
+        } else {
+            CLVShare = userDeposit - CLVLoss;
+        }
+
+        // update deposit and snapshots
+        deposit[_address] = 0;
+
+        snapshot[_address].CLV = S_CLV;
+        snapshot[_address].ETH = S_ETH;
+
+        emit UserDepositChanged(_address, deposit[_address]);
         emit UserSnapshotUpdated(S_CLV, S_ETH);
 
-        // TODO: Handle case where not enough CLV in pool to cover their share?
-        CLV.returnFromPool(stabilityPoolAddress, user, getMin(CLVShare, stabilityPool.getCLV()));
+        // send CLV to user and decrease CLV in Pool
+        CLV.returnFromPool(stabilityPoolAddress, _address, getMin(CLVShare, stabilityPool.getCLV()));
         stabilityPool.decreaseCLV(CLVShare);
-        stabilityPool.decreaseTotalCLVDeposits(_amount);
+        stabilityPool.decreaseTotalCLVDeposits(userDeposit);
 
-     /* Based on user's choices, redirect ETH to user's CDP, store for later retrieval, or send directly
-     to user */
-        sendETHShare(user, ETHShare, _destination);
+        // send ETH to user
+        stabilityPool.sendETH(_address, ETHShare);
 
-        emit UserDepositChanged(user, deposit[user]);
-        return true;
+        uint[2] memory shares = [CLVShare, ETHShare];
+        return shares;
     }
 
-    // send ETHShare to correct destination, according to user's choice
-    function sendETHShare(address payable _user, uint ETHShare, uint _destination ) internal returns(bool) {
-        bool userCDPisActive = cdpManager.hasActiveCDP(_user);
+    // Transfers _address's entitled CLV (CLVDeposit - CLVLoss) to _address, and their ETHGain to their CDP.
+    function retrieveToCDP(address payable _address) internal returns(uint[2] memory) {
+        uint userDeposit = deposit[_address];
+        require(cdpManager.hasActiveCDP(_address), "Address must have an active CDP");
 
-        uint sendToUser = uint(Destination.sendToUser);
-        uint sendToCDP = uint(Destination.sendToCDP);
-        uint keepInPool = uint(Destination.keepInPool);
-        
-        if (_destination == sendToCDP && userCDPisActive) {
-            stabilityPool.sendETH(activePoolAddress, ETHShare);
-            cdpManager.redirectETHBalanceToCDP(_user, ETHShare);
+        uint ETHShare = getCurrentETHGain(_address);
+        uint CLVLoss = getCurrentCLVLoss(_address);
+        uint CLVShare;
 
-        } else if (_destination == keepInPool) {
-            entitledETHGain[_user] = entitledETHGain[_user].add(ETHShare);
-
-        } else if (_destination == sendToUser) {
-            stabilityPool.sendETH(_user, ETHShare);
+        // If user's deposit is an 'overstay', they retrieve 0 CLV
+        if (CLVLoss > userDeposit) {
+            CLVShare = 0;
+        } else {
+            CLVShare = userDeposit - CLVLoss;
         }
+
+        // update deposit and snapshots
+        deposit[_address] = 0;
+
+        snapshot[_address].CLV = S_CLV;
+        snapshot[_address].ETH = S_ETH;
+
+        emit UserDepositChanged(_address, deposit[_address]);
+        emit UserSnapshotUpdated(S_CLV, S_ETH);
+
+        // send CLV to user and decrease CLV in Pool
+        CLV.returnFromPool(stabilityPoolAddress, _address, getMin(CLVShare, stabilityPool.getCLV()));
+        stabilityPool.decreaseCLV(CLVShare);
+        stabilityPool.decreaseTotalCLVDeposits(userDeposit);
+
+        // send ETH to CDP
+        cdpManager.sendETHGainToCDP(_address, ETHShare);
+        stabilityPool.sendETH(activePoolAddress, ETHShare);
+        
+        uint[2] memory shares = [CLVShare, ETHShare];
+        return shares;
+    }
+
+    // --- Public StabilityPool Functions ---
+
+    /* Sends ETHGain to user's address, and updates their deposit, 
+    setting newDeposit = (oldDeposit - CLVLoss) + amount. */
+    function provideToSP(uint _amount) external returns(bool) {
+        address payable user = _msgSender();
+
+        uint[2] memory returnedVals = retrieveToUser(user);
+
+        uint returnedCLV = returnedVals[0];
+
+        uint newDeposit = returnedCLV + _amount;
+        depositCLV(msg.sender, newDeposit);
+
         return true;
     }
 
-    function retrieveEntitledETH() public returns(bool) {
+    /* Withdraws _amount of CLV and the caller’s entire ETHGain from the 
+    Stability Pool, and updates the caller’s reduced deposit. 
+
+    If  _amount is 0, the user only withdraws their ETHGain, no CLV.
+
+    In all cases, ETHGain is sent to user, and CLVLoss is applied to their deposit. */
+    function withdrawFromSP(uint _amount) external returns(bool) {
         address payable user = _msgSender();
-        uint entitledETH = entitledETHGain[user];
-        entitledETHGain[user] = 0;
-        stabilityPool.sendETH(user, entitledETH);
-        emit EntitledETHRetrieved(user, entitledETH);
+        uint userDeposit = deposit[user];
+        uint CLVLoss = getCurrentCLVLoss(user);
+
+        require(userDeposit >= CLVLoss, 'PoolManager: User must have net-positive CLV to withdraw');
+        require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
+
+        // retrieve all CLV and ETH for the user
+        uint[2] memory returnedVals = retrieveToUser(user);
+
+        uint returnedCLV = returnedVals[0];
+
+        uint newDeposit; 
+
+        // if requested withdrawal amount is greater than available CLV, simply withdraw it all.
+        if (_amount > returnedCLV) { 
+            newDeposit = 0; 
+        } else {
+            newDeposit = (returnedCLV - _amount);
+        }
+        depositCLV(msg.sender, newDeposit);
+
+        return true;
+    }
+
+    /* Transfers the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
+    Applies their CLVLoss to the deposit. */
+    function withdrawFromSPtoCDP() external returns(bool) {
+        address payable user = _msgSender();
+        uint userDeposit = deposit[user];
+        uint CLVLoss = getCurrentCLVLoss(user);
+
+        require(userDeposit >= CLVLoss, 'PoolManager: User must have net-positive CLV to withdraw');
+        require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
+
+        // retrieve all CLV to user's CLV balance, and ETH to their CDP
+        uint[2] memory returnedVals = retrieveToCDP(user);
+
+        uint returnedCLV = returnedVals[0];
+
+        // update deposit, applying CLVLoss
+        depositCLV(msg.sender, returnedCLV);
+
+        return true;
+    }
+
+    /* Withdraws a 'penalty' fraction of an overstayed depositor's ETHGain.  
+    
+    Callable by anyone when _depositor's CLVLoss > deposit. */
+    function withdrawPenaltyFromSP(address payable _address) external returns(bool) {
+        address payable claimant = _msgSender();
+        address payable depositor = _address;
+        require(claimant != depositor, "PoolManager: depositor may not claim their own penalty");
+        
+        uint CLVLoss = getCurrentCLVLoss(depositor);
+        uint depositAmount = deposit[depositor];
+        require(CLVLoss > depositAmount, "PoolManager: depositor has not overstayed");
+
+        uint ETHGain = getCurrentETHGain(depositor);
+
+        /* Depositor is penalised for overstaying - i.e. letting CLVLoss grow larger than their deposit.
+       
+        Their ETH entitlement is reduced to ETHGain * (deposit/CLVLoss).
+        The claimant retrieves ETHGain * (1 - deposit/CLVLoss). */
+        uint ratio = DeciMath.accurateMulDiv(depositAmount, DIGITS, CLVLoss);
+        uint claimantReward = (ETHGain.mul(DIGITS.sub(ratio))).div(DIGITS);
+        uint remainder = ETHGain.sub(claimantReward);
+        
+        // update deposit and snapshots
+        deposit[depositor] = 0;
+        snapshot[depositor].CLV = S_CLV;
+        snapshot[depositor].ETH = S_ETH;
+
+        emit UserDepositChanged(depositor, deposit[depositor]);
+        emit UserSnapshotUpdated(S_CLV, S_ETH);
+
+        // send reward to claimant, and remainder to depositor
+        stabilityPool.sendETH(claimant, claimantReward);
+        stabilityPool.sendETH(depositor, remainder);
+        emit OverstayPenaltyClaimed(claimant, claimantReward, depositor, remainder);
+
         return true;
     }
 }    

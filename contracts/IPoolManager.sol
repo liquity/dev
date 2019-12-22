@@ -24,7 +24,7 @@ interface IPoolManager {
 
     event UserDepositChanged(address _user, uint _amount);
 
-    event EntitledETHRetrieved(address user, uint entitledETH);
+    event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
     // Functions
     function setCDPManagerAddress(address _cdpManagerAddress) external;
@@ -69,9 +69,19 @@ interface IPoolManager {
 
     function redeemCollateral(address payable _account, uint _CLV, uint _ETH) external returns(bool);
 
-    function depositCLV( uint _amount) external returns(bool);
+    // StabilityPool Functions
+    function provideToSP(uint _amount) external returns(bool);
+
+    function withdrawFromSP(uint _amount) external returns(bool);
+
+    function withdrawFromSPtoCDP() external returns(bool);
+
+    function withdrawPenaltyFromSP(address payable _address) external returns(bool);
 
     function offset(uint _debt, uint _coll) external payable returns(uint[2] memory);
 
-    function retrieve(uint _amount, uint _destination) external returns(bool);
+    // function retrieve(uint _amount, uint _destination) external returns(bool);
+
+    // function depositCLV( uint _amount) external returns(bool);
+
 }
