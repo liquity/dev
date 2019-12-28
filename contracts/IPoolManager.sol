@@ -2,8 +2,7 @@
 
 // Common interface for the ETH/CLV pools.
 interface IPoolManager {
-
-     // Events
+     // --- Events ---
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
 
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
@@ -26,7 +25,7 @@ interface IPoolManager {
 
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
-    // Functions
+    // --- Functions ---
     function setCDPManagerAddress(address _cdpManagerAddress) external;
 
     function setPriceFeed(address _priceFeedAddress) external;
@@ -69,7 +68,7 @@ interface IPoolManager {
 
     function redeemCollateral(address payable _account, uint _CLV, uint _ETH) external returns(bool);
 
-    // StabilityPool Functions
+    // --- StabilityPool Functions ---
     function provideToSP(uint _amount) external returns(bool);
 
     function withdrawFromSP(uint _amount) external returns(bool);
@@ -79,9 +78,4 @@ interface IPoolManager {
     function withdrawPenaltyFromSP(address payable _address) external returns(bool);
 
     function offset(uint _debt, uint _coll) external payable returns(uint[2] memory);
-
-    // function retrieve(uint _amount, uint _destination) external returns(bool);
-
-    // function depositCLV( uint _amount) external returns(bool);
-
 }

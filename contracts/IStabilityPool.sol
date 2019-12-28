@@ -1,7 +1,6 @@
 pragma solidity ^0.5.11;
 
 interface IStabilityPool {
-    
     // --- Events ---
     event ETHBalanceUpdated(uint _newBalance);
 
@@ -45,8 +44,6 @@ interface IStabilityPool {
     function decreaseTotalCLVDeposits(uint _amount)  external;
 
     function sendETH(address payable _account, uint _amount) external returns(bool);
-
-    // function increaseETH(uint _amount) external;
 
     function increaseCLV(uint _amount) external;
 

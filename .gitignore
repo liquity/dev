@@ -1,2 +1,5 @@
 # dependencies
 /node_modules
+
+# Contract JSONs
+/client/src/contracts

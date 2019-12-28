@@ -7,11 +7,37 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_user",
+          "name": "_newPoolManagerAddress",
           "type": "address"
         }
       ],
-      "name": "CDPClosed",
+      "name": "PoolManagerAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_newPriceFeedAddress",
+          "type": "address"
+        }
+      ],
+      "name": "PriceFeedAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_newCLVTokenAddress",
+          "type": "address"
+        }
+      ],
+      "name": "CLVTokenAddressChanged",
       "type": "event"
     },
     {
@@ -66,47 +92,9 @@
           "internalType": "address",
           "name": "_user",
           "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "_amountRepayed",
-          "type": "uint256"
         }
       ],
-      "name": "CLVRepayed",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "_newCLVTokenAddress",
-          "type": "address"
-        }
-      ],
-      "name": "CLVTokenAddressChanged",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "_amountWithdrawn",
-          "type": "uint256"
-        }
-      ],
-      "name": "CLVWithdrawn",
+      "name": "CDPClosed",
       "type": "event"
     },
     {
@@ -140,11 +128,11 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "redeemedAmount",
+          "name": "_amountWithdrawn",
           "type": "uint256"
         }
       ],
-      "name": "CollateralRedeemed",
+      "name": "CollateralWithdrawn",
       "type": "event"
     },
     {
@@ -163,7 +151,7 @@
           "type": "uint256"
         }
       ],
-      "name": "CollateralWithdrawn",
+      "name": "CLVWithdrawn",
       "type": "event"
     },
     {
@@ -172,11 +160,17 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newPoolManagerAddress",
+          "name": "_user",
           "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_amountRepayed",
+          "type": "uint256"
         }
       ],
-      "name": "PoolManagerAddressChanged",
+      "name": "CLVRepayed",
       "type": "event"
     },
     {
@@ -185,11 +179,17 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newPriceFeedAddress",
+          "name": "_user",
           "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "redeemedAmount",
+          "type": "uint256"
         }
       ],
-      "name": "PriceFeedAddressChanged",
+      "name": "CollateralRedeemed",
       "type": "event"
     },
     {
@@ -663,7 +663,7 @@
           "type": "uint256"
         }
       ],
-      "name": "redirectETHBalanceToCDP",
+      "name": "sendETHGainToCDP",
       "outputs": [
         {
           "internalType": "bool",
@@ -723,15 +723,15 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.12+commit.7709ece9\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"CDPClosed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"CDPCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_debt\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_coll\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"ICR\",\"type\":\"uint256\"}],\"name\":\"CDPUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amountRepayed\",\"type\":\"uint256\"}],\"name\":\"CLVRepayed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newCLVTokenAddress\",\"type\":\"address\"}],\"name\":\"CLVTokenAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amountWithdrawn\",\"type\":\"uint256\"}],\"name\":\"CLVWithdrawn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amountAdded\",\"type\":\"uint256\"}],\"name\":\"CollateralAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"redeemedAmount\",\"type\":\"uint256\"}],\"name\":\"CollateralRedeemed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amountWithdrawn\",\"type\":\"uint256\"}],\"name\":\"CollateralWithdrawn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newPoolManagerAddress\",\"type\":\"address\"}],\"name\":\"PoolManagerAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newPriceFeedAddress\",\"type\":\"address\"}],\"name\":\"PriceFeedAddressChanged\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[],\"name\":\"addColl\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_debtor\",\"type\":\"address\"}],\"name\":\"close\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_n\",\"type\":\"uint256\"}],\"name\":\"closeCDPs\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_z\",\"type\":\"uint256\"}],\"name\":\"getAccurateMulDiv\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"pure\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_debtor\",\"type\":\"address\"}],\"name\":\"getCollRatio\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getMCR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"pure\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"hasActiveCDP\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"mockAddCDP\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_debtShare\",\"type\":\"uint256\"}],\"name\":\"obtainDefaultShare\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"redeemCollateral\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_ETHShare\",\"type\":\"uint256\"}],\"name\":\"redirectETHBalanceToCDP\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"repayCLV\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_clvTokenAddress\",\"type\":\"address\"}],\"name\":\"setCLVToken\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_poolManagerAddress\",\"type\":\"address\"}],\"name\":\"setPoolManager\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_priceFeedAddress\",\"type\":\"address\"}],\"name\":\"setPriceFeed\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_id\",\"type\":\"address\"}],\"name\":\"sortedCDPsContains\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsGetFirst\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"sortedCDPsGetKey\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsGetLast\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsGetMaxSize\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"sortedCDPsGetNext\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"sortedCDPsGetPrev\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsIsEmpty\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsIsFull\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsgetSize\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"userCreateCDP\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"withdrawCLV\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"withdrawColl\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/C/Users/Administrator/Desktop/Cleverage/contracts/ICDPManager.sol\":\"ICDPManager\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":1},\"remappings\":[]},\"sources\":{\"/C/Users/Administrator/Desktop/Cleverage/contracts/ICDPManager.sol\":{\"keccak256\":\"0x5ffe8e66caa1965cb6e89dbda9395621e615f5a4e55c38a6a9b678af3af43f51\",\"urls\":[\"bzz-raw://e02ba44a4d65b60f79489fd72d287ce0ee90e5e18f9605a193df6a0682c9ca78\",\"dweb:/ipfs/QmPtKrAHSiRJRiCG4K72rVQjwjQNoHr1gMATmm6vRHZQzs\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.11+commit.c082d0b4\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsGetLast\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsGetMaxSize\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"hasActiveCDP\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"addColl\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_n\",\"type\":\"uint256\"}],\"name\":\"closeCDPs\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"sortedCDPsGetPrev\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getMCR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"pure\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"withdrawCLV\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsIsFull\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"userCreateCDP\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_debtor\",\"type\":\"address\"}],\"name\":\"getCollRatio\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_priceFeedAddress\",\"type\":\"address\"}],\"name\":\"setPriceFeed\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"withdrawColl\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_poolManagerAddress\",\"type\":\"address\"}],\"name\":\"setPoolManager\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"mockAddCDP\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsIsEmpty\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_ETHShare\",\"type\":\"uint256\"}],\"name\":\"sendETHGainToCDP\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"sortedCDPsGetKey\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"sortedCDPsGetNext\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_id\",\"type\":\"address\"}],\"name\":\"sortedCDPsContains\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"redeemCollateral\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_debtShare\",\"type\":\"uint256\"}],\"name\":\"obtainDefaultShare\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_debtor\",\"type\":\"address\"}],\"name\":\"close\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"repayCLV\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsgetSize\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_z\",\"type\":\"uint256\"}],\"name\":\"getAccurateMulDiv\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"pure\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"sortedCDPsGetFirst\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_clvTokenAddress\",\"type\":\"address\"}],\"name\":\"setCLVToken\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newPoolManagerAddress\",\"type\":\"address\"}],\"name\":\"PoolManagerAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newPriceFeedAddress\",\"type\":\"address\"}],\"name\":\"PriceFeedAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newCLVTokenAddress\",\"type\":\"address\"}],\"name\":\"CLVTokenAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"CDPCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_debt\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_coll\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"ICR\",\"type\":\"uint256\"}],\"name\":\"CDPUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"CDPClosed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amountAdded\",\"type\":\"uint256\"}],\"name\":\"CollateralAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amountWithdrawn\",\"type\":\"uint256\"}],\"name\":\"CollateralWithdrawn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amountWithdrawn\",\"type\":\"uint256\"}],\"name\":\"CLVWithdrawn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amountRepayed\",\"type\":\"uint256\"}],\"name\":\"CLVRepayed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"redeemedAmount\",\"type\":\"uint256\"}],\"name\":\"CollateralRedeemed\",\"type\":\"event\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/C/Users/Rick/Desktop/Cleverage/contracts/ICDPManager.sol\":\"ICDPManager\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":1000},\"remappings\":[]},\"sources\":{\"/C/Users/Rick/Desktop/Cleverage/contracts/ICDPManager.sol\":{\"keccak256\":\"0x5a9237ab10c9bb8ff01ed9059a825694516daec3edb17f80a13c5078b5928246\",\"urls\":[\"bzz-raw://36de35eff982f53bc5ab5b72ba341e5022058a504fcd551b40ae51580a474e94\",\"dweb:/ipfs/QmUfwCYQriH9HptDe3m1zNa8FLRGdbe5wWqZxjgi7CBjtn\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "    pragma solidity ^0.5.11;\r\n\r\n// Common interface for the ETH/CLV pools.\r\ninterface ICDPManager {\r\n    // Events\r\n    event PoolManagerAddressChanged(address _newPoolManagerAddress);\r\n\r\n    event PriceFeedAddressChanged(address _newPriceFeedAddress);\r\n\r\n    event CLVTokenAddressChanged(address _newCLVTokenAddress);\r\n\r\n    event CDPCreated(address _user);\r\n\r\n    event CDPUpdated(address _user, uint _debt, uint _coll, uint ICR);\r\n\r\n    event CDPClosed(address _user);\r\n\r\n    event CollateralAdded(address _user, uint _amountAdded);\r\n\r\n    event CollateralWithdrawn(address _user, uint _amountWithdrawn);\r\n\r\n    event CLVWithdrawn(address _user, uint _amountWithdrawn);\r\n\r\n    event CLVRepayed(address _user, uint _amountRepayed);\r\n\r\n    event CollateralRedeemed(address _user, uint redeemedAmount);\r\n\r\n    // Functions\r\n    function setPoolManager(address _poolManagerAddress) external;\r\n\r\n    function setPriceFeed(address _priceFeedAddress) external;\r\n\r\n    function setCLVToken(address _clvTokenAddress) external;\r\n\r\n    function getMCR() external pure returns(uint);\r\n\r\n    function getAccurateMulDiv(uint _x, uint _y, uint _z) external pure returns(uint);\r\n\r\n    function hasActiveCDP(address _user) external view returns(bool);\r\n\r\n    function sortedCDPsContains(address _id) external view returns(bool);\r\n\r\n    function sortedCDPsIsEmpty() external view returns(bool);\r\n\r\n    function sortedCDPsIsFull() external view returns (bool);\r\n\r\n    function sortedCDPsgetSize() external view returns(uint);\r\n\r\n    function sortedCDPsGetMaxSize() external view returns(uint);\r\n    \r\n    function sortedCDPsGetKey(address user) external view returns(uint); \r\n\r\n    function sortedCDPsGetFirst() external view returns (address); \r\n\r\n    function sortedCDPsGetLast() external view returns (address); \r\n\r\n    function sortedCDPsGetNext(address user) external view returns (address); \r\n\r\n    function sortedCDPsGetPrev(address user) external view returns (address); \r\n\r\n    function getCollRatio(address _debtor) external view returns(uint);\r\n\r\n    function userCreateCDP() external returns(bool);\r\n\r\n    function addColl() external payable returns(bool);\r\n\r\n    function withdrawColl(uint _amount) external returns(bool);\r\n\r\n    function withdrawCLV(uint _amount) external returns (bool);\r\n\r\n    function repayCLV(uint _amount) external returns(bool);\r\n\r\n    function close(address _debtor) external returns(bool);\r\n\r\n    function closeCDPs(uint _n) external returns(bool);\r\n\r\n    function mockAddCDP() external returns(bool);\r\n\r\n    function redirectETHBalanceToCDP(address _user, uint _ETHShare) external returns(bool);\r\n\r\n    function obtainDefaultShare(address _user, uint _debtShare) external returns(bool);\r\n\r\n    function redeemCollateral(uint _amount) external returns(bool);\r\n\r\n    // function getNewCollRatio(address _debtor, uint _debt_change, uint _coll_change) view external returns (uint); \r\n    \r\n    // function createCDP(address _account) external returns(bool);\r\n\r\n    // function getMin(uint a, uint b) external pure returns(uint);\r\n}",
-  "sourcePath": "C:\\Users\\Administrator\\Desktop\\Cleverage\\contracts\\ICDPManager.sol",
+  "source": "    pragma solidity ^0.5.11;\r\n\r\n// Common interface for the ETH/CLV pools.\r\ninterface ICDPManager {\r\n    // Events\r\n    event PoolManagerAddressChanged(address _newPoolManagerAddress);\r\n\r\n    event PriceFeedAddressChanged(address _newPriceFeedAddress);\r\n\r\n    event CLVTokenAddressChanged(address _newCLVTokenAddress);\r\n\r\n    event CDPCreated(address _user);\r\n\r\n    event CDPUpdated(address _user, uint _debt, uint _coll, uint ICR);\r\n\r\n    event CDPClosed(address _user);\r\n\r\n    event CollateralAdded(address _user, uint _amountAdded);\r\n\r\n    event CollateralWithdrawn(address _user, uint _amountWithdrawn);\r\n\r\n    event CLVWithdrawn(address _user, uint _amountWithdrawn);\r\n\r\n    event CLVRepayed(address _user, uint _amountRepayed);\r\n\r\n    event CollateralRedeemed(address _user, uint redeemedAmount);\r\n\r\n    // Functions\r\n    function setPoolManager(address _poolManagerAddress) external;\r\n\r\n    function setPriceFeed(address _priceFeedAddress) external;\r\n\r\n    function setCLVToken(address _clvTokenAddress) external;\r\n\r\n    function getMCR() external pure returns(uint);\r\n\r\n    function getAccurateMulDiv(uint _x, uint _y, uint _z) external pure returns(uint);\r\n\r\n    function hasActiveCDP(address _user) external view returns(bool);\r\n\r\n    function sortedCDPsContains(address _id) external view returns(bool);\r\n\r\n    function sortedCDPsIsEmpty() external view returns(bool);\r\n\r\n    function sortedCDPsIsFull() external view returns (bool);\r\n\r\n    function sortedCDPsgetSize() external view returns(uint);\r\n\r\n    function sortedCDPsGetMaxSize() external view returns(uint);\r\n    \r\n    function sortedCDPsGetKey(address user) external view returns(uint); \r\n\r\n    function sortedCDPsGetFirst() external view returns (address); \r\n\r\n    function sortedCDPsGetLast() external view returns (address); \r\n\r\n    function sortedCDPsGetNext(address user) external view returns (address); \r\n\r\n    function sortedCDPsGetPrev(address user) external view returns (address); \r\n\r\n    function getCollRatio(address _debtor) external view returns(uint);\r\n\r\n    function userCreateCDP() external returns(bool);\r\n\r\n    function addColl() external payable returns(bool);\r\n\r\n    function withdrawColl(uint _amount) external returns(bool);\r\n\r\n    function withdrawCLV(uint _amount) external returns (bool);\r\n\r\n    function repayCLV(uint _amount) external returns(bool);\r\n\r\n    function close(address _debtor) external returns(bool);\r\n\r\n    function closeCDPs(uint _n) external returns(bool);\r\n\r\n    function mockAddCDP() external returns(bool);\r\n\r\n    function sendETHGainToCDP(address _user, uint _ETHShare) external returns(bool);\r\n\r\n    function obtainDefaultShare(address _user, uint _debtShare) external returns(bool);\r\n\r\n    function redeemCollateral(uint _amount) external returns(bool);\r\n\r\n    // function getNewCollRatio(address _debtor, uint _debt_change, uint _coll_change) view external returns (uint); \r\n    \r\n    // function createCDP(address _account) external returns(bool);\r\n\r\n    // function getMin(uint a, uint b) external pure returns(uint);\r\n}",
+  "sourcePath": "C:\\Users\\Rick\\Desktop\\Cleverage\\contracts\\ICDPManager.sol",
   "ast": {
-    "absolutePath": "/C/Users/Administrator/Desktop/Cleverage/contracts/ICDPManager.sol",
+    "absolutePath": "/C/Users/Rick/Desktop/Cleverage/contracts/ICDPManager.sol",
     "exportedSymbols": {
       "ICDPManager": [
         3348
@@ -3200,7 +3200,7 @@
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "redirectETHBalanceToCDP",
+            "name": "sendETHGainToCDP",
             "nodeType": "FunctionDefinition",
             "parameters": {
               "id": 3327,
@@ -3212,7 +3212,7 @@
                   "name": "_user",
                   "nodeType": "VariableDeclaration",
                   "scope": 3331,
-                  "src": "2565:13:6",
+                  "src": "2558:13:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -3223,7 +3223,7 @@
                     "id": 3323,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2565:7:6",
+                    "src": "2558:7:6",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -3239,7 +3239,7 @@
                   "name": "_ETHShare",
                   "nodeType": "VariableDeclaration",
                   "scope": 3331,
-                  "src": "2580:14:6",
+                  "src": "2573:14:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -3250,7 +3250,7 @@
                     "id": 3325,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2580:4:6",
+                    "src": "2573:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -3260,7 +3260,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2564:31:6"
+              "src": "2557:31:6"
             },
             "returnParameters": {
               "id": 3330,
@@ -3272,7 +3272,7 @@
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "scope": 3331,
-                  "src": "2613:4:6",
+                  "src": "2606:4:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -3283,7 +3283,7 @@
                     "id": 3328,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2613:4:6",
+                    "src": "2606:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -3293,10 +3293,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2612:6:6"
+              "src": "2605:6:6"
             },
             "scope": 3348,
-            "src": "2532:87:6",
+            "src": "2532:80:6",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -3320,7 +3320,7 @@
                   "name": "_user",
                   "nodeType": "VariableDeclaration",
                   "scope": 3340,
-                  "src": "2655:13:6",
+                  "src": "2648:13:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -3331,7 +3331,7 @@
                     "id": 3332,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2655:7:6",
+                    "src": "2648:7:6",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -3347,7 +3347,7 @@
                   "name": "_debtShare",
                   "nodeType": "VariableDeclaration",
                   "scope": 3340,
-                  "src": "2670:15:6",
+                  "src": "2663:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -3358,7 +3358,7 @@
                     "id": 3334,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2670:4:6",
+                    "src": "2663:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -3368,7 +3368,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2654:32:6"
+              "src": "2647:32:6"
             },
             "returnParameters": {
               "id": 3339,
@@ -3380,7 +3380,7 @@
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "scope": 3340,
-                  "src": "2704:4:6",
+                  "src": "2697:4:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -3391,7 +3391,7 @@
                     "id": 3337,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2704:4:6",
+                    "src": "2697:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -3401,10 +3401,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2703:6:6"
+              "src": "2696:6:6"
             },
             "scope": 3348,
-            "src": "2627:83:6",
+            "src": "2620:83:6",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -3428,7 +3428,7 @@
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
                   "scope": 3347,
-                  "src": "2744:12:6",
+                  "src": "2737:12:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -3439,7 +3439,7 @@
                     "id": 3341,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2744:4:6",
+                    "src": "2737:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -3449,7 +3449,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2743:14:6"
+              "src": "2736:14:6"
             },
             "returnParameters": {
               "id": 3346,
@@ -3461,7 +3461,7 @@
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "scope": 3347,
-                  "src": "2775:4:6",
+                  "src": "2768:4:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -3472,7 +3472,7 @@
                     "id": 3344,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2775:4:6",
+                    "src": "2768:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -3482,23 +3482,23 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2774:6:6"
+              "src": "2767:6:6"
             },
             "scope": 3348,
-            "src": "2718:63:6",
+            "src": "2711:63:6",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
           }
         ],
         "scope": 3349,
-        "src": "76:2975:6"
+        "src": "76:2968:6"
       }
     ],
-    "src": "4:3047:6"
+    "src": "4:3040:6"
   },
   "legacyAST": {
-    "absolutePath": "/C/Users/Administrator/Desktop/Cleverage/contracts/ICDPManager.sol",
+    "absolutePath": "/C/Users/Rick/Desktop/Cleverage/contracts/ICDPManager.sol",
     "exportedSymbols": {
       "ICDPManager": [
         3348
@@ -5967,7 +5967,7 @@
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "redirectETHBalanceToCDP",
+            "name": "sendETHGainToCDP",
             "nodeType": "FunctionDefinition",
             "parameters": {
               "id": 3327,
@@ -5979,7 +5979,7 @@
                   "name": "_user",
                   "nodeType": "VariableDeclaration",
                   "scope": 3331,
-                  "src": "2565:13:6",
+                  "src": "2558:13:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -5990,7 +5990,7 @@
                     "id": 3323,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2565:7:6",
+                    "src": "2558:7:6",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -6006,7 +6006,7 @@
                   "name": "_ETHShare",
                   "nodeType": "VariableDeclaration",
                   "scope": 3331,
-                  "src": "2580:14:6",
+                  "src": "2573:14:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -6017,7 +6017,7 @@
                     "id": 3325,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2580:4:6",
+                    "src": "2573:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -6027,7 +6027,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2564:31:6"
+              "src": "2557:31:6"
             },
             "returnParameters": {
               "id": 3330,
@@ -6039,7 +6039,7 @@
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "scope": 3331,
-                  "src": "2613:4:6",
+                  "src": "2606:4:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -6050,7 +6050,7 @@
                     "id": 3328,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2613:4:6",
+                    "src": "2606:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -6060,10 +6060,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2612:6:6"
+              "src": "2605:6:6"
             },
             "scope": 3348,
-            "src": "2532:87:6",
+            "src": "2532:80:6",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -6087,7 +6087,7 @@
                   "name": "_user",
                   "nodeType": "VariableDeclaration",
                   "scope": 3340,
-                  "src": "2655:13:6",
+                  "src": "2648:13:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -6098,7 +6098,7 @@
                     "id": 3332,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2655:7:6",
+                    "src": "2648:7:6",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -6114,7 +6114,7 @@
                   "name": "_debtShare",
                   "nodeType": "VariableDeclaration",
                   "scope": 3340,
-                  "src": "2670:15:6",
+                  "src": "2663:15:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -6125,7 +6125,7 @@
                     "id": 3334,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2670:4:6",
+                    "src": "2663:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -6135,7 +6135,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2654:32:6"
+              "src": "2647:32:6"
             },
             "returnParameters": {
               "id": 3339,
@@ -6147,7 +6147,7 @@
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "scope": 3340,
-                  "src": "2704:4:6",
+                  "src": "2697:4:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -6158,7 +6158,7 @@
                     "id": 3337,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2704:4:6",
+                    "src": "2697:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -6168,10 +6168,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2703:6:6"
+              "src": "2696:6:6"
             },
             "scope": 3348,
-            "src": "2627:83:6",
+            "src": "2620:83:6",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -6195,7 +6195,7 @@
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
                   "scope": 3347,
-                  "src": "2744:12:6",
+                  "src": "2737:12:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -6206,7 +6206,7 @@
                     "id": 3341,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2744:4:6",
+                    "src": "2737:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -6216,7 +6216,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2743:14:6"
+              "src": "2736:14:6"
             },
             "returnParameters": {
               "id": 3346,
@@ -6228,7 +6228,7 @@
                   "name": "",
                   "nodeType": "VariableDeclaration",
                   "scope": 3347,
-                  "src": "2775:4:6",
+                  "src": "2768:4:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -6239,7 +6239,7 @@
                     "id": 3344,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2775:4:6",
+                    "src": "2768:4:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -6249,28 +6249,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2774:6:6"
+              "src": "2767:6:6"
             },
             "scope": 3348,
-            "src": "2718:63:6",
+            "src": "2711:63:6",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
           }
         ],
         "scope": 3349,
-        "src": "76:2975:6"
+        "src": "76:2968:6"
       }
     ],
-    "src": "4:3047:6"
+    "src": "4:3040:6"
   },
   "compiler": {
     "name": "solc",
-    "version": "0.5.12+commit.7709ece9.Emscripten.clang"
+    "version": "0.5.11+commit.c082d0b4.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.19",
-  "updatedAt": "2019-12-20T09:33:12.543Z",
+  "schemaVersion": "3.0.20",
+  "updatedAt": "2019-12-26T17:22:10.222Z",
   "devdoc": {
     "methods": {}
   },

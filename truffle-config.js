@@ -20,19 +20,19 @@ module.exports = {
     //   network_id: 4447
     // },
   },
-solc: {
+  solc: {
     optimizer: {
       enabled: true,
-      runs: 1
+      runs: 1000
     },
   },
   // use native binaries rather than solc.js 
-  // compilers: {
-  //   solc: {
-  //     version: "native",
-  //   }
-  // },
+  compilers: {
+    solc: {
+      version: "0.5.11"
+    }
+  },
   plugins: [
     'truffle-ganache-test'
-]
+  ]
 }

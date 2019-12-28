@@ -2,6 +2,11 @@
 pragma solidity ^0.5.11;
 
 interface ICLVToken { 
+    // --- Events ---
+    event PoolManagerAddressChanged( address _newPoolManagerAddress);
+
+    event CLVTokenBalanceUpdated(address _user, uint _amount);
+
     // --- Functions ---
     function setPoolManagerAddress(address _poolManagerAddress) external;
 
@@ -30,9 +35,4 @@ interface ICLVToken {
     function increaseAllowance(address spender, uint256 addedValue) external returns (bool);
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external returns(bool);
-
-    // --- Events ---
-    event PoolManagerAddressChanged( address _newPoolManagerAddress);
-
-    event CLVTokenBalanceUpdated(address _user, uint _amount);
 }

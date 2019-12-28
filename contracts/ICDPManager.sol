@@ -2,7 +2,7 @@
 
 // Common interface for the ETH/CLV pools.
 interface ICDPManager {
-    // Events
+    // --- Events ---
     event PoolManagerAddressChanged(address _newPoolManagerAddress);
 
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
@@ -25,7 +25,7 @@ interface ICDPManager {
 
     event CollateralRedeemed(address _user, uint redeemedAmount);
 
-    // Functions
+    // --- Functions ---
     function setPoolManager(address _poolManagerAddress) external;
 
     function setPriceFeed(address _priceFeedAddress) external;
@@ -62,7 +62,7 @@ interface ICDPManager {
 
     function userCreateCDP() external returns(bool);
 
-    function addColl() external payable returns(bool);
+    function addColl(address _owner) external payable returns(bool);
 
     function withdrawColl(uint _amount) external returns(bool);
 
@@ -76,15 +76,7 @@ interface ICDPManager {
 
     function mockAddCDP() external returns(bool);
 
-    function sendETHGainToCDP(address _user, uint _ETHShare) external returns(bool);
-
     function obtainDefaultShare(address _user, uint _debtShare) external returns(bool);
 
     function redeemCollateral(uint _amount) external returns(bool);
-
-    // function getNewCollRatio(address _debtor, uint _debt_change, uint _coll_change) view external returns (uint); 
-    
-    // function createCDP(address _account) external returns(bool);
-
-    // function getMin(uint a, uint b) external pure returns(uint);
 }

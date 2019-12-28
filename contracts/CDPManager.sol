@@ -201,49 +201,48 @@ contract CDPManager is Ownable, ICDPManager {
 
         return true;
     }
-    
-    // Pay a given number of ETH (msg.value) as collateral to a CDP 
-    function addColl() 
+
+    // Send ETH as collateral to a CDP
+    function addColl(address _owner) 
         public 
         payable 
         returns (bool) 
     {
-        address user = _msgSender();
         bool isFirstCollDeposit = false;
         // Potential issue with using _msgSender() as the key in the CDPs map: Users may not be able interact via other contracts since the 
         // _msgSender() would then be the contract rather than the transacting user. Beware of tx.origin.
-        require(CDPs[user].status != Status.closed, "CDPManager: CDP is closed");
+        require(CDPs[_owner].status != Status.closed, "CDPManager: CDP is closed");
         
-        if (CDPs[user].status == Status.inexistent) {
-            createCDP(user);
+        if (CDPs[_owner].status == Status.inexistent) {
+            createCDP(_owner);
             isFirstCollDeposit = true; 
-        } else if (CDPs[user].status == Status.newBorn) {
+        } else if (CDPs[_owner].status == Status.newBorn) {
             isFirstCollDeposit = true;
         }
             
-        CDPs[user].status = Status.active;
+        CDPs[_owner].status = Status.active;
        
         // Add the received collateral to the CDP 
-        CDPs[user].coll = (CDPs[user].coll).add(msg.value);
+        CDPs[_owner].coll = (CDPs[_owner].coll).add(msg.value);
 
         // Send the received collateral to PoolManager, to forward to ActivePool
         poolManager.addColl.value(msg.value)();
 
         // get user's new ICR
-        uint newICR = getCollRatio(user);
+        uint newICR = getCollRatio(_owner);
 
         // update the ICR in the CDP mapping
-        CDPs[user].ICR = newICR;
+        CDPs[_owner].ICR = newICR;
         
         // Insert or update the ICR  in sortedCDPs
         if (isFirstCollDeposit) {
-            sortedCDPs.insert(user, newICR, user, user);
+            sortedCDPs.insert(_owner, newICR, _owner, _owner);
         } else {
-            sortedCDPs.updateKey(user, newICR, user, user);
+            sortedCDPs.updateKey(_owner, newICR, _owner, _owner);
         }
 
-        emit CollateralAdded(user, msg.value);
-        emit CDPUpdated(user, CDPs[user].debt, CDPs[user].coll, CDPs[user].ICR);
+        emit CollateralAdded(_owner, msg.value);
+        emit CDPUpdated(_owner, CDPs[_owner].debt, CDPs[_owner].coll, CDPs[_owner].ICR);
         return true;
     }
 
@@ -259,22 +258,6 @@ contract CDPManager is Ownable, ICDPManager {
         cdp.status = Status.active;
 
         CDPs[_msgSender()] = cdp;
-    }
-
-    // Top up collateral. Called by PoolManager::retrieve()
-    function sendETHGainToCDP(address _user, uint ETHShare) public onlyPoolManager returns(bool) {
-        require(CDPs[_user].status == Status.active, 'CDPManager: CDP must be active');
-   
-        CDPs[_user].coll =  (CDPs[_user].coll).add(ETHShare);
-
-        uint newICR = getCollRatio(_user);
-        CDPs[_user].ICR = newICR;
-        
-        sortedCDPs.updateKey(_user, newICR, _user, _user);
-        
-        emit CollateralAdded(_user, ETHShare);
-        emit CDPUpdated(_user, CDPs[_user].debt, CDPs[_user].coll, CDPs[_user].ICR);
-        return true;
     }
     
     // Withdraw ETH collateral from a CDP
