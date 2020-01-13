@@ -1,4 +1,4 @@
-    pragma solidity ^0.5.11;
+pragma solidity ^0.5.11;
 
 // Common interface for the ETH/CLV pools.
 interface IPoolManager {
@@ -32,11 +32,11 @@ interface IPoolManager {
 
     function setCLVToken(address _CLVAddress) external;
 
-    function setStabilityPool(address payable _stabilityPoolAddress) external;
+    function setStabilityPool(address _stabilityPoolAddress) external;
 
-    function setActivePool(address payable _activePoolAddress) external;
+    function setActivePool(address _activePoolAddress) external;
 
-    function setDefaultPool(address payable _defaultPoolAddress) external;
+    function setDefaultPool(address _defaultPoolAddress) external;
 
     function getAccurateMulDiv(uint x, uint y, uint z) external pure returns(uint);
 
@@ -56,7 +56,7 @@ interface IPoolManager {
 
     function addColl() external payable returns(bool);
 
-    function withdrawColl(address payable _account, uint _ETH) external returns (bool);
+    function withdrawColl(address _account, uint _ETH) external returns (bool);
 
     function withdrawCLV(address _account, uint _CLV) external returns(bool);
     
@@ -66,7 +66,7 @@ interface IPoolManager {
 
     function obtainDefaultShare(uint _CLV, uint _ETH) external returns(bool);
 
-    function redeemCollateral(address payable _account, uint _CLV, uint _ETH) external returns(bool);
+    function redeemCollateral(address _account, uint _CLV, uint _ETH) external returns(bool);
 
     // --- StabilityPool Functions ---
     function provideToSP(uint _amount) external returns(bool);
@@ -75,7 +75,7 @@ interface IPoolManager {
 
     function withdrawFromSPtoCDP() external returns(bool);
 
-    function withdrawPenaltyFromSP(address payable _address) external returns(bool);
+    function withdrawPenaltyFromSP(address _address) external returns(bool);
 
     function offset(uint _debt, uint _coll) external payable returns(uint[2] memory);
 }

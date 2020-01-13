@@ -62,7 +62,7 @@ contract DefaultPool is Ownable, IPool {
     }
 
     // --- Pool functionality ---
-    function sendETH(address payable _account, uint _amount) public onlyPoolManager returns(bool) {
+    function sendETH(address _account, uint _amount) public onlyPoolManager returns(bool) {
         ETH = ETH.sub(_amount);
         (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
         require (success == true, 'DefaultPool: transaction reverted');
@@ -103,10 +103,11 @@ contract DefaultPool is Ownable, IPool {
             _msgSender() == poolManagerAddress || 
             _msgSender() == stabilityPoolAddress || 
             _msgSender() == activePoolAddress, 
-            "ActivePool: only receive ETH from Pool or PoolManager");
-        ETH = ETH.add(msg.value);
+            "DefaultPool: only receive ETH from Pool or PoolManager");
         _;
     }
 
-    function () external payable onlyPoolManagerOrPool {}
+    function () external payable onlyPoolManagerOrPool {
+        ETH = ETH.add(msg.value);
+    }
 }

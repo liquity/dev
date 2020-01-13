@@ -38,25 +38,25 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.11+commit.c082d0b4\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_price\",\"type\":\"uint256\"}],\"name\":\"setPrice\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/C/Users/Rick/Desktop/Cleverage/contracts/IPriceFeed.sol\":\"IPriceFeed\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":1000},\"remappings\":[]},\"sources\":{\"/C/Users/Rick/Desktop/Cleverage/contracts/IPriceFeed.sol\":{\"keccak256\":\"0xb0eb19822faa846787c627ca0aaa1ef36a4c2c71b6503a678ef87045b6c10d3d\",\"urls\":[\"bzz-raw://d8ceda190a721c1025d602b6b8d0c2056482496bdccb508bccd52c0275787371\",\"dweb:/ipfs/QmRfxtYr9o8vTw1Fb34vBDUU3MhLZbrTA6jXnRmbHhEgyR\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.11+commit.c082d0b4\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_price\",\"type\":\"uint256\"}],\"name\":\"setPrice\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/c/Users/Rick/Desktop/Cleverage/contracts/IPriceFeed.sol\":\"IPriceFeed\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":1000},\"remappings\":[]},\"sources\":{\"/c/Users/Rick/Desktop/Cleverage/contracts/IPriceFeed.sol\":{\"keccak256\":\"0x1d3a5cafbae117c29b370b06cb8e32159227a17427b0188fd458ead96c472618\",\"urls\":[\"bzz-raw://8960f93871b79267f40269844405350878ee93e4ec5f031f7d691ea14f695f6f\",\"dweb:/ipfs/QmZM3dNB8fS8dEGB4YuQDdJGB72KmpJVMm44PC1Z4j9Be9\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "pragma solidity ^0.5.11;\r\n\r\ninterface IPriceFeed { \r\n\r\n    function setPrice(uint _price) external returns(bool);\r\n        \r\n    function getPrice() external view returns(uint);\r\n}\r\n",
-  "sourcePath": "C:\\Users\\Rick\\Desktop\\Cleverage\\contracts\\IPriceFeed.sol",
+  "source": "pragma solidity ^0.5.11;\r\n\r\ninterface IPriceFeed { \r\n    // --- Functions ---\r\n    function setPrice(uint _price) external returns(bool);\r\n        \r\n    function getPrice() external view returns(uint);\r\n}\r\n",
+  "sourcePath": "c:\\Users\\Rick\\Desktop\\Cleverage\\contracts\\IPriceFeed.sol",
   "ast": {
-    "absolutePath": "/C/Users/Rick/Desktop/Cleverage/contracts/IPriceFeed.sol",
+    "absolutePath": "/c/Users/Rick/Desktop/Cleverage/contracts/IPriceFeed.sol",
     "exportedSymbols": {
       "IPriceFeed": [
-        3836
+        3744
       ]
     },
-    "id": 3837,
+    "id": 3745,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3823,
+        "id": 3731,
         "literals": [
           "solidity",
           "^",
@@ -72,9 +72,9 @@
         "contractKind": "interface",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 3836,
+        "id": 3744,
         "linearizedBaseContracts": [
-          3836
+          3744
         ],
         "name": "IPriceFeed",
         "nodeType": "ContractDefinition",
@@ -82,23 +82,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3830,
+            "id": 3738,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setPrice",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3826,
+              "id": 3734,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3825,
+                  "id": 3733,
                   "name": "_price",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3830,
-                  "src": "77:11:10",
+                  "scope": 3738,
+                  "src": "101:11:10",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -106,10 +106,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3824,
+                    "id": 3732,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "77:4:10",
+                    "src": "101:4:10",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -119,19 +119,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "76:13:10"
+              "src": "100:13:10"
             },
             "returnParameters": {
-              "id": 3829,
+              "id": 3737,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3828,
+                  "id": 3736,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3830,
-                  "src": "107:4:10",
+                  "scope": 3738,
+                  "src": "131:4:10",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -139,10 +139,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 3827,
+                    "id": 3735,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "107:4:10",
+                    "src": "131:4:10",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -152,10 +152,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "106:6:10"
+              "src": "130:6:10"
             },
-            "scope": 3836,
-            "src": "59:54:10",
+            "scope": 3744,
+            "src": "83:54:10",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -163,29 +163,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3835,
+            "id": 3743,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getPrice",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3831,
+              "id": 3739,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "146:2:10"
+              "src": "170:2:10"
             },
             "returnParameters": {
-              "id": 3834,
+              "id": 3742,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3833,
+                  "id": 3741,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3835,
-                  "src": "171:4:10",
+                  "scope": 3743,
+                  "src": "195:4:10",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -193,10 +193,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3832,
+                    "id": 3740,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "171:4:10",
+                    "src": "195:4:10",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -206,33 +206,33 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "170:6:10"
+              "src": "194:6:10"
             },
-            "scope": 3836,
-            "src": "129:48:10",
+            "scope": 3744,
+            "src": "153:48:10",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 3837,
-        "src": "28:152:10"
+        "scope": 3745,
+        "src": "28:176:10"
       }
     ],
-    "src": "0:182:10"
+    "src": "0:206:10"
   },
   "legacyAST": {
-    "absolutePath": "/C/Users/Rick/Desktop/Cleverage/contracts/IPriceFeed.sol",
+    "absolutePath": "/c/Users/Rick/Desktop/Cleverage/contracts/IPriceFeed.sol",
     "exportedSymbols": {
       "IPriceFeed": [
-        3836
+        3744
       ]
     },
-    "id": 3837,
+    "id": 3745,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3823,
+        "id": 3731,
         "literals": [
           "solidity",
           "^",
@@ -248,9 +248,9 @@
         "contractKind": "interface",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 3836,
+        "id": 3744,
         "linearizedBaseContracts": [
-          3836
+          3744
         ],
         "name": "IPriceFeed",
         "nodeType": "ContractDefinition",
@@ -258,23 +258,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3830,
+            "id": 3738,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setPrice",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3826,
+              "id": 3734,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3825,
+                  "id": 3733,
                   "name": "_price",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3830,
-                  "src": "77:11:10",
+                  "scope": 3738,
+                  "src": "101:11:10",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -282,10 +282,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3824,
+                    "id": 3732,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "77:4:10",
+                    "src": "101:4:10",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -295,19 +295,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "76:13:10"
+              "src": "100:13:10"
             },
             "returnParameters": {
-              "id": 3829,
+              "id": 3737,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3828,
+                  "id": 3736,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3830,
-                  "src": "107:4:10",
+                  "scope": 3738,
+                  "src": "131:4:10",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -315,10 +315,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 3827,
+                    "id": 3735,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "107:4:10",
+                    "src": "131:4:10",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -328,10 +328,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "106:6:10"
+              "src": "130:6:10"
             },
-            "scope": 3836,
-            "src": "59:54:10",
+            "scope": 3744,
+            "src": "83:54:10",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -339,29 +339,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3835,
+            "id": 3743,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getPrice",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3831,
+              "id": 3739,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "146:2:10"
+              "src": "170:2:10"
             },
             "returnParameters": {
-              "id": 3834,
+              "id": 3742,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3833,
+                  "id": 3741,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3835,
-                  "src": "171:4:10",
+                  "scope": 3743,
+                  "src": "195:4:10",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -369,10 +369,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3832,
+                    "id": 3740,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "171:4:10",
+                    "src": "195:4:10",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -382,20 +382,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "170:6:10"
+              "src": "194:6:10"
             },
-            "scope": 3836,
-            "src": "129:48:10",
+            "scope": 3744,
+            "src": "153:48:10",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 3837,
-        "src": "28:152:10"
+        "scope": 3745,
+        "src": "28:176:10"
       }
     ],
-    "src": "0:182:10"
+    "src": "0:206:10"
   },
   "compiler": {
     "name": "solc",
@@ -403,7 +403,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.20",
-  "updatedAt": "2019-12-26T17:22:10.245Z",
+  "updatedAt": "2019-12-30T00:39:24.159Z",
   "devdoc": {
     "methods": {}
   },

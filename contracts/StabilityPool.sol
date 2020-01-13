@@ -70,7 +70,7 @@ contract StabilityPool is Ownable, IStabilityPool {
     }
 
     // --- Pool functionality ---
-    function sendETH(address payable _account, uint _amount) public onlyPoolManager returns(bool){
+    function sendETH(address _account, uint _amount) public onlyPoolManager returns(bool){
         ETH = ETH.sub(_amount);
         (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
         require (success == true, 'StabilityPool: transaction reverted');
@@ -119,10 +119,11 @@ contract StabilityPool is Ownable, IStabilityPool {
             _msgSender() == poolManagerAddress || 
             _msgSender() == activePoolAddress || 
             _msgSender() == defaultPoolAddress, 
-            "ActivePool: only receive ETH from Pool or PoolManager");
-        ETH = ETH.add(msg.value);
+            "StabilityPool: only receive ETH from Pool or PoolManager");
         _;
     }
 
-    function () external payable onlyPoolManagerOrPool {}
+    function () external payable onlyPoolManagerOrPool {
+        ETH = ETH.add(msg.value);
+    }
 }

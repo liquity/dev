@@ -36,21 +36,21 @@ contract PoolManager is Ownable, IPoolManager {
     IPriceFeed priceFeed;
     address public priceFeedAddress;
 
-    ICLVToken CLV; 
+    ICLVToken CLV;
     address public clvAddress;
 
     IStabilityPool public stabilityPool;
-    address payable public stabilityPoolAddress;
+    address public stabilityPoolAddress;
 
     IPool public activePool;
-    address payable public activePoolAddress;
+    address public activePoolAddress;
 
     IPool public defaultPool;
-    address payable public defaultPoolAddress;
+    address public defaultPoolAddress;
    
    // --- Data structures ---
    
-    mapping (address => uint) public deposit; 
+    mapping (address => uint) public deposit;
 
       struct Snapshot {
         uint ETH;
@@ -60,11 +60,11 @@ contract PoolManager is Ownable, IPoolManager {
     /* Track the sums of accumulated rewards per unit staked: S_CLV and S_ETH. During it's lifetime, each deposit earns:
 
     A CLV *loss* of ( deposit * [S_CLV - S_CLV(0)] )
-    An ETH *gain* of ( deposit * [S_ETH - S_ETH(0)] ) 
+    An ETH *gain* of ( deposit * [S_ETH - S_ETH(0)] )
     
     Where S_CLV(0) and S_ETH(0) are snapshots of S_CLV and S_ETH taken at the instant the deposit was made */
-    uint public S_CLV; 
-    uint public S_ETH; 
+    uint public S_CLV;
+    uint public S_ETH;
 
     // Map users to their individual snapshots of S_CLV and the S_ETH
     mapping (address => Snapshot) public snapshot;
@@ -98,23 +98,23 @@ contract PoolManager is Ownable, IPoolManager {
 
     function setCLVToken(address _CLVAddress) public onlyOwner {
         clvAddress = _CLVAddress;
-        CLV = ICLVToken(_CLVAddress); 
+        CLV = ICLVToken(_CLVAddress);
         emit CLVTokenAddressChanged(_CLVAddress);
     }
 
-    function setStabilityPool(address payable _stabilityPoolAddress) public onlyOwner {
+    function setStabilityPool(address _stabilityPoolAddress) public onlyOwner {
         stabilityPoolAddress = _stabilityPoolAddress;
         stabilityPool = IStabilityPool(stabilityPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
     }
 
-    function setActivePool(address payable _activePoolAddress) public onlyOwner {
+    function setActivePool(address _activePoolAddress) public onlyOwner {
         activePoolAddress = _activePoolAddress;
         activePool = IPool(activePoolAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
     }
 
-    function setDefaultPool(address payable _defaultPoolAddress) public onlyOwner {
+    function setDefaultPool(address _defaultPoolAddress) public onlyOwner {
         defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(defaultPoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
@@ -126,17 +126,17 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Return the total collateral ratio of the system
-    function getTCR() 
-        view 
-        public 
-        returns (uint) 
+    function getTCR()
+        view
+        public
+        returns (uint)
     {
         uint activePoolETH = activePool.getETH();
         uint activePoolCLV = activePool.getCLV();
         uint price = priceFeed.getPrice();
         
         // Handle edge cases of div by 0
-        if(activePoolETH == 0 && activePoolCLV == 0 ) { 
+        if(activePoolETH == 0 && activePoolCLV == 0 ) {
             return 1;
         }  else if (activePoolETH != 0 && activePoolCLV == 0 ) {
             return 2**256 - 1; // TCR is technically infinite
@@ -147,7 +147,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
     
     // Return the current ETH balance of the TokenPools contract
-    function getBalance() 
+    function getBalance()
         public
         view
         returns (uint)
@@ -156,7 +156,7 @@ contract PoolManager is Ownable, IPoolManager {
     } 
     
     // Return the total active debt (in CLV) in the system
-    function getActiveDebt() 
+    function getActiveDebt()
         public
         view
         returns (uint)
@@ -165,7 +165,7 @@ contract PoolManager is Ownable, IPoolManager {
     }    
     
     // Return the total active collateral (in ETH) in the system
-    function getActiveColl() 
+    function getActiveColl()
         public
         view
         returns (uint)
@@ -174,7 +174,7 @@ contract PoolManager is Ownable, IPoolManager {
     } 
     
     // Return the amount of closed debt (in CLV)
-    function getClosedDebt() 
+    function getClosedDebt()
         public
         view
         returns (uint)
@@ -183,23 +183,23 @@ contract PoolManager is Ownable, IPoolManager {
     }    
     
     // Return the amount of closed collateral (in ETH)
-    function getClosedColl() 
+    function getClosedColl()
         public
         view
         returns (uint)
     {
         return defaultPool.getETH();
-    }  
+    }
     
     // Return the lower value from two given integers
-    function getMin(uint a, uint b) 
+    function getMin(uint a, uint b)
         public
         pure
         returns (uint)
     {
         if (a <= b) return a;
         else return b;
-    }    
+    }
     
     // Add the received ETH to the total active collateral
     function addColl()
@@ -208,14 +208,14 @@ contract PoolManager is Ownable, IPoolManager {
         onlyCDPManager
         returns (bool)
     {
-        // Send ETH to Active Pool and increase its recorded ETH balance 
+        // Send ETH to Active Pool and increase its recorded ETH balance
        (bool success, ) = activePoolAddress.call.value(msg.value)("");
        require (success == true, 'PoolManager: transaction to activePool reverted');
        return success;
     }
     
-    // Transfer the specified amount of ETH to _account and updates the total active collateral 
-    function withdrawColl(address payable _account, uint _ETH)
+    // Transfer the specified amount of ETH to _account and updates the total active collateral
+    function withdrawColl(address _account, uint _ETH)
         public
         onlyCDPManager
         returns (bool)
@@ -258,38 +258,38 @@ contract PoolManager is Ownable, IPoolManager {
         defaultPool.increaseCLV(_CLV);
         activePool.decreaseCLV(_CLV);
         activePool.sendETH(defaultPoolAddress, _ETH);
-        
+
         return true;
-    }    
-    
+    }
+
     // Update the Active Pool and the Default Pool when a CDP obtains a default share
     function obtainDefaultShare(uint _CLV, uint _ETH)
         public
         onlyCDPManager
         returns (bool)
-    {    
+    {
         // Transfer the debt & coll from the Default Pool to the Active Pool
         defaultPool.decreaseCLV(_CLV);
         activePool.increaseCLV(_CLV);
         defaultPool.sendETH(activePoolAddress, _ETH);
- 
+
         return true;
     }
-    
+
     // Burn the received CLV, transfers the redeemed ETH to _account and updates the Active Pool
-    function redeemCollateral(address payable _account, uint _CLV, uint _ETH)
+    function redeemCollateral(address _account, uint _CLV, uint _ETH)
         public
         onlyCDPManager
         returns (bool)
-    {    
+    {
         // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLV(_CLV);
         activePool.sendETH(_account, _ETH);
-        
+
         CLV.burn(_account, _CLV);
 
         return true;
-    }    
+    }
 
     // Return the accumulated change, for the user, for the duration that this deposit was held
     function getCurrentETHGain(address _user) internal view returns(uint) {
@@ -331,7 +331,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
    // Transfers _address's entitled CLV (CLVDeposit - CLVLoss) and their ETHGain, to _address.
-    function retrieveToUser(address payable _address) internal returns(uint[2] memory) {
+    function retrieveToUser(address _address) internal returns(uint[2] memory) {
         uint userDeposit = deposit[_address];
 
         uint ETHShare = getCurrentETHGain(_address);
@@ -367,7 +367,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Transfer _address's entitled CLV (userDeposit - CLVLoss) to _address, and their ETHGain to their CDP.
-    function retrieveToCDP(address payable _address) internal returns(uint[2] memory) {
+    function retrieveToCDP(address _address) internal returns(uint[2] memory) {
         uint userDeposit = deposit[_address];
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
         
@@ -409,7 +409,7 @@ contract PoolManager is Ownable, IPoolManager {
     /* Send ETHGain to user's address, and updates their deposit, 
     setting newDeposit = (oldDeposit - CLVLoss) + amount. */
     function provideToSP(uint _amount) external returns(bool) {
-        address payable user = _msgSender();
+        address user = _msgSender();
 
         uint[2] memory returnedVals = retrieveToUser(user);
 
@@ -429,7 +429,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     In all cases, the entire ETHGain is sent to user, and the CLVLoss is applied to their deposit. */
     function withdrawFromSP(uint _amount) external returns(bool) {
-        address payable user = _msgSender();
+        address user = _msgSender();
         uint userDeposit = deposit[user];
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
 
@@ -451,7 +451,7 @@ contract PoolManager is Ownable, IPoolManager {
     /* Transfer the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
     Applies their CLVLoss to the deposit. */
     function withdrawFromSPtoCDP() external returns(bool) {
-        address payable user = _msgSender();
+        address user = _msgSender();
         uint userDeposit = deposit[user];
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
 
@@ -471,9 +471,9 @@ contract PoolManager is Ownable, IPoolManager {
     /* Withdraw a 'penalty' fraction of an overstayed depositor's ETHGain.  
     
     Callable by anyone when _depositor's CLVLoss > deposit. */
-    function withdrawPenaltyFromSP(address payable _address) external returns(bool) {
-        address payable claimant = _msgSender();
-        address payable depositor = _address;
+    function withdrawPenaltyFromSP(address _address) external returns(bool) {
+        address claimant = _msgSender();
+        address depositor = _address;
         
         uint CLVLoss = getCurrentCLVLoss(depositor);
         uint depositAmount = deposit[depositor];

@@ -38,7 +38,7 @@ interface IPool {
 
     function setDefaultPoolAddress(address _defaultPoolAddress) external;
     
-    function sendETH(address payable _account, uint _amount) external returns(bool);
+    function sendETH(address _account, uint _amount) external returns(bool);
 
     function increaseCLV(uint _amount) external;
 

@@ -266,7 +266,7 @@ contract CDPManager is Ownable, ICDPManager {
         public 
         returns (bool) 
     {
-        address payable user = _msgSender();
+        address user = _msgSender();
         uint newICR = getNewCollRatio(user, 0, -_amount);
 
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
@@ -455,7 +455,7 @@ contract CDPManager is Ownable, ICDPManager {
         public
         returns (bool)
     {
-        address payable user = _msgSender();
+        address user = _msgSender();
         require(CLV.balanceOf(user) >= _amount, "CDPManager: Sender has insufficient balance");
         uint redeemed;
 

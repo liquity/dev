@@ -365,25 +365,25 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.11+commit.c082d0b4\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":true,\"inputs\":[],\"name\":\"getRawETHBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getETH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"decreaseTotalCLVDeposits\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"increaseCLV\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"_account\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"sendETH\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getStabilityPoolAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getPoolManagerAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_defaultPoolAddress\",\"type\":\"address\"}],\"name\":\"setDefaultPoolAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_poolManagerAddress\",\"type\":\"address\"}],\"name\":\"setPoolManagerAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_stabilityPoolAddress\",\"type\":\"address\"}],\"name\":\"setStabilityPoolAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getTotalCLVDeposits\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_activePoolAddress\",\"type\":\"address\"}],\"name\":\"setActivePoolAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getActivePoolAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"increaseTotalCLVDeposits\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getCLV\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"decreaseCLV\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getDefaultPoolAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_newBalance\",\"type\":\"uint256\"}],\"name\":\"ETHBalanceUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_newBalance\",\"type\":\"uint256\"}],\"name\":\"CLVBalanceUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newAddress\",\"type\":\"address\"}],\"name\":\"PoolManagerAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newActivePoolAddress\",\"type\":\"address\"}],\"name\":\"ActivePoolAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newDefaultPoolAddress\",\"type\":\"address\"}],\"name\":\"DefaultPoolAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newStabilityPoolAddress\",\"type\":\"address\"}],\"name\":\"StabilityPoolAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"EtherSent\",\"type\":\"event\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/C/Users/Rick/Desktop/Cleverage/contracts/IStabilityPool.sol\":\"IStabilityPool\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":1000},\"remappings\":[]},\"sources\":{\"/C/Users/Rick/Desktop/Cleverage/contracts/IStabilityPool.sol\":{\"keccak256\":\"0x6eec097cc0bf2f90711eea4d4f995d2b588d28596c0bfbc60edcc02b9577707a\",\"urls\":[\"bzz-raw://b6eacbe15b01e7304547e38ca1d2d5845e9d44fb31d3df0de68e122f3e5f48ba\",\"dweb:/ipfs/Qmf5cCxxposdKdu2SkUueeSWXBw87Hw6e2i9vp2pwfQbnc\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.11+commit.c082d0b4\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":true,\"inputs\":[],\"name\":\"getRawETHBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getETH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"decreaseTotalCLVDeposits\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"increaseCLV\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"_account\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"sendETH\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getStabilityPoolAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getPoolManagerAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_defaultPoolAddress\",\"type\":\"address\"}],\"name\":\"setDefaultPoolAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_poolManagerAddress\",\"type\":\"address\"}],\"name\":\"setPoolManagerAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_stabilityPoolAddress\",\"type\":\"address\"}],\"name\":\"setStabilityPoolAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getTotalCLVDeposits\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_activePoolAddress\",\"type\":\"address\"}],\"name\":\"setActivePoolAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getActivePoolAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"increaseTotalCLVDeposits\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getCLV\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"decreaseCLV\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getDefaultPoolAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_newBalance\",\"type\":\"uint256\"}],\"name\":\"ETHBalanceUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_newBalance\",\"type\":\"uint256\"}],\"name\":\"CLVBalanceUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newAddress\",\"type\":\"address\"}],\"name\":\"PoolManagerAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newActivePoolAddress\",\"type\":\"address\"}],\"name\":\"ActivePoolAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newDefaultPoolAddress\",\"type\":\"address\"}],\"name\":\"DefaultPoolAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newStabilityPoolAddress\",\"type\":\"address\"}],\"name\":\"StabilityPoolAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"EtherSent\",\"type\":\"event\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/c/Users/Rick/Desktop/Cleverage/contracts/IStabilityPool.sol\":\"IStabilityPool\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":1000},\"remappings\":[]},\"sources\":{\"/c/Users/Rick/Desktop/Cleverage/contracts/IStabilityPool.sol\":{\"keccak256\":\"0x0ff597644ae5736b9281aa04424147eed0d856fe933448f55fb9bffde1216bad\",\"urls\":[\"bzz-raw://d2c91d1e582453c477b8526f08a2b729c1784deb59ace71fc4e000314c161b2e\",\"dweb:/ipfs/Qmb1T9d3bQ7RapuLpLJdgjZCZeTBfRuXT4iqnXsGFvCgYm\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "pragma solidity ^0.5.11;\r\n\r\ninterface IStabilityPool {\r\n    \r\n    // --- Events ---\r\n    event ETHBalanceUpdated(uint _newBalance);\r\n\r\n    event CLVBalanceUpdated(uint _newBalance);\r\n\r\n    event PoolManagerAddressChanged(address _newAddress);\r\n\r\n    event ActivePoolAddressChanged(address _newActivePoolAddress);\r\n\r\n    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);\r\n\r\n    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);\r\n\r\n    event EtherSent(address _to, uint _amount);\r\n\r\n    // --- Functions ---\r\n    function getETH() external view returns(uint);\r\n    \r\n    function getCLV() external view returns(uint);\r\n\r\n    function getTotalCLVDeposits() external view returns(uint);\r\n    \r\n    function getPoolManagerAddress() external view returns(address);\r\n    \r\n    function getActivePoolAddress() external view returns(address);\r\n\r\n    function getStabilityPoolAddress() external view returns(address);\r\n\r\n    function getDefaultPoolAddress() external view returns(address);\r\n\r\n    function setPoolManagerAddress(address _poolManagerAddress) external;\r\n\r\n    function setActivePoolAddress(address _activePoolAddress) external;\r\n\r\n    function setStabilityPoolAddress(address _stabilityPoolAddress) external;\r\n\r\n    function setDefaultPoolAddress(address _defaultPoolAddress) external;\r\n    \r\n    function increaseTotalCLVDeposits(uint _amount) external;\r\n\r\n    function decreaseTotalCLVDeposits(uint _amount)  external;\r\n\r\n    function sendETH(address payable _account, uint _amount) external returns(bool);\r\n\r\n    // function increaseETH(uint _amount) external;\r\n\r\n    function increaseCLV(uint _amount) external;\r\n\r\n    function decreaseCLV(uint _amount) external;\r\n\r\n    function getRawETHBalance() external view returns(uint);\r\n}",
-  "sourcePath": "C:\\Users\\Rick\\Desktop\\Cleverage\\contracts\\IStabilityPool.sol",
+  "source": "pragma solidity ^0.5.11;\r\n\r\ninterface IStabilityPool {\r\n    // --- Events ---\r\n    event ETHBalanceUpdated(uint _newBalance);\r\n\r\n    event CLVBalanceUpdated(uint _newBalance);\r\n\r\n    event PoolManagerAddressChanged(address _newAddress);\r\n\r\n    event ActivePoolAddressChanged(address _newActivePoolAddress);\r\n\r\n    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);\r\n\r\n    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);\r\n\r\n    event EtherSent(address _to, uint _amount);\r\n\r\n    // --- Functions ---\r\n    function getETH() external view returns(uint);\r\n    \r\n    function getCLV() external view returns(uint);\r\n\r\n    function getTotalCLVDeposits() external view returns(uint);\r\n    \r\n    function getPoolManagerAddress() external view returns(address);\r\n    \r\n    function getActivePoolAddress() external view returns(address);\r\n\r\n    function getStabilityPoolAddress() external view returns(address);\r\n\r\n    function getDefaultPoolAddress() external view returns(address);\r\n\r\n    function setPoolManagerAddress(address _poolManagerAddress) external;\r\n\r\n    function setActivePoolAddress(address _activePoolAddress) external;\r\n\r\n    function setStabilityPoolAddress(address _stabilityPoolAddress) external;\r\n\r\n    function setDefaultPoolAddress(address _defaultPoolAddress) external;\r\n    \r\n    function increaseTotalCLVDeposits(uint _amount) external;\r\n\r\n    function decreaseTotalCLVDeposits(uint _amount)  external;\r\n\r\n    function sendETH(address payable _account, uint _amount) external returns(bool);\r\n\r\n    function increaseCLV(uint _amount) external;\r\n\r\n    function decreaseCLV(uint _amount) external;\r\n\r\n    function getRawETHBalance() external view returns(uint);\r\n}",
+  "sourcePath": "c:\\Users\\Rick\\Desktop\\Cleverage\\contracts\\IStabilityPool.sol",
   "ast": {
-    "absolutePath": "/C/Users/Rick/Desktop/Cleverage/contracts/IStabilityPool.sol",
+    "absolutePath": "/c/Users/Rick/Desktop/Cleverage/contracts/IStabilityPool.sol",
     "exportedSymbols": {
       "IStabilityPool": [
-        3958
+        3866
       ]
     },
-    "id": 3959,
+    "id": 3867,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3838,
+        "id": 3746,
         "literals": [
           "solidity",
           "^",
@@ -399,9 +399,9 @@
         "contractKind": "interface",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 3958,
+        "id": 3866,
         "linearizedBaseContracts": [
-          3958
+          3866
         ],
         "name": "IStabilityPool",
         "nodeType": "ContractDefinition",
@@ -409,21 +409,21 @@
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3842,
+            "id": 3750,
             "name": "ETHBalanceUpdated",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3841,
+              "id": 3749,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3840,
+                  "id": 3748,
                   "indexed": false,
                   "name": "_newBalance",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3842,
-                  "src": "113:16:11",
+                  "scope": 3750,
+                  "src": "107:16:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -431,10 +431,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3839,
+                    "id": 3747,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "113:4:11",
+                    "src": "107:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -444,28 +444,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "112:18:11"
+              "src": "106:18:11"
             },
-            "src": "89:42:11"
+            "src": "83:42:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3846,
+            "id": 3754,
             "name": "CLVBalanceUpdated",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3845,
+              "id": 3753,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3844,
+                  "id": 3752,
                   "indexed": false,
                   "name": "_newBalance",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3846,
-                  "src": "163:16:11",
+                  "scope": 3754,
+                  "src": "157:16:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -473,10 +473,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3843,
+                    "id": 3751,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "163:4:11",
+                    "src": "157:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -486,28 +486,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "162:18:11"
+              "src": "156:18:11"
             },
-            "src": "139:42:11"
+            "src": "133:42:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3850,
+            "id": 3758,
             "name": "PoolManagerAddressChanged",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3849,
+              "id": 3757,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3848,
+                  "id": 3756,
                   "indexed": false,
                   "name": "_newAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3850,
-                  "src": "221:19:11",
+                  "scope": 3758,
+                  "src": "215:19:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -515,10 +515,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3847,
+                    "id": 3755,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "221:7:11",
+                    "src": "215:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -529,28 +529,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "220:21:11"
+              "src": "214:21:11"
             },
-            "src": "189:53:11"
+            "src": "183:53:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3854,
+            "id": 3762,
             "name": "ActivePoolAddressChanged",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3853,
+              "id": 3761,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3852,
+                  "id": 3760,
                   "indexed": false,
                   "name": "_newActivePoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3854,
-                  "src": "281:29:11",
+                  "scope": 3762,
+                  "src": "275:29:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -558,10 +558,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3851,
+                    "id": 3759,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "281:7:11",
+                    "src": "275:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -572,28 +572,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "280:31:11"
+              "src": "274:31:11"
             },
-            "src": "250:62:11"
+            "src": "244:62:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3858,
+            "id": 3766,
             "name": "DefaultPoolAddressChanged",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3857,
+              "id": 3765,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3856,
+                  "id": 3764,
                   "indexed": false,
                   "name": "_newDefaultPoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3858,
-                  "src": "352:30:11",
+                  "scope": 3766,
+                  "src": "346:30:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -601,10 +601,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3855,
+                    "id": 3763,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "352:7:11",
+                    "src": "346:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -615,28 +615,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "351:32:11"
+              "src": "345:32:11"
             },
-            "src": "320:64:11"
+            "src": "314:64:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3862,
+            "id": 3770,
             "name": "StabilityPoolAddressChanged",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3861,
+              "id": 3769,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3860,
+                  "id": 3768,
                   "indexed": false,
                   "name": "_newStabilityPoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3862,
-                  "src": "426:32:11",
+                  "scope": 3770,
+                  "src": "420:32:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -644,10 +644,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3859,
+                    "id": 3767,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "426:7:11",
+                    "src": "420:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -658,28 +658,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "425:34:11"
+              "src": "419:34:11"
             },
-            "src": "392:68:11"
+            "src": "386:68:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3868,
+            "id": 3776,
             "name": "EtherSent",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3867,
+              "id": 3775,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3864,
+                  "id": 3772,
                   "indexed": false,
                   "name": "_to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3868,
-                  "src": "484:11:11",
+                  "scope": 3776,
+                  "src": "478:11:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -687,10 +687,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3863,
+                    "id": 3771,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "484:7:11",
+                    "src": "478:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -702,12 +702,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 3866,
+                  "id": 3774,
                   "indexed": false,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3868,
-                  "src": "497:12:11",
+                  "scope": 3776,
+                  "src": "491:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -715,10 +715,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3865,
+                    "id": 3773,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "497:4:11",
+                    "src": "491:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -728,36 +728,36 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "483:27:11"
+              "src": "477:27:11"
             },
-            "src": "468:43:11"
+            "src": "462:43:11"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 3873,
+            "id": 3781,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getETH",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3869,
+              "id": 3777,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "560:2:11"
+              "src": "554:2:11"
             },
             "returnParameters": {
-              "id": 3872,
+              "id": 3780,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3871,
+                  "id": 3779,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3873,
-                  "src": "585:4:11",
+                  "scope": 3781,
+                  "src": "579:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -765,10 +765,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3870,
+                    "id": 3778,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "585:4:11",
+                    "src": "579:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -778,10 +778,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "584:6:11"
+              "src": "578:6:11"
             },
-            "scope": 3958,
-            "src": "545:46:11",
+            "scope": 3866,
+            "src": "539:46:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -789,29 +789,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3878,
+            "id": 3786,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getCLV",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3874,
+              "id": 3782,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "618:2:11"
+              "src": "612:2:11"
             },
             "returnParameters": {
-              "id": 3877,
+              "id": 3785,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3876,
+                  "id": 3784,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3878,
-                  "src": "643:4:11",
+                  "scope": 3786,
+                  "src": "637:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -819,10 +819,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3875,
+                    "id": 3783,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "643:4:11",
+                    "src": "637:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -832,10 +832,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "642:6:11"
+              "src": "636:6:11"
             },
-            "scope": 3958,
-            "src": "603:46:11",
+            "scope": 3866,
+            "src": "597:46:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -843,29 +843,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3883,
+            "id": 3791,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getTotalCLVDeposits",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3879,
+              "id": 3787,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "685:2:11"
+              "src": "679:2:11"
             },
             "returnParameters": {
-              "id": 3882,
+              "id": 3790,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3881,
+                  "id": 3789,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3883,
-                  "src": "710:4:11",
+                  "scope": 3791,
+                  "src": "704:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -873,10 +873,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3880,
+                    "id": 3788,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "710:4:11",
+                    "src": "704:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -886,10 +886,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "709:6:11"
+              "src": "703:6:11"
             },
-            "scope": 3958,
-            "src": "657:59:11",
+            "scope": 3866,
+            "src": "651:59:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -897,29 +897,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3888,
+            "id": 3796,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getPoolManagerAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3884,
+              "id": 3792,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "758:2:11"
+              "src": "752:2:11"
             },
             "returnParameters": {
-              "id": 3887,
+              "id": 3795,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3886,
+                  "id": 3794,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3888,
-                  "src": "783:7:11",
+                  "scope": 3796,
+                  "src": "777:7:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -927,10 +927,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3885,
+                    "id": 3793,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "783:7:11",
+                    "src": "777:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -941,10 +941,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "782:9:11"
+              "src": "776:9:11"
             },
-            "scope": 3958,
-            "src": "728:64:11",
+            "scope": 3866,
+            "src": "722:64:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -952,29 +952,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3893,
+            "id": 3801,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getActivePoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3889,
+              "id": 3797,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "833:2:11"
+              "src": "827:2:11"
             },
             "returnParameters": {
-              "id": 3892,
+              "id": 3800,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3891,
+                  "id": 3799,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3893,
-                  "src": "858:7:11",
+                  "scope": 3801,
+                  "src": "852:7:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -982,10 +982,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3890,
+                    "id": 3798,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "858:7:11",
+                    "src": "852:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -996,10 +996,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "857:9:11"
+              "src": "851:9:11"
             },
-            "scope": 3958,
-            "src": "804:63:11",
+            "scope": 3866,
+            "src": "798:63:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -1007,29 +1007,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3898,
+            "id": 3806,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getStabilityPoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3894,
+              "id": 3802,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "907:2:11"
+              "src": "901:2:11"
             },
             "returnParameters": {
-              "id": 3897,
+              "id": 3805,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3896,
+                  "id": 3804,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3898,
-                  "src": "932:7:11",
+                  "scope": 3806,
+                  "src": "926:7:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1037,10 +1037,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3895,
+                    "id": 3803,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "932:7:11",
+                    "src": "926:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1051,10 +1051,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "931:9:11"
+              "src": "925:9:11"
             },
-            "scope": 3958,
-            "src": "875:66:11",
+            "scope": 3866,
+            "src": "869:66:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -1062,29 +1062,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3903,
+            "id": 3811,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getDefaultPoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3899,
+              "id": 3807,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "979:2:11"
+              "src": "973:2:11"
             },
             "returnParameters": {
-              "id": 3902,
+              "id": 3810,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3901,
+                  "id": 3809,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3903,
-                  "src": "1004:7:11",
+                  "scope": 3811,
+                  "src": "998:7:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1092,10 +1092,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3900,
+                    "id": 3808,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1004:7:11",
+                    "src": "998:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1106,10 +1106,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1003:9:11"
+              "src": "997:9:11"
             },
-            "scope": 3958,
-            "src": "949:64:11",
+            "scope": 3866,
+            "src": "943:64:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -1117,23 +1117,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3908,
+            "id": 3816,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setPoolManagerAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3906,
+              "id": 3814,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3905,
+                  "id": 3813,
                   "name": "_poolManagerAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3908,
-                  "src": "1052:27:11",
+                  "scope": 3816,
+                  "src": "1046:27:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1141,10 +1141,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3904,
+                    "id": 3812,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1052:7:11",
+                    "src": "1046:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1155,16 +1155,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1051:29:11"
+              "src": "1045:29:11"
             },
             "returnParameters": {
-              "id": 3907,
+              "id": 3815,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1089:0:11"
+              "src": "1083:0:11"
             },
-            "scope": 3958,
-            "src": "1021:69:11",
+            "scope": 3866,
+            "src": "1015:69:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1172,23 +1172,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3913,
+            "id": 3821,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setActivePoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3911,
+              "id": 3819,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3910,
+                  "id": 3818,
                   "name": "_activePoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3913,
-                  "src": "1128:26:11",
+                  "scope": 3821,
+                  "src": "1122:26:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1196,10 +1196,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3909,
+                    "id": 3817,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1128:7:11",
+                    "src": "1122:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1210,16 +1210,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1127:28:11"
+              "src": "1121:28:11"
             },
             "returnParameters": {
-              "id": 3912,
+              "id": 3820,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1164:0:11"
+              "src": "1158:0:11"
             },
-            "scope": 3958,
-            "src": "1098:67:11",
+            "scope": 3866,
+            "src": "1092:67:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1227,23 +1227,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3918,
+            "id": 3826,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setStabilityPoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3916,
+              "id": 3824,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3915,
+                  "id": 3823,
                   "name": "_stabilityPoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3918,
-                  "src": "1206:29:11",
+                  "scope": 3826,
+                  "src": "1200:29:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1251,10 +1251,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3914,
+                    "id": 3822,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1206:7:11",
+                    "src": "1200:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1265,16 +1265,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1205:31:11"
+              "src": "1199:31:11"
             },
             "returnParameters": {
-              "id": 3917,
+              "id": 3825,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1245:0:11"
+              "src": "1239:0:11"
             },
-            "scope": 3958,
-            "src": "1173:73:11",
+            "scope": 3866,
+            "src": "1167:73:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1282,23 +1282,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3923,
+            "id": 3831,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setDefaultPoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3921,
+              "id": 3829,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3920,
+                  "id": 3828,
                   "name": "_defaultPoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3923,
-                  "src": "1285:27:11",
+                  "scope": 3831,
+                  "src": "1279:27:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1306,10 +1306,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3919,
+                    "id": 3827,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1285:7:11",
+                    "src": "1279:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1320,16 +1320,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1284:29:11"
+              "src": "1278:29:11"
             },
             "returnParameters": {
-              "id": 3922,
+              "id": 3830,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1322:0:11"
+              "src": "1316:0:11"
             },
-            "scope": 3958,
-            "src": "1254:69:11",
+            "scope": 3866,
+            "src": "1248:69:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1337,23 +1337,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3928,
+            "id": 3836,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "increaseTotalCLVDeposits",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3926,
+              "id": 3834,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3925,
+                  "id": 3833,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3928,
-                  "src": "1369:12:11",
+                  "scope": 3836,
+                  "src": "1363:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1361,10 +1361,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3924,
+                    "id": 3832,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1369:4:11",
+                    "src": "1363:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1374,16 +1374,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1368:14:11"
+              "src": "1362:14:11"
             },
             "returnParameters": {
-              "id": 3927,
+              "id": 3835,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1391:0:11"
+              "src": "1385:0:11"
             },
-            "scope": 3958,
-            "src": "1335:57:11",
+            "scope": 3866,
+            "src": "1329:57:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1391,23 +1391,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3933,
+            "id": 3841,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "decreaseTotalCLVDeposits",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3931,
+              "id": 3839,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3930,
+                  "id": 3838,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3933,
-                  "src": "1434:12:11",
+                  "scope": 3841,
+                  "src": "1428:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1415,10 +1415,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3929,
+                    "id": 3837,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1434:4:11",
+                    "src": "1428:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1428,16 +1428,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1433:14:11"
+              "src": "1427:14:11"
             },
             "returnParameters": {
-              "id": 3932,
+              "id": 3840,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1457:0:11"
+              "src": "1451:0:11"
             },
-            "scope": 3958,
-            "src": "1400:58:11",
+            "scope": 3866,
+            "src": "1394:58:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1445,23 +1445,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3942,
+            "id": 3850,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "sendETH",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3938,
+              "id": 3846,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3935,
+                  "id": 3843,
                   "name": "_account",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3942,
-                  "src": "1483:24:11",
+                  "scope": 3850,
+                  "src": "1477:24:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1469,10 +1469,10 @@
                     "typeString": "address payable"
                   },
                   "typeName": {
-                    "id": 3934,
+                    "id": 3842,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1483:15:11",
+                    "src": "1477:15:11",
                     "stateMutability": "payable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address_payable",
@@ -1484,11 +1484,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 3937,
+                  "id": 3845,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3942,
-                  "src": "1509:12:11",
+                  "scope": 3850,
+                  "src": "1503:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1496,10 +1496,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3936,
+                    "id": 3844,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1509:4:11",
+                    "src": "1503:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1509,19 +1509,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1482:40:11"
+              "src": "1476:40:11"
             },
             "returnParameters": {
-              "id": 3941,
+              "id": 3849,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3940,
+                  "id": 3848,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3942,
-                  "src": "1540:4:11",
+                  "scope": 3850,
+                  "src": "1534:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1529,10 +1529,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 3939,
+                    "id": 3847,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1540:4:11",
+                    "src": "1534:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -1542,10 +1542,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1539:6:11"
+              "src": "1533:6:11"
             },
-            "scope": 3958,
-            "src": "1466:80:11",
+            "scope": 3866,
+            "src": "1460:80:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1553,23 +1553,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3947,
+            "id": 3855,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "increaseCLV",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3945,
+              "id": 3853,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3944,
+                  "id": 3852,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3947,
-                  "src": "1630:12:11",
+                  "scope": 3855,
+                  "src": "1569:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1577,10 +1577,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3943,
+                    "id": 3851,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1630:4:11",
+                    "src": "1569:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1590,16 +1590,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1629:14:11"
+              "src": "1568:14:11"
             },
             "returnParameters": {
-              "id": 3946,
+              "id": 3854,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1652:0:11"
+              "src": "1591:0:11"
             },
-            "scope": 3958,
-            "src": "1609:44:11",
+            "scope": 3866,
+            "src": "1548:44:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1607,23 +1607,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3952,
+            "id": 3860,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "decreaseCLV",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3950,
+              "id": 3858,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3949,
+                  "id": 3857,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3952,
-                  "src": "1682:12:11",
+                  "scope": 3860,
+                  "src": "1621:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1631,10 +1631,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3948,
+                    "id": 3856,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1682:4:11",
+                    "src": "1621:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1644,16 +1644,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1681:14:11"
+              "src": "1620:14:11"
             },
             "returnParameters": {
-              "id": 3951,
+              "id": 3859,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1704:0:11"
+              "src": "1643:0:11"
             },
-            "scope": 3958,
-            "src": "1661:44:11",
+            "scope": 3866,
+            "src": "1600:44:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1661,29 +1661,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3957,
+            "id": 3865,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getRawETHBalance",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3953,
+              "id": 3861,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1738:2:11"
+              "src": "1677:2:11"
             },
             "returnParameters": {
-              "id": 3956,
+              "id": 3864,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3955,
+                  "id": 3863,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3957,
-                  "src": "1763:4:11",
+                  "scope": 3865,
+                  "src": "1702:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1691,10 +1691,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3954,
+                    "id": 3862,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1763:4:11",
+                    "src": "1702:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1704,33 +1704,33 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1762:6:11"
+              "src": "1701:6:11"
             },
-            "scope": 3958,
-            "src": "1713:56:11",
+            "scope": 3866,
+            "src": "1652:56:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 3959,
-        "src": "28:1744:11"
+        "scope": 3867,
+        "src": "28:1683:11"
       }
     ],
-    "src": "0:1772:11"
+    "src": "0:1711:11"
   },
   "legacyAST": {
-    "absolutePath": "/C/Users/Rick/Desktop/Cleverage/contracts/IStabilityPool.sol",
+    "absolutePath": "/c/Users/Rick/Desktop/Cleverage/contracts/IStabilityPool.sol",
     "exportedSymbols": {
       "IStabilityPool": [
-        3958
+        3866
       ]
     },
-    "id": 3959,
+    "id": 3867,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3838,
+        "id": 3746,
         "literals": [
           "solidity",
           "^",
@@ -1746,9 +1746,9 @@
         "contractKind": "interface",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 3958,
+        "id": 3866,
         "linearizedBaseContracts": [
-          3958
+          3866
         ],
         "name": "IStabilityPool",
         "nodeType": "ContractDefinition",
@@ -1756,21 +1756,21 @@
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3842,
+            "id": 3750,
             "name": "ETHBalanceUpdated",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3841,
+              "id": 3749,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3840,
+                  "id": 3748,
                   "indexed": false,
                   "name": "_newBalance",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3842,
-                  "src": "113:16:11",
+                  "scope": 3750,
+                  "src": "107:16:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1778,10 +1778,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3839,
+                    "id": 3747,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "113:4:11",
+                    "src": "107:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1791,28 +1791,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "112:18:11"
+              "src": "106:18:11"
             },
-            "src": "89:42:11"
+            "src": "83:42:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3846,
+            "id": 3754,
             "name": "CLVBalanceUpdated",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3845,
+              "id": 3753,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3844,
+                  "id": 3752,
                   "indexed": false,
                   "name": "_newBalance",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3846,
-                  "src": "163:16:11",
+                  "scope": 3754,
+                  "src": "157:16:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1820,10 +1820,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3843,
+                    "id": 3751,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "163:4:11",
+                    "src": "157:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1833,28 +1833,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "162:18:11"
+              "src": "156:18:11"
             },
-            "src": "139:42:11"
+            "src": "133:42:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3850,
+            "id": 3758,
             "name": "PoolManagerAddressChanged",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3849,
+              "id": 3757,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3848,
+                  "id": 3756,
                   "indexed": false,
                   "name": "_newAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3850,
-                  "src": "221:19:11",
+                  "scope": 3758,
+                  "src": "215:19:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1862,10 +1862,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3847,
+                    "id": 3755,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "221:7:11",
+                    "src": "215:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1876,28 +1876,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "220:21:11"
+              "src": "214:21:11"
             },
-            "src": "189:53:11"
+            "src": "183:53:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3854,
+            "id": 3762,
             "name": "ActivePoolAddressChanged",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3853,
+              "id": 3761,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3852,
+                  "id": 3760,
                   "indexed": false,
                   "name": "_newActivePoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3854,
-                  "src": "281:29:11",
+                  "scope": 3762,
+                  "src": "275:29:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1905,10 +1905,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3851,
+                    "id": 3759,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "281:7:11",
+                    "src": "275:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1919,28 +1919,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "280:31:11"
+              "src": "274:31:11"
             },
-            "src": "250:62:11"
+            "src": "244:62:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3858,
+            "id": 3766,
             "name": "DefaultPoolAddressChanged",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3857,
+              "id": 3765,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3856,
+                  "id": 3764,
                   "indexed": false,
                   "name": "_newDefaultPoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3858,
-                  "src": "352:30:11",
+                  "scope": 3766,
+                  "src": "346:30:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1948,10 +1948,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3855,
+                    "id": 3763,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "352:7:11",
+                    "src": "346:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1962,28 +1962,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "351:32:11"
+              "src": "345:32:11"
             },
-            "src": "320:64:11"
+            "src": "314:64:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3862,
+            "id": 3770,
             "name": "StabilityPoolAddressChanged",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3861,
+              "id": 3769,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3860,
+                  "id": 3768,
                   "indexed": false,
                   "name": "_newStabilityPoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3862,
-                  "src": "426:32:11",
+                  "scope": 3770,
+                  "src": "420:32:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1991,10 +1991,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3859,
+                    "id": 3767,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "426:7:11",
+                    "src": "420:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2005,28 +2005,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "425:34:11"
+              "src": "419:34:11"
             },
-            "src": "392:68:11"
+            "src": "386:68:11"
           },
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3868,
+            "id": 3776,
             "name": "EtherSent",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3867,
+              "id": 3775,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3864,
+                  "id": 3772,
                   "indexed": false,
                   "name": "_to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3868,
-                  "src": "484:11:11",
+                  "scope": 3776,
+                  "src": "478:11:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2034,10 +2034,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3863,
+                    "id": 3771,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "484:7:11",
+                    "src": "478:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2049,12 +2049,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 3866,
+                  "id": 3774,
                   "indexed": false,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3868,
-                  "src": "497:12:11",
+                  "scope": 3776,
+                  "src": "491:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2062,10 +2062,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3865,
+                    "id": 3773,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "497:4:11",
+                    "src": "491:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2075,36 +2075,36 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "483:27:11"
+              "src": "477:27:11"
             },
-            "src": "468:43:11"
+            "src": "462:43:11"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 3873,
+            "id": 3781,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getETH",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3869,
+              "id": 3777,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "560:2:11"
+              "src": "554:2:11"
             },
             "returnParameters": {
-              "id": 3872,
+              "id": 3780,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3871,
+                  "id": 3779,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3873,
-                  "src": "585:4:11",
+                  "scope": 3781,
+                  "src": "579:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2112,10 +2112,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3870,
+                    "id": 3778,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "585:4:11",
+                    "src": "579:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2125,10 +2125,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "584:6:11"
+              "src": "578:6:11"
             },
-            "scope": 3958,
-            "src": "545:46:11",
+            "scope": 3866,
+            "src": "539:46:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -2136,29 +2136,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3878,
+            "id": 3786,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getCLV",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3874,
+              "id": 3782,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "618:2:11"
+              "src": "612:2:11"
             },
             "returnParameters": {
-              "id": 3877,
+              "id": 3785,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3876,
+                  "id": 3784,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3878,
-                  "src": "643:4:11",
+                  "scope": 3786,
+                  "src": "637:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2166,10 +2166,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3875,
+                    "id": 3783,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "643:4:11",
+                    "src": "637:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2179,10 +2179,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "642:6:11"
+              "src": "636:6:11"
             },
-            "scope": 3958,
-            "src": "603:46:11",
+            "scope": 3866,
+            "src": "597:46:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -2190,29 +2190,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3883,
+            "id": 3791,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getTotalCLVDeposits",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3879,
+              "id": 3787,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "685:2:11"
+              "src": "679:2:11"
             },
             "returnParameters": {
-              "id": 3882,
+              "id": 3790,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3881,
+                  "id": 3789,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3883,
-                  "src": "710:4:11",
+                  "scope": 3791,
+                  "src": "704:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2220,10 +2220,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3880,
+                    "id": 3788,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "710:4:11",
+                    "src": "704:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2233,10 +2233,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "709:6:11"
+              "src": "703:6:11"
             },
-            "scope": 3958,
-            "src": "657:59:11",
+            "scope": 3866,
+            "src": "651:59:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -2244,29 +2244,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3888,
+            "id": 3796,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getPoolManagerAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3884,
+              "id": 3792,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "758:2:11"
+              "src": "752:2:11"
             },
             "returnParameters": {
-              "id": 3887,
+              "id": 3795,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3886,
+                  "id": 3794,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3888,
-                  "src": "783:7:11",
+                  "scope": 3796,
+                  "src": "777:7:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2274,10 +2274,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3885,
+                    "id": 3793,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "783:7:11",
+                    "src": "777:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2288,10 +2288,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "782:9:11"
+              "src": "776:9:11"
             },
-            "scope": 3958,
-            "src": "728:64:11",
+            "scope": 3866,
+            "src": "722:64:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -2299,29 +2299,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3893,
+            "id": 3801,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getActivePoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3889,
+              "id": 3797,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "833:2:11"
+              "src": "827:2:11"
             },
             "returnParameters": {
-              "id": 3892,
+              "id": 3800,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3891,
+                  "id": 3799,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3893,
-                  "src": "858:7:11",
+                  "scope": 3801,
+                  "src": "852:7:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2329,10 +2329,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3890,
+                    "id": 3798,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "858:7:11",
+                    "src": "852:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2343,10 +2343,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "857:9:11"
+              "src": "851:9:11"
             },
-            "scope": 3958,
-            "src": "804:63:11",
+            "scope": 3866,
+            "src": "798:63:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -2354,29 +2354,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3898,
+            "id": 3806,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getStabilityPoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3894,
+              "id": 3802,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "907:2:11"
+              "src": "901:2:11"
             },
             "returnParameters": {
-              "id": 3897,
+              "id": 3805,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3896,
+                  "id": 3804,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3898,
-                  "src": "932:7:11",
+                  "scope": 3806,
+                  "src": "926:7:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2384,10 +2384,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3895,
+                    "id": 3803,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "932:7:11",
+                    "src": "926:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2398,10 +2398,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "931:9:11"
+              "src": "925:9:11"
             },
-            "scope": 3958,
-            "src": "875:66:11",
+            "scope": 3866,
+            "src": "869:66:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -2409,29 +2409,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3903,
+            "id": 3811,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getDefaultPoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3899,
+              "id": 3807,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "979:2:11"
+              "src": "973:2:11"
             },
             "returnParameters": {
-              "id": 3902,
+              "id": 3810,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3901,
+                  "id": 3809,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3903,
-                  "src": "1004:7:11",
+                  "scope": 3811,
+                  "src": "998:7:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2439,10 +2439,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3900,
+                    "id": 3808,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1004:7:11",
+                    "src": "998:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2453,10 +2453,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1003:9:11"
+              "src": "997:9:11"
             },
-            "scope": 3958,
-            "src": "949:64:11",
+            "scope": 3866,
+            "src": "943:64:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -2464,23 +2464,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3908,
+            "id": 3816,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setPoolManagerAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3906,
+              "id": 3814,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3905,
+                  "id": 3813,
                   "name": "_poolManagerAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3908,
-                  "src": "1052:27:11",
+                  "scope": 3816,
+                  "src": "1046:27:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2488,10 +2488,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3904,
+                    "id": 3812,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1052:7:11",
+                    "src": "1046:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2502,16 +2502,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1051:29:11"
+              "src": "1045:29:11"
             },
             "returnParameters": {
-              "id": 3907,
+              "id": 3815,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1089:0:11"
+              "src": "1083:0:11"
             },
-            "scope": 3958,
-            "src": "1021:69:11",
+            "scope": 3866,
+            "src": "1015:69:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -2519,23 +2519,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3913,
+            "id": 3821,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setActivePoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3911,
+              "id": 3819,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3910,
+                  "id": 3818,
                   "name": "_activePoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3913,
-                  "src": "1128:26:11",
+                  "scope": 3821,
+                  "src": "1122:26:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2543,10 +2543,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3909,
+                    "id": 3817,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1128:7:11",
+                    "src": "1122:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2557,16 +2557,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1127:28:11"
+              "src": "1121:28:11"
             },
             "returnParameters": {
-              "id": 3912,
+              "id": 3820,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1164:0:11"
+              "src": "1158:0:11"
             },
-            "scope": 3958,
-            "src": "1098:67:11",
+            "scope": 3866,
+            "src": "1092:67:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -2574,23 +2574,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3918,
+            "id": 3826,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setStabilityPoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3916,
+              "id": 3824,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3915,
+                  "id": 3823,
                   "name": "_stabilityPoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3918,
-                  "src": "1206:29:11",
+                  "scope": 3826,
+                  "src": "1200:29:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2598,10 +2598,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3914,
+                    "id": 3822,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1206:7:11",
+                    "src": "1200:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2612,16 +2612,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1205:31:11"
+              "src": "1199:31:11"
             },
             "returnParameters": {
-              "id": 3917,
+              "id": 3825,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1245:0:11"
+              "src": "1239:0:11"
             },
-            "scope": 3958,
-            "src": "1173:73:11",
+            "scope": 3866,
+            "src": "1167:73:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -2629,23 +2629,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3923,
+            "id": 3831,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setDefaultPoolAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3921,
+              "id": 3829,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3920,
+                  "id": 3828,
                   "name": "_defaultPoolAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3923,
-                  "src": "1285:27:11",
+                  "scope": 3831,
+                  "src": "1279:27:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2653,10 +2653,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 3919,
+                    "id": 3827,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1285:7:11",
+                    "src": "1279:7:11",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2667,16 +2667,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1284:29:11"
+              "src": "1278:29:11"
             },
             "returnParameters": {
-              "id": 3922,
+              "id": 3830,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1322:0:11"
+              "src": "1316:0:11"
             },
-            "scope": 3958,
-            "src": "1254:69:11",
+            "scope": 3866,
+            "src": "1248:69:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -2684,23 +2684,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3928,
+            "id": 3836,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "increaseTotalCLVDeposits",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3926,
+              "id": 3834,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3925,
+                  "id": 3833,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3928,
-                  "src": "1369:12:11",
+                  "scope": 3836,
+                  "src": "1363:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2708,10 +2708,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3924,
+                    "id": 3832,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1369:4:11",
+                    "src": "1363:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2721,16 +2721,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1368:14:11"
+              "src": "1362:14:11"
             },
             "returnParameters": {
-              "id": 3927,
+              "id": 3835,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1391:0:11"
+              "src": "1385:0:11"
             },
-            "scope": 3958,
-            "src": "1335:57:11",
+            "scope": 3866,
+            "src": "1329:57:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -2738,23 +2738,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3933,
+            "id": 3841,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "decreaseTotalCLVDeposits",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3931,
+              "id": 3839,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3930,
+                  "id": 3838,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3933,
-                  "src": "1434:12:11",
+                  "scope": 3841,
+                  "src": "1428:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2762,10 +2762,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3929,
+                    "id": 3837,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1434:4:11",
+                    "src": "1428:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2775,16 +2775,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1433:14:11"
+              "src": "1427:14:11"
             },
             "returnParameters": {
-              "id": 3932,
+              "id": 3840,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1457:0:11"
+              "src": "1451:0:11"
             },
-            "scope": 3958,
-            "src": "1400:58:11",
+            "scope": 3866,
+            "src": "1394:58:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -2792,23 +2792,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3942,
+            "id": 3850,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "sendETH",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3938,
+              "id": 3846,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3935,
+                  "id": 3843,
                   "name": "_account",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3942,
-                  "src": "1483:24:11",
+                  "scope": 3850,
+                  "src": "1477:24:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2816,10 +2816,10 @@
                     "typeString": "address payable"
                   },
                   "typeName": {
-                    "id": 3934,
+                    "id": 3842,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1483:15:11",
+                    "src": "1477:15:11",
                     "stateMutability": "payable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address_payable",
@@ -2831,11 +2831,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 3937,
+                  "id": 3845,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3942,
-                  "src": "1509:12:11",
+                  "scope": 3850,
+                  "src": "1503:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2843,10 +2843,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3936,
+                    "id": 3844,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1509:4:11",
+                    "src": "1503:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2856,19 +2856,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1482:40:11"
+              "src": "1476:40:11"
             },
             "returnParameters": {
-              "id": 3941,
+              "id": 3849,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3940,
+                  "id": 3848,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3942,
-                  "src": "1540:4:11",
+                  "scope": 3850,
+                  "src": "1534:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2876,10 +2876,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 3939,
+                    "id": 3847,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1540:4:11",
+                    "src": "1534:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -2889,10 +2889,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1539:6:11"
+              "src": "1533:6:11"
             },
-            "scope": 3958,
-            "src": "1466:80:11",
+            "scope": 3866,
+            "src": "1460:80:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -2900,23 +2900,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3947,
+            "id": 3855,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "increaseCLV",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3945,
+              "id": 3853,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3944,
+                  "id": 3852,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3947,
-                  "src": "1630:12:11",
+                  "scope": 3855,
+                  "src": "1569:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2924,10 +2924,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3943,
+                    "id": 3851,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1630:4:11",
+                    "src": "1569:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2937,16 +2937,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1629:14:11"
+              "src": "1568:14:11"
             },
             "returnParameters": {
-              "id": 3946,
+              "id": 3854,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1652:0:11"
+              "src": "1591:0:11"
             },
-            "scope": 3958,
-            "src": "1609:44:11",
+            "scope": 3866,
+            "src": "1548:44:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -2954,23 +2954,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3952,
+            "id": 3860,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "decreaseCLV",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3950,
+              "id": 3858,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3949,
+                  "id": 3857,
                   "name": "_amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3952,
-                  "src": "1682:12:11",
+                  "scope": 3860,
+                  "src": "1621:12:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2978,10 +2978,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3948,
+                    "id": 3856,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1682:4:11",
+                    "src": "1621:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2991,16 +2991,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1681:14:11"
+              "src": "1620:14:11"
             },
             "returnParameters": {
-              "id": 3951,
+              "id": 3859,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1704:0:11"
+              "src": "1643:0:11"
             },
-            "scope": 3958,
-            "src": "1661:44:11",
+            "scope": 3866,
+            "src": "1600:44:11",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -3008,29 +3008,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 3957,
+            "id": 3865,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getRawETHBalance",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3953,
+              "id": 3861,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1738:2:11"
+              "src": "1677:2:11"
             },
             "returnParameters": {
-              "id": 3956,
+              "id": 3864,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3955,
+                  "id": 3863,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3957,
-                  "src": "1763:4:11",
+                  "scope": 3865,
+                  "src": "1702:4:11",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -3038,10 +3038,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3954,
+                    "id": 3862,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1763:4:11",
+                    "src": "1702:4:11",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -3051,20 +3051,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1762:6:11"
+              "src": "1701:6:11"
             },
-            "scope": 3958,
-            "src": "1713:56:11",
+            "scope": 3866,
+            "src": "1652:56:11",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 3959,
-        "src": "28:1744:11"
+        "scope": 3867,
+        "src": "28:1683:11"
       }
     ],
-    "src": "0:1772:11"
+    "src": "0:1711:11"
   },
   "compiler": {
     "name": "solc",
@@ -3072,7 +3072,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.20",
-  "updatedAt": "2019-12-26T17:22:10.249Z",
+  "updatedAt": "2019-12-30T00:39:24.167Z",
   "devdoc": {
     "methods": {}
   },
