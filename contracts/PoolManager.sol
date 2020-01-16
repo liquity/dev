@@ -75,6 +75,11 @@ contract PoolManager is Ownable, IPoolManager {
         _;
     }
 
+    modifier onlyCDPManagerOrUserIsSender(address _user) {
+        require( _user == _msgSender() || _msgSender()  == cdpManagerAddress,
+        "PoolManager: Target CDP must be _msgSender(), otherwise caller must be CDPManager");
+        _;
+    }
     modifier onlyStabilityPool {
         require(
             _msgSender() == stabilityPoolAddress, "PoolManager: Caller is not the StabilityPool");
@@ -249,7 +254,7 @@ contract PoolManager is Ownable, IPoolManager {
     }           
     
     // Update the Active Pool and the Default Pool when a CDP gets closed
-    function close(uint _CLV, uint _ETH)
+    function liquidate(uint _CLV, uint _ETH)
         public
         onlyCDPManager
         returns (bool)
@@ -306,7 +311,7 @@ contract PoolManager is Ownable, IPoolManager {
         return DeciMath.accurateMulDiv(userDeposit, rewardPerUnitStaked, DIGITS);
     }
 
-    // --- Internal  StabilityPool functions --- 
+    // --- Internal StabilityPool functions --- 
 
     // Deposit _amount CLV from _address, to the Stability Pool.
     function depositCLV(address _address, uint _amount) internal returns(bool) {
@@ -450,15 +455,15 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Transfer the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
     Applies their CLVLoss to the deposit. */
-    function withdrawFromSPtoCDP() external returns(bool) {
-        address user = _msgSender();
-        uint userDeposit = deposit[user];
+    function withdrawFromSPtoCDP(address _user) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
+
+        uint userDeposit = deposit[_user];
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
 
-        uint CLVLoss = getCurrentCLVLoss(user);
+        uint CLVLoss = getCurrentCLVLoss(_user);
 
         // Retrieve all CLV to user's CLV balance, and ETH to their CDP
-        uint[2] memory returnedVals = retrieveToCDP(user);
+        uint[2] memory returnedVals = retrieveToCDP(_user);
 
         uint returnedCLV = returnedVals[0];
 

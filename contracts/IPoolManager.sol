@@ -62,7 +62,7 @@ interface IPoolManager {
     
     function repayCLV(address _account, uint _CLV) external returns(bool);
 
-    function close(uint _CLV, uint _ETH) external returns(bool);
+    function liquidate(uint _CLV, uint _ETH) external returns(bool);
 
     function obtainDefaultShare(uint _CLV, uint _ETH) external returns(bool);
 
@@ -73,7 +73,7 @@ interface IPoolManager {
 
     function withdrawFromSP(uint _amount) external returns(bool);
 
-    function withdrawFromSPtoCDP() external returns(bool);
+    function withdrawFromSPtoCDP(address _user) external returns(bool);
 
     function withdrawPenaltyFromSP(address _address) external returns(bool);
 

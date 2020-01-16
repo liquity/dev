@@ -61,8 +61,6 @@ contract ActivePool is Ownable, IPool {
         return CLV;
     }
 
-    
-
     // --- Pool functionality ---
     function sendETH(address _account, uint _amount) public onlyPoolManager returns(bool) {
         ETH = ETH.sub(_amount);
@@ -72,12 +70,6 @@ contract ActivePool is Ownable, IPool {
         emit EtherSent(_account, _amount);
         return success;
     }
-
-    // Deprecated
-    // function increaseETH(uint _amount) public onlyPoolManager () {
-    //     ETH = ETH.add(_amount);
-    //     emit ETHBalanceUpdated(ETH);
-    // }
 
     function increaseCLV(uint _amount) public onlyPoolManager () {
         CLV  = CLV.add(_amount);

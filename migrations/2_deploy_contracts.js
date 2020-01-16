@@ -1,7 +1,7 @@
-const SortedDoublyLL = artifacts.require("./SortedDoublyLL.sol")
+const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const PoolManager = artifacts.require("./PoolManager.sol")
-const ActivePool = artifacts.require("./ActivePool.sol");
-const DefaultPool = artifacts.require("./DefaultPool.sol");
+const ActivePool = artifacts.require("./ActivePool.sol")
+const DefaultPool = artifacts.require("./DefaultPool.sol")
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
@@ -18,8 +18,7 @@ const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegis
 
 module.exports =  function(deployer) {
     // Deploy contract bytecode to blockchain
-    deployer.deploy(SortedDoublyLL)
-    deployer.link(SortedDoublyLL, CDPManager)
+    deployer.deploy(SortedCDPs)
     deployer.deploy(DeciMath)
     deployer.link(DeciMath, CDPManager)
     deployer.link(DeciMath, PoolManager)
@@ -38,6 +37,7 @@ module.exports =  function(deployer) {
     const priceFeed = await PriceFeed.deployed()
     const clvToken = await CLVToken.deployed()
     const poolManager = await PoolManager.deployed()
+    const sortedCDPs = await SortedCDPs.deployed()
     const cdpManager = await CDPManager.deployed()
     const nameRegistry = await NameRegistry.deployed()
     const activePool = await ActivePool.deployed()
@@ -46,7 +46,8 @@ module.exports =  function(deployer) {
 
     const contracts = { priceFeed, 
                         clvToken, 
-                        poolManager, 
+                        poolManager,
+                        sortedCDPs, 
                         cdpManager, 
                         nameRegistry, 
                         activePool, 

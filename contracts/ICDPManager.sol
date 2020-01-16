@@ -1,6 +1,6 @@
 pragma solidity ^0.5.11;
 
-// Common interface for the ETH/CLV pools.
+// Common interface for the CDP Manager.
 interface ICDPManager {
     // --- Events ---
     event PoolManagerAddressChanged(address _newPoolManagerAddress);
@@ -9,9 +9,11 @@ interface ICDPManager {
 
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
 
-    event CDPCreated(address _user);
+    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
-    event CDPUpdated(address _user, uint _debt, uint _coll, uint ICR);
+    event CDPCreated(address _user, uint arrayIndex);
+
+    event CDPUpdated(address _user, uint _debt, uint _coll, uint stake, uint arrayIndex);
 
     event CDPClosed(address _user);
 
@@ -23,7 +25,7 @@ interface ICDPManager {
 
     event CLVRepayed(address _user, uint _amountRepayed);
 
-    event CollateralRedeemed(address _user, uint redeemedAmount);
+    event CollateralRedeemed(address _user, uint exchangedCLV, uint redeemedETH);
 
     // --- Functions ---
     function setPoolManager(address _poolManagerAddress) external;
@@ -32,11 +34,11 @@ interface ICDPManager {
 
     function setCLVToken(address _clvTokenAddress) external;
 
+    function setSortedCDPs(address _sortedCDPsAddress) external;
+
     function getMCR() external pure returns(uint);
 
     function getAccurateMulDiv(uint _x, uint _y, uint _z) external pure returns(uint);
-
-    function hasActiveCDP(address _user) external view returns(bool);
 
     function sortedCDPsContains(address _id) external view returns(bool);
 
@@ -47,8 +49,6 @@ interface ICDPManager {
     function sortedCDPsgetSize() external view returns(uint);
 
     function sortedCDPsGetMaxSize() external view returns(uint);
-    
-    function sortedCDPsGetKey(address user) external view returns(uint); 
 
     function sortedCDPsGetFirst() external view returns (address); 
 
@@ -58,25 +58,25 @@ interface ICDPManager {
 
     function sortedCDPsGetPrev(address user) external view returns (address); 
 
-    function getCollRatio(address _debtor) external view returns(uint);
+    function getCollRatio(address _user) external view returns(uint);
+
+    function getApproxHint(uint CR, uint numTrials) external view returns(address);
 
     function userCreateCDP() external returns(bool);
 
-    function addColl(address _owner) external payable returns(bool);
+    function addColl(address _user) external payable returns(bool);
 
     function withdrawColl(uint _amount) external returns(bool);
 
-    function withdrawCLV(uint _amount) external returns (bool);
+    function withdrawCLV(uint _amount) external returns(bool);
 
     function repayCLV(uint _amount) external returns(bool);
 
-    function close(address _debtor) external returns(bool);
+    function liquidate(address _user) external returns(bool);
 
-    function closeCDPs(uint _n) external returns(bool);
+    function liquidateCDPs(uint _n) external returns(bool);
 
     function mockAddCDP() external returns(bool);
 
-    function obtainDefaultShare(address _user, uint _debtShare) external returns(bool);
-
-    function redeemCollateral(uint _amount) external returns(bool);
+    function redeemCollateral(uint _CLVAmount) external returns(bool);
 }

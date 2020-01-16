@@ -155,7 +155,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.withdrawCLV('180000000000000000000', { from: bob })
     await cdpManager.addColl({ from: carol, value: _1_Ether })
     
-    // Alice creates CDP, price drops, ICR < MCR
+    // Alice creates CDP
     await cdpManager.addColl({ from: alice, value: _1_Ether })
     await cdpManager.withdrawCLV('180000000000000000000', { from: alice })
     
@@ -166,7 +166,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
 
-    // price drops to 1ETH:100CLV, reducing Alice's ICR below MCR
+    // price drops to 1ETH:100CLV, reducing Alice's ICR below MCR, alice is liquidated
     await priceFeed.setPrice(100);
     await cdpManager.close(alice, { from: owner })
 
@@ -177,7 +177,7 @@ contract('CDPManager', async accounts => {
     assert.equal(defaultPoolDebt_After, '180000000000000000000')
     assert.equal(defaultPoolColl_After, _1_Ether)
 
-    // Attempt to send a share of defaulted debt to carol
+    // Attempt to send a share of defaulted debt to Carol
     await cdpManager.obtainDefaultShare(carol, '1000000000000000000')
 
     const carol_CDP_After = await cdpManager.CDPs(carol)
