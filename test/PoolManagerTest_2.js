@@ -1,5 +1,6 @@
 // TODO - Refactor duplication across tests. Run only minimum number of contracts
 const PoolManager = artifacts.require("./PoolManager.sol")
+const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
@@ -28,6 +29,7 @@ contract('PoolManager', async accounts => {
   let priceFeed;
   let clvToken;
   let poolManager;
+  let sortedCDPs;
   let cdpManager;
   let nameRegistry;
   let activePool;
@@ -40,6 +42,7 @@ contract('PoolManager', async accounts => {
       priceFeed = await PriceFeed.new()
       clvToken = await CLVToken.new() //
       poolManager = await PoolManager.new() //
+      sortedCDPs = await SortedCDPs.new()
       cdpManager = await CDPManager.new() //
       nameRegistry = await NameRegistry.new()
       activePool = await ActivePool.new() //
@@ -50,6 +53,7 @@ contract('PoolManager', async accounts => {
         priceFeed,
         clvToken,
         poolManager,
+        sortedCDPs,
         cdpManager,
         nameRegistry,
         activePool,
@@ -430,7 +434,7 @@ contract('PoolManager', async accounts => {
       assert.equal(stability_ETH_Difference, '-75000000000000000')
     })
 
-    it("withdrawFromSPtoCDP(): Applies CLVLoss to user's deposit, and redirects ETH reward to user's CDP", async () => {
+    it.only("withdrawFromSPtoCDP(): Applies CLVLoss to user's deposit, and redirects ETH reward to user's CDP", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
       await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
@@ -462,10 +466,10 @@ contract('PoolManager', async accounts => {
       / Alice's expected rewards:
       / CLV: 150 * 180/2000 = 13.5
       / ETH: 150 * 1/2000 = 0.075 */
-      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
 
       // Alice sends her ETH Gains to her CDP
-      await poolManager.withdrawFromSPtoCDP({ from: alice })
+      await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
 
       // check Alice's CLVLoss has been applied to her deposit - expect (150 - 13.5) = 136.5 CLV
       alice_deposit_afterDefault = (await poolManager.deposit(alice)).toString()
@@ -527,7 +531,7 @@ contract('PoolManager', async accounts => {
       assert.equal(stability_ETH_Difference, '-75000000000000000')
     })
 
-    it("offset: increases S_ETH and S_CLV by correct amounts", async () => {
+    it("offset(): increases S_ETH and S_CLV by correct amounts", async () => {
       // --- SETUP ---
       await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
       // 2 CDPs opened, each withdraws 180 CLV

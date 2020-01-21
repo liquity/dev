@@ -26,16 +26,17 @@ library DeciMath {
     // --- Accurate decimal math functions ---
 
     /* Accurately calculate (x * y) / z. Converts all arguments to 'duints', performs 
-    calculations, then converts the result back to uint before returning */
+    calculations, then converts the result back to uint before returning. */
     function accurateMulDiv(uint x, uint y, uint z) public pure returns (uint fraction) {
     // convert all uint to duint
         uint x_duint = toDuint(x);
         uint y_duint = toDuint(y);
         uint z_duint = toDuint(z);
 
-        // perform duint operations. 
-        uint prod_duint = decMul(x_duint, y_duint);    //  (x * y).  If y is guaranteed to be an integer (i.e. not duint) could use normalMul(x_duint, y) here to save gas.
-        uint res_duint = decDiv(prod_duint, z_duint);   // (x* y) / z
+        //  (x * y).  If y is guaranteed to be an integer (i.e. not duint) could use normalMul(x_duint, y) here to save gas.
+        uint prod_duint = decMul(x_duint, y_duint); 
+        // (x* y) / z
+        uint res_duint = decDiv(prod_duint, z_duint);   
 
         // convert result back to uint
         uint result = fromDuint(res_duint);
@@ -58,6 +59,25 @@ library DeciMath {
        
         prod = SafeMath.div(SafeMath.add(prod_xy, _5E17), _1E18 );
         
+        return prod;
+    }
+
+    // Accurately divides one uint by another. Returns a 'duint'
+    function div_toDuint(uint x, uint y) public pure returns (uint quotient) {
+        uint x_duint = toDuint(x);
+        uint y_duint = toDuint(y);
+
+        quotient = decDiv(x_duint, y_duint);
+        return quotient;
+    }
+
+    // Accurately multiply one uint by a 'duint'. Returns a uint.
+    function mul_uintByDuint( uint x, uint y_duint)public pure returns (uint prod) {
+        uint x_duint = toDuint(x);
+
+        uint prod_duint = decMul(x_duint, y_duint);
+        uint prod = fromDuint(prod_duint);
+
         return prod;
     }
 

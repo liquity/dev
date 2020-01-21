@@ -53,11 +53,11 @@ contract DefaultPool is Ownable, IPool {
         return poolManagerAddress;
     }
 
-    function getETH() public view onlyPoolManager returns(uint) {
+    function getETH() public view returns(uint) {
         return ETH;
     }
 
-    function getCLV() public view onlyPoolManager returns(uint) {
+    function getCLV() public view returns(uint) {
         return CLV;
     }
 
@@ -70,12 +70,6 @@ contract DefaultPool is Ownable, IPool {
         emit EtherSent(_account, _amount);
         return success;
     }
-
-    // // Deprecated
-    // function increaseETH(uint _amount) public onlyPoolManager () {
-    //     ETH = ETH.add(_amount);
-    //     emit ETHBalanceUpdated(ETH);
-    // }
 
     function increaseCLV(uint _amount) public onlyPoolManager () {
         CLV  = CLV.add(_amount);

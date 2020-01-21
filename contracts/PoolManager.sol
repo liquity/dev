@@ -188,7 +188,7 @@ contract PoolManager is Ownable, IPoolManager {
     }    
     
     // Return the amount of closed collateral (in ETH)
-    function getClosedColl()
+    function getLiquidatedColl()
         public
         view
         returns (uint)
@@ -268,7 +268,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Update the Active Pool and the Default Pool when a CDP obtains a default share
-    function obtainDefaultShare(uint _CLV, uint _ETH)
+    function applyPendingRewards(uint _CLV, uint _ETH)
         public
         onlyCDPManager
         returns (bool)
@@ -458,7 +458,7 @@ contract PoolManager is Ownable, IPoolManager {
     function withdrawFromSPtoCDP(address _user) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
 
         uint userDeposit = deposit[_user];
-        require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
+        if (userDeposit == 0) { return false; }
 
         uint CLVLoss = getCurrentCLVLoss(_user);
 
@@ -468,7 +468,7 @@ contract PoolManager is Ownable, IPoolManager {
         uint returnedCLV = returnedVals[0];
 
         // Update deposit, applying CLVLoss
-        depositCLV(msg.sender, returnedCLV);
+        depositCLV(_user, returnedCLV);
 
         return true;
     }

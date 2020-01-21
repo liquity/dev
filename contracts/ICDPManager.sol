@@ -38,6 +38,8 @@ interface ICDPManager {
 
     function getMCR() external pure returns(uint);
 
+    function getCDPOwnersCount() external view returns(uint);
+
     function getAccurateMulDiv(uint _x, uint _y, uint _z) external pure returns(uint);
 
     function sortedCDPsContains(address _id) external view returns(bool);
@@ -58,7 +60,7 @@ interface ICDPManager {
 
     function sortedCDPsGetPrev(address user) external view returns (address); 
 
-    function getCollRatio(address _user) external view returns(uint);
+    function getCurrentICR(address _user) external view returns(uint);
 
     function getApproxHint(uint CR, uint numTrials) external view returns(address);
 

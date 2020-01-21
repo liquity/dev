@@ -50,7 +50,7 @@ interface IPoolManager {
     
     function getClosedDebt() external view returns (uint);
     
-    function getClosedColl() external view returns(uint);
+    function getLiquidatedColl() external view returns(uint);
 
     function getMin(uint a, uint b) external pure returns(uint);
 
@@ -64,7 +64,7 @@ interface IPoolManager {
 
     function liquidate(uint _CLV, uint _ETH) external returns(bool);
 
-    function obtainDefaultShare(uint _CLV, uint _ETH) external returns(bool);
+    function applyPendingRewards(uint _CLV, uint _ETH) external returns(bool);
 
     function redeemCollateral(address _account, uint _CLV, uint _ETH) external returns(bool);
 

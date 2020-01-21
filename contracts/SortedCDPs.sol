@@ -184,7 +184,7 @@ contract SortedCDPs is Ownable {
      * @param _transcoder Address of transcoder
      */
     function contains(address _id) public view returns (bool) {
-        return data.nodes[_id].exists == true;
+        return data.nodes[_id].exists;
     }
 
     /*
@@ -257,15 +257,15 @@ contract SortedCDPs is Ownable {
             return isEmpty();
         } else if (_prevId == address(0)) {
             // `(null, _nextId)` is a valid insert position if `_nextId` is the head of the list
-            return data.head == _nextId && _ICR >= cdpManager.getCollRatio(_nextId);
+            return data.head == _nextId && _ICR >= cdpManager.getCurrentICR(_nextId);
         } else if (_nextId == address(0)) {
             // `(_prevId, null)` is a valid insert position if `_prevId` is the tail of the list
-            return data.tail == _prevId && _ICR <= cdpManager.getCollRatio(_prevId);
+            return data.tail == _prevId && _ICR <= cdpManager.getCurrentICR(_prevId);
         } else {
             // `(_prevId, _nextId)` is a valid insert position if they are adjacent nodes and `_ICR` falls between the two nodes' ICRs
             return data.nodes[_prevId].nextId == _nextId && 
-                   cdpManager.getCollRatio(_prevId) >= _ICR && 
-                   _ICR >= cdpManager.getCollRatio(_nextId);
+                   cdpManager.getCurrentICR(_prevId) >= _ICR && 
+                   _ICR >= cdpManager.getCurrentICR(_nextId);
         }
     }
 
@@ -276,7 +276,7 @@ contract SortedCDPs is Ownable {
      */
     function descendList(uint256 _ICR, address _startId) private view returns (address, address) {
         // If `_startId` is the head, check if the insert position is before the head
-        if (data.head == _startId && _ICR >= cdpManager.getCollRatio(_startId)) {
+        if (data.head == _startId && _ICR >= cdpManager.getCurrentICR(_startId)) {
             return (address(0), _startId);
         }
 
@@ -299,7 +299,7 @@ contract SortedCDPs is Ownable {
      */
     function ascendList(uint256 _ICR, address _startId) private view returns (address, address) {
         // If `_startId` is the tail, check if the insert position is after the tail
-        if (data.tail == _startId && _ICR <= cdpManager.getCollRatio(_startId)) {
+        if (data.tail == _startId && _ICR <= cdpManager.getCurrentICR(_startId)) {
             return (_startId, address(0));
         }
 
@@ -326,14 +326,14 @@ contract SortedCDPs is Ownable {
         address nextId = _nextId;
 
         if (prevId != address(0)) {
-            if (!contains(prevId) || _ICR > cdpManager.getCollRatio(prevId)) {
+            if (!contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId)) {
                 // `prevId` does not exist anymore or now has a smaller ICR than the given ICR
                 prevId = address(0);
             }
         }
 
         if (nextId != address(0)) {
-            if (!contains(nextId) || _ICR < cdpManager.getCollRatio(nextId)) {
+            if (!contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId)) {
                 // `nextId` does not exist anymore or now has a larger ICR than the given ICR
                 nextId = address(0);
             }

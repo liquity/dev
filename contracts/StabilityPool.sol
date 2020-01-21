@@ -79,12 +79,6 @@ contract StabilityPool is Ownable, IStabilityPool {
         return success;
     }
 
-    // Deprecated
-    // function increaseETH(uint _amount) public onlyPoolManager () {
-    //     ETH = ETH.add(_amount);
-    //     emit ETHBalanceUpdated(ETH);
-    // }
-
     function increaseCLV(uint _amount) public onlyPoolManager () {
         CLV  = CLV.add(_amount);
         emit CLVBalanceUpdated(CLV);

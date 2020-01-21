@@ -55,32 +55,32 @@ contract CDPManager is Ownable, ICDPManager {
     struct CDP {
         uint debt;
         uint coll;
+        uint stake;
         Status status;
         uint arrayIndex;
-        uint stake;
     }
     
     mapping (address => CDP) public CDPs;
 
-    uint totalStakes; 
+    uint public totalStakes; 
 
     // snapshot of the value of totalStakes immediately after the last liquidation
-    uint totalStakesSnapshot;  
+    uint public totalStakesSnapshot;  
 
-    // snapshot of the total collateral in the ActivePool immediately after the last liquidation
-    uint totalCollateralSnapshot;    
+    // snapshot of the total collateral in ActivePool and DefaultPool, immediately after the last liquidation.
+    uint public totalCollateralSnapshot;    
 
-    /* L_ETH and L_CLV track the sums of accumulated liquidation rewards per unit staked. During it's lifetime, each stake earns:
+    /* L_ETH and L_CLVDebt track the sums of accumulated liquidation rewards per unit staked. During it's lifetime, each stake earns:
 
-    An ETH gain of ( stake * [S_ETH - S_ETH(0)] )
-    A CLVDebt gain  of ( stake * [L_CLV - L_CLV(0)] )
+    An ETH gain of ( stake * [L_ETH - L_ETH(0)] )
+    A CLVDebt gain  of ( stake * [L_CLVDebt - L_CLVDebt(0)] )
     
-    Where L_ETH(0) and L_CLV(0) are snapshots of S_CLV and S_ETH for the active CDP taken at the instant the stake was made */
-    uint L_ETH;     
-    uint L_CLVDebt;    
+    Where L_ETH(0) and L_CLVDebt(0) are snapshots of L_ETH and L_CLVDebt for the active CDP taken at the instant the stake was made */
+    uint public L_ETH;     
+    uint public L_CLVDebt;    
 
     // maps addresses with active CDPs to their RewardSnapshot
-    mapping (address => RewardSnapshot) rewardSnapshots;  
+    mapping (address => RewardSnapshot) public rewardSnapshots;  
 
     // object containing the ETH and CLV snapshots for a given active CDP
     struct RewardSnapshot { uint ETH; uint CLVDebt;}   
@@ -126,6 +126,9 @@ contract CDPManager is Ownable, ICDPManager {
         return MCR;
     }
 
+    function getCDPOwnersCount() public view returns(uint) {
+        return CDPOwners.length;
+    }
     function getAccurateMulDiv(uint x, uint y, uint z) public pure returns(uint) {
         return DeciMath.accurateMulDiv(x, y, z);
     }
@@ -214,7 +217,7 @@ contract CDPManager is Ownable, ICDPManager {
         CDPs[_user].coll = (CDPs[_user].coll).add(msg.value);
         updateStakeAndTotalStakes(_user);
 
-        uint newICR = getCollRatio(_user);
+        uint newICR = getCurrentICR(_user);
 
         // Insert CDP to sortedCDPs, or update exist CDP's position
         if (isFirstCollDeposit) {
@@ -242,10 +245,9 @@ contract CDPManager is Ownable, ICDPManager {
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
        
         applyPendingRewards(user);
-
-        uint newICR = getNewCollRatio(user, 0, -_amount);
-
         require(CDPs[user].coll >= _amount, "CDPManager: Insufficient balance for ETH withdrawal");
+        
+        uint newICR = getNewICRfromCollDecrease(user, _amount);
         require(newICR >= MCR, "CDPManager: Insufficient collateral ratio for ETH withdrawal");
         
         // Update the CDP's coll and stake
@@ -275,11 +277,11 @@ contract CDPManager is Ownable, ICDPManager {
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
         require(_amount > 0, "CDPManager: Amount to withdraw must be larger than 0");
         
-        uint newICR = getNewCollRatio(user, 0, -_amount);
+        uint newICR = getNewICRfromDebtIncrease(user, _amount);
         
         require(newICR >= MCR, "CDPManager: Insufficient collateral ratio for CLV withdrawal");
         
-        // Update the CDP's debt
+        // Increase the CDP's debt
         CDPs[user].debt = (CDPs[user].debt).add(_amount);
 
         // Update CDP's position in sortedCDPs
@@ -310,7 +312,7 @@ contract CDPManager is Ownable, ICDPManager {
         // Update the CDP's debt
         CDPs[user].debt  = (CDPs[user].debt).sub(_amount);
 
-        uint newICR = getCollRatio(user);
+        uint newICR = getCurrentICR(user);
         
         // Update CDP's position in sortedCDPs
         sortedCDPs.reInsert(user, newICR, user, user);
@@ -329,7 +331,7 @@ contract CDPManager is Ownable, ICDPManager {
 
     // --- CDP Liquidation functions ---
 
-    // Closes the CDP of the spefifieed user if its individual collateral ratio is lower than the minimum collateral ratio.
+    // Closes the CDP of the specified user if its individual collateral ratio is lower than the minimum collateral ratio.
     // TODO: Left public for initial testing. Make internal.
     function liquidate(address _user) public returns (bool) {
         require(CDPs[_user].status == Status.active, "CDPManager: CDP does not exist or is already closed");
@@ -337,8 +339,11 @@ contract CDPManager is Ownable, ICDPManager {
         // Apply any StabilityPool gains before checking ICR against MCR
         poolManager.withdrawFromSPtoCDP(_user);
 
-        if (getCollRatio(_user) > MCR) { return false; }
+        if (getCurrentICR(_user) > MCR) { return false; }
         
+        // Apply all the CDP's rewards before liquidation
+        applyPendingRewards(_user);
+
         // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
         uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
         uint CLVDebtRemainder = remainder[0];
@@ -346,25 +351,33 @@ contract CDPManager is Ownable, ICDPManager {
 
         totalStakes = totalStakes.sub(CDPs[_user].stake);
 
+
         if (CLVDebtRemainder > 0) {
-            /* If the debt could not be offset entirely, then add the coll and debt rewards-per-unit-staked 
-            to the running totals. */
-            uint ETHRewardPerUnitStaked = DeciMath.accurateMulDiv(ETHRemainder, DIGITS, totalStakes);
-            uint CLVDebtRewardPerUnitStaked = DeciMath.accurateMulDiv(CLVDebtRemainder, DIGITS, totalStakes);
-            
-            L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
-            L_CLVDebt = L_CLVDebt.add(CLVDebtRewardPerUnitStaked);
+            if (totalStakes > 0) {
+                /*If debt could not be offset entirely, add the coll and debt rewards-per-unit-staked 
+                to the running totals. */
+                uint ETHRewardPerUnitStaked = DeciMath.div_toDuint(ETHRemainder, totalStakes);
+                uint CLVDebtRewardPerUnitStaked = DeciMath.div_toDuint(CLVDebtRemainder, totalStakes);
+                
+                L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
+                L_CLVDebt = L_CLVDebt.add(CLVDebtRewardPerUnitStaked);
+            }
             
             // Transfer coll and debt from ActivePool to DefaultPool
             poolManager.liquidate(CLVDebtRemainder, ETHRemainder);
-        }
+        } 
         
         // Close the CDP
         CDPs[_user].status = Status.closed;
 
-        // Update the snapshots of system stakes & system collateral 
+        // Update the snapshots of system stakes & system collateral
         totalStakesSnapshot = totalStakes;
-        totalCollateralSnapshot = poolManager.getActiveColl();
+
+        /* The total collateral snapshot is the sum of all active collateral and all pending rewards
+       (ActivePool ETH + DefaultPool ETH), immediately after the liquidation occurs. */
+        uint activeColl = poolManager.getActiveColl();
+        uint liquidatedColl = poolManager.getLiquidatedColl();
+        totalCollateralSnapshot = activeColl.add(liquidatedColl);
         
         // Remove CDP from sortedCDPs, and owner address from the CDPOwner array
         sortedCDPs.remove(_user);
@@ -374,15 +387,15 @@ contract CDPManager is Ownable, ICDPManager {
         return true;
     }
      
-    // Closes a maximum number of n multiple undercollateralized CDPs, starting from the one with the lowest collateral ratio
+    // Closes a maximum number of n multiple under-collateralized CDPs, starting from the one with the lowest collateral ratio
     // TODO: Should  be synchronized with PriceFeed and called every time the price is updated
     function liquidateCDPs(uint n) public returns (bool) {    
         uint i;
 
         while (i < n) {
             address user = sortedCDPs.getLast();
-            uint collRatio = getCollRatio(user);
-            
+            uint collRatio = getCurrentICR(user);
+
             // Close CDPs if it is under-collateralized
             if (collRatio < MCR) {
                 liquidate(user);
@@ -415,11 +428,11 @@ contract CDPManager is Ownable, ICDPManager {
         while (exchangedCLV < _CLVamount) {
 
             address currentCDPuser = sortedCDPs.getLast();
-            uint collRatio = getCollRatio(currentCDPuser);
+            uint collRatio = getCurrentICR(currentCDPuser);
             uint price = priceFeed.getPrice();
             uint activeDebt = poolManager.getActiveDebt();
 
-            // Break the loop if there is no more active debt to redeem 
+            // Break the loop if there is no more active debt to cancel with the received CLV
             if (activeDebt == 0) break;   
             
             // Close CDPs along the way that turn out to be under-collateralized
@@ -437,7 +450,7 @@ contract CDPManager is Ownable, ICDPManager {
                 CDPs[currentCDPuser].debt = (CDPs[currentCDPuser].debt).sub(CLVLot);
                 CDPs[currentCDPuser].coll = (CDPs[currentCDPuser].coll).sub(ETHLot);
                 
-                uint newCollRatio = getCollRatio(currentCDPuser);
+                uint newCollRatio = getCurrentICR(currentCDPuser);
 
                 // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()
                 poolManager.redeemCollateral(user, CLVLot, ETHLot);
@@ -481,7 +494,7 @@ contract CDPManager is Ownable, ICDPManager {
         while (i < numTrials) {
             uint arrayIndex = getRandomArrayIndex(block.timestamp.add(i), CDPOwners.length);
             address currentAddress = CDPOwners[arrayIndex];
-            uint currentICR = getCollRatio(currentAddress);
+            uint currentICR = getCurrentICR(currentAddress);
 
             // Update closest if current is closer 
             if ((currentICR <= CR) && (currentICR > closestICR)) {
@@ -501,31 +514,52 @@ contract CDPManager is Ownable, ICDPManager {
    }
 
     // Return the current collateral ratio (ICR) of a given CDP. Takes pending coll/debt rewards into account.
-    function getCollRatio(address _user) 
-        public
-        view 
-        returns (uint) 
-    {
-        return getNewCollRatio(_user, 0, 0);
-    }
-
-    /* Return the new collateral ratio, considering the collateral and/or debt that should be added or removed.
-     Takes pending coll/debt rewards into account. */
-    function getNewCollRatio(address _user, uint _collChange, uint _debtChange) view internal returns(uint) 
-    {
+    function getCurrentICR(address _user) public view returns(uint) {
+    
         uint pendingETHReward = computePendingETHReward(_user);
         uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
 
         uint currentETH = (CDPs[_user].coll).add(pendingETHReward);
         uint currentCLVDebt = (CDPs[_user].debt).add(pendingCLVDebtReward);
 
-        uint newColl = currentETH.add(_collChange);
-        uint newDebt = currentCLVDebt.add(_debtChange);
+        return computeICR(currentETH, currentCLVDebt);
+    }
 
+    /* Compute the new collateral ratio, considering the collateral to be removed. Takes pending coll/debt 
+    rewards into account. */
+    function getNewICRfromCollDecrease(address _user, uint _collDecrease) view internal returns(uint) {
+
+        uint pendingETHReward = computePendingETHReward(_user);
+        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
+
+        uint currentETH = (CDPs[_user].coll).add(pendingETHReward);
+        uint currentCLVDebt = (CDPs[_user].debt).add(pendingCLVDebtReward);
+
+        uint newColl = currentETH.sub(_collDecrease);
+        
+        return computeICR(newColl, currentCLVDebt);
+    }
+
+    /* Compute the new collateral ratio, considering the debt to be added.
+     Takes pending coll/debt rewards into account. */
+    function getNewICRfromDebtIncrease(address _user, uint _debtIncrease) view internal returns(uint) {
+        
+        uint pendingETHReward = computePendingETHReward(_user);
+        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
+
+        uint currentETH = (CDPs[_user].coll).add(pendingETHReward);
+        uint currentCLVDebt = (CDPs[_user].debt).add(pendingCLVDebtReward);
+
+        uint newCLVDebt = currentCLVDebt.add(_debtIncrease);
+
+        return computeICR(currentETH, newCLVDebt);
+    } 
+
+    function computeICR(uint coll, uint debt) view internal returns(uint) {
         uint price = priceFeed.getPrice();
         // Check if the total debt is higher than 0, to avoid division by 0
-        if (newDebt > 0) {
-            uint newCollRatio = DeciMath.accurateMulDiv(newColl, price, newDebt);
+        if (debt > 0) {
+            uint newCollRatio = DeciMath.accurateMulDiv(coll, price, debt);
             return newCollRatio;
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
@@ -533,7 +567,8 @@ contract CDPManager is Ownable, ICDPManager {
             return 2**256 - 1; 
         }
     }
-    
+
+    // Add the user's coll and debt rewards earned from liquidations, to their CDP
     function applyPendingRewards(address _user) internal returns(bool) {
         require(CDPs[_user].status == Status.active, "CDPManager: user must have an active CDP");
         
@@ -545,25 +580,32 @@ contract CDPManager is Ownable, ICDPManager {
         CDPs[_user].coll = CDPs[_user].coll.add(pendingETHReward);
         CDPs[_user].debt = CDPs[_user].debt.add(pendingCLVDebtReward);
 
+        // Tell PM to transfer from DefaultPool to ActivePool when user claims rewards.
+        poolManager.applyPendingRewards(pendingCLVDebtReward, pendingETHReward);
+
         // Update user's reward snapshot to reflect current values
         rewardSnapshots[_user].ETH = L_ETH;
         rewardSnapshots[_user].CLVDebt = L_CLVDebt;
         return true;
     }
 
+    // Get the user's pending accumulated ETH reward, earned by its stake
     function computePendingETHReward(address _user) internal view returns(uint) {
         uint stake = CDPs[_user].stake;
         uint snapshotETH = rewardSnapshots[_user].ETH;
+
         uint rewardPerUnitStaked = L_ETH.sub(snapshotETH);
-        uint pendingETHReward = stake.mul(rewardPerUnitStaked);
+        uint pendingETHReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked);
         return pendingETHReward;
     }
 
+     // Get the user's pending accumulated CLV reward, earned by its stake
     function computePendingCLVDebtReward(address _user) internal view returns(uint) {
         uint stake =  CDPs[_user].stake;
         uint snapshotETH = rewardSnapshots[_user].CLVDebt;
+
         uint rewardPerUnitStaked = L_CLVDebt.sub(snapshotETH);
-        uint pendingCLVDebtReward = stake.mul(rewardPerUnitStaked);
+        uint pendingCLVDebtReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked);
         return pendingCLVDebtReward;
     }
 
@@ -580,7 +622,8 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     function computeNewStake(uint _coll) internal view returns (uint) {
-        uint stake = DeciMath.accurateMulDiv(_coll, totalStakesSnapshot, totalCollateralSnapshot);
+        uint stake = totalCollateralSnapshot == 0 ? _coll : 
+                     DeciMath.accurateMulDiv(_coll, totalStakesSnapshot, totalCollateralSnapshot);
         return stake;
     }
 
@@ -594,7 +637,7 @@ contract CDPManager is Ownable, ICDPManager {
      /* Remove a CDP owner from the CDPOwners array, preserving array length but not order. Deleting owner 'B' does the following: 
     [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. */
     function removeCDPOwner(address _user) internal returns(bool) {
-        require(CDPs[_user].status == Status.active, "CDPManager: CDP already exists");
+        require(CDPs[_user].status == Status.closed, "CDPManager: CDP is still active");
 
         uint index = CDPs[_user].arrayIndex;   
         address addressToMove = CDPOwners[CDPOwners.length - 1];
