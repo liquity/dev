@@ -338,8 +338,13 @@ contract CDPManager is Ownable, ICDPManager {
         
         // Apply any StabilityPool gains before checking ICR against MCR
         poolManager.withdrawFromSPtoCDP(_user);
+        uint newICR = getCurrentICR(_user);
 
-        if (getCurrentICR(_user) > MCR) { return false; }
+        // if newICR > MCR, update CDP's position in sortedCDPs and return
+        if (newICR > MCR) { 
+            // sortedCDPs.reInsert(_user, newICR, _user, _user);
+            return false; 
+        } 
         
         // Apply all the CDP's rewards before liquidation
         applyPendingRewards(_user);
@@ -350,7 +355,6 @@ contract CDPManager is Ownable, ICDPManager {
         uint ETHRemainder = remainder[1];
 
         totalStakes = totalStakes.sub(CDPs[_user].stake);
-
 
         if (CLVDebtRemainder > 0) {
             if (totalStakes > 0) {
@@ -501,7 +505,6 @@ contract CDPManager is Ownable, ICDPManager {
                 closestICR = currentICR;
                 hintAddress = currentAddress;
             }
-            
             i++;
         }
     return hintAddress;
@@ -622,9 +625,14 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     function computeNewStake(uint _coll) internal view returns (uint) {
-        uint stake = totalCollateralSnapshot == 0 ? _coll : 
-                     DeciMath.accurateMulDiv(_coll, totalStakesSnapshot, totalCollateralSnapshot);
-        return stake;
+        uint stake;
+        if (totalCollateralSnapshot == 0) {
+            stake = _coll;
+        } else {
+            uint ratio = DeciMath.div_toDuint(totalStakesSnapshot, totalCollateralSnapshot);
+            stake = DeciMath.mul_uintByDuint(_coll, ratio);
+        }
+     return stake;
     }
 
     // Return the lower value from two given integers

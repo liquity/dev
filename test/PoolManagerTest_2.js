@@ -116,7 +116,7 @@ contract('PoolManager', async accounts => {
       assert.equal(alice_depositRecord_After, 200)
     })
 
-    it("provideToSP(): reduces users CLV balance by the correct amount", async () => {
+    it("provideToSP(): reduces the user's CLV balance by the correct amount", async () => {
       // --- SETUP --- Give Alice 200 CLV
       // use the mockPool to set alice's CLV Balance
       await clvToken.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
@@ -171,8 +171,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(100);
 
       // CDPs are closed
-      await cdpManager.close(defaulter_1, { from: owner })
-      await cdpManager.close(defaulter_2, { from: owner });
+      await cdpManager.liquidate(defaulter_1, { from: owner })
+      await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // --- TEST ---
       const S_CLV = (await poolManager.S_CLV()).toString()   // expected: 0.18 CLV
@@ -232,8 +232,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(100);
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.close(defaulter_2, { from: owner }); // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_2, { from: owner }); // 180 CLV closed
 
       // At this stage, total deposits = 2000 CLV: 1850CLV (from whale) and 150CLV (from Alice)
       const S_CLV_1 = (await poolManager.S_CLV()).toString()   // expected: 0.18 CLV
@@ -268,7 +268,7 @@ contract('PoolManager', async accounts => {
       assert.equal(totalCLVDeposits, '2500000000000000000000')
 
       // Defaulter 3 CDP is closed
-      await cdpManager.close(defaulter_3, { from: owner })
+      await cdpManager.liquidate(defaulter_3, { from: owner })
 
       /*  Now, 'S' values have been impacted by 3 'default' events:
        S_CLV = (180/2000 + 180/2000 + 180/2500) = (0.09 + 0.09 + 0.072) = 0.252 CLV
@@ -317,8 +317,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(100);
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.close(defaulter_2, { from: owner }) // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_2, { from: owner }) // 180 CLV closed
 
       const S_CLV_1 = (await poolManager.S_CLV()).toString()   // expected: 0.18 CLV
       const S_ETH_1 = (await poolManager.S_ETH()).toString()  // expected: 0.001 Ether
@@ -374,8 +374,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(100);
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.close(defaulter_2, { from: owner }); // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_2, { from: owner }); // 180 CLV closed
 
       // Alice retrieves part of her entitled CLV: 90 CLV
       await poolManager.withdrawFromSP('90000000000000000000', { from: alice })
@@ -415,7 +415,7 @@ contract('PoolManager', async accounts => {
       / Alice's expected rewards:
       / CLV: 150 * 180/2000 = 13.5
       / ETH: 150 * 1/2000 = 0.075 */
-      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
 
       //check activePool and StabilityPool Ether before retrieval:
       const active_ETH_Before = await activePool.getETH()
@@ -434,7 +434,7 @@ contract('PoolManager', async accounts => {
       assert.equal(stability_ETH_Difference, '-75000000000000000')
     })
 
-    it.only("withdrawFromSPtoCDP(): Applies CLVLoss to user's deposit, and redirects ETH reward to user's CDP", async () => {
+    it("withdrawFromSPtoCDP(): Applies CLVLoss to user's deposit, and redirects ETH reward to user's CDP", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
       await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
@@ -469,7 +469,7 @@ contract('PoolManager', async accounts => {
       await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
 
       // Alice sends her ETH Gains to her CDP
-      await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      await poolManager.withdrawFromSPtoCDP(alice, {from: alice})
 
       // check Alice's CLVLoss has been applied to her deposit - expect (150 - 13.5) = 136.5 CLV
       alice_deposit_afterDefault = (await poolManager.deposit(alice)).toString()
@@ -511,14 +511,14 @@ contract('PoolManager', async accounts => {
       / Alice's expected rewards:
       / CLV: 150 * 180/2000 = 13.5
       / ETH: 150 * 1/2000 = 0.075 */
-      await cdpManager.close(defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
 
       //check activePool and StabilityPool Ether before retrieval:
       const active_ETH_Before = await activePool.getETH()
       const stability_ETH_Before = await stabilityPool.getETH()
 
       // Alice retrieves all of her deposit, 150CLV, choosing to redirect to her CDP
-      await poolManager.withdrawFromSPtoCDP({ from: alice })
+      await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
 
       const active_ETH_After = await activePool.getETH()
       const stability_ETH_After = await stabilityPool.getETH()
@@ -556,8 +556,8 @@ contract('PoolManager', async accounts => {
       // price drops: defaulter's CDPs fall below MCR, whale doesn't
       await priceFeed.setPrice(100);
       // CDPs are closed
-      await cdpManager.close(defaulter_1, { from: owner });
-      await cdpManager.close(defaulter_2, { from: owner });
+      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.liquidate(defaulter_2, { from: owner });
 
       /* 
       With 2000 CLV in StabilityPool, each closed CDP contributes:
@@ -596,7 +596,7 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(100);
 
       // defaulter 1 gets closed
-      await cdpManager.close(defaulter_1, { from: owner });
+      await cdpManager.liquidate(defaulter_1, { from: owner });
 
       // whale 2 provides 2000 CLV to StabilityPool
       await cdpManager.addColl(whale_2, { from: whale_2, value: _100_Ether })
@@ -604,14 +604,13 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP('2000000000000000000000', { from: whale_2 })
 
       // defaulter 2 gets closed
-      await cdpManager.close(defaulter_2, { from: owner });
+      await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Get accumulated rewards per unit staked
       const S_CLV_After = (await poolManager.S_CLV()).toString()   // expected: 1.125 CLV
       const S_ETH_After = (await poolManager.S_ETH()).toString()  // expected: 0.01 ETH
 
       totalDep = (await stabilityPool.totalCLVDeposits()).toString()
-      console.log("totalDepis:" + totalDep)
       assert.equal(S_CLV_After, '1125000000000000000')  // 1.125 CLV
       assert.equal(S_ETH_After, '7500000000000000')  // 0.0075 Ether
 
@@ -625,11 +624,6 @@ contract('PoolManager', async accounts => {
       const arg1  = penaltyTx.logs[2].args[1];
       const arg2 = penaltyTx.logs[2].args[2];
       const arg3 = penaltyTx.logs[2].args[3];
-      console.log(penaltyTx.logs[2])
-      console.log(arg0.toString())
-      console.log(arg1.toString())
-      console.log(arg2.toString())
-      console.log(arg3.toString())
 
       /* deposit/CLVLoss = 500/562.5 = 0.8888888888888...
       Alice's expected remainder = ETHGain * deposit/CLVLoss = 3.75 * (19/20) = 3.33333... ETH
@@ -641,7 +635,7 @@ contract('PoolManager', async accounts => {
       const alice_Remainder = (penaltyTx.logs[2].args[3]).toString()
 
       assert.equal(alice_Remainder, '3333333333333333333')
-      assert.equal(bob_Reward, '416666666666666666')
+      assert.equal(bob_Reward, '416666666666666667')
     })
   })
 })

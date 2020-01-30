@@ -299,16 +299,18 @@ contract PoolManager is Ownable, IPoolManager {
     // Return the accumulated change, for the user, for the duration that this deposit was held
     function getCurrentETHGain(address _user) internal view returns(uint) {
         uint userDeposit = deposit[_user];
-        uint snapshotETH = snapshot[_user].ETH;
-        uint rewardPerUnitStaked = S_ETH.sub(snapshotETH);
-        return DeciMath.accurateMulDiv(userDeposit, rewardPerUnitStaked, DIGITS);
+        uint snapshotETH = snapshot[_user].ETH;  // duint
+        uint ETHGainPerUnitStaked = S_ETH.sub(snapshotETH);  // duint
+
+        return DeciMath.mul_uintByDuint(userDeposit, ETHGainPerUnitStaked); // uint
     }
 
     function getCurrentCLVLoss(address _user) internal view returns(uint) {
         uint userDeposit = deposit[_user];
-        uint snapshotCLV = snapshot[_user].CLV;
-        uint rewardPerUnitStaked = S_CLV.sub(snapshotCLV);
-        return DeciMath.accurateMulDiv(userDeposit, rewardPerUnitStaked, DIGITS);
+        uint snapshotCLV = snapshot[_user].CLV; // duint
+        uint CLVLossPerUnitStaked = S_CLV.sub(snapshotCLV); // duint
+
+        return DeciMath.mul_uintByDuint(userDeposit, CLVLossPerUnitStaked); // uint
     }
 
     // --- Internal StabilityPool functions --- 
@@ -347,7 +349,7 @@ contract PoolManager is Ownable, IPoolManager {
         if (CLVLoss > userDeposit) {
             CLVShare = 0;
         } else {
-            CLVShare = userDeposit - CLVLoss;
+            CLVShare = userDeposit.sub(CLVLoss);
         }
 
         // Update deposit and snapshots
@@ -378,13 +380,14 @@ contract PoolManager is Ownable, IPoolManager {
         
         uint ETHShare = getCurrentETHGain(_address);
         uint CLVLoss = getCurrentCLVLoss(_address);
+
         uint CLVShare;
 
         // If user's deposit is an 'overstay', they retrieve 0 CLV
         if (CLVLoss > userDeposit) {
             CLVShare = 0;
         } else {
-            CLVShare = userDeposit - CLVLoss;
+            CLVShare = userDeposit.sub(CLVLoss);
         }
 
         // Update deposit and snapshots
@@ -438,8 +441,6 @@ contract PoolManager is Ownable, IPoolManager {
         uint userDeposit = deposit[user];
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
 
-        uint CLVLoss = getCurrentCLVLoss(user);
-
         // Retrieve all CLV and ETH for the user
         uint[2] memory returnedVals = retrieveToUser(user);
 
@@ -447,7 +448,7 @@ contract PoolManager is Ownable, IPoolManager {
 
         // If requested withdrawal amount is less than available CLV, re-deposit the difference.
         if (_amount < returnedCLV) {
-            depositCLV(user, returnedCLV - _amount);
+            depositCLV(user, returnedCLV.sub(_amount));
         }
 
         return true;
@@ -459,8 +460,6 @@ contract PoolManager is Ownable, IPoolManager {
 
         uint userDeposit = deposit[_user];
         if (userDeposit == 0) { return false; }
-
-        uint CLVLoss = getCurrentCLVLoss(_user);
 
         // Retrieve all CLV to user's CLV balance, and ETH to their CDP
         uint[2] memory returnedVals = retrieveToCDP(_user);
@@ -490,8 +489,8 @@ contract PoolManager is Ownable, IPoolManager {
        
         Depositor's ETH entitlement is reduced to ETHGain * (deposit/CLVLoss).
         The claimant retrieves ETHGain * (1 - deposit/CLVLoss). */
-        uint ratio = DeciMath.accurateMulDiv(depositAmount, DIGITS, CLVLoss);
-        uint depositorRemainder = ETHGain.mul(ratio).div(DIGITS);
+        uint ratio = DeciMath.div_toDuint(depositAmount, CLVLoss);  // duint
+        uint depositorRemainder = DeciMath.mul_uintByDuint(ETHGain, ratio); // uint
         uint claimantReward = ETHGain.sub(depositorRemainder);
         
         // Update deposit and snapshots
@@ -530,13 +529,16 @@ contract PoolManager is Ownable, IPoolManager {
         // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
         uint debtToOffset = getMin(_debt, CLVinPool);
         // Collateral to be added in proportion to the debt that is cancelled
-        uint collToAdd =  DeciMath.accurateMulDiv(debtToOffset, _coll, _debt);
+        uint debtRatio =  DeciMath.div_toDuint(debtToOffset, _debt);
+        uint collToAdd = DeciMath.mul_uintByDuint(_coll, debtRatio);
         
         // Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool
-        S_CLV = S_CLV.add( DeciMath.accurateMulDiv(debtToOffset,  DIGITS, totalCLVDeposits) );
+        uint CLVLossPerUnitStaked = DeciMath.div_toDuint(debtToOffset, totalCLVDeposits);
+        S_CLV = S_CLV.add(CLVLossPerUnitStaked);
         emit S_CLVUpdated(S_CLV);
         // Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool
-        S_ETH = S_ETH.add( DeciMath.accurateMulDiv(collToAdd, DIGITS, totalCLVDeposits) );
+        uint ETHGainPerUnitStaked = DeciMath.div_toDuint(collToAdd, totalCLVDeposits);
+        S_ETH = S_ETH.add(ETHGainPerUnitStaked);
         emit S_ETHUpdated(S_ETH);
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLV(debtToOffset);  

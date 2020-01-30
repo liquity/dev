@@ -16,5 +16,8 @@
     "@openzeppelin/contracts": "^2.4.0",
     "ganache-core": "^2.8.0",
     "truffle-ganache-test": "^1.1.0"
+  },
+  "devDependencies": {
+    "eth-gas-reporter": "^0.2.14"
   }
 }

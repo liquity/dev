@@ -116,7 +116,7 @@ contract('CDPManager', async accounts => {
 
     const debt_After = alice_CDP_After[0]
     const coll_After = alice_CDP_After[1]
-    const ICR_After = web3.utils.toHex(await cdpManager.getCollRatio(alice))
+    const ICR_After = web3.utils.toHex(await cdpManager.getCurrentICR(alice))
     const status_After = alice_CDP_After[3]
 
     assert.equal(debt_After, 0)
@@ -396,7 +396,7 @@ contract('CDPManager', async accounts => {
     assert.equal(bob_CLVDebtRewardSnapshot_After, '9000000000000000000')
   })
 
-  it.only("addColl(), active CDP: adds the right corrected stake after liquidations have occured", async () => {
+  it("addColl(), active CDP: adds the right corrected stake after liquidations have occured", async () => {
     // --- SETUP ---
     // Alice and Bob add 10 ether, Carol adds 1 ether
     await cdpManager.addColl(alice, { from: alice, value: _15_Ether })
@@ -497,19 +497,17 @@ contract('CDPManager', async accounts => {
     assert.equal(totalStakes_After, '1000000000000000000')
   })
   
-  it("withdrawColl(): increases user's ether balance by correct amount", async () => {
+  it("withdrawColl(): sends the correct amount of ETH to the user", async () => {
     await cdpManager.addColl(alice, { from: alice, value: _2_Ether })
-
-    const alice_rawEtherBalance_Before = await web3.eth.getBalance(alice)
     
-    await cdpManager.withdrawColl(_1_Ether, { from: alice })
+    const txData = await cdpManager.withdrawColl(_1_Ether, { from: alice })
+    
+    const ETHSentToAlice = txData.logs[0].args[1].toString() 
 
-    const alice_rawEtherBalance_After = await web3.eth.getBalance(alice)
-    const balanceChange = (alice_rawEtherBalance_After - alice_rawEtherBalance_Before)
-    assert.equal(balanceChange, _1_Ether)
+    assert.equal(ETHSentToAlice, _1_Ether)
   })
 
-  it.only("withdrawColl(): applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
+  it("withdrawColl(): applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
     // --- SETUP ---
     // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether
     await cdpManager.addColl(alice, { from: alice, value: _15_Ether })

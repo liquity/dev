@@ -34,5 +34,8 @@ module.exports = {
   },
   plugins: [
     'truffle-ganache-test'
-  ]
+  ],
+  // mocha: {
+  //   reporter: 'eth-gas-reporter'
+  // }
 }

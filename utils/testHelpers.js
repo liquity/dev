@@ -5,9 +5,10 @@ const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const NameRegistry = artifacts.require("./NameRegistry.sol")
-const ActivePool = artifacts.require("./ActivePool.sol");
-const DefaultPool = artifacts.require("./DefaultPool.sol");
+const ActivePool = artifacts.require("./ActivePool.sol")
+const DefaultPool = artifacts.require("./DefaultPool.sol")
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 
 const getDeployedContracts = async () => {
   // get deployed contract representations
@@ -19,6 +20,7 @@ const getDeployedContracts = async () => {
   const activePool = await ActivePool.deployed()
   const defaultPool = await DefaultPool.deployed()
   const stabilityPool = await StabilityPool.deployed()
+  const sortedCDPs = await SortedCDPs.deployed()
  
 // TODO:  Remove this duplication below with deploymentHelpers.js.  The above, can be a single function 
 // getAllDeployedContracts()
@@ -32,6 +34,7 @@ const getDeployedContracts = async () => {
   const activePoolAddress = activePool.address
   const defaultPoolAddress = defaultPool.address
   const stabilityPoolAddress = stabilityPool.address
+  const sortedCDPsAddress = sortedCDPs.address
 
   return {
     cdpManager,
@@ -50,7 +53,8 @@ const getDeployedContracts = async () => {
     nameRegistryAddress,
     activePoolAddress,
     defaultPoolAddress,
-    stabilityPoolAddress
+    stabilityPoolAddress,
+    sortedCDPsAddress
   }
 }
 

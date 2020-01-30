@@ -21,7 +21,7 @@ contract('CDPManager', async accounts => {
       assert.equal(a, '1000000000000000000')
     })
 
-    it('accurateMulDiv(), basics: calculates the correct result', async () => {
+    it('accurateMulDiv(), basics: calculates the correct results', async () => {
       const a = (await cdpManager.getAccurateMulDiv('1000000000000000000', 1, 1)).toString()
       assert.equal(a, '1000000000000000000')
 
@@ -32,7 +32,7 @@ contract('CDPManager', async accounts => {
       assert.equal(c, '1')
     })
 
-    it('accurateMulDiv(), repeating decimals: calculates the correct result', async () => {
+    it('accurateMulDiv(), repeating decimals: calculates the correct results', async () => {
       const a = (await cdpManager.getAccurateMulDiv('1000000000000000000', 1000, 3)).toString()
       assert.equal(a, '333333333333333333333')
 
@@ -65,22 +65,19 @@ contract('CDPManager', async accounts => {
 
     it('accurateMulDiv(): reverts for div-by-0', async () => {
       try {
-        const a = (await cdpManager.getAccurateMulDiv('1', 1000, 0)).toString()
-        assert.fail()
+        const a = (await cdpManager.getAccurateMulDiv('1', 1000, 0)).toString()     
       } catch (err) {
         assert.include(err.message, 'revert')
       }
 
       try {
         const b = (await cdpManager.getAccurateMulDiv('112402340234', 12345, 0)).toString()
-        assert.fail()
       } catch (err) {
         assert.include(err.message, 'revert')
       }
 
       try {
         const c = (await cdpManager.getAccurateMulDiv('0', 1, 0)).toString()
-        assert.fail()
       } catch (err) {
         assert.include(err.message, 'revert')
       }

@@ -1,4 +1,4 @@
-const SortedDoublyLL = artifacts.require("./SortedDoublyLL.sol")
+const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const PoolManager = artifacts.require("./PoolManager.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
@@ -10,7 +10,7 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 
 //Contract Artifacts
 const allContractJSONs = {
-  SortedDoublyLL,
+  SortedCDPs,
   PoolManager,
   ActivePool,
   DefaultPool,
@@ -29,7 +29,7 @@ const replaceLibraryPlaceholders = (bytecode) => {
 const dummyDeciMathAddr = 'FB88dE099e13c3ED21F80a7a1E49f8CAEcF10df6'.toLowerCase()
 const dummySDLLAddr = 'Aa588d3737B611baFD7bD713445b314BD453a5C8'.toLowerCase()
 bytecode = bytecode.replace(/__DeciMath______________________________/g, dummyDeciMathAddr)
-bytecode = bytecode.replace(/__SortedDoublyLL________________________/g, dummySDLLAddr)
+bytecode = bytecode.replace(/__SortedCDPs________________________/g, dummySDLLAddr)
 
 return bytecode
 }
@@ -56,8 +56,8 @@ const getWeb3Contract = (contractJSON) => {
 
 const estimateAllContracts = async (contractJSONs) => {
   total = 0
-  Object.keys(contractJSONs).forEach(contractJSON => {
-    total += getEstimatedGasForDeployment(contractJSON)
+  Object.keys(contractJSONs).forEach(async (contractJSON) => {
+    total += await getEstimatedGasForDeployment(contractJSON)
   });
   console.log(`total estimated gas usage:${total}`)
   return total

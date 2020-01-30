@@ -8,6 +8,7 @@ const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const NameRegistry = artifacts.require("./NameRegistry.sol")
 const DeciMath = artifacts.require("./DeciMath.sol")
+// const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 
@@ -31,6 +32,7 @@ module.exports =  function(deployer) {
     deployer.deploy(StabilityPool)
     deployer.deploy(CDPManager)
     deployer.deploy(DeciMath)
+    // deployer.deploy(FunctionCaller)
 
   deployer.then (async () => {
    // Grab contract representations
@@ -65,9 +67,7 @@ module.exports =  function(deployer) {
     console.log('deploy_contracts.js - Contract addresses stored in NameRegistry: \n')
     console.log(registeredAddresses)
     console.log('\n')
-    console.log('Rick: contracts deployed by the Truffle deployment script.')
-    console.log('Test contracts deployed with .new() have different addresses.')
-
+    
     // Connect contracts to each other via the NameRegistry records
     await connectContracts(contracts, registeredAddresses)
   })

@@ -1,5 +1,6 @@
 const PoolManager = artifacts.require("./PoolManager.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
+const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const NameRegistry = artifacts.require("./NameRegistry.sol")
@@ -24,27 +25,30 @@ contract('CLVToken', async accounts => {
   let priceFeed;
   let clvToken;
   let poolManager;
+  let sortedCDPs;
   let cdpManager;
   let nameRegistry;
   let activePool;
   let stabilityPool; 
   let defaultPool;
-  let contractAddresses;
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
       priceFeed = await PriceFeed.new()
       clvToken = await CLVToken.new()
       poolManager = await PoolManager.new()
+      sortedCDPs = await SortedCDPs.new()
       cdpManager = await CDPManager.new()
       nameRegistry = await NameRegistry.new()
       activePool = await ActivePool.new()
       stabilityPool = await StabilityPool.new()
       defaultPool = await DefaultPool.new()
 
-      const contracts = { priceFeed, 
+      const contracts = { 
+                    priceFeed, 
                     clvToken, 
                     poolManager, 
+                    sortedCDPs,
                     cdpManager, 
                     nameRegistry, 
                     activePool, 
@@ -62,9 +66,9 @@ contract('CLVToken', async accounts => {
       // await cdpManager.mockAddCDP({ from: bob })
       // await cdpManager.mockAddCDP({ from: carol })
 
-      await cdpManager.addColl({ from: alice, value: _1_Ether })
-      await cdpManager.addColl({ from: bob, value: _1_Ether })
-      await cdpManager.addColl({ from: carol, value: _1_Ether })
+      await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
+      await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
+      await cdpManager.addColl(carol, { from: carol, value: _1_Ether })
 
       // Three test users withdraw CLV
       await cdpManager.withdrawCLV(150, { from: alice }) 

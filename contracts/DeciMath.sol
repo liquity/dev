@@ -28,6 +28,7 @@ library DeciMath {
     /* Accurately calculate (x * y) / z. Converts all arguments to 'duints', performs 
     calculations, then converts the result back to uint before returning. */
     function accurateMulDiv(uint x, uint y, uint z) public pure returns (uint fraction) {
+        require( z!= 0, "DeciMath: can not divide by zero");
     // convert all uint to duint
         uint x_duint = toDuint(x);
         uint y_duint = toDuint(y);
@@ -81,6 +82,15 @@ library DeciMath {
         return prod;
     }
 
+    function mul_uintByDuint_roundUp( uint x, uint y_duint)public pure returns (uint prod) {
+        uint x_duint = toDuint(x);
+
+        uint prod_duint = decMul(x_duint, y_duint);
+        uint prod = fromDuint_roundUp(prod_duint);
+
+        return prod;
+    }
+
      // --- Helpers. Convert to and from duints ---
 
     function toDuint(uint integer) public pure returns(uint) {
@@ -90,6 +100,13 @@ library DeciMath {
     function fromDuint(uint duint) public pure returns(uint) {
         // rounding: always round down
         return SafeMath.div(duint, _1E18);
+    }
+
+     function fromDuint_roundUp(uint duint) public pure returns(uint) {
+        // rounding: common rounding.
+        uint integer;
+        integer =  SafeMath.div(duint, _1E18) + 1;  // round up
+        return integer;
     }
 
     function fromDuint_commonRounding(uint duint) public pure returns(uint) {
