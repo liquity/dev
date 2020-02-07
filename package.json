@@ -20,6 +20,7 @@
     "solc": "^0.5.11"
   },
   "devDependencies": {
-    "eth-gas-reporter": "^0.2.14"
+    "eth-gas-reporter": "^0.2.14",
+    "husky": "^4.2.1"
   }
 }

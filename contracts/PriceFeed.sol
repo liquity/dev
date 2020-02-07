@@ -29,7 +29,7 @@ contract PriceFeed is Ownable {
 
     function setPrice(uint _price) public onlyOwner returns (bool) {
         price = _price.mul(DIGITS);
-        // cdpManager.checkTCRAndSetRecoveryMode();
+        cdpManager.checkTCRAndSetRecoveryMode();
         emit PriceUpdated(price);
         return true;
 
