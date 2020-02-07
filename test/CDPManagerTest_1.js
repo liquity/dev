@@ -475,7 +475,7 @@ contract('CDPManager', async accounts => {
   })
 
   it("withdrawColl(): updates the stake and updates the total stakes", async () => {
-    //  Alice creates initial CDP with 1 ether
+    //  Alice creates initial CDP with 2 ether
     await cdpManager.addColl(alice, {from: alice, value: _2_Ether })
 
     const alice_CDP_Before = await cdpManager.CDPs(alice)

@@ -65,7 +65,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         return true;
     }
 
-   // ***** OPENZEPPELIN ERC20 FUNCTIONALITY *****
+   // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---
 
    /**
  * @dev Implementation of the {IERC20} interface.

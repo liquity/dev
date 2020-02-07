@@ -51,6 +51,9 @@ const connectContracts = async (contracts, registeredAddresses) => {
   // set CDPManager addr in SortedCDPs
   await contracts.sortedCDPs.setCDPManager(registeredAddresses.CDPManager)
 
+   // set CDPManager addr in PriceFeed
+  //  await contracts.priceFeed.setCDPManagerAddress(registeredAddresses.CDPManager)
+
   // set contracts in the CDP Manager
   await contracts.cdpManager.setCLVToken(registeredAddresses.CLVToken)
   await contracts.cdpManager.setSortedCDPs(registeredAddresses.SortedCDPs)

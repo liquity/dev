@@ -24,10 +24,11 @@ contract('CDPManager', async accounts => {
   const _1_Ether = web3.utils.toWei('1', 'ether')
   const _10_Ether = web3.utils.toWei('10', 'ether')
   const _11_Ether = web3.utils.toWei('11', 'ether')
+  const _50_Ether = web3.utils.toWei('50', 'ether')
   const _98_Ether = web3.utils.toWei('98', 'ether')
   const _100_Ether = web3.utils.toWei('100', 'ether')
 
-  const [owner, alice, bob, carol, dennis] = accounts;
+  const [owner, alice, bob, carol, dennis, whale] = accounts;
   let priceFeed;
   let clvToken;
   let poolManager;
@@ -69,6 +70,7 @@ contract('CDPManager', async accounts => {
   })
 
  it('liquidate(): closes a CDP that has ICR < MCR', async () => {
+  await cdpManager.addColl(whale, { from: whale, value: _50_Ether })
     await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
 
     const ICR_Before = web3.utils.toHex(await cdpManager.getCurrentICR(alice))
@@ -283,6 +285,7 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): CDP remains active if withdrawal of its StabilityPool ETH gain brings it above the MCR", async () => {
    // --- SETUP ---
+   await cdpManager.addColl(whale, { from: whale, value: _10_Ether })
    await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
    await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
    await cdpManager.addColl(carol, { from: carol, value: _1_Ether })
@@ -313,7 +316,9 @@ contract('CDPManager', async accounts => {
     console.log("S_CLV is " + S_CLV.toString())
 
 //   S_CLV:  1000000000000000000  i.e. 1 CLV per unit staked (correct, bob should have 180 * 1 liquidated)
-//   S_ETH:     5555555555555556  i.e. 0.0055555.. ETH  per unit staked ( ?? ) ahhhh OK, so then when computing reward, it's slightly high
+/*   S_ETH:     5555555555555556  i.e. 0.0055555.. ETH  per unit staked ( ?? ) 
+ahhhh OK, so because of the rounding up, then when computing actual reward, it's slightly high, 
+and higher than what's in the Pool. */
     
     /* Now, attempt to liquidate Bob and Carol. Carol should be liquidated, but Bob's StabilityPool ETH gain should be 
     withdrawn to his CDP, bringing his ICR > MCR. Thus, his CDP should remain active */
@@ -339,6 +344,7 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): if withdrawal of StabilityPool ETH gain brings it above the MCR, CDP is re-inserted at a new list position", async () => {
     // --- SETUP ---
+    await cdpManager.addColl(alice, { from: alice, value: _10_Ether })
     await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
     await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
     await cdpManager.addColl(dennis, { from: dennis, value: _1_Ether })

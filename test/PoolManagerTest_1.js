@@ -72,7 +72,7 @@ contract('PoolManager', async accounts => {
     assert.equal(mockCDPManagerAddress, recordedCDPddress)
   })
 
-  it('getTCR(): with 0 ActivePool ETH and 0 ActivePool CLV, returns a TCR of 1', async () => {
+  it.only('getTCR(): with 0 ActivePool ETH and 0 ActivePool CLV, returns a TCR of 1', async () => {
     const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
     const activePoolCLV = await activePool.getCLV({ from: mockPoolManagerAddress })
     assert.equal(activePoolETH, 0)
@@ -83,7 +83,7 @@ contract('PoolManager', async accounts => {
     assert.equal(expectedTCR, TCR)
   })
 
-  it('getTCR(): with non-zero ActivePool ETH and 0 ActivePool CLV, returns the correct TCR', async () => {
+  it.only('getTCR(): with non-zero ActivePool ETH and 0 ActivePool CLV, returns the correct TCR', async () => {
     // setup: add ETH to ActivePool
     await activePool.setPoolManagerAddress(mockPoolManagerAddress)
     await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })
@@ -103,7 +103,7 @@ contract('PoolManager', async accounts => {
 
   // This test should pass after math rounding errors in contracts are fixed
 
-  it('getTCR: with ActivePool ETH and ActivePool CLV, returns the correct TCR', async () => {
+  it.only('getTCR: with ActivePool ETH and ActivePool CLV, returns the correct TCR', async () => {
    // setup: add ETH and CLV to ActivePool
     await activePool.setPoolManagerAddress(mockPoolManagerAddress)
     await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })

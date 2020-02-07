@@ -17,7 +17,7 @@ const setNameRegistry = deploymentHelpers.setNameRegistry
 const connectContracts = deploymentHelpers.connectContracts
 const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
 
-module.exports =  function(deployer) {
+module.exports = function(deployer) {
     // Deploy contract bytecode to blockchain
     deployer.deploy(SortedCDPs)
     deployer.deploy(DeciMath)
@@ -34,7 +34,7 @@ module.exports =  function(deployer) {
     deployer.deploy(DeciMath)
     // deployer.deploy(FunctionCaller)
 
-  deployer.then (async () => {
+  deployer.then(async () => {
    // Grab contract representations
     const priceFeed = await PriceFeed.deployed()
     const clvToken = await CLVToken.deployed()

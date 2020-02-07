@@ -68,7 +68,7 @@ contract ActivePool is Ownable, IPool {
         require (success == true, 'ActivePool: transaction reverted');
         emit ETHBalanceUpdated(ETH);
         emit EtherSent(_account, _amount);
-        return success;
+        return true;
     }
 
     function increaseCLV(uint _amount) public onlyPoolManager () {

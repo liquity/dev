@@ -80,5 +80,9 @@ interface ICDPManager {
 
     function mockAddCDP() external returns(bool);
 
+    function checkTCRAndSetRecoveryMode() external returns(bool);
+
     function redeemCollateral(uint _CLVAmount) external returns(bool);
+
+    function getNewTCRfromDebtIncrease(uint _debtIncrease) external view returns (uint);
 }

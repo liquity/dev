@@ -32,9 +32,9 @@ module.exports = {
       version: "0.5.11"
     }
   },
-  plugins: [
-    'truffle-ganache-test'
-  ],
+  // plugins: [
+  //   'truffle-ganache-test'
+  // ],
   // mocha: {
   //   reporter: 'eth-gas-reporter'
   // }

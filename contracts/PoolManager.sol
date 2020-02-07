@@ -80,9 +80,9 @@ contract PoolManager is Ownable, IPoolManager {
         "PoolManager: Target CDP must be _msgSender(), otherwise caller must be CDPManager");
         _;
     }
-    modifier onlyStabilityPool {
+    modifier onlyStabilityPoolorActivePool {
         require(
-            _msgSender() == stabilityPoolAddress, "PoolManager: Caller is not the StabilityPool");
+            _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, "PoolManager: Caller is not the StabilityPool");
         _;
     }
 
@@ -130,27 +130,6 @@ contract PoolManager is Ownable, IPoolManager {
         return DeciMath.accurateMulDiv(x, y, z);
     }
 
-    // Return the total collateral ratio of the system
-    function getTCR()
-        view
-        public
-        returns (uint)
-    {
-        uint activePoolETH = activePool.getETH();
-        uint activePoolCLV = activePool.getCLV();
-        uint price = priceFeed.getPrice();
-        
-        // Handle edge cases of div by 0
-        if(activePoolETH == 0 && activePoolCLV == 0 ) {
-            return 1;
-        }  else if (activePoolETH != 0 && activePoolCLV == 0 ) {
-            return 2**256 - 1; // TCR is technically infinite
-        }
-
-        // Calculate TCR
-        return DeciMath.accurateMulDiv(activePoolETH, price, activePoolCLV);
-    }
-    
     // Return the current ETH balance of the TokenPools contract
     function getBalance()
         public
@@ -160,6 +139,25 @@ contract PoolManager is Ownable, IPoolManager {
         return address(this).balance;
     } 
     
+    // Return the total collateral ratio (TCR) of the system, based on the most recent ETH:USD price
+    function getTCR() view public returns (uint) {
+        uint totalCollateral = activePool.getETH();
+        uint totalDebt = activePool.getCLV();
+        uint price = priceFeed.getPrice();
+
+        // Handle edge cases of div by 0
+        if(totalCollateral == 0 && totalDebt == 0 ) {
+            return 1;
+        }  else if (totalCollateral != 0 && totalDebt == 0 ) {
+            return 2**256 - 1; // TCR is technically infinite
+        }
+
+        // Calculate TCR
+        uint collToDebtRatio = DeciMath.div_toDuint(totalCollateral, totalDebt);
+        uint TCR = DeciMath.mul_uintByDuint(price, collToDebtRatio);
+        return TCR;
+    }
+
     // Return the total active debt (in CLV) in the system
     function getActiveDebt()
         public
@@ -196,6 +194,15 @@ contract PoolManager is Ownable, IPoolManager {
         return defaultPool.getETH();
     }
     
+    // Return the total CLV in the Stability Pool
+    function getStabilityPoolCLV()
+        public
+        view
+        returns (uint)
+    {
+        return stabilityPool.getCLV();
+    }
+
     // Return the lower value from two given integers
     function getMin(uint a, uint b)
         public
@@ -266,6 +273,31 @@ contract PoolManager is Ownable, IPoolManager {
 
         return true;
     }
+
+    function pullFromActivePool(uint _CLVDebt, uint _ETH) 
+    public
+    onlyCDPManager
+    returns (bool)
+    {
+        activePool.sendETH(address(this), _ETH);
+        activePool.decreaseCLV(_CLVDebt);
+
+        return true;
+    }
+
+    function returnToActivePool(uint _CLVDebt, uint _ETH)
+    public
+    onlyCDPManager
+    returns (bool)
+    { 
+        activePool.increaseCLV(_CLVDebt);
+        (bool success, ) = activePoolAddress.call.value(_ETH)("");  // use call.value()('') as per Consensys latest advice 
+        require (success == true, 'PoolManager: transaction reverted');
+
+        return success;
+    }
+
+
 
     // Update the Active Pool and the Default Pool when a CDP obtains a default share
     function applyPendingRewards(uint _CLV, uint _ETH)
@@ -417,6 +449,8 @@ contract PoolManager is Ownable, IPoolManager {
     /* Send ETHGain to user's address, and updates their deposit, 
     setting newDeposit = (oldDeposit - CLVLoss) + amount. */
     function provideToSP(uint _amount) external returns(bool) {
+        cdpManager.checkTCRAndSetRecoveryMode();
+
         address user = _msgSender();
 
         uint[2] memory returnedVals = retrieveToUser(user);
@@ -437,6 +471,8 @@ contract PoolManager is Ownable, IPoolManager {
 
     In all cases, the entire ETHGain is sent to user, and the CLVLoss is applied to their deposit. */
     function withdrawFromSP(uint _amount) external returns(bool) {
+        cdpManager.checkTCRAndSetRecoveryMode();
+
         address user = _msgSender();
         uint userDeposit = deposit[user];
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
@@ -457,6 +493,7 @@ contract PoolManager is Ownable, IPoolManager {
     /* Transfer the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
     Applies their CLVLoss to the deposit. */
     function withdrawFromSPtoCDP(address _user) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
+        cdpManager.checkTCRAndSetRecoveryMode();
 
         uint userDeposit = deposit[_user];
         if (userDeposit == 0) { return false; }
@@ -476,6 +513,8 @@ contract PoolManager is Ownable, IPoolManager {
     
     Callable by anyone when _depositor's CLVLoss > deposit. */
     function withdrawPenaltyFromSP(address _address) external returns(bool) {
+        cdpManager.checkTCRAndSetRecoveryMode();
+
         address claimant = _msgSender();
         address depositor = _address;
         
@@ -555,5 +594,5 @@ contract PoolManager is Ownable, IPoolManager {
         return remainder;
     }
 
-    function () external payable onlyStabilityPool {}
+    function () external payable onlyStabilityPoolorActivePool {}
 }    

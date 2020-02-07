@@ -1,6 +1,0 @@
-#!/bin/bash
-
-truffle.cmd migrate --reset
-truffle.cmd console
-exec ./utils/functionGasEstimator.js
-.exit
