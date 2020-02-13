@@ -285,7 +285,7 @@ contract('CDPManager', async accounts => {
     assert.equal(aliceCDPInList_Before, true)
     assert.equal(listIsEmpty_Before, false)
 
-    await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
 
     // check Alice is still in list after
     const aliceCDPInList_After = await cdpManager.sortedCDPsContains(alice)
@@ -461,7 +461,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.addColl(alice, alice, { from: alice, value: _100_Finney })
 
     // Tops up with only one wei
-    const txData = await cdpManager.addColl(alice, { from: alice, value: '1' })
+    const txData = await cdpManager.addColl(alice, alice, { from: alice, value: '1' })
 
     // check top-up was successful
     txStatus = txData.receipt.status

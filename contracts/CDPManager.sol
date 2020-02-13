@@ -17,7 +17,6 @@ contract CDPManager is Ownable, ICDPManager {
     uint constant DIGITS = 1e18; // Number of digits used for precision, e.g. when calculating redistribution shares. Equals "ether" unit.
     uint constant MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant MAX_DRAWDOWN = 20; // Loans cannot be drawn down more than 5% (= 1/20) below the TCR when receiving redistribution shares
     uint constant MIN_COLL_IN_USD = 20000000000000000000;
     enum Status { nonExistent, newBorn, active, closed }
     
@@ -369,19 +368,20 @@ contract CDPManager is Ownable, ICDPManager {
         
         // Apply any StabilityPool gains before checking ICR against MCR
         poolManager.withdrawFromSPtoCDP(_user);
-        uint ICR = getCurrentICR(_user);
         
         if (recoveryMode == true) {
-            liquidateRecoveryMode(_user, ICR);
+            liquidateRecoveryMode(_user);
         } else if (recoveryMode == false) {
-            liquidateNormalMode(_user, ICR);
+            liquidateNormalMode(_user);
         }  
     }
     
-    function liquidateNormalMode(address _user, uint _ICR) internal returns (bool) {
+    function liquidateNormalMode(address _user) internal returns (bool) {
+        uint ICR = getCurrentICR(_user);
+
         // if newICR > MCR, update CDP's position in sortedCDPs and return
-        if (_ICR > MCR) { 
-            sortedCDPs.reInsert(_user, _ICR, _user, _user);
+        if (ICR > MCR) { 
+            sortedCDPs.reInsert(_user, ICR, _user, _user);
             return false; 
         } 
     
@@ -401,9 +401,11 @@ contract CDPManager is Ownable, ICDPManager {
         return true;
     }
 
-    function liquidateRecoveryMode(address _user, uint _ICR) internal returns (bool) {
+    function liquidateRecoveryMode(address _user) internal returns (bool) {
+        uint ICR = getCurrentICR(_user);
+
         // If ICR <= 100%, redistribute the CDP across all active CDPs
-        if (_ICR <= 1000000000000000000) {
+        if (ICR <= 1000000000000000000) {
             applyPendingRewards(_user);
             removeStake(_user);
 
@@ -416,7 +418,7 @@ contract CDPManager is Ownable, ICDPManager {
             updateSystemSnapshots();
 
         // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
-        } else if ((_ICR > 1000000000000000000) && (_ICR < MCR)) {
+        } else if ((ICR > 1000000000000000000) && (ICR < MCR)) {
             applyPendingRewards(_user);
             removeStake(_user);
             
@@ -448,12 +450,10 @@ contract CDPManager is Ownable, ICDPManager {
 
             // If loan can not be entirely offset, leave the CDP active, with a reduced coll and debt, and corresponding new stake.
             if (CLVDebtRemainder > 0) {
-                /* Temporarily pull the coll and debt remainders from the Active Pool, in order to correctly update system snapshots.
-                Then restore the coll and debt remainders to the Active Pool.  */
-                poolManager.pullFromActivePool(CLVDebtRemainder, ETHRemainder);
-                updateSystemSnapshots();
-                poolManager.returnToActivePool(CLVDebtRemainder, ETHRemainder);
 
+                // Update system snapshots, excluding the reduced collateral that remains in the CDP
+                updateSystemSnapshots_excludeCollRemainder(ETHRemainder);
+                
                 // Give the loan a new reduced coll and debt, then update stake and totalStakes
                 CDPs[_user].coll = ETHRemainder;
                 CDPs[_user].debt = CLVDebtRemainder;
@@ -483,11 +483,13 @@ contract CDPManager is Ownable, ICDPManager {
             uint i;
             while (i < n) {
                 address user = sortedCDPs.getLast();
+                uint collRatio = getCurrentICR(user);
                 // attempt to close CDP
                 liquidate(user);
 
-                // Break loop if the system has left recovery mode, or loop reaches the first CDP in the sorted list 
-                if ((recoveryMode == false) || (user == sortedCDPs.getFirst())) { break; }
+                /* Break loop if the system has left recovery mode and all active CDPs are 
+                above the MCR, or if the loop reaches the first CDP in the sorted list  */
+                if ((recoveryMode == false && collRatio >= MCR) || (user == sortedCDPs.getFirst())) { break; }
                 i++;
             }
         } else if (recoveryMode == false) {
@@ -781,6 +783,19 @@ contract CDPManager is Ownable, ICDPManager {
         uint activeColl = poolManager.getActiveColl();
         uint liquidatedColl = poolManager.getLiquidatedColl();
         totalCollateralSnapshot = activeColl.add(liquidatedColl);
+
+        return true;
+    }
+
+    // Updates snapshots of system stakes and system collateral, excluding a given collateral remainder from the calculation
+     function updateSystemSnapshots_excludeCollRemainder(uint _collRemainder) internal returns (bool) {
+        totalStakesSnapshot = totalStakes;
+
+        /* The total collateral snapshot is the sum of all active collateral and all pending rewards
+       (ActivePool ETH + DefaultPool ETH), immediately after the liquidation occurs. */
+        uint activeColl = poolManager.getActiveColl();
+        uint liquidatedColl = poolManager.getLiquidatedColl();
+        totalCollateralSnapshot = activeColl.sub(_collRemainder).add(liquidatedColl);
 
         return true;
     }

@@ -82,7 +82,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
     modifier onlyStabilityPoolorActivePool {
         require(
-            _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, "PoolManager: Caller is not the StabilityPool");
+            _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, "PoolManager: Caller is neither StabilityPool nor ActivePool");
         _;
     }
 
@@ -273,31 +273,6 @@ contract PoolManager is Ownable, IPoolManager {
 
         return true;
     }
-
-    function pullFromActivePool(uint _CLVDebt, uint _ETH) 
-    public
-    onlyCDPManager
-    returns (bool)
-    {
-        activePool.sendETH(address(this), _ETH);
-        activePool.decreaseCLV(_CLVDebt);
-
-        return true;
-    }
-
-    function returnToActivePool(uint _CLVDebt, uint _ETH)
-    public
-    onlyCDPManager
-    returns (bool)
-    { 
-        activePool.increaseCLV(_CLVDebt);
-        (bool success, ) = activePoolAddress.call.value(_ETH)("");  // use call.value()('') as per Consensys latest advice 
-        require (success == true, 'PoolManager: transaction reverted');
-
-        return success;
-    }
-
-
 
     // Update the Active Pool and the Default Pool when a CDP obtains a default share
     function applyPendingRewards(uint _CLV, uint _ETH)

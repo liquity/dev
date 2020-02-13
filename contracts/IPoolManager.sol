@@ -64,9 +64,9 @@ interface IPoolManager {
 
     function liquidate(uint _CLV, uint _ETH) external returns(bool);
 
-    function pullFromActivePool(uint _CLV, uint _ETH) external returns (bool);
+    // function pullFromActivePool(uint _CLV, uint _ETH) external returns (bool);
 
-    function returnToActivePool(uint _CLV, uint _ETH) external returns (bool);
+    // function returnToActivePool(uint _CLV, uint _ETH) external returns (bool);
   
     function applyPendingRewards(uint _CLV, uint _ETH) external returns(bool);
 
