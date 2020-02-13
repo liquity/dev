@@ -8,6 +8,7 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
@@ -24,16 +25,16 @@ contract('PoolManager', async accounts => {
   const _101_Ether = web3.utils.toWei('101', 'ether')
 
   const [owner, mockCDPManagerAddress, mockPoolManagerAddress, alice, bob] = accounts;
-  let priceFeed;
-  let clvToken;
-  let poolManager;
-  let sortedCDPs;
-  let cdpManager;
-  let nameRegistry;
-  let activePool;
-  let stabilityPool;
-  let defaultPool;
-  let contractAddresses;
+  let priceFeed
+  let clvToken
+  let poolManager
+  let sortedCDPs
+  let cdpManager
+  let nameRegistry
+  let activePool
+  let stabilityPool
+  let defaultPool
+  let functionCaller
 
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()
@@ -45,6 +46,7 @@ contract('PoolManager', async accounts => {
     activePool = await ActivePool.new()
     stabilityPool = await StabilityPool.new()
     defaultPool = await DefaultPool.new()
+    functionCaller = await FunctionCaller.new()
 
     contracts = {
       priceFeed,
@@ -55,7 +57,8 @@ contract('PoolManager', async accounts => {
       nameRegistry,
       activePool,
       stabilityPool,
-      defaultPool
+      defaultPool,
+      functionCaller
     }
 
     const contractAddresses = getAddresses(contracts)
@@ -72,7 +75,7 @@ contract('PoolManager', async accounts => {
     assert.equal(mockCDPManagerAddress, recordedCDPddress)
   })
 
-  it.only('getTCR(): with 0 ActivePool ETH and 0 ActivePool CLV, returns a TCR of 1', async () => {
+  it('getTCR(): with 0 ActivePool ETH and 0 ActivePool CLV, returns a TCR of 1', async () => {
     const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
     const activePoolCLV = await activePool.getCLV({ from: mockPoolManagerAddress })
     assert.equal(activePoolETH, 0)
@@ -83,7 +86,7 @@ contract('PoolManager', async accounts => {
     assert.equal(expectedTCR, TCR)
   })
 
-  it.only('getTCR(): with non-zero ActivePool ETH and 0 ActivePool CLV, returns the correct TCR', async () => {
+  it('getTCR(): with non-zero ActivePool ETH and 0 ActivePool CLV, returns the correct TCR', async () => {
     // setup: add ETH to ActivePool
     await activePool.setPoolManagerAddress(mockPoolManagerAddress)
     await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })
@@ -103,7 +106,7 @@ contract('PoolManager', async accounts => {
 
   // This test should pass after math rounding errors in contracts are fixed
 
-  it.only('getTCR: with ActivePool ETH and ActivePool CLV, returns the correct TCR', async () => {
+  it('getTCR: with ActivePool ETH and ActivePool CLV, returns the correct TCR', async () => {
    // setup: add ETH and CLV to ActivePool
     await activePool.setPoolManagerAddress(mockPoolManagerAddress)
     await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })

@@ -17,4 +17,9 @@ contract FunctionCaller {
     function cdpManager_getCurrentICR (address _address) public returns(uint) {
         cdpManager.getCurrentICR(_address);  
     }
+
+    function cdpManager_getApproxHint (uint CR, uint numTrials) public returns (address) {
+        return cdpManager.getApproxHint(CR, numTrials);
+    }
 }
+

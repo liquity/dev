@@ -21,6 +21,7 @@ const getDeployedContracts = async () => {
   const defaultPool = await DefaultPool.deployed()
   const stabilityPool = await StabilityPool.deployed()
   const sortedCDPs = await SortedCDPs.deployed()
+  const functionCaller = await FunctionCaller.deployed()
  
 // TODO:  Remove this duplication below with deploymentHelpers.js.  The above, can be a single function 
 // getAllDeployedContracts()
@@ -35,6 +36,7 @@ const getDeployedContracts = async () => {
   const defaultPoolAddress = defaultPool.address
   const stabilityPoolAddress = stabilityPool.address
   const sortedCDPsAddress = sortedCDPs.address
+  const functionCallerAddress = functionCaller.address
 
   return {
     cdpManager,
@@ -46,6 +48,8 @@ const getDeployedContracts = async () => {
     activePool,
     stabilityPool,
     defaultPool,
+    sortedCDPs,
+    functionCaller,
     poolManagerAddress,
     clvTokenAddress,
     priceFeedAddress,
@@ -54,7 +58,9 @@ const getDeployedContracts = async () => {
     activePoolAddress,
     defaultPoolAddress,
     stabilityPoolAddress,
-    sortedCDPsAddress
+    sortedCDPsAddress, 
+    functionCallerAddress
+
   }
 }
 

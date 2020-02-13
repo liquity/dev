@@ -7,6 +7,7 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
@@ -22,15 +23,16 @@ contract('CLVToken', async accounts => {
   const _1_Ether = web3.utils.toWei('1', 'ether')
 
   const [owner, mockPool, alice, bob, carol] = accounts;
-  let priceFeed;
-  let clvToken;
-  let poolManager;
-  let sortedCDPs;
-  let cdpManager;
-  let nameRegistry;
-  let activePool;
-  let stabilityPool; 
-  let defaultPool;
+  let priceFeed
+  let clvToken
+  let poolManager
+  let sortedCDPs
+  let cdpManager
+  let nameRegistry
+  let activePool
+  let stabilityPool
+  let defaultPool
+  let functionCaller
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
@@ -43,6 +45,7 @@ contract('CLVToken', async accounts => {
       activePool = await ActivePool.new()
       stabilityPool = await StabilityPool.new()
       defaultPool = await DefaultPool.new()
+      functionCaller = await FunctionCaller.new()
 
       const contracts = { 
                     priceFeed, 
@@ -53,7 +56,9 @@ contract('CLVToken', async accounts => {
                     nameRegistry, 
                     activePool, 
                     stabilityPool, 
-                    defaultPool }
+                    defaultPool,
+                    functionCaller 
+                  }
       
       const contractAddresses = getAddresses(contracts)
       await setNameRegistry(contractAddresses, nameRegistry, { from: owner })

@@ -8,6 +8,7 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
@@ -29,15 +30,16 @@ contract('CDPManager', async accounts => {
   const _100_Ether = web3.utils.toWei('100', 'ether')
 
   const [owner, alice, bob, carol, dennis, whale] = accounts;
-  let priceFeed;
-  let clvToken;
-  let poolManager;
-  let sortedCDPs;
-  let cdpManager;
-  let nameRegistry;
-  let activePool;
-  let stabilityPool;
-  let defaultPool;
+  let priceFeed
+  let clvToken
+  let poolManager
+  let sortedCDPs
+  let cdpManager
+  let nameRegistry
+  let activePool
+  let stabilityPool
+  let defaultPool
+  let functionCaller
 
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()
@@ -49,6 +51,7 @@ contract('CDPManager', async accounts => {
     activePool = await ActivePool.new()
     stabilityPool = await StabilityPool.new()
     defaultPool = await DefaultPool.new()
+    functionCaller = await FunctionCaller.new()
 
     contracts = {
       priceFeed,
@@ -59,7 +62,8 @@ contract('CDPManager', async accounts => {
       nameRegistry,
       activePool,
       stabilityPool,
-      defaultPool
+      defaultPool,
+      functionCaller
     }
 
     const contractAddresses = getAddresses(contracts)
@@ -70,8 +74,8 @@ contract('CDPManager', async accounts => {
   })
 
  it('liquidate(): closes a CDP that has ICR < MCR', async () => {
-  await cdpManager.addColl(whale, { from: whale, value: _50_Ether })
-    await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
+  await cdpManager.addColl(whale, whale, { from: whale, value: _50_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
 
     const ICR_Before = web3.utils.toHex(await cdpManager.getCurrentICR(alice))
     const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
@@ -81,7 +85,7 @@ contract('CDPManager', async accounts => {
     assert.equal(MCR.toString(), '1100000000000000000')
 
     // Alice withdraws 180 CLV, lowering her ICR to 1.11
-    await cdpManager.withdrawCLV('180000000000000000000', { from: alice })
+    await cdpManager.withdrawCLV('180000000000000000000', alice, { from: alice })
     const ICR_AfterWithdrawal = (await cdpManager.getCurrentICR(alice)).toString()
     assert.equal(ICR_AfterWithdrawal, '1111111111111111111')
 
@@ -100,11 +104,11 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): decreases ActivePool ETH and CLVDebt by correct amounts", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, { from: alice, value: _10_Ether })
-    await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
     // Alice withdraws 100CLV, Bob withdraws 180CLV
-    await cdpManager.withdrawCLV('100000000000000000000', { from: alice })
-    await cdpManager.withdrawCLV('180000000000000000000', { from: bob })
+    await cdpManager.withdrawCLV('100000000000000000000', alice, { from: alice })
+    await cdpManager.withdrawCLV('180000000000000000000', bob, { from: bob })
 
     // --- TEST ---
 
@@ -136,11 +140,11 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): increases DefaultPool ETH and CLV debt by correct amounts", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, { from: alice, value: _10_Ether })
-    await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
 
-    await cdpManager.withdrawCLV('1000000000000000000', { from: alice })
-    await cdpManager.withdrawCLV('180000000000000000000', { from: bob })
+    await cdpManager.withdrawCLV('1000000000000000000', alice, { from: alice })
+    await cdpManager.withdrawCLV('180000000000000000000', bob, { from: bob })
 
     // --- TEST ---
 
@@ -171,11 +175,11 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): removes the CDP's stake from the total stakes", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, { from: alice, value: _10_Ether })
-    await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
 
-    await cdpManager.withdrawCLV('1000000000000000000', { from: alice })
-    await cdpManager.withdrawCLV('180000000000000000000', { from: bob })
+    await cdpManager.withdrawCLV('1000000000000000000', alice, { from: alice })
+    await cdpManager.withdrawCLV('180000000000000000000', bob, { from: bob })
 
     // --- TEST ---
 
@@ -196,11 +200,11 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): updates the snapshots of total stakes and total collateral", async () => {
      // --- SETUP ---
-     await cdpManager.addColl(alice, { from: alice, value: _10_Ether })
-     await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
+     await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+     await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
  
-     await cdpManager.withdrawCLV('1000000000000000000', { from: alice })
-     await cdpManager.withdrawCLV('180000000000000000000', { from: bob })
+     await cdpManager.withdrawCLV('1000000000000000000', alice, { from: alice })
+     await cdpManager.withdrawCLV('180000000000000000000', bob, { from: bob })
 
      // --- TEST ---
 
@@ -230,12 +234,12 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): updates the L_ETH and L_CLVDebt reward-per-unit-staked totals", async () => {
      // --- SETUP ---
-    await cdpManager.addColl(alice, { from: alice, value: _10_Ether })
-    await cdpManager.addColl(bob, { from: bob, value: _10_Ether })
-    await cdpManager.addColl(carol, { from: carol, value: _1_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _10_Ether })
+    await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
 
     // Carol withdraws 180CLV, lowering her ICR to 1.11
-    await cdpManager.withdrawCLV('180000000000000000000', { from: carol })
+    await cdpManager.withdrawCLV('180000000000000000000', carol, { from: carol })
 
     // --- TEST ---
 
@@ -258,7 +262,7 @@ contract('CDPManager', async accounts => {
     assert.equal(L_CLVDebt_AfterCarolLiquidated, '9000000000000000000')
 
     // Bob now withdraws 800 CLV, bringing his ICR to 1.11
-    await cdpManager.withdrawCLV('800000000000000000000', { from: bob })
+    await cdpManager.withdrawCLV('800000000000000000000', bob, { from: bob })
 
     // price drops to 1ETH:50CLV, reducing Bob's ICR below MCR
     await priceFeed.setPrice(50);
@@ -285,16 +289,16 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): CDP remains active if withdrawal of its StabilityPool ETH gain brings it above the MCR", async () => {
    // --- SETUP ---
-   await cdpManager.addColl(whale, { from: whale, value: _10_Ether })
-   await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
-   await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
-   await cdpManager.addColl(carol, { from: carol, value: _1_Ether })
-   await cdpManager.addColl(dennis, { from: dennis, value: _1_Ether })
+   await cdpManager.addColl(whale, whale, { from: whale, value: _10_Ether })
+   await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+   await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
+   await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
+   await cdpManager.addColl(dennis, dennis, { from: dennis, value: _1_Ether })
 
    //  Bob and Carol and Dennis withdraw 180 CLV
-   await cdpManager.withdrawCLV('180000000000000000000', { from: bob })
-   await cdpManager.withdrawCLV('180000000000000000000', { from: carol })
-   await cdpManager.withdrawCLV('180000000000000000000', { from: dennis })
+   await cdpManager.withdrawCLV('180000000000000000000', bob, { from: bob })
+   await cdpManager.withdrawCLV('180000000000000000000', carol, { from: carol })
+   await cdpManager.withdrawCLV('180000000000000000000', dennis, { from: dennis })
 
     // --- TEST ---
 
@@ -344,15 +348,15 @@ and higher than what's in the Pool. */
 
   it("liquidate(): if withdrawal of StabilityPool ETH gain brings it above the MCR, CDP is re-inserted at a new list position", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, { from: alice, value: _10_Ether })
-    await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
-    await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
-    await cdpManager.addColl(dennis, { from: dennis, value: _1_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _1_Ether })
  
     //  Bob withdraws 150 CLV
-    await cdpManager.withdrawCLV('150000000000000000000', { from: bob })
+    await cdpManager.withdrawCLV('150000000000000000000', bob, { from: bob })
     // Dennis withdraws 140 CLV
-    await cdpManager.withdrawCLV('140000000000000000000', { from: dennis })
+    await cdpManager.withdrawCLV('140000000000000000000', dennis, { from: dennis })
  
      // --- TEST ---
  
@@ -363,7 +367,7 @@ and higher than what's in the Pool. */
      await priceFeed.setPrice(100);
 
      // Alice withdraws 90CLV, resulting in an ICR = 1.111...
-     await cdpManager.withdrawCLV('90000000000000000000', {from: alice})
+     await cdpManager.withdrawCLV('90000000000000000000', alice, {from: alice})
  
      // check last CDP is bob
      
@@ -411,14 +415,14 @@ and higher than what's in the Pool. */
     // --- SETUP ---
 
     // create 3 CDPs
-    await cdpManager.addColl(alice, { from: alice, value: _10_Ether })
-    await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
-    await cdpManager.addColl(carol, { from: carol, value: _1_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
+    await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
 
     // alice withdraws only 1 CLV. Bob and Carol each withdraw 180 CLV, lowering their ICR to 1.11
-    await cdpManager.withdrawCLV('1000000000000000000', { from: alice })
-    await cdpManager.withdrawCLV('180000000000000000000', { from: bob })
-    await cdpManager.withdrawCLV('180000000000000000000', { from: carol })
+    await cdpManager.withdrawCLV('1000000000000000000', alice, { from: alice })
+    await cdpManager.withdrawCLV('180000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('180000000000000000000', carol, { from: carol })
 
     // --- TEST ---
 
@@ -458,16 +462,16 @@ and higher than what's in the Pool. */
     // --- SETUP ---
 
     // create 4 CDPs
-    await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
-    await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
-    await cdpManager.addColl(carol, { from: carol, value: _1_Ether })
+    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
+    await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
     // start Dennis with a high ICR
-    await cdpManager.addColl(dennis, { from: dennis, value: _98_Ether })
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _98_Ether })
     
-    await cdpManager.withdrawCLV('5000000000000000000', { from: alice }) // alice withdraws 5 CLV
-    await cdpManager.withdrawCLV('8000000000000000000', { from: bob }) // bob withdraws 8 CLV
-    await cdpManager.withdrawCLV('10000000000000000000', { from: carol }) // carol withdraws 10 CLV 
-    await cdpManager.withdrawCLV('150000000000000000000', { from: dennis }) // dennis withdraws 150 CLV
+    await cdpManager.withdrawCLV('5000000000000000000', alice, { from: alice }) // alice withdraws 5 CLV
+    await cdpManager.withdrawCLV('8000000000000000000', bob, { from: bob }) // bob withdraws 8 CLV
+    await cdpManager.withdrawCLV('10000000000000000000', carol, { from: carol }) // carol withdraws 10 CLV 
+    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis }) // dennis withdraws 150 CLV
 
     const dennis_CLVBalance_Before = (await clvToken.balanceOf(dennis)).toString()
     assert.equal(dennis_CLVBalance_Before, '150000000000000000000')
@@ -475,7 +479,7 @@ and higher than what's in the Pool. */
     // --- TEST --- 
 
     // Dennis redeems 20 CLV
-    await cdpManager.redeemCollateral('20000000000000000000', {from: dennis})
+    await cdpManager.redeemCollateral('20000000000000000000', dennis, {from: dennis})
 
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const bob_CDP_After = await cdpManager.CDPs(bob)

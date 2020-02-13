@@ -9,6 +9,7 @@ const getAddresses = (contracts) => {
     stabilityPool: contracts.stabilityPool.address,
     activePool: contracts.activePool.address,
     defaultPool: contracts.defaultPool.address,
+    functionCaller: contracts.functionCaller.address
   }
 }
 
@@ -21,6 +22,7 @@ const setNameRegistry = async (addresses, nameRegistry) => {
   await nameRegistry.registerContract('StabilityPool', addresses.stabilityPool)
   await nameRegistry.registerContract('ActivePool', addresses.activePool)
   await nameRegistry.registerContract('DefaultPool', addresses.defaultPool)
+  await nameRegistry.registerContract('FunctionCaller', addresses.functionCaller)
 }
 
 const getAddressesFromNameRegistry = async (nameRegistry) => {
@@ -32,6 +34,7 @@ const getAddressesFromNameRegistry = async (nameRegistry) => {
   const StabilityPool = await nameRegistry.getAddress('StabilityPool')
   const ActivePool = await nameRegistry.getAddress('ActivePool')
   const DefaultPool = await nameRegistry.getAddress('DefaultPool')
+  const FunctionCaller = await nameRegistry.getAddress('FunctionCaller')
 
   return { PoolManager, CLVToken, PriceFeed, SortedCDPs, CDPManager, StabilityPool, ActivePool, DefaultPool }
 }
@@ -51,8 +54,11 @@ const connectContracts = async (contracts, registeredAddresses) => {
   // set CDPManager addr in SortedCDPs
   await contracts.sortedCDPs.setCDPManager(registeredAddresses.CDPManager)
 
+   // set CDPManager addr in the FunctionCaller 
+   await contracts.functionCaller.setCDPManagerAddress(registeredAddresses.CDPManager)
+
    // set CDPManager addr in PriceFeed
-  //  await contracts.priceFeed.setCDPManagerAddress(registeredAddresses.CDPManager)
+   await contracts.priceFeed.setCDPManagerAddress(registeredAddresses.CDPManager)
 
   // set contracts in the CDP Manager
   await contracts.cdpManager.setCLVToken(registeredAddresses.CLVToken)

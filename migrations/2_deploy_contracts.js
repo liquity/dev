@@ -8,7 +8,7 @@ const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const NameRegistry = artifacts.require("./NameRegistry.sol")
 const DeciMath = artifacts.require("./DeciMath.sol")
-// const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 
@@ -32,7 +32,7 @@ module.exports = function(deployer) {
     deployer.deploy(StabilityPool)
     deployer.deploy(CDPManager)
     deployer.deploy(DeciMath)
-    // deployer.deploy(FunctionCaller)
+    deployer.deploy(FunctionCaller)
 
   deployer.then(async () => {
    // Grab contract representations
@@ -45,6 +45,7 @@ module.exports = function(deployer) {
     const activePool = await ActivePool.deployed()
     const stabilityPool = await StabilityPool.deployed()
     const defaultPool = await DefaultPool.deployed()
+    const functionCaller = await FunctionCaller.deployed()
 
     const contracts = { priceFeed, 
                         clvToken, 
@@ -54,7 +55,8 @@ module.exports = function(deployer) {
                         nameRegistry, 
                         activePool, 
                         stabilityPool, 
-                        defaultPool }
+                        defaultPool,
+                        functionCaller }
                         
     // Grab contract addresses
     const addresses = getAddresses(contracts)
