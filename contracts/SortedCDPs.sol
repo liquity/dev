@@ -321,7 +321,7 @@ contract SortedCDPs is Ownable {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function findInsertPosition(uint256 _ICR, address _prevId, address _nextId) private view returns (address, address) {
+    function findInsertPosition(uint256 _ICR, address _prevId, address _nextId) public view returns (address, address) {
         address prevId = _prevId;
         address nextId = _nextId;
 
