@@ -7,8 +7,8 @@ import "./IPriceFeed.sol";
 import "./ISortedCDPs.sol";
 import "./IPoolManager.sol";
 import "./DeciMath.sol";
-import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import "../node_modules/@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 contract CDPManager is Ownable, ICDPManager {
     using SafeMath for uint;

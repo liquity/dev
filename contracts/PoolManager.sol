@@ -7,8 +7,8 @@ import './IStabilityPool.sol';
 import './IPriceFeed.sol';
 import './ICLVToken.sol';
 import './DeciMath.sol';
-import '../node_modules/@openzeppelin/contracts/math/SafeMath.sol';
-import '../node_modules/@openzeppelin/contracts/ownership/Ownable.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/ownership/Ownable.sol';
 
 // PoolManager maintains all pools 
 contract PoolManager is Ownable, IPoolManager {

@@ -1,8 +1,8 @@
 pragma solidity ^0.5.11;
 
 import './IStabilityPool.sol';
-import '../node_modules/@openzeppelin/contracts/ownership/Ownable.sol';
-import '../node_modules/@openzeppelin/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/ownership/Ownable.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 contract StabilityPool is Ownable, IStabilityPool {
     using SafeMath for uint256;

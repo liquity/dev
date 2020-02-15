@@ -1,6 +1,6 @@
 pragma solidity ^0.5.11;
 
-import "../node_modules/@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 contract NameRegistry is Ownable {
 

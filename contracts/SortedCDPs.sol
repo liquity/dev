@@ -1,8 +1,8 @@
 pragma solidity ^0.5.11;
 
 import "./ICDPManager.sol";
-import '../node_modules/@openzeppelin/contracts/math/SafeMath.sol';
-import "../node_modules/@openzeppelin/contracts/ownership/Ownable.sol";
+import '@openzeppelin/contracts/math/SafeMath.sol';
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 /* 
 A sorted doubly linked list with nodes sorted in descending order, based on current ICRs of active CDPs. 
