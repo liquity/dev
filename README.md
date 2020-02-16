@@ -162,7 +162,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `userCreateCDP()`: creates a CDP for the caller, with zero collateral and debt.
 
-`addColl( address _user, address _hint)`: payable function that adds the received ether to the given user’s CDP. If the user does not have a CDP, a new one is opened. Allows any user to add ether to any other user’s CDP. The initial ether must exceed $20 USD in value.
+`addColl(address _user, address _hint)`: payable function that adds the received ether to the given user’s CDP. If the user does not have a CDP, a new one is opened. Allows any user to add ether to any other user’s CDP. The initial ether must exceed $20 USD in value.
 
 `withdrawColl(uint _amount, address _hint)`: withdraws `_amount` of collateral from the caller’s CDP. Executes only if the user has an active CDP, and the withdrawal would not pull the user’s CDP below the minimum collateral ratio. If it is a partial withdrawal, it must not leave a remaining collateral with value below $20 USD.
 
