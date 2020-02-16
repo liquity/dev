@@ -142,7 +142,7 @@ All ratios, CLV quantities, and the ETH:USD price are integer representations of
 
 | **uint representation of decimal** | **Number**       |
 |--------------------------------|---------------|
-| 1100000000000000000                        | 110           |
+| 1100000000000000000                        | 1.1          |
 | 200000000000000000000                         | 200           |
 | 1000000000000000000                         | 1             |
 | 5432100000000000000                   | 5.4321        |
@@ -212,6 +212,8 @@ All CDP operations take a ‘hint’ argument. The better the ‘hint’ is, the
 
 The `CDPManager::getApproxHint()` function can be used to generate a useful hint, which can then be passed as an argument to the desired CDP operation or to `SortedCDPs::findInsertPosition()` to get an exact hint. 
 
+`getApproxHint()` takes two arguments: `CR`, and `numTrials`.  The function randomly selects `numTrials` amount of CDPs, and returns the one with the closest position in the list to where a CDP with a collateral ratio of `CR` should be inserted.  It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case O(sqrt(n)), if k >= 10.
+
 **CDP operation without a hint**
 
 1. User performs CDP operation in their browser
@@ -224,7 +226,7 @@ Gas cost will be worst case O(n), where n is the size of the `SortedCDPs` list.
 1. User performs CDP operation in their browser
 2. The front end computes a new collateral ratio locally, based on the change in collateral and/or debt.
 3. Call `CDPManager::getApproxHint()`, passing it the computed collateral ratio. Returns an address close to the correct insert position
-4. Call `SortedCDPs::findInsertPosition()`, passing it the hint. Returns the exact insert position based on the current blockchain state. 
+4. Call `SortedCDPs::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`.
 5. Pass the exact position as an argument to the CDP operation function call. (Note that the hint may become slightly inexact due to  pending transactions that are processed first, though this is gracefully handled by the system.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be O(1).
