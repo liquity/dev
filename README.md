@@ -12,7 +12,7 @@ After opening a CDP with some ether, they may issue tokens such that the collate
 
 Tokens are freely exchangeable - anyone with an Ethereum address can send or receive CLV tokens, whether they have an open CDP or not.
 
-The Liquity system regularly updates the ETH:USD price via a trusted data feed. When a CDP falls below a minimum 110% collateral ratio, it is considered under-collateralized, and is vulnerable to liquidation.
+The Liquity system regularly updates the ETH:USD price via a decentralized data feed. When a CDP falls below a minimum collateral ratio (MCR) of 110%, it is considered under-collateralized, and is vulnerable to liquidation.
 
 ## Liquidation
 
@@ -22,7 +22,7 @@ Any user may deposit CLV tokens to the Stability Pool. This allows them to earn 
 
 Anyone may call the public `liquidateCDPs()` function, which will check for under-collateralized loans, and liquidate them.
 
-Liquity redistributes liquidations in two ways: firstly, it tries to cancel as much debt as possible with the tokens in the stability pool, and distributes the liquidated collateral between the Stability Pool participants.
+Liquity redistributes liquidations in two ways: firstly, it tries to cancel as much debt as possible with the tokens in the Stability pool, and distributes the liquidated collateral between the Stability Pool participants.
 
 Secondly, if the Pool is not sufficient to cancel with the liquidated debt, the system distributes the liquidated collateral and debt across all active CDPs.
 
@@ -34,9 +34,9 @@ Similarly, a CDP’s accumulated rewards from liquidations are automatically app
 
 ## Recovery Mode
 
-Recovery mode kicks in when the total collateral ratio (TCR) of the system falls below 150%.
+Recovery Mode kicks in when the total collateral ratio (TCR) of the system falls below 150%.
 
-During recovery mode, liquidation conditions are relaxed, and the system blocks issuance of new CLV. Recovery Mode is structured to incentive borrowers to behave in ways that promptly raise the TCR back above 150%.
+During Recovery Mode, liquidation conditions are relaxed, and the system blocks issuance of new CLV. Recovery Mode is structured to incentive borrowers to behave in ways that promptly raise the TCR back above 150%.
 
 Recovery Mode is designed to incentivise collateral top-ups, and also itself acts as a self-negating deterrent: the possibility of it actually guides the system away from ever reaching it.
 
@@ -58,7 +58,7 @@ Going forward, backend development will be done in the Buidler framework, which 
 
 The core Liquity system consists of several smart contracts, which are deployable to the Ethereum blockchain.
 
-All application logic and data is contained in these contracts - there is no need for a seperate database or back end logic running on a web server. In effect, the Ethereum network is itself the Liquity back end. As such, all balances and contract data are public.
+All application logic and data is contained in these contracts - there is no need for a separate database or back end logic running on a web server. In effect, the Ethereum network is itself the Liquity back end. As such, all balances and contract data are public.
 
 The two main contracts - `CDPManager.sol` and `PoolManager.sol` - hold the user-facing public functions, and contain most of the internal logic. They control movements of ether and tokens around the system.
 
@@ -70,9 +70,9 @@ The two main contracts - `CDPManager.sol` and `PoolManager.sol` - hold the user-
 
 `CLVToken.sol` - the stablecoin token contract, which implements the ERC20 fungible token standard. The contract mints, burns and transfers CLV tokens.
 
-`SortedCDPs.sol` - a doubly linked that stores addresses of CDP owners, sorted by their individual collateral ratio (ICR). Inserts and re-inserted CDPS at the correct position, based on their ICR.
+`SortedCDPs.sol` - a doubly linked list that stores addresses of CDP owners, sorted by their individual collateral ratio (ICR). Inserts and re-inserted CDPs at the correct position, based on their ICR.
 
-`PriceFeed.sol` - Contains the current ETH:USD price, which the system will use for calculating collateral ratios. Currently, the price is set by the admin. This contract willl eventually regularly obtain current and trusted ETH:USD price data.
+`PriceFeed.sol` - Contains the current ETH:USD price, which the system will use for calculating collateral ratios. Currently, the price is set by the admin. This contract will eventually regularly obtain current and decentralized ETH:USD price data.
 
 ### Data and Value Silo Contracts
 
@@ -166,19 +166,19 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `withdrawColl(uint _amount, address _hint)`: withdraws `_amount` of collateral from the caller’s CDP. Executes only if the user has an active CDP, and the withdrawal would not pull the user’s CDP below the minimum collateral ratio. If it is a partial withdrawal, it must not leave a remaining collateral with value below $20 USD.
 
-`withdrawCLV(uint _amount, address_hint)`: issues `_amount` of CLV from the caller’s CDP to the caller. Executes only if the resultant colalteral ratio would remain above the minimum.
+`withdrawCLV(uint _amount, address_hint)`: issues `_amount` of CLV from the caller’s CDP to the caller. Executes only if the resultant collateral ratio would remain above the minimum.
 
 `repayCLV(uint _amount, uint _hint)`: repay `_amount` of CLV to the caller’s CDP.
 
 ### CDPManager Liquidation Functions  - _CDPManager.sol_
 
-`liquidate(address _user)`: callable by anyone, attempts to liquidate the CDP of `_user`. Executes successfully if `_user`’s CDP is below the minimum collateral ratio.
+`liquidate(address _user)`: callable by anyone, attempts to liquidate the CDP of `_user`. Executes successfully if `_user`’s CDP is below the minimum collateral ratio (MCR).
 
-`liquidateCDPs(n)`: callable by anyone, checks for under-collateralised CDPs and liquidates up to `n`, subject to gas constraints and the actual number of under-collateralized CDPs.
+`liquidateCDPs(n)`: callable by anyone, checks for under-collateralised CDPs below MCR and liquidates up to `n`, starting from the CDP with the lowest collateral ratio; subject to gas constraints and the actual number of under-collateralized CDPs.
 
 `redeemCollateral(uint _CLVamount, address _hint)`: redeems `_CLVamount` of stablecoins for ether from the system. Decreases the caller’s CLV balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient CLV to redeem.
 
-`getCurrentICR(_user)`: computes the user’s individual collateral ratio based on their total collateral and total CLV debt. Returns 2^256 -1 if they have 0 debt.
+`getCurrentICR(_user)`: computes the user’s individual collateral ratio (ICR) based on their total collateral and total CLV debt. Returns 2^256 -1 if they have 0 debt.
 
 `getCDPOwnersCount(`): get the number of active CDPs in the system
 
@@ -194,7 +194,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Individual Pool Functions - *StabilityPool.sol*, *ActivePool.sol*, *DefaultPool.sol*
 
-`getRawEtherBalance()`: returns the actual raw ether balance of the contract. Dictinct from the ETH public variable, which returns the total recorded ETH deposits. 
+`getRawEtherBalance()`: returns the actual raw ether balance of the contract. Distinct from the ETH public variable, which returns the total recorded ETH deposits. 
 
 ### Name Registry
 
@@ -204,13 +204,13 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 CDPs in Liquity are recorded in a sorted doubly linked list, sorted by their ICR, from high to low.
 
-All CDP operations change the collateral ratio need to either insert or reinsert the CDP to the `SortedCDPs` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, a ‘hint’ may be provided.
+All CDP operations that change the collateral ratio need to either insert or reinsert the CDP to the `SortedCDPs` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, a ‘hint’ may be provided.
 
 A hint is the address of a CDP with a position in the sorted list close to the correct insert position.
 
 All CDP operations take a ‘hint’ argument. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call.
 
-The `getApproxHint()` function can be used to generate a useful hint, which can then be passed as an argument to the desired CDP operation. 
+The `CDPManager::getApproxHint()` function can be used to generate a useful hint, which can then be passed as an argument to the desired CDP operation or to `SortedCDPs::findInsertPosition()` to get an exact hint. 
 
 **CDP operation without a hint**
 
@@ -224,8 +224,8 @@ Gas cost will be worst case O(n), where n is the size of the `SortedCDPs` list.
 1. User performs CDP operation in their browser
 2. The front end computes a new collateral ratio locally, based on the change in collateral and/or debt.
 3. Call `CDPManager::getApproxHint()`, passing it the computed collateral ratio. Returns an address close to the correct insert position
-4. Call `SortedCDPs::findInsertPosition()`, passing it the hint. Returns the exact insert position.
-5. Pass the exact position as an argument to the CDP operation function call
+4. Call `SortedCDPs::findInsertPosition()`, passing it the hint. Returns the exact insert position based on the current blockchain state. 
+5. Pass the exact position as an argument to the CDP operation function call. (Note that the hint may become slightly inexact due to  pending transactions that are processed first, though this is gracefully handled by the system.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be O(1).
 
