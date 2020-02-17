@@ -1,281 +1,290 @@
-const testHelpers = require("../utils/testHelpers.js")
-const getDeployedContracts = testHelpers.getDeployedContracts
+const PoolManager = artifacts.require("./PoolManager.sol")
+const SortedCDPs = artifacts.require("./SortedCDPs.sol")
+const CDPManager = artifacts.require("./CDPManager.sol")
+const PriceFeed = artifacts.require("./PriceFeed.sol")
+const CLVToken = artifacts.require("./CLVToken.sol")
+const NameRegistry = artifacts.require("./NameRegistry.sol")
+const ActivePool = artifacts.require("./ActivePool.sol");
+const DefaultPool = artifacts.require("./DefaultPool.sol");
+const StabilityPool = artifacts.require("./StabilityPool.sol")
+const DeciMath = artifacts.require("DeciMath")
+const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
-describe('Set correct contract addresses dependencies for after deployment', function () {
-  contract('CDPManager', async () => {
-    it('sets the correct PriceFeed address', async () => {
-      const deployed = await getDeployedContracts()
-      const cdpManager = deployed.cdpManager
-      const priceFeedAddress = deployed.priceFeedAddress
+const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const getAddresses = deploymentHelpers.getAddresses
+const setNameRegistry = deploymentHelpers.setNameRegistry
+const connectContracts = deploymentHelpers.connectContracts
+const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
 
-      const recordedPriceFeedAddress = await cdpManager.priceFeedAddress()
+contract('Deployment script - Sets correct contract addresses dependencies after deployment', async accounts => {
+  const [owner] = accounts;
+  let priceFeed
+  let clvToken
+  let poolManager
+  let sortedCDPs
+  let cdpManager
+  let nameRegistry
+  let activePool
+  let stabilityPool
+  let defaultPool
+  let functionCaller
 
-      assert.equal(priceFeedAddress, recordedPriceFeedAddress)
-    })
+  before(async () => {
+    const deciMath = await DeciMath.new()
+    DeciMath.setAsDeployed(deciMath)
+    CDPManager.link(deciMath)
+    PoolManager.link(deciMath)
 
-    it('sets the correct SortedCDPs address', async () => {
-      const deployed = await getDeployedContracts()
-      const cdpManager = deployed.cdpManager
-      const sortedCDPsAddress = deployed.sortedCDPsAddress
+    priceFeed = await PriceFeed.new()
+    clvToken = await CLVToken.new()
+    poolManager = await PoolManager.new()
+    sortedCDPs = await SortedCDPs.new()
+    cdpManager = await CDPManager.new()
+    nameRegistry = await NameRegistry.new()
+    activePool = await ActivePool.new()
+    stabilityPool = await StabilityPool.new()
+    defaultPool = await DefaultPool.new()
+    functionCaller = await FunctionCaller.new()
 
-      const recordedSortedCDPsAddress = await cdpManager.sortedCDPsAddress()
+    DefaultPool.setAsDeployed(defaultPool)
+    PriceFeed.setAsDeployed(priceFeed)
+    CLVToken.setAsDeployed(clvToken)
+    PoolManager.setAsDeployed(poolManager)
+    SortedCDPs.setAsDeployed(sortedCDPs)
+    CDPManager.setAsDeployed(cdpManager)
+    NameRegistry.setAsDeployed(nameRegistry)
+    ActivePool.setAsDeployed(activePool)
+    StabilityPool.setAsDeployed(stabilityPool)
+    FunctionCaller.setAsDeployed(functionCaller)
 
-      assert.equal(sortedCDPsAddress, recordedSortedCDPsAddress)
-    })
+    const contracts = {
+      priceFeed,
+      clvToken,
+      poolManager,
+      sortedCDPs,
+      cdpManager,
+      nameRegistry,
+      activePool,
+      stabilityPool,
+      defaultPool,
+      functionCaller
+    }
 
-    it('sets the correct CLVToken address', async () => {
-      const deployed = await getDeployedContracts()
-      const cdpManager = deployed.cdpManager
-      const clvTokenAddress = deployed.clvTokenAddress
-
-      const recordedClvTokenAddress = await cdpManager.clvTokenAddress()
-
-      assert.equal(clvTokenAddress, recordedClvTokenAddress)
-    })
-
-    it('sets the correct PoolManager address', async () => {
-      const deployed = await getDeployedContracts()
-      const cdpManager = deployed.cdpManager
-      const poolManagerAddress = deployed.poolManagerAddress
-
-      const recordedPoolManagerAddress = await cdpManager.poolManagerAddress()
-
-      assert.equal(poolManagerAddress, recordedPoolManagerAddress)
-    })
+    const contractAddresses = getAddresses(contracts)
+    await setNameRegistry(contractAddresses, nameRegistry, { from: owner })
+    const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
+    await connectContracts(contracts, registeredAddresses)
   })
 
-  contract('PoolManager', async () => {
-    it('sets the correct PriceFeed address', async () => {
-      const deployed = await getDeployedContracts()
-      const poolManager = deployed.poolManager
-      const priceFeedAddress = deployed.priceFeedAddress
+  it('sets the correct PriceFeed address in CDPManager', async () => {
+    const priceFeedAddress = priceFeed.address
 
-      const recordedPriceFeedAddress = await poolManager.priceFeedAddress()
+    const recordedPriceFeedAddress = await cdpManager.priceFeedAddress()
 
-      assert.equal(priceFeedAddress, recordedPriceFeedAddress)
-    })
-
-    it('sets the correct CDPManager address', async () => {
-      const deployed = await getDeployedContracts()
-      const poolManager = deployed.poolManager
-      const cdpManagerAddress = deployed.cdpManagerAddress
-
-      const recordedCDPManagerAddress = await poolManager.cdpManagerAddress()
-
-      assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
-    })
-
-    it('sets the correct CLVToken address', async () => {
-      const deployed = await getDeployedContracts()
-      const poolManager = deployed.poolManager
-      const clvTokenAddress = deployed.clvTokenAddress
-
-      const recordedClvTokenAddress = await poolManager.clvAddress()
-
-      assert.equal(clvTokenAddress, recordedClvTokenAddress)
-    })
-
-    it('sets the correct ActivePool address', async () => {
-      const deployed = await getDeployedContracts()
-      const poolManager = deployed.poolManager
-      const activePoolAddress = deployed.activePoolAddress
-
-      const recordedActivePoolAddress = await poolManager.activePoolAddress()
-
-      assert.equal(activePoolAddress, recordedActivePoolAddress)
-    })
-
-    it('sets the correct StabilityPool address', async () => {
-      const deployed = await getDeployedContracts()
-      const poolManager = deployed.poolManager
-      const stabilityPoolAddress = deployed.stabilityPoolAddress
-
-      const recordedStabilityPoolAddress = await poolManager.stabilityPoolAddress()
-
-      assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
-    })
-  
-    it('sets the correct DefaultPool address', async () => {
-      const deployed = await getDeployedContracts()
-      const poolManager = deployed.poolManager
-      const defaultPoolAddress = deployed.defaultPoolAddress
-
-      const recordedDefaultPoolAddress = await poolManager.defaultPoolAddress()
-
-      assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
-    })
+    assert.equal(priceFeedAddress, recordedPriceFeedAddress)
   })
 
-  contract('CLVToken', async () => {
-    it('sets the correct PoolManager address', async () => {
-      const deployed = await getDeployedContracts()
-      const clvToken = deployed.clvToken
-      const poolManagerAddress = deployed.poolManagerAddress
+  it('sets the correct SortedCDPs address in CDPManager', async () => {
+    const sortedCDPsAddress = sortedCDPs.address
 
-      const recordedPoolManagerAddress = await clvToken.poolManagerAddress()
+    const recordedSortedCDPsAddress = await cdpManager.sortedCDPsAddress()
 
-      assert.equal(poolManagerAddress, recordedPoolManagerAddress)
-    })
+    assert.equal(sortedCDPsAddress, recordedSortedCDPsAddress)
   })
 
-  contract('NameRegistry', async () => {
-    it('sets the correct PoolManager address', async () => {
-      const deployed = await getDeployedContracts()
-      const nameRegistry = deployed.nameRegistry
-      const poolManagerAddress = deployed.poolManagerAddress
+  it('sets the correct CLVToken address in CDPManager', async () => {
+    const clvTokenAddress = clvToken.address
 
-      const recordedPoolManagerAddress = await nameRegistry.getAddress('PoolManager')
+    const recordedClvTokenAddress = await cdpManager.clvTokenAddress()
 
-      assert.equal(poolManagerAddress, recordedPoolManagerAddress)
-    })
-
-    it('sets the correct PriceFeed address', async () => {
-      const deployed = await getDeployedContracts()
-      const nameRegistry = deployed.nameRegistry
-      const priceFeedAddress = deployed.priceFeedAddress
-
-      const recordedPriceFeedAddress = await nameRegistry.getAddress('PriceFeed')
-
-      assert.equal(priceFeedAddress, recordedPriceFeedAddress)
-    })
-
-    it('sets the correct CLVToken address', async () => {
-      const deployed = await getDeployedContracts()
-      const nameRegistry = deployed.nameRegistry
-      const clvTokenAddress = deployed.clvTokenAddress
-
-      const recordedClvTokenAddress = await nameRegistry.getAddress('CLVToken')
-
-      assert.equal(clvTokenAddress, recordedClvTokenAddress)
-    })
-
-    it('sets the correct CDPManager address', async () => {
-      const deployed = await getDeployedContracts()
-      const nameRegistry = deployed.nameRegistry
-      const cdpManagerAddress = deployed.cdpManagerAddress
-
-      const recordedCDPManagerAddress = await nameRegistry.getAddress('CDPManager')
-
-      assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
-    })
-
-    it('sets the correct ActivePool address', async () => {
-      const deployed = await getDeployedContracts()
-      const nameRegistry = deployed.nameRegistry
-      const activePoolAddress = deployed.activePoolAddress
-
-      const recordedActivePoolAddress = await nameRegistry.getAddress('ActivePool')
-
-      assert.equal(activePoolAddress, recordedActivePoolAddress)
-    })
-
-    it('sets the correct StabilityPool address', async () => {
-      const deployed = await getDeployedContracts()
-      const nameRegistry = deployed.nameRegistry
-      const stabilityPoolAddress = deployed.stabilityPoolAddress
-
-      const recordedStabilityPoolAddress = await nameRegistry.getAddress('StabilityPool')
-
-      assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
-    })
-  
-    it('sets the correct DefaultPool address', async () => {
-      const deployed = await getDeployedContracts()
-      const nameRegistry = deployed.nameRegistry
-      const defaultPoolAddress = deployed.defaultPoolAddress
-
-      const recordedDefaultPoolAddress = await nameRegistry.getAddress('DefaultPool')
-
-      assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
-    })
+    assert.equal(clvTokenAddress, recordedClvTokenAddress)
   })
 
-  contract('ActivePool', async () => {
-    it('sets the correct PoolManager address', async () => {
-      const deployed = await getDeployedContracts()
-      const activePool = deployed.activePool
-      const poolManagerAddress = deployed.poolManagerAddress
+  it('sets the correct PoolManager address in CDPManager', async () => {
+    const poolManagerAddress = poolManager.address
 
-      const recordedPoolManagerAddress = await activePool.getPoolManagerAddress()
-      assert.equal(poolManagerAddress, recordedPoolManagerAddress)
-    })
+    const recordedPoolManagerAddress = await cdpManager.poolManagerAddress()
 
-    it('sets the correct DefaultPool address', async () => {
-      const deployed = await getDeployedContracts()
-      const activePool = deployed.activePool
-      const defaultPoolAddress = deployed.defaultPoolAddress
-
-      const recordedDefaultPoolAddress = await activePool.getDefaultPoolAddress()
-      assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
-    })
-
-    it('sets the correct StabilityPool address', async () => {
-      const deployed = await getDeployedContracts()
-      const activePool = deployed.activePool
-      const stabilityPoolAddress = deployed.stabilityPoolAddress
-
-      const recordedStabilityPoolAddress = await activePool.getStabilityPoolAddress()
-      assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
-    })
+    assert.equal(poolManagerAddress, recordedPoolManagerAddress)
   })
 
-  contract('StabilityPool', async () => {
-    it('sets the correct PoolManager address', async () => {
-      const deployed = await getDeployedContracts()
-      const stabilityPool = deployed.stabilityPool
-      const poolManagerAddress = deployed.poolManagerAddress
+  it('sets the correct PriceFeed address  in PoolManager', async () => {
+    const priceFeedAddress = priceFeed.address
 
-      const recordedPoolManagerAddress = await stabilityPool.getPoolManagerAddress()
-      assert.equal(poolManagerAddress, recordedPoolManagerAddress)
-    })
+    const recordedPriceFeedAddress = await poolManager.priceFeedAddress()
 
-    it('sets the correct DefaultPool address', async () => {
-      const deployed = await getDeployedContracts()
-      const stabilityPool = deployed.stabilityPool
-      const defaultPoolAddress = deployed.defaultPoolAddress
-
-      const recordedDefaultPoolAddress = await stabilityPool.getDefaultPoolAddress()
-      assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
-    })
-
-    it('sets the correct ActivePool address', async () => {
-      const deployed = await getDeployedContracts()
-      const stabilityPool = deployed.stabilityPool
-      const activePoolAddress = deployed.activePoolAddress
-
-      const recordedActivePoolAddress = await stabilityPool.getActivePoolAddress()
-      assert.equal(activePoolAddress, recordedActivePoolAddress)
-    })
+    assert.equal(priceFeedAddress, recordedPriceFeedAddress)
   })
 
-  contract('DefaultPool', async () => {
-    it('sets the correct PoolManager address', async () => {
-      const deployed = await getDeployedContracts()
-      const defaultPool = deployed.defaultPool
-      const poolManagerAddress = deployed.poolManagerAddress
+  it('sets the correct CDPManager address in PoolManager', async () => {
+    const cdpManagerAddress = cdpManager.address
 
-      const recordedPoolManagerAddress = await defaultPool.getPoolManagerAddress()
-      assert.equal(poolManagerAddress, recordedPoolManagerAddress)
-    })
+    const recordedCDPManagerAddress = await poolManager.cdpManagerAddress()
 
-    it('sets the correct ActivePool address', async () => {
-      const deployed = await getDeployedContracts()
-      const defaultPool = deployed.defaultPool
-      const activePoolAddress = deployed.activePoolAddress
+    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+  })
 
-      const recordedActivePoolAddress = await defaultPool.getActivePoolAddress()
-      assert.equal(activePoolAddress, recordedActivePoolAddress)
-    })
+  it('sets the correct CLVToken address in PoolManager', async () => {
+    const clvTokenAddress = clvToken.address
 
-    it('sets the correct StabilityPool address', async () => {
-      const deployed = await getDeployedContracts()
-      const defaultPool = deployed.defaultPool
-      const stabilityPoolAddress = deployed.stabilityPoolAddress
+    const recordedClvTokenAddress = await poolManager.clvAddress()
 
-      const recordedStabilityPoolAddress = await defaultPool.getStabilityPoolAddress()
-      assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
-    })
+    assert.equal(clvTokenAddress, recordedClvTokenAddress)
+  })
+
+  it('sets the correct ActivePool address in PoolManager', async () => {
+    const activePoolAddress = activePool.address
+
+    const recordedActivePoolAddress = await poolManager.activePoolAddress()
+
+    assert.equal(activePoolAddress, recordedActivePoolAddress)
+  })
+
+  it('sets the correct StabilityPool address in PoolManager', async () => {
+    const stabilityPoolAddress = stabilityPool.address
+
+    const recordedStabilityPoolAddress = await poolManager.stabilityPoolAddress()
+
+    assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
+  })
+
+  it('sets the correct DefaultPool address in PoolManager', async () => {
+    const defaultPoolAddress = defaultPool.address
+
+    const recordedDefaultPoolAddress = await poolManager.defaultPoolAddress()
+
+    assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
+  })
+
+  it('sets the correct PoolManager address in CLVToken', async () => {
+    const poolManagerAddress = poolManager.address
+
+    const recordedPoolManagerAddress = await clvToken.poolManagerAddress()
+
+    assert.equal(poolManagerAddress, recordedPoolManagerAddress)
+  })
+
+  it('sets the correct PoolManager address in NameRegistry', async () => {
+    const poolManagerAddress = poolManager.address
+
+    const recordedPoolManagerAddress = await nameRegistry.getAddress('PoolManager')
+
+    assert.equal(poolManagerAddress, recordedPoolManagerAddress)
+  })
+
+  it('sets the correct PriceFeed address in NameRegistry', async () => {
+    const priceFeedAddress = priceFeed.address
+
+    const recordedPriceFeedAddress = await nameRegistry.getAddress('PriceFeed')
+
+    assert.equal(priceFeedAddress, recordedPriceFeedAddress)
+  })
+
+  it('sets the correct CLVToken address in NameRegistry', async () => {
+    const clvTokenAddress = clvToken.address
+
+    const recordedClvTokenAddress = await nameRegistry.getAddress('CLVToken')
+
+    assert.equal(clvTokenAddress, recordedClvTokenAddress)
+  })
+
+  it('sets the correct CDPManager address in NameRegistry', async () => {
+    const cdpManagerAddress = cdpManager.address
+
+    const recordedCDPManagerAddress = await nameRegistry.getAddress('CDPManager')
+
+    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+  })
+
+  it('sets the correct ActivePool address in NameRegistry', async () => {
+    const activePoolAddress = activePool.address
+
+    const recordedActivePoolAddress = await nameRegistry.getAddress('ActivePool')
+
+    assert.equal(activePoolAddress, recordedActivePoolAddress)
+  })
+
+  it('sets the correct StabilityPool address in NameRegistry', async () => {
+    const stabilityPoolAddress = stabilityPool.address
+
+    const recordedStabilityPoolAddress = await nameRegistry.getAddress('StabilityPool')
+
+    assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
+  })
+
+  it('sets the correct DefaultPool address in NameRegistry', async () => {
+    const defaultPoolAddress = defaultPool.address
+
+    const recordedDefaultPoolAddress = await nameRegistry.getAddress('DefaultPool')
+
+    assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
+  })
+
+  it('sets the correct PoolManager address in ActivePool', async () => {
+    const poolManagerAddress = poolManager.address
+
+    const recordedPoolManagerAddress = await activePool.getPoolManagerAddress()
+
+    assert.equal(poolManagerAddress, recordedPoolManagerAddress)
+  })
+
+  it('sets the correct DefaultPool address in ActivePool', async () => {
+    const defaultPoolAddress = defaultPool.address
+
+    const recordedDefaultPoolAddress = await activePool.getDefaultPoolAddress()
+
+    assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
+  })
+
+  it('sets the correct StabilityPool address in ActivePool', async () => {
+    const stabilityPoolAddress = stabilityPool.address
+
+    const recordedStabilityPoolAddress = await activePool.getStabilityPoolAddress()
+
+    assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
+  })
+
+  it('sets the correct PoolManager address in StabilityPool', async () => {
+    const poolManagerAddress = poolManager.address
+
+    const recordedPoolManagerAddress = await stabilityPool.getPoolManagerAddress()
+    assert.equal(poolManagerAddress, recordedPoolManagerAddress)
+  })
+
+  it('sets the correct DefaultPool address in StabilityPool', async () => {
+    const defaultPoolAddress = defaultPool.address
+
+    const recordedDefaultPoolAddress = await stabilityPool.getDefaultPoolAddress()
+    assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
+  })
+
+  it('sets the correct ActivePool address in StabilityPool', async () => {
+    const activePoolAddress = activePool.address
+
+    const recordedActivePoolAddress = await stabilityPool.getActivePoolAddress()
+    assert.equal(activePoolAddress, recordedActivePoolAddress)
+  })
+
+  it('sets the correct PoolManager address in DefaultPool', async () => {
+    const poolManagerAddress = poolManager.address
+
+    const recordedPoolManagerAddress = await defaultPool.getPoolManagerAddress()
+    assert.equal(poolManagerAddress, recordedPoolManagerAddress)
+  })
+
+  it('sets the correct ActivePool address in DefaultPool', async () => {
+    const activePoolAddress = activePool.address
+
+    const recordedActivePoolAddress = await defaultPool.getActivePoolAddress()
+    assert.equal(activePoolAddress, recordedActivePoolAddress)
+  })
+
+  it('sets the correct StabilityPool address in DefaultPool', async () => {
+    const stabilityPoolAddress = stabilityPool.address
+
+    const recordedStabilityPoolAddress = await defaultPool.getStabilityPoolAddress()
+    assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
   })
 })
 
-contract('Reset chain state', async accounts => {})
+contract('Reset chain state', async accounts => { })

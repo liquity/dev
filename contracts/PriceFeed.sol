@@ -1,9 +1,8 @@
 pragma solidity ^0.5.11;
 
-import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import '../node_modules/@openzeppelin/contracts/ownership/Ownable.sol';
-import '../node_modules/@openzeppelin/contracts/ownership/Ownable.sol';
-import './ICDPManager.sol';
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import '@openzeppelin/contracts/ownership/Ownable.sol';
+import './Interfaces/ICDPManager.sol';
 
 // A mock ETH:USD price oracle
 contract PriceFeed is Ownable {

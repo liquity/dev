@@ -7,6 +7,7 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const DeciMath = artifacts.require("DeciMath")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
@@ -35,6 +36,13 @@ contract('CLVToken', async accounts => {
   let functionCaller
 
   describe('Basic token functions', async () => {
+    before(async() => {
+      const deciMath = await DeciMath.new()
+      DeciMath.setAsDeployed(deciMath)
+      CDPManager.link(deciMath)
+      PoolManager.link(deciMath)
+    })
+  
     beforeEach(async () => {
       priceFeed = await PriceFeed.new()
       clvToken = await CLVToken.new()
@@ -46,6 +54,17 @@ contract('CLVToken', async accounts => {
       stabilityPool = await StabilityPool.new()
       defaultPool = await DefaultPool.new()
       functionCaller = await FunctionCaller.new()
+  
+      DefaultPool.setAsDeployed(defaultPool)
+      PriceFeed.setAsDeployed(priceFeed)
+      CLVToken.setAsDeployed(clvToken)
+      PoolManager.setAsDeployed(poolManager)
+      SortedCDPs.setAsDeployed(sortedCDPs)
+      CDPManager.setAsDeployed(cdpManager)
+      NameRegistry.setAsDeployed(nameRegistry)
+      ActivePool.setAsDeployed(activePool)
+      StabilityPool.setAsDeployed(stabilityPool)
+      FunctionCaller.setAsDeployed(functionCaller)
 
       const contracts = { 
                     priceFeed, 
@@ -71,14 +90,14 @@ contract('CLVToken', async accounts => {
       // await cdpManager.mockAddCDP({ from: bob })
       // await cdpManager.mockAddCDP({ from: carol })
 
-      await cdpManager.addColl(alice, { from: alice, value: _1_Ether })
-      await cdpManager.addColl(bob, { from: bob, value: _1_Ether })
-      await cdpManager.addColl(carol, { from: carol, value: _1_Ether })
+      await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+      await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
+      await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
 
       // Three test users withdraw CLV
-      await cdpManager.withdrawCLV(150, { from: alice }) 
-      await cdpManager.withdrawCLV(100, { from: bob })
-      await cdpManager.withdrawCLV(50, { from: carol })
+      await cdpManager.withdrawCLV(150, alice, { from: alice }) 
+      await cdpManager.withdrawCLV(100, alice, { from: bob })
+      await cdpManager.withdrawCLV(50, alice, { from: carol })
     })
 
     it('balanceOf: gets the balance of the account', async () => {

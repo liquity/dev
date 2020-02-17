@@ -18,6 +18,7 @@ const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegis
 
 contract('CDPManager', async accounts => {
  
+  const [owner] = accounts;
   let priceFeed;
   let clvToken;
   let poolManager;
@@ -122,7 +123,7 @@ contract('CDPManager', async accounts => {
     const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
     await connectContracts(contracts, registeredAddresses)
 
-    numAccounts = 100
+    numAccounts = 10
     await makeCDPsInSequence(accounts, numAccounts) 
     // await makeCDPsInParallel(accounts, numAccounts)  
   })
@@ -214,7 +215,7 @@ contract('CDPManager', async accounts => {
 
   /* Pass 100 random collateral ratios to getApproxHint(). For each, check whether the returned hint address is within 
   sqrt(length) positions of where a CDP with that CR should be inserted. */
-  it.only("getApproxHint(): for 100 random CRs, returns the address of a CDP within sqrt(length) positions of the correct insert position", async () => {
+  it("getApproxHint(): for 100 random CRs, returns the address of a CDP within sqrt(length) positions of the correct insert position", async () => {
     const sqrtLength = Math.ceil(Math.sqrt(numAccounts))
 
     for (i = 0; i < 100; i++) {

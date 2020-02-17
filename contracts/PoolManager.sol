@@ -1,14 +1,14 @@
 pragma solidity ^0.5.11;
 
-import './IPool.sol';
-import './IPoolManager.sol';
-import './ICDPManager.sol';
-import './IStabilityPool.sol';
-import './IPriceFeed.sol';
-import './ICLVToken.sol';
+import './Interfaces/IPool.sol';
+import './Interfaces/IPoolManager.sol';
+import './Interfaces/ICDPManager.sol';
+import './Interfaces/IStabilityPool.sol';
+import './Interfaces/IPriceFeed.sol';
+import './Interfaces/ICLVToken.sol';
 import './DeciMath.sol';
-import '../node_modules/@openzeppelin/contracts/math/SafeMath.sol';
-import '../node_modules/@openzeppelin/contracts/ownership/Ownable.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/ownership/Ownable.sol';
 
 // PoolManager maintains all pools 
 contract PoolManager is Ownable, IPoolManager {

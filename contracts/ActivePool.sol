@@ -1,8 +1,8 @@
 pragma solidity ^0.5.11;
 
-import './IPool.sol';
-import '../node_modules/@openzeppelin/contracts/ownership/Ownable.sol';
-import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
+import './Interfaces/IPool.sol';
+import '@openzeppelin/contracts/ownership/Ownable.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 contract ActivePool is Ownable, IPool {
     using SafeMath for uint256;

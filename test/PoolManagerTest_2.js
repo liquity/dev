@@ -8,8 +8,8 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const DeciMath = artifacts.require("DeciMath")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
-
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
@@ -18,16 +18,21 @@ const connectContracts = deploymentHelpers.connectContracts
 const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
 
 contract('PoolManager', async accounts => {
-  const _2_Ether = web3.utils.toWei('2', 'ether')
   const _1_Ether = web3.utils.toWei('1', 'ether')
-  const _9_Ether = web3.utils.toWei('9', 'ether')
   const _10_Ether = web3.utils.toWei('10', 'ether')
-  const _20_Ether = web3.utils.toWei('20', 'ether')
   const _50_Ether = web3.utils.toWei('50', 'ether')
   const _100_Ether = web3.utils.toWei('100', 'ether')
-  const _101_Ether = web3.utils.toWei('101', 'ether')
-
-  const [owner, mockCDPManagerAddress, mockPoolManagerAddress, defaulter_1, defaulter_2, defaulter_3, alice, whale, bob, whale_2] = accounts;
+  
+  const [ owner, 
+          mockCDPManagerAddress, 
+          mockPoolManagerAddress, 
+          defaulter_1, defaulter_2, 
+          defaulter_3, 
+          alice, 
+          whale, 
+          bob, 
+          whale_2 ] = accounts;
+          
   let priceFeed
   let clvToken
   let poolManager
@@ -40,17 +45,35 @@ contract('PoolManager', async accounts => {
   let functionCaller
 
   describe("Stability Pool Mechanisms", async () => {
+    before(async() => {
+      const deciMath = await DeciMath.new()
+      DeciMath.setAsDeployed(deciMath)
+      CDPManager.link(deciMath)
+      PoolManager.link(deciMath)
+    })
+  
     beforeEach(async () => {
       priceFeed = await PriceFeed.new()
-      clvToken = await CLVToken.new() //
-      poolManager = await PoolManager.new() 
+      clvToken = await CLVToken.new()
+      poolManager = await PoolManager.new()
       sortedCDPs = await SortedCDPs.new()
-      cdpManager = await CDPManager.new() 
+      cdpManager = await CDPManager.new()
       nameRegistry = await NameRegistry.new()
-      activePool = await ActivePool.new() 
-      stabilityPool = await StabilityPool.new() 
-      defaultPool = await DefaultPool.new() 
+      activePool = await ActivePool.new()
+      stabilityPool = await StabilityPool.new()
+      defaultPool = await DefaultPool.new()
       functionCaller = await FunctionCaller.new()
+  
+      DefaultPool.setAsDeployed(defaultPool)
+      PriceFeed.setAsDeployed(priceFeed)
+      CLVToken.setAsDeployed(clvToken)
+      PoolManager.setAsDeployed(poolManager)
+      SortedCDPs.setAsDeployed(sortedCDPs)
+      CDPManager.setAsDeployed(cdpManager)
+      NameRegistry.setAsDeployed(nameRegistry)
+      ActivePool.setAsDeployed(activePool)
+      StabilityPool.setAsDeployed(stabilityPool)
+      FunctionCaller.setAsDeployed(functionCaller)
 
       contracts = {
         priceFeed,

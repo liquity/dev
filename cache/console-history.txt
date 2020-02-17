@@ -1,0 +1,10 @@
+.exit
+b = web3.utils.hexToString("0x21e19e0c9bab2400000")
+b = web3.utils.hexToString(0x21e19e0c9bab2400000)
+b = web3.utils.hexToNumber(0x21e19e0c9bab2400000)
+let b = web3.utils.hexToNumber(0x21e19e0c9bab2400000)
+let b = web3.utils.hexToNumber(00x21e19e0c9bab2400000)
+let b = web3.utils.hexToNumber("00x21e19e0c9bab2400000")
+let a = web3.utils.hexToNumber("00x21e19e0c9bab2400000")
+a
+let a = web3.utils.toHex("2")

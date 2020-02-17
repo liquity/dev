@@ -8,6 +8,7 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const DeciMath = artifacts.require("DeciMath")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
@@ -21,10 +22,8 @@ contract('PoolManager', async accounts => {
   const _1_Ether = web3.utils.toWei('1', 'ether')
   const _9_Ether = web3.utils.toWei('9', 'ether')
   const _10_Ether = web3.utils.toWei('10', 'ether')
-  const _100_Ether = web3.utils.toWei('100', 'ether')
-  const _101_Ether = web3.utils.toWei('101', 'ether')
 
-  const [owner, mockCDPManagerAddress, mockPoolManagerAddress, alice, bob] = accounts;
+  const [owner, mockCDPManagerAddress, mockPoolManagerAddress, alice] = accounts;
   let priceFeed
   let clvToken
   let poolManager
@@ -35,6 +34,13 @@ contract('PoolManager', async accounts => {
   let stabilityPool
   let defaultPool
   let functionCaller
+
+  before(async() => {
+    const deciMath = await DeciMath.new()
+    DeciMath.setAsDeployed(deciMath)
+    CDPManager.link(deciMath)
+    PoolManager.link(deciMath)
+  })
 
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()
@@ -47,6 +53,17 @@ contract('PoolManager', async accounts => {
     stabilityPool = await StabilityPool.new()
     defaultPool = await DefaultPool.new()
     functionCaller = await FunctionCaller.new()
+
+    DefaultPool.setAsDeployed(defaultPool)
+    PriceFeed.setAsDeployed(priceFeed)
+    CLVToken.setAsDeployed(clvToken)
+    PoolManager.setAsDeployed(poolManager)
+    SortedCDPs.setAsDeployed(sortedCDPs)
+    CDPManager.setAsDeployed(cdpManager)
+    NameRegistry.setAsDeployed(nameRegistry)
+    ActivePool.setAsDeployed(activePool)
+    StabilityPool.setAsDeployed(stabilityPool)
+    FunctionCaller.setAsDeployed(functionCaller)
 
     contracts = {
       priceFeed,

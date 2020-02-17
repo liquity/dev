@@ -2,8 +2,8 @@ pragma solidity ^0.5.11;
 
 // Stores the CLV user data: token balances and spending allowances.
 // Functions are setters, addition and subtraction. Actual token logic resides in CLVToken.sol
-import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import "../node_modules/@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 contract CLVTokenData is Ownable {
     using SafeMath for uint;

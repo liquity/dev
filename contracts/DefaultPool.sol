@@ -1,6 +1,6 @@
 pragma solidity ^0.5.11;
 
-import './IPool.sol';
+import './Interfaces/IPool.sol';
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 

@@ -1,19 +1,24 @@
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PoolManager = artifacts.require("./PoolManager.sol")
+const DeciMath = artifacts.require("DeciMath")
 
 // Test functionality through CDPManager, which DeciMathBasic library is linked to 
 contract('CDPManager', async accounts => {
   
-  let cdpManager
-  let poolManager
-
-  beforeEach(async () => {
-    cdpManager = await CDPManager.deployed()
-    poolManager = await PoolManager.deployed()
+  before(async() => {
+    const deciMath = await DeciMath.new()
+    DeciMath.setAsDeployed(deciMath)
+    CDPManager.link(deciMath)
+    PoolManager.link(deciMath)
+ 
+    const cdpManager = await CDPManager.new()
+    const poolManager = await PoolManager.new()
+    
+    CDPManager.setAsDeployed(cdpManager)
+    PoolManager.setAsDeployed(poolManager)
   })
 
   describe('accurateMulDiv()', async => {
-
     it('accurateMulDiv(): is available in CDPManager and PoolManager', async () => {
       const a = (await cdpManager.getAccurateMulDiv('1000000000000000000', 1, 1)).toString()
       assert.equal(a, '1000000000000000000')

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.11;
 
-import './ICDPManager.sol';
+import './Interfaces/ICDPManager.sol';
 
 // Proxy contract - used for calculating gas of read-only functions in gas calculation scripts.  Not part of the application.
 

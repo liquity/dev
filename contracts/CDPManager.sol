@@ -1,14 +1,14 @@
 pragma solidity ^0.5.11;
 
 // TODO: Use SafeMath
-import "./ICDPManager.sol";
-import "./ICLVToken.sol";
-import "./IPriceFeed.sol";
-import "./ISortedCDPs.sol";
-import "./IPoolManager.sol";
+import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/ICLVToken.sol";
+import "./Interfaces/IPriceFeed.sol";
+import "./Interfaces/ISortedCDPs.sol";
+import "./Interfaces/IPoolManager.sol";
 import "./DeciMath.sol";
-import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import "../node_modules/@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 contract CDPManager is Ownable, ICDPManager {
     using SafeMath for uint;

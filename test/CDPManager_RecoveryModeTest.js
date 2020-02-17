@@ -7,6 +7,7 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const DeciMath = artifacts.require("DeciMath")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
@@ -24,21 +25,16 @@ contract('CDPManager', async accounts => {
   const _2_Ether = web3.utils.toWei('2', 'ether')
   const _3_Ether = web3.utils.toWei('3', 'ether')
   const _3pt5_Ether = web3.utils.toWei('3.5', 'ether')
-  const _5_Ether = web3.utils.toWei('5', 'ether')
   const _6_Ether = web3.utils.toWei('6', 'ether')
   const _9_Ether = web3.utils.toWei('9', 'ether')
   const _10_Ether = web3.utils.toWei('10', 'ether')
-  const _16_Ether = web3.utils.toWei('16', 'ether')
   const _20_Ether = web3.utils.toWei('20', 'ether')
   const _21_Ether = web3.utils.toWei('21', 'ether')
   const _22_Ether = web3.utils.toWei('22', 'ether')
   const _24_Ether = web3.utils.toWei('24', 'ether')
   const _25_Ether = web3.utils.toWei('25', 'ether')
   const _27_Ether = web3.utils.toWei('27', 'ether')
-  const _15_Ether = web3.utils.toWei('15', 'ether')
-  const _98_Ether = web3.utils.toWei('98', 'ether')
-  const _100_Ether = web3.utils.toWei('100', 'ether')
-  const _200_Ether = web3.utils.toWei('200', 'ether')
+
 
   const [owner, alice, bob, carol, dennis, elisa, freddy, greta, harry, ida] = accounts;
   let priceFeed
@@ -52,6 +48,13 @@ contract('CDPManager', async accounts => {
   let defaultPool
   let functionCaller
 
+  before(async() => {
+    const deciMath = await DeciMath.new()
+    DeciMath.setAsDeployed(deciMath)
+    CDPManager.link(deciMath)
+    PoolManager.link(deciMath)
+  })
+
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()
     clvToken = await CLVToken.new()
@@ -63,6 +66,17 @@ contract('CDPManager', async accounts => {
     stabilityPool = await StabilityPool.new()
     defaultPool = await DefaultPool.new()
     functionCaller = await FunctionCaller.new()
+
+    DefaultPool.setAsDeployed(defaultPool)
+    PriceFeed.setAsDeployed(priceFeed)
+    CLVToken.setAsDeployed(clvToken)
+    PoolManager.setAsDeployed(poolManager)
+    SortedCDPs.setAsDeployed(sortedCDPs)
+    CDPManager.setAsDeployed(cdpManager)
+    NameRegistry.setAsDeployed(nameRegistry)
+    ActivePool.setAsDeployed(activePool)
+    StabilityPool.setAsDeployed(stabilityPool)
+    FunctionCaller.setAsDeployed(functionCaller)
 
     const contracts = {
       priceFeed,
