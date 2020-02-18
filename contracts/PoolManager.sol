@@ -9,12 +9,11 @@ import './Interfaces/ICLVToken.sol';
 import './DeciMath.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/ownership/Ownable.sol';
+import '@nomiclabs/buidler/console.sol';
 
 // PoolManager maintains all pools 
 contract PoolManager is Ownable, IPoolManager {
     using SafeMath for uint;
-
-    uint constant DIGITS = 1e18;
 
     // --- Events ---
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
@@ -23,6 +22,7 @@ contract PoolManager is Ownable, IPoolManager {
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
+    
     event UserSnapshotUpdated(uint _CLV, uint _ETH);
     event S_CLVUpdated(uint _S_CLV);
     event S_ETHUpdated(uint _S_ETH);
@@ -52,7 +52,7 @@ contract PoolManager is Ownable, IPoolManager {
    
     mapping (address => uint) public deposit;
 
-      struct Snapshot {
+    struct Snapshot {
         uint ETH;
         uint CLV;
     }
@@ -76,13 +76,14 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     modifier onlyCDPManagerOrUserIsSender(address _user) {
-        require( _user == _msgSender() || _msgSender()  == cdpManagerAddress,
+        require(_msgSender()  == cdpManagerAddress || _user == _msgSender(),
         "PoolManager: Target CDP must be _msgSender(), otherwise caller must be CDPManager");
         _;
     }
     modifier onlyStabilityPoolorActivePool {
         require(
-            _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, "PoolManager: Caller is neither StabilityPool nor ActivePool");
+            _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, 
+            "PoolManager: Caller is neither StabilityPool nor ActivePool");
         _;
     }
 
@@ -126,16 +127,9 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // --- Getters ---
-    function getAccurateMulDiv(uint x, uint y, uint z) public pure returns(uint) {
-        return DeciMath.accurateMulDiv(x, y, z);
-    }
 
-    // Return the current ETH balance of the TokenPools contract
-    function getBalance()
-        public
-        view
-        returns (uint)
-    {
+    // Return the current ETH balance of the PoolManager contract
+    function getBalance() public view returns(uint) {
         return address(this).balance;
     } 
     
@@ -145,7 +139,7 @@ contract PoolManager is Ownable, IPoolManager {
         uint totalDebt = activePool.getCLV();
         uint price = priceFeed.getPrice();
 
-        // Handle edge cases of div by 0
+        // Handle edge cases of div-by-0
         if(totalCollateral == 0 && totalDebt == 0 ) {
             return 1;
         }  else if (totalCollateral != 0 && totalDebt == 0 ) {
@@ -201,16 +195,6 @@ contract PoolManager is Ownable, IPoolManager {
         returns (uint)
     {
         return stabilityPool.getCLV();
-    }
-
-    // Return the lower value from two given integers
-    function getMin(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        if (a <= b) return a;
-        else return b;
     }
     
     // Add the received ETH to the total active collateral
@@ -369,7 +353,7 @@ contract PoolManager is Ownable, IPoolManager {
         emit UserSnapshotUpdated(S_CLV, S_ETH);
 
         // Send CLV to user and decrease CLV in Pool
-        CLV.returnFromPool(stabilityPoolAddress, _address, getMin(CLVShare, stabilityPool.getCLV()));
+        CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV()));
         stabilityPool.decreaseCLV(CLVShare);
         stabilityPool.decreaseTotalCLVDeposits(userDeposit);
 
@@ -407,7 +391,7 @@ contract PoolManager is Ownable, IPoolManager {
         emit UserSnapshotUpdated(S_CLV, S_ETH);
 
         // Send CLV to user and decrease CLV in StabilityPool
-        CLV.returnFromPool(stabilityPoolAddress, _address, getMin(CLVShare, stabilityPool.getCLV()));
+        CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV()));
         stabilityPool.decreaseCLV(CLVShare);
         stabilityPool.decreaseTotalCLVDeposits(userDeposit);
 
@@ -428,7 +412,6 @@ contract PoolManager is Ownable, IPoolManager {
         cdpManager.checkTCRAndSetRecoveryMode();
 
         address user = _msgSender();
-
         uint[2] memory returnedVals = retrieveToUser(user);
 
         uint returnedCLV = returnedVals[0];
@@ -542,7 +525,7 @@ contract PoolManager is Ownable, IPoolManager {
         }
         
         // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
-        uint debtToOffset = getMin(_debt, CLVinPool);
+        uint debtToOffset = DeciMath.getMin(_debt, CLVinPool);
         // Collateral to be added in proportion to the debt that is cancelled
         uint debtRatio =  DeciMath.div_toDuint(debtToOffset, _debt);
         uint collToAdd = DeciMath.mul_uintByDuint(_coll, debtRatio);

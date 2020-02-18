@@ -1,6 +1,7 @@
 pragma solidity ^0.5.11;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@nomiclabs/buidler/console.sol";
 
 library DeciMath {
     /* 
@@ -131,4 +132,10 @@ library DeciMath {
     function normalMul(uint a, uint b) public pure returns(uint) {
         return SafeMath.mul(a, b);
     }  
+
+    // --- Normal min function ---
+    function getMin(uint a, uint b) public pure returns(uint) {
+        if (a <= b) return a;
+        else return b;
+    }
 }

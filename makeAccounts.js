@@ -1,7 +1,7 @@
 const fs = require('fs')
 
 const makeAccount = () => {
-  acc = `{ privateKey: "${randomHex()}", balance: "00x21e19e0c9bab2400000" }`
+  acc = `{ privateKey: "${randomHex()}", balance: "0x21e19e0c9bab2400000" }`
   return acc
 }
 

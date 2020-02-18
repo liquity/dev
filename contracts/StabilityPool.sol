@@ -3,6 +3,7 @@ pragma solidity ^0.5.11;
 import './Interfaces/IStabilityPool.sol';
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
+import "@nomiclabs/buidler/console.sol";
 
 contract StabilityPool is Ownable, IStabilityPool {
     using SafeMath for uint256;
@@ -11,9 +12,9 @@ contract StabilityPool is Ownable, IStabilityPool {
     address public defaultPoolAddress;
     address public activePoolAddress;
     uint256 public ETH;  // deposited ether tracker
-
     // Total CLV held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.
     uint256 public CLV;  
+
     // Total user CLV deposits. Used in proportional reward calculation in PoolManager. 
     //  Only changes when users deposit/withdraw.
     uint256 public totalCLVDeposits; 
@@ -21,6 +22,7 @@ contract StabilityPool is Ownable, IStabilityPool {
     constructor() public {}
 
     // --- Contract setters ---
+
     function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
         poolManagerAddress = _poolManagerAddress;
         emit PoolManagerAddressChanged(poolManagerAddress);
@@ -36,26 +38,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         emit DefaultPoolAddressChanged(defaultPoolAddress);
     }
 
-    // Redundant function. Needed only to satisfy IPool interface
-    function setStabilityPoolAddress(address _defaultPoolAddress) public onlyOwner {
-    }
-
     // --- Getters for public variables. Required by IPool interface ---
-    function getActivePoolAddress() public view returns(address) {
-        return activePoolAddress;
-    }
-
-    function getStabilityPoolAddress() public view returns(address){
-        return address(this);
-    }
-
-    function getDefaultPoolAddress() public view returns(address){
-        return defaultPoolAddress;
-    }
-   
-    function getPoolManagerAddress() public view returns(address) {
-        return poolManagerAddress;
-    }
 
     function getETH() public view returns(uint) {
         return ETH;
@@ -70,6 +53,7 @@ contract StabilityPool is Ownable, IStabilityPool {
     }
 
     // --- Pool functionality ---
+
     function sendETH(address _account, uint _amount) public onlyPoolManager returns(bool){
         ETH = ETH.sub(_amount);
         (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 

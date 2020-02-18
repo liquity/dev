@@ -45,6 +45,7 @@ contract('CDPManager', async accounts => {
     DeciMath.setAsDeployed(deciMath)
     CDPManager.link(deciMath)
     PoolManager.link(deciMath)
+    FunctionCaller.link(deciMath)
   })
 
   beforeEach(async () => {
@@ -98,7 +99,7 @@ contract('CDPManager', async accounts => {
     const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
     assert.equal(ICR_Before, maxBytes32)
 
-    const MCR = (await cdpManager.getMCR()).toString()
+    const MCR = (await cdpManager.MCR()).toString()
     assert.equal(MCR.toString(), '1100000000000000000')
 
     // Alice withdraws 180 CLV, lowering her ICR to 1.11
@@ -114,8 +115,8 @@ contract('CDPManager', async accounts => {
 
     // check the CDP is successfully closed, and removed from sortedList
     const status = (await cdpManager.CDPs(alice))[3]
-    assert.equal(status, 3)  // status enum element 3 corresponds to "Closed"
-    const alice_CDP_isInSortedList = await cdpManager.sortedCDPsContains(alice)
+    assert.equal(status, 2)  // status enum  2 corresponds to "Closed"
+    const alice_CDP_isInSortedList = await sortedCDPs.contains(alice)
     assert.isFalse(alice_CDP_isInSortedList)
   })
 
@@ -352,12 +353,12 @@ contract('CDPManager', async accounts => {
     const bob_Status = bob_CDP[3]
     const carol_Status = carol_CDP[3]
 
-    assert.equal(bob_Status, 2)     // Status enum 2 is 'active'
-    assert.equal(carol_Status, 3)   // Status enum 3 is 'closed'
+    assert.equal(bob_Status, 1)     // Status enum 1 is 'active'
+    assert.equal(carol_Status, 2)   // Status enum 2 is 'closed'
 
     //check Bob is in sortedCDPs, and Carol is not
-    const bob_isInSortedList = await cdpManager.sortedCDPsContains(bob)
-    const carol_isInSortedList = await cdpManager.sortedCDPsContains(carol)
+    const bob_isInSortedList = await sortedCDPs.contains(bob)
+    const carol_isInSortedList = await sortedCDPs.contains(carol)
 
     assert.isTrue(bob_isInSortedList)
     assert.isFalse(carol_isInSortedList)
@@ -388,7 +389,7 @@ contract('CDPManager', async accounts => {
 
     // check last CDP is bob
 
-    const lastCDP_Before = await cdpManager.sortedCDPsGetLast()
+    const lastCDP_Before = await sortedCDPs.getLast()
     assert.equal(lastCDP_Before, bob)
 
     /*  Liquidate Dennis. His CLVDebt (140 CLV) is entirely offset against Bob's StabilityPool deposit (180 CLV). 
@@ -398,7 +399,7 @@ contract('CDPManager', async accounts => {
     // check Dennis's CDP is closed
     const dennis_CDP = await cdpManager.CDPs(dennis)
     const dennis_Status = dennis_CDP[3]
-    assert.equal(dennis_Status, 3)     // Status enum 3 is 'closed'
+    assert.equal(dennis_Status, 2)     // Status enum 2 is 'closed'
 
     /* Now, attempt to liquidate Bob. Bob's StabilityPool ETH gain should be 
     withdrawn to his CDP, bringing his ICR > MCR.
@@ -409,22 +410,22 @@ contract('CDPManager', async accounts => {
     // check Bob's CDP is active
     const bob_CDP = await cdpManager.CDPs(bob)
     const bob_Status = bob_CDP[3]
-    assert.equal(bob_Status, 2)     // Status enum 2 is 'active'
+    assert.equal(bob_Status, 1)     // Status enum 1 is 'active'
 
     // Bob's ICR should now be: (2 * 100) / 150 = 1.3333...
 
     //check Bob is in sortedCDPs
-    const bob_isInSortedList = await cdpManager.sortedCDPsContains(bob)
+    const bob_isInSortedList = await sortedCDPs.contains(bob)
     assert.isTrue(bob_isInSortedList)
 
     // Now, Bob (ICR = 1.333) should have been reinserted above Alice (ICR=1.111).
 
     // check last ICR is not Bob:
-    const lastCDP_After = await cdpManager.sortedCDPsGetLast()
+    const lastCDP_After = await sortedCDPs.getLast()
     assert.notEqual(lastCDP_After, bob)
 
     // check first CDP is Bob:
-    const firstCDP_After = await cdpManager.sortedCDPsGetFirst()
+    const firstCDP_After = await sortedCDPs.getFirst()
     assert.equal(firstCDP_After, bob)
   })
 
@@ -457,15 +458,15 @@ contract('CDPManager', async accounts => {
     Her ICR, at price 1ETH:200CLV, should be (12 ETH * 200 / 361 CLV) = 664.82%. Thus her CDP should still be active. */
 
     // check Alice's CDP is still active
-    assert.equal(alice_CDP_status, 2)
+    assert.equal(alice_CDP_status, 1)
 
     // check Bob and Carol's CDP status is closed
-    assert.equal(bob_CDP_status, 3)
-    assert.equal(carol_CDP_status, 3)
+    assert.equal(bob_CDP_status, 2)
+    assert.equal(carol_CDP_status, 2)
 
-    const alice_CDP_isInSortedList = await cdpManager.sortedCDPsContains(alice)
-    const bob_CDP_isInSortedList = await cdpManager.sortedCDPsContains(bob)
-    const carol_CDP_isInSortedList = await cdpManager.sortedCDPsContains(carol)
+    const alice_CDP_isInSortedList = await sortedCDPs.contains(alice)
+    const bob_CDP_isInSortedList = await sortedCDPs.contains(bob)
+    const carol_CDP_isInSortedList = await sortedCDPs.contains(carol)
 
     // check Alice's CDP is still in the sortedList
     assert.isTrue(alice_CDP_isInSortedList)

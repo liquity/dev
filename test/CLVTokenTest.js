@@ -41,6 +41,7 @@ contract('CLVToken', async accounts => {
       DeciMath.setAsDeployed(deciMath)
       CDPManager.link(deciMath)
       PoolManager.link(deciMath)
+      FunctionCaller.link(deciMath)
     })
   
     beforeEach(async () => {
@@ -86,10 +87,6 @@ contract('CLVToken', async accounts => {
       await connectContracts(contracts, registeredAddresses)
       
       // add CDPs for three test users
-      // await cdpManager.mockAddCDP({ from: alice })
-      // await cdpManager.mockAddCDP({ from: bob })
-      // await cdpManager.mockAddCDP({ from: carol })
-
       await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
       await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
       await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })

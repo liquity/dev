@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./CLVTokenData.sol";
+import "@nomiclabs/buidler/console.sol";
 
 contract CLVToken is IERC20, ICLVToken, Ownable {
     using SafeMath for uint256;
@@ -15,7 +16,6 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     event CLVTokenBalanceUpdated(address _user, uint _amount);
 
     address public poolManagerAddress;
-    bytes32 public name;
 
     uint256 public _totalSupply;
 
@@ -35,10 +35,6 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
         poolManagerAddress =  _poolManagerAddress;
         emit PoolManagerAddressChanged(_poolManagerAddress);
-    }
-    
-    function setName(bytes32 _name) public onlyOwner {
-        name = _name;
     }
 
     function mint(address _account, uint256 _amount) public onlyPoolManager returns (bool) {

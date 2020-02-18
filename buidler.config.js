@@ -24,10 +24,5 @@ module.exports = {
     rpc: {
         host: "localhost",
         port: 8545
-    },
-    // gasReporter: {
-    //     currency: 'CHF',
-    //     gasPrice: 20
-    // }
-
+    }
 };

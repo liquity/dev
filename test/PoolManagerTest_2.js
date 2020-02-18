@@ -50,6 +50,7 @@ contract('PoolManager', async accounts => {
       DeciMath.setAsDeployed(deciMath)
       CDPManager.link(deciMath)
       PoolManager.link(deciMath)
+      FunctionCaller.link(deciMath)
     })
   
     beforeEach(async () => {

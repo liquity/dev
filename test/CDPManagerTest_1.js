@@ -8,7 +8,7 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const DeciMath = artifacts.require("DeciMath")
+const DeciMath = artifacts.require("./DeciMath.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
@@ -45,6 +45,7 @@ contract('CDPManager', async accounts => {
     DeciMath.setAsDeployed(deciMath)
     CDPManager.link(deciMath)
     PoolManager.link(deciMath)
+    FunctionCaller.link(deciMath)
   })
 
   beforeEach(async () => {
@@ -90,62 +91,6 @@ contract('CDPManager', async accounts => {
     await connectContracts(contracts, registeredAddresses)
   })
 
-  it("userCreateCDP(): creates a new CDP for a user", async () => {
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
-    const alice_CDPStatus_Before = alice_CDP_Before[3]   // status is the 4'th property of CDP struct
-
-    // in key->struct mappings, when key not present, corresponding struct has properties initialised to 0x0
-    assert.equal(alice_CDPStatus_Before, 0)
-
-    await cdpManager.userCreateCDP({ from: alice })
-
-    const alice_CDP_after = await cdpManager.CDPs(alice)
-    const alice_CDPStatus_After = alice_CDP_after[3]
-
-    assert.equal(alice_CDPStatus_After, 1)  // The 2nd element of the status enum is 'newBorn' 
-  })
-
-  it("userCreateCDP(): adds CDP owner to CDPOwners array", async () => {
-    const CDPOwnersCount_Before = (await cdpManager.getCDPOwnersCount()).toString();
-    assert.equal(CDPOwnersCount_Before, '0')
-
-    await cdpManager.userCreateCDP({ from: alice })
-
-    const CDPOwnersCount_After = (await cdpManager.getCDPOwnersCount()).toString();
-    assert.equal(CDPOwnersCount_After, '1')
-  })
-
-  it("userCreateCDP(): assigns the correct debt, coll, ICR and status to the CDP", async () => {
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
-    const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-
-    const debt_Before = alice_CDP_Before[0]
-    const coll_Before = alice_CDP_Before[1]
-
-    const ICR_Before = web3.utils.toHex(await cdpManager.getCurrentICR(alice))
-    const status_Before = alice_CDP_Before[3]
-
-    assert.equal(debt_Before, 0)
-    assert.equal(coll_Before, 0)
-    assert.equal(ICR_Before, maxBytes32)
-    assert.equal(status_Before, 0)
-
-    // Alice creates CDP
-    await cdpManager.userCreateCDP({ from: alice })
-
-    const alice_CDP_After = await cdpManager.CDPs(alice)
-
-    const debt_After = alice_CDP_After[0]
-    const coll_After = alice_CDP_After[1]
-    const ICR_After = web3.utils.toHex(await cdpManager.getCurrentICR(alice))
-    const status_After = alice_CDP_After[3]
-
-    assert.equal(debt_After, 0)
-    assert.equal(coll_After, 0)
-    assert.equal(ICR_After, maxBytes32)
-    assert.equal(status_After, 1)
-  })
-
   it("addColl(), non-existent CDP: creates a new CDP and assigns the correct collateral amount", async () => {
     const alice_CDP_Before = await cdpManager.CDPs(alice)
     const coll_Before = alice_CDP_Before[1]
@@ -163,7 +108,7 @@ contract('CDPManager', async accounts => {
 
     // check after
     assert.equal(coll_After, _1_Ether)
-    assert.equal(status_After, 2)  // check active status
+    assert.equal(status_After, 1)  // check active status
   })
 
   it("addColl(), non-existent CDP: adds CDP owner to CDPOwners array", async () => {
@@ -196,16 +141,16 @@ contract('CDPManager', async accounts => {
 
   it("addColl(), non-existent CDP: inserts CDP to sortedList", async () => {
     // check before
-    const aliceCDPInList_Before = await cdpManager.sortedCDPsContains(alice)
-    const listIsEmpty_Before = await cdpManager.sortedCDPsIsEmpty()
+    const aliceCDPInList_Before = await sortedCDPs.contains(alice)
+    const listIsEmpty_Before = await sortedCDPs.isEmpty()
     assert.equal(aliceCDPInList_Before, false)
     assert.equal(listIsEmpty_Before, true)
 
     await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
 
     // check after
-    const aliceCDPInList_After = await cdpManager.sortedCDPsContains(alice)
-    const listIsEmpty_After = await cdpManager.sortedCDPsIsEmpty()
+    const aliceCDPInList_After = await sortedCDPs.contains(alice)
+    const listIsEmpty_After = await sortedCDPs.isEmpty()
     assert.equal(aliceCDPInList_After, true)
     assert.equal(listIsEmpty_After, false)
   })
@@ -224,59 +169,17 @@ contract('CDPManager', async accounts => {
     assert.equal(activePool_RawEther_After, _1_Ether)
   })
 
-  it("addColl(), newBorn CDP: makes CDP active and assigns the correct collateral amount", async () => {
-    // alice creates a CDP
-    await cdpManager.userCreateCDP({ from: alice })
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
-    const coll_Before = alice_CDP_Before[1]
-    const status_Before = alice_CDP_Before[3]
-
-    // check before - 0 coll and newBorn status
-    assert.equal(coll_Before, 0)
-    assert.equal(status_Before, 1)   
-
-    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
-
-    const alice_CDP_After = await cdpManager.CDPs(alice)
-    const coll_After = alice_CDP_After[1]
-    const status_After = alice_CDP_After[3]
-
-    // check after - 0 coll and newBorn status
-    assert.equal(coll_After, _1_Ether)
-    assert.equal(status_After, 2)  
-  })
-
-  it("addColl(), newBorn CDP: inserts CDP to sortedList", async () => {
-    // create newBorn CDP
-    await cdpManager.userCreateCDP({ from: alice })
-
-    // check before
-    const aliceCDPInList_Before = await cdpManager.sortedCDPsContains(alice)
-    const listIsEmpty_Before = await cdpManager.sortedCDPsIsEmpty()
-    assert.equal(aliceCDPInList_Before, false)
-    assert.equal(listIsEmpty_Before, true)
-
-    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
-
-    // check after
-    const aliceCDPInList_After = await cdpManager.sortedCDPsContains(alice)
-    const listIsEmpty_After = await cdpManager.sortedCDPsIsEmpty()
-    assert.equal(aliceCDPInList_After, true)
-    assert.equal(listIsEmpty_After, false)
-  })
-
   it("addColl(), active CDP: adds the correct collateral amount to the CDP", async () => {
     // alice creates a CDP and adds first collateral
-    await cdpManager.userCreateCDP({ from: alice })
     await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
 
     const alice_CDP_Before = await cdpManager.CDPs(alice)
     coll_Before = alice_CDP_Before[1]
     const status_Before = alice_CDP_Before[3]
 
-    // check coll and sttus before
+    // check coll and status before
     assert.equal(coll_Before, _1_Ether)
-    assert.equal(status_Before, 2)   
+    assert.equal(status_Before, 1)   
 
     // Alice adds second collateral
     await cdpManager.addColl(alice, alice,  { from: alice, value: _1_Ether })
@@ -285,27 +188,26 @@ contract('CDPManager', async accounts => {
     const coll_After = alice_CDP_After[1]
     const status_After = alice_CDP_After[3]
 
-    // check coll increases by correct amount,and status remains
+    // check coll increases by correct amount,and status remains active
     assert.equal(coll_After, _2_Ether)
-    assert.equal(status_After, 2)  
+    assert.equal(status_After, 1)  
   })
 
   it("addColl(), active CDP: CDP is in sortedList before and after", async () => {
     // alice creates a CDP and adds first collateral
-    await cdpManager.userCreateCDP({ from: alice })
     await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
 
     // check Alice is in list before
-    const aliceCDPInList_Before = await cdpManager.sortedCDPsContains(alice)
-    const listIsEmpty_Before = await cdpManager.sortedCDPsIsEmpty()
+    const aliceCDPInList_Before = await sortedCDPs.contains(alice)
+    const listIsEmpty_Before = await sortedCDPs.isEmpty()
     assert.equal(aliceCDPInList_Before, true)
     assert.equal(listIsEmpty_Before, false)
 
     await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
 
     // check Alice is still in list after
-    const aliceCDPInList_After = await cdpManager.sortedCDPsContains(alice)
-    const listIsEmpty_After = await cdpManager.sortedCDPsIsEmpty()
+    const aliceCDPInList_After = await sortedCDPs.contains(alice)
+    const listIsEmpty_After = await sortedCDPs.isEmpty()
     assert.equal(aliceCDPInList_After, true)
     assert.equal(listIsEmpty_After, false)
   })
@@ -492,8 +394,8 @@ contract('CDPManager', async accounts => {
     // Check CDP is active
     const alice_CDP_1 = await cdpManager.CDPs(alice)
     const status_1 = alice_CDP_1[3]
-    assert.equal(status_1, 2)
-    assert.isTrue(await cdpManager.sortedCDPsContains(alice))
+    assert.equal(status_1, 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
     
     // Repay and close CDP
     await cdpManager.repayCLV( '17500000000000000000', alice, {from: alice})
@@ -502,8 +404,8 @@ contract('CDPManager', async accounts => {
     // Check CDP is closed
     const alice_CDP_2 = await cdpManager.CDPs(alice)
     const status_2 = alice_CDP_2[3]
-    assert.equal(status_2, 3)
-    assert.isFalse(await cdpManager.sortedCDPsContains(alice))
+    assert.equal(status_2, 2)
+    assert.isFalse(await sortedCDPs.contains(alice))
 
     // Re-open CDP
     await cdpManager.addColl(alice, alice, { from: alice, value: _2_Ether })
@@ -512,8 +414,8 @@ contract('CDPManager', async accounts => {
     // Check CDP is re-opened
     const alice_CDP_3 = await cdpManager.CDPs(alice)
     const status_3 = alice_CDP_3[3]
-    assert.equal(status_3, 2)
-    assert.isTrue(await cdpManager.sortedCDPsContains(alice))
+    assert.equal(status_3, 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
   })
 
   it("withdrawColl(): reverts if dollar value of remaining collateral in CDP would be < $20 USD", async () => {
@@ -547,8 +449,8 @@ contract('CDPManager', async accounts => {
     // Check CDP is active
     const alice_CDP_Before = await cdpManager.CDPs(alice)
     const status_Before = alice_CDP_Before[3]
-    assert.equal(status_Before, 2)
-    assert.isTrue(await cdpManager.sortedCDPsContains(alice))
+    assert.equal(status_Before, 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
     
     // Withdraw all the collateral in the CDP
     await cdpManager.withdrawColl(_1_Ether, alice, { from: alice})
@@ -556,8 +458,8 @@ contract('CDPManager', async accounts => {
     // Check CDP is closed
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const status_After = alice_CDP_After[3]
-    assert.equal(status_After, 3)
-    assert.isFalse(await cdpManager.sortedCDPsContains(alice))
+    assert.equal(status_After, 2)
+    assert.isFalse(await sortedCDPs.contains(alice))
 
   })
 
@@ -568,8 +470,8 @@ contract('CDPManager', async accounts => {
     // Check CDP is active
     const alice_CDP_Before = await cdpManager.CDPs(alice)
     const status_Before = alice_CDP_Before[3]
-    assert.equal(status_Before, 2)
-    assert.isTrue(await cdpManager.sortedCDPsContains(alice))
+    assert.equal(status_Before, 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
     
     // Withdraw some collateral
     await cdpManager.withdrawColl(_100_Finney, alice, { from: alice})
@@ -577,8 +479,8 @@ contract('CDPManager', async accounts => {
     // Check CDP is still active
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const status_After = alice_CDP_After[3]
-    assert.equal(status_After, 2)
-    assert.isTrue(await cdpManager.sortedCDPsContains(alice))
+    assert.equal(status_After, 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
   })
 
   it("withdrawColl(): reduces the CDP's collateral by the correct amount", async () => {

@@ -40,6 +40,7 @@ contract('PoolManager', async accounts => {
     DeciMath.setAsDeployed(deciMath)
     CDPManager.link(deciMath)
     PoolManager.link(deciMath)
+    FunctionCaller.link(deciMath)
   })
 
   beforeEach(async () => {
@@ -158,15 +159,6 @@ contract('PoolManager', async accounts => {
     const actualActiveColl = (await defaultPool.getETH({ from: poolManager.address })).toNumber()
     const returnedActiveColl = (await poolManager.getLiquidatedColl()).toNumber()
     assert.equal(actualActiveColl, returnedActiveColl)
-  })
-
-  it('getMin(): returns the minimum of two uints', async () => {
-    const a = await poolManager.getMin(3, 2)
-    const b = await poolManager.getMin(4, 10)
-    const c = await poolManager.getMin(5, 5)
-    assert.equal(a, 2)
-    assert.equal(b, 4)
-    assert.equal(c, 5)
   })
 
   it('addColl(): increases the raw ether balance of the ActivePool by the correct amount', async () => {

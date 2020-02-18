@@ -22,7 +22,7 @@ contract('StabilityPool', async accounts => {
 
   it('poolManagerAddress(): sets and gets the poolManager address', async () => {
     await stabilityPool.setPoolManagerAddress(mockPoolManagerAddress)
-    const recordedPMAddress = await stabilityPool.getPoolManagerAddress()
+    const recordedPMAddress = await stabilityPool.poolManagerAddress()
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
 
@@ -89,12 +89,12 @@ contract('ActivePool', async accounts => {
   beforeEach(async () => {
     activePool = await ActivePool.new()
     await activePool.setPoolManagerAddress(mockPoolManagerAddress)
-    recordedPMAddress = await activePool.getPoolManagerAddress()
+    recordedPMAddress = await activePool.poolManagerAddress()
   })
 
   it('poolManagerAddress(): sets and gets the poolManager address', async () => {
     await activePool.setPoolManagerAddress(mockPoolManagerAddress)
-    const recordedPMAddress = await activePool.getPoolManagerAddress()
+    const recordedPMAddress = await activePool.poolManagerAddress()
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
 
@@ -161,12 +161,12 @@ contract('DefaultPool', async accounts => {
   beforeEach(async () => {
     defaultPool = await DefaultPool.new()
     await defaultPool.setPoolManagerAddress(mockPoolManagerAddress)
-    recordedPMAddress = await defaultPool.getPoolManagerAddress()
+    recordedPMAddress = await defaultPool.poolManagerAddress()
   })
 
   it('poolManagerAddress(): sets and gets the poolManager address', async () => {
     await defaultPool.setPoolManagerAddress(mockPoolManagerAddress)
-    const recordedPMAddress = await defaultPool.getPoolManagerAddress()
+    const recordedPMAddress = await defaultPool.poolManagerAddress()
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
 

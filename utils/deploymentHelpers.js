@@ -36,7 +36,7 @@ const getAddressesFromNameRegistry = async (nameRegistry) => {
   const DefaultPool = await nameRegistry.getAddress('DefaultPool')
   const FunctionCaller = await nameRegistry.getAddress('FunctionCaller')
 
-  return { PoolManager, CLVToken, PriceFeed, SortedCDPs, CDPManager, StabilityPool, ActivePool, DefaultPool }
+  return { PoolManager, CLVToken, PriceFeed, SortedCDPs, CDPManager, StabilityPool, ActivePool, DefaultPool, FunctionCaller }
 }
 
 // Connect contracts to their dependencies

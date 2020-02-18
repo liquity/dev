@@ -37,8 +37,6 @@ interface IPoolManager {
     function setActivePool(address _activePoolAddress) external;
 
     function setDefaultPool(address _defaultPoolAddress) external;
-
-    function getAccurateMulDiv(uint x, uint y, uint z) external pure returns(uint);
     
     function getBalance() external view returns(uint);
     
@@ -52,8 +50,6 @@ interface IPoolManager {
 
     function getStabilityPoolCLV() external view returns (uint);
 
-    function getMin(uint a, uint b) external pure returns(uint);
-
     function addColl() external payable returns(bool);
 
     function withdrawColl(address _account, uint _ETH) external returns (bool);
@@ -63,10 +59,6 @@ interface IPoolManager {
     function repayCLV(address _account, uint _CLV) external returns(bool);
 
     function liquidate(uint _CLV, uint _ETH) external returns(bool);
-
-    // function pullFromActivePool(uint _CLV, uint _ETH) external returns (bool);
-
-    // function returnToActivePool(uint _CLV, uint _ETH) external returns (bool);
   
     function applyPendingRewards(uint _CLV, uint _ETH) external returns(bool);
 

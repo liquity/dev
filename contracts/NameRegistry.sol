@@ -1,6 +1,7 @@
 pragma solidity ^0.5.11;
 
 import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@nomiclabs/buidler/console.sol";
 
 contract NameRegistry is Ownable {
 
@@ -23,7 +24,7 @@ contract NameRegistry is Ownable {
         return true;
     }
 
-    function getAddress(string memory name) public view onlyOwner returns(address) {
+    function getAddress(string memory name) public view returns(address) {
         require(registry[name] != address(0), "NameReg: name does not map to an addr");
         return registry[name];
     }

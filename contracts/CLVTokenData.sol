@@ -4,6 +4,7 @@ pragma solidity ^0.5.11;
 // Functions are setters, addition and subtraction. Actual token logic resides in CLVToken.sol
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@nomiclabs/buidler/console.sol";
 
 contract CLVTokenData is Ownable {
     using SafeMath for uint;
@@ -23,7 +24,9 @@ contract CLVTokenData is Ownable {
         require(_msgSender() == clvTokenAddress, "CLVTokenData: only clvTokenAddress");
         _;
     }
-    // balances
+
+    // --- Balance functions --- 
+
     function getBalance(address account) external view onlyCLVTokenAddress returns(uint) { 
         return balances[account];
     }
@@ -40,7 +43,8 @@ contract CLVTokenData is Ownable {
         balances[account] = balances[account].sub(value, 'ERC20: subtracted amount exceeds balance');
     }
 
-    // allowances
+    // --- Allowance functions ---
+    
     function getAllowance(address owner, address spender) external view onlyCLVTokenAddress returns(uint) {
         return allowances[owner][spender];
     }

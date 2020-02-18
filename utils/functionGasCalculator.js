@@ -1,4 +1,3 @@
-
 const PoolManager = artifacts.require("./PoolManager.sol")
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
@@ -8,13 +7,73 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-// const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const DeciMath = artifacts.require("DeciMath")
+const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
-// const deploymentHelpers = require("../utils/deploymentHelpers.js")
-// const getAddresses = deploymentHelpers.getAddresses
-// const setNameRegistry = deploymentHelpers.setNameRegistry
-// const connectContracts = deploymentHelpers.connectContracts
-// const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
+const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const getAddresses = deploymentHelpers.getAddresses
+const setNameRegistry = deploymentHelpers.setNameRegistry
+const connectContracts = deploymentHelpers.connectContracts
+const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
+
+  const [owner, alice, bob, carol, dennis, whale] = accounts;
+  let priceFeed
+  let clvToken
+  let poolManager
+  let sortedCDPs
+  let cdpManager
+  let nameRegistry
+  let activePool
+  let stabilityPool
+  let defaultPool
+  let functionCaller
+
+
+  const deciMath = await DeciMath.new()
+  DeciMath.setAsDeployed(deciMath)
+  CDPManager.link(deciMath)
+  PoolManager.link(deciMath)
+  FunctionCaller.link(deciMath)
+
+  priceFeed = await PriceFeed.new()
+  clvToken = await CLVToken.new()
+  poolManager = await PoolManager.new()
+  sortedCDPs = await SortedCDPs.new()
+  cdpManager = await CDPManager.new()
+  nameRegistry = await NameRegistry.new()
+  activePool = await ActivePool.new()
+  stabilityPool = await StabilityPool.new()
+  defaultPool = await DefaultPool.new()
+  functionCaller = await FunctionCaller.new()
+
+  DefaultPool.setAsDeployed(defaultPool)
+  PriceFeed.setAsDeployed(priceFeed)
+  CLVToken.setAsDeployed(clvToken)
+  PoolManager.setAsDeployed(poolManager)
+  SortedCDPs.setAsDeployed(sortedCDPs)
+  CDPManager.setAsDeployed(cdpManager)
+  NameRegistry.setAsDeployed(nameRegistry)
+  ActivePool.setAsDeployed(activePool)
+  StabilityPool.setAsDeployed(stabilityPool)
+  FunctionCaller.setAsDeployed(functionCaller)
+
+    contracts = {
+      priceFeed,
+      clvToken,
+      poolManager,
+      sortedCDPs,
+      cdpManager,
+      nameRegistry,
+      activePool,
+      stabilityPool,
+      defaultPool,
+      functionCaller
+    }
+
+    const contractAddresses = getAddresses(contracts)
+    await setNameRegistry(contractAddresses, nameRegistry, { from: owner })
+    const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
+    await connectContracts(contracts, registeredAddresses)
 
 const _2_Ether = web3.utils.toWei('2', 'ether')
 const _1_Ether = web3.utils.toWei('1', 'ether')
@@ -43,29 +102,29 @@ module.exports = async () => {
     return accounts
   }
 
-  const getDeployedContracts = async () => {
-    priceFeed = await PriceFeed.deployed()
-    clvToken = await CLVToken.deployed()
-    poolManager = await PoolManager.deployed()
-    sortedCDPs = await SortedCDPs.deployed()
-    cdpManager = await CDPManager.deployed()
-    nameRegistry = await NameRegistry.deployed()
-    activePool = await ActivePool.deployed()
-    stabilityPool = await StabilityPool.deployed()
-    defaultPool = await DefaultPool.deployed()
+  // const getDeployedContracts = async () => {
+  //   priceFeed = await PriceFeed.deployed()
+  //   clvToken = await CLVToken.deployed()
+  //   poolManager = await PoolManager.deployed()
+  //   sortedCDPs = await SortedCDPs.deployed()
+  //   cdpManager = await CDPManager.deployed()
+  //   nameRegistry = await NameRegistry.deployed()
+  //   activePool = await ActivePool.deployed()
+  //   stabilityPool = await StabilityPool.deployed()
+  //   defaultPool = await DefaultPool.deployed()
 
-    return {
-      priceFeed,
-      clvToken,
-      poolManager,
-      sortedCDPs,
-      cdpManager,
-      nameRegistry,
-      activePool,
-      stabilityPool,
-      defaultPool
-    }
-  }
+  //   return {
+  //     priceFeed,
+  //     clvToken,
+  //     poolManager,
+  //     sortedCDPs,
+  //     cdpManager,
+  //     nameRegistry,
+  //     activePool,
+  //     stabilityPool,
+  //     defaultPool
+  //   }
+  // }
 
   // const functionCaller = await FunctionCaller.deployed()
   // // console.log(functionCaller)

@@ -36,35 +36,11 @@ interface ICDPManager {
 
     function setSortedCDPs(address _sortedCDPsAddress) external;
 
-    function getMCR() external pure returns(uint);
-
     function getCDPOwnersCount() external view returns(uint);
-
-    function getAccurateMulDiv(uint _x, uint _y, uint _z) external pure returns(uint);
-
-    function sortedCDPsContains(address _id) external view returns(bool);
-
-    function sortedCDPsIsEmpty() external view returns(bool);
-
-    function sortedCDPsIsFull() external view returns (bool);
-
-    function sortedCDPsgetSize() external view returns(uint);
-
-    function sortedCDPsGetMaxSize() external view returns(uint);
-
-    function sortedCDPsGetFirst() external view returns (address); 
-
-    function sortedCDPsGetLast() external view returns (address); 
-
-    function sortedCDPsGetNext(address user) external view returns (address); 
-
-    function sortedCDPsGetPrev(address user) external view returns (address); 
 
     function getCurrentICR(address _user) external view returns(uint);
 
     function getApproxHint(uint CR, uint numTrials) external view returns(address);
-
-    function userCreateCDP() external returns(bool);
 
     function addColl(address _user, address _hint) external payable returns(bool);
 
@@ -77,8 +53,6 @@ interface ICDPManager {
     function liquidate(address _user) external returns(bool);
 
     function liquidateCDPs(uint _n) external returns(bool);
-
-    function mockAddCDP() external returns(bool);
 
     function checkTCRAndSetRecoveryMode() external returns(bool);
 

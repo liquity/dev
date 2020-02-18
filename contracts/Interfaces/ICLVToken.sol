@@ -9,8 +9,6 @@ interface ICLVToken {
     // --- Functions ---
     function setPoolManagerAddress(address _poolManagerAddress) external;
 
-    function setName(bytes32 _name) external;
-
     function mint(address _account, uint256 _amount) external returns(bool);
 
     function burn(address _account, uint256 _amount) external returns(bool);

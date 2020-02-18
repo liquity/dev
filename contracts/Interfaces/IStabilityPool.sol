@@ -1,5 +1,3 @@
-pragma solidity ^0.5.11;
-
 interface IStabilityPool {
     // --- Events ---
     event ETHBalanceUpdated(uint _newBalance);
@@ -22,20 +20,10 @@ interface IStabilityPool {
     function getCLV() external view returns(uint);
 
     function getTotalCLVDeposits() external view returns(uint);
-    
-    function getPoolManagerAddress() external view returns(address);
-    
-    function getActivePoolAddress() external view returns(address);
-
-    function getStabilityPoolAddress() external view returns(address);
-
-    function getDefaultPoolAddress() external view returns(address);
 
     function setPoolManagerAddress(address _poolManagerAddress) external;
 
     function setActivePoolAddress(address _activePoolAddress) external;
-
-    function setStabilityPoolAddress(address _stabilityPoolAddress) external;
 
     function setDefaultPoolAddress(address _defaultPoolAddress) external;
     

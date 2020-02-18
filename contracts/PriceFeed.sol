@@ -3,6 +3,7 @@ pragma solidity ^0.5.11;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 import './Interfaces/ICDPManager.sol';
+import "@nomiclabs/buidler/console.sol";
 
 // A mock ETH:USD price oracle
 contract PriceFeed is Ownable {
@@ -31,7 +32,6 @@ contract PriceFeed is Ownable {
         cdpManager.checkTCRAndSetRecoveryMode();
         emit PriceUpdated(price);
         return true;
-
     }    
     
     function getPrice() public returns (uint) {

@@ -34,6 +34,7 @@ contract('CDPManager', async accounts => {
   const _24_Ether = web3.utils.toWei('24', 'ether')
   const _25_Ether = web3.utils.toWei('25', 'ether')
   const _27_Ether = web3.utils.toWei('27', 'ether')
+  const _30_Ether = web3.utils.toWei('30', 'ether')
 
 
   const [owner, alice, bob, carol, dennis, elisa, freddy, greta, harry, ida] = accounts;
@@ -48,11 +49,12 @@ contract('CDPManager', async accounts => {
   let defaultPool
   let functionCaller
 
-  before(async() => {
+  before(async () => {
     const deciMath = await DeciMath.new()
     DeciMath.setAsDeployed(deciMath)
     CDPManager.link(deciMath)
     PoolManager.link(deciMath)
+    FunctionCaller.link(deciMath)
   })
 
   beforeEach(async () => {
@@ -369,9 +371,9 @@ contract('CDPManager', async accounts => {
     assert.equal(TCR, '1500000000000000000')
 
     const bob_CDPStatus_Before = (await cdpManager.CDPs(bob))[3]
-    const bob_CDP_isInSortedList_Before = await cdpManager.sortedCDPsContains(bob)
+    const bob_CDP_isInSortedList_Before = await sortedCDPs.contains(bob)
 
-    assert.equal(bob_CDPStatus_Before, 2) // status enum element 2 corresponds to "Active"
+    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
     assert.isTrue(bob_CDP_isInSortedList_Before)
 
     // --- TEST ---
@@ -391,8 +393,8 @@ contract('CDPManager', async accounts => {
 
     // check Bob's CDP is successfully closed, and removed from sortedList
     const bob_CDPStatus_After = (await cdpManager.CDPs(bob))[3]
-    const bob_CDP_isInSortedList_After = await cdpManager.sortedCDPsContains(bob)
-    assert.equal(bob_CDPStatus_After, 3)  // status enum element 3 corresponds to "Closed"
+    const bob_CDP_isInSortedList_After = await sortedCDPs.contains(bob)
+    assert.equal(bob_CDPStatus_After, 2)  // status enum element 2 corresponds to "Closed"
     assert.isFalse(bob_CDP_isInSortedList_After)
   })
 
@@ -546,9 +548,9 @@ contract('CDPManager', async accounts => {
     await cdpManager.withdrawCLV('2000000000000000000000', bob, { from: bob })
 
     const bob_CDPStatus_Before = (await cdpManager.CDPs(bob))[3]
-    const bob_CDP_isInSortedList_Before = await cdpManager.sortedCDPsContains(bob)
+    const bob_CDP_isInSortedList_Before = await sortedCDPs.contains(bob)
 
-    assert.equal(bob_CDPStatus_Before, 2) // status enum element 2 corresponds to "Active"
+    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
     assert.isTrue(bob_CDP_isInSortedList_Before)
 
     // --- TEST ---
@@ -568,8 +570,8 @@ contract('CDPManager', async accounts => {
 
     // check Bob's CDP is successfully closed, and removed from sortedList
     const bob_CDPStatus_After = (await cdpManager.CDPs(bob))[3]
-    const bob_CDP_isInSortedList_After = await cdpManager.sortedCDPsContains(bob)
-    assert.equal(bob_CDPStatus_After, 3)  // status enum element 3 corresponds to "Closed"
+    const bob_CDP_isInSortedList_After = await sortedCDPs.contains(bob)
+    assert.equal(bob_CDPStatus_After, 2)  // status enum element 2 corresponds to "Closed"
     assert.isFalse(bob_CDP_isInSortedList_After)
   })
 
@@ -707,12 +709,12 @@ contract('CDPManager', async accounts => {
     const bob_Coll = bob_CDP[1].toString()
     const bob_Stake = bob_CDP[2].toString()
     const bob_CDPStatus = bob_CDP[3].toString()
-    const bob_isInSortedCDPsList = await cdpManager.sortedCDPsContains(bob)
+    const bob_isInSortedCDPsList = await sortedCDPs.contains(bob)
 
     assert.equal(bob_Debt, '250000000000000000000')
     assert.equal(bob_Coll, '3000000000000000000')
     assert.equal(bob_Stake, '3000000000000000000')
-    assert.equal(bob_CDPStatus, '2')
+    assert.equal(bob_CDPStatus, '1')
     assert.isTrue(bob_isInSortedCDPsList)
   })
 
@@ -855,7 +857,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice,  { from: alice })
+    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
     await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
     await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
@@ -873,9 +875,9 @@ contract('CDPManager', async accounts => {
 
     // Check Bob's CDP is active
     const bob_CDPStatus_Before = (await cdpManager.CDPs(bob))[3]
-    const bob_CDP_isInSortedList_Before = await cdpManager.sortedCDPsContains(bob)
+    const bob_CDP_isInSortedList_Before = await sortedCDPs.contains(bob)
 
-    assert.equal(bob_CDPStatus_Before, 2) // status enum element 2 corresponds to "Active"
+    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
     assert.isTrue(bob_CDP_isInSortedList_Before)
 
     // Liquidate Bob
@@ -883,9 +885,9 @@ contract('CDPManager', async accounts => {
 
     // Check Bob's CDP is closed after liquidation
     const bob_CDPStatus_After = (await cdpManager.CDPs(bob))[3]
-    const bob_CDP_isInSortedList_After = await cdpManager.sortedCDPsContains(bob)
+    const bob_CDP_isInSortedList_After = await sortedCDPs.contains(bob)
 
-    assert.equal(bob_CDPStatus_After, 3) // status enum element 3 corresponds to "Closed"
+    assert.equal(bob_CDPStatus_After, 2) // status enum element 2 corresponds to "Closed"
     assert.isFalse(bob_CDP_isInSortedList_After)
   })
 
@@ -898,7 +900,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice,  { from: alice })
+    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
     await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
     await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
@@ -916,9 +918,9 @@ contract('CDPManager', async accounts => {
 
     // Check Bob's CDP is active
     const bob_CDPStatus_Before = (await cdpManager.CDPs(bob))[3]
-    const bob_CDP_isInSortedList_Before = await cdpManager.sortedCDPsContains(bob)
+    const bob_CDP_isInSortedList_Before = await sortedCDPs.contains(bob)
 
-    assert.equal(bob_CDPStatus_Before, 2) // status enum element 2 corresponds to "Active"
+    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
     assert.isTrue(bob_CDP_isInSortedList_Before)
 
     // Liquidate Bob
@@ -928,9 +930,9 @@ contract('CDPManager', async accounts => {
     expect Bob's loan to only be partially offset, and remain active after liquidation */
 
     const bob_CDPStatus_After = (await cdpManager.CDPs(bob))[3]
-    const bob_CDP_isInSortedList_After = await cdpManager.sortedCDPsContains(bob)
+    const bob_CDP_isInSortedList_After = await sortedCDPs.contains(bob)
 
-    assert.equal(bob_CDPStatus_After, 2) // status enum element 2 corresponds to "Active"
+    assert.equal(bob_CDPStatus_After, 1) // status enum element 1 corresponds to "Active"
     assert.isTrue(bob_CDP_isInSortedList_After)
   })
 
@@ -941,7 +943,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice,  { from: alice })
+    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
     await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
     await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
@@ -995,7 +997,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice,  { from: alice })
+    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
     await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
     await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
@@ -1039,7 +1041,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice,  { from: alice })
+    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
     await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
     await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
@@ -1082,10 +1084,9 @@ contract('CDPManager', async accounts => {
     assert.equal(L_ETH_After, '0')
   })
 
-  it("liquidateCDPs(): Liquidates CDPs until system leaves recovery mode", async () => {
+  it("liquidateCDPs(): With all ICRs > 110%, Liquidates CDPs until system leaves recovery mode", async () => {
     // make 8 CDPs accordingly
     // --- SETUP ---
-    [owner, alice, bob, carol, dennis, elisa, freddy, greta, harry, ida]
 
     await cdpManager.addColl(alice, alice, { from: alice, value: _25_Ether })
     await cdpManager.addColl(bob, bob, { from: bob, value: _3pt5_Ether })
@@ -1105,8 +1106,8 @@ contract('CDPManager', async accounts => {
     await cdpManager.withdrawCLV('240000000000000000000', freddy, { from: freddy }) // 240 CLV -> ICR = 250%
     await cdpManager.withdrawCLV('85000000000000000000', greta, { from: greta }) // 85 CLV -> ICR = 235%
     await cdpManager.withdrawCLV('90000000000000000000', harry, { from: harry }) // 90 CLV ->  ICR = 222%
-    
-    // Alice deposits 1500 CLV to Stability Pool
+
+    // Alice deposits 1400 CLV to Stability Pool
     await poolManager.provideToSP('1400000000000000000000', { from: alice })
 
     // price drops
@@ -1121,7 +1122,7 @@ contract('CDPManager', async accounts => {
     const _150percent = web3.utils.toBN('1500000000000000000')
     const TCR_Before = await poolManager.getTCR()
     assert.isTrue(TCR_Before.lt(_150percent))
-    
+
     /* 
    After the price drop and prior to any liquidations, ICR should be:
 
@@ -1197,25 +1198,132 @@ contract('CDPManager', async accounts => {
     const greta_CDP = await cdpManager.CDPs(greta)
     const harry_CDP = await cdpManager.CDPs(harry)
 
-    // check that Alice and Bob's CDPs remain active
-    assert.equal(alice_CDP[3], 2)
+    // check that Alice, Bob, Carol, & Dennis' CDPs remain active
+    assert.equal(alice_CDP[3], 1)
+    assert.equal(bob_CDP[3], 1)
+    assert.equal(carol_CDP[3], 1)
+    assert.equal(dennis_CDP[3], 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
+    assert.isTrue(await sortedCDPs.contains(bob))
+    assert.isTrue(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedCDPs.contains(dennis))
+
+    // check all other CDPs are closed
+    assert.equal(elisa_CDP[3], 2)
+    assert.equal(freddy_CDP[3], 2)
+    assert.equal(greta_CDP[3], 2)
+    assert.equal(harry_CDP[3], 2)
+    assert.isFalse(await sortedCDPs.contains(elisa))
+    assert.isFalse(await sortedCDPs.contains(freddy))
+    assert.isFalse(await sortedCDPs.contains(greta))
+    assert.isFalse(await sortedCDPs.contains(harry))
+  })
+
+  it("liquidateCDPs(): Liquidates CDPs until 1) system has left recovery mode AND 2) it reaches a CDP with ICR >= 110%", async () => {
+    // make 6 CDPs accordingly
+    // --- SETUP ---
+
+    await cdpManager.addColl(alice, alice, { from: alice, value: _30_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await cdpManager.addColl(carol, carol, { from: carol, value: _3_Ether })
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
+    await cdpManager.addColl(elisa, elisa, { from: elisa, value: _3_Ether })
+    await cdpManager.addColl(freddy, freddy, { from: freddy, value: _3_Ether })
+
+    // Alice withdraws 1400 CLV, the others each withdraw 250 CLV 
+    await cdpManager.withdrawCLV('1400000000000000000000', alice, { from: alice })  // 1400 CLV -> ICR = 429%
+    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob }) //  250 CLV -> ICR = 240%
+    await cdpManager.withdrawCLV('250000000000000000000', carol, { from: carol }) // 250 CLV -> ICR = 240%
+    await cdpManager.withdrawCLV('250000000000000000000', dennis, { from: dennis }) // 250 CLV -> ICR = 240%
+    await cdpManager.withdrawCLV('250000000000000000000', elisa, { from: elisa }) // 250 CLV -> ICR = 240%
+    await cdpManager.withdrawCLV('250000000000000000000', freddy, { from: freddy }) // 250 CLV -> ICR = 240%
+
+    // Alice deposits 1400 CLV to Stability Pool
+    await poolManager.provideToSP('1400000000000000000000', { from: alice })
+
+    // price drops to 1ETH:85CLV, reducing TCR below 150%
+    await priceFeed.setPrice(85)
+
+    // check Recovery Mode kicks in
+    await cdpManager.checkTCRAndSetRecoveryMode()
+    const recoveryMode_Before = await cdpManager.recoveryMode()
+    assert.isTrue(recoveryMode_Before)
+
+    // check TCR < 150%
+    const _150percent = web3.utils.toBN('1500000000000000000')
+    const TCR_Before = await poolManager.getTCR()
+    assert.isTrue(TCR_Before.lt(_150percent))
+
+    /* 
+   After the price drop and prior to any liquidations, ICR should be:
+
+    CDP         ICR
+    Alice       182%
+    Bob         102%
+    Carol       102%
+    Dennis      102%
+    Elisa       102%
+    Freddy      102%
+    */
+    alice_ICR = await cdpManager.getCurrentICR(alice)
+    bob_ICR = await cdpManager.getCurrentICR(bob)
+    carol_ICR = await cdpManager.getCurrentICR(carol)
+    dennis_ICR = await cdpManager.getCurrentICR(dennis)
+    elisa_ICR = await cdpManager.getCurrentICR(elisa)
+    freddy_ICR = await cdpManager.getCurrentICR(freddy)
+
+    // Alice should have ICR > 150%
+    assert.isTrue(alice_ICR.gt(_150percent))
+    // All other CDPs should have ICR < 150%
+    assert.isTrue(carol_ICR.lt(_150percent))
+    assert.isTrue(dennis_ICR.lt(_150percent))
+    assert.isTrue(elisa_ICR.lt(_150percent))
+    assert.isTrue(freddy_ICR.lt(_150percent))
+
+    /* Liquidations should occur from the lowest ICR CDP upwards, i.e. 
+    1) Freddy, 2) Elisa, 3) Dennis.
+
+    After liquidating Freddy and Elisa, the the TCR of the system rises above the CCR, to 154%.  
+   (see calculations in Google Sheet)
+
+    Liquidations continue until all CDPs with ICR < MCR have been closed. 
+    Only Alice should remain active - all others should be closed. */
+
+    // call liquidate CDPs
+    await cdpManager.liquidateCDPs(6);
+
+    // check system is no longer in Recovery Mode
+    const recoveryMode_After = await cdpManager.recoveryMode()
+    assert.isFalse(recoveryMode_After)
+
+    // After liquidation, TCR should rise to above 150%. 
+    const TCR_After = await poolManager.getTCR()
+    assert.isTrue(TCR_After.gt(_150percent))
+
+    // get all CDPs
+    const alice_CDP = await cdpManager.CDPs(alice)
+    const bob_CDP = await cdpManager.CDPs(bob)
+    const carol_CDP = await cdpManager.CDPs(carol)
+    const dennis_CDP = await cdpManager.CDPs(dennis)
+    const elisa_CDP = await cdpManager.CDPs(elisa)
+    const freddy_CDP = await cdpManager.CDPs(freddy)
+
+    // check that Alice's CDP remains active
+    assert.equal(alice_CDP[3], 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
+
+    // check all other CDPs are closed
     assert.equal(bob_CDP[3], 2)
     assert.equal(carol_CDP[3], 2)
     assert.equal(dennis_CDP[3], 2)
-    assert.isTrue(await cdpManager.sortedCDPsContains(alice))
-    assert.isTrue(await cdpManager.sortedCDPsContains(bob))
-    assert.isTrue(await cdpManager.sortedCDPsContains(carol))
-    assert.isTrue(await cdpManager.sortedCDPsContains(dennis))
+    assert.equal(elisa_CDP[3], 2)
+    assert.equal(freddy_CDP[3], 2)
 
-    // check all other CDPs are closed
-    assert.equal(elisa_CDP[3], 3)
-    assert.equal(freddy_CDP[3], 3)
-    assert.equal(greta_CDP[3], 3)
-    assert.equal(harry_CDP[3], 3)
-    assert.isFalse(await cdpManager.sortedCDPsContains(elisa))
-    assert.isFalse(await cdpManager.sortedCDPsContains(freddy))
-    assert.isFalse(await cdpManager.sortedCDPsContains(greta))
-    assert.isFalse(await cdpManager.sortedCDPsContains(harry))
+    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedCDPs.contains(dennis))
+    assert.isFalse(await sortedCDPs.contains(elisa))
+    assert.isFalse(await sortedCDPs.contains(freddy))
   })
 })
 

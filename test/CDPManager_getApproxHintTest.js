@@ -82,6 +82,7 @@ contract('CDPManager', async accounts => {
     DeciMath.setAsDeployed(deciMath)
     CDPManager.link(deciMath)
     PoolManager.link(deciMath)
+    FunctionCaller.link(deciMath)
     
     priceFeed = await PriceFeed.new()
     clvToken = await CLVToken.new()
@@ -223,7 +224,7 @@ contract('CDPManager', async accounts => {
       const min = 200
       const max = 200 + numAccounts
       const ICR_Percent = (Math.floor(Math.random() * (max - min) + min)) 
-      console.log(`random ICR is ${ICR_Percent}`)
+      console.log(`Run ${i}: random ICR is ${ICR_Percent}`)
 
       // Convert ICR to a duint
       const ICR = web3.utils.toWei((ICR_Percent * 10).toString(), 'finney') 
@@ -251,7 +252,7 @@ contract('CDPManager', async accounts => {
     const ICR_hintAddress_Max = await cdpManager.getCurrentICR(hintAddress_Max)
     const ICRPercent_hintAddress_Max = Number(web3.utils.fromWei(ICR_hintAddress_Max, 'ether')) * 100
 
-     const firstCDP = await cdpManager.sortedCDPsGetFirst()
+     const firstCDP = await sortedCDPs.getFirst()
      const ICR_FirstCDP = await cdpManager.getCurrentICR(firstCDP)
      const ICRPercent_FirstCDP = Number(web3.utils.fromWei(ICR_FirstCDP, 'ether')) * 100
  
@@ -271,7 +272,7 @@ contract('CDPManager', async accounts => {
     const ICR_hintAddress_Min = await cdpManager.getCurrentICR(hintAddress_Min)
     const ICRPercent_hintAddress_Min = Number(web3.utils.fromWei(ICR_hintAddress_Min, 'ether')) * 100
 
-     const lastCDP = await cdpManager.sortedCDPsGetLast()
+     const lastCDP = await sortedCDPs.getLast()
      const ICR_LastCDP = await cdpManager.getCurrentICR(lastCDP)
      const ICRPercent_LastCDP = Number(web3.utils.fromWei(ICR_LastCDP, 'ether')) * 100
  
