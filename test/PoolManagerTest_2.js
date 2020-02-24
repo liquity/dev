@@ -602,7 +602,7 @@ contract('PoolManager', async accounts => {
       assert.equal(S_ETH_After, '1000000000000000')  // 0.001 Ether
     })
 
-    it('withdrawPenaltyFromSP(): Penalises the overstayer, allows a claimant to get the penalty, and sends remainder to overstayer', async () => {
+    it.only('withdrawPenaltyFromSP(): Penalises the overstayer, allows a claimant to get the penalty, and sends remainder to overstayer', async () => {
       //// --- SETUP ---
       // Whale withdraws 1500 CLV and provides to StabilityPool
       await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
@@ -610,7 +610,7 @@ contract('PoolManager', async accounts => {
       await cdpManager.withdrawCLV('1500000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1500000000000000000000', { from: whale })
     
-        // 2 CDPs opened, each withdraws 180 CLV
+        // 2 CDPs opened, each withdraws 1500 CLV
         await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _10_Ether })
         await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _10_Ether })
         await cdpManager.withdrawCLV('1500000000000000000000', defaulter_1, { from: defaulter_1 })

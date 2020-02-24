@@ -17,7 +17,10 @@ module.exports = {
     },
     networks: {
         buidlerevm: {
-            accounts: accountsList
+            accounts: accountsList,
+            // expanded gas limits for testing
+            gas: 9000000000,  // tx gas limit
+            blockGasLimit: 9000000000 
         }
     },
     mocha: { timeout: 12000000 },

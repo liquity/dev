@@ -560,11 +560,12 @@ contract CDPManager is Ownable, ICDPManager {
     function getCurrentICR(address _user) public view returns(uint) {
         uint pendingETHReward = computePendingETHReward(_user);
         uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
-
+       
         uint currentETH = (CDPs[_user].coll).add(pendingETHReward);
         uint currentCLVDebt = (CDPs[_user].debt).add(pendingCLVDebtReward);
-
-        return computeICR(currentETH, currentCLVDebt);
+        
+        uint ICR = computeICR(currentETH, currentCLVDebt);
+        return ICR;
     }
 
     /* Compute the new collateral ratio, considering the collateral to be removed. Takes pending coll/debt 
@@ -598,7 +599,9 @@ contract CDPManager is Ownable, ICDPManager {
         uint price = priceFeed.getPrice();
         // Check if the total debt is higher than 0, to avoid division by 0
         if (debt > 0) {
-            uint newCollRatio = DeciMath.accurateMulDiv(coll, price, debt);
+            // uint newCollRatio = DeciMath.accurateMulDiv(coll, price, debt);
+            uint ratio = DeciMath.div_toDuint(coll, debt);
+            uint newCollRatio = DeciMath.decMul(price, ratio);
             return newCollRatio;
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0

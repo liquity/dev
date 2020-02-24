@@ -6,3 +6,10 @@
 
 # Buidler Contract JSONs
 /artifacts
+
+# Accounts for testing
+/accountsList.js 
+
+# Exported function gas costs
+/gasTestData.csv
+
