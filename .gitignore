@@ -7,6 +7,9 @@
 # Buidler Contract JSONs
 /artifacts
 
+# Buidler compilation cache
+/cache
+
 # Accounts for testing
 /accountsList.js 
 
