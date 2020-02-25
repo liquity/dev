@@ -1,9 +1,6 @@
 # dependencies
 /node_modules
 
-# Truffle Contract JSONs
-/client/src/contracts
-
 # Buidler Contract JSONs
 /artifacts
 

@@ -7,7 +7,7 @@ const accountsList = accounts.accountsList
 module.exports = {
     paths: {
         contracts: "./contracts",
-        artifacts: "./client/src/contracts"
+        artifacts: "./artifacts"
     },
     solc: {
         optimizer: {
