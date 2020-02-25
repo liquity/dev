@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  frontend-build:
+    image: "node:alpine"
+    volumes:
+      - .:/app
+      - static-files:/app/build
+    working_dir: /app
+    command: yarn build
+
+  nginx:
+    image: nginx
+    volumes:
+      - static-files:/usr/share/nginx/html
+    ports:
+      - "3001:80"
+
+volumes:
+  static-files:

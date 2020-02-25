@@ -1,5 +1,5 @@
 {
-  "name": "Cleverage",
+  "name": "@liquity/contracts",
   "version": "1.0.0",
   "description": "",
   "main": "truffle-config.js",
@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "buidler compile",
+    "test": "buidler test"
   },
   "keywords": [],
   "author": "",

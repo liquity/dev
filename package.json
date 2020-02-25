@@ -1,0 +1,12 @@
+{
+  "name": "liquity",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "compile:contracts": "yarn workspace @liquity/contracts compile",
+    "typechain:lib": "yarn workspace @liquity/lib typechain",
+    "bootstrap": "yarn install && yarn compile:contracts && yarn typechain:lib"
+  }
+}
