@@ -1,29 +1,85 @@
 import { Web3Provider } from "ethers/providers";
-import React, { useState, useEffect } from "react";
-import { useWeb3React } from '@web3-react/core';
-import {
-  Button,
-  Box,
-  Card,
-  Flex,
-  Heading,
-  MetaMaskButton,
-  Modal,
-  Text
-} from "rimble-ui";
+import React, { useEffect, useReducer } from "react";
+import { useWeb3React } from "@web3-react/core";
+import { MetaMaskButton, Modal, Text } from "rimble-ui";
 
 import { useInjectedConnector } from "./connectors/InjectedConnector";
+import { RetryDialog } from "./RetryDialog";
+import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
+import { MetaMaskIcon } from "./MetaMaskIcon";
+
+interface Connector {
+  activate: () => Promise<void>;
+  deactivate: () => void;
+}
+
+type ConnectionState =
+  | { type: "inactive" }
+  | { type: "activating" | "rejectedByUser" | "failed"; connector: Connector };
+
+type ConnectionAction =
+  | { type: "activate"; connector: Connector }
+  | { type: "fail"; error: Error }
+  | { type: "retry" | "cancel" };
+
+const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (state, action) => {
+  switch (action.type) {
+    case "activate":
+      if (state.type === "inactive") {
+        action.connector.activate();
+        return {
+          type: "activating",
+          connector: action.connector
+        };
+      }
+      break;
+    case "fail":
+      if (state.type === "activating") {
+        return {
+          type: action.error.name === "UserRejectedRequestError" ? "rejectedByUser" : "failed",
+          connector: state.connector
+        };
+      }
+      break;
+    case "retry":
+      if (state.type === "rejectedByUser" || state.type === "failed") {
+        state.connector.activate();
+        return {
+          type: "activating",
+          connector: state.connector
+        };
+      }
+      break;
+    case "cancel":
+      if (state.type === "activating") {
+        state.connector.deactivate();
+        return {
+          type: "inactive"
+        }
+      }
+      if (state.type === "rejectedByUser" || state.type === "failed") {
+        return {
+          type: "inactive"
+        };
+      }
+      break;
+  }
+
+  throw new Error(`Cannot ${action.type} when ${state.type}`);
+};
 
 export default () => {
   const { active, error } = useWeb3React<Web3Provider>();
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
   const connectors = {
     injected: useInjectedConnector()
   };
 
+  const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
+
   useEffect(() => {
-    if (error)
-    setErrorMessage(error.message);
+    if (error) {
+      dispatch({ type: "fail", error });
+    }
   }, [error]);
 
   if (!connectors.injected.triedAuthorizedConnection) {
@@ -39,40 +95,34 @@ export default () => {
 
   return (
     <>
-      <MetaMaskButton onClick={connectors.injected.activate}>
+      <MetaMaskButton
+        onClick={() => dispatch({ type: "activate", connector: connectors.injected })}
+      >
         Connect to MetaMask
       </MetaMaskButton>
 
-      <Modal isOpen={errorMessage !== undefined}>
-        <Card width={"420px"} p={0}>
-          <Button.Text
-            icononly
-            icon={"Close"}
-            color={"moon-gray"}
-            position={"absolute"}
-            top={0}
-            right={0}
-            mt={3}
-            mr={3}
-            onClick={() => setErrorMessage(undefined)}
-          />
+      <Modal isOpen={connectionState.type === "activating"}>
+        <ConnectionConfirmationDialog
+          title="Confirm connection in MetaMask"
+          icon={<MetaMaskIcon />}
+          onCancel={() => dispatch({ type: "cancel" })}
+        >
+          <Text textAlign="center">
+            Confirm the request that's just appeared. If you can't see a request, open your MetaMask
+            extension via your browser.
+          </Text>
+        </ConnectionConfirmationDialog>
+      </Modal>
 
-          <Box p={4} mb={3}>
-            <Heading.h3>Error</Heading.h3>
-            <Text>{errorMessage}</Text>
-          </Box>
-
-          <Flex
-            px={4}
-            py={3}
-            borderTop={1}
-            borderColor={"#E8E8E8"}
-            justifyContent={"flex-end"}
-          >
-            <Button.Outline onClick={() => setErrorMessage(undefined)}>Dismiss</Button.Outline>
-          </Flex>
-        </Card>
+      <Modal isOpen={connectionState.type === "rejectedByUser"}>
+        <RetryDialog
+          title="Cancel connection?"
+          onCancel={() => dispatch({ type: "cancel" })}
+          onRetry={() => dispatch({ type: "retry" })}
+        >
+          <Text>To use Liquity, you need to connect your Ethereum account.</Text>
+        </RetryDialog>
       </Modal>
     </>
   );
-}
+};

@@ -16,7 +16,7 @@ const injectedConnector = new InjectedConnector({});
  * @returns true when finished trying to activate the InjectedConnector, false otherwise
  */
 export function useInjectedConnector() {
-  const { activate } = useWeb3React<Web3Provider>();
+  const { activate, deactivate } = useWeb3React<Web3Provider>();
   const [tried, setTried] = useState(false);
 
   useEffect(() => {
@@ -35,6 +35,7 @@ export function useInjectedConnector() {
 
   return {
     triedAuthorizedConnection: tried,
-    activate: () => activate(injectedConnector)
+    activate: () => activate(injectedConnector),
+    deactivate
   }
 }
