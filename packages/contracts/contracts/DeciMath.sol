@@ -28,7 +28,7 @@ library DeciMath {
 
     /* Accurately calculate (x * y) / z. Converts all arguments to 'duints', performs 
     calculations, then converts the result back to uint before returning. */
-    function accurateMulDiv(uint x, uint y, uint z) public pure returns (uint fraction) {
+    function accurateMulDiv(uint x, uint y, uint z) public view returns (uint fraction) {
         require( z!= 0, "DeciMath: can not divide by zero");
     // convert all uint to duint
         uint x_duint = toDuint(x);
@@ -47,7 +47,7 @@ library DeciMath {
     }
 
     // Accurately divides one 'duint' by another. Returns a 'duint'
-    function decDiv(uint x, uint y) public pure returns (uint quotient) {
+    function decDiv(uint x, uint y) public view returns (uint quotient) {
         uint prod_x_1E18 = SafeMath.mul(x, _1E18);
         uint half_y = SafeMath.div(y, 2);
 
@@ -56,16 +56,15 @@ library DeciMath {
     }
 
      // Accurately multiplies two 'duints'. Returns a 'duint'
-    function decMul(uint x, uint y) public pure returns (uint prod) {
+    function decMul(uint x, uint y) public view returns (uint prod) {
         uint prod_xy = SafeMath.mul(x, y);
-       
         prod = SafeMath.div(SafeMath.add(prod_xy, _5E17), _1E18 );
-        
+
         return prod;
     }
 
     // Accurately divides one uint by another. Returns a 'duint'
-    function div_toDuint(uint x, uint y) public pure returns (uint quotient) {
+    function div_toDuint(uint x, uint y) public view returns (uint quotient) {
         uint x_duint = toDuint(x);
         uint y_duint = toDuint(y);
 
@@ -74,7 +73,7 @@ library DeciMath {
     }
 
     // Accurately multiply one uint by a 'duint'. Returns a uint.
-    function mul_uintByDuint( uint x, uint y_duint)public pure returns (uint prod) {
+    function mul_uintByDuint( uint x, uint y_duint)public view returns (uint prod) {
         uint x_duint = toDuint(x);
 
         uint prod_duint = decMul(x_duint, y_duint);
@@ -83,7 +82,7 @@ library DeciMath {
         return prod;
     }
 
-    function mul_uintByDuint_roundUp( uint x, uint y_duint)public pure returns (uint prod) {
+    function mul_uintByDuint_roundUp( uint x, uint y_duint)public view returns (uint prod) {
         uint x_duint = toDuint(x);
 
         uint prod_duint = decMul(x_duint, y_duint);
@@ -94,23 +93,23 @@ library DeciMath {
 
      // --- Helpers. Convert to and from duints ---
 
-    function toDuint(uint integer) public pure returns(uint) {
+    function toDuint(uint integer) public view returns(uint) {
         return SafeMath.mul(integer, _1E18);
     }
 
-    function fromDuint(uint duint) public pure returns(uint) {
+    function fromDuint(uint duint) public view returns(uint) {
         // rounding: always round down
         return SafeMath.div(duint, _1E18);
     }
 
-     function fromDuint_roundUp(uint duint) public pure returns(uint) {
+     function fromDuint_roundUp(uint duint) public view returns(uint) {
         // rounding: common rounding.
         uint integer;
         integer =  SafeMath.div(duint, _1E18) + 1;  // round up
         return integer;
     }
 
-    function fromDuint_commonRounding(uint duint) public pure returns(uint) {
+    function fromDuint_commonRounding(uint duint) public view returns(uint) {
         // rounding: common rounding. If first mantissa digit >=5 round up, else round down.
         uint integer;
         uint firstDecimalDigit = SafeMath.div(duint % _1E18, _1E17); // grab 18th digit from-right
@@ -125,16 +124,16 @@ library DeciMath {
     }
 
      // --- Normal Solidity multiplication and floor division ---
-    function normalDiv(uint a, uint b) public pure returns(uint) {
+    function normalDiv(uint a, uint b) public view returns(uint) {
         return SafeMath.div(a, b);
     }
 
-    function normalMul(uint a, uint b) public pure returns(uint) {
+    function normalMul(uint a, uint b) public view returns(uint) {
         return SafeMath.mul(a, b);
     }  
 
     // --- Normal min function ---
-    function getMin(uint a, uint b) public pure returns(uint) {
+    function getMin(uint a, uint b) public view returns(uint) {
         if (a <= b) return a;
         else return b;
     }

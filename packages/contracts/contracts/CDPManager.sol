@@ -130,6 +130,48 @@ contract CDPManager is Ownable, ICDPManager {
     
     // --- CDP Operations ---
 
+    function openLoan(uint _CLVAmount, address _hint) public payable returns (bool) {
+        checkTCRAndSetRecoveryMode();
+        
+        address user = _msgSender();
+        
+        require(CDPs[user].status != Status.active, "CDPManager: Borrower already has an active CDP");
+        require(recoveryMode == false || _CLVAmount == 0, "CDPManager: Debt issuance is not permitted during Recovery Mode");
+        require(getUSDValue(msg.value) >= MIN_COLL_IN_USD, 
+                "CDPManager: Dollar value of collateral deposit must equal or exceed the minimum");
+        
+        uint ICR = computeICR(msg.value, _CLVAmount);
+        require(ICR >= MCR, "CDPManager: ICR of prospective loan must be >= than the MCR");
+
+        uint newTCR = getNewTCR(msg.value, _CLVAmount);
+        require (newTCR >= CCR, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted");
+        
+        // Update loan properties
+        CDPs[user].status = Status.active;
+        CDPs[user].coll = (CDPs[user].coll).add(msg.value);
+        CDPs[user].debt = (CDPs[user].debt).add(_CLVAmount);
+        
+        updateRewardSnapshots(user);
+        updateStakeAndTotalStakes(user);
+
+        sortedCDPs.insert(user, ICR, _hint, _hint);
+        /* push the owner's address to the CDP owners list, and record 
+        the corresponding array index on the CDP struct */
+        CDPs[user].arrayIndex = CDPOwners.push(user) - 1;
+
+        // Move the ether to the activePool, and mint CLV to the borrower
+        poolManager.addColl.value(msg.value)();
+        poolManager.withdrawCLV(user, _CLVAmount);
+
+        checkTCRAndSetRecoveryMode();
+        emit CDPUpdated(user, 
+                        CDPs[user].debt, 
+                        CDPs[user].coll, 
+                        CDPs[user].stake,
+                        CDPs[user].arrayIndex);
+        return true;
+    }
+
     // Send ETH as collateral to a CDP
     function addColl(address _user, address _hint) public payable returns (bool) {
         bool isFirstCollDeposit;
@@ -224,7 +266,7 @@ contract CDPManager is Ownable, ICDPManager {
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
         require(_amount > 0, "CDPManager: Amount to withdraw must be larger than 0");
         
-        uint newTCR = getNewTCRfromDebtIncrease(_amount);
+        uint newTCR = getNewTCR(0, _amount);
         uint newICR = getNewICRfromDebtIncrease(user, _amount);
         
         require(recoveryMode == false, "CDPManager: Debt issuance is not permitted during Recovery Mode");
@@ -625,7 +667,12 @@ contract CDPManager is Ownable, ICDPManager {
         // Tell PM to transfer from DefaultPool to ActivePool when user claims rewards.
         poolManager.applyPendingRewards(pendingCLVDebtReward, pendingETHReward);
 
-        // Update user's reward snapshot to reflect current values
+        updateRewardSnapshots(_user);
+        return true;
+    }
+
+    // Update user's snapshots of L_ETH and L_CLVDebt to reflect the current values
+    function updateRewardSnapshots(address _user) internal returns(bool) {
         rewardSnapshots[_user].ETH = L_ETH;
         rewardSnapshots[_user].CLVDebt = L_CLVDebt;
         return true;
@@ -724,8 +771,6 @@ contract CDPManager is Ownable, ICDPManager {
      function updateSystemSnapshots_excludeCollRemainder(uint _collRemainder) internal returns (bool) {
         totalStakesSnapshot = totalStakes;
 
-        /* The total collateral snapshot is the sum of all active collateral and all pending rewards
-       (ActivePool ETH + DefaultPool ETH), immediately after the liquidation occurs. */
         uint activeColl = poolManager.getActiveColl();
         uint liquidatedColl = poolManager.getLiquidatedColl();
         totalCollateralSnapshot = activeColl.sub(_collRemainder).add(liquidatedColl);
@@ -751,13 +796,13 @@ contract CDPManager is Ownable, ICDPManager {
         return DeciMath.decMul(priceFeed.getPrice(), _coll);
     }
 
-    function getNewTCRfromDebtIncrease(uint _debtIncrease) public view returns (uint) {
+    function getNewTCR(uint _collIncrease, uint _debtIncrease) public view returns (uint) {
         uint activeColl = poolManager.getActiveColl();
         uint activeDebt = poolManager.getActiveDebt();
         uint liquidatedColl = poolManager.getLiquidatedColl();
         uint closedDebt = poolManager.getClosedDebt();
 
-        uint totalCollateral = activeColl.add(liquidatedColl);
+        uint totalCollateral = activeColl.add(liquidatedColl).add(_collIncrease);
         uint newTotalDebt = activeDebt.add(closedDebt).add(_debtIncrease);
 
         uint newTCR = computeICR(totalCollateral, newTotalDebt);

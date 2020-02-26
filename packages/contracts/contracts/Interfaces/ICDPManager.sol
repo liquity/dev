@@ -42,6 +42,8 @@ interface ICDPManager {
 
     function getApproxHint(uint CR, uint numTrials) external view returns(address);
 
+    function openLoan(uint _CLVAmount, address _hint) external payable returns (bool);
+
     function addColl(address _user, address _hint) external payable returns(bool);
 
     function withdrawColl(uint _amount, address _hint) external returns(bool);
@@ -58,5 +60,5 @@ interface ICDPManager {
 
     function redeemCollateral(uint _CLVAmount, address _hint) external returns(bool);
 
-    function getNewTCRfromDebtIncrease(uint _debtIncrease) external view returns (uint);
+    function getNewTCR(uint collIncrease, uint _debtIncrease) external view returns (uint);
 }

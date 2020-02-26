@@ -17,10 +17,6 @@ const setNameRegistry = deploymentHelpers.setNameRegistry
 const connectContracts = deploymentHelpers.connectContracts
 const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
 
-/* TODO: Mock CDP creation. Currently, testing functions like getCollRatio() via manual CDP creation. 
- Ideally, we add a mock CDP to the mapping and sortedList, and use it as test data.
- Potentially use Doppleganger Ethereum library for mocks. */
-
 contract('CDPManager', async accounts => {
   const _2_Ether = web3.utils.toWei('2', 'ether')
   const _100_Finney = web3.utils.toWei('100', 'finney')

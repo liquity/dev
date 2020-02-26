@@ -4,8 +4,9 @@
 # Buidler compilation cache
 /cache
 
-# Accounts for testing
+# Ethereum accounts for testing
 /accountsList.js 
 
-# Exported function gas costs
-/gasTestData.csv
+# Exported function gas costs and test outputs
+/test/gas/gasTestData.csv
+/test/gas/gasTestOutput.txt

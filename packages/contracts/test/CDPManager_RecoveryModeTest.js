@@ -149,6 +149,63 @@ contract('CDPManager', async accounts => {
     }
   })
 
+  //---
+
+  it("openLoan(): reverts if withdrawal would pull TCR below CCR", async () => {
+    // --- SETUP ---
+    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+
+    //  Alice and Bob withdraw such that the TCR is 150%
+    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+
+    // --- TEST ---
+
+    // Carol attempts to open a loan, which would reduce TCR to below 150%
+    try {
+      const txData = await cdpManager.openLoan('180000000000000000000', carol, { from: carol, value: _1_Ether })
+      assert.fail(txData)
+    } catch (err) {
+      assert.include(err.message, 'revert')
+      assert.include(err.message, 'opening a loan that would result in a TCR < CCR is not permitted')
+    }
+  })
+
+  it("openLoan(): reverts if system is in recovery mode", async () => {
+    // --- SETUP ---
+    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+
+    //  Alice and Bob withdraw such that the TCR is 150%
+    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+
+    // --- TEST ---
+
+    // price drops to 1ETH:150CLV, reducing TCR below 150%
+    await priceFeed.setPrice(150);
+
+    try {
+      const txData = await cdpManager.openLoan('50000000000000000000', carol, { from: carol, value: _1_Ether })
+      assert.fail(txData)
+    } catch (err) {
+      assert.include(err.message, 'revert')
+      assert.include(err.message, 'Debt issuance is not permitted during Recovery Mode')
+    }
+  })
+
+
+  //---
+
+
+
   it("withdrawColl(): reverts if system is in recovery mode", async () => {
     // --- SETUP ---
     await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
@@ -679,9 +736,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(recoveryMode)
 
     // Check Bob's ICR is >110% but still lowest
-    const bob_ICR = await cdpManager.getCurrentICR(bob)
-    const alice_ICR = await cdpManager.getCurrentICR(alice)
-    const dennis_ICR = await cdpManager.getCurrentICR(dennis)
+    const bob_ICR = (await cdpManager.getCurrentICR(bob)).toString()
+    const alice_ICR = (await cdpManager.getCurrentICR(alice)).toString()
+    const dennis_ICR = (await cdpManager.getCurrentICR(dennis)).toString()
     assert.equal(bob_ICR, '1200000000000000000')
     assert.equal(alice_ICR, '1333333333333333333')
     assert.equal(dennis_ICR, '1333333333333333333')
@@ -744,9 +801,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(recoveryMode)
 
     // Check Bob's ICR is > 110% but still lowest
-    bob_ICR = await cdpManager.getCurrentICR(bob)
-    alice_ICR = await cdpManager.getCurrentICR(alice)
-    dennis_ICR = await cdpManager.getCurrentICR(dennis)
+    bob_ICR = (await cdpManager.getCurrentICR(bob)).toString()
+    alice_ICR = (await cdpManager.getCurrentICR(alice)).toString()
+    dennis_ICR = (await cdpManager.getCurrentICR(dennis)).toString()
     assert.equal(bob_ICR, '1200000000000000000')
     assert.equal(alice_ICR, '1333333333333333333')
     assert.equal(dennis_ICR, '1333333333333333333')

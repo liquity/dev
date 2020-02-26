@@ -21,12 +21,15 @@ const setNameRegistry = deploymentHelpers.setNameRegistry
 const connectContracts = deploymentHelpers.connectContracts
 const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
 
+
 contract('Gas cost tests', async accounts => {
+
   const _2_Ether = web3.utils.toWei('2', 'ether')
   const _1_Ether = web3.utils.toWei('1', 'ether')
   const _5_Ether = web3.utils.toWei('5', 'ether')
   const _10_Ether = web3.utils.toWei('10', 'ether')
   const _15_Ether = web3.utils.toWei('15', 'ether')
+  const _20_Ether = web3.utils.toWei('20', 'ether')
   const _98_Ether = web3.utils.toWei('98', 'ether')
   const _100_Ether = web3.utils.toWei('100', 'ether')
   const _200_Ether = web3.utils.toWei('200', 'ether')
@@ -180,6 +183,30 @@ contract('Gas cost tests', async accounts => {
   }
 
   // --- CDPManager gas functions ---
+
+  const openLoan_allAccounts = async( accounts, cdpManager, ETHAmount, CLVAmount) => {
+    const gasCostList = []
+    for (const account of accounts) {
+      const tx = await cdpManager.openLoan(CLVAmount, account, { from: account, value: ETHAmount })
+      const gas = gasUsed(tx)
+      gasCostList.push(gas)
+    }
+   return getGasMetrics(gasCostList)
+  }
+
+  const openLoan_allAccounts_decreasingCLVAmounts = async( accounts, cdpManager, ETHAmount, maxCLVAmount) => {
+    const gasCostList = []
+    let i = 0
+    for (const account of accounts) {
+      const CLVAmount = (maxCLVAmount - i).toString()
+      const CLVAmountWei = web3.utils.toWei(CLVAmount, 'ether')
+      const tx = await cdpManager.openLoan(CLVAmountWei, account, { from: account, value: ETHAmount })
+      const gas = gasUsed(tx)
+      gasCostList.push(gas)
+      i += 1
+    }
+   return getGasMetrics(gasCostList)
+  }
 
   const addColl_allAccounts = async (accounts, cdpManager, amount) => {
     const gasCostList = []
@@ -374,6 +401,41 @@ contract('Gas cost tests', async accounts => {
   //
 
   // --- CDP Manager function calls ---
+
+  // --- openLoan() ---
+
+  it.only("", async () => {
+    const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues 100 CLV'
+    const amountETH = _10_Ether
+    const amountCLV = _100e18
+    const gasResults = await openLoan_allAccounts(_10_Accounts, cdpManager, amountETH, amountCLV)
+    logGasMetrics(gasResults, message)
+    logAllGasCosts(gasResults)
+    
+    appendData(gasResults, message, data)
+  })
+
+  it.only("", async () => {
+    const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues less CLV than the previous one'
+    const amountETH = _10_Ether
+    const amountCLV = 200
+    const gasResults = await openLoan_allAccounts_decreasingCLVAmounts(_10_Accounts, cdpManager, amountETH, amountCLV)
+    logGasMetrics(gasResults, message)
+    logAllGasCosts(gasResults)
+    
+    appendData(gasResults, message, data)
+  })
+
+  it.only("", async () => {
+    const message = 'openLoan(), 10 accounts, each account adds 20 ether and issues less CLV than the previous one'
+    const amountETH = _20_Ether
+    const amountCLV = 200
+    const gasResults = await openLoan_allAccounts_decreasingCLVAmounts(_10_Accounts, cdpManager, amountETH, amountCLV)
+    logGasMetrics(gasResults, message)
+    logAllGasCosts(gasResults)
+    
+    appendData(gasResults, message, data)
+  })
 
   // --- addColl() ---
 
@@ -605,7 +667,7 @@ contract('Gas cost tests', async accounts => {
 
 // --- getCurrentICR() ---
 
-it.only("", async () => {
+it("", async () => {
   const message = 'single getCurrentICR() call'
   
   await cdpManager.addColl(accounts[1], accounts[1], {from: accounts[1], value: _10_Ether})
@@ -1373,7 +1435,6 @@ it("", async () => {
 
 // // --- liquidateCDPs() ---
 
-
 it("", async () => {
   const message = 'liquidateCDPs() Normal Mode liquidates 1 CDP, n = 10, 10 remaining active CDPs, No funds in SP, no ETH gain in pool'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
@@ -1723,7 +1784,7 @@ it("", async () => {
 
   // --- DeciMath Functions ---
 
-  it("", async () => {
+  it.only("", async () => {
     const message = "decMul() with random args"
     const rand1 = randAmountInWei(1,200)
     const rand2 = randAmountInWei(1,200)
@@ -1734,7 +1795,7 @@ it("", async () => {
     appendData({gas: gas}, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = "decDiv() with random args"
     const rand1 = randAmountInWei(1,200)
     const rand2 = randAmountInWei(1,200)
@@ -1769,7 +1830,7 @@ it("", async () => {
   })
 
   it("", async () => {
-    const message = "div_toDuint() with random args"
+    const message = "mul_uintByDuint() with random args"
     const rand1 = randAmountInWei(1,200)
     const rand2 = randAmountInWei(1,200)
     const tx = await functionCaller.decimath_mul_uintByDuint(rand1, rand2)
@@ -1780,7 +1841,7 @@ it("", async () => {
   })
 
   it("Export test data", async () => {
-    fs.writeFile('gasTestData.csv', data, (err) => { 
+    fs.writeFile('test/gas/gasTestData.csv', data, (err) => { 
       if (err) console.log(err)
     console.log("Gas test data written to /gasTestData.csv") })
   })

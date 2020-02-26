@@ -91,6 +91,219 @@ contract('CDPManager', async accounts => {
     await connectContracts(contracts, registeredAddresses)
   })
 
+  it("openLoan(): creates a new CDP and assigns the correct collateral and debt amount", async () => {
+    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    
+    const debt_Before = alice_CDP_Before[0]
+    const coll_Before = alice_CDP_Before[1]
+    const status_Before = alice_CDP_Before[3]
+
+    // check coll and debt before
+    assert.equal(debt_Before, 0)
+    assert.equal(coll_Before, 0)
+
+    // check non-existent status
+    assert.equal(status_Before, 0)  
+
+    await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    const alice_CDP_After = await cdpManager.CDPs(alice)
+    
+    const debt_After = alice_CDP_After[0].toString()
+    const coll_After = alice_CDP_After[1]
+    const status_After = alice_CDP_After[3]
+
+    // check coll and debt after
+    assert.equal(debt_After, '50000000000000000000')
+    assert.equal(coll_After, _1_Ether)
+
+    // check active status
+    assert.equal(status_After, 1)  
+  })
+
+  it("openLoan(): adds CDP owner to CDPOwners array", async () => {
+    const CDPOwnersCount_Before = (await cdpManager.getCDPOwnersCount()).toString();
+    assert.equal(CDPOwnersCount_Before, '0')
+
+    await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    const CDPOwnersCount_After = (await cdpManager.getCDPOwnersCount()).toString();
+    assert.equal(CDPOwnersCount_After, '1')
+  })
+
+  it("openLoan(): creates a stake and adds it to total stakes", async () => {
+    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_Stake_Before = alice_CDP_Before[2].toString()
+    const totalStakes_Before = (await cdpManager.totalStakes()).toString()
+
+    assert.equal(alice_Stake_Before, '0')
+    assert.equal(totalStakes_Before, '0')
+
+    await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_Stake_After = alice_CDP_After[2].toString()
+    const totalStakes_After = (await cdpManager.totalStakes()).toString()
+
+    assert.equal(alice_Stake_After, '1000000000000000000')
+    assert.equal(totalStakes_After, '1000000000000000000')
+  })
+
+  it("openLoan(): inserts CDP to Sorted CDPs list", async () => {
+    // check before
+    const aliceCDPInList_Before = await sortedCDPs.contains(alice)
+    const listIsEmpty_Before = await sortedCDPs.isEmpty()
+    assert.equal(aliceCDPInList_Before, false)
+    assert.equal(listIsEmpty_Before, true)
+
+    await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    // check after
+    const aliceCDPInList_After = await sortedCDPs.contains(alice)
+    const listIsEmpty_After = await sortedCDPs.isEmpty()
+    assert.equal(aliceCDPInList_After, true)
+    assert.equal(listIsEmpty_After, false)
+  })
+
+  it("openLoan(): Increases the activePool ETH and raw ether balance by correct amount", async () => {
+    const activePool_ETH_Before = await activePool.getETH()
+    const activePool_RawEther_Before = await web3.eth.getBalance(activePool.address)
+    assert.equal(activePool_ETH_Before, 0)
+    assert.equal(activePool_RawEther_Before, 0)
+
+    await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    const activePool_ETH_After = await activePool.getETH()
+    const activePool_RawEther_After = await web3.eth.getBalance(activePool.address)
+    assert.equal(activePool_ETH_After, _1_Ether)
+    assert.equal(activePool_RawEther_After, _1_Ether)
+  })
+
+  it("openLoan(): records up-to-date initial snapshots of L_ETH and L_CLVDebt", async () => {
+    // --- SETUP ---
+    /* Alice adds 10 ether
+    Carol adds 1 ether */
+    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+    // await cdpManager.addColl('100000000000000000000', bob, { from: bob, value: _5_Ether })
+    await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
+    
+    // Alice withdraws 100CLV, Carol withdraws 180CLV
+    await cdpManager.withdrawCLV('100000000000000000000', alice, { from: alice })
+    await cdpManager.withdrawCLV('180000000000000000000', carol, { from: carol })
+  
+    // --- TEST ---
+
+    // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
+    await priceFeed.setPrice(100);
+
+    // close Carol's CDP, liquidating her 1 ether and 180CLV.
+    await cdpManager.liquidate(carol, { from: owner });
+
+    /* with total stakes = 10 ether, after liquidation, L_ETH should equal 1/10 ether per-ether-staked,
+     and L_CLV should equal 18 CLV per-ether-staked. */
+
+    const L_ETH = (await cdpManager.L_ETH()).toString()
+    const L_CLV = (await cdpManager.L_CLVDebt()).toString()
+   
+    assert.equal(L_ETH, '100000000000000000')
+    assert.equal(L_CLV, '18000000000000000000')
+
+    // Bob opens loan
+    await cdpManager.openLoan('50000000000000000000', bob, { from: bob, value: _1_Ether })
+
+    // check Bob's snapshots of L_ETH and L_CLV equal the respective current values
+    const bob_rewardSnapshot = await cdpManager.rewardSnapshots(bob)
+    const bob_ETHrewardSnapshot = bob_rewardSnapshot[0].toString()
+    const bob_CLVDebtRewardSnapshot = bob_rewardSnapshot[1].toString()
+
+    assert.equal(bob_ETHrewardSnapshot, L_ETH)
+    assert.equal(bob_CLVDebtRewardSnapshot, L_CLV)  
+  })
+
+  it("openLoan(): reverts if user tries to open a new CDP with collateral of value < $20 USD", async () => {
+    /* Alice adds 0.0999 ether. At a price of 200 USD per ETH, 
+    her collateral value is < $20 USD.  So her tx should revert */
+    const coll = '99999999999999999' 
+    
+    try {
+      const txData = await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: coll })
+      assert.fail(txData)
+    } catch (err) {
+      assert.include(err.message, "revert")
+      assert.include(err.message, "Dollar value of collateral deposit must equal or exceed the minimum")
+    }  
+  })
+
+  it("openLoan(): allows a user to open a CDP, then close it, then re-open it", async () => {
+    // Open CDP 
+    await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    // Check CDP is active
+    const alice_CDP_1 = await cdpManager.CDPs(alice)
+    const status_1 = alice_CDP_1[3]
+    assert.equal(status_1, 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
+    
+    // Repay and close CDP
+    await cdpManager.repayCLV( '50000000000000000000', alice, {from: alice})
+    await cdpManager.withdrawColl(_1_Ether, alice, { from: alice})
+
+    // Check CDP is closed
+    const alice_CDP_2 = await cdpManager.CDPs(alice)
+    const status_2 = alice_CDP_2[3]
+    assert.equal(status_2, 2)
+    assert.isFalse(await sortedCDPs.contains(alice))
+
+    // Re-open CDP
+    await cdpManager.openLoan('25000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    // Check CDP is re-opened
+    const alice_CDP_3 = await cdpManager.CDPs(alice)
+    const status_3 = alice_CDP_3[3]
+    assert.equal(status_3, 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
+  })
+
+  it("openLoan(): increases the CDP's CLV debt by the correct amount", async () => {
+    // check before
+    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const debt_Before = alice_CDP_Before[0]
+    assert.equal(debt_Before, 0)
+
+    await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    // check after
+    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const debt_After = alice_CDP_After[0]
+    assert.equal(debt_After, '50000000000000000000')
+  })
+
+  it("openLoan(): increases CLV debt in ActivePool by correct amount", async () => {
+    // check before
+    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const debt_Before = alice_CDP_Before[0]
+    assert.equal(debt_Before, 0)
+
+    await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    // check after
+    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const debt_After = alice_CDP_After[0]
+    assert.equal(debt_After, '50000000000000000000')
+  })
+
+  it("openLoan(): increases user CLVToken balance by correct amount", async () => {
+    // check before
+    const alice_CLVTokenBalance_Before = await clvToken.balanceOf(alice)
+    assert.equal(alice_CLVTokenBalance_Before, 0)
+
+    await cdpManager.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
+
+    // check after
+    const alice_CLVTokenBalance_After = await clvToken.balanceOf(alice)
+    assert.equal(alice_CLVTokenBalance_After, '50000000000000000000')
+  })
+  
   it('liquidate(): closes a CDP that has ICR < MCR', async () => {
     await cdpManager.addColl(whale, whale, { from: whale, value: _50_Ether })
     await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
