@@ -3,7 +3,7 @@ import React, { useEffect, useReducer } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { MetaMaskButton, Modal, Text } from "rimble-ui";
 
-import { useInjectedConnector } from "./connectors/InjectedConnector";
+import { useInjectedConnector } from "../hooks/connectors/InjectedConnector";
 import { RetryDialog } from "./RetryDialog";
 import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
 import { MetaMaskIcon } from "./MetaMaskIcon";
@@ -55,7 +55,7 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
         state.connector.deactivate();
         return {
           type: "inactive"
-        }
+        };
       }
       if (state.type === "rejectedByUser" || state.type === "failed") {
         return {
@@ -68,19 +68,19 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
   throw new Error(`Cannot ${action.type} when ${state.type}`);
 };
 
-export default () => {
-  const { active, error } = useWeb3React<Web3Provider>();
-  const connectors = {
-    injected: useInjectedConnector()
-  };
+export const WalletConnector: React.FC = () => {
+  const web3 = useWeb3React<Web3Provider>();
 
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
+  const connectors = {
+    injected: useInjectedConnector(web3)
+  };
 
   useEffect(() => {
-    if (error) {
-      dispatch({ type: "fail", error });
+    if (web3.error) {
+      dispatch({ type: "fail", error: web3.error });
     }
-  }, [error]);
+  }, [web3.error]);
 
   if (!connectors.injected.triedAuthorizedConnection) {
     // Display nothing for the very brief period while we try to activate the injected provider.
@@ -89,15 +89,13 @@ export default () => {
     return null;
   }
 
-  if (active) {
-    return <p>Connected to wallet.</p>;
+  if (web3.active) {
+    return <Text>Connected to wallet.</Text>;
   }
 
   return (
     <>
-      <MetaMaskButton
-        onClick={() => dispatch({ type: "activate", connector: connectors.injected })}
-      >
+      <MetaMaskButton onClick={() => dispatch({ type: "activate", connector: connectors.injected })}>
         Connect to MetaMask
       </MetaMaskButton>
 

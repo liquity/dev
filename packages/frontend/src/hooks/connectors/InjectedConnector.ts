@@ -1,6 +1,5 @@
-import { Web3Provider } from "ethers/providers";
 import { useState, useEffect } from "react";
-import { useWeb3React } from '@web3-react/core';
+import { Web3ReactContextInterface } from "@web3-react/core/dist/types";
 import { InjectedConnector } from "@web3-react/injected-connector";
 
 const injectedConnector = new InjectedConnector({});
@@ -15,15 +14,15 @@ const injectedConnector = new InjectedConnector({});
  *
  * @returns true when finished trying to activate the InjectedConnector, false otherwise
  */
-export function useInjectedConnector() {
-  const { activate, deactivate } = useWeb3React<Web3Provider>();
+
+export function useInjectedConnector<T>(web3: Web3ReactContextInterface<T>) {
   const [tried, setTried] = useState(false);
 
   useEffect(() => {
     const tryToActivateIfAuthorized = async () => {
       try {
         if (await injectedConnector.isAuthorized()) {
-          await activate(injectedConnector, undefined, true);
+          await web3.activate(injectedConnector, undefined, true);
         }
       } finally {
         setTried(true);
@@ -35,7 +34,7 @@ export function useInjectedConnector() {
 
   return {
     triedAuthorizedConnection: tried,
-    activate: () => activate(injectedConnector),
-    deactivate
+    activate: () => web3.activate(injectedConnector),
+    deactivate: web3.deactivate
   }
 }

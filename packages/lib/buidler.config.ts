@@ -28,7 +28,7 @@ task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) =>
   const contracts = await deployAndSetupContracts(bre.artifacts, defaultSigner);
 
   for (const [contractName, contract] of Object.entries(contracts)) {
-    console.log(contractName, '=>', contract.address);
+    console.log(`${contractName}: "${contract.address}",`);
   }
 });
 
