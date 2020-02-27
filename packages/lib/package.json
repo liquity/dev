@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --project tsconfig.dist.json",
+    "deploy": "buidler deploy",
     "test": "buidler test",
     "typechain": "typechain --target ethers --outDir types '../contracts/artifacts/*.json'"
   },
