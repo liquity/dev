@@ -148,8 +148,8 @@ contract CDPManager is Ownable, ICDPManager {
         
         // Update loan properties
         CDPs[user].status = Status.active;
-        CDPs[user].coll = (CDPs[user].coll).add(msg.value);
-        CDPs[user].debt = (CDPs[user].debt).add(_CLVAmount);
+        CDPs[user].coll = msg.value;
+        CDPs[user].debt = _CLVAmount;
         
         updateRewardSnapshots(user);
         updateStakeAndTotalStakes(user);
