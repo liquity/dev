@@ -26,7 +26,7 @@ contract PoolManager is Ownable, IPoolManager {
     event UserSnapshotUpdated(uint _CLV, uint _ETH);
     event S_CLVUpdated(uint _S_CLV);
     event S_ETHUpdated(uint _S_ETH);
-    event UserDepositChanged(address _user, uint _amount);
+    event UserDepositChanged(address indexed _user, uint _amount);
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
     // --- Connected contract declarations ---

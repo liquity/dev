@@ -21,7 +21,7 @@ interface IPoolManager {
 
     event S_ETHUpdated(uint _S_ETH);
 
-    event UserDepositChanged(address _user, uint _amount);
+    event UserDepositChanged(address indexed _user, uint _amount);
 
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 

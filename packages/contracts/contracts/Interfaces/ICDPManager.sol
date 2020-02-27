@@ -11,21 +11,21 @@ interface ICDPManager {
 
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
-    event CDPCreated(address _user, uint arrayIndex);
+    event CDPCreated(address indexed _user, uint arrayIndex);
 
-    event CDPUpdated(address _user, uint _debt, uint _coll, uint stake, uint arrayIndex);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, uint arrayIndex);
 
-    event CDPClosed(address _user);
+    event CDPClosed(address indexed _user);
 
-    event CollateralAdded(address _user, uint _amountAdded);
+    event CollateralAdded(address indexed _user, uint _amountAdded);
 
-    event CollateralWithdrawn(address _user, uint _amountWithdrawn);
+    event CollateralWithdrawn(address indexed _user, uint _amountWithdrawn);
 
-    event CLVWithdrawn(address _user, uint _amountWithdrawn);
+    event CLVWithdrawn(address indexed _user, uint _amountWithdrawn);
 
-    event CLVRepayed(address _user, uint _amountRepayed);
+    event CLVRepayed(address indexed _user, uint _amountRepayed);
 
-    event CollateralRedeemed(address _user, uint exchangedCLV, uint redeemedETH);
+    event CollateralRedeemed(address indexed _user, uint exchangedCLV, uint redeemedETH);
 
     // --- Functions ---
     function setPoolManager(address _poolManagerAddress) external;

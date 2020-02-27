@@ -21,19 +21,19 @@ contract CDPManager is Ownable, ICDPManager {
     
     // --- Events --- 
     event PoolManagerAddressChanged(address _newPoolManagerAddress);
-    event PriceFeedAddressChanged(address _newPriceFeedAddress);
+    event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
-    event CDPCreated(address _user, uint arrayIndex);
-    event CDPUpdated(address _user, uint _debt, uint _coll,  uint stake, uint arrayIndex);
-    event CDPClosed(address _user);
+    event CDPCreated(address indexed _user, uint arrayIndex);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll,  uint stake, uint arrayIndex);
+    event CDPClosed(address indexed _user);
 
-    event CollateralAdded(address _user, uint _amountAdded);
-    event CollateralWithdrawn(address _user, uint _amountWithdrawn);
-    event CLVWithdrawn(address _user, uint _amountWithdrawn);
-    event CLVRepayed(address _user, uint _amountRepayed);
-    event CollateralRedeemed(address _user, uint exchangedCLV, uint redeemedETH);
+    event CollateralAdded(address indexed _user, uint _amountAdded);
+    event CollateralWithdrawn(address indexed _user, uint _amountWithdrawn);
+    event CLVWithdrawn(address indexed _user, uint _amountWithdrawn);
+    event CLVRepayed(address indexed _user, uint _amountRepayed);
+    event CollateralRedeemed(address indexed _user, uint exchangedCLV, uint redeemedETH);
 
     // --- Connected contract declarations ---
     IPoolManager poolManager;
