@@ -1,5 +1,5 @@
 import { Web3Provider } from "ethers/providers";
-import React, { useMemo, createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { useMemo, createContext, useContext, useState, useEffect } from "react";
 
 import { Liquity, LiquityContractAddresses, Trove } from "@liquity/lib";
 import { useWeb3React } from "@web3-react/core";
@@ -64,15 +64,9 @@ export function useLiquityCall<T>(
   return callState;
 }
 
-export const useTroveState = () => {
-  const memoizedGetTrove = useCallback((liquity: Liquity) => liquity.getTrove(), []);
-  const memoizedWatchTrove = useCallback(
-    (liquity: Liquity, onTroveChanged: (trove: Trove | undefined) => void) => {
-      return liquity.watchTrove(onTroveChanged);
-    },
-    []
-  );
-  const troveState = useLiquityCall(memoizedGetTrove, memoizedWatchTrove);
-
-  return troveState;
+const getTrove = (liquity: Liquity) => liquity.getTrove();
+const watchTrove = (liquity: Liquity, onTroveChanged: (trove: Trove | undefined) => void) => {
+  return liquity.watchTrove(onTroveChanged);
 };
+
+export const useTroveState = () => useLiquityCall(getTrove, watchTrove);
