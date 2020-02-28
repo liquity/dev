@@ -1,10 +1,9 @@
-import { Signer } from "ethers";
-import { Provider } from "ethers/providers";
-import { bigNumberify } from "ethers/utils";
+import { Web3Provider } from "ethers/providers";
+import { bigNumberify, BigNumber } from "ethers/utils";
 
 import { Decimal, Decimalish } from "../utils/Decimal";
 import { LiquityContractAddresses, LiquityContracts } from "./contracts";
-import { connectToContracts, getContractsFromNameRegistry } from "./contractConnector";
+import { connectToContracts } from "./contractConnector";
 
 const MAX_UINT256 = new Decimal(
   bigNumberify(2)
@@ -31,36 +30,31 @@ enum CDPStatus {
 
 export class Liquity {
   private readonly contracts: LiquityContracts;
-  public provider?: Provider;
-  public signer?: Signer;
+  public userAddress?: string;
 
-  private constructor(contracts: LiquityContracts, signerOrProvider: Signer | Provider) {
+  private constructor(contracts: LiquityContracts, userAddress?: string) {
     this.contracts = contracts;
-    if (Signer.isSigner(signerOrProvider)) {
-      this.signer = signerOrProvider;
-      this.provider = signerOrProvider.provider;
+    this.userAddress = userAddress;
+  }
+
+  public static connect(
+    addresses: LiquityContractAddresses,
+    provider: Web3Provider,
+    userAddress?: string
+  ) {
+    if (userAddress) {
+      return new Liquity(
+        connectToContracts(addresses, provider.getSigner(userAddress)),
+        userAddress
+      );
     } else {
-      this.provider = signerOrProvider;
+      return new Liquity(connectToContracts(addresses, provider));
     }
   }
 
-  public static connect(addresses: LiquityContractAddresses, signerOrProvider: Signer | Provider) {
-    return new Liquity(connectToContracts(addresses, signerOrProvider), signerOrProvider);
-  }
-
-  public static async connectUsingNameRegistry(
-    nameRegistryAddress: string,
-    signerOrProvider: Signer | Provider
-  ) {
-    return new Liquity(
-      await getContractsFromNameRegistry(nameRegistryAddress, signerOrProvider),
-      signerOrProvider
-    );
-  }
-
-  private async getAddress(address?: string) {
+  private backfillAddress(address?: string): string {
     if (!address) {
-      address = await this.signer?.getAddress();
+      address = this.userAddress;
       if (!address) {
         throw Error("An address is required");
       }
@@ -69,7 +63,7 @@ export class Liquity {
   }
 
   public async getTrove(address?: string): Promise<Trove | undefined> {
-    address = await this.getAddress(address);
+    address = this.backfillAddress(address);
     const cdp = await this.contracts.cdpManager.CDPs(address);
 
     if (cdp.status === CDPStatus.active) {
@@ -80,8 +74,39 @@ export class Liquity {
     }
   }
 
+  public watchTrove(onTroveChanged: (trove: Trove | undefined) => void, address?: string) {
+    const cdpManager = this.contracts.cdpManager;
+    const { CDPCreated, CDPUpdated, CDPClosed } = this.contracts.cdpManager.filters;
+
+    address = this.backfillAddress(address);
+
+    const cdpCreated = CDPCreated(address, null);
+    const cdpUpdated = CDPUpdated(address, null, null, null, null);
+    const cdpClosed = CDPClosed(address);
+
+    const onCdpCreated = () => {
+      onTroveChanged({ collateral: Decimal.from(0), debt: Decimal.from(0) });
+    };
+    const onCdpUpdated = (_address: string, debt: BigNumber, collateral: BigNumber) => {
+      onTroveChanged({ collateral: new Decimal(collateral), debt: new Decimal(debt) });
+    };
+    const onCdpClosed = () => {
+      onTroveChanged(undefined);
+    };
+
+    cdpManager.on(cdpCreated, onCdpCreated);
+    cdpManager.on(cdpUpdated, onCdpUpdated);
+    cdpManager.on(cdpClosed, onCdpClosed);
+
+    return () => {
+      cdpManager.removeListener(cdpCreated, onCdpCreated);
+      cdpManager.removeListener(cdpUpdated, onCdpUpdated);
+      cdpManager.removeListener(cdpClosed, onCdpClosed);
+    };
+  }
+
   public async createTrove(trove: Trove, address?: string) {
-    address = await this.getAddress(address);
+    address = this.backfillAddress(address);
 
     const addCollTx = this.contracts.cdpManager.addColl(address, address, {
       value: trove.collateral.bigNumber

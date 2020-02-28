@@ -23,11 +23,11 @@ export const CurrentTrove: React.FC = () => {
   } else if (troveState.type === "loading") {
     return <Text>Loading...</Text>;
   } else {
-    if (troveState.result) {
+    if (troveState.value) {
       return (
         <>
           <Heading>Your Liquity Trove</Heading>
-          <TroveView trove={troveState.result} />
+          <TroveView trove={troveState.value} />
         </>
       );
     } else {
