@@ -89,10 +89,6 @@ export const WalletConnector: React.FC = () => {
     return null;
   }
 
-  if (web3.active) {
-    return <Text>Connected to wallet.</Text>;
-  }
-
   return (
     <>
       <MetaMaskButton onClick={() => dispatch({ type: "activate", connector: connectors.injected })}>
