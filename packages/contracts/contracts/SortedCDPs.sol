@@ -1,5 +1,7 @@
 pragma solidity ^0.5.11;
 
+
+import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ICDPManager.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import "@openzeppelin/contracts/ownership/Ownable.sol";
@@ -24,7 +26,7 @@ https://github.com/livepeer/protocol/blob/master/contracts/libraries/SortedDoubl
 In our variant, keys have been removed, and all ICR checks in functions now compare an ICR argument to the current ICR, 
 calculated at runtime. Data is stored in the 'data' state variable.
 */
-contract SortedCDPs is Ownable {
+contract SortedCDPs is Ownable, ISortedCDPs {
     using SafeMath for uint256;
 
     event CDPManagerAddressChanged(address _newCDPlManagerAddress);

@@ -1,25 +1,30 @@
 pragma solidity ^0.5.11;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import '@openzeppelin/contracts/ownership/Ownable.sol';
-import './Interfaces/ICDPManager.sol';
+import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/IPriceFeed.sol";
+import "./Interfaces/IDeployedAggregator.sol";
 import "@nomiclabs/buidler/console.sol";
 
-// A mock ETH:USD price oracle
-contract PriceFeed is Ownable {
-    using SafeMath for uint;
-    
-    uint constant DIGITS = 1e18;
-    uint public price = 200 * DIGITS;  
-   
-    constructor() public {
-    }   
-   
-    address cdpManagerAddress;
-    ICDPManager cdpManager;
+contract PriceFeed is Ownable, IPriceFeed {
+    using SafeMath for uint256;
 
-    event PriceUpdated(uint _newPrice);
+    uint256 constant DIGITS = 1e18;
+    uint256 public price = 200 * DIGITS;
+
+    address public cdpManagerAddress;
+    address public poolManagerAddress;
+    address public priceAggregatorAddress;
+
+    ICDPManager cdpManager;
+    IDeployedAggregator priceAggregator;
+
+    event PriceUpdated(uint256 _newPrice);
     event CDPManagerAddressChanged(address _cdpManagerAddress);
+    event PoolManagerAddressChanged(address _poolManagerAddress);
+
+    // --- Dependency setters ---
 
     function setCDPManagerAddress(address _cdpManagerAddress) public onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
@@ -27,14 +32,63 @@ contract PriceFeed is Ownable {
         emit CDPManagerAddressChanged(_cdpManagerAddress);
     }
 
-    function setPrice(uint _price) public onlyOwner returns (bool) {
+    function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
+        poolManagerAddress = _poolManagerAddress;
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+    }
+
+     // --- Modifiers ---
+
+      modifier onlyCDPManagerOrPoolManager {
+        require(
+            _msgSender() == cdpManagerAddress || 
+            _msgSender() == poolManagerAddress,
+            "PriceFeed: only callable by CDPMaanger or PoolManager");
+        _;
+    }
+
+    // --- Functions ---
+
+    // Manual price setter for owner. TODO: remove this function before mainnet deployment.
+    function setPrice(uint256 _price) public onlyOwner returns (bool) {
         price = _price.mul(DIGITS);
         cdpManager.checkTCRAndSetRecoveryMode();
         emit PriceUpdated(price);
         return true;
-    }    
-    
-    function getPrice() public returns (uint) {
+    }
+    function getPrice() public returns (uint256) {
         return price;
-    }  
+    }
+
+    // --- Chainlink functionality ---
+
+    function setAggregator(address _priceAggregatorAddress) public onlyOwner {
+        priceAggregatorAddress = _priceAggregatorAddress;
+        priceAggregator = IDeployedAggregator(_priceAggregatorAddress);
+    }
+
+    function updatePrice() public onlyCDPManagerOrPoolManager returns (uint256) {
+        price = getLatestPrice();
+        emit PriceUpdated(price);
+        return price;
+    }
+
+    function getLatestPrice() public view returns (uint256) {
+        int256 intPrice = priceAggregator.currentAnswer();
+        require(
+            intPrice >= 0,
+            "Price response from aggregator is negative int"
+        );
+
+        return uint256(intPrice);
+    }
+
+    function getLatestAnswerID() public view returns (uint256) {
+        return priceAggregator.latestCompletedAnswer();
+    }
+
+    // Get the block timestamp at which the reference price was last updated
+    function getLatestTimestamp() public view returns (uint256) {
+        return priceAggregator.updatedHeight();
+    }
 }
