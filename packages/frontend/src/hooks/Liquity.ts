@@ -1,19 +1,20 @@
+import React, { useMemo, createContext, useContext, useCallback } from "react";
 import { Web3Provider } from "ethers/providers";
-import React, { useMemo, createContext, useContext, useState, useEffect, useCallback } from "react";
-
-import { Liquity, LiquityContractAddresses } from "@liquity/lib";
 import { useWeb3React } from "@web3-react/core";
 
+import { Liquity, LiquityContractAddresses, Trove } from "@liquity/lib";
+import { useAsyncValue } from "../hooks/AsyncValue";
+
 const contractAddresses: LiquityContractAddresses = {
-  activePool: "0xd28fe5d691eE793e47685e3D2844Ba432C5BBB19",
-  cdpManager: "0x051b5Bd5314FC29038ac66F76798fD6110f2186c",
-  clvToken: "0x134a8b33fD3f4ad5F211FAe5616a0acAEEEE08Ba",
-  defaultPool: "0x6838a92608AB7Cfa9c4d88217491F22e7EEbc0b6",
-  nameRegistry: "0xE98801a095c21d52122872a97dc64799767C9CE4",
-  poolManager: "0xB15ddD7c87C6f14f039543B2c3028679eD00D5A0",
-  priceFeed: "0xF17B6F58F256e635d2bF9CCB8AFBAFfde34c32A0",
-  sortedCDPs: "0xD26F83A5cc323D40fA7E884bD51fA71c6d973317",
-  stabilityPool: "0xA330C37aA989dc542A4D3E9d9E0e0F81daDac1e0"
+  activePool: "0x04700bCA4766f391fC55A4E36da0Be83daA849F6",
+  cdpManager: "0xf9f6344919048Da7b8874780e575E087fEA009e5",
+  clvToken: "0x277A693784789582F4A154a3Eb8fd827e99B5A88",
+  defaultPool: "0xF686A081b216F818431267339B4e78E03D8282CC",
+  nameRegistry: "0x289824E4291f8c2Ab27dC1dFDFc189401B06680a",
+  poolManager: "0x581Ad97A398Ef2377a7d0c8A51Afc39Bc833Af7D",
+  priceFeed: "0x3cd61B9D6e94F2fF4D51295EA9D2D581432adA01",
+  sortedCDPs: "0x9F23490eF9A5F63546Dab89f3a6dED0Bf8467331",
+  stabilityPool: "0xCb05a079C0EbC818961866EC38B7c05827Cfc96b"
 };
 
 const LiquityContext = createContext<Liquity | undefined>(undefined);
@@ -23,11 +24,7 @@ export const LiquityProvider: React.FC = ({ children }) => {
 
   const liquity = useMemo<Liquity | undefined>(() => {
     if (library) {
-      if (account) {
-        return Liquity.connect(contractAddresses, library.getSigner(account));
-      } else {
-        return Liquity.connect(contractAddresses, library);
-      }
+      return Liquity.connect(contractAddresses, library, account || undefined);
     }
   }, [account, library]);
 
@@ -36,30 +33,23 @@ export const LiquityProvider: React.FC = ({ children }) => {
 
 export const useLiquity = () => useContext(LiquityContext);
 
-export type LiquityCallState<T> = { type: "loading" } | { type: "loaded"; result: T } | undefined;
+/**
+ * Hook for observing the Trove.
+ *
+ * Dispatches an async call to get the current Trove state. The state is then kept up-to-date via
+ * contract events.
+ *
+ * @param liquity - The Liquity instance to get the Trove from.
+ */
+export const useTroveState = (liquity: Liquity) => {
+  const getTrove = useCallback(() => liquity.getTrove(), [liquity]);
 
-export const useLiquityCall = <T>(
-  callFunc: (liquity: Liquity) => Promise<T>
-): LiquityCallState<T> => {
-  const liquity = useLiquity();
-  const [callState, setCallState] = useState<LiquityCallState<T>>();
+  const watchTrove = useCallback(
+    (onTroveChanged: (trove: Trove | undefined) => void) => {
+      return liquity.watchTrove(onTroveChanged);
+    },
+    [liquity]
+  );
 
-  useEffect(() => {
-    if (liquity) {
-      const dispatchCall = async () => {
-        setCallState({ type: "loading" });
-        setCallState({ type: "loaded", result: await callFunc(liquity) });
-      };
-      dispatchCall();
-    } else {
-      setCallState(undefined);
-    }
-  }, [liquity, callFunc]);
-
-  return callState;
-};
-
-export const useTroveState = () => {
-  const memoizedGetTrove = useCallback((liquity: Liquity) => liquity.getTrove(), []);
-  return useLiquityCall(memoizedGetTrove);
+  return useAsyncValue(getTrove, watchTrove);
 };

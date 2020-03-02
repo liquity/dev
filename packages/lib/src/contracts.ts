@@ -1,5 +1,3 @@
-import { Contract } from "ethers";
-
 import { ActivePool } from "../types/ActivePool";
 import { CDPManager } from "../types/CDPManager";
 import { CLVToken } from "../types/CLVToken";
@@ -23,8 +21,6 @@ export interface LiquityContractAddresses {
 }
 
 export interface LiquityContracts {
-  [contractName: string]: Contract;
-
   activePool: ActivePool;
   cdpManager: CDPManager;
   clvToken: CLVToken;
@@ -35,3 +31,15 @@ export interface LiquityContracts {
   sortedCDPs: SortedCDPs;
   stabilityPool: StabilityPool;
 }
+
+export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses => ({
+  activePool: contracts.activePool.address,
+  cdpManager: contracts.cdpManager.address,
+  clvToken: contracts.clvToken.address,
+  defaultPool: contracts.defaultPool.address,
+  nameRegistry: contracts.nameRegistry.address,
+  poolManager: contracts.poolManager.address,
+  priceFeed: contracts.priceFeed.address,
+  sortedCDPs: contracts.sortedCDPs.address,
+  stabilityPool: contracts.stabilityPool.address
+});
