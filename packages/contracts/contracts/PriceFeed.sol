@@ -51,11 +51,12 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     // Manual price setter for owner. TODO: remove this function before mainnet deployment.
     function setPrice(uint256 _price) public onlyOwner returns (bool) {
-        price = _price.mul(DIGITS);
+        price = _price;
         cdpManager.checkTCRAndSetRecoveryMode();
         emit PriceUpdated(price);
         return true;
     }
+
     function getPrice() public view returns (uint256) {
         return price;
     }
@@ -67,6 +68,7 @@ contract PriceFeed is Ownable, IPriceFeed {
         priceAggregator = IDeployedAggregator(_priceAggregatorAddress);
     }
 
+    // TODO: convert received Chainlink price to precision-18 before setting state variable
     function updatePrice() public onlyCDPManagerOrPoolManager returns (uint256) {
         price = getLatestPrice();
         emit PriceUpdated(price);

@@ -138,7 +138,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:150CLV, reducing TCR below 150%
-    await priceFeed.setPrice(150);
+    await priceFeed.setPrice('150000000000000000000');
 
     try {
       const txData = await cdpManager.withdrawCLV('200', alice, { from: alice })
@@ -190,7 +190,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:150CLV, reducing TCR below 150%
-    await priceFeed.setPrice(150);
+    await priceFeed.setPrice('150000000000000000000');
 
     try {
       const txData = await cdpManager.openLoan('50000000000000000000', carol, { from: carol, value: _1_Ether })
@@ -221,7 +221,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:150CLV, reducing TCR below 150%
-    await priceFeed.setPrice(150);
+    await priceFeed.setPrice('150000000000000000000');
 
     //Alice tries to withdraw collateral during Recovery Mode
     try {
@@ -251,7 +251,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:150CLV, reducing TCR below 150%.  setPrice() calls checkTCRAndSetRecoveryMode() internally.
-    await priceFeed.setPrice(150)
+    await priceFeed.setPrice('150000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode_After = await cdpManager.recoveryMode();
@@ -273,7 +273,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:150CLV, reducing TCR below 150%
-    await priceFeed.setPrice(150)
+    await priceFeed.setPrice('150000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode_Before = await cdpManager.recoveryMode();
@@ -318,7 +318,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:150CLV, reducing TCR below 150%
-    await priceFeed.setPrice(150)
+    await priceFeed.setPrice('150000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode_Before = await cdpManager.recoveryMode();
@@ -353,7 +353,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -389,7 +389,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%, and all CDPs below 100% ICR
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -435,7 +435,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -481,7 +481,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%, and all CDPs below 100% ICR
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -520,7 +520,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR to 120%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -554,7 +554,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.withdrawCLV('2000000000000000000000', bob, { from: bob })
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%, and all CDPs below 100% ICR
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -612,7 +612,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -650,7 +650,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -729,7 +729,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -794,7 +794,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -841,7 +841,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -882,7 +882,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -924,7 +924,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -967,7 +967,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -1010,7 +1010,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -1064,7 +1064,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -1108,7 +1108,7 @@ contract('CDPManager', async accounts => {
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
-    await priceFeed.setPrice(100)
+    await priceFeed.setPrice('100000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode = await cdpManager.recoveryMode()
@@ -1169,7 +1169,7 @@ contract('CDPManager', async accounts => {
 
     // price drops
     // price drops to 1ETH:90CLV, reducing TCR below 150%
-    await priceFeed.setPrice(90)
+    await priceFeed.setPrice('90000000000000000000')
 
     await cdpManager.checkTCRAndSetRecoveryMode()
     const recoveryMode_Before = await cdpManager.recoveryMode()
@@ -1299,7 +1299,7 @@ contract('CDPManager', async accounts => {
     await poolManager.provideToSP('1400000000000000000000', { from: alice })
 
     // price drops to 1ETH:85CLV, reducing TCR below 150%
-    await priceFeed.setPrice(85)
+    await priceFeed.setPrice('85000000000000000000')
 
     // check Recovery Mode kicks in
     await cdpManager.checkTCRAndSetRecoveryMode()

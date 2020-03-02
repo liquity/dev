@@ -1,13 +1,28 @@
 const ethers = require('ethers');
 const oracleABIs = require('./oracleABIs.js')
+const secrets = require ('./../secrets.js')
+const web3 = require('web3')
+
+const privateKey = secrets.privateKey
 
 const MainnetAggregatorABI = oracleABIs.MainnetAggregator
 const TestnetAggregatorABI = oracleABIs.TestnetAggregator
 const MainnetPriceFeedABI = oracleABIs.MainnetPriceFeed
 const TestnetPriceFeedABI = oracleABIs.TestnetPriceFeed
 
+const getGasFromTxHash = async (provider, txHash) => {
+  console.log("tx hash is")
+  console.log(txHash)
+  const receipt = await provider.getTransactionReceipt(txHash)
+  const gas = receipt.gasUsed
+  return gas
+}
+
 const mainnetProvider = ethers.getDefaultProvider();
 const testnetProvider = ethers.getDefaultProvider('testnet');
+
+const testnetWallet = new ethers.Wallet(privateKey, testnetProvider)
+const mainnetWallet = new ethers.Wallet(privateKey, mainnetProvider)
 
 // Addresses of the deployed Chainlink aggregator reference contracts
 const aggregatorAddressMainnet = "0x79fEbF6B9F76853EDBcBc913e6aAE8232cFB9De9";
@@ -18,11 +33,11 @@ const priceFeedAddressMainnet = "0xfD7838852b42dE1F9189025523e7A7150b81df72"
 const priceFeedAddressTestnet = "0x885E5383f59C04B789724a06B9e9B638D1c913FD"
 
 // Instantiate contract objects
-const mainnetAggregator = new ethers.Contract(aggregatorAddressMainnet, MainnetAggregatorABI, mainnetProvider);
-const testnetAggregator = new ethers.Contract(aggregatorAddressTestnet, TestnetAggregatorABI, testnetProvider);
+const mainnetAggregator = new ethers.Contract(aggregatorAddressMainnet, MainnetAggregatorABI, mainnetWallet);
+const testnetAggregator = new ethers.Contract(aggregatorAddressTestnet, TestnetAggregatorABI, testnetWallet);
 
-const mainnetPriceFeed = new ethers.Contract(priceFeedAddressMainnet, MainnetPriceFeedABI, mainnetProvider);
-const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPriceFeedABI, testnetProvider);
+const mainnetPriceFeed = new ethers.Contract(priceFeedAddressMainnet, MainnetPriceFeedABI, mainnetWallet);
+const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPriceFeedABI, testnetWallet);
 
 (async () => {
 
@@ -54,7 +69,7 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
         console.log('\n')
       }
 
-    // --- Mainnet ---
+    // // --- Mainnet ---
 
     // Calling the mainnet Chainlink aggregator directly 
     const price_aggregatorMainnet = (await mainnetAggregator.currentAnswer()).toString();
@@ -73,4 +88,25 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
     console.log(`Mainnet: Timestamp of latest price from deployed PriceFeed: ${timestap_PriceFeedMainnet}`)
     console.log(`Mainnet: ID of latest price answer from deployed PriceFeed: ${latestAnswerID_PriceFeedMainnet}`)
     console.log('\n')
+
+    // --- Gas costs of updatePrice() ---
+
+    console.log("Get gas costs")
+    console.log("\n")
+    // Testnet
+    console.log("Call updatePrice() on Testnet")
+    const txResponseTestnet = await testnetPriceFeed.updatePrice()
+    console.log("waiting for tx to be mined...")
+    txResponseTestnet.wait()
+    const gasTestnet = await getGasFromTxHash(testnetProvider, txResponseTestnet.hash)
+    console.log(`Testnet: updatePrice() gas cost: ${gasTestnet}`)
+    console.log('\n')
+
+    // Mainnet
+    console.log("Call updatePrice() on Mainnet")
+    const txResponseMainnet = await mainnetPriceFeed.updatePrice()
+    console.log("waiting for tx to be mined...")
+    txResponseMainnet.wait()
+    const gasMainnet = await getGasFromTxHash(mainnetProvider, txResponseMainnet.hash)
+    console.log(`Testnet: updatePrice() gas cost: ${gasMainnet}`)
 })();

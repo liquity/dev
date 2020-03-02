@@ -197,7 +197,7 @@ contract('PoolManager', async accounts => {
       await cdpManager.withdrawCLV(100, alice, { from: alice })
      
       // price drops: defaulter's CDPs fall below MCR, whale doesn't
-      await priceFeed.setPrice(100);
+      await priceFeed.setPrice('100000000000000000000');
 
       // CDPs are closed
       await cdpManager.liquidate(defaulter_1, { from: owner })
@@ -258,7 +258,7 @@ contract('PoolManager', async accounts => {
       assert.equal(alice_Snapshot_0_CLV, 0)
 
       // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
-      await priceFeed.setPrice(100);
+      await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
       await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
@@ -343,7 +343,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP('150000000000000000000', { from: alice })
 
       // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
-      await priceFeed.setPrice(100);
+      await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
       await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
@@ -400,7 +400,7 @@ contract('PoolManager', async accounts => {
       assert.equal(alice_snapshotCLV_Before, 0)
 
       // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
-      await priceFeed.setPrice(100);
+      await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
       await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
@@ -438,7 +438,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP('150000000000000000000', { from: alice })
 
       // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
-      await priceFeed.setPrice(100);
+      await priceFeed.setPrice('100000000000000000000');
 
       /* defaulter's CDP is closed.  
       / Alice's expected rewards:
@@ -489,7 +489,7 @@ contract('PoolManager', async accounts => {
       assert.equal(aliceCDP_ETH_Before, _10_Ether)
 
       // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
-      await priceFeed.setPrice(100);
+      await priceFeed.setPrice('100000000000000000000');
 
       /* defaulter's CDP is closed.  
       / Alice's expected rewards:
@@ -534,7 +534,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP('150000000000000000000', { from: alice })
 
       // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
-      await priceFeed.setPrice(100);
+      await priceFeed.setPrice('100000000000000000000');
 
       /* defaulter's CDP is closed.  
       / Alice's expected rewards:
@@ -583,7 +583,7 @@ contract('PoolManager', async accounts => {
       assert.equal(totalCLVDeposits, '2000000000000000000000')
 
       // price drops: defaulter's CDPs fall below MCR, whale doesn't
-      await priceFeed.setPrice(100);
+      await priceFeed.setPrice('100000000000000000000');
       // CDPs are closed
       await cdpManager.liquidate(defaulter_1, { from: owner });
       await cdpManager.liquidate(defaulter_2, { from: owner });
@@ -622,7 +622,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP('500000000000000000000', { from: alice })
 
       // price drops: defaulters fall below MCR
-      await priceFeed.setPrice(100);
+      await priceFeed.setPrice('100000000000000000000');
 
       // defaulter 1 gets closed
       await cdpManager.liquidate(defaulter_1, { from: owner });

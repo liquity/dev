@@ -246,7 +246,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
     await cdpManager.liquidate(carol, { from: owner });
@@ -330,7 +330,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 5 ether and 900CLV.
     await cdpManager.liquidate(carol, { from: owner });
@@ -562,7 +562,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
     await cdpManager.liquidate(carol, { from: owner });

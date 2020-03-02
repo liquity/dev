@@ -10,3 +10,5 @@
 # Exported function gas costs and test outputs
 /test/gas/gasTestData.csv
 /test/gas/gasTestOutput.txt
+
+/secrets.js

@@ -194,7 +194,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
     await cdpManager.liquidate(carol, { from: owner });
@@ -321,7 +321,7 @@ contract('CDPManager', async accounts => {
     assert.equal(ICR_AfterWithdrawal, '1111111111111111111')
 
     // price drops to 1ETH:100CLV, reducing Alice's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // close CDP
     await cdpManager.liquidate(alice, { from: owner });
@@ -353,7 +353,7 @@ contract('CDPManager', async accounts => {
     assert.equal(activePool_CLVDebt_Before, '280000000000000000000')
 
     // price drops to 1ETH:100CLV, reducing Bob's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     /* close Bob's CDP. Should liquidate his 1 ether and 180CLV, 
     leaving 10 ether and 100 CLV debt in the ActivePool. */
@@ -389,7 +389,7 @@ contract('CDPManager', async accounts => {
     assert.equal(defaultPool_CLVDebt_Before, '0')
 
     // price drops to 1ETH:100CLV, reducing Bob's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // close Bob's CDP
     await cdpManager.liquidate(bob, { from: owner });
@@ -419,7 +419,7 @@ contract('CDPManager', async accounts => {
     assert.equal(totalStakes_Before, _11_Ether)
 
     // price drops to 1ETH:100CLV, reducing Bob's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // close Bob's CDP
     await cdpManager.liquidate(bob, { from: owner });
@@ -446,7 +446,7 @@ contract('CDPManager', async accounts => {
     assert.equal(totalCollateralSnapshot_Before, '0')
 
     // price drops to 1ETH:100CLV, reducing Bob's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // close Bob's CDP.  His 1 ether and 180 CLV should be added to the DefaultPool.
     await cdpManager.liquidate(bob, { from: owner });
@@ -475,7 +475,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:100CLV, reducing Carols's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP.  
     await cdpManager.liquidate(carol, { from: owner });
@@ -496,7 +496,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.withdrawCLV('800000000000000000000', bob, { from: bob })
 
     // price drops to 1ETH:50CLV, reducing Bob's ICR below MCR
-    await priceFeed.setPrice(50);
+    await priceFeed.setPrice('50000000000000000000');
 
     // close Bob's CDP 
     await cdpManager.liquidate(bob, { from: owner });
@@ -537,7 +537,7 @@ contract('CDPManager', async accounts => {
     await poolManager.provideToSP('180000000000000000000', { from: bob })
 
     // price drops to 1ETH:100CLV, reducing Bob's ICR and Carol's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     /*  Liquidate Dennis. His CLVDebt (180 CLV) is entirely offset against Bob's StabilityPool deposit (180 CLV). 
     As the only StabilityPool depositor, Bob earns a gain of 1 ETH (the entire liquidated ETH from Dennis' CDP) */
@@ -595,7 +595,7 @@ contract('CDPManager', async accounts => {
     await poolManager.provideToSP('150000000000000000000', { from: bob })
 
     // price drops to 1ETH:100CLV, reducing Bob's ICR, and Dennis's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     // Alice withdraws 90CLV, resulting in an ICR = 1.111...
     await cdpManager.withdrawCLV('90000000000000000000', alice, { from: alice })
@@ -658,7 +658,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
 
     // price drops to 1ETH:100CLV, reducing Bob and Carols's ICR below MCR
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice('100000000000000000000');
 
     await cdpManager.liquidateCDPs(10, { from: owner });
 
