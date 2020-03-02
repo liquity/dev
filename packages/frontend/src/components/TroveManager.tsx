@@ -11,13 +11,18 @@ type TroveManagerProps = {
 export const TroveManager: React.FC<TroveManagerProps> = ({ liquity }) => {
   const troveState = useTroveState(liquity);
 
-  if (troveState?.type !== "loaded") {
+  if (!troveState?.loaded) {
     return null;
   }
 
   const trove = troveState.value;
+
   if (!trove) {
-    return <Button onClick={() => liquity.createTrove(new Trove(1, 100))}>Open a new loan</Button>;
+    return (
+      <Button onClick={() => liquity.createTrove(new Trove({ collateral: 1, debt: 100 }))}>
+        Open a new loan
+      </Button>
+    );
   }
 
   return (

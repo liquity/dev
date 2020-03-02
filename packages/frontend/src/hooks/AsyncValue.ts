@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
 
-export type AsyncValueState<T> = { type: "loading" } | { type: "loaded"; value: T };
+export type AsyncValueState<T> = { loaded: false } | { loaded: true; value: T };
 
 export function useAsyncValue<T>(
   getValue: () => Promise<T>,
   watchValue?: (onValueChanged: (value: T) => void) => () => void
 ) {
-  const [callState, setCallState] = useState<AsyncValueState<T>>({ type: "loading" });
+  const [callState, setCallState] = useState<AsyncValueState<T>>({ loaded: false });
 
   useEffect(() => {
     const fetchValue = async () => {
-      setCallState({ type: "loaded", value: await getValue() });
+      setCallState({ loaded: true, value: await getValue() });
     };
 
     const onValueChanged = (value: T) => {
-      setCallState({ type: "loaded", value });
+      setCallState({ loaded: true, value });
     };
 
     fetchValue();

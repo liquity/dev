@@ -4,15 +4,15 @@ import { BigNumber, bigNumberify } from "ethers/utils";
 export type Decimalish = Decimal | number | string;
 
 export class Decimal {
-  public static readonly PRECISION = 18;
-  public static readonly DIGITS = Decimal.getDigits(Decimal.PRECISION);
+  static readonly PRECISION = 18;
+  static readonly DIGITS = Decimal.getDigits(Decimal.PRECISION);
 
   private static readonly stringRepresentationFormat = /^[0-9]*(\.[0-9]*)?$/;
   private static readonly trailingZeros = /0*$/;
 
-  public readonly bigNumber: BigNumber;
+  readonly bigNumber: BigNumber;
 
-  public constructor(bigNumber: BigNumber) {
+  constructor(bigNumber: BigNumber) {
     if (bigNumber.lt(0)) {
       throw new Error("must not be negative");
     }
@@ -46,7 +46,7 @@ export class Decimal {
     );
   }
 
-  public static from(decimalish: Decimalish) {
+  static from(decimalish: Decimalish) {
     switch (typeof decimalish) {
       case "object":
         return decimalish;
@@ -57,7 +57,7 @@ export class Decimal {
     }
   }
 
-  public static bigNumberFrom(decimalish: Decimalish) {
+  static bigNumberFrom(decimalish: Decimalish) {
     return Decimal.from(decimalish).bigNumber;
   }
 
@@ -98,7 +98,7 @@ export class Decimal {
     }
   }
 
-  public toString(precision?: number) {
+  toString(precision?: number) {
     if (precision !== undefined) {
       return this.toStringWithPrecision(precision);
     } else {
@@ -106,41 +106,41 @@ export class Decimal {
     }
   }
 
-  public add(addend: Decimalish) {
+  add(addend: Decimalish) {
     return new Decimal(this.bigNumber.add(Decimal.from(addend).bigNumber));
   }
 
-  public sub(subtrahend: Decimalish) {
+  sub(subtrahend: Decimalish) {
     return new Decimal(this.bigNumber.sub(Decimal.from(subtrahend).bigNumber));
   }
 
-  public mul(multiplier: Decimalish) {
+  mul(multiplier: Decimalish) {
     return new Decimal(this.bigNumber.mul(Decimal.from(multiplier).bigNumber).div(Decimal.DIGITS));
   }
 
-  public div(divider: Decimalish) {
+  div(divider: Decimalish) {
     return new Decimal(this.bigNumber.mul(Decimal.DIGITS).div(Decimal.from(divider).bigNumber));
   }
 
-  public mulDiv(multiplier: Decimalish, divider: Decimalish) {
+  mulDiv(multiplier: Decimalish, divider: Decimalish) {
     return new Decimal(
       this.bigNumber.mul(Decimal.from(multiplier).bigNumber).div(Decimal.from(divider).bigNumber)
     );
   }
 
-  public isZero() {
+  isZero() {
     return this.bigNumber.isZero();
   }
 
-  public lt(that: Decimalish) {
+  lt(that: Decimalish) {
     return this.bigNumber.lt(Decimal.from(that).bigNumber);
   }
 
-  public eq(that: Decimalish) {
+  eq(that: Decimalish) {
     return this.bigNumber.eq(Decimal.from(that).bigNumber);
   }
 
-  public gt(that: Decimalish) {
+  gt(that: Decimalish) {
     return this.bigNumber.gt(Decimal.from(that).bigNumber);
   }
 }

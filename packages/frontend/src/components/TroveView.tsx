@@ -10,8 +10,27 @@ type TroveViewProps = {
 
 export const TroveView: React.FC<TroveViewProps> = ({ trove }) => (
   <>
-    <Text fontSize={4}>Collateral: {trove.collateral.toString(2)} ETH</Text>
-    <Text fontSize={4}>Debt: {trove.debt.toString(2)} QUI</Text>
+    <Text fontSize={4}>
+      Collateral: {trove.collateral.toString(2)} ETH
+      {!trove.pendingCollateralReward.isZero() && (
+        <Text.span>(+{trove.pendingCollateralReward.toString(2)} ETH pending)</Text.span>
+      )}
+    </Text>
+    <Text fontSize={4}>
+      Debt: {trove.debt.toString(2)} QUI
+      {!trove.pendingDebtReward.isZero() && (
+        <Text.span>(+{trove.pendingDebtReward.toString(2)} QUI pending)</Text.span>
+      )}
+    </Text>
+    <Text fontSize={4}>
+      Collateral ratio: {trove.collateralRatio.mul(100).toString(1)}%
+      {!trove.pendingCollateralReward.isZero() ||
+        (!trove.pendingDebtReward.isZero() && (
+          <Text.span>
+            (after rewards: {trove.collateralRatioAfterRewards.mul(100).toString(1)}%)
+          </Text.span>
+        ))}
+    </Text>
   </>
 );
 
@@ -22,7 +41,7 @@ type CurrentTroveProps = {
 export const CurrentTrove: React.FC<CurrentTroveProps> = ({ liquity }) => {
   const troveState = useTroveState(liquity);
 
-  if (troveState.type === "loading") {
+  if (!troveState.loaded) {
     return <Text>Loading...</Text>;
   }
 

@@ -12,7 +12,7 @@ type AccountBalanceProps = {
 export const AccountBalance: React.FC<AccountBalanceProps> = ({ provider, account }) => {
   const accountBalanceState = useAccountBalance(provider, account);
 
-  if (accountBalanceState.type === "loading") {
+  if (!accountBalanceState.loaded) {
     return null;
   }
 

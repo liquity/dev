@@ -7,6 +7,7 @@
   "scripts": {
     "build": "yarn run typechain && tsc --project tsconfig.dist.json",
     "deploy": "buidler deploy",
+    "deploy-warzone": "buidler deploy-warzone",
     "test": "buidler test",
     "typechain": "typechain --target ethers --outDir types '../contracts/artifacts/*.json'"
   },

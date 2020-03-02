@@ -8,6 +8,7 @@ import { WalletConnector } from "./components/WalletConnector";
 import { CurrentTrove } from "./components/TroveView";
 import { TroveManager } from "./components/TroveManager";
 import { AccountBalance } from "./components/AccountBalance";
+import { SystemStats } from "./components/SystemStats";
 import "./App.css";
 
 const LiquityFrontend = () => {
@@ -21,6 +22,7 @@ const LiquityFrontend = () => {
   return (
     <>
       <AccountBalance provider={web3.library} account={web3.account} />
+      <SystemStats liquity={liquity} />
       <Box m={5}>
         <CurrentTrove liquity={liquity} />
       </Box>
