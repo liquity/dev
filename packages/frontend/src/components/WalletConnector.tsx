@@ -68,7 +68,7 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
   throw new Error(`Cannot ${action.type} when ${state.type}`);
 };
 
-export const WalletConnector: React.FC = () => {
+export const WalletConnector: React.FC = ({ children }) => {
   const web3 = useWeb3React<Web3Provider>();
 
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
@@ -87,6 +87,10 @@ export const WalletConnector: React.FC = () => {
     // This is arguably better than flashing a loading message or spinner that is only visible
     // for a few milliseconds.
     return null;
+  }
+
+  if (web3.active) {
+    return <>{children}</>;
   }
 
   return (

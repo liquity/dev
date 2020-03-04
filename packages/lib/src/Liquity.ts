@@ -89,50 +89,36 @@ export class Liquity {
   protected price?: Decimal;
 
   private readonly cdpManager: CDPManager;
-  private readonly signerOrProvider: Signer | Provider;
+  private readonly priceFeed: IPriceFeed;
+  private readonly sortedCDPs: ISortedCDPs;
   private readonly userAddress?: string;
-
-  private get priceFeed() {
-    if (this._priceFeed) {
-      return Promise.resolve(this._priceFeed);
-    }
-
-    return this.cdpManager.priceFeedAddress().then(address => {
-      return (this._priceFeed = IPriceFeedFactory.connect(address, this.signerOrProvider));
-    });
-  }
-
-  private get sortedCDPs() {
-    if (this._sortedCDPs) {
-      return Promise.resolve(this._sortedCDPs);
-    }
-
-    return this.cdpManager.sortedCDPsAddress().then(address => {
-      return (this._sortedCDPs = ISortedCDPsFactory.connect(address, this.signerOrProvider));
-    });
-  }
-
-  private _priceFeed?: IPriceFeed;
-  private _sortedCDPs?: ISortedCDPs;
 
   private constructor(
     cdpManager: CDPManager,
-    signerOrProvider: Signer | Provider,
+    priceFeed: IPriceFeed,
+    sortedCDPs: ISortedCDPs,
     userAddress?: string
   ) {
     this.cdpManager = cdpManager;
-    this.signerOrProvider = signerOrProvider;
+    this.priceFeed = priceFeed;
+    this.sortedCDPs = sortedCDPs;
     this.userAddress = userAddress;
   }
 
-  static connect(cdpManagerAddress: string, provider: Web3Provider, userAddress?: string) {
+  static async connect(cdpManagerAddress: string, provider: Web3Provider, userAddress?: string) {
     const signerOrProvider = userAddress ? provider.getSigner(userAddress) : provider;
+    const cdpManager = CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider);
 
-    return new Liquity(
-      CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider),
-      signerOrProvider,
-      userAddress
-    );
+    const [priceFeed, sortedCDPs] = await Promise.all([
+      cdpManager.priceFeedAddress().then(address => {
+        return IPriceFeedFactory.connect(address, signerOrProvider);
+      }),
+      cdpManager.sortedCDPsAddress().then(address => {
+        return ISortedCDPsFactory.connect(address, signerOrProvider);
+      })
+    ]);
+
+    return new Liquity(cdpManager, priceFeed, sortedCDPs, userAddress);
   }
 
   private requireAddress(): string {
@@ -229,8 +215,11 @@ export class Liquity {
       bigNumberify(numberOfTrials)
     );
 
-    const sortedCDPs = await this.sortedCDPs;
-    const { 0: hint } = await sortedCDPs.findInsertPosition(collateralRatio, approxHint, approxHint);
+    const { 0: hint } = await this.sortedCDPs.findInsertPosition(
+      collateralRatio,
+      approxHint,
+      approxHint
+    );
 
     return hint;
   }
@@ -295,15 +284,26 @@ export class Liquity {
   }
 
   async getPrice() {
-    const priceFeed = await this.priceFeed;
+    return new Decimal(await this.priceFeed.getPrice());
+  }
 
-    return new Decimal(await priceFeed.getPrice());
+  watchPrice(onPriceChanged: (price: Decimal) => void) {
+    const { PriceUpdated } = this.priceFeed.filters;
+    const priceUpdated = PriceUpdated(null);
+
+    const priceUpdatedListener = (price: BigNumber) => {
+      onPriceChanged(new Decimal(price));
+    };
+
+    this.priceFeed.on(priceUpdated, priceUpdatedListener);
+
+    return () => {
+      this.priceFeed.removeListener(priceUpdated, priceUpdatedListener);
+    };
   }
 
   async setPrice(price: Decimalish) {
-    const priceFeed = await this.priceFeed;
-
-    return priceFeed.setPrice(Decimal.from(price).bigNumber);
+    return this.priceFeed.setPrice(Decimal.from(price).bigNumber);
   }
 
   async isRecoveryModeActive() {

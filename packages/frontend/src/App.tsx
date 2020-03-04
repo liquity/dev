@@ -12,6 +12,14 @@ import { SystemStats } from "./components/SystemStats";
 import { DeveloperTools } from "./components/DeveloperTools";
 import "./App.css";
 
+const EthersWeb3ReactProvider: React.FC = ({ children }) => {
+  return (
+    <Web3ReactProvider getLibrary={provider => new Web3Provider(provider)}>
+      {children}
+    </Web3ReactProvider>
+  );
+};
+
 type LiquityFrontendProps = {
   loader?: React.ReactNode;
 };
@@ -49,11 +57,13 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 const App = () => (
   <div className="App">
     <header className="App-header">
-      <Web3ReactProvider getLibrary={provider => new Web3Provider(provider)}>
-        <LiquityProvider fallback={<WalletConnector />}>
-          <LiquityFrontend loader="Loading..." />
-        </LiquityProvider>
-      </Web3ReactProvider>
+      <EthersWeb3ReactProvider>
+        <WalletConnector>
+          <LiquityProvider>
+            <LiquityFrontend loader="Loading..." />
+          </LiquityProvider>
+        </WalletConnector>
+      </EthersWeb3ReactProvider>
     </header>
   </div>
 );

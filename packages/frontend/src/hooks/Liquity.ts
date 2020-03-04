@@ -1,8 +1,9 @@
-import React, { useMemo, createContext, useContext, useCallback } from "react";
+import React, { createContext, useContext, useCallback } from "react";
 import { Web3Provider } from "ethers/providers";
 import { useWeb3React } from "@web3-react/core";
 
 import { Liquity, Trove } from "@liquity/lib";
+import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue, useAsyncStore } from "../hooks/AsyncValue";
 import { useAccountBalance } from "./AccountBalance";
 
@@ -18,28 +19,28 @@ type LiquityContext = {
 
 const LiquityContext = createContext<LiquityContext | undefined>(undefined);
 
-type LiquityProviderProps = {
-  fallback: React.ReactNode;
-};
-
-export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, fallback }) => {
+export const LiquityProvider: React.FC = ({ children }) => {
   const { account, library } = useWeb3React<Web3Provider>();
 
-  const liquity = useMemo<Liquity | undefined>(() => {
-    if (library && account) {
-      return Liquity.connect(cdpManagerAddress, library, account);
-    }
-  }, [account, library]);
+  const liquityState = useAsyncValue(
+    useCallback(async () => {
+      if (library && account) {
+        return Liquity.connect(cdpManagerAddress, library, account);
+      }
+    }, [library, account])
+  );
 
-  if (account && library && liquity) {
-    return React.createElement(
-      LiquityContext.Provider,
-      { value: { account, library, liquity } },
-      children
-    );
-  } else {
-    return React.createElement(React.Fragment, {}, fallback);
+  if (!library || !account || !liquityState.loaded || !liquityState.value) {
+    return null;
   }
+
+  const liquity = liquityState.value;
+
+  return React.createElement(
+    LiquityContext.Provider,
+    { value: { account, library, liquity } },
+    children
+  );
 };
 
 export const useLiquity = () => {
@@ -53,9 +54,16 @@ export const useLiquity = () => {
 };
 
 export const useLiquityStore = (provider: Web3Provider, account: string, liquity: Liquity) => {
-  const getPrice = useCallback(() => liquity.getPrice(), [liquity]);
   const getNumberOfTroves = useCallback(() => liquity.getNumberOfTroves(), [liquity]);
   const isRecoveryModeActive = useCallback(() => liquity.isRecoveryModeActive(), [liquity]);
+
+  const getPrice = useCallback(() => liquity.getPrice(), [liquity]);
+  const watchPrice = useCallback(
+    (onPriceChanged: (price: Decimal) => void) => {
+      return liquity.watchPrice(onPriceChanged);
+    },
+    [liquity]
+  );
 
   const getTrove = useCallback(() => liquity.getTrove(), [liquity]);
   const watchTrove = useCallback(
@@ -67,7 +75,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
 
   return useAsyncStore({
     balance: useAccountBalance(provider, account),
-    price: useAsyncValue(getPrice),
+    price: useAsyncValue(getPrice, watchPrice),
     recoveryModeActive: useAsyncValue(isRecoveryModeActive),
     numberOfTroves: useAsyncValue(getNumberOfTroves),
     trove: useAsyncValue(getTrove, watchTrove)
