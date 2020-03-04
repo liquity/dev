@@ -13,6 +13,43 @@ import { IPriceFeedFactory } from "../types/IPriceFeedFactory";
 import { IPoolManager } from "../types/IPoolManager";
 import { IPoolManagerFactory } from "../types/IPoolManagerFactory";
 
+interface Poolish {
+  readonly activeCollateral: Decimalish;
+  readonly activeDebt: Decimalish;
+  readonly liquidatedCollateral: Decimalish;
+  readonly closedDebt: Decimalish;
+}
+
+export class Pool {
+  readonly activeCollateral: Decimal;
+  readonly activeDebt: Decimal;
+  readonly liquidatedCollateral: Decimal;
+  readonly closedDebt: Decimal;
+
+  constructor({ activeCollateral, activeDebt, liquidatedCollateral, closedDebt }: Poolish) {
+    this.activeCollateral = Decimal.from(activeCollateral);
+    this.activeDebt = Decimal.from(activeDebt);
+    this.liquidatedCollateral = Decimal.from(liquidatedCollateral);
+    this.closedDebt = Decimal.from(closedDebt);
+  }
+
+  get totalCollateral() {
+    return this.activeCollateral.add(this.liquidatedCollateral);
+  }
+
+  get totalDebt() {
+    return this.activeDebt.add(this.closedDebt);
+  }
+
+  totalCollateralRatioAt(price: Decimalish) {
+    return calculateCollateralRatio(this.totalCollateral, this.totalDebt, price);
+  }
+
+  isRecoveryModeActiveAt(price: Decimalish) {
+    return this.totalCollateralRatioAt(price).lt(1.5);
+  }
+}
+
 interface Trovish {
   readonly collateral?: Decimalish;
   readonly debt?: Decimalish;
@@ -20,7 +57,7 @@ interface Trovish {
   readonly pendingDebtReward?: Decimalish;
 }
 
-export const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
+const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
   if (debt.isZero()) {
     return Decimal.INFINITY;
   }
@@ -33,18 +70,22 @@ export class Trove {
   readonly pendingCollateralReward: Decimal;
   readonly pendingDebtReward: Decimal;
 
-  public collateralRatioAt(price: Decimalish): Decimal {
+  collateralRatioAt(price: Decimalish): Decimal {
     return calculateCollateralRatio(this.collateral, this.debt, price);
   }
 
-  public collateralRatioAfterRewardsAt(price: Decimalish): Decimal {
+  collateralRatioAfterRewardsAt(price: Decimalish): Decimal {
     const collateralAfterRewards = this.collateral.add(this.pendingCollateralReward);
     const debtAfterRewards = this.debt.add(this.pendingDebtReward);
 
     return calculateCollateralRatio(collateralAfterRewards, debtAfterRewards, price);
   }
 
-  public constructor({
+  isBelowMinimumCollateralRatioAt(price: Decimalish) {
+    return this.collateralRatioAfterRewardsAt(price).lt(1.1);
+  }
+
+  constructor({
     collateral = 0,
     debt = 0,
     pendingCollateralReward = 0,
@@ -308,11 +349,7 @@ export class Liquity {
     return this.priceFeed.setPrice(Decimal.from(price).bigNumber);
   }
 
-  async isRecoveryModeActive() {
-    return this.cdpManager.recoveryMode();
-  }
-
-  async getPoolTotals() {
+  async getPool() {
     const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
       [
         this.poolManager.getActiveColl(),
@@ -322,7 +359,7 @@ export class Liquity {
       ].map(promise => promise.then(bigNumber => new Decimal(bigNumber)))
     );
 
-    return { activeCollateral, activeDebt, liquidatedCollateral, closedDebt };
+    return new Pool({ activeCollateral, activeDebt, liquidatedCollateral, closedDebt });
   }
 
   async liquidate(maximumNumberOfCDPsToLiquidate: BigNumberish) {

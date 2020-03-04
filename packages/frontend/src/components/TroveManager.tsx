@@ -1,22 +1,17 @@
 import React from "react";
 import { Button, Flex, Box } from "rimble-ui";
 
-import { Trove, Liquity } from "@liquity/lib";
+import { Trove, Liquity, Pool } from "@liquity/lib";
 import { Decimalish } from "@liquity/lib/dist/utils";
 
 type TroveManagerProps = {
   liquity: Liquity;
   trove?: Trove;
   price: Decimalish;
-  recoveryModeActive: boolean;
+  pool: Pool;
 };
 
-export const TroveManager: React.FC<TroveManagerProps> = ({
-  liquity,
-  trove,
-  price,
-  recoveryModeActive
-}) => {
+export const TroveManager: React.FC<TroveManagerProps> = ({ liquity, trove, price, pool }) => {
   if (!trove) {
     return (
       <Button onClick={() => liquity.createTrove(new Trove({ collateral: 1, debt: 100 }), price)}>
@@ -36,11 +31,8 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
           width={1 / 2}
           onClick={() => liquity.withdrawEther(trove, 1, price)}
           disabled={
-            recoveryModeActive ||
-            trove
-              .subtractCollateral(1)
-              .collateralRatioAfterRewardsAt(price)
-              .lt(1.1)
+            pool.isRecoveryModeActiveAt(price) ||
+            trove.subtractCollateral(1).isBelowMinimumCollateralRatioAt(price)
           }
         >
           Withdraw ETH
@@ -52,11 +44,8 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
           width={1 / 2}
           onClick={() => liquity.borrowQui(trove, 100, price)}
           disabled={
-            recoveryModeActive ||
-            trove
-              .addDebt(100)
-              .collateralRatioAfterRewardsAt(price)
-              .lt(1.1)
+            pool.isRecoveryModeActiveAt(price) ||
+            trove.addDebt(100).isBelowMinimumCollateralRatioAt(price)
           }
         >
           Borrow QUI

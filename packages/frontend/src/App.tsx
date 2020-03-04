@@ -36,12 +36,12 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   (window as any).liquity = liquity;
   (window as any).store = storeState.value;
 
-  const { balance, numberOfTroves, price, recoveryModeActive, trove, poolTotals } = storeState.value;
+  const { balance, numberOfTroves, price, trove, pool } = storeState.value;
 
   return (
     <>
       <UserAccount {...{ balance }} />
-      <SystemStats {...{ numberOfTroves, price, recoveryModeActive, poolTotals }} />
+      <SystemStats {...{ numberOfTroves, price, pool }} />
       {account === deployerAddress ? (
         <Box m={5}>
           <DeveloperTools {...{ liquity, price }} />
@@ -51,7 +51,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
           <Box m={5}>
             <TroveView {...{ trove, price }} />
           </Box>
-          <TroveManager {...{ liquity, trove, price, recoveryModeActive }} />
+          <TroveManager {...{ liquity, trove, price, pool }} />
         </>
       )}
     </>

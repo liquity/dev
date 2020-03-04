@@ -55,8 +55,7 @@ export const useLiquity = () => {
 
 export const useLiquityStore = (provider: Web3Provider, account: string, liquity: Liquity) => {
   const getNumberOfTroves = useCallback(() => liquity.getNumberOfTroves(), [liquity]);
-  const isRecoveryModeActive = useCallback(() => liquity.isRecoveryModeActive(), [liquity]);
-  const getPoolTotals = useCallback(() => liquity.getPoolTotals(), [liquity]);
+  const getPool = useCallback(() => liquity.getPool(), [liquity]);
 
   const getPrice = useCallback(() => liquity.getPrice(), [liquity]);
   const watchPrice = useCallback(
@@ -77,9 +76,8 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   return useAsyncStore({
     balance: useAccountBalance(provider, account),
     price: useAsyncValue(getPrice, watchPrice),
-    recoveryModeActive: useAsyncValue(isRecoveryModeActive),
     numberOfTroves: useAsyncValue(getNumberOfTroves),
     trove: useAsyncValue(getTrove, watchTrove),
-    poolTotals: useAsyncValue(getPoolTotals)
+    pool: useAsyncValue(getPool)
   });
 };
