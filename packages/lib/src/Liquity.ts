@@ -1,6 +1,6 @@
 import { Signer } from "ethers";
 import { Web3Provider, Provider } from "ethers/providers";
-import { bigNumberify, BigNumber } from "ethers/utils";
+import { bigNumberify, BigNumber, BigNumberish } from "ethers/utils";
 
 import { Decimal, Decimalish } from "../utils/Decimal";
 
@@ -13,12 +13,6 @@ import { IPriceFeedFactory } from "../types/IPriceFeedFactory";
 import { IPoolManager } from "../types/IPoolManager";
 import { IPoolManagerFactory } from "../types/IPoolManagerFactory";
 
-const MAX_UINT256 = new Decimal(
-  bigNumberify(2)
-    .pow(256)
-    .sub(1)
-);
-
 interface Trovish {
   readonly collateral?: Decimalish;
   readonly debt?: Decimalish;
@@ -28,7 +22,7 @@ interface Trovish {
 
 export const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
   if (debt.isZero()) {
-    return MAX_UINT256;
+    return Decimal.INFINITY;
   }
   return collateral.mulDiv(price, debt);
 };
@@ -329,5 +323,9 @@ export class Liquity {
     );
 
     return { activeCollateral, activeDebt, liquidatedCollateral, closedDebt };
+  }
+
+  async liquidate(maximumNumberOfCDPsToLiquidate: BigNumberish) {
+    return this.cdpManager.liquidateCDPs(maximumNumberOfCDPsToLiquidate);
   }
 }

@@ -32,6 +32,10 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
     return <>{loader}</>;
   }
 
+  // For console tinkering ;-)
+  (window as any).liquity = liquity;
+  (window as any).store = storeState.value;
+
   const { balance, numberOfTroves, price, recoveryModeActive, trove, poolTotals } = storeState.value;
 
   return (

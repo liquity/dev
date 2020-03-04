@@ -4,6 +4,12 @@ import { BigNumber, bigNumberify } from "ethers/utils";
 export type Decimalish = Decimal | number | string;
 
 export class Decimal {
+  static readonly INFINITY = new Decimal(
+    bigNumberify(2)
+      .pow(256)
+      .sub(1)
+  );
+
   static readonly PRECISION = 18;
   static readonly DIGITS = Decimal.getDigits(Decimal.PRECISION);
 
@@ -130,6 +136,10 @@ export class Decimal {
 
   isZero() {
     return this.bigNumber.isZero();
+  }
+
+  isInfinite() {
+    return this.eq(Decimal.INFINITY);
   }
 
   lt(that: Decimalish) {

@@ -35,7 +35,13 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
           m={2}
           width={1 / 2}
           onClick={() => liquity.withdrawEther(trove, 1, price)}
-          disabled={recoveryModeActive}
+          disabled={
+            recoveryModeActive ||
+            trove
+              .subtractCollateral(1)
+              .collateralRatioAfterRewardsAt(price)
+              .lt(1.1)
+          }
         >
           Withdraw ETH
         </Button>
@@ -45,7 +51,13 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
           m={2}
           width={1 / 2}
           onClick={() => liquity.borrowQui(trove, 100, price)}
-          disabled={recoveryModeActive}
+          disabled={
+            recoveryModeActive ||
+            trove
+              .addDebt(100)
+              .collateralRatioAfterRewardsAt(price)
+              .lt(1.1)
+          }
         >
           Borrow QUI
         </Button>
