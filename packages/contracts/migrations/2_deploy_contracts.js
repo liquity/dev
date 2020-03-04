@@ -10,6 +10,7 @@ const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const NameRegistry = artifacts.require("./NameRegistry.sol")
 const DeciMath = artifacts.require("./DeciMath.sol")
+const Blah = artifacts.require("./Blah.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
@@ -32,6 +33,7 @@ module.exports = async () => {
   const defaultPool = await DefaultPool.new()
   const deciMath = await DeciMath.new()
   const functionCaller = await FunctionCaller.new()
+  const blah = await Blah.new()
 
   PriceFeed.setAsDeployed(priceFeed)
   CLVToken.setAsDeployed(clvToken)
@@ -43,6 +45,7 @@ module.exports = async () => {
   StabilityPool.setAsDeployed(stabilityPool)
   DefaultPool.setAsDeployed(defaultPool)
   DeciMath.setAsDeployed(deciMath)
+  Blah.setAsDeployed(blah)
   FunctionCaller.setAsDeployed(functionCaller)
 
   const contracts = {

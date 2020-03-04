@@ -46,11 +46,17 @@ contract ActivePool is Ownable, IPool {
     // --- Pool functionality ---
 
     function sendETH(address _account, uint _amount) public onlyPoolManager returns(bool) {
-        ETH = ETH.sub(_amount);
-        (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
-        require (success == true, 'ActivePool: transaction reverted');
-        emit ETHBalanceUpdated(ETH);
-        emit EtherSent(_account, _amount);
+        // console.log("00. gas left: %s", gasleft());
+        ETH = ETH.sub(_amount);  // 5980 gas
+        // console.log("01. gas left: %s", gasleft());
+        (bool success, ) = _account.call.value(_amount)("");  // 7500 gas.  use call.value()('') as per Consensys latest advice 
+        // console.log("02. gas left: %s", gasleft());
+        require (success == true, 'ActivePool: transaction reverted'); // 9 gas
+        // console.log("03. gas left: %s", gasleft());
+        emit ETHBalanceUpdated(ETH); // 1800 gas
+        // console.log("04. gas left: %s", gasleft());
+        emit EtherSent(_account, _amount);  // 1320 gas
+        // console.log("05. gas left: %s", gasleft());
         return true;
     }
 
@@ -60,8 +66,11 @@ contract ActivePool is Ownable, IPool {
     }
 
     function decreaseCLV(uint _amount) public onlyPoolManager () {
-        CLV = CLV.sub(_amount);
-        emit CLVBalanceUpdated(CLV);
+        // console.log("00. gas left: %s", gasleft());
+        CLV = CLV.sub(_amount); // 6000 gas
+        // console.log("01. gas left: %s", gasleft());
+        emit CLVBalanceUpdated(CLV); // 1840 gas 
+        // console.log("02. gas left: %s", gasleft());
     }
 
     /* Returns the raw ether balance at ActivePool address.  

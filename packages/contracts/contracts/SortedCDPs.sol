@@ -1,6 +1,5 @@
 pragma solidity ^0.5.11;
 
-
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ICDPManager.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
@@ -77,25 +76,34 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _nextId Id of next node for the insert position
      */
     function insert(address _id, uint256 _ICR, address _prevId, address _nextId) public {
+        // console.log("insert()");
+        // console.log("00. gas left: %s", gasleft());
         // List must not be full
-        require(!isFull());
+        require(!isFull());  // 1650 gas
+        // console.log("01. gas left: %s", gasleft());
         // List must not already contain node
-        require(!contains(_id));
+        require(!contains(_id));  // 900 gas
+        // console.log("02. gas left: %s", gasleft());
         // Node id must not be null
-        require(_id != address(0));
+        require(_id != address(0));  // 26 gas
+        // console.log("03. gas left: %s", gasleft());
         // ICR must be non-zero
-        require(_ICR > 0);
+        require(_ICR > 0); // 16 gas
+        // console.log("04. gas left: %s", gasleft());
 
-        address prevId = _prevId;
-        address nextId = _nextId;
+        address prevId = _prevId; // 2 gas
+        // console.log("05. gas left: %s", gasleft());
+        address nextId = _nextId; // 3 gas
+        // console.log("06. gas left: %s", gasleft());
 
         if (!validInsertPosition(_ICR, prevId, nextId)) {
             // Sender's hint was not a valid insert position
             // Use sender's hint to find a valid insert position
-            (prevId, nextId) = findInsertPosition(_ICR, prevId, nextId);
+            (prevId, nextId) = findInsertPosition(_ICR, prevId, nextId);  // 20k gas with 0 traversals
         }
-
-        data.nodes[_id].exists = true;
+        // console.log("07. gas left: %s", gasleft());
+        data.nodes[_id].exists = true;  // *** 20k gas for false --> true, 1800 for already true
+        // console.log("08. gas left: %s", gasleft());
 
         if (prevId == address(0) && nextId == address(0)) {
             // Insert as head and tail
@@ -112,14 +120,19 @@ contract SortedCDPs is Ownable, ISortedCDPs {
             data.nodes[data.tail].nextId = _id;
             data.tail = _id;
         } else {
+            // console.log("09. gas left: %s", gasleft());
             // Insert at insert position between `prevId` and `nextId`
             data.nodes[_id].nextId = nextId;
+            // console.log("10. gas left: %s", gasleft());
             data.nodes[_id].prevId = prevId;
+            // console.log("11. gas left: %s", gasleft());
             data.nodes[prevId].nextId = _id;
+            // console.log("12. gas left: %s", gasleft());
             data.nodes[nextId].prevId = _id;
+            // console.log("13. gas left: %s", gasleft());
         }
 
-        data.size = data.size.add(1);
+        data.size = data.size.add(1);  // 1700 gas
     }
 
     /*

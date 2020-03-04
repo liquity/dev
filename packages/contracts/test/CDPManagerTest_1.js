@@ -36,14 +36,6 @@ contract('CDPManager', async accounts => {
   let defaultPool
   let functionCaller
 
-  before(async() => {
-    const deciMath = await DeciMath.new()
-    DeciMath.setAsDeployed(deciMath)
-    CDPManager.link(deciMath)
-    PoolManager.link(deciMath)
-    FunctionCaller.link(deciMath)
-  })
-
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()
     clvToken = await CLVToken.new()

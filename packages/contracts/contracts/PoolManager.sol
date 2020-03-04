@@ -265,9 +265,13 @@ contract PoolManager is Ownable, IPoolManager {
         returns (bool)
     {
         // Transfer the debt & coll from the Default Pool to the Active Pool
-        defaultPool.decreaseCLV(_CLV);
-        activePool.increaseCLV(_CLV);
-        defaultPool.sendETH(activePoolAddress, _ETH);
+        // console.log("00. gas left: %s", gasleft());
+        defaultPool.decreaseCLV(_CLV);  // 8300 gas (no rewards)
+        // console.log("01. gas left: %s", gasleft());
+        activePool.increaseCLV(_CLV); // 8200 gas (no rewards)
+        // console.log("02. gas left: %s", gasleft());
+        defaultPool.sendETH(activePoolAddress, _ETH); // 16000 gas (no rewards)
+        // console.log("03. gas left: %s", gasleft());
 
         return true;
     }
@@ -279,10 +283,14 @@ contract PoolManager is Ownable, IPoolManager {
         returns (bool)
     {
         // Update Active Pool CLV, and send ETH to account
-        activePool.decreaseCLV(_CLV);
-        activePool.sendETH(_account, _ETH);
+        // console.log("00. gas left: %s", gasleft());
+        activePool.decreaseCLV(_CLV);  // 10500 gas
+        // console.log("01. gas left: %s", gasleft());
+        activePool.sendETH(_account, _ETH); // 20300 gas
+        // console.log("02. gas left: %s", gasleft());
 
-        CLV.burn(_account, _CLV);
+        CLV.burn(_account, _CLV); // 22500 gas
+        // console.log("03. gas left: %s", gasleft()); 
 
         return true;
     }
