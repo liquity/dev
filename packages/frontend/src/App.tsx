@@ -1,32 +1,47 @@
 import React from "react";
 import { Web3Provider } from "ethers/providers";
-import { Web3ReactProvider, useWeb3React } from "@web3-react/core";
+import { Web3ReactProvider } from "@web3-react/core";
 import { Box } from "rimble-ui";
 
-import { LiquityProvider, useLiquity } from "./hooks/Liquity";
+import { LiquityProvider, useLiquity, deployerAddress, useLiquityStore } from "./hooks/Liquity";
 import { WalletConnector } from "./components/WalletConnector";
-import { CurrentTrove } from "./components/TroveView";
+import { TroveView } from "./components/TroveView";
 import { TroveManager } from "./components/TroveManager";
-import { AccountBalance } from "./components/AccountBalance";
+import { UserAccount } from "./components/UserAccount";
 import { SystemStats } from "./components/SystemStats";
+import { DeveloperTools } from "./components/DeveloperTools";
 import "./App.css";
 
-const LiquityFrontend = () => {
-  const web3 = useWeb3React<Web3Provider>();
-  const liquity = useLiquity();
+type LiquityFrontendProps = {
+  loader?: React.ReactNode;
+};
 
-  if (!web3.account || !web3.library || !liquity) {
-    return <WalletConnector />;
+const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
+  const { account, library, liquity } = useLiquity();
+  const storeState = useLiquityStore(library, account, liquity);
+
+  if (!storeState.loaded) {
+    return <>{loader}</>;
   }
+
+  const { balance, numberOfTroves, price, recoveryModeActive, trove } = storeState.value;
 
   return (
     <>
-      <AccountBalance provider={web3.library} account={web3.account} />
-      <SystemStats liquity={liquity} />
-      <Box m={5}>
-        <CurrentTrove liquity={liquity} />
-      </Box>
-      <TroveManager liquity={liquity} />
+      <UserAccount {...{ balance }} />
+      <SystemStats {...{ numberOfTroves, price, recoveryModeActive }} />
+      {account === deployerAddress ? (
+        <Box m={5}>
+          <DeveloperTools {...{ liquity, price }} />
+        </Box>
+      ) : (
+        <>
+          <Box m={5}>
+            <TroveView {...{ trove, price }} />
+          </Box>
+          <TroveManager {...{ liquity, trove, price }} />
+        </>
+      )}
     </>
   );
 };
@@ -35,8 +50,8 @@ const App = () => (
   <div className="App">
     <header className="App-header">
       <Web3ReactProvider getLibrary={provider => new Web3Provider(provider)}>
-        <LiquityProvider>
-          <LiquityFrontend />
+        <LiquityProvider fallback={<WalletConnector />}>
+          <LiquityFrontend loader="Loading..." />
         </LiquityProvider>
       </Web3ReactProvider>
     </header>

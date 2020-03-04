@@ -1,23 +1,25 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { Text } from "rimble-ui";
 
-import { Liquity } from "@liquity/lib";
-import { useAsyncValue } from "../hooks/AsyncValue";
+import { Decimalish } from "@liquity/lib/dist/utils";
+import { BigNumber } from "ethers/utils";
 
 type SystemStatsProps = {
-  liquity: Liquity;
+  numberOfTroves: BigNumber;
+  price: Decimalish;
+  recoveryModeActive: boolean;
 };
 
-export const SystemStats: React.FC<SystemStatsProps> = ({ liquity }) => {
-  const numberOfTrovesState = useAsyncValue(
-    useCallback(() => liquity.getNumberOfTroves(), [liquity])
+export const SystemStats: React.FC<SystemStatsProps> = ({
+  numberOfTroves,
+  price,
+  recoveryModeActive
+}) => {
+  return (
+    <>
+      <Text>Total number of Liquity Troves: {numberOfTroves.toString()}</Text>
+      <Text>Price of ETH: ${price.toString(2)}</Text>
+      {recoveryModeActive && <Text intent="danger">The system is in recovery mode!</Text>}
+    </>
   );
-
-  if (!numberOfTrovesState.loaded) {
-    return null;
-  }
-
-  const numberOfTroves = numberOfTrovesState.value.toString();
-
-  return <Text>Total number of Liquity Troves: {numberOfTroves}</Text>;
 };

@@ -1,10 +1,15 @@
-import { ContractTransaction } from "ethers";
-import { Web3Provider } from "ethers/providers";
+import { Signer } from "ethers";
+import { Web3Provider, Provider } from "ethers/providers";
 import { bigNumberify, BigNumber } from "ethers/utils";
 
 import { Decimal, Decimalish } from "../utils/Decimal";
-import { LiquityContractAddresses, LiquityContracts } from "./contracts";
-import { connectToContracts } from "./contractConnector";
+
+import { CDPManager } from "../types/CDPManager";
+import { CDPManagerFactory } from "../types/CDPManagerFactory";
+import { ISortedCDPs } from "../types/ISortedCDPs";
+import { ISortedCDPsFactory } from "../types/ISortedCDPsFactory";
+import { IPriceFeed } from "../types/IPriceFeed";
+import { IPriceFeedFactory } from "../types/IPriceFeedFactory";
 
 const MAX_UINT256 = new Decimal(
   bigNumberify(2)
@@ -25,31 +30,25 @@ export class Trove {
   readonly pendingCollateralReward: Decimal;
   readonly pendingDebtReward: Decimal;
 
-  private static calculateCollateralRatio(collateral: Decimal, debt: Decimal, price: Decimal) {
+  private static calculateCollateralRatio(collateral: Decimal, debt: Decimal, price: Decimalish) {
     if (debt.isZero()) {
       return MAX_UINT256;
     }
     return collateral.mulDiv(price, debt);
   }
 
-  get collateralRatio(): Decimal {
-    return Trove.calculateCollateralRatio(this.collateral, this.debt, this.price);
+  public collateralRatioAt(price: Decimalish): Decimal {
+    return Trove.calculateCollateralRatio(this.collateral, this.debt, price);
   }
 
-  get collateralRatioAfterRewards(): Decimal {
+  public collateralRatioAfterRewardsAt(price: Decimalish): Decimal {
     const collateralAfterRewards = this.collateral.add(this.pendingCollateralReward);
     const debtAfterRewards = this.debt.add(this.pendingDebtReward);
 
-    return Trove.calculateCollateralRatio(collateralAfterRewards, debtAfterRewards, this.price);
+    return Trove.calculateCollateralRatio(collateralAfterRewards, debtAfterRewards, price);
   }
 
-  private static price: Decimal = Decimal.from(200);
-
-  get price() {
-    return Trove.price;
-  }
-
-  constructor({
+  public constructor({
     collateral = 0,
     debt = 0,
     pendingCollateralReward = 0,
@@ -87,23 +86,53 @@ enum CDPStatus {
 export class Liquity {
   public static useHint = true;
 
-  private readonly contracts: LiquityContracts;
+  protected price?: Decimal;
+
+  private readonly cdpManager: CDPManager;
+  private readonly signerOrProvider: Signer | Provider;
   private readonly userAddress?: string;
 
-  private constructor(contracts: LiquityContracts, userAddress?: string) {
-    this.contracts = contracts;
+  private get priceFeed() {
+    if (this._priceFeed) {
+      return Promise.resolve(this._priceFeed);
+    }
+
+    return this.cdpManager.priceFeedAddress().then(address => {
+      return (this._priceFeed = IPriceFeedFactory.connect(address, this.signerOrProvider));
+    });
+  }
+
+  private get sortedCDPs() {
+    if (this._sortedCDPs) {
+      return Promise.resolve(this._sortedCDPs);
+    }
+
+    return this.cdpManager.sortedCDPsAddress().then(address => {
+      return (this._sortedCDPs = ISortedCDPsFactory.connect(address, this.signerOrProvider));
+    });
+  }
+
+  private _priceFeed?: IPriceFeed;
+  private _sortedCDPs?: ISortedCDPs;
+
+  private constructor(
+    cdpManager: CDPManager,
+    signerOrProvider: Signer | Provider,
+    userAddress?: string
+  ) {
+    this.cdpManager = cdpManager;
+    this.signerOrProvider = signerOrProvider;
     this.userAddress = userAddress;
   }
 
-  static connect(addresses: LiquityContractAddresses, provider: Web3Provider, userAddress?: string) {
-    if (userAddress) {
-      return new Liquity(
-        connectToContracts(addresses, provider.getSigner(userAddress)),
-        userAddress
-      );
-    } else {
-      return new Liquity(connectToContracts(addresses, provider));
-    }
+  static connect(cdpManagerAddress: string, provider: Web3Provider, userAddress?: string) {
+    const signerOrProvider = userAddress ? provider.getSigner(userAddress) : provider;
+
+    return new Liquity(
+      CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider),
+      signerOrProvider,
+      userAddress
+    );
   }
 
   private requireAddress(): string {
@@ -125,20 +154,18 @@ export class Liquity {
   }
 
   async getTrove(address = this.requireAddress()): Promise<Trove | undefined> {
-    const { cdpManager } = this.contracts;
-
-    const cdp = await cdpManager.CDPs(address);
+    const cdp = await this.cdpManager.CDPs(address);
 
     if (cdp.status !== CDPStatus.active) {
       return undefined;
     }
 
     const stake = new Decimal(cdp.stake);
-    const snapshot = await cdpManager.rewardSnapshots(address);
+    const snapshot = await this.cdpManager.rewardSnapshots(address);
     const snapshotETH = new Decimal(snapshot.ETH);
     const snapshotCLVDebt = new Decimal(snapshot.CLVDebt);
-    const L_ETH = new Decimal(await cdpManager.L_ETH());
-    const L_CLVDebt = new Decimal(await cdpManager.L_CLVDebt());
+    const L_ETH = new Decimal(await this.cdpManager.L_ETH());
+    const L_CLVDebt = new Decimal(await this.cdpManager.L_CLVDebt());
 
     const pendingCollateralReward = Liquity.computePendingReward(snapshotETH, L_ETH, stake);
     const pendingDebtReward = Liquity.computePendingReward(snapshotCLVDebt, L_CLVDebt, stake);
@@ -152,8 +179,7 @@ export class Liquity {
   }
 
   watchTrove(onTroveChanged: (trove: Trove | undefined) => void, address = this.requireAddress()) {
-    const { cdpManager } = this.contracts;
-    const { CDPCreated, CDPUpdated, CDPClosed } = cdpManager.filters;
+    const { CDPCreated, CDPUpdated, CDPClosed } = this.cdpManager.filters;
 
     const cdpCreated = CDPCreated(address, null);
     const cdpUpdated = CDPUpdated(address, null, null, null, null);
@@ -171,22 +197,20 @@ export class Liquity {
       onTroveChanged(undefined);
     };
 
-    cdpManager.on(cdpCreated, cdpCreatedListener);
-    cdpManager.on(cdpUpdated, cdpUpdatedListener);
-    cdpManager.on(cdpClosed, cdpClosedListener);
+    this.cdpManager.on(cdpCreated, cdpCreatedListener);
+    this.cdpManager.on(cdpUpdated, cdpUpdatedListener);
+    this.cdpManager.on(cdpClosed, cdpClosedListener);
 
     // TODO: we might want to setup a low-freq periodic task to check for any new rewards
 
     return () => {
-      cdpManager.removeListener(cdpCreated, cdpCreatedListener);
-      cdpManager.removeListener(cdpUpdated, cdpUpdatedListener);
-      cdpManager.removeListener(cdpClosed, cdpClosedListener);
+      this.cdpManager.removeListener(cdpCreated, cdpCreatedListener);
+      this.cdpManager.removeListener(cdpUpdated, cdpUpdatedListener);
+      this.cdpManager.removeListener(cdpClosed, cdpClosedListener);
     };
   }
 
-  private async findHint(trove: Trove, address: string) {
-    const { cdpManager, sortedCDPs } = this.contracts;
-
+  private async findHint(trove: Trove, price: Decimalish, address: string) {
     if (!Liquity.useHint) {
       return address;
     }
@@ -198,69 +222,91 @@ export class Liquity {
     }
 
     const numberOfTrials = bigNumberify(Math.ceil(Math.sqrt(numberOfTroves))); // XXX not multiplying by 10 here
-    const collateralRatio = trove.collateralRatioAfterRewards.bigNumber;
-    const approxHint = await cdpManager.getApproxHint(collateralRatio, bigNumberify(numberOfTrials));
+    const collateralRatio = trove.collateralRatioAfterRewardsAt(price).bigNumber;
+
+    const approxHint = await this.cdpManager.getApproxHint(
+      collateralRatio,
+      bigNumberify(numberOfTrials)
+    );
+
+    const sortedCDPs = await this.sortedCDPs;
     const { 0: hint } = await sortedCDPs.findInsertPosition(collateralRatio, approxHint, approxHint);
 
     return hint;
   }
 
-  async createTrove(trove: Trove) {
-    const { cdpManager } = this.contracts;
+  async createTrove(trove: Trove, price: Decimalish) {
     const address = this.requireAddress();
 
-    return cdpManager.openLoan(trove.debt.bigNumber, await this.findHint(trove, address), {
-      value: trove.collateral.bigNumber
-    });
+    return this.cdpManager.openLoan(
+      trove.debt.bigNumber,
+      await this.findHint(trove, price, address),
+      {
+        value: trove.collateral.bigNumber
+      }
+    );
   }
 
   async depositEther(
     initialTrove: Trove,
     depositedEther: Decimalish,
+    price: Decimalish,
     address = this.requireAddress()
   ) {
-    const { cdpManager } = this.contracts;
     const finalTrove = initialTrove.addCollateral(depositedEther);
 
-    return cdpManager.addColl(address, await this.findHint(finalTrove, address), {
+    return this.cdpManager.addColl(address, await this.findHint(finalTrove, price, address), {
       value: Decimal.from(depositedEther).bigNumber
     });
   }
 
-  async withdrawEther(initialTrove: Trove, withdrawnEther: Decimalish) {
-    const { cdpManager } = this.contracts;
+  async withdrawEther(initialTrove: Trove, withdrawnEther: Decimalish, price: Decimalish) {
     const address = this.requireAddress();
     const finalTrove = initialTrove.subtractCollateral(withdrawnEther);
 
-    return cdpManager.withdrawColl(
+    return this.cdpManager.withdrawColl(
       Decimal.from(withdrawnEther).bigNumber,
-      await this.findHint(finalTrove, address)
+      await this.findHint(finalTrove, price, address)
     );
   }
 
-  async borrowQui(initialTrove: Trove, borrowedQui: Decimalish) {
-    const { cdpManager } = this.contracts;
+  async borrowQui(initialTrove: Trove, borrowedQui: Decimalish, price: Decimalish) {
     const address = this.requireAddress();
     const finalTrove = initialTrove.addDebt(borrowedQui);
 
-    return cdpManager.withdrawCLV(
+    return this.cdpManager.withdrawCLV(
       Decimal.from(borrowedQui).bigNumber,
-      await this.findHint(finalTrove, address)
+      await this.findHint(finalTrove, price, address)
     );
   }
 
-  async repayQui(initialTrove: Trove, repaidQui: Decimalish) {
-    const { cdpManager } = this.contracts;
+  async repayQui(initialTrove: Trove, repaidQui: Decimalish, price: Decimalish) {
     const address = this.requireAddress();
     const finalTrove = initialTrove.subtractDebt(repaidQui);
 
-    return cdpManager.repayCLV(
+    return this.cdpManager.repayCLV(
       Decimal.from(repaidQui).bigNumber,
-      await this.findHint(finalTrove, address)
+      await this.findHint(finalTrove, price, address)
     );
   }
 
   getNumberOfTroves() {
-    return this.contracts.sortedCDPs.getSize();
+    return this.cdpManager.getCDPOwnersCount();
+  }
+
+  async getPrice() {
+    const priceFeed = await this.priceFeed;
+
+    return new Decimal(await priceFeed.getPrice());
+  }
+
+  async setPrice(price: Decimalish) {
+    const priceFeed = await this.priceFeed;
+
+    return priceFeed.setPrice(Decimal.from(price).bigNumber);
+  }
+
+  async isRecoveryModeActive() {
+    return this.cdpManager.recoveryMode();
   }
 }

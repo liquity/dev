@@ -9,7 +9,8 @@
     "deploy": "buidler deploy",
     "deploy-warzone": "buidler deploy-warzone",
     "test": "buidler test",
-    "typechain": "typechain --target ethers --outDir types '../contracts/artifacts/*.json'"
+    "typechain": "typechain --target ethers --outDir types '../contracts/artifacts/*.json'",
+    "update-pricefeed": "buidler update-pricefeed"
   },
   "peerDependencies": {
     "ethers": "^4.0.45"
