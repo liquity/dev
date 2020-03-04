@@ -10,6 +10,8 @@ import { ISortedCDPs } from "../types/ISortedCDPs";
 import { ISortedCDPsFactory } from "../types/ISortedCDPsFactory";
 import { IPriceFeed } from "../types/IPriceFeed";
 import { IPriceFeedFactory } from "../types/IPriceFeedFactory";
+import { IPoolManager } from "../types/IPoolManager";
+import { IPoolManagerFactory } from "../types/IPoolManagerFactory";
 
 const MAX_UINT256 = new Decimal(
   bigNumberify(2)
@@ -24,28 +26,28 @@ interface Trovish {
   readonly pendingDebtReward?: Decimalish;
 }
 
+export const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
+  if (debt.isZero()) {
+    return MAX_UINT256;
+  }
+  return collateral.mulDiv(price, debt);
+};
+
 export class Trove {
   readonly collateral: Decimal;
   readonly debt: Decimal;
   readonly pendingCollateralReward: Decimal;
   readonly pendingDebtReward: Decimal;
 
-  private static calculateCollateralRatio(collateral: Decimal, debt: Decimal, price: Decimalish) {
-    if (debt.isZero()) {
-      return MAX_UINT256;
-    }
-    return collateral.mulDiv(price, debt);
-  }
-
   public collateralRatioAt(price: Decimalish): Decimal {
-    return Trove.calculateCollateralRatio(this.collateral, this.debt, price);
+    return calculateCollateralRatio(this.collateral, this.debt, price);
   }
 
   public collateralRatioAfterRewardsAt(price: Decimalish): Decimal {
     const collateralAfterRewards = this.collateral.add(this.pendingCollateralReward);
     const debtAfterRewards = this.debt.add(this.pendingDebtReward);
 
-    return Trove.calculateCollateralRatio(collateralAfterRewards, debtAfterRewards, price);
+    return calculateCollateralRatio(collateralAfterRewards, debtAfterRewards, price);
   }
 
   public constructor({
@@ -91,17 +93,20 @@ export class Liquity {
   private readonly cdpManager: CDPManager;
   private readonly priceFeed: IPriceFeed;
   private readonly sortedCDPs: ISortedCDPs;
+  private readonly poolManager: IPoolManager;
   private readonly userAddress?: string;
 
   private constructor(
     cdpManager: CDPManager,
     priceFeed: IPriceFeed,
     sortedCDPs: ISortedCDPs,
+    poolManager: IPoolManager,
     userAddress?: string
   ) {
     this.cdpManager = cdpManager;
     this.priceFeed = priceFeed;
     this.sortedCDPs = sortedCDPs;
+    this.poolManager = poolManager;
     this.userAddress = userAddress;
   }
 
@@ -109,16 +114,19 @@ export class Liquity {
     const signerOrProvider = userAddress ? provider.getSigner(userAddress) : provider;
     const cdpManager = CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider);
 
-    const [priceFeed, sortedCDPs] = await Promise.all([
+    const [priceFeed, sortedCDPs, poolManager] = await Promise.all([
       cdpManager.priceFeedAddress().then(address => {
         return IPriceFeedFactory.connect(address, signerOrProvider);
       }),
       cdpManager.sortedCDPsAddress().then(address => {
         return ISortedCDPsFactory.connect(address, signerOrProvider);
+      }),
+      cdpManager.poolManagerAddress().then(address => {
+        return IPoolManagerFactory.connect(address, signerOrProvider);
       })
     ]);
 
-    return new Liquity(cdpManager, priceFeed, sortedCDPs, userAddress);
+    return new Liquity(cdpManager, priceFeed, sortedCDPs, poolManager, userAddress);
   }
 
   private requireAddress(): string {
@@ -308,5 +316,18 @@ export class Liquity {
 
   async isRecoveryModeActive() {
     return this.cdpManager.recoveryMode();
+  }
+
+  async getPoolTotals() {
+    const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
+      [
+        this.poolManager.getActiveColl(),
+        this.poolManager.getActiveDebt(),
+        this.poolManager.getLiquidatedColl(),
+        this.poolManager.getClosedDebt()
+      ].map(promise => promise.then(bigNumber => new Decimal(bigNumber)))
+    );
+
+    return { activeCollateral, activeDebt, liquidatedCollateral, closedDebt };
   }
 }
