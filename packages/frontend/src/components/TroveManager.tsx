@@ -8,9 +8,15 @@ type TroveManagerProps = {
   liquity: Liquity;
   trove?: Trove;
   price: Decimalish;
+  recoveryModeActive: boolean;
 };
 
-export const TroveManager: React.FC<TroveManagerProps> = ({ liquity, trove, price }) => {
+export const TroveManager: React.FC<TroveManagerProps> = ({
+  liquity,
+  trove,
+  price,
+  recoveryModeActive
+}) => {
   if (!trove) {
     return (
       <Button onClick={() => liquity.createTrove(new Trove({ collateral: 1, debt: 100 }), price)}>
@@ -25,12 +31,22 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ liquity, trove, pric
         <Button m={2} width={1 / 2} onClick={() => liquity.depositEther(trove, 1, price)}>
           Deposit ETH
         </Button>
-        <Button m={2} width={1 / 2} onClick={() => liquity.withdrawEther(trove, 1, price)}>
+        <Button
+          m={2}
+          width={1 / 2}
+          onClick={() => liquity.withdrawEther(trove, 1, price)}
+          disabled={recoveryModeActive}
+        >
           Withdraw ETH
         </Button>
       </Flex>
       <Flex>
-        <Button m={2} width={1 / 2} onClick={() => liquity.borrowQui(trove, 100, price)}>
+        <Button
+          m={2}
+          width={1 / 2}
+          onClick={() => liquity.borrowQui(trove, 100, price)}
+          disabled={recoveryModeActive}
+        >
           Borrow QUI
         </Button>
         <Button m={2} width={1 / 2} onClick={() => liquity.repayQui(trove, 100, price)}>

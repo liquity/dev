@@ -47,7 +47,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
           <Box m={5}>
             <TroveView {...{ trove, price }} />
           </Box>
-          <TroveManager {...{ liquity, trove, price }} />
+          <TroveManager {...{ liquity, trove, price, recoveryModeActive }} />
         </>
       )}
     </>
