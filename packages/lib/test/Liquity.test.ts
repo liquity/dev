@@ -74,8 +74,8 @@ describe("Liquity", () => {
     expect(await provider.getBalance(userAddress)).to.equal(targetBalance);
   });
 
-  it("should connect to contracts by CDPManager address", () => {
-    liquity = Liquity.connect(addresses.cdpManager, provider, userAddress);
+  it("should connect to contracts by CDPManager address", async () => {
+    liquity = await Liquity.connect(addresses.cdpManager, provider, userAddress);
   });
 
   it("should have no Trove initially", async () => {

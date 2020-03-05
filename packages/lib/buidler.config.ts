@@ -93,11 +93,13 @@ task(
   async (_taskArgs, bre) => {
     const [deployer, ...users] = await bre.ethers.signers();
 
-    const price = await Liquity.connect(
+    const liquity = await Liquity.connect(
       addresses.cdpManager,
       bre.waffle.provider,
       await deployer.getAddress()
-    ).getPrice();
+    );
+
+    const price = await liquity.getPrice();
 
     let i = 0;
     for (const user of users) {
@@ -105,7 +107,7 @@ task(
       const collateral = 999 * Math.random() + 1;
       const debt = (200 * collateral) / (3 * Math.random() + 1.11);
 
-      const liquity = Liquity.connect(addresses.cdpManager, bre.waffle.provider, userAddress);
+      const liquity = await Liquity.connect(addresses.cdpManager, bre.waffle.provider, userAddress);
 
       await deployer.sendTransaction({
         to: userAddress,

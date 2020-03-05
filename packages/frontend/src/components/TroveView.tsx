@@ -2,11 +2,11 @@ import React from "react";
 import { Text, Heading } from "rimble-ui";
 
 import { Trove } from "@liquity/lib";
-import { Decimalish } from "@liquity/lib/dist/utils";
+import { Decimal } from "@liquity/lib/dist/utils";
 
 type TroveViewProps = {
   trove?: Trove;
-  price: Decimalish;
+  price: Decimal;
 };
 
 export const TroveView: React.FC<TroveViewProps> = ({ trove, price }) => {
@@ -33,20 +33,20 @@ export const TroveView: React.FC<TroveViewProps> = ({ trove, price }) => {
     <>
       <Heading>Your Liquity Trove</Heading>
       <Text fontSize={4}>
-        Collateral: {trove.collateral.toString(2)} ETH
+        Collateral: {trove.collateral.prettify()} ETH
         {!trove.pendingCollateralReward.isZero() && (
           <Text.span color="success" fontSize={4}>
             {" "}
-            (+{trove.pendingCollateralReward.toString(2)} ETH pending)
+            (+{trove.pendingCollateralReward.prettify()} ETH pending)
           </Text.span>
         )}
       </Text>
       <Text fontSize={4}>
-        Debt: {trove.debt.toString(2)} QUI
+        Debt: {trove.debt.prettify()} QUI
         {!trove.pendingDebtReward.isZero() && (
           <Text.span color="warning" fontSize={4}>
             {" "}
-            (+{trove.pendingDebtReward.toString(2)} QUI pending)
+            (+{trove.pendingDebtReward.prettify()} QUI pending)
           </Text.span>
         )}
       </Text>

@@ -2,15 +2,15 @@ import React, { useState } from "react";
 import { Text, Input, Button, Flex } from "rimble-ui";
 
 import { Liquity } from "@liquity/lib";
-import { Decimalish } from "@liquity/lib/dist/utils";
+import { Decimal } from "@liquity/lib/dist/utils";
 
 type DeveloperToolsProps = {
   liquity: Liquity;
-  price: Decimalish;
+  price: Decimal;
 };
 
 export const DeveloperTools: React.FC<DeveloperToolsProps> = ({ liquity, price }) => {
-  const [newPrice, setNewPrice] = useState<string>(price.toString(2));
+  const [newPrice, setNewPrice] = useState<string>(price.toString());
 
   return (
     <>

@@ -15,6 +15,7 @@ export class Decimal {
 
   private static readonly stringRepresentationFormat = /^[0-9]*(\.[0-9]*)?$/;
   private static readonly trailingZeros = /0*$/;
+  private static readonly magnitudes = ["", "K", "M", "B", "T"];
 
   readonly bigNumber: BigNumber;
 
@@ -110,6 +111,30 @@ export class Decimal {
     } else {
       return this.toStringWithAutomaticPrecision();
     }
+  }
+
+  prettify(precision: number = 2) {
+    const [characteristic, mantissa] = this.toString(precision).split(".");
+    const prettyCharacteristic = characteristic.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+
+    return mantissa !== undefined ? prettyCharacteristic + "." + mantissa : prettyCharacteristic;
+  }
+
+  shorten() {
+    const characteristicLength = this.toString(0).length;
+    const magnitude = Math.min(
+      Math.floor((characteristicLength - 1) / 3),
+      Decimal.magnitudes.length - 1
+    );
+
+    const precision = Math.max(3 * (magnitude + 1) - characteristicLength, 0);
+    const normalized = this.div(new Decimal(Decimal.getDigits(Decimal.PRECISION + 3 * magnitude)));
+
+    return normalized.prettify(precision) + Decimal.magnitudes[magnitude];
+  }
+
+  static shorten(bigNumber: BigNumber) {
+    return new Decimal(bigNumber.mul(Decimal.DIGITS)).shorten();
   }
 
   add(addend: Decimalish) {

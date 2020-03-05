@@ -3,19 +3,20 @@ import { Text } from "rimble-ui";
 import { BigNumber } from "ethers/utils";
 
 import { Pool } from "@liquity/lib";
-import { Decimal, Decimalish } from "@liquity/lib/dist/utils";
+import { Decimal } from "@liquity/lib/dist/utils";
 
 type SystemStatsProps = {
   numberOfTroves: BigNumber;
-  price: Decimalish;
+  price: Decimal;
   pool: Pool;
 };
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ numberOfTroves, price, pool }) => {
   return (
     <>
-      <Text>Total number of Liquity Troves: {numberOfTroves.toString()}</Text>
-      <Text>Price of ETH: ${price.toString(2)}</Text>
+      <Text>Total number of Liquity Troves: {Decimal.shorten(numberOfTroves)}</Text>
+      <Text>Price of ETH: ${price.prettify()}</Text>
+      <Text>QUI in circulation: {pool.totalDebt.shorten()}</Text>
       <Text>
         Total collateral ratio:{" "}
         {pool

@@ -2,12 +2,12 @@ import React from "react";
 import { Button, Flex, Box } from "rimble-ui";
 
 import { Trove, Liquity, Pool } from "@liquity/lib";
-import { Decimalish } from "@liquity/lib/dist/utils";
+import { Decimal } from "@liquity/lib/dist/utils";
 
 type TroveManagerProps = {
   liquity: Liquity;
   trove?: Trove;
-  price: Decimalish;
+  price: Decimal;
   pool: Pool;
 };
 
