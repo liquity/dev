@@ -52,12 +52,14 @@ contract PriceFeed is Ownable, IPriceFeed {
     // Manual price setter for owner. TODO: remove this function before mainnet deployment.
     function setPrice(uint256 _price) public onlyOwner returns (bool) {
         price = _price;
-        cdpManager.checkTCRAndSetRecoveryMode();
+        cdpManager.checkTCRAndSetRecoveryMode(price);
         emit PriceUpdated(price);
         return true;
     }
 
     function getPrice() public view returns (uint256) {
+        // console.log("00. gas left: %s", gasleft());
+        // console.log("01. gas left: %s", gasleft());
         return price;
     }
 

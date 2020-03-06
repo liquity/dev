@@ -40,7 +40,9 @@ contract CLVTokenData is Ownable {
     }
 
     function subFromBalance(address account, uint256 value) external onlyCLVTokenAddress {
-        balances[account] = balances[account].sub(value, 'ERC20: subtracted amount exceeds balance');
+        // console.log("00. gas left: %s", gasleft());
+        balances[account] = balances[account].sub(value, 'ERC20: subtracted amount exceeds balance'); // 6100 gas
+        // console.log("01. gas left: %s", gasleft());
     }
 
     // --- Allowance functions ---

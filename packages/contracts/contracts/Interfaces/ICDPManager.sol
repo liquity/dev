@@ -13,7 +13,7 @@ interface ICDPManager {
 
     event CDPCreated(address indexed _user, uint arrayIndex);
 
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, uint arrayIndex);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll);
 
     event CDPClosed(address indexed _user);
 
@@ -38,7 +38,7 @@ interface ICDPManager {
 
     function getCDPOwnersCount() external view returns(uint);
 
-    function getCurrentICR(address _user) external view returns(uint);
+    function getCurrentICR(address _user, uint price) external view returns(uint);
 
     function getApproxHint(uint CR, uint numTrials) external view returns(address);
 
@@ -56,9 +56,9 @@ interface ICDPManager {
 
     function liquidateCDPs(uint _n) external returns(bool);
 
-    function checkTCRAndSetRecoveryMode() external returns(bool);
+    function checkTCRAndSetRecoveryMode(uint _price) external returns(bool);
 
     function redeemCollateral(uint _CLVAmount, address _hint) external returns(bool);
 
-    function getNewTCR(uint collIncrease, uint _debtIncrease) external view returns (uint);
+    function getNewTCR(uint collIncrease, uint _debtIncrease, uint _price) external view returns (uint);
 }

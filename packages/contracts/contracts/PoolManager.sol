@@ -266,11 +266,11 @@ contract PoolManager is Ownable, IPoolManager {
     {
         // Transfer the debt & coll from the Default Pool to the Active Pool
         // console.log("00. gas left: %s", gasleft());
-        defaultPool.decreaseCLV(_CLV);  // 8300 gas (no rewards)
+        defaultPool.decreaseCLV(_CLV);  // 6360 gas (no rewards)
         // console.log("01. gas left: %s", gasleft());
-        activePool.increaseCLV(_CLV); // 8200 gas (no rewards)
+        activePool.increaseCLV(_CLV); // 6300 gas (no rewards)
         // console.log("02. gas left: %s", gasleft());
-        defaultPool.sendETH(activePoolAddress, _ETH); // 16000 gas (no rewards)
+        defaultPool.sendETH(activePoolAddress, _ETH); // 14500 gas (no rewards)
         // console.log("03. gas left: %s", gasleft());
 
         return true;
@@ -417,7 +417,8 @@ contract PoolManager is Ownable, IPoolManager {
     /* Send ETHGain to user's address, and updates their deposit, 
     setting newDeposit = (oldDeposit - CLVLoss) + amount. */
     function provideToSP(uint _amount) external returns(bool) {
-        cdpManager.checkTCRAndSetRecoveryMode();
+        uint price = priceFeed.getPrice();
+        cdpManager.checkTCRAndSetRecoveryMode(price);
 
         address user = _msgSender();
         uint[2] memory returnedVals = retrieveToUser(user);
@@ -438,7 +439,8 @@ contract PoolManager is Ownable, IPoolManager {
 
     In all cases, the entire ETHGain is sent to user, and the CLVLoss is applied to their deposit. */
     function withdrawFromSP(uint _amount) external returns(bool) {
-        cdpManager.checkTCRAndSetRecoveryMode();
+        uint price = priceFeed.getPrice();
+        cdpManager.checkTCRAndSetRecoveryMode(price);
 
         address user = _msgSender();
         uint userDeposit = deposit[user];
@@ -460,7 +462,8 @@ contract PoolManager is Ownable, IPoolManager {
     /* Transfer the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
     Applies their CLVLoss to the deposit. */
     function withdrawFromSPtoCDP(address _user) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
-        cdpManager.checkTCRAndSetRecoveryMode();
+        uint price = priceFeed.getPrice();
+        cdpManager.checkTCRAndSetRecoveryMode(price);
 
         uint userDeposit = deposit[_user];
         if (userDeposit == 0) { return false; }
@@ -480,7 +483,8 @@ contract PoolManager is Ownable, IPoolManager {
     
     Callable by anyone when _depositor's CLVLoss > deposit. */
     function withdrawPenaltyFromSP(address _address) external returns(bool) {
-        cdpManager.checkTCRAndSetRecoveryMode();
+        uint price = priceFeed.getPrice();
+        cdpManager.checkTCRAndSetRecoveryMode(price);
 
         address claimant = _msgSender();
         address depositor = _address;

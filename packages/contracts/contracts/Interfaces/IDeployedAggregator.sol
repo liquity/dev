@@ -1,3 +1,5 @@
+pragma solidity ^0.5.11;
+
 /* Interface for the mainnet deployed Chainlink aggregator reference contract. Differs from the aggregator interface
 in the Chainlink npm package */
 interface IDeployedAggregator {

@@ -75,7 +75,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function insert(address _id, uint256 _ICR, address _prevId, address _nextId) public {
+    function insert(address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) public {
         // console.log("insert()");
         // console.log("00. gas left: %s", gasleft());
         // List must not be full
@@ -96,13 +96,13 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address nextId = _nextId; // 3 gas
         // console.log("06. gas left: %s", gasleft());
 
-        if (!validInsertPosition(_ICR, prevId, nextId)) {
+        if (!validInsertPosition(_ICR, _price, prevId, nextId)) {
             // Sender's hint was not a valid insert position
             // Use sender's hint to find a valid insert position
-            (prevId, nextId) = findInsertPosition(_ICR, prevId, nextId);  // 20k gas with 0 traversals
+            (prevId, nextId) = findInsertPosition(_ICR, _price, prevId, nextId);  // 20k gas with 0 traversals
         }
         // console.log("07. gas left: %s", gasleft());
-        data.nodes[_id].exists = true;  // *** 20k gas for false --> true, 1800 for already true
+        data.nodes[_id].exists = true;  // *** 20k gas for false --> true
         // console.log("08. gas left: %s", gasleft());
 
         if (prevId == address(0) && nextId == address(0)) {
@@ -182,7 +182,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the new insert position
      * @param _nextId Id of next node for the new insert position
      */
-    function reInsert(address _id, uint256 _newICR, address _prevId, address _nextId) public {
+    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) public {
         // List must contain the node
         require(contains(_id));
 
@@ -191,7 +191,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
         if (_newICR > 0) {
             // Insert node if it has a non-zero ICR
-            insert(_id, _newICR, _prevId, _nextId);
+            insert(_id, _price, _newICR, _prevId, _nextId);
         }
     }
 
@@ -267,21 +267,21 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function validInsertPosition(uint256 _ICR, address _prevId, address _nextId) public view returns (bool) {
+    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view returns (bool) {
         if (_prevId == address(0) && _nextId == address(0)) {
             // `(null, null)` is a valid insert position if the list is empty
             return isEmpty();
         } else if (_prevId == address(0)) {
             // `(null, _nextId)` is a valid insert position if `_nextId` is the head of the list
-            return data.head == _nextId && _ICR >= cdpManager.getCurrentICR(_nextId);
+            return data.head == _nextId && _ICR >= cdpManager.getCurrentICR(_nextId, _price);
         } else if (_nextId == address(0)) {
             // `(_prevId, null)` is a valid insert position if `_prevId` is the tail of the list
-            return data.tail == _prevId && _ICR <= cdpManager.getCurrentICR(_prevId);
+            return data.tail == _prevId && _ICR <= cdpManager.getCurrentICR(_prevId, _price);
         } else {
             // `(_prevId, _nextId)` is a valid insert position if they are adjacent nodes and `_ICR` falls between the two nodes' ICRs
             return data.nodes[_prevId].nextId == _nextId && 
-                   cdpManager.getCurrentICR(_prevId) >= _ICR && 
-                   _ICR >= cdpManager.getCurrentICR(_nextId);
+                   cdpManager.getCurrentICR(_prevId, _price) >= _ICR && 
+                   _ICR >= cdpManager.getCurrentICR(_nextId, _price);
         }
     }
 
@@ -290,9 +290,9 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _ICR Node's ICR
      * @param _startId Id of node to start ascending the list from
      */
-    function descendList(uint256 _ICR, address _startId) private view returns (address, address) {
+    function descendList(uint256 _ICR, uint _price, address _startId) private view returns (address, address) {
         // If `_startId` is the head, check if the insert position is before the head
-        if (data.head == _startId && _ICR >= cdpManager.getCurrentICR(_startId)) {
+        if (data.head == _startId && _ICR >= cdpManager.getCurrentICR(_startId, _price)) {
             return (address(0), _startId);
         }
 
@@ -300,7 +300,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address nextId = data.nodes[prevId].nextId;
 
         // Descend the list until we reach the end or until we find a valid insert position
-        while (prevId != address(0) && !validInsertPosition(_ICR, prevId, nextId)) {
+        while (prevId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
             prevId = data.nodes[prevId].nextId;
             nextId = data.nodes[prevId].nextId;
         }
@@ -313,9 +313,9 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _ICR Node's ICR
      * @param _startId Id of node to start descending the list from
      */
-    function ascendList(uint256 _ICR, address _startId) private view returns (address, address) {
+    function ascendList(uint256 _ICR, uint _price, address _startId) private view returns (address, address) {
         // If `_startId` is the tail, check if the insert position is after the tail
-        if (data.tail == _startId && _ICR <= cdpManager.getCurrentICR(_startId)) {
+        if (data.tail == _startId && _ICR <= cdpManager.getCurrentICR(_startId, _price)) {
             return (_startId, address(0));
         }
 
@@ -323,7 +323,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address prevId = data.nodes[nextId].prevId;
 
         // Ascend the list until we reach the end or until we find a valid insertion point
-        while (nextId != address(0) && !validInsertPosition(_ICR, prevId, nextId)) {
+        while (nextId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
             nextId = data.nodes[nextId].prevId;
             prevId = data.nodes[nextId].prevId;
         }
@@ -337,19 +337,19 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function findInsertPosition(uint256 _ICR, address _prevId, address _nextId) public view returns (address, address) {
+    function findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view returns (address, address) {
         address prevId = _prevId;
         address nextId = _nextId;
 
         if (prevId != address(0)) {
-            if (!contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId)) {
+            if (!contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId, _price)) {
                 // `prevId` does not exist anymore or now has a smaller ICR than the given ICR
                 prevId = address(0);
             }
         }
 
         if (nextId != address(0)) {
-            if (!contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId)) {
+            if (!contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId, _price)) {
                 // `nextId` does not exist anymore or now has a larger ICR than the given ICR
                 nextId = address(0);
             }
@@ -357,16 +357,16 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
         if (prevId == address(0) && nextId == address(0)) {
             // No hint - descend list starting from head
-            return descendList(_ICR, data.head);
+            return descendList(_ICR, _price, data.head);
         } else if (prevId == address(0)) {
             // No `prevId` for hint - ascend list starting from `nextId`
-            return ascendList(_ICR, nextId);
+            return ascendList(_ICR, _price, nextId);
         } else if (nextId == address(0)) {
             // No `nextId` for hint - descend list starting from `prevId`
-            return descendList(_ICR, prevId);
+            return descendList(_ICR, _price, prevId);
         } else {
             // Descend list starting from `prevId`
-            return descendList(_ICR, prevId);
+            return descendList(_ICR, _price, prevId);
         }
     }
 }
