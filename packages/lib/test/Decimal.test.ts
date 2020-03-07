@@ -173,13 +173,13 @@ describe("Decimal", () => {
     });
   });
 
-  describe(".isZero()", () => {
+  describe(".isZero", () => {
     it("should be true if Decimal is zero", () => {
-      expect(Decimal.from("0.0").isZero()).to.be.true;
+      expect(Decimal.from("0.0").isZero).to.be.true;
     });
 
     it("should be false if Decimal is non-zero", () => {
-      expect(Decimal.from("0.1").isZero()).to.be.false;
+      expect(Decimal.from("0.1").isZero).to.be.false;
     });
   });
 });

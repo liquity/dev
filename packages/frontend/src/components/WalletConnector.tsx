@@ -68,7 +68,11 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
   throw new Error(`Cannot ${action.type} when ${state.type}`);
 };
 
-export const WalletConnector: React.FC = ({ children }) => {
+type WalletConnectorProps = {
+  loader?: React.ReactNode;
+};
+
+export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, loader }) => {
   const web3 = useWeb3React<Web3Provider>();
 
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
@@ -83,10 +87,7 @@ export const WalletConnector: React.FC = ({ children }) => {
   }, [web3.error]);
 
   if (!connectors.injected.triedAuthorizedConnection) {
-    // Display nothing for the very brief period while we try to activate the injected provider.
-    // This is arguably better than flashing a loading message or spinner that is only visible
-    // for a few milliseconds.
-    return null;
+    return <>{loader}</>;
   }
 
   if (web3.active) {

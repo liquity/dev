@@ -16,6 +16,7 @@
     "@types/react": "^16.9.22",
     "@types/react-dom": "^16.9.5",
     "@types/styled-components": "^5.0.0",
+    "@types/styled-system": "^5.1.8",
     "@types/testing-library__jest-dom": "^5.0.1",
     "@types/testing-library__react": "^9.1.2",
     "@types/testing-library__user-event": "^4.1.1",
@@ -30,6 +31,7 @@
     "react-scripts": "3.4.0",
     "rimble-ui": "^0.11.1",
     "styled-components": "^5.0.1",
+    "styled-system": "^5.1.5",
     "typescript": "~3.8.2"
   },
   "scripts": {

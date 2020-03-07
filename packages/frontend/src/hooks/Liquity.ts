@@ -19,8 +19,12 @@ type LiquityContext = {
 
 const LiquityContext = createContext<LiquityContext | undefined>(undefined);
 
-export const LiquityProvider: React.FC = ({ children }) => {
-  const { account, library } = useWeb3React<Web3Provider>();
+type LiquityProviderProps = {
+  loader?: React.ReactNode;
+};
+
+export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, loader }) => {
+  const { library, account } = useWeb3React<Web3Provider>();
 
   const liquityState = useAsyncValue(
     useCallback(async () => {
@@ -31,7 +35,7 @@ export const LiquityProvider: React.FC = ({ children }) => {
   );
 
   if (!library || !account || !liquityState.loaded || !liquityState.value) {
-    return null;
+    return React.createElement(React.Fragment, {}, loader);
   }
 
   const liquity = liquityState.value;

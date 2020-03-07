@@ -1,5 +1,5 @@
 import React from "react";
-import { Text } from "rimble-ui";
+import { Flex, Text } from "rimble-ui";
 import { BigNumber } from "ethers/utils";
 
 import { Pool } from "@liquity/lib";
@@ -13,8 +13,7 @@ type SystemStatsProps = {
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ numberOfTroves, price, pool }) => {
   return (
-    <>
-      <Text>Total number of Liquity Troves: {Decimal.shorten(numberOfTroves)}</Text>
+    <Flex flexDirection="column" alignItems="center">
       <Text>Price of ETH: ${price.prettify()}</Text>
       <Text>QUI in circulation: {pool.totalDebt.shorten()}</Text>
       <Text>
@@ -25,9 +24,10 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ numberOfTroves, price,
           .toString(1)}
         %
       </Text>
+      <Text>Total number of Liquity Troves: {Decimal.shorten(numberOfTroves)}</Text>
       {pool.isRecoveryModeActiveAt(price) && (
         <Text color="danger">The system is in recovery mode!</Text>
       )}
-    </>
+    </Flex>
   );
 };

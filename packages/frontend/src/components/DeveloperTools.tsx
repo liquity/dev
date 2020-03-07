@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, Input, Button, Flex } from "rimble-ui";
+import { Text, Input, Button, Flex, Box, Heading } from "rimble-ui";
 
 import { Liquity } from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
@@ -13,7 +13,10 @@ export const DeveloperTools: React.FC<DeveloperToolsProps> = ({ liquity, price }
   const [newPrice, setNewPrice] = useState<string>(price.toString());
 
   return (
-    <>
+    <Box m={5}>
+      <Heading m={4} textAlign="center">
+        Developer Tools
+      </Heading>
       <Flex m={2}>
         <Text m={2} fontSize={3} fontWeight={4}>
           ETH price:
@@ -36,6 +39,6 @@ export const DeveloperTools: React.FC<DeveloperToolsProps> = ({ liquity, price }
           Liquidate 10
         </Button>
       </Flex>
-    </>
+    </Box>
   );
 };

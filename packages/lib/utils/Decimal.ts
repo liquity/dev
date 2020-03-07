@@ -106,7 +106,9 @@ export class Decimal {
   }
 
   toString(precision?: number) {
-    if (precision !== undefined) {
+    if (this.infinite) {
+      return "∞";
+    } else if (precision !== undefined) {
       return this.toStringWithPrecision(precision);
     } else {
       return this.toStringWithAutomaticPrecision();
@@ -159,12 +161,24 @@ export class Decimal {
     );
   }
 
-  isZero() {
+  get isZero() {
     return this.bigNumber.isZero();
   }
 
-  isInfinite() {
-    return this.eq(Decimal.INFINITY);
+  get nonZero() {
+    if (!this.isZero) {
+      return this;
+    }
+  }
+
+  get infinite() {
+    if (this.eq(Decimal.INFINITY)) {
+      return this;
+    }
+  }
+
+  get absoluteValue() {
+    return this;
   }
 
   lt(that: Decimalish) {
@@ -177,5 +191,127 @@ export class Decimal {
 
   gt(that: Decimalish) {
     return this.bigNumber.gt(Decimal.from(that).bigNumber);
+  }
+
+  gte(that: Decimalish) {
+    return this.bigNumber.gte(Decimal.from(that).bigNumber);
+  }
+
+  lte(that: Decimalish) {
+    return this.bigNumber.lte(Decimal.from(that).bigNumber);
+  }
+}
+
+type DifferenceRepresentation = { sign: "" | "+" | "-"; absoluteValue: Decimal };
+
+export class Difference {
+  private number?: DifferenceRepresentation;
+
+  private constructor(number?: DifferenceRepresentation) {
+    this.number = number;
+  }
+
+  static between(d1: Decimalish, d2: Decimalish) {
+    d1 = Decimal.from(d1);
+    d2 = Decimal.from(d2);
+
+    if (d1.infinite && d2.infinite) {
+      return new Difference(undefined);
+    } else if (d1.infinite) {
+      return new Difference({ sign: "+", absoluteValue: d1 });
+    } else if (d2.infinite) {
+      return new Difference({ sign: "-", absoluteValue: d2 });
+    } else if (d1.gt(d2)) {
+      return new Difference({ sign: "+", absoluteValue: Decimal.from(d1).sub(d2) });
+    } else if (d2.gt(d1)) {
+      return new Difference({ sign: "-", absoluteValue: Decimal.from(d2).sub(d1) });
+    } else {
+      return new Difference({ sign: "", absoluteValue: Decimal.from(0) });
+    }
+  }
+
+  toString(precision?: number) {
+    if (!this.number) {
+      return "N/A";
+    }
+
+    return this.number.sign + this.number.absoluteValue.toString(precision);
+  }
+
+  prettify(precision?: number) {
+    if (!this.number) {
+      return this.toString();
+    }
+
+    return this.number.sign + this.number.absoluteValue.prettify(precision);
+  }
+
+  mul(multiplier: Decimalish) {
+    return new Difference(
+      this.number && {
+        sign: this.number.sign,
+        absoluteValue: this.number.absoluteValue.mul(multiplier)
+      }
+    );
+  }
+
+  get nonZero() {
+    return this.number?.absoluteValue.nonZero && this;
+  }
+
+  get positive() {
+    return (this.number?.sign === "+" && this) || undefined;
+  }
+
+  get negative() {
+    return (this.number?.sign === "-" && this) || undefined;
+  }
+
+  get absoluteValue() {
+    return this.number?.absoluteValue;
+  }
+
+  get infinite() {
+    return this.number?.absoluteValue.infinite && this;
+  }
+}
+
+export class Percent<
+  A extends {
+    gte(n: string): boolean;
+  },
+  T extends {
+    infinite: T | undefined;
+    absoluteValue: A | undefined;
+    mul(hundred: 100): T;
+    toString(precision?: number): string;
+  }
+> {
+  private percent: T;
+
+  public constructor(ratio: T) {
+    this.percent = ratio.infinite || ratio.mul(100);
+  }
+
+  nonZero(precision: number) {
+    const zeroish = `0.${"0".repeat(precision)}5`;
+
+    if (this.percent.absoluteValue?.gte(zeroish)) {
+      return this;
+    }
+  }
+
+  toString(precision: number) {
+    return this.percent.infinite?.toString() || this.percent.toString(precision) + "%";
+  }
+
+  prettify() {
+    if (this.percent.absoluteValue?.gte("1000")) {
+      return this.toString(0);
+    } else if (this.percent.absoluteValue?.gte("10")) {
+      return this.toString(1);
+    } else {
+      return this.toString(2);
+    }
   }
 }

@@ -9,19 +9,35 @@ export function useAsyncValue<T>(
   const [callState, setCallState] = useState<AsyncValueState<T>>({ loaded: false });
 
   useEffect(() => {
+    let mounted = true;
+    let unwatch: (() => void) | undefined;
+
     const fetchValue = async () => {
-      setCallState({ loaded: true, value: await getValue() });
+      const value = await getValue();
+      if (mounted) {
+        setCallState({ loaded: true, value });
+      }
     };
 
     const onValueChanged = (value: T) => {
-      setCallState({ loaded: true, value });
+      if (mounted) {
+        setCallState({ loaded: true, value });
+      }
     };
 
+    setCallState({ loaded: false });
     fetchValue();
 
     if (watchValue) {
-      return watchValue(onValueChanged);
+      unwatch = watchValue(onValueChanged);
     }
+
+    return () => {
+      mounted = false;
+      if (unwatch) {
+        unwatch();
+      }
+    };
   }, [getValue, watchValue]);
 
   return callState;

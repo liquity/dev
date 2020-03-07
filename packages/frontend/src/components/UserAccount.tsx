@@ -8,5 +8,5 @@ type UserAccountProps = {
 };
 
 export const UserAccount: React.FC<UserAccountProps> = ({ balance }) => {
-  return <Text>You have {balance.prettify()} ETH available to deposit.</Text>;
+  return <Text textAlign="center">You have {balance.prettify()} ETH available to deposit.</Text>;
 };

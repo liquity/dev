@@ -2,7 +2,7 @@ import { Signer } from "ethers";
 import { Web3Provider, Provider } from "ethers/providers";
 import { bigNumberify, BigNumber, BigNumberish } from "ethers/utils";
 
-import { Decimal, Decimalish } from "../utils/Decimal";
+import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
 import { CDPManager } from "../types/CDPManager";
 import { CDPManagerFactory } from "../types/CDPManagerFactory";
@@ -58,7 +58,7 @@ interface Trovish {
 }
 
 const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
-  if (debt.isZero()) {
+  if (debt.isZero) {
     return Decimal.INFINITY;
   }
   return collateral.mulDiv(price, debt);
@@ -70,15 +70,20 @@ export class Trove {
   readonly pendingCollateralReward: Decimal;
   readonly pendingDebtReward: Decimal;
 
+  get collateralAfterReward() {
+    return this.collateral.add(this.pendingCollateralReward);
+  }
+
+  get debtAfterReward() {
+    return this.debt.add(this.pendingDebtReward);
+  }
+
   collateralRatioAt(price: Decimalish): Decimal {
     return calculateCollateralRatio(this.collateral, this.debt, price);
   }
 
   collateralRatioAfterRewardsAt(price: Decimalish): Decimal {
-    const collateralAfterRewards = this.collateral.add(this.pendingCollateralReward);
-    const debtAfterRewards = this.debt.add(this.pendingDebtReward);
-
-    return calculateCollateralRatio(collateralAfterRewards, debtAfterRewards, price);
+    return calculateCollateralRatio(this.collateralAfterReward, this.debtAfterReward, price);
   }
 
   isBelowMinimumCollateralRatioAt(price: Decimalish) {
@@ -98,19 +103,67 @@ export class Trove {
   }
 
   addCollateral(addedCollateral: Decimalish): Trove {
-    return new Trove({ ...this, collateral: this.collateral.add(addedCollateral) });
+    return new Trove({
+      collateral: this.collateralAfterReward.add(addedCollateral),
+      debt: this.debtAfterReward
+    });
   }
 
   addDebt(addedDebt: Decimalish): Trove {
-    return new Trove({ ...this, debt: this.debt.add(addedDebt) });
+    return new Trove({
+      collateral: this.collateralAfterReward,
+      debt: this.debtAfterReward.add(addedDebt)
+    });
   }
 
   subtractCollateral(subtractedCollateral: Decimalish): Trove {
-    return new Trove({ ...this, collateral: this.collateral.sub(subtractedCollateral) });
+    return new Trove({
+      collateral: this.collateralAfterReward.sub(subtractedCollateral),
+      debt: this.debtAfterReward
+    });
   }
 
   subtractDebt(subtractedDebt: Decimalish): Trove {
-    return new Trove({ ...this, debt: this.debt.sub(subtractedDebt) });
+    return new Trove({
+      collateral: this.collateralAfterReward,
+      debt: this.debtAfterReward.sub(subtractedDebt)
+    });
+  }
+
+  setCollateral(collateral: Decimalish): Trove {
+    return new Trove({
+      collateral,
+      debt: this.debtAfterReward
+    });
+  }
+
+  setDebt(debt: Decimalish): Trove {
+    return new Trove({
+      collateral: this.collateralAfterReward,
+      debt
+    });
+  }
+
+  whatChanged(
+    other: Trove
+  ):
+    | {
+        property: "collateral" | "debt";
+        difference: Difference;
+      }
+    | undefined {
+    if (!other.collateralAfterReward.eq(this.collateralAfterReward)) {
+      return {
+        property: "collateral",
+        difference: Difference.between(other.collateralAfterReward, this.collateralAfterReward)
+      };
+    }
+    if (!other.debtAfterReward.eq(this.debtAfterReward)) {
+      return {
+        property: "debt",
+        difference: Difference.between(other.debtAfterReward, this.debtAfterReward)
+      };
+    }
   }
 }
 
