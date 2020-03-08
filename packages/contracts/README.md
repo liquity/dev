@@ -42,17 +42,19 @@ Recovery Mode is designed to incentivise collateral top-ups, and also itself act
 
 ## Project Structure
 
-Liquity uses the `truffle-react` box template, and and follows the default Truffle project structure. The project runs on Truffle v5.1.5.
+Liquity follows the default Truffle project structure. The project runs on Truffle v5.1.5.
 
 ### Directories
 
-- `contracts/` -The core back end smart contracts written in Solidity
-- `test/` - JS test suite for the system. Tests run in Mocha/Chai
-- `migrations/` - contains for deploying the smart contracts to the blockchain
-- `utils/` - external truffle scripts - deployment helpers, gas calculators, etc
-- `client/` - contains the front-end React app. Front-end development code could be placed here. Alternatively, the contracts could be added to a new project for development in React or a different responsive front-end framework.
+- `packages/front-end/` - Contains the front-end React app for the user-facing web interface
+- `packages/lib/` - A layer between the front-end and smart contracts that handles the intermediate logic and low-level transactions
+- `packages/contracts/` The backend development folder, contains the Truffle/Buidler project, contracts and tests
+- `packages/contracts/contracts/` -The core back end smart contracts written in Solidity
+- `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
+- `packages/contracts/migrations/` - contains for deploying the smart contracts to the blockchain
+- `packages/contracts/utils/` - external truffle scripts - deployment helpers, gas calculators, etc
 
-Going forward, backend development will be done in the Buidler framework, which is compatible with Truffle projects, and allows Liquity to be deployed on the Buidler EVM network for faster compilation and test execution.
+Backend development is done in the Buidler framework, which is compatible with Truffle projects, and allows Liquity to be deployed on the Buidler EVM network for faster compilation and test execution.
 
 ## System Architecture
 
@@ -159,6 +161,8 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 ## Public User-Facing Functions
 
 ### Borrower CDP Operations - _CDPManager.sol_
+
+`openLoan(uint _CLVAmount)`: payable function that creates a CDP for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional - the collateral must exceed $20 in value, and the resulting collateral ratio must exceed the minimum (110% in normal circumstances).
 
 `userCreateCDP()`: creates a CDP for the caller, with zero collateral and debt.
 
