@@ -11,6 +11,8 @@ import { PriceFeed } from "../types/PriceFeed";
 import { PriceFeedFactory } from "../types/PriceFeedFactory";
 import { PoolManager } from "../types/PoolManager";
 import { PoolManagerFactory } from "../types/PoolManagerFactory";
+import { CLVToken } from "../types/CLVToken";
+import { CLVTokenFactory } from "../types/CLVTokenFactory";
 
 interface Poolish {
   readonly activeCollateral: Decimalish;
@@ -212,6 +214,7 @@ export class Liquity {
   private readonly priceFeed: PriceFeed;
   private readonly sortedCDPs: SortedCDPs;
   private readonly poolManager: PoolManager;
+  private readonly clvToken: CLVToken;
   private readonly userAddress?: string;
 
   private constructor(
@@ -219,12 +222,14 @@ export class Liquity {
     priceFeed: PriceFeed,
     sortedCDPs: SortedCDPs,
     poolManager: PoolManager,
+    clvToken: CLVToken,
     userAddress?: string
   ) {
     this.cdpManager = cdpManager;
     this.priceFeed = priceFeed;
     this.sortedCDPs = sortedCDPs;
     this.poolManager = poolManager;
+    this.clvToken = clvToken;
     this.userAddress = userAddress;
   }
 
@@ -232,7 +237,7 @@ export class Liquity {
     const signerOrProvider = userAddress ? provider.getSigner(userAddress) : provider;
     const cdpManager = CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider);
 
-    const [priceFeed, sortedCDPs, poolManager] = await Promise.all([
+    const [priceFeed, sortedCDPs, poolManager, clvToken] = await Promise.all([
       cdpManager.priceFeedAddress().then(address => {
         return PriceFeedFactory.connect(address, signerOrProvider);
       }),
@@ -241,10 +246,13 @@ export class Liquity {
       }),
       cdpManager.poolManagerAddress().then(address => {
         return PoolManagerFactory.connect(address, signerOrProvider);
+      }),
+      cdpManager.clvTokenAddress().then(address => {
+        return CLVTokenFactory.connect(address, signerOrProvider);
       })
     ]);
 
-    return new Liquity(cdpManager, priceFeed, sortedCDPs, poolManager, userAddress);
+    return new Liquity(cdpManager, priceFeed, sortedCDPs, poolManager, clvToken, userAddress);
   }
 
   private requireAddress(): string {
@@ -357,9 +365,7 @@ export class Liquity {
     return this.cdpManager.openLoan(
       trove.debt.bigNumber,
       await this.findHint(trove, price, address),
-      {
-        value: trove.collateral.bigNumber
-      }
+      { value: trove.collateral.bigNumber }
     );
   }
 
@@ -450,7 +456,7 @@ export class Liquity {
     return this.cdpManager.liquidateCDPs(maximumNumberOfCDPsToLiquidate);
   }
 
-  async getStabilityDeposit(address: string = this.requireAddress()) {
+  async getStabilityDeposit(address = this.requireAddress()) {
     const deposit = new Decimal(await this.poolManager.deposit(address));
 
     const snapshot = await this.poolManager.snapshot(address);
@@ -468,7 +474,7 @@ export class Liquity {
 
   watchStabilityDeposit(
     onStabilityDepositChanged: (deposit: StabilityDeposit) => void,
-    address: string = this.requireAddress()
+    address = this.requireAddress()
   ) {
     const { UserDepositChanged } = this.poolManager.filters;
     const userDepositChanged = UserDepositChanged(address, null);
@@ -484,11 +490,33 @@ export class Liquity {
     };
   }
 
-  depositQuiInStabilityPool(depositedQui: Decimal) {
-    return this.poolManager.provideToSP(depositedQui.bigNumber);
+  depositQuiInStabilityPool(depositedQui: Decimalish) {
+    return this.poolManager.provideToSP(Decimal.from(depositedQui).bigNumber);
   }
 
-  withdrawQuiFromStabilityPool(withdrawnQui: Decimal) {
-    return this.poolManager.withdrawFromSP(withdrawnQui.bigNumber);
+  withdrawQuiFromStabilityPool(withdrawnQui: Decimalish) {
+    return this.poolManager.withdrawFromSP(Decimal.from(withdrawnQui).bigNumber);
+  }
+
+  async getQuiBalance(address = this.requireAddress()) {
+    return new Decimal(await this.clvToken.balanceOf(address));
+  }
+
+  watchQuiBalance(onQuiBalanceChanged: (balance: Decimal) => void, address = this.requireAddress()) {
+    const { Transfer } = this.clvToken.filters;
+    const transferFromUser = Transfer(address, null, null);
+    const transferToUser = Transfer(null, address, null);
+
+    const transferListener = () => {
+      this.getQuiBalance(address).then(onQuiBalanceChanged);
+    };
+
+    this.clvToken.on(transferFromUser, transferListener);
+    this.clvToken.on(transferToUser, transferListener);
+
+    return () => {
+      this.clvToken.removeListener(transferFromUser, transferListener);
+      this.clvToken.removeListener(transferToUser, transferListener);
+    };
   }
 }

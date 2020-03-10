@@ -100,12 +100,13 @@ task(
     );
 
     const price = await liquity.getPrice();
+    const priceAsNumber = parseFloat(price.toString(4));
 
     let i = 0;
     for (const user of users) {
       const userAddress = await user.getAddress();
       const collateral = 999 * Math.random() + 1;
-      const debt = (200 * collateral) / (3 * Math.random() + 1.11);
+      const debt = (priceAsNumber * collateral) / (3 * Math.random() + 1.11);
 
       const liquity = await Liquity.connect(addresses.cdpManager, bre.waffle.provider, userAddress);
 
@@ -115,6 +116,7 @@ task(
       });
 
       await liquity.createTrove(new Trove({ collateral, debt }), price);
+      await liquity.depositQuiInStabilityPool(debt);
 
       if (++i % 10 === 0) {
         console.log(`Created ${i} Troves.`);

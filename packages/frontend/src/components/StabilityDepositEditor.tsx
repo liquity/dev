@@ -48,7 +48,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
 
         <StaticRow
           label="Gain"
-          amount={originalDeposit.pendingCollateralGain.prettify()}
+          amount={originalDeposit.pendingCollateralGain.prettify(4)}
           color={originalDeposit.pendingCollateralGain.nonZero && "success"}
           unit="ETH"
         />

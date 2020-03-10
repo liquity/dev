@@ -45,13 +45,13 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
       <Box p={2}>
         <EditableRow
           label="Collateral"
-          amount={editedTrove.collateralAfterReward.prettify()}
+          amount={editedTrove.collateralAfterReward.prettify(4)}
           pendingAmount={pendingCollateralChange.nonZero?.prettify()}
           pendingColor={pendingCollateralChange.positive ? "success" : "danger"}
           unit="ETH"
           {...{ edited }}
           {...{ editingState }}
-          editedAmount={editedTrove.collateralAfterReward.toString(2)}
+          editedAmount={editedTrove.collateralAfterReward.toString(4)}
           setEditedAmount={(editedCollateral: string) =>
             setEditedTrove(editedTrove.setCollateral(editedCollateral))
           }

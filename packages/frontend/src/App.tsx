@@ -67,12 +67,12 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   (window as any).liquity = liquity;
   (window as any).store = storeState.value;
 
-  const { balance, numberOfTroves, price, trove, pool, deposit } = storeState.value;
+  const { etherBalance, quiBalance, numberOfTroves, price, trove, pool, deposit } = storeState.value;
 
   return (
     <>
       <SystemStats {...{ numberOfTroves, price, pool }} />
-      <UserAccount {...{ balance }} />
+      <UserAccount {...{ etherBalance, quiBalance }} />
       {account === deployerAddress ? (
         <DeveloperTools {...{ liquity, price }} />
       ) : (

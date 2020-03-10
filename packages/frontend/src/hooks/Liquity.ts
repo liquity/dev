@@ -85,8 +85,17 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     [liquity]
   );
 
+  const getQuiBalance = useCallback(() => liquity.getQuiBalance(), [liquity]);
+  const watchQuiBalance = useCallback(
+    (onQuiBalanceChanged: (balance: Decimal) => void) => {
+      return liquity.watchQuiBalance(onQuiBalanceChanged);
+    },
+    [liquity]
+  );
+
   return useAsyncStore({
-    balance: useAccountBalance(provider, account),
+    etherBalance: useAccountBalance(provider, account),
+    quiBalance: useAsyncValue(getQuiBalance, watchQuiBalance),
     price: useAsyncValue(getPrice, watchPrice),
     numberOfTroves: useAsyncValue(getNumberOfTroves),
     trove: useAsyncValue(getTrove, watchTrove),

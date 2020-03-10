@@ -10,7 +10,7 @@ type RowProps = {
 
 const Row: React.FC<RowProps> = ({ label, unit, children }) => {
   return (
-    <Flex width="500px" alignItems="stretch">
+    <Flex width="450px" alignItems="stretch">
       <Label width={unit ? 0.25 : 0.4}>{label}</Label>
       {unit && (
         <StaticCell bg="#eee" width={0.15} textAlign="center">
