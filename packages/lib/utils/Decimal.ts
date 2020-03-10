@@ -293,7 +293,7 @@ export class Percent<
     this.percent = ratio.infinite || ratio.mul(100);
   }
 
-  nonZero(precision: number) {
+  nonZeroish(precision: number) {
     const zeroish = `0.${"0".repeat(precision)}5`;
 
     if (this.percent.absoluteValue?.gte(zeroish)) {

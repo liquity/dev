@@ -10,6 +10,7 @@ import { TroveManager } from "./components/TroveManager";
 import { UserAccount } from "./components/UserAccount";
 import { SystemStats } from "./components/SystemStats";
 import { DeveloperTools } from "./components/DeveloperTools";
+import { StabilityDepositManager } from "./components/StabilityDepositManager";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
@@ -66,7 +67,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   (window as any).liquity = liquity;
   (window as any).store = storeState.value;
 
-  const { balance, numberOfTroves, price, trove, pool } = storeState.value;
+  const { balance, numberOfTroves, price, trove, pool, deposit } = storeState.value;
 
   return (
     <>
@@ -75,7 +76,10 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
       {account === deployerAddress ? (
         <DeveloperTools {...{ liquity, price }} />
       ) : (
-        <TroveManager {...{ liquity, trove, price, pool }} />
+        <>
+          <TroveManager {...{ liquity, trove, price, pool }} />
+          <StabilityDepositManager {...{ liquity, deposit }} />
+        </>
       )}
     </>
   );

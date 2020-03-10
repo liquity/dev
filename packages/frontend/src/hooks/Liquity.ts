@@ -2,7 +2,7 @@ import React, { createContext, useContext, useCallback } from "react";
 import { Web3Provider } from "ethers/providers";
 import { useWeb3React } from "@web3-react/core";
 
-import { Liquity, Trove } from "@liquity/lib";
+import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue, useAsyncStore } from "../hooks/AsyncValue";
 import { useAccountBalance } from "./AccountBalance";
@@ -77,11 +77,20 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     [liquity]
   );
 
+  const getStabilityDeposit = useCallback(() => liquity.getStabilityDeposit(), [liquity]);
+  const watchStabilityDeposit = useCallback(
+    (onStabilityDepositChanged: (deposit: StabilityDeposit) => void) => {
+      return liquity.watchStabilityDeposit(onStabilityDepositChanged);
+    },
+    [liquity]
+  );
+
   return useAsyncStore({
     balance: useAccountBalance(provider, account),
     price: useAsyncValue(getPrice, watchPrice),
     numberOfTroves: useAsyncValue(getNumberOfTroves),
     trove: useAsyncValue(getTrove, watchTrove),
+    deposit: useAsyncValue(getStabilityDeposit, watchStabilityDeposit),
     pool: useAsyncValue(getPool)
   });
 };

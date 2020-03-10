@@ -1,17 +1,16 @@
-import { Signer } from "ethers";
-import { Web3Provider, Provider } from "ethers/providers";
+import { Web3Provider } from "ethers/providers";
 import { bigNumberify, BigNumber, BigNumberish } from "ethers/utils";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
 import { CDPManager } from "../types/CDPManager";
 import { CDPManagerFactory } from "../types/CDPManagerFactory";
-import { ISortedCDPs } from "../types/ISortedCDPs";
-import { ISortedCDPsFactory } from "../types/ISortedCDPsFactory";
-import { IPriceFeed } from "../types/IPriceFeed";
-import { IPriceFeedFactory } from "../types/IPriceFeedFactory";
-import { IPoolManager } from "../types/IPoolManager";
-import { IPoolManagerFactory } from "../types/IPoolManagerFactory";
+import { SortedCDPs } from "../types/SortedCDPs";
+import { SortedCDPsFactory } from "../types/SortedCDPsFactory";
+import { PriceFeed } from "../types/PriceFeed";
+import { PriceFeedFactory } from "../types/PriceFeedFactory";
+import { PoolManager } from "../types/PoolManager";
+import { PoolManagerFactory } from "../types/PoolManagerFactory";
 
 interface Poolish {
   readonly activeCollateral: Decimalish;
@@ -144,25 +143,56 @@ export class Trove {
     });
   }
 
-  whatChanged(
-    other: Trove
-  ):
-    | {
-        property: "collateral" | "debt";
-        difference: Difference;
-      }
-    | undefined {
-    if (!other.collateralAfterReward.eq(this.collateralAfterReward)) {
+  whatChanged(that: Trove): { property: "collateral" | "debt"; difference: Difference } | undefined {
+    if (!that.collateralAfterReward.eq(this.collateralAfterReward)) {
       return {
         property: "collateral",
-        difference: Difference.between(other.collateralAfterReward, this.collateralAfterReward)
+        difference: Difference.between(that.collateralAfterReward, this.collateralAfterReward)
       };
     }
-    if (!other.debtAfterReward.eq(this.debtAfterReward)) {
+    if (!that.debtAfterReward.eq(this.debtAfterReward)) {
       return {
         property: "debt",
-        difference: Difference.between(other.debtAfterReward, this.debtAfterReward)
+        difference: Difference.between(that.debtAfterReward, this.debtAfterReward)
       };
+    }
+  }
+}
+
+// yeah, sounds stupid...
+interface StabilityDepositish {
+  readonly deposit?: Decimalish;
+  readonly pendingCollateralGain?: Decimalish;
+  readonly pendingDepositLoss?: Decimalish;
+}
+
+export class StabilityDeposit {
+  readonly deposit: Decimal;
+  readonly pendingCollateralGain: Decimal;
+  readonly pendingDepositLoss: Decimal;
+
+  get depositAfterLoss() {
+    return this.deposit.sub(this.pendingDepositLoss);
+  }
+
+  constructor({
+    deposit = 0,
+    pendingCollateralGain = 0,
+    pendingDepositLoss = 0
+  }: StabilityDepositish) {
+    this.deposit = Decimal.from(deposit);
+    this.pendingCollateralGain = Decimal.from(pendingCollateralGain);
+
+    if (this.deposit.gt(pendingDepositLoss)) {
+      this.pendingDepositLoss = Decimal.from(pendingDepositLoss);
+    } else {
+      this.pendingDepositLoss = this.deposit;
+    }
+  }
+
+  calculateDifference(that: StabilityDeposit) {
+    if (!that.depositAfterLoss.eq(this.depositAfterLoss)) {
+      return Difference.between(that.depositAfterLoss, this.depositAfterLoss);
     }
   }
 }
@@ -179,16 +209,16 @@ export class Liquity {
   protected price?: Decimal;
 
   private readonly cdpManager: CDPManager;
-  private readonly priceFeed: IPriceFeed;
-  private readonly sortedCDPs: ISortedCDPs;
-  private readonly poolManager: IPoolManager;
+  private readonly priceFeed: PriceFeed;
+  private readonly sortedCDPs: SortedCDPs;
+  private readonly poolManager: PoolManager;
   private readonly userAddress?: string;
 
   private constructor(
     cdpManager: CDPManager,
-    priceFeed: IPriceFeed,
-    sortedCDPs: ISortedCDPs,
-    poolManager: IPoolManager,
+    priceFeed: PriceFeed,
+    sortedCDPs: SortedCDPs,
+    poolManager: PoolManager,
     userAddress?: string
   ) {
     this.cdpManager = cdpManager;
@@ -204,13 +234,13 @@ export class Liquity {
 
     const [priceFeed, sortedCDPs, poolManager] = await Promise.all([
       cdpManager.priceFeedAddress().then(address => {
-        return IPriceFeedFactory.connect(address, signerOrProvider);
+        return PriceFeedFactory.connect(address, signerOrProvider);
       }),
       cdpManager.sortedCDPsAddress().then(address => {
-        return ISortedCDPsFactory.connect(address, signerOrProvider);
+        return SortedCDPsFactory.connect(address, signerOrProvider);
       }),
       cdpManager.poolManagerAddress().then(address => {
-        return IPoolManagerFactory.connect(address, signerOrProvider);
+        return PoolManagerFactory.connect(address, signerOrProvider);
       })
     ]);
 
@@ -242,13 +272,14 @@ export class Liquity {
       return undefined;
     }
 
-    const stake = new Decimal(cdp.stake);
     const snapshot = await this.cdpManager.rewardSnapshots(address);
     const snapshotETH = new Decimal(snapshot.ETH);
     const snapshotCLVDebt = new Decimal(snapshot.CLVDebt);
+
     const L_ETH = new Decimal(await this.cdpManager.L_ETH());
     const L_CLVDebt = new Decimal(await this.cdpManager.L_CLVDebt());
 
+    const stake = new Decimal(cdp.stake);
     const pendingCollateralReward = Liquity.computePendingReward(snapshotETH, L_ETH, stake);
     const pendingDebtReward = Liquity.computePendingReward(snapshotCLVDebt, L_CLVDebt, stake);
 
@@ -417,5 +448,47 @@ export class Liquity {
 
   async liquidate(maximumNumberOfCDPsToLiquidate: BigNumberish) {
     return this.cdpManager.liquidateCDPs(maximumNumberOfCDPsToLiquidate);
+  }
+
+  async getStabilityDeposit(address: string = this.requireAddress()) {
+    const deposit = new Decimal(await this.poolManager.deposit(address));
+
+    const snapshot = await this.poolManager.snapshot(address);
+    const snapshotETH = new Decimal(snapshot.ETH);
+    const snapshotCLV = new Decimal(snapshot.CLV);
+
+    const S_ETH = new Decimal(await this.poolManager.S_ETH());
+    const S_CLV = new Decimal(await this.poolManager.S_CLV());
+
+    const pendingCollateralGain = Liquity.computePendingReward(snapshotETH, S_ETH, deposit);
+    const pendingDepositLoss = Liquity.computePendingReward(snapshotCLV, S_CLV, deposit);
+
+    return new StabilityDeposit({ deposit, pendingCollateralGain, pendingDepositLoss });
+  }
+
+  watchStabilityDeposit(
+    onStabilityDepositChanged: (deposit: StabilityDeposit) => void,
+    address: string = this.requireAddress()
+  ) {
+    const { UserDepositChanged } = this.poolManager.filters;
+    const userDepositChanged = UserDepositChanged(address, null);
+
+    const userDepositChangedListener = (_address: string, deposit: BigNumber) => {
+      onStabilityDepositChanged(new StabilityDeposit({ deposit: new Decimal(deposit) }));
+    };
+
+    this.poolManager.on(userDepositChanged, userDepositChangedListener);
+
+    return () => {
+      this.poolManager.removeListener(userDepositChanged, userDepositChangedListener);
+    };
+  }
+
+  depositQuiInStabilityPool(depositedQui: Decimal) {
+    return this.poolManager.provideToSP(depositedQui.bigNumber);
+  }
+
+  withdrawQuiFromStabilityPool(withdrawnQui: Decimal) {
+    return this.poolManager.withdrawFromSP(withdrawnQui.bigNumber);
   }
 }

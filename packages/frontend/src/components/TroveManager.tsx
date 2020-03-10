@@ -67,7 +67,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
   const [actionState, setActionState] = useState<"idle" | "waitingForUser" | "waitingForNetwork">(
     "idle"
   );
-  const change = originalTrove?.whatChanged(editedTrove);
+  const change = originalTrove.whatChanged(editedTrove);
   const { addMessage } = useToast();
 
   useEffect(() => {
@@ -81,11 +81,11 @@ const TroveAction: React.FC<TroveActionProps> = ({
   const [actionName, action] = getTroveAction(change.property, change.difference);
 
   return (
-    <Flex>
+    <Flex mt={4}>
       {actionState === "idle" ? (
         <>
           <Button
-            m={2}
+            mx={2}
             disabled={
               editedTrove.isBelowMinimumCollateralRatioAt(price) ||
               (pool.isRecoveryModeActiveAt(price) &&
@@ -110,7 +110,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
             {actionName}
           </Button>
           <Button
-            m={2}
+            mx={2}
             variant="danger"
             icon="Replay"
             icononly
@@ -118,7 +118,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
           />
         </>
       ) : (
-        <Button m={2} disabled>
+        <Button mx={2} disabled>
           <Loader mr={2} color="white" />
           {actionState === "waitingForUser"
             ? "Waiting for your confirmation"
@@ -157,7 +157,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ liquity, trove, pric
 
   return (
     <>
-      <Box m={5}>
+      <Box mt={4}>
         <TroveEditor {...{ originalTrove: trove, editedTrove, setEditedTrove, price }} />
       </Box>
 
