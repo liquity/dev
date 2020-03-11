@@ -237,18 +237,18 @@ export class Liquity {
     const signerOrProvider = userAddress ? provider.getSigner(userAddress) : provider;
     const cdpManager = CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider);
 
-    const [priceFeed, sortedCDPs, poolManager, clvToken] = await Promise.all([
+    const [priceFeed, sortedCDPs, clvToken, poolManager] = await Promise.all([
       cdpManager.priceFeedAddress().then(address => {
         return PriceFeedFactory.connect(address, signerOrProvider);
       }),
       cdpManager.sortedCDPsAddress().then(address => {
         return SortedCDPsFactory.connect(address, signerOrProvider);
       }),
-      cdpManager.poolManagerAddress().then(address => {
-        return PoolManagerFactory.connect(address, signerOrProvider);
-      }),
       cdpManager.clvTokenAddress().then(address => {
         return CLVTokenFactory.connect(address, signerOrProvider);
+      }),
+      cdpManager.poolManagerAddress().then(address => {
+        return PoolManagerFactory.connect(address, signerOrProvider);
       })
     ]);
 
@@ -496,6 +496,10 @@ export class Liquity {
 
   withdrawQuiFromStabilityPool(withdrawnQui: Decimalish) {
     return this.poolManager.withdrawFromSP(Decimal.from(withdrawnQui).bigNumber);
+  }
+
+  async getQuiInStabilityPool() {
+    return new Decimal(await this.poolManager.getStabilityPoolCLV());
   }
 
   async getQuiBalance(address = this.requireAddress()) {

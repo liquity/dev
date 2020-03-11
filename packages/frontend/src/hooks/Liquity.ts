@@ -93,6 +93,10 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     [liquity]
   );
 
+  const getQuiInStabilityPool = useCallback(() => {
+    return liquity.getQuiInStabilityPool();
+  }, [liquity]);
+
   return useAsyncStore({
     etherBalance: useAccountBalance(provider, account),
     quiBalance: useAsyncValue(getQuiBalance, watchQuiBalance),
@@ -100,6 +104,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     numberOfTroves: useAsyncValue(getNumberOfTroves),
     trove: useAsyncValue(getTrove, watchTrove),
     deposit: useAsyncValue(getStabilityDeposit, watchStabilityDeposit),
-    pool: useAsyncValue(getPool)
+    pool: useAsyncValue(getPool),
+    quiInStabilityPool: useAsyncValue(getQuiInStabilityPool)
   });
 };
