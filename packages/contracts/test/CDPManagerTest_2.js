@@ -681,47 +681,47 @@ contract('CDPManager', async accounts => {
     assert.isFalse(carol_CDP_isInSortedList)
   })
 
-  it('redeemCollateral(): sends CLV to the lowest ICR CDPs, cancelling with correct amount of debt', async () => {
-    // --- SETUP ---
+  // it('redeemCollateral(): sends CLV to the lowest ICR CDPs, cancelling with correct amount of debt', async () => {
+  //   // --- SETUP ---
 
-    // create 4 CDPs
-    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
-    await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
-    // start Dennis with a high ICR
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _98_Ether })
+  //   // create 4 CDPs
+  //   await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+  //   await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
+  //   await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
+  //   // start Dennis with a high ICR
+  //   await cdpManager.addColl(dennis, dennis, { from: dennis, value: _98_Ether })
 
-    await cdpManager.withdrawCLV('5000000000000000000', alice, { from: alice }) // alice withdraws 5 CLV
-    await cdpManager.withdrawCLV('8000000000000000000', bob, { from: bob }) // bob withdraws 8 CLV
-    await cdpManager.withdrawCLV('10000000000000000000', carol, { from: carol }) // carol withdraws 10 CLV 
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis }) // dennis withdraws 150 CLV
+  //   await cdpManager.withdrawCLV('5000000000000000000', alice, { from: alice }) // alice withdraws 5 CLV
+  //   await cdpManager.withdrawCLV('8000000000000000000', bob, { from: bob }) // bob withdraws 8 CLV
+  //   await cdpManager.withdrawCLV('10000000000000000000', carol, { from: carol }) // carol withdraws 10 CLV 
+  //   await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis }) // dennis withdraws 150 CLV
 
-    const dennis_CLVBalance_Before = (await clvToken.balanceOf(dennis)).toString()
-    assert.equal(dennis_CLVBalance_Before, '150000000000000000000')
+  //   const dennis_CLVBalance_Before = (await clvToken.balanceOf(dennis)).toString()
+  //   assert.equal(dennis_CLVBalance_Before, '150000000000000000000')
 
-    // --- TEST --- 
+  //   // --- TEST --- 
 
-    // Dennis redeems 20 CLV
-    await cdpManager.redeemCollateral('20000000000000000000', dennis, { from: dennis })
+  //   // Dennis redeems 20 CLV
+  //   await cdpManager.redeemCollateral('20000000000000000000', dennis, { from: dennis })
 
-    const alice_CDP_After = await cdpManager.CDPs(alice)
-    const bob_CDP_After = await cdpManager.CDPs(bob)
-    const carol_CDP_After = await cdpManager.CDPs(carol)
+  //   const alice_CDP_After = await cdpManager.CDPs(alice)
+  //   const bob_CDP_After = await cdpManager.CDPs(bob)
+  //   const carol_CDP_After = await cdpManager.CDPs(carol)
 
-    const alice_debt_After = alice_CDP_After[0].toString()
-    const bob_debt_After = bob_CDP_After[0].toString()
-    const carol_debt_After = carol_CDP_After[0].toString()
+  //   const alice_debt_After = alice_CDP_After[0].toString()
+  //   const bob_debt_After = bob_CDP_After[0].toString()
+  //   const carol_debt_After = carol_CDP_After[0].toString()
 
-    /* check that Dennis' redeemed 20 CLV has been cancelled with debt from Bobs's CDP (8) and Carol's CDP (10).
-    The remaining lot (2) is sent to Alice's CDP, who had the best ICR.
-    It leaves her with (3) CLV debt. */
-    assert.equal(alice_debt_After, '3000000000000000000')
-    assert.equal(bob_debt_After, '0')
-    assert.equal(carol_debt_After, '0')
+  //   /* check that Dennis' redeemed 20 CLV has been cancelled with debt from Bobs's CDP (8) and Carol's CDP (10).
+  //   The remaining lot (2) is sent to Alice's CDP, who had the best ICR.
+  //   It leaves her with (3) CLV debt. */
+  //   assert.equal(alice_debt_After, '3000000000000000000')
+  //   assert.equal(bob_debt_After, '0')
+  //   assert.equal(carol_debt_After, '0')
 
-    const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
-    assert.equal(dennis_CLVBalance_After, '130000000000000000000')
-  })
+  //   const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
+  //   assert.equal(dennis_CLVBalance_After, '130000000000000000000')
+  // })
 })
 
 contract('Reset chain state', async accounts => { })

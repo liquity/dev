@@ -43,8 +43,10 @@ contract('Gas cost tests', async accounts => {
   const _90e18 =  web3.utils.toWei('90', 'ether')
 
   const _100e18 = web3.utils.toWei('100', 'ether')
+  const _101e18 = web3.utils.toWei('101', 'ether')
   const _180e18 = web3.utils.toWei('180', 'ether')
   const _200e18 = web3.utils.toWei('180', 'ether')
+  const _450e18 = web3.utils.toWei('450', 'ether')
   const _500e18 = web3.utils.toWei('500', 'ether')
   const _900e18 = web3.utils.toWei('900', 'ether')
   const _1000e18 = web3.utils.toWei('1000', 'ether')
@@ -314,8 +316,10 @@ contract('Gas cost tests', async accounts => {
 
   const getCurrentICR_allAccounts = async (accounts, cdpManager) => {
     const gasCostList = []
+    const price = await priceFeed.getPrice()
+
     for (const account of accounts) {
-      const tx = await functionCaller.cdpManager_getCurrentICR(account)
+      const tx = await functionCaller.cdpManager_getCurrentICR(account, price)
       const gas = gasUsed(tx) - 21000
       gasCostList.push(gas)
     }
@@ -691,7 +695,8 @@ it("", async () => {
   const randCLVAmount = randAmountInWei(1,180)
   await cdpManager.withdrawCLV(randCLVAmount, accounts[1], {from: accounts[1]})
 
-  const tx = await functionCaller.cdpManager_getCurrentICR(accounts[1])
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.cdpManager_getCurrentICR(accounts[1], price)
 
   const gas = gasUsed(tx) - 21000
   logGas(gas, message)
@@ -760,8 +765,8 @@ it("", async () => {
    await priceFeed.setPrice(_100e18)
    await cdpManager.liquidate(accounts[999], { from: accounts[0]})
 
-
-  const tx = await functionCaller.cdpManager_getCurrentICR(accounts[1])
+  const price = await priceFeed.getPrice())
+  const tx = await functionCaller.cdpManager_getCurrentICR(accounts[1], price)
 
   const gas = gasUsed(tx) - 21000
   logGas(gas, message)
@@ -827,7 +832,7 @@ it("", async () => {
 })
 
  // --- redeemCollateral() ---
-  it.only("", async () => { 
+  it("", async () => { 
     const message = 'redeemCollateral(), redeems 50 CLV, redemption hits 1 CDP. One account in system'
     await addColl_allAccounts([accounts[0]], cdpManager, _10_Ether)
     await withdrawCLV_allAccounts([accounts[0]], cdpManager, _100e18)
@@ -858,6 +863,21 @@ it("", async () => {
     appendData({gas: gas}, message, data)
   })
 
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeemed 101 CLV, redemption hits 1 CDP'
+    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts(_10_Accounts, cdpManager, _100e18)
+
+    // Whale adds 200 ether, withdraws 500 CLV, redeems 101 CLV
+    await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
+    await cdpManager.withdrawCLV(_500e18, accounts[9], { from: accounts[9]})
+    const gas = await redeemCollateral(accounts[9], cdpManager, _101e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
   it("", async () => { 
     const message = 'redeemCollateral(), redeemed 500 CLV, redemption hits 5 CDPs'
     await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
@@ -867,6 +887,20 @@ it("", async () => {
     await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
     await cdpManager.withdrawCLV(_500e18, accounts[9], { from: accounts[9]})
     const gas = await redeemCollateral(accounts[9], cdpManager, _500e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeemed 450 CLV, redemption hits 5 CDPs, partial redemption (50 of 100 CLV) from final CDP'
+    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts(_10_Accounts, cdpManager, _100e18)
+
+    // Whale adds 200 ether, withdraws 500 CLV, redeems 500 CLV
+    await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
+    await cdpManager.withdrawCLV(_450e18, accounts[9], { from: accounts[9]})
+    const gas = await redeemCollateral(accounts[9], cdpManager, _450e18)
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
@@ -1951,7 +1985,8 @@ it("", async () => {
   const CR = web3.utils.toWei('3', 'ether')
   const address_0 = '0x0000000000000000000000000000000000000000'
  
-  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
   const gas = gasUsed(tx) - 21000
   logGas(gas, message)
 
@@ -1968,7 +2003,8 @@ it("", async () => {
   const CR = web3.utils.toWei('3', 'ether')
   const address_0 = '0x0000000000000000000000000000000000000000'
  
-  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
   const gas = gasUsed(tx) - 21000
   logGas(gas, message)
 
@@ -1987,7 +2023,8 @@ it("", async () => {
   const CR = web3.utils.toWei('2', 'ether')
   const address_0 = '0x0000000000000000000000000000000000000000'
  
-  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
   const gas = gasUsed(tx) - 21000
   logGas(gas, message)
 
@@ -2003,7 +2040,8 @@ it("", async () => {
   // 200% ICR, lower than CDP at tail of list
   const CR = web3.utils.toWei('2', 'ether')
  
-  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
   const gas = gasUsed(tx) - 21000
   logGas(gas, message)
 
@@ -2020,14 +2058,16 @@ it("", async () => {
     // 200% ICR, lower than CDP at tail of list
     const CR = web3.utils.toWei('2', 'ether')
   
-    const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
+    const price = await priceFeed.getPrice()
+    const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
     const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
   })
 
-// withdrawPenaltyFromSP
+// --- withdrawPenaltyFromSP ---
+
   it("", async () => {
     const message = "withdrawPenaltyFromSP()"
     // Acct 1 withdraws 1500 CLV and provides to StabilityPool
@@ -2124,64 +2164,6 @@ it("", async () => {
     appendData({gas: gas}, message, data)
   })
 
-// --- DeciMath Internal Functions - Embedded Library ---
-
-it("", async () => {
-  const message = "DeciMath internal decMul() with random args"
-  const rand1 = randAmountInWei(1,200)
-  const rand2 = randAmountInWei(1,200)
-  const tx = await functionCaller.decimath2_decMul(rand1, rand2)
-  const gas = gasUsed(tx) - 21000
-  logGas(gas, message)
-
-  appendData({gas: gas}, message, data)
-})
-
-it("", async () => {
-  const message = "DeciMath internal decDiv() with random args"
-  const rand1 = randAmountInWei(1,200)
-  const rand2 = randAmountInWei(1,200)
-  const tx = await functionCaller.decimath2_decDiv(rand1, rand2)
-  const gas = gasUsed(tx) - 21000
-  logGas(gas, message)
-
-  appendData({gas: gas}, message, data)
-})
-
-it("", async () => {
-  const message = "DeciMath internal accurateMulDiv() with random args"
-  const rand1 = randAmountInWei(1,200)
-  const rand2 = randAmountInWei(1,200)
-  const rand3 = randAmountInWei(1,200)
-  const tx = await functionCaller.decimath2_accurateMulDiv(rand1, rand2, rand3)
-  const gas = gasUsed(tx) - 21000
-  logGas(gas, message)
-
-  appendData({gas: gas}, message, data)
-})
-
-it("", async () => {
-  const message = "DeciMath internal div_toDuint() with random args"
-  const rand1 = randAmountInWei(1,200)
-  const rand2 = randAmountInWei(1,200)
-  const tx = await functionCaller.decimath2_div_toDuint(rand1, rand2)
-  const gas = gasUsed(tx) - 21000
-  logGas(gas, message)
-
-  appendData({gas: gas}, message, data)
-})
-
-it("", async () => {
-  const message = "DeciMath internal mul_uintByDuint() with random args"
-  const rand1 = randAmountInWei(1,200)
-  const rand2 = randAmountInWei(1,200)
-  const tx = await functionCaller.decimath2_mul_uintByDuint(rand1, rand2)
-  const gas = gasUsed(tx) - 21000
-  logGas(gas, message)
-
-  appendData({gas: gas}, message, data)
-})
-
 // --- ABDKMath64x64 functions - embedded library ---
 
 it("", async () => {
@@ -2251,6 +2233,8 @@ it("", async () => {
 
   appendData({gas: gas}, message, data)
 })
+
+// TODO abdkMath_divuu (returns uint128)
 
 
 // --- Write test output data to CSV file

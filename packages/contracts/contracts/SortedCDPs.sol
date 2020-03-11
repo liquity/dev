@@ -191,7 +191,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
         if (_newICR > 0) {
             // Insert node if it has a non-zero ICR
-            insert(_id, _price, _newICR, _prevId, _nextId);
+            insert(_id, _newICR, _price, _prevId, _nextId);
         }
     }
 

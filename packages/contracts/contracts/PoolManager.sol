@@ -7,6 +7,7 @@ import './Interfaces/IStabilityPool.sol';
 import './Interfaces/IPriceFeed.sol';
 import './Interfaces/ICLVToken.sol';
 import './DeciMath.sol';
+import './ABDKMath64x64.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/ownership/Ownable.sol';
 import '@nomiclabs/buidler/console.sol';
@@ -23,9 +24,9 @@ contract PoolManager is Ownable, IPoolManager {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     
-    event UserSnapshotUpdated(uint _CLV, uint _ETH);
-    event S_CLVUpdated(uint _S_CLV);
-    event S_ETHUpdated(uint _S_ETH);
+    event UserSnapshotUpdated(int128 _CLV, int128 _ETH);
+    event S_CLVUpdated(int128 _S_CLV);
+    event S_ETHUpdated(int128 _S_ETH);
     event UserDepositChanged(address indexed _user, uint _amount);
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
@@ -53,8 +54,8 @@ contract PoolManager is Ownable, IPoolManager {
     mapping (address => uint) public deposit;
 
     struct Snapshot {
-        uint ETH;
-        uint CLV;
+        int128 ETH;
+        int128 CLV;
     }
     
     /* Track the sums of accumulated rewards per unit staked: S_CLV and S_ETH. During it's lifetime, each deposit earns:
@@ -63,8 +64,8 @@ contract PoolManager is Ownable, IPoolManager {
     An ETH *gain* of ( deposit * [S_ETH - S_ETH(0)] )
     
     Where S_CLV(0) and S_ETH(0) are snapshots of S_CLV and S_ETH taken at the instant the deposit was made */
-    uint public S_CLV;
-    uint public S_ETH;
+    int128 public S_CLV;
+    int128 public S_ETH;
 
     // Map users to their individual snapshots of S_CLV and the S_ETH
     mapping (address => Snapshot) public snapshot;
@@ -146,9 +147,13 @@ contract PoolManager is Ownable, IPoolManager {
             return 2**256 - 1; // TCR is technically infinite
         }
 
-        // Calculate TCR
-        uint collToDebtRatio = DeciMath.div_toDuint(totalCollateral, totalDebt);
-        uint TCR = DeciMath.mul_uintByDuint(price, collToDebtRatio);
+        // // Calculate TCR
+        // uint collToDebtRatio = DeciMath.div_toDuint(totalCollateral, totalDebt);
+        // uint TCR = DeciMath.mul_uintByDuint(price, collToDebtRatio);
+
+        int128 collToDebtRatio = ABDKMath64x64.divu(totalCollateral, totalDebt);
+        uint TCR = ABDKMath64x64.mulu(collToDebtRatio, price);
+
         return TCR;
     }
 
@@ -298,18 +303,30 @@ contract PoolManager is Ownable, IPoolManager {
     // Return the accumulated change, for the user, for the duration that this deposit was held
     function getCurrentETHGain(address _user) internal view returns(uint) {
         uint userDeposit = deposit[_user];
-        uint snapshotETH = snapshot[_user].ETH;  // duint
-        uint ETHGainPerUnitStaked = S_ETH.sub(snapshotETH);  // duint
 
-        return DeciMath.mul_uintByDuint(userDeposit, ETHGainPerUnitStaked); // uint
+        int128 snapshotETH = snapshot[_user].ETH;  
+
+        // uint ETHGainPerUnitStaked = S_ETH.sub(snapshotETH);  // duint
+        
+        // return DeciMath.mul_uintByDuint(userDeposit, ETHGainPerUnitStaked); // uint
+
+        int128 ETHGainPerUnitStaked = ABDKMath64x64.sub(S_ETH, snapshotETH);  // 64.64 fp
+
+        return ABDKMath64x64.mulu(ETHGainPerUnitStaked, userDeposit);
     }
 
     function getCurrentCLVLoss(address _user) internal view returns(uint) {
         uint userDeposit = deposit[_user];
-        uint snapshotCLV = snapshot[_user].CLV; // duint
-        uint CLVLossPerUnitStaked = S_CLV.sub(snapshotCLV); // duint
 
-        return DeciMath.mul_uintByDuint(userDeposit, CLVLossPerUnitStaked); // uint
+        int128 snapshotCLV = snapshot[_user].CLV; // duint
+
+        // uint CLVLossPerUnitStaked = S_CLV.sub(snapshotCLV); 
+        
+        // return DeciMath.mul_uintByDuint(userDeposit, CLVLossPerUnitStaked); // uint
+
+        int128 CLVLossPerUnitStaked = ABDKMath64x64.sub(S_CLV, snapshotCLV); 
+        
+        return ABDKMath64x64.mulu(CLVLossPerUnitStaked, userDeposit);
     }
 
     // --- Internal StabilityPool functions --- 
@@ -499,8 +516,12 @@ contract PoolManager is Ownable, IPoolManager {
        
         Depositor's ETH entitlement is reduced to ETHGain * (deposit/CLVLoss).
         The claimant retrieves ETHGain * (1 - deposit/CLVLoss). */
-        uint ratio = DeciMath.div_toDuint(depositAmount, CLVLoss);  // duint
-        uint depositorRemainder = DeciMath.mul_uintByDuint(ETHGain, ratio); // uint
+        // uint ratio = DeciMath.div_toDuint(depositAmount, CLVLoss);  // duint
+        // uint depositorRemainder = DeciMath.mul_uintByDuint(ETHGain, ratio); // uint
+        
+        int128 ratio = ABDKMath64x64.divu(depositAmount, CLVLoss);  // duint
+        uint depositorRemainder = ABDKMath64x64.mulu(ratio, ETHGain); // uint
+        
         uint claimantReward = ETHGain.sub(depositorRemainder);
         
         // Update deposit and snapshots
@@ -539,16 +560,23 @@ contract PoolManager is Ownable, IPoolManager {
         // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
         uint debtToOffset = DeciMath.getMin(_debt, CLVinPool);
         // Collateral to be added in proportion to the debt that is cancelled
-        uint debtRatio =  DeciMath.div_toDuint(debtToOffset, _debt);
-        uint collToAdd = DeciMath.mul_uintByDuint(_coll, debtRatio);
+        // uint debtRatio =  DeciMath.div_toDuint(debtToOffset, _debt);
+        // uint collToAdd = DeciMath.mul_uintByDuint(_coll, debtRatio);
+
+        int128 debtRatio = ABDKMath64x64.divu(debtToOffset, _debt);
+        uint collToAdd = ABDKMath64x64.mulu(debtRatio, _coll);
         
         // Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool
-        uint CLVLossPerUnitStaked = DeciMath.div_toDuint(debtToOffset, totalCLVDeposits);
-        S_CLV = S_CLV.add(CLVLossPerUnitStaked);
+        // uint CLVLossPerUnitStaked = DeciMath.div_toDuint(debtToOffset, totalCLVDeposits);
+
+        int128 CLVLossPerUnitStaked = ABDKMath64x64.divu(debtToOffset, totalCLVDeposits);
+        S_CLV = ABDKMath64x64.add(S_CLV, CLVLossPerUnitStaked);
         emit S_CLVUpdated(S_CLV);
         // Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool
-        uint ETHGainPerUnitStaked = DeciMath.div_toDuint(collToAdd, totalCLVDeposits);
-        S_ETH = S_ETH.add(ETHGainPerUnitStaked);
+        // uint ETHGainPerUnitStaked = DeciMath.div_toDuint(collToAdd, totalCLVDeposits);
+        
+        int128 ETHGainPerUnitStaked = ABDKMath64x64.divu(collToAdd, totalCLVDeposits);
+        S_ETH = ABDKMath64x64.add(S_ETH, ETHGainPerUnitStaked);
         emit S_ETHUpdated(S_ETH);
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLV(debtToOffset);  

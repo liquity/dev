@@ -7,7 +7,13 @@ async function main() {
 
     console.log("FunctioCaller address:", functionCaller.address);
 
-    // --- Multiplication ---
+    // // --- Testing max values ---
+    const maxVal = await functionCaller.abdkMath_fromUInt_view('18446744073709551616')
+    console.log(`max is ${max}`)
+    const res2 = await functionCaller.abdkMath_fromUInt_view('18446744073709551616')
+    console.log(`${max_plus_1}`)
+
+    // // --- Multiplication ---
 
     // 5 * 6
     // convert each uint to 64.64
@@ -21,20 +27,102 @@ async function main() {
     const res4 = await functionCaller.abdkMath_toUInt_view(res3)
     console.log(`result of 5 * 6, performed in 64.64, converted back to uint64: ${res4}`)
 
-    // 0.5 * 6 
+    // 500 * 600
+    // convert each uint to 64.64
+    const res1 = await functionCaller.abdkMath_fromUInt_view(500)
+    console.log(`5 as 64.64 fixed-point: ${res1}`)
+    const res2 = await functionCaller.abdkMath_fromUInt_view(600)
+    console.log(`6 as 64.64 fixed-point: ${res2}`)
+
+    // perform mul operation in 64.64
+    const res3 = await functionCaller.abdkMath_mul_view(res1, res2)
+    const res4 = await functionCaller.abdkMath_toUInt_view(res3)
+    console.log(`result of 500 * 600, performed in 64.64, converted back to uint64: ${res4}`)
+
+    // // 0.5 * 6 
     // get 0.5 as 64.64dec
-    // const res5 = await functionCaller.abdkMath_divu_view(1,2)
-    // console.log(`0.5 as 64.64 fixed-point: ${res5}`)
-    // // get 6 as 64.64dec
-    // const res6 = await functionCaller.abdkMath_fromUInt_view(6)
-    // console.log(`6 as 64.64 fixed-point: ${res6}`)
+    const res5 = await functionCaller.abdkMath_divu_view(1,2)
+    console.log(`0.5 as 64.64 fixed-point: ${res5}`)
+    // get 6 as 64.64dec
+    const res6 = await functionCaller.abdkMath_fromUInt_view(6)
+    console.log(`6 as 64.64 fixed-point: ${res6}`)
 
-    // // perform mul operation in 64.64
-    // const res7 = await functionCaller.abdkMath_mul_view(res5, res6)
-    // const res8 = await functionCaller.abdkMath_toUInt_view(res7)
-    // console.log(`result of 0.5 * 6, performed in 64.64, converted back to uint64: ${res8}`)
+    // perform mul operation in 64.64
+    const res7 = await functionCaller.abdkMath_mul_view(res5, res6)
+    const res8 = await functionCaller.abdkMath_toUInt_view(res7)
+    console.log(`result of 0.5 * 6, performed in 64.64, converted back to uint64: ${res8}`)
 
-    // --- Ratio Multiplication ---
+
+    // Exampple computaton: CLV -> Ether price conversion
+
+    // price = 200.12345678, stored as uint
+    // convert 6123456700909.123456789123456789 CLV to Ether
+    // amount = 6123456700909.123456789123456789 CLV / 200.12345678 
+
+    // expect amount 30598395607.571232843807983401100033706903271291774255... Ether
+  
+    // 1)
+    const storedPrice = '20012345678'
+    // convert price to 64.64dec fraction
+    const price = await functionCaller.abdkMath_divu_view(storedPrice,'100000000')
+    const etherVal = await functionCaller.abdkMath_divu_view('6123456700909123456789123456789', price)
+    console.log(`ether val is ${etherVal}`)
+
+    // returns 30598395607571232843814242587
+
+    // expected: 30598395607.571232843807983401100033706903271291774255... Ether
+   //  actual:   30598395607.571232843814242587 Ether
+     
+    // accurate to 22 digits.  So with 99 billion ether, it's accurate to 1 gwei. 
+
+    // Example computation: Stake computation
+ 
+    // 1) 
+
+    // reward = stake * S - S0
+
+    // stake = 65032.123456789123456789 Ether
+    // S = 0.005555555888888888 Ether per unit staked
+    // S_0 = 0.003579246835792468 Ether per uint staked
+    // S - S_0 = 0.001976309053096420 
+    // r = s * S - S0
+    // r =  128.523574329736396343 Ether
+
+    let stake = '65032123456789123456789'
+    let rewardPerUnitStaked = '1976309053096420' 
+
+    let fraction = await functionCaller.abdkMath_divu_view(rewardPerUnitStaked, '1000000000000000000')
+    let reward = await functionCaller.abdkMath_mulu_view(fraction, stake)
+    console.log(`${reward}`)
+
+    // returns 128.523574329736395585
+    // accurate to 18 digits
+
+    // 2) 
+     // reward = stake * S - S0
+
+    /* stake = 5555565032.123456789123456789 Ether
+    S = 0.005555555888888888 Ether per unit staked
+    S_0 = 0.003579246835792468 Ether per uint staked
+    S - S_0 = 0.001976309053096420 
+    r = s * S - S0
+    r = 10979513.468051491046396343 Ether
+    */
+
+    stake = '5555565032123456789123456789'
+    rewardPerUnitStaked = '1976309053096420' 
+
+    fraction = await functionCaller.abdkMath_divu_view(rewardPerUnitStaked, '1000000000000000000')
+    reward = await functionCaller.abdkMath_mulu_view(fraction, stake)
+    console.log(`${reward}`)
+
+    // returns 10979513.468051490981687838
+    // accurate to 17 digits
+
+    /* TODO: will L_ETH, L_CLV overflow if stored as 64.64? Possibly need to store as uint, divide by 1e18, then use
+    the resulting 64.64  */
+
+    // // --- Ratio Multiplication ---
     const res5 = await functionCaller.abdkMath_divu_view(1,2)
     console.log(`0.5 as 64.64 fixed-point: ${res5}`)
 
@@ -43,7 +131,7 @@ async function main() {
     console.log(`result of 0.5 * 6, performed in 64.64, converted back to uint256: ${res6}`)
     // 
 
-    //--- Division ---
+    // //--- Division ---
     
     const res7 = await functionCaller.abdkMath_divu_view(11,10)
     console.log(`10/11 as 64.64 fixed-point: ${res7}`)
@@ -69,44 +157,15 @@ async function main() {
     
     // seems accurate to 18 digits
 
-
   /* 
   --- Using ABDK functions in Liquity ---
   
-  ABDK.mulu is for: (64.64dec * uint)  -> uint.  i.e. for stake * ratio -> reward
+  ABDK.mulu is for: (64.64dec * uint)  -> uint.  i.e. for rewardPerUnitStaked  * stake -> reward
 
-  ABDK.divu is for: (uint / uint)  -> 64.64dec.  i.e. for coll  / debt -> ICR.
+  ABDK.divu is for: (uint / uint)  -> 64.64dec.  i.e. for liquidatedETH / totalStakes 
 
-  A 64.64dec is stored as a int128, which has 2**128 combinations. But the *max value we can represent* with that, 
-  given it is a binary representation that ignores a 2*64 denominator... is 2**64. That's 19 digits.
+  */
 
- 1)  Should be more than enough for all ratios that need to be stored as decimals, i.e. ICR:
-
-  At 1ETH = 200CLV,
-
-  Coll(ETH) -----  Debt(CLV) ----- ICR()
-  1                 1               200
-
-  Could just have an upper limit on ICR and say all above certain huge ICR get set to 2**64.  
-  Since that is billions of ETH: 1 CLV.
-
-  How about L_ETH, L_CLV, S_ETH, S_CLV?
-
-  What about stake? 2**64 gives 20 digits, so no, likely cant store stake.  e.g. a corrected stake for a 1mil ether collateral
-  needs 24 digits for the wei, then however many digits for the mantissa.
-
-  So let's say we have a uint stake, to nearest whole wei, rounded down.
-
-  Does it matter, given 1 wei is such a small value already - how bad can the losses get if stakes are rounded 
-  to nearest wei?
-
-  reward = stake * L - L(0)
-
-  worstCaseLoss = 1 wei * L - L(0)
-
-  L is rewards per ether staked, as share of total.  L_ETH/CLV and S_ETH/CLV also need to be ints?  What's max loss from rounding?
-
-  For other calcs, we can convert to/from 64.64 format. */
 }
 
 main()
