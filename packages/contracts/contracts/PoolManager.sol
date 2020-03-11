@@ -365,7 +365,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Transfer _address's entitled CLV (userDeposit - CLVLoss) to _address, and their ETHGain to their CDP.
-    function retrieveToCDP(address _address) internal returns(uint[2] memory) {
+    function retrieveToCDP(address _address, address _hint) internal returns(uint[2] memory) {
         uint userDeposit = deposit[_address];
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
         
@@ -398,7 +398,7 @@ contract PoolManager is Ownable, IPoolManager {
         // Pull ETHShare from StabilityPool, and send to CDP
         stabilityPool.sendETH(address(this), ETHShare);
         //TODO: Potentially use getApproxHint() here
-        cdpManager.addColl.value(ETHShare)(_address, _address);
+        cdpManager.addColl.value(ETHShare)(_address, _hint);
         
         uint[2] memory shares = [CLVShare, ETHShare];
         return shares;
@@ -451,14 +451,14 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Transfer the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
     Applies their CLVLoss to the deposit. */
-    function withdrawFromSPtoCDP(address _user) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
+    function withdrawFromSPtoCDP(address _user, address _hint) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
         cdpManager.checkTCRAndSetRecoveryMode();
 
         uint userDeposit = deposit[_user];
         if (userDeposit == 0) { return false; }
 
         // Retrieve all CLV to user's CLV balance, and ETH to their CDP
-        uint[2] memory returnedVals = retrieveToCDP(_user);
+        uint[2] memory returnedVals = retrieveToCDP(_user, _hint);
 
         uint returnedCLV = returnedVals[0];
 

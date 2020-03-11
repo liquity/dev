@@ -69,7 +69,7 @@ interface IPoolManager {
 
     function withdrawFromSP(uint _amount) external returns(bool);
 
-    function withdrawFromSPtoCDP(address _user) external returns(bool);
+    function withdrawFromSPtoCDP(address _user, address _hint) external returns(bool);
 
     function withdrawPenaltyFromSP(address _address) external returns(bool);
 
