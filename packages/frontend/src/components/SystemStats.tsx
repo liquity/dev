@@ -18,14 +18,17 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
   pool,
   quiInStabilityPool
 }) => {
-  const quiInStabilityPoolPct = new Percent(quiInStabilityPool.div(pool.totalDebt));
+  const quiInStabilityPoolPct =
+    pool.totalDebt.nonZero && new Percent(quiInStabilityPool.div(pool.totalDebt));
 
   return (
     <Flex flexDirection="column" alignItems="center">
       <Text>Price of ETH: ${price.prettify()}</Text>
-      <Text>Total number of Liquity Troves: {Decimal.shorten(numberOfTroves)}</Text>
+      <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
       <Text>QUI in circulation: {pool.totalDebt.shorten()}</Text>
-      <Text>Fraction of QUI in Stability Pool: {quiInStabilityPoolPct.toString(1)}</Text>
+      {quiInStabilityPoolPct && (
+        <Text>Fraction of QUI in Stability Pool: {quiInStabilityPoolPct.toString(1)}</Text>
+      )}
       <Text>
         Total collateral ratio:{" "}
         {pool

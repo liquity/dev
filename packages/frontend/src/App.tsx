@@ -80,16 +80,25 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
   return (
     <>
-      <SystemStats {...{ numberOfTroves, price, pool, quiInStabilityPool }} />
-      <UserAccount {...{ etherBalance, quiBalance }} />
-      {account === deployerAddress ? (
-        <DeveloperTools {...{ liquity, price }} />
-      ) : (
-        <>
-          <TroveManager {...{ liquity, trove, price, pool }} />
-          <StabilityDepositManager {...{ liquity, deposit }} />
-        </>
-      )}
+      <UserAccount {...{ account, etherBalance, quiBalance }} />
+      <Flex
+        flexDirection="column"
+        alignItems="center"
+        mx="auto"
+        py={4}
+        width={[1, 0.8, 0.6]}
+        minHeight="100vh"
+      >
+        <SystemStats {...{ numberOfTroves, price, pool, quiInStabilityPool }} />
+        {account === deployerAddress ? (
+          <DeveloperTools {...{ liquity, price }} />
+        ) : (
+          <>
+            <TroveManager {...{ liquity, trove, price, pool }} />
+            <StabilityDepositManager {...{ liquity, deposit }} />
+          </>
+        )}
+      </Flex>
     </>
   );
 };
@@ -112,20 +121,11 @@ const App = () => {
     <EthersWeb3ReactProvider>
       <BaseStyles>
         <ToastProvider>
-          <Flex
-            flexDirection="column"
-            alignItems="center"
-            mx="auto"
-            py={4}
-            width={[1, 0.8, 0.6]}
-            minHeight="100vh"
-          >
-            <WalletConnector {...{ loader }}>
-              <LiquityProvider {...{ loader }}>
-                <LiquityFrontend {...{ loader }} />
-              </LiquityProvider>
-            </WalletConnector>
-          </Flex>
+          <WalletConnector {...{ loader }}>
+            <LiquityProvider {...{ loader }}>
+              <LiquityFrontend {...{ loader }} />
+            </LiquityProvider>
+          </WalletConnector>
         </ToastProvider>
       </BaseStyles>
     </EthersWeb3ReactProvider>

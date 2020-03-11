@@ -9,7 +9,7 @@ import { useAccountBalance } from "./AccountBalance";
 
 export const deployerAddress = "0x00a329c0648769A73afAc7F9381E08FB43dBEA72";
 const cdpManagerAddress = "0xf9f6344919048Da7b8874780e575E087fEA009e5";
-//const cdpManagerAddress = "0xc44BbB41FddF601e5fC09263F91178049235097F";
+//const cdpManagerAddress = "0x742fC0A4BeD1903518c318660A8558Cf2391371D";
 
 type LiquityContext = {
   account: string;

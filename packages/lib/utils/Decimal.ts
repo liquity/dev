@@ -122,6 +122,10 @@ export class Decimal {
     return mantissa !== undefined ? prettyCharacteristic + "." + mantissa : prettyCharacteristic;
   }
 
+  static prettify(bigNumber: BigNumber) {
+    return new Decimal(bigNumber.mul(Decimal.DIGITS)).prettify(0);
+  }
+
   shorten() {
     const characteristicLength = this.toString(0).length;
     const magnitude = Math.min(
