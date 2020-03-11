@@ -1,7 +1,7 @@
 import React from "react";
 import { Web3Provider, AsyncSendable } from "ethers/providers";
 import { Web3ReactProvider } from "@web3-react/core";
-import { BaseStyles, Flex, Loader, Heading } from "rimble-ui";
+import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 
 import { LiquityProvider, useLiquity, deployerAddress, useLiquityStore } from "./hooks/Liquity";
 import { ToastProvider } from "./hooks/ToastProvider";
@@ -81,23 +81,20 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   return (
     <>
       <UserAccount {...{ account, etherBalance, quiBalance }} />
-      <Flex
-        flexDirection="column"
-        alignItems="center"
-        mx="auto"
-        py={4}
-        width={[1, 0.8, 0.6]}
-        minHeight="100vh"
-      >
-        <SystemStats {...{ numberOfTroves, price, pool, quiInStabilityPool }} />
-        {account === deployerAddress ? (
-          <DeveloperTools {...{ liquity, price }} />
-        ) : (
-          <>
-            <TroveManager {...{ liquity, trove, price, pool }} />
-            <StabilityDepositManager {...{ liquity, deposit }} />
-          </>
-        )}
+      <Flex flexWrap="wrap" justifyItems="center" width={[1, 0.6]} mx="auto">
+        <Box mx="auto">
+          {account === deployerAddress ? (
+            <DeveloperTools {...{ liquity, price }} />
+          ) : (
+            <>
+              <TroveManager {...{ liquity, trove, price, pool }} />
+              <StabilityDepositManager {...{ liquity, deposit }} />
+            </>
+          )}
+        </Box>
+        <Box mx="auto">
+          <SystemStats {...{ numberOfTroves, price, pool, quiInStabilityPool }} />
+        </Box>
       </Flex>
     </>
   );

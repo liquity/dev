@@ -1,5 +1,5 @@
 import React from "react";
-import { Flex, Text } from "rimble-ui";
+import { Card, Text, Heading } from "rimble-ui";
 import { BigNumber } from "ethers/utils";
 
 import { Pool } from "@liquity/lib";
@@ -22,7 +22,10 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
     pool.totalDebt.nonZero && new Percent(quiInStabilityPool.div(pool.totalDebt));
 
   return (
-    <Flex flexDirection="column" alignItems="center">
+    <Card mt={4} p={3} bg="lavender">
+      <Heading as="h3" mb={2}>
+        System
+      </Heading>
       <Text>Price of ETH: ${price.prettify()}</Text>
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
       <Text>QUI in circulation: {pool.totalDebt.shorten()}</Text>
@@ -40,6 +43,6 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
       {pool.isRecoveryModeActiveAt(price) && (
         <Text color="danger">The system is in recovery mode!</Text>
       )}
-    </Flex>
+    </Card>
   );
 };
