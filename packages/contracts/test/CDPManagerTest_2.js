@@ -8,7 +8,6 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const DeciMath = artifacts.require("DeciMath")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
@@ -39,14 +38,6 @@ contract('CDPManager', async accounts => {
   let stabilityPool
   let defaultPool
   let functionCaller
-
-  before(async () => {
-    const deciMath = await DeciMath.new()
-    DeciMath.setAsDeployed(deciMath)
-    CDPManager.link(deciMath)
-    PoolManager.link(deciMath)
-    FunctionCaller.link(deciMath)
-  })
 
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()
@@ -197,7 +188,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    await cdpManager.liquidate(carol, { from: owner });
+    await cdpManager.liquidate(carol, carol, { from: owner });
 
     /* with total stakes = 10 ether, after liquidation, L_ETH should equal 1/10 ether per-ether-staked,
      and L_CLV should equal 18 CLV per-ether-staked. */
@@ -324,7 +315,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close CDP
-    await cdpManager.liquidate(alice, { from: owner });
+    await cdpManager.liquidate(alice, alice, { from: owner });
 
     // check the CDP is successfully closed, and removed from sortedList
     const status = (await cdpManager.CDPs(alice))[3]
@@ -357,7 +348,7 @@ contract('CDPManager', async accounts => {
 
     /* close Bob's CDP. Should liquidate his 1 ether and 180CLV, 
     leaving 10 ether and 100 CLV debt in the ActivePool. */
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.liquidate(bob, bob, { from: owner });
 
     // check ActivePool ETH and CLV debt 
     const activePool_ETH_After = (await activePool.getETH()).toString()
@@ -392,7 +383,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Bob's CDP
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.liquidate(bob, bob, { from: owner });
 
     // check after
     const defaultPool_ETH_After = (await defaultPool.getETH()).toString()
@@ -422,7 +413,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Bob's CDP
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.liquidate(bob, bob, { from: owner });
 
     // check totalStakes after
     const totalStakes_After = (await cdpManager.totalStakes()).toString()
@@ -449,7 +440,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Bob's CDP.  His 1 ether and 180 CLV should be added to the DefaultPool.
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.liquidate(bob, bob, { from: owner });
 
     /* check snapshots after. Total stakes should be equal to the only remaining stake then the system: 
     10 ether, Alice's stake.
@@ -478,7 +469,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP.  
-    await cdpManager.liquidate(carol, { from: owner });
+    await cdpManager.liquidate(carol, carol, { from: owner });
 
     /* Alice and Bob have the only active stakes. totalStakes in the system is (10 + 10) = 20 ether.
     
@@ -499,7 +490,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('50000000000000000000');
 
     // close Bob's CDP 
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.liquidate(bob, bob, { from: owner });
 
     /* Alice now has the only active stake. totalStakes in the system is now 10 ether.
    
@@ -541,7 +532,7 @@ contract('CDPManager', async accounts => {
 
     /*  Liquidate Dennis. His CLVDebt (180 CLV) is entirely offset against Bob's StabilityPool deposit (180 CLV). 
     As the only StabilityPool depositor, Bob earns a gain of 1 ETH (the entire liquidated ETH from Dennis' CDP) */
-    await cdpManager.liquidate(dennis, { from: owner });
+    await cdpManager.liquidate(dennis, dennis, { from: owner });
 
     // log S_ETH and S_CLV
     const S_ETH = await poolManager.S_ETH()
@@ -557,8 +548,8 @@ contract('CDPManager', async accounts => {
 
     /* Now, attempt to liquidate Bob and Carol. Carol should be liquidated, but Bob's StabilityPool ETH gain should be 
     withdrawn to his CDP, bringing his ICR > MCR. Thus, his CDP should remain active */
-    await cdpManager.liquidate(bob, { from: owner });
-    await cdpManager.liquidate(carol, { from: owner });
+    await cdpManager.liquidate(bob, bob,{ from: owner });
+    await cdpManager.liquidate(carol, carol, { from: owner });
 
     // check Bob's CDP is active, Carol's CDP is closed
     const bob_CDP = await cdpManager.CDPs(bob)
@@ -607,7 +598,7 @@ contract('CDPManager', async accounts => {
 
     /*  Liquidate Dennis. His CLVDebt (140 CLV) is entirely offset against Bob's StabilityPool deposit (180 CLV). 
     As the only StabilityPool depositor, Bob earns a gain of 1 ETH (the entire liquidated ETH from Dennis' CDP) */
-    await cdpManager.liquidate(dennis, { from: owner });
+    await cdpManager.liquidate(dennis, dennis, { from: owner });
 
     // check Dennis's CDP is closed
     const dennis_CDP = await cdpManager.CDPs(dennis)
@@ -618,7 +609,7 @@ contract('CDPManager', async accounts => {
     withdrawn to his CDP, bringing his ICR > MCR.
     
     Thus, his CDP should remain active */
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.liquidate(bob, bob, { from: owner });
 
     // check Bob's CDP is active
     const bob_CDP = await cdpManager.CDPs(bob)

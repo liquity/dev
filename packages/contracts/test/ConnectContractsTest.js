@@ -7,7 +7,6 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const DeciMath = artifacts.require("DeciMath")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
@@ -30,11 +29,6 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   let functionCaller
 
   before(async () => {
-    const deciMath = await DeciMath.new()
-    DeciMath.setAsDeployed(deciMath)
-    CDPManager.link(deciMath)
-    PoolManager.link(deciMath)
-    FunctionCaller.link(deciMath)
 
     priceFeed = await PriceFeed.new()
     clvToken = await CLVToken.new()

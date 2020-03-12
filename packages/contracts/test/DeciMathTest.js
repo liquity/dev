@@ -8,11 +8,6 @@ contract('functionCaller', async accounts => {
   let functionCaller
 
   before(async() => {
-    const deciMath = await DeciMath.new()
-    DeciMath.setAsDeployed(deciMath)
-   
-    FunctionCaller.link(deciMath)
-
     functionCaller = await FunctionCaller.new()
     FunctionCaller.setAsDeployed(functionCaller)
   })

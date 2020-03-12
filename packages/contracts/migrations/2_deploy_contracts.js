@@ -30,7 +30,6 @@ module.exports = async () => {
   const activePool = await ActivePool.new()
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
-  const deciMath = await DeciMath.new()
   const functionCaller = await FunctionCaller.new()
 
   PriceFeed.setAsDeployed(priceFeed)
@@ -42,7 +41,6 @@ module.exports = async () => {
   ActivePool.setAsDeployed(activePool)
   StabilityPool.setAsDeployed(stabilityPool)
   DefaultPool.setAsDeployed(defaultPool)
-  DeciMath.setAsDeployed(deciMath)
   FunctionCaller.setAsDeployed(functionCaller)
 
   const contracts = {

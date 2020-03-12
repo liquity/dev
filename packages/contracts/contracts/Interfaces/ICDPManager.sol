@@ -52,7 +52,7 @@ interface ICDPManager {
 
     function repayCLV(uint _amount, address _hint) external returns(bool);
 
-    function liquidate(address _user) external returns(bool);
+    function liquidate(address _user, address _hint) external returns(bool);
 
     function liquidateCDPs(uint _n) external returns(bool);
 

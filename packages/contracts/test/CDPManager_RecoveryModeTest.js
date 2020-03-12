@@ -7,7 +7,6 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const DeciMath = artifacts.require("DeciMath")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
@@ -48,14 +47,6 @@ contract('CDPManager', async accounts => {
   let stabilityPool
   let defaultPool
   let functionCaller
-
-  before(async () => {
-    const deciMath = await DeciMath.new()
-    DeciMath.setAsDeployed(deciMath)
-    CDPManager.link(deciMath)
-    PoolManager.link(deciMath)
-    FunctionCaller.link(deciMath)
-  })
 
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()

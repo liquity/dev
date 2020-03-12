@@ -266,6 +266,8 @@ contract CDPManager is Ownable, ICDPManager {
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
         require(_amount > 0, "CDPManager: Amount to withdraw must be larger than 0");
         
+        applyPendingRewards(user);
+
         uint newTCR = getNewTCR(0, _amount);
         uint newICR = getNewICRfromDebtIncrease(user, _amount);
         
@@ -298,6 +300,8 @@ contract CDPManager is Ownable, ICDPManager {
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
         require(_amount > 0, "CDPManager: Repaid amount must be larger than 0");
        
+        applyPendingRewards(user);
+
         require(_amount <= CDPs[user].debt, "CDPManager: Repaid amount is larger than current debt");
         require(CLV.balanceOf(user) >= _amount, "CDPManager: Sender has insufficient CLV balance");
         // TODO: Maybe allow foreign accounts to repay loans
@@ -328,32 +332,31 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Closes the CDP of the specified user if its individual collateral ratio is lower than the minimum collateral ratio.
     // TODO: Left public for initial testing. Make internal.
-    function liquidate(address _user) public returns (bool) {
+    function liquidate(address _user, address _hint) public returns (bool) {
         checkTCRAndSetRecoveryMode();
 
         require(CDPs[_user].status == Status.active, "CDPManager: CDP does not exist or is already closed");
         
         if (recoveryMode == true) {
-            liquidateRecoveryMode(_user);
+            liquidateRecoveryMode(_user, _hint);
         } else if (recoveryMode == false) {
-            liquidateNormalMode(_user);
+            liquidateNormalMode(_user, _hint);
         }  
     }
     
-    function liquidateNormalMode(address _user) internal returns (bool) {
+    function liquidateNormalMode(address _user, address _hint) internal returns (bool) {
         uint ICR = getCurrentICR(_user);
 
         // If ICR < MCR, withdraw any gains from Stability Pool to the CDP, and re-check ICR
         if (ICR < MCR) {
-            poolManager.withdrawFromSPtoCDP(_user);
+            poolManager.withdrawFromSPtoCDP(_user, _hint);
             ICR = getCurrentICR(_user);
         } else {
             return false;
         }
 
-        // If ICR is now > MCR, update CDP's position in sortedCDPs and return
+        // If ICR is now > MCR, return
         if (ICR > MCR) { 
-            sortedCDPs.reInsert(_user, ICR, _user, _user);
             return false; 
         } 
     
@@ -373,9 +376,9 @@ contract CDPManager is Ownable, ICDPManager {
         return true;
     }
 
-    function liquidateRecoveryMode(address _user) internal returns (bool) {
+    function liquidateRecoveryMode(address _user, address _hint) internal returns (bool) {
         // Withdraw any Stability Pool gains to the CDP
-        poolManager.withdrawFromSPtoCDP(_user);
+        poolManager.withdrawFromSPtoCDP(_user, _hint);
         
         uint ICR = getCurrentICR(_user);
 
@@ -458,7 +461,7 @@ contract CDPManager is Ownable, ICDPManager {
                 address user = sortedCDPs.getLast();
                 uint collRatio = getCurrentICR(user);
                 // attempt to close CDP
-                liquidate(user);
+                liquidate(user, user);
                 /* Break loop if the system has left recovery mode and all active CDPs are 
                 above the MCR, or if the loop reaches the first CDP in the sorted list  */
                 if ((recoveryMode == false && collRatio >= MCR) || (user == sortedCDPs.getFirst())) { break; }
@@ -474,7 +477,7 @@ contract CDPManager is Ownable, ICDPManager {
 
                 // Close CDPs if it is under-collateralized
                 if (collRatio < MCR) {
-                    liquidate(user);
+                    liquidate(user, user);
                 } else break;
                 
                 // Break loop if you reach the first CDP in the sorted list 
@@ -511,7 +514,7 @@ contract CDPManager is Ownable, ICDPManager {
             
             // Close CDPs along the way that turn out to be under-collateralized
             if (collRatio < MCR) {
-                liquidate(currentCDPuser);
+                liquidate(currentCDPuser, currentCDPuser);
             }
             else {
                 applyPendingRewards(currentCDPuser);

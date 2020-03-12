@@ -8,7 +8,6 @@ const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const DeciMath = artifacts.require("./DeciMath.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
@@ -36,13 +35,13 @@ contract('CDPManager', async accounts => {
   let defaultPool
   let functionCaller
 
-  before(async() => {
-    const deciMath = await DeciMath.new()
-    DeciMath.setAsDeployed(deciMath)
-    CDPManager.link(deciMath)
-    PoolManager.link(deciMath)
-    FunctionCaller.link(deciMath)
-  })
+  // before(async() => {
+  //   const deciMath = await DeciMath.new()
+  //   DeciMath.setAsDeployed(deciMath)
+  //   CDPManager.link(deciMath)
+  //   PoolManager.link(deciMath)
+  //   FunctionCaller.link(deciMath)
+  // })
 
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()
@@ -249,7 +248,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    await cdpManager.liquidate(carol, { from: owner });
+    await cdpManager.liquidate(carol, carol, { from: owner });
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
     alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
@@ -333,7 +332,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 5 ether and 900CLV.
-    await cdpManager.liquidate(carol, { from: owner });
+    await cdpManager.liquidate(carol, carol, { from: owner });
 
     // dennis opens a CDP with 2 ether
     await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
@@ -565,7 +564,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    await cdpManager.liquidate(carol, { from: owner });
+    await cdpManager.liquidate(carol, carol, { from: owner });
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
     alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
