@@ -11,6 +11,9 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const DeciMath = artifacts.require("DeciMath")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
+const testHelpers = require("../utils/testHelpers.js")
+const getDifference = testHelpers.getDifference
+
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
 const setNameRegistry = deploymentHelpers.setNameRegistry
@@ -194,22 +197,22 @@ contract('CDPManager', async accounts => {
     /* with total stakes = 10 ether, after liquidation, L_ETH should equal 1/10 ether per-ether-staked,
      and L_CLV should equal 18 CLV per-ether-staked. */
 
-    const L_ETH = (await cdpManager.L_ETH()).toString()
-    const L_CLV = (await cdpManager.L_CLVDebt()).toString()
+    const L_ETH = await cdpManager.L_ETH()
+    const L_CLV = await cdpManager.L_CLVDebt()
    
-    assert.equal(L_ETH, '100000000000000000')
-    assert.equal(L_CLV, '18000000000000000000')
+    assert.isAtMost(getDifference(L_ETH, '100000000000000000'), 100)
+    assert.isAtMost(getDifference(L_CLV, '18000000000000000000'), 100)
 
     // Bob opens loan
     await cdpManager.openLoan('50000000000000000000', bob, { from: bob, value: _1_Ether })
 
     // check Bob's snapshots of L_ETH and L_CLV equal the respective current values
     const bob_rewardSnapshot = await cdpManager.rewardSnapshots(bob)
-    const bob_ETHrewardSnapshot = bob_rewardSnapshot[0].toString()
-    const bob_CLVDebtRewardSnapshot = bob_rewardSnapshot[1].toString()
+    const bob_ETHrewardSnapshot = bob_rewardSnapshot[0]
+    const bob_CLVDebtRewardSnapshot = bob_rewardSnapshot[1]
 
-    assert.equal(bob_ETHrewardSnapshot, L_ETH)
-    assert.equal(bob_CLVDebtRewardSnapshot, L_CLV)  
+    assert.isAtMost(getDifference(bob_ETHrewardSnapshot, L_ETH), 100)
+    assert.isAtMost(getDifference(bob_CLVDebtRewardSnapshot, L_CLV), 100) 
   })
 
   it("openLoan(): reverts if user tries to open a new CDP with collateral of value < $20 USD", async () => {
@@ -300,7 +303,8 @@ contract('CDPManager', async accounts => {
     await cdpManager.addColl(whale, whale, { from: whale, value: _50_Ether })
     await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
 
-    const ICR_Before = web3.utils.toHex(await cdpManager.getCurrentICR(alice))
+    const price = await priceFeed.getPrice()
+    const ICR_Before = web3.utils.toHex(await cdpManager.getCurrentICR(alice, price))
     const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
     assert.equal(ICR_Before, maxBytes32)
 
@@ -309,8 +313,8 @@ contract('CDPManager', async accounts => {
 
     // Alice withdraws 180 CLV, lowering her ICR to 1.11
     await cdpManager.withdrawCLV('180000000000000000000', alice, { from: alice })
-    const ICR_AfterWithdrawal = (await cdpManager.getCurrentICR(alice)).toString()
-    assert.equal(ICR_AfterWithdrawal, '1111111111111111111')
+    const ICR_AfterWithdrawal = await cdpManager.getCurrentICR(alice, price)
+    assert.isAtMost(getDifference(ICR_AfterWithdrawal, '1111111111111111111'), 100)
 
     // price drops to 1ETH:100CLV, reducing Alice's ICR below MCR
     await priceFeed.setPrice('100000000000000000000');
@@ -478,11 +482,11 @@ contract('CDPManager', async accounts => {
     
     L_ETH = (1 / 20) = 0.05 ETH
     L_CLVDebt = (180 / 20) = 9 CLV */
-    const L_ETH_AfterCarolLiquidated = (await cdpManager.L_ETH()).toString()
-    const L_CLVDebt_AfterCarolLiquidated = (await cdpManager.L_CLVDebt()).toString()
+    const L_ETH_AfterCarolLiquidated = await cdpManager.L_ETH()
+    const L_CLVDebt_AfterCarolLiquidated = await cdpManager.L_CLVDebt()
 
-    assert.equal(L_ETH_AfterCarolLiquidated, '50000000000000000')
-    assert.equal(L_CLVDebt_AfterCarolLiquidated, '9000000000000000000')
+    assert.isAtMost(getDifference(L_ETH_AfterCarolLiquidated, '50000000000000000'), 100)
+    assert.isAtMost(getDifference(L_CLVDebt_AfterCarolLiquidated, '9000000000000000000'), 100)
 
     // Bob now withdraws 800 CLV, bringing his ICR to 1.11
     await cdpManager.withdrawCLV('800000000000000000000', bob, { from: bob })
@@ -503,11 +507,10 @@ contract('CDPManager', async accounts => {
    
    L_ETH = (1 / 20) + (10.5  / 10) = 1.10 ETH
    L_CLVDebt = (180 / 20) + (890 / 10) = 98 CLV */
-    const L_ETH_AfterBobLiquidated = (await cdpManager.L_ETH()).toString()
-    const L_CLVDebt_AfterBobLiquidated = (await cdpManager.L_CLVDebt()).toString()
-
-    assert.equal(L_ETH_AfterBobLiquidated, '1100000000000000000')
-    assert.equal(L_CLVDebt_AfterBobLiquidated, '98000000000000000000')
+    const L_ETH_AfterBobLiquidated = await cdpManager.L_ETH()
+    const L_CLVDebt_AfterBobLiquidated = await cdpManager.L_CLVDebt()
+    assert.isAtMost(getDifference(L_ETH_AfterBobLiquidated, '1100000000000000000'), 100)
+    assert.isAtMost(getDifference(L_CLVDebt_AfterBobLiquidated, '98000000000000000000'), 100)
   })
 
   it("liquidate(): CDP remains active if withdrawal of its StabilityPool ETH gain brings it above the MCR", async () => {
@@ -542,6 +545,7 @@ contract('CDPManager', async accounts => {
     console.log("S_ETH is " + S_ETH.toString())
     console.log("S_CLV is " + S_CLV.toString())
 
+    // Debugging SafeMath overflow:
     //   S_CLV:  1000000000000000000  i.e. 1 CLV per unit staked (correct, bob should have 180 * 1 liquidated)
     /*   S_ETH:     5555555555555556  i.e. 0.0055555.. ETH  per unit staked ( ?? ) 
     ahhhh OK, so because of the rounding up, then when computing actual reward, it's slightly high, 

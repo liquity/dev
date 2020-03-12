@@ -15,7 +15,6 @@ import "@nomiclabs/buidler/console.sol";
 contract CDPManager is Ownable, ICDPManager {
     using SafeMath for uint;
 
-    uint constant DIGITS = 1e18; // Number of digits used for precision, e.g. when calculating redistribution shares. Equals "ether" unit.
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
@@ -84,14 +83,14 @@ contract CDPManager is Ownable, ICDPManager {
     A CLVDebt gain  of ( stake * [L_CLVDebt - L_CLVDebt(0)] )
     
     Where L_ETH(0) and L_CLVDebt(0) are snapshots of L_ETH and L_CLVDebt for the active CDP taken at the instant the stake was made */
-    int128 public L_ETH;     
-    int128 public L_CLVDebt;    
+    uint public L_ETH;     
+    uint public L_CLVDebt;    
 
     // maps addresses with active CDPs to their RewardSnapshot
     mapping (address => RewardSnapshot) public rewardSnapshots;  
 
     // object containing the ETH and CLV snapshots for a given active CDP
-    struct RewardSnapshot { int128 ETH; int128 CLVDebt;}   
+    struct RewardSnapshot { uint ETH; uint CLVDebt;}   
 
     //array of all active CDP addresses - used to compute “approx hint” for list insertion
     address[] CDPOwners;
@@ -142,6 +141,14 @@ contract CDPManager is Ownable, ICDPManager {
         return CDPOwners.length;
     }
     
+    // function get_L_ETH() public view returns(uint) {
+    //     return ABDKMath64x64.toUInt(ABDKMath64x64.mul(L_ETH, 1e18));
+    // }
+
+    // function get_L_CLVDebt() public view returns(uint) {
+    //     return ABDKMath64x64.toUInt(ABDKMath64x64.mul(L_CLVDebt, 1e18));
+    // }
+
     // --- CDP Operations ---
 
     function openLoan(uint _CLVAmount, address _hint) public payable returns (bool) {
@@ -559,9 +566,9 @@ contract CDPManager is Ownable, ICDPManager {
                 uint CLVLot = DeciMath.getMin(_CLVamount.sub(exchangedCLV), CDPs[currentCDPuser].debt); // 1200 gas
                 // console.log("CLVLot in loop is is %s", CLVLot);
                 // console.log("08. gas left: %s", gasleft());
-                // uint ETHLot = DeciMath.accurateMulDiv(CLVLot, DIGITS, price); // 1950 gas
+                // uint ETHLot = DeciMath.accurateMulDiv(CLVLot, 1e18, price); // 1950 gas
                 // console.log("09. gas left: %s", gasleft());
-                uint ETHLot = uint(ABDKMath64x64.divu(CLVLot, uint(ABDKMath64x64.divu(price, DIGITS))));
+                uint ETHLot = uint(ABDKMath64x64.divu(CLVLot, uint(ABDKMath64x64.divu(price, 1e18))));
                 // console.log("ETHLot in loop is is %s", ETHLot);
                 // Decrease the debt and collateral of the current CDP according to the lot and corresponding ETH to send
                 uint newDebt = (CDPs[currentCDPuser].debt).sub(CLVLot);
@@ -776,8 +783,8 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Get the user's pending accumulated ETH reward, earned by its stake
     function computePendingETHReward(address _user) internal view returns(uint) {
-        int128 snapshotETH = rewardSnapshots[_user].ETH; // 913 gas (no reward)
-        int128 rewardPerUnitStaked = ABDKMath64x64.sub(L_ETH, snapshotETH); 
+        uint snapshotETH = rewardSnapshots[_user].ETH; // 913 gas (no reward)
+        uint rewardPerUnitStaked = L_ETH.sub(snapshotETH); 
         
         if ( rewardPerUnitStaked == 0 ) { return 0; }
        
@@ -791,14 +798,14 @@ contract CDPManager is Ownable, ICDPManager {
         // uint pendingETHReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked); // 1000 gas (no reward)
         // // console.log("4. gas left: %s", gasleft());// console.log("0. gas left: %s", gasleft());
 
-        uint pendingETHReward = ABDKMath64x64.mulu(rewardPerUnitStaked, stake);
+        uint pendingETHReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
         return pendingETHReward;
     }
 
      // Get the user's pending accumulated CLV reward, earned by its stake
     function computePendingCLVDebtReward(address _user) internal view returns(uint) {
-        int128 snapshotCLVDebt = rewardSnapshots[_user].CLVDebt;  // 900 gas
-        int128 rewardPerUnitStaked = ABDKMath64x64.sub(L_CLVDebt, snapshotCLVDebt); 
+        uint snapshotCLVDebt = rewardSnapshots[_user].CLVDebt;  // 900 gas
+        uint rewardPerUnitStaked = L_CLVDebt.sub(snapshotCLVDebt); 
        
         if ( rewardPerUnitStaked == 0 ) { return 0; }
        
@@ -813,7 +820,7 @@ contract CDPManager is Ownable, ICDPManager {
         // uint pendingCLVDebtReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked);  // 900 gas
         // // console.log("04. gas left: %s", gasleft());
 
-        uint pendingCLVDebtReward = ABDKMath64x64.mulu(rewardPerUnitStaked, stake);
+        uint pendingCLVDebtReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
         return pendingCLVDebtReward;
     }
 
@@ -857,14 +864,14 @@ contract CDPManager is Ownable, ICDPManager {
                 // uint ETHRewardPerUnitStaked = DeciMath.div_toDuint(_coll, totalStakes);
                 // uint CLVDebtRewardPerUnitStaked = DeciMath.div_toDuint(_debt, totalStakes);
 
-                int128 ETHRewardPerUnitStaked = ABDKMath64x64.divu(_coll, totalStakes);
-                int128 CLVDebtRewardPerUnitStaked = ABDKMath64x64.divu(_debt, totalStakes);
+                uint ETHRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, totalStakes), 1e18);
+                uint CLVDebtRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_debt, totalStakes), 1e18);
                 
                 // L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
                 // L_CLVDebt = L_CLVDebt.add(CLVDebtRewardPerUnitStaked);
 
-                L_ETH = ABDKMath64x64.add(L_ETH, ETHRewardPerUnitStaked);
-                L_CLVDebt = ABDKMath64x64.add(L_CLVDebt, CLVDebtRewardPerUnitStaked);
+                L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
+                L_CLVDebt = L_CLVDebt.add(CLVDebtRewardPerUnitStaked);
             }
             // Transfer coll and debt from ActivePool to DefaultPool
             poolManager.liquidate(_debt, _coll);

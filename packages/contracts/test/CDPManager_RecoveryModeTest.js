@@ -10,6 +10,9 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const DeciMath = artifacts.require("DeciMath")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
+const testHelpers = require("../utils/testHelpers.js")
+const getDifference = testHelpers.getDifference
+
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
 const setNameRegistry = deploymentHelpers.setNameRegistry
@@ -91,16 +94,17 @@ contract('CDPManager', async accounts => {
     await connectContracts(contracts, registeredAddresses)
   })
 
-  it("withdrawCLV(): reverts if withdrawal would pull TCR below CCR", async () => {
+  it.only("withdrawCLV(): reverts if withdrawal would pull TCR below CCR", async () => {
     // --- SETUP ---
     await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
     await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is 150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
+    console.log("TCR is" + TCR)
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---

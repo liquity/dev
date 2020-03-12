@@ -11,6 +11,10 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const DeciMath = artifacts.require("./DeciMath.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
+
+const testHelpers = require("../utils/testHelpers.js")
+const getDifference = testHelpers.getDifference
+
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
 const setNameRegistry = deploymentHelpers.setNameRegistry
@@ -276,35 +280,35 @@ contract('CDPManager', async accounts => {
     - His collateral should be (5 + 0.25 + 1) = 6.25 ETH.
     - His CLV debt should be (100 + 45) = 145 CLV.   */
     const alice_CDP_After = await cdpManager.CDPs(alice)
-    const alice_CLVDebt_After = (alice_CDP_After[0]).toString()
-    const alice_Coll_After = alice_CDP_After[1].toString()
+    const alice_CLVDebt_After = alice_CDP_After[0]
+    const alice_Coll_After = alice_CDP_After[1]
 
     const bob_CDP_After = await cdpManager.CDPs(bob)
-    const bob_CLVDebt_After = bob_CDP_After[0].toString()
-    const bob_Coll_After = bob_CDP_After[1].toString()
+    const bob_CLVDebt_After = bob_CDP_After[0]
+    const bob_Coll_After = bob_CDP_After[1]
 
-    assert.equal(alice_CLVDebt_After, '235000000000000000000')
-    assert.equal(alice_Coll_After, '20750000000000000000')
-
-    assert.equal(bob_CLVDebt_After, '145000000000000000000')
-    assert.equal(bob_Coll_After, '6250000000000000000')
+    // check coll and debt are within 1e-16 of expected values
+    assert.isAtMost(getDifference(alice_CLVDebt_After,'235000000000000000000'), 100)
+    assert.isAtMost(getDifference(alice_Coll_After, '20750000000000000000'), 100)
+    assert.isAtMost(getDifference(bob_CLVDebt_After,'145000000000000000000'), 100)
+    assert.isAtMost(getDifference(bob_Coll_After, '6250000000000000000'), 100)
 
     /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be:
 
     L_ETH(0): 0.05
     L_CLVDebt(0): 9   */
     alice_rewardSnapshot_After = await cdpManager.rewardSnapshots(alice)
-    const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0].toString()
-    const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1].toString()
+    const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0]
+    const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
     
     const bob_rewardSnapshot_After = await cdpManager.rewardSnapshots(bob)
-    const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0].toString()
-    const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1].toString()
+    const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0]
+    const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
 
-    assert.equal(alice_ETHrewardSnapshot_After, '50000000000000000')
-    assert.equal(alice_CLVDebtRewardSnapshot_After, '9000000000000000000')
-    assert.equal(bob_ETHrewardSnapshot_After, '50000000000000000')
-    assert.equal(bob_CLVDebtRewardSnapshot_After, '9000000000000000000')
+    assert.isAtMost(getDifference(alice_ETHrewardSnapshot_After, '50000000000000000'), 100)
+    assert.isAtMost(getDifference(alice_CLVDebtRewardSnapshot_After, '9000000000000000000'), 100)
+    assert.isAtMost(getDifference(bob_ETHrewardSnapshot_After, '50000000000000000'), 100)
+    assert.isAtMost(getDifference(bob_CLVDebtRewardSnapshot_After, '9000000000000000000'), 100)
   })
 
   it("addColl(), active CDP: adds the right corrected stake after liquidations have occured", async () => {
@@ -343,9 +347,9 @@ contract('CDPManager', async accounts => {
 
     Therefore, as Dennis adds 2 ether collateral, his corrected stake should be:  s = 2 * (20 / 25 ) = 1.6 ETH */
     const dennis_CDP = await cdpManager.CDPs(dennis)
-    const dennis_Stake = dennis_CDP[2].toString()
+    const dennis_Stake = dennis_CDP[2]
 
-    assert.equal(dennis_Stake, '1600000000000000000')
+    assert.isAtMost(Number(dennis_Stake.sub(web3.utils.toBN( '1600000000000000000')).abs()), 100)
 
   })
 
@@ -592,35 +596,35 @@ contract('CDPManager', async accounts => {
     - His collateral should be (5 + 0.25 - 1) = 4.25 ETH.
     - His CLV debt should be (100 + 45) = 145 CLV.   */
     const alice_CDP_After = await cdpManager.CDPs(alice)
-    const alice_CLVDebt_After = (alice_CDP_After[0]).toString()
-    const alice_Coll_After = alice_CDP_After[1].toString()
+    const alice_CLVDebt_After = alice_CDP_After[0]
+    const alice_Coll_After = alice_CDP_After[1]
 
     const bob_CDP_After = await cdpManager.CDPs(bob)
-    const bob_CLVDebt_After = bob_CDP_After[0].toString()
-    const bob_Coll_After = bob_CDP_After[1].toString()
+    const bob_CLVDebt_After = bob_CDP_After[0]
+    const bob_Coll_After = bob_CDP_After[1]
 
-    assert.equal(alice_CLVDebt_After, '235000000000000000000')
-    assert.equal(alice_Coll_After, '10750000000000000000')
+    assert.isAtMost(getDifference(alice_CLVDebt_After, '235000000000000000000'), 100)
+    assert.isAtMost(getDifference(alice_Coll_After, '10750000000000000000'), 100)
 
-    assert.equal(bob_CLVDebt_After, '145000000000000000000')
-    assert.equal(bob_Coll_After, '4250000000000000000')
+    assert.isAtMost(getDifference(bob_CLVDebt_After, '145000000000000000000'), 100)
+    assert.isAtMost(getDifference(bob_Coll_After, '4250000000000000000'), 100)
 
     /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be:
 
     L_ETH(0): 0.05
     L_CLVDebt(0): 9   */
     alice_rewardSnapshot_After = await cdpManager.rewardSnapshots(alice)
-    const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0].toString()
-    const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1].toString()
+    const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0]
+    const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
     
     const bob_rewardSnapshot_After = await cdpManager.rewardSnapshots(bob)
-    const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0].toString()
-    const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1].toString()
+    const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0]
+    const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
 
-    assert.equal(alice_ETHrewardSnapshot_After, '50000000000000000')
-    assert.equal(alice_CLVDebtRewardSnapshot_After, '9000000000000000000')
-    assert.equal(bob_ETHrewardSnapshot_After, '50000000000000000')
-    assert.equal(bob_CLVDebtRewardSnapshot_After, '9000000000000000000')
+    assert.isAtMost(getDifference(alice_ETHrewardSnapshot_After, '50000000000000000'), 100)
+    assert.isAtMost(getDifference(alice_CLVDebtRewardSnapshot_After, '9000000000000000000'), 100)
+    assert.isAtMost(getDifference(bob_ETHrewardSnapshot_After, '50000000000000000'), 100)
+    assert.isAtMost(getDifference(bob_CLVDebtRewardSnapshot_After, '9000000000000000000'), 100)
   })
 
   it("withdrawCLV(): increases the CDP's CLV debt by the correct amount", async () => {
