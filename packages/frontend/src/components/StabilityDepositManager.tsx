@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Loader } from "rimble-ui";
 import { ContractTransaction } from "ethers";
 
-import { Liquity, StabilityDeposit } from "@liquity/lib";
-import { Difference } from "@liquity/lib/dist/utils";
+import { Liquity, StabilityDeposit, Trove } from "@liquity/lib";
+import { Difference, Decimal } from "@liquity/lib/dist/utils";
 import { useToast } from "../hooks/ToastProvider";
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 
@@ -32,13 +32,17 @@ type StabilityDepositActionProps = {
   originalDeposit: StabilityDeposit;
   editedDeposit: StabilityDeposit;
   setEditedDeposit: (deposit: StabilityDeposit) => void;
+  trove?: Trove;
+  price: Decimal;
 };
 
 const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   liquity,
   originalDeposit,
   editedDeposit,
-  setEditedDeposit
+  setEditedDeposit,
+  trove,
+  price
 }) => {
   const [actionState, setActionState] = useState<"idle" | "waitingForUser" | "waitingForNetwork">(
     "idle"
@@ -50,14 +54,19 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     setActionState("idle");
   }, [originalDeposit]);
 
-  if (!difference) {
+  if (!difference && (originalDeposit.pendingCollateralGain.isZero || !trove)) {
     return null;
   }
 
-  const [actionName, action] = getStabilityDepositAction(difference);
+  const [actionName, action] = (difference && getStabilityDepositAction(difference)) || [
+    `Transfer ${originalDeposit.pendingCollateralGain.prettify(4)} ETH to Trove`,
+    (liquity: Liquity) => {
+      return liquity.transferCollateralGainToTrove(originalDeposit, trove!, price);
+    }
+  ];
 
   return (
-    <Flex mt={4}>
+    <Flex mt={4} justifyContent="center">
       {actionState === "idle" ? (
         <>
           <Button
@@ -79,13 +88,15 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
           >
             {actionName}
           </Button>
-          <Button
-            mx={2}
-            variant="danger"
-            icon="Replay"
-            icononly
-            onClick={() => setEditedDeposit(originalDeposit)}
-          />
+          {difference && (
+            <Button
+              mx={2}
+              variant="danger"
+              icon="Replay"
+              icononly
+              onClick={() => setEditedDeposit(originalDeposit)}
+            />
+          )}
         </>
       ) : (
         <Button mx={2} disabled>
@@ -102,11 +113,15 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
 type StabilityDepositManagerProps = {
   liquity: Liquity;
   deposit: StabilityDeposit;
+  trove?: Trove;
+  price: Decimal;
 };
 
 export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = ({
   liquity,
-  deposit
+  deposit,
+  trove,
+  price
 }) => {
   const [editedDeposit, setEditedDeposit] = useState(deposit);
 
@@ -119,7 +134,7 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
       </Box>
 
       <StabilityDepositAction
-        {...{ liquity, originalDeposit: deposit, editedDeposit, setEditedDeposit }}
+        {...{ liquity, originalDeposit: deposit, editedDeposit, setEditedDeposit, trove, price }}
       />
     </>
   );

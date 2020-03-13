@@ -8,8 +8,8 @@ import { useAsyncValue, useAsyncStore } from "../hooks/AsyncValue";
 import { useAccountBalance } from "./AccountBalance";
 
 export const deployerAddress = "0x00a329c0648769A73afAc7F9381E08FB43dBEA72";
-const cdpManagerAddress = "0xf9f6344919048Da7b8874780e575E087fEA009e5";
-//const cdpManagerAddress = "0x742fC0A4BeD1903518c318660A8558Cf2391371D";
+//const cdpManagerAddress = "0xf9f6344919048Da7b8874780e575E087fEA009e5";
+const cdpManagerAddress = "0xB90C5d681AFcFD77D3938F2941AAd75fa95030D8";
 
 type LiquityContext = {
   account: string;

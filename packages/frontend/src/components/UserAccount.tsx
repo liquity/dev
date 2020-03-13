@@ -28,12 +28,12 @@ export const UserAccount: React.FC<UserAccountProps> = ({ account, etherBalance,
         <Heading>Liquity</Heading>
       </Flex>
       <Flex alignItems="center">
-        <Icon name="AccountCircle" size={28} />
+        <Icon name="AccountCircle" size="28" />
         <Box ml={3} mr={4}>
           <Heading fontSize={1}>Connected as</Heading>
           <Text fontSize={1}>{shortenAddress(account)}</Text>
         </Box>
-        <Icon name="AccountBalanceWallet" size={28} />
+        <Icon name="AccountBalanceWallet" size="28" />
         <Box ml={3}>
           <Heading fontSize={1}>Balance</Heading>
           <Text.span mr={3} fontSize={1}>

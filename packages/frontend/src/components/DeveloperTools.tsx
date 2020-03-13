@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import { Text, Input, Button, Flex, Box, Heading } from "rimble-ui";
 
 import { Liquity } from "@liquity/lib";
@@ -10,10 +10,11 @@ type DeveloperToolsProps = {
 };
 
 export const DeveloperTools: React.FC<DeveloperToolsProps> = ({ liquity, price }) => {
-  const [newPrice, setNewPrice] = useState<string>(price.toString());
+  const priceInputRef = useRef<HTMLInputElement | null>();
+  const numberOfTrovesToLiquidateInputRef = useRef<HTMLInputElement | null>();
 
   return (
-    <Box m={5}>
+    <Box mt={4}>
       <Heading m={4} textAlign="center">
         Developer Tools
       </Heading>
@@ -21,22 +22,34 @@ export const DeveloperTools: React.FC<DeveloperToolsProps> = ({ liquity, price }
         <Text m={2} fontSize={3} fontWeight={4}>
           ETH price:
         </Text>
-        <Input
-          type="text"
-          required
-          value={newPrice}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPrice(e.target.value)}
-        />
-        <Button ml={2} onClick={() => liquity.setPrice(newPrice)}>
+        <Input ref={priceInputRef} type="number" defaultValue={price} />
+        <Button
+          ml={2}
+          onClick={() => priceInputRef.current && liquity.setPrice(priceInputRef.current.value)}
+        >
           Set
         </Button>
       </Flex>
       <Flex m={2} mt={4}>
-        <Button mr={1} width={1 / 2} onClick={() => liquity.liquidate(1)}>
-          Liquidate 1
-        </Button>
-        <Button ml={1} width={1 / 2} onClick={() => liquity.liquidate(10)}>
-          Liquidate 10
+        <Input
+          ref={numberOfTrovesToLiquidateInputRef}
+          type="number"
+          defaultValue={10}
+          step={1}
+          min={1}
+          mr={1}
+        />
+        <Button
+          ml={1}
+          width={1 / 2}
+          onClick={() => {
+            const numberOfTrovesToLiquidate = numberOfTrovesToLiquidateInputRef.current?.value;
+            if (numberOfTrovesToLiquidate) {
+              liquity.liquidate(parseInt(numberOfTrovesToLiquidate));
+            }
+          }}
+        >
+          Liquidate
         </Button>
       </Flex>
     </Box>

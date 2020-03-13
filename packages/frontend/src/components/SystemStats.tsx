@@ -20,6 +20,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
 }) => {
   const quiInStabilityPoolPct =
     pool.totalDebt.nonZero && new Percent(quiInStabilityPool.div(pool.totalDebt));
+  const totalCollateralRatioPct = new Percent(pool.totalCollateralRatioAt(price));
 
   return (
     <Card mt={4} p={3} bg="lavender">
@@ -32,14 +33,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
       {quiInStabilityPoolPct && (
         <Text>Fraction of QUI in Stability Pool: {quiInStabilityPoolPct.toString(1)}</Text>
       )}
-      <Text>
-        Total collateral ratio:{" "}
-        {pool
-          .totalCollateralRatioAt(price)
-          .mul(100)
-          .toString(1)}
-        %
-      </Text>
+      <Text>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Text>
       {pool.isRecoveryModeActiveAt(price) && (
         <Text color="danger">The system is in recovery mode!</Text>
       )}

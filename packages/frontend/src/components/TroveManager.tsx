@@ -81,7 +81,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
   const [actionName, action] = getTroveAction(change.property, change.difference);
 
   return (
-    <Flex mt={4}>
+    <Flex mt={4} justifyContent="center">
       {actionState === "idle" ? (
         <>
           <Button
