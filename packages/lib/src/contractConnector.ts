@@ -1,15 +1,15 @@
 import { Signer } from "ethers";
 import { Provider } from "ethers/providers";
 
-import { ActivePoolFactory } from "../types/ActivePoolFactory";
-import { CDPManagerFactory } from "../types/CDPManagerFactory";
-import { CLVTokenFactory } from "../types/CLVTokenFactory";
-import { DefaultPoolFactory } from "../types/DefaultPoolFactory";
-import { NameRegistryFactory } from "../types/NameRegistryFactory";
-import { PoolManagerFactory } from "../types/PoolManagerFactory";
-import { PriceFeedFactory } from "../types/PriceFeedFactory";
-import { SortedCDPsFactory } from "../types/SortedCDPsFactory";
-import { StabilityPoolFactory } from "../types/StabilityPoolFactory";
+import { ActivePoolFactory } from "../types/ethers/ActivePoolFactory";
+import { CDPManagerFactory } from "../types/ethers/CDPManagerFactory";
+import { CLVTokenFactory } from "../types/ethers/CLVTokenFactory";
+import { DefaultPoolFactory } from "../types/ethers/DefaultPoolFactory";
+import { NameRegistryFactory } from "../types/ethers/NameRegistryFactory";
+import { PoolManagerFactory } from "../types/ethers/PoolManagerFactory";
+import { PriceFeedFactory } from "../types/ethers/PriceFeedFactory";
+import { SortedCDPsFactory } from "../types/ethers/SortedCDPsFactory";
+import { StabilityPoolFactory } from "../types/ethers/StabilityPoolFactory";
 
 import { LiquityContractAddresses, LiquityContracts } from "./contracts";
 
@@ -43,13 +43,16 @@ const getContractAddressesFromNameRegistry = async (
     priceFeed: await nameRegistry.getAddress("PriceFeed"),
     sortedCDPs: await nameRegistry.getAddress("SortedCDPs"),
     stabilityPool: await nameRegistry.getAddress("StabilityPool")
-  }
-}
+  };
+};
 
 export const getContractsFromNameRegistry = async (
   nameRegistryAddress: string,
   signerOrProvider: Signer | Provider
 ): Promise<LiquityContracts> => {
-  const addresses = await getContractAddressesFromNameRegistry(nameRegistryAddress, signerOrProvider);
+  const addresses = await getContractAddressesFromNameRegistry(
+    nameRegistryAddress,
+    signerOrProvider
+  );
   return connectToContracts(addresses, signerOrProvider);
-}
+};

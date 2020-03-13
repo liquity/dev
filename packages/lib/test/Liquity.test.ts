@@ -3,7 +3,7 @@ import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { Signer } from "ethers";
 import { solidity } from "ethereum-waffle";
-import { artifacts, ethers, waffle } from "@nomiclabs/buidler";
+import { web3, artifacts, ethers, waffle } from "@nomiclabs/buidler";
 
 import { deployAndSetupContracts } from "./utils/deploy";
 import { Decimal } from "../utils/Decimal";
@@ -27,7 +27,7 @@ describe("Liquity", () => {
   before(async () => {
     [deployer, user] = await ethers.signers();
     userAddress = await user.getAddress();
-    addresses = addressesOf(await deployAndSetupContracts(artifacts, deployer));
+    addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
   });
 
   // Always setup same initial balance for user

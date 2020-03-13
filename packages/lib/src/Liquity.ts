@@ -3,16 +3,16 @@ import { bigNumberify, BigNumber, BigNumberish } from "ethers/utils";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
-import { CDPManager } from "../types/CDPManager";
-import { CDPManagerFactory } from "../types/CDPManagerFactory";
-import { SortedCDPs } from "../types/SortedCDPs";
-import { SortedCDPsFactory } from "../types/SortedCDPsFactory";
-import { PriceFeed } from "../types/PriceFeed";
-import { PriceFeedFactory } from "../types/PriceFeedFactory";
-import { PoolManager } from "../types/PoolManager";
-import { PoolManagerFactory } from "../types/PoolManagerFactory";
-import { CLVToken } from "../types/CLVToken";
-import { CLVTokenFactory } from "../types/CLVTokenFactory";
+import { CDPManager } from "../types/ethers/CDPManager";
+import { CDPManagerFactory } from "../types/ethers/CDPManagerFactory";
+import { SortedCDPs } from "../types/ethers/SortedCDPs";
+import { SortedCDPsFactory } from "../types/ethers/SortedCDPsFactory";
+import { PriceFeed } from "../types/ethers/PriceFeed";
+import { PriceFeedFactory } from "../types/ethers/PriceFeedFactory";
+import { PoolManager } from "../types/ethers/PoolManager";
+import { PoolManagerFactory } from "../types/ethers/PoolManagerFactory";
+import { CLVToken } from "../types/ethers/CLVToken";
+import { CLVTokenFactory } from "../types/ethers/CLVTokenFactory";
 
 interface Poolish {
   readonly activeCollateral: Decimalish;
@@ -496,6 +496,20 @@ export class Liquity {
 
   withdrawQuiFromStabilityPool(withdrawnQui: Decimalish) {
     return this.poolManager.withdrawFromSP(Decimal.from(withdrawnQui).bigNumber);
+  }
+
+  async transferCollateralGainToTrove(
+    deposit: StabilityDeposit,
+    initialTrove: Trove,
+    price: Decimalish
+  ) {
+    const address = this.requireAddress();
+    const finalTrove = initialTrove.addCollateral(deposit.pendingCollateralGain);
+
+    return this.poolManager.withdrawFromSPtoCDP(
+      address,
+      await this.findHint(finalTrove, price, address)
+    );
   }
 
   async getQuiInStabilityPool() {

@@ -1,12 +1,12 @@
-import { ActivePool } from "../types/ActivePool";
-import { CDPManager } from "../types/CDPManager";
-import { CLVToken } from "../types/CLVToken";
-import { DefaultPool } from "../types/DefaultPool";
-import { NameRegistry } from "../types/NameRegistry";
-import { PoolManager } from "../types/PoolManager";
-import { PriceFeed } from "../types/PriceFeed";
-import { SortedCDPs } from "../types/SortedCDPs";
-import { StabilityPool } from "../types/StabilityPool";
+import { ActivePool } from "../types/ethers/ActivePool";
+import { CDPManager } from "../types/ethers/CDPManager";
+import { CLVToken } from "../types/ethers/CLVToken";
+import { DefaultPool } from "../types/ethers/DefaultPool";
+import { NameRegistry } from "../types/ethers/NameRegistry";
+import { PoolManager } from "../types/ethers/PoolManager";
+import { PriceFeed } from "../types/ethers/PriceFeed";
+import { SortedCDPs } from "../types/ethers/SortedCDPs";
+import { StabilityPool } from "../types/ethers/StabilityPool";
 
 export interface LiquityContractAddresses {
   activePool: string;
