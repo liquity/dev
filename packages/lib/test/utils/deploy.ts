@@ -45,12 +45,13 @@ interface GenericContract extends Truffle.Contract<Truffle.ContractInstance> {
 }
 
 const deployContract = async (web3: Web3, artifacts: Truffle.Artifacts, contractName: string) => {
+  silent || console.log(`Deploying ${contractName} ...`);
+
   const contract = await artifacts.require<GenericContract>(contractName).new();
   const receipt = await transactionReceipt(web3, contract.transactionHash);
 
   if (!silent) {
     console.log({
-      contractName,
       contractAddress: contract.address,
       blockNumber: receipt.blockNumber
     });

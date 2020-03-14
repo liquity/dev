@@ -1,5 +1,6 @@
 import { Wallet } from "ethers";
 import { task, usePlugin, BuidlerConfig } from "@nomiclabs/buidler/config";
+import { NetworkConfig } from "@nomiclabs/buidler/types";
 
 import { deployAndSetupContracts, setSilent } from "./test/utils/deploy";
 import { Liquity, Trove } from "./src/Liquity";
@@ -8,7 +9,7 @@ import { CDPManagerFactory } from "./types/ethers/CDPManagerFactory";
 import { PoolManagerFactory } from "./types/ethers/PoolManagerFactory";
 import { PriceFeedFactory } from "./types/ethers/PriceFeedFactory";
 import { NameRegistryFactory } from "./types/ethers/NameRegistryFactory";
-import { LiquityContractAddresses } from "./src/contracts";
+import { LiquityContractAddresses, addressesOf } from "./src/contracts";
 
 usePlugin("@nomiclabs/buidler-web3");
 usePlugin("@nomiclabs/buidler-truffle5");
@@ -24,17 +25,47 @@ const generateRandomAccounts = (numberOfAccounts: number) => {
   return accounts;
 };
 
+const deployerAccount = "0x543ab4105a87fa14619bad9b85b6e989412b2f30380a3f36f49b9327b5967fb1";
+const devChainRichAccount = "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7";
+
+const infuraApiKey = "ad9cef41c9c844a7b54d10be24d416e5";
+
+const infuraNetwork = (name: string): { [name: string]: NetworkConfig } => ({
+  [name]: {
+    url: `https://${name}.infura.io/v3/${infuraApiKey}`,
+    accounts: [deployerAccount]
+  }
+});
+
+const config: BuidlerConfig = {
+  defaultNetwork: "buidlerevm",
+  networks: {
+    dev: {
+      url: "http://localhost:8545",
+      accounts: [deployerAccount, devChainRichAccount, ...generateRandomAccounts(10)]
+    },
+    ...infuraNetwork("ropsten"),
+    ...infuraNetwork("rinkeby"),
+    ...infuraNetwork("goerli"),
+    ...infuraNetwork("kovan")
+  },
+  paths: {
+    artifacts: "../contracts/artifacts",
+    cache: "../contracts/cache"
+  }
+};
+
 const addressesOnNetwork: { [network: string]: LiquityContractAddresses } = {
   dev: {
-    activePool: "0x04700bCA4766f391fC55A4E36da0Be83daA849F6",
-    cdpManager: "0xf9f6344919048Da7b8874780e575E087fEA009e5",
-    clvToken: "0x277A693784789582F4A154a3Eb8fd827e99B5A88",
-    defaultPool: "0xF686A081b216F818431267339B4e78E03D8282CC",
-    nameRegistry: "0x289824E4291f8c2Ab27dC1dFDFc189401B06680a",
-    poolManager: "0x581Ad97A398Ef2377a7d0c8A51Afc39Bc833Af7D",
-    priceFeed: "0x080642CdB88e86600C77a866d4F375142906E93F",
-    sortedCDPs: "0x9F23490eF9A5F63546Dab89f3a6dED0Bf8467331",
-    stabilityPool: "0xCb05a079C0EbC818961866EC38B7c05827Cfc96b"
+    activePool: "0x788b1f7A4976279305E43A08a5419F95B3B5545a",
+    cdpManager: "0x086063A27f505b8eA5a0E65F2A34B26197ef419C",
+    clvToken: "0x9FB0a538EC610e4fafb7d50338d417E6643463CB",
+    defaultPool: "0x3B7af23BB5B69951c677D39dAe0809C7f3231E50",
+    nameRegistry: "0xa650242F20F748bB861067FDe7B7766Ac17f3e64",
+    poolManager: "0x35b7c50900b5B188536138f43cc6E1b978abF009",
+    priceFeed: "0x74d37CE7E7210401a3432F8c49590723b3e211D2",
+    sortedCDPs: "0x2142F04f584076a1783f6d86159bac83D10256d9",
+    stabilityPool: "0xdB00Fbb08Fa75c77324661Cf46625d7399e954aB"
   },
   ropsten: {
     activePool: "0xc9E61022f5dBDF504a58afa76aacC4220079A9a4",
@@ -68,35 +99,17 @@ const addressesOnNetwork: { [network: string]: LiquityContractAddresses } = {
     priceFeed: "0x5ADc1B1ba342597c1525f5D551F614B9D250925E",
     sortedCDPs: "0x92E8FF4272e15983246418770FD076830Ff2E745",
     stabilityPool: "0xdedDCEA0E907472A91430633B7f7dF0FAf78eD61"
-  }
-};
-
-const config: BuidlerConfig = {
-  defaultNetwork: "buidlerevm",
-  networks: {
-    dev: {
-      url: "http://localhost:8545",
-      accounts: [
-        "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7",
-        ...generateRandomAccounts(40)
-      ]
-    },
-    ropsten: {
-      url: "https://ropsten.infura.io/v3/ad9cef41c9c844a7b54d10be24d416e5",
-      accounts: ["0x543ab4105a87fa14619bad9b85b6e989412b2f30380a3f36f49b9327b5967fb1"]
-    },
-    rinkeby: {
-      url: "https://rinkeby.infura.io/v3/ad9cef41c9c844a7b54d10be24d416e5",
-      accounts: ["0x543ab4105a87fa14619bad9b85b6e989412b2f30380a3f36f49b9327b5967fb1"]
-    },
-    goerli: {
-      url: "https://goerli.infura.io/v3/ad9cef41c9c844a7b54d10be24d416e5",
-      accounts: ["0x543ab4105a87fa14619bad9b85b6e989412b2f30380a3f36f49b9327b5967fb1"]
-    }
   },
-  paths: {
-    artifacts: "../contracts/artifacts",
-    cache: "../contracts/cache"
+  kovan: {
+    activePool: "0x8Aded274EB4B31a740945f0933eA2d0757350921",
+    cdpManager: "0xecbc0A33CBf929DadD1D64B5E7A6247041402314",
+    clvToken: "0x7A088435468F894A7Bb59fE9B92700570E0f884c",
+    defaultPool: "0xEddE64C273aC266FC2758652b0BBaeE565808d34",
+    nameRegistry: "0x3aC1A85a427227C83A3aE95Accd2022Fa1d6352A",
+    poolManager: "0xABA1eD61d4224831FE0e96F1054DD989FDd42310",
+    priceFeed: "0x5C3B80A5A5517567905a77d5DbBDeB455b174C5b",
+    sortedCDPs: "0x6B681d4C1F835E236639F46929530a92a90768B1",
+    stabilityPool: "0xa77975FaCaA6dC5E8e436D39CdA52A4D398D10B2"
   }
 };
 
@@ -107,11 +120,8 @@ task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) =>
   const contracts = await deployAndSetupContracts(bre.web3, bre.artifacts, deployer);
 
   console.log();
-  console.log("addresses = {");
-  for (const [contractName, contract] of Object.entries(contracts)) {
-    console.log(`  ${contractName}: "${contract.address}",`);
-  }
-  console.log("}");
+  console.log(addressesOf(contracts));
+  console.log();
 });
 
 task(

@@ -16,8 +16,9 @@ chai.use(solidity);
 chai.use(chaiAsPromised);
 
 describe("Liquity", () => {
-  const price = Decimal.from(200);
+  let price: Decimal;
   let deployer: Signer;
+  let funder: Signer;
   let user: Signer;
   let userAddress: string;
   let addresses: LiquityContractAddresses;
@@ -25,7 +26,7 @@ describe("Liquity", () => {
   let trove: Trove | undefined;
 
   before(async () => {
-    [deployer, user] = await ethers.signers();
+    [deployer, funder, user] = await ethers.signers();
     userAddress = await user.getAddress();
     addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
   });
@@ -41,7 +42,7 @@ describe("Liquity", () => {
     if (balance.eq(targetBalance)) return;
 
     if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
-      await deployer.sendTransaction({
+      await funder.sendTransaction({
         to: userAddress,
         value: targetBalance
           .add(txCost)
@@ -51,20 +52,20 @@ describe("Liquity", () => {
       });
 
       await user.sendTransaction({
-        to: deployer.getAddress(),
+        to: funder.getAddress(),
         value: 1,
         gasLimit
       });
     } else {
       if (balance.lt(targetBalance)) {
-        await deployer.sendTransaction({
+        await funder.sendTransaction({
           to: userAddress,
           value: targetBalance.sub(balance),
           gasLimit
         });
       } else {
         await user.sendTransaction({
-          to: deployer.getAddress(),
+          to: funder.getAddress(),
           value: balance.sub(targetBalance).sub(txCost),
           gasLimit
         });
@@ -76,6 +77,10 @@ describe("Liquity", () => {
 
   it("should connect to contracts by CDPManager address", async () => {
     liquity = await Liquity.connect(addresses.cdpManager, provider, userAddress);
+  });
+
+  it("should get the price", async () => {
+    price = await liquity.getPrice();
   });
 
   it("should have no Trove initially", async () => {
