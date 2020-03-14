@@ -2,29 +2,12 @@ import React, { createContext, useContext, useCallback } from "react";
 import { Web3Provider } from "ethers/providers";
 import { useWeb3React } from "@web3-react/core";
 
-import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import { Liquity, Trove, StabilityDeposit, addressesOnNetwork } from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue, useAsyncStore } from "../hooks/AsyncValue";
 import { useAccountBalance } from "./AccountBalance";
 
 export const deployerAddress = "0x70E78E2D8B2a4fDb073B7F61c4653c23aE12DDDF";
-
-const cdpManagerAddressOnChain: { [chainId: number]: string } = {
-  // ropsten
-  3: "0x28c941d6A29b86036C18249C175CE2084f3983e7",
-
-  // rinkeby
-  4: "0x907CC782Eb562BDce0191be0ceC8Cace3F00E081",
-
-  // goerli
-  5: "0x710E14FBbaC14D819Be9a21E2089ebfdb8e3a95E",
-
-  // kovan
-  42: "0xecbc0A33CBf929DadD1D64B5E7A6247041402314",
-
-  // parity dev chain
-  17: "0x086063A27f505b8eA5a0E65F2A34B26197ef419C"
-};
 
 type LiquityContext = {
   account: string;
@@ -45,7 +28,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, load
     useCallback(async () => {
       if (library && account && chainId) {
         console.log(chainId);
-        const cdpManagerAddress = cdpManagerAddressOnChain[chainId];
+        const cdpManagerAddress = addressesOnNetwork[chainId].cdpManager;
         return Liquity.connect(cdpManagerAddress, library, account);
       }
     }, [library, account, chainId])
