@@ -1,7 +1,7 @@
 import { Wallet } from "ethers";
 import { task, usePlugin, BuidlerConfig } from "@nomiclabs/buidler/config";
 
-import { deployAndSetupContracts } from "./test/utils/deploy";
+import { deployAndSetupContracts, setSilent } from "./test/utils/deploy";
 import { Liquity, Trove } from "./src/Liquity";
 import { Decimal } from "./utils";
 import { CDPManagerFactory } from "./types/ethers/CDPManagerFactory";
@@ -102,6 +102,8 @@ const config: BuidlerConfig = {
 
 task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) => {
   const [deployer] = await bre.ethers.signers();
+
+  setSilent(false);
   const contracts = await deployAndSetupContracts(bre.web3, bre.artifacts, deployer);
 
   console.log();

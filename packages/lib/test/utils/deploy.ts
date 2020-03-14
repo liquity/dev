@@ -1,56 +1,51 @@
-import type Web3 from "web3";
-import { Signer } from "ethers";
+import Web3 from "web3";
+import { Signer, ContractTransaction } from "ethers";
 import { Provider } from "ethers/providers";
 
 import { LiquityContractAddresses, LiquityContracts } from "../../src/contracts";
 import { connectToContracts } from "../../src/contractConnector";
 
-const waitForDeployment = async (web3: Web3, promisedContract: Promise<Truffle.ContractInstance>) => {
-  const contract = await promisedContract;
+let silent = true;
+
+export const setSilent = (s: boolean) => {
+  silent = s;
+};
+
+interface GenericContract extends Truffle.Contract<Truffle.ContractInstance> {
+  "new"(meta?: Truffle.TransactionDetails): Promise<Truffle.ContractInstance>;
+}
+
+const deployContract = async (web3: Web3, artifacts: Truffle.Artifacts, contractName: string) => {
+  const contract = await artifacts.require<GenericContract>(contractName).new();
   const receipt = await web3.eth.getTransactionReceipt(contract.transactionHash);
 
-  //console.log(receipt.blockNumber);
+  if (!silent) {
+    console.log({
+      contractName,
+      deployTransactionHash: contract.transactionHash,
+      contractAddress: contract.address,
+      blockNumber: receipt.blockNumber
+    });
+    console.log();
+  }
 
-  return contract;
-}
+  return contract.address;
+};
 
 const deployContracts = async (
   web3: Web3,
   artifacts: Truffle.Artifacts
-): Promise<LiquityContractAddresses> => {
-  // DeciMath is a library that needs to be linked into a couple other
-  // contracts, so deploy it first
-  const deciMath = await waitForDeployment(web3, artifacts.require("DeciMath").new());
-
-  const CDPManager = artifacts.require("CDPManager");
-  CDPManager.link(deciMath);
-  const cdpManager = await waitForDeployment(web3, CDPManager.new());
-
-  const PoolManager = artifacts.require("PoolManager");
-  PoolManager.link(deciMath);
-  const poolManager = await waitForDeployment(web3, PoolManager.new());
-
-  // Rest need no linking
-  const activePool = await waitForDeployment(web3, artifacts.require("ActivePool").new());
-  const clvToken = await waitForDeployment(web3, artifacts.require("CLVToken").new());
-  const defaultPool = await waitForDeployment(web3, artifacts.require("DefaultPool").new());
-  const nameRegistry = await waitForDeployment(web3, artifacts.require("NameRegistry").new());
-  const priceFeed = await waitForDeployment(web3, artifacts.require("PriceFeed").new());
-  const sortedCDPs = await waitForDeployment(web3, artifacts.require("SortedCDPs").new());
-  const stabilityPool = await waitForDeployment(web3, artifacts.require("StabilityPool").new());
-
-  return {
-    activePool: activePool.address,
-    cdpManager: cdpManager.address,
-    clvToken: clvToken.address,
-    defaultPool: defaultPool.address,
-    nameRegistry: nameRegistry.address,
-    poolManager: poolManager.address,
-    priceFeed: priceFeed.address,
-    sortedCDPs: sortedCDPs.address,
-    stabilityPool: stabilityPool.address
-  };
-};
+): Promise<LiquityContractAddresses> => ({
+  activePool: await deployContract(web3, artifacts, "ActivePool"),
+  cdpManager: await deployContract(web3, artifacts, "CDPManager"),
+  clvToken: await deployContract(web3, artifacts, "CLVToken"),
+  defaultPool: await deployContract(web3, artifacts, "DefaultPool"),
+  nameRegistry: await deployContract(web3, artifacts, "NameRegistry"),
+  poolManager: await deployContract(web3, artifacts, "PoolManager"),
+  priceFeed: await deployContract(web3, artifacts, "PriceFeed"),
+  sortedCDPs: await deployContract(web3, artifacts, "SortedCDPs"),
+  stabilityPool: await deployContract(web3, artifacts, "StabilityPool")
+});
 /*
 const nameRegisterContracts = async (contracts: LiquityContracts) => {
   const nameRegistry = contracts.nameRegistry;
@@ -65,7 +60,16 @@ const nameRegisterContracts = async (contracts: LiquityContracts) => {
 };
 */
 const connectContracts = async (
-  contracts: LiquityContracts,
+  {
+    activePool,
+    cdpManager,
+    clvToken,
+    defaultPool,
+    poolManager,
+    priceFeed,
+    sortedCDPs,
+    stabilityPool
+  }: LiquityContracts,
   signerOrProvider: Signer | Provider
 ) => {
   let txCount: number | undefined;
@@ -78,50 +82,35 @@ const connectContracts = async (
     throw new Error("Can't determine nonce");
   }
 
-  const txs = await Promise.all(
-    [
-      (nonce: number) =>
-        contracts.clvToken.setPoolManagerAddress(contracts.poolManager.address, { nonce }),
-      (nonce: number) =>
-        contracts.poolManager.setCDPManagerAddress(contracts.cdpManager.address, { nonce }),
-      (nonce: number) => contracts.poolManager.setCLVToken(contracts.clvToken.address, { nonce }),
-      (nonce: number) => contracts.poolManager.setPriceFeed(contracts.priceFeed.address, { nonce }),
-      (nonce: number) =>
-        contracts.poolManager.setStabilityPool(contracts.stabilityPool.address, { nonce }),
-      (nonce: number) =>
-        contracts.poolManager.setActivePool(contracts.activePool.address, { nonce }),
-      (nonce: number) =>
-        contracts.poolManager.setDefaultPool(contracts.defaultPool.address, { nonce }),
-      (nonce: number) => contracts.sortedCDPs.setCDPManager(contracts.cdpManager.address, { nonce }),
-      (nonce: number) =>
-        contracts.priceFeed.setCDPManagerAddress(contracts.cdpManager.address, { nonce }),
-      (nonce: number) => contracts.cdpManager.setCLVToken(contracts.clvToken.address, { nonce }),
-      (nonce: number) => contracts.cdpManager.setSortedCDPs(contracts.sortedCDPs.address, { nonce }),
-      (nonce: number) =>
-        contracts.cdpManager.setPoolManager(contracts.poolManager.address, { nonce }),
-      (nonce: number) => contracts.cdpManager.setPriceFeed(contracts.priceFeed.address, { nonce }),
-      (nonce: number) =>
-        contracts.stabilityPool.setPoolManagerAddress(contracts.poolManager.address, { nonce }),
-      (nonce: number) =>
-        contracts.stabilityPool.setActivePoolAddress(contracts.activePool.address, { nonce }),
-      (nonce: number) =>
-        contracts.stabilityPool.setDefaultPoolAddress(contracts.defaultPool.address, { nonce }),
-      (nonce: number) =>
-        contracts.activePool.setPoolManagerAddress(contracts.poolManager.address, { nonce }),
-      (nonce: number) =>
-        contracts.activePool.setStabilityPoolAddress(contracts.stabilityPool.address, { nonce }),
-      (nonce: number) =>
-        contracts.activePool.setDefaultPoolAddress(contracts.defaultPool.address, { nonce }),
-      (nonce: number) =>
-        contracts.defaultPool.setPoolManagerAddress(contracts.poolManager.address, { nonce }),
-      (nonce: number) =>
-        contracts.defaultPool.setStabilityPoolAddress(contracts.stabilityPool.address, { nonce }),
-      (nonce: number) =>
-        contracts.defaultPool.setActivePoolAddress(contracts.activePool.address, { nonce })
-    ].map((tx, i) => tx(txCount! + i))
-  );
+  const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
+    nonce => clvToken.setPoolManagerAddress(poolManager.address, { nonce }),
+    nonce => poolManager.setCDPManagerAddress(cdpManager.address, { nonce }),
+    nonce => poolManager.setCLVToken(clvToken.address, { nonce }),
+    nonce => poolManager.setPriceFeed(priceFeed.address, { nonce }),
+    nonce => poolManager.setStabilityPool(stabilityPool.address, { nonce }),
+    nonce => poolManager.setActivePool(activePool.address, { nonce }),
+    nonce => poolManager.setDefaultPool(defaultPool.address, { nonce }),
+    nonce => sortedCDPs.setCDPManager(cdpManager.address, { nonce }),
+    nonce => priceFeed.setCDPManagerAddress(cdpManager.address, { nonce }),
+    nonce => cdpManager.setCLVToken(clvToken.address, { nonce }),
+    nonce => cdpManager.setSortedCDPs(sortedCDPs.address, { nonce }),
+    nonce => cdpManager.setPoolManager(poolManager.address, { nonce }),
+    nonce => cdpManager.setPriceFeed(priceFeed.address, { nonce }),
+    nonce => stabilityPool.setPoolManagerAddress(poolManager.address, { nonce }),
+    nonce => stabilityPool.setActivePoolAddress(activePool.address, { nonce }),
+    nonce => stabilityPool.setDefaultPoolAddress(defaultPool.address, { nonce }),
+    nonce => activePool.setPoolManagerAddress(poolManager.address, { nonce }),
+    nonce => activePool.setStabilityPoolAddress(stabilityPool.address, { nonce }),
+    nonce => activePool.setDefaultPoolAddress(defaultPool.address, { nonce }),
+    nonce => defaultPool.setPoolManagerAddress(poolManager.address, { nonce }),
+    nonce => defaultPool.setStabilityPoolAddress(stabilityPool.address, { nonce }),
+    nonce => defaultPool.setActivePoolAddress(activePool.address, { nonce })
+  ];
 
-  await Promise.all(txs.map(tx => tx.wait()));
+  const txs = await Promise.all(connections.map((connect, i) => connect(txCount! + i)));
+
+  let i = 0;
+  await Promise.all(txs.map(tx => tx.wait().then(() => silent || console.log(`Connected ${++i}`))));
 };
 
 export const deployAndSetupContracts = async (
@@ -129,8 +118,10 @@ export const deployAndSetupContracts = async (
   artifacts: Truffle.Artifacts,
   signerOrProvider: Signer | Provider
 ): Promise<LiquityContracts> => {
+  silent || (console.log("Deploying contracts..."), console.log());
   const addresses = await deployContracts(web3, artifacts);
   const contracts = connectToContracts(addresses, signerOrProvider);
+  silent || console.log("Connecting contracts...");
   await connectContracts(contracts, signerOrProvider);
   //await nameRegisterContracts(contracts);
 
