@@ -1,14 +1,43 @@
 import Web3 from "web3";
+import { TransactionReceipt } from "web3-eth";
 import { Signer, ContractTransaction } from "ethers";
 import { Provider } from "ethers/providers";
 
 import { LiquityContractAddresses, LiquityContracts } from "../../src/contracts";
 import { connectToContracts } from "../../src/contractConnector";
 
+// Bug in web3-eth: getTransactionReceipt is typed wrong. It returns null when the transaction is
+// still pending.
+// https://web3js.readthedocs.io/en/v1.2.0/web3-eth.html#gettransactionreceipt
+declare module "web3-eth" {
+  interface Eth {
+    getTransactionReceipt(
+      hash: string,
+      callback?: (error: Error, transactionReceipt: TransactionReceipt) => void
+    ): Promise<TransactionReceipt | null>;
+  }
+}
+
 let silent = true;
 
 export const setSilent = (s: boolean) => {
   silent = s;
+};
+
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve(), ms));
+
+const transactionReceipt = async (web3: Web3, transactionHash: string) => {
+  silent || console.log(`Waiting for transaction ${transactionHash} ...`);
+
+  for (;;) {
+    const receipt = await web3.eth.getTransactionReceipt(transactionHash);
+
+    if (receipt) {
+      return receipt;
+    }
+
+    await sleep(4000);
+  }
 };
 
 interface GenericContract extends Truffle.Contract<Truffle.ContractInstance> {
@@ -17,12 +46,11 @@ interface GenericContract extends Truffle.Contract<Truffle.ContractInstance> {
 
 const deployContract = async (web3: Web3, artifacts: Truffle.Artifacts, contractName: string) => {
   const contract = await artifacts.require<GenericContract>(contractName).new();
-  const receipt = await web3.eth.getTransactionReceipt(contract.transactionHash);
+  const receipt = await transactionReceipt(web3, contract.transactionHash);
 
   if (!silent) {
     console.log({
       contractName,
-      deployTransactionHash: contract.transactionHash,
       contractAddress: contract.address,
       blockNumber: receipt.blockNumber
     });
