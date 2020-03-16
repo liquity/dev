@@ -220,12 +220,13 @@ describe("Liquity", () => {
     );
   });
 
-  it("should withdraw the gains to the Trove", async () => {
+  // Currently failing due to a rounding problem in the contracts
+  it("should transfer the gains to the Trove", async () => {
     await liquity.transferCollateralGainToTrove(deposit, trove!, price);
     trove = await liquity.getTrove();
     deposit = await liquity.getStabilityDeposit();
 
-    expect(trove).to.deep.equal(new Trove({ collateral: 2.22, debt: 140 }));
+    expect(trove).to.deep.equal(new Trove({ collateral: 2.2233, debt: 139 }));
     expect(deposit.isEmpty).to.be.true;
   });
 });
