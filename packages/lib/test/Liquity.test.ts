@@ -8,7 +8,7 @@ import { web3, artifacts, ethers, waffle } from "@nomiclabs/buidler";
 import { deployAndSetupContracts } from "./utils/deploy";
 import { Decimal } from "../utils/Decimal";
 import { LiquityContractAddresses, addressesOf } from "../src/contracts";
-import { Liquity, Trove } from "../src/Liquity";
+import { Liquity, Trove, StabilityDeposit } from "../src/Liquity";
 
 const provider = waffle.provider;
 
@@ -21,12 +21,16 @@ describe("Liquity", () => {
   let funder: Signer;
   let user: Signer;
   let userAddress: string;
+  let otherUser: Signer;
   let addresses: LiquityContractAddresses;
+  let deployerLiquity: Liquity;
   let liquity: Liquity;
+  let otherLiquity: Liquity;
   let trove: Trove | undefined;
+  let deposit: StabilityDeposit;
 
   before(async () => {
-    [deployer, funder, user] = await ethers.signers();
+    [deployer, funder, user, otherUser] = await ethers.signers();
     userAddress = await user.getAddress();
     addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
   });
@@ -149,5 +153,79 @@ describe("Liquity", () => {
     trove = await liquity.getTrove();
 
     expect(trove).to.deep.equal(new Trove({ collateral: 2, debt: 110 }));
+  });
+
+  it("should make a small stability deposit", async () => {
+    await liquity.depositQuiInStabilityPool(10);
+  });
+
+  before(async () => {
+    const otherUserAddress = await otherUser.getAddress();
+    otherLiquity = await Liquity.connect(addresses.cdpManager, provider, otherUserAddress);
+
+    await funder.sendTransaction({ to: otherUserAddress, value: Decimal.from(0.23).bigNumber });
+  });
+
+  it("other user should make a Trove with very low ICR", async () => {
+    await otherLiquity.createTrove(new Trove({ collateral: 0.2233, debt: 39 }), price);
+    const otherTrove = await otherLiquity.getTrove();
+
+    expect(otherTrove?.collateralRatioAt(price).toString()).to.equal("1.145128205128205128");
+  });
+
+  before(async () => {
+    deployerLiquity = await Liquity.connect(
+      addresses.cdpManager,
+      provider,
+      await deployer.getAddress()
+    );
+  });
+
+  it("the price should take a dip", async () => {
+    await deployerLiquity.setPrice(190);
+    price = await liquity.getPrice();
+
+    expect(price.toString()).to.equal("190");
+  });
+
+  it("should liquidate other user's Trove", async () => {
+    await liquity.liquidate(1);
+    const otherTrove = await otherLiquity.getTrove();
+
+    expect(otherTrove).to.be.undefined;
+  });
+
+  it("should have a depleted stability deposit and some collateral gain", async () => {
+    deposit = await liquity.getStabilityDeposit();
+
+    expect(deposit).to.deep.equal(
+      new StabilityDeposit({
+        deposit: 10,
+        pendingCollateralGain: "0.05725641025641026",
+        pendingDepositLoss: 10
+      })
+    );
+  });
+
+  it("should have some pending rewards in the Trove", async () => {
+    trove = await liquity.getTrove();
+
+    expect(trove).to.deep.equal(
+      new Trove({
+        collateral: 2,
+        debt: 110,
+        pendingCollateralReward: "0.166043589743589744",
+        pendingDebtReward: 29
+      })
+    );
+  });
+
+  it("should withdraw the gains to the Trove", async () => {
+    await liquity.transferCollateralGainToTrove(deposit, trove!, price);
+    trove = await liquity.getTrove();
+    deposit = await liquity.getStabilityDeposit();
+
+    expect(trove).to.deep.equal(new Trove({ collateral: 2.22, debt: 140 }));
+    expect(deposit.isEmpty).to.be.true;
   });
 });

@@ -6,13 +6,15 @@ import { Decimal, Percent, Difference } from "@liquity/lib/dist/utils";
 import { EditableRow, StaticRow } from "./Editor";
 
 type TroveEditorProps = {
-  originalTrove: Trove;
+  title: string;
+  originalTrove?: Trove;
   editedTrove: Trove;
-  setEditedTrove: (trove: Trove | undefined) => void;
+  setEditedTrove: (trove: Trove) => void;
   price: Decimal;
 };
 
 export const TroveEditor: React.FC<TroveEditorProps> = ({
+  title,
   originalTrove,
   editedTrove,
   setEditedTrove,
@@ -22,24 +24,28 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
   const pendingCollateralChange = Difference.between(
     editedTrove.collateralAfterReward,
-    originalTrove.collateral
+    originalTrove?.collateral
   );
-  const pendingDebtChange = Difference.between(editedTrove.debtAfterReward, originalTrove.debt);
+  const pendingDebtChange = Difference.between(editedTrove.debtAfterReward, originalTrove?.debt);
 
-  const collateralRatioAfterRewards = editedTrove.collateralRatioAfterRewardsAt(price);
-  const collateralRatioPctAfterRewards = new Percent(collateralRatioAfterRewards);
+  const collateralRatioAfterRewards =
+    (editedTrove.collateralAfterReward.nonZero || editedTrove.debtAfterReward.nonZero) &&
+    editedTrove.collateralRatioAfterRewardsAt(price);
+  const collateralRatioPctAfterRewards = new Percent(
+    collateralRatioAfterRewards || { toString: () => "N/A" }
+  );
   const pendingCollateralRatioChange = Difference.between(
     editedTrove.collateralRatioAfterRewardsAt(price),
-    originalTrove.collateralRatioAt(price)
+    originalTrove?.collateralRatioAt(price)
   );
   const pendingCollateralRatioChangePct = new Percent(pendingCollateralRatioChange);
 
-  const edited = originalTrove.whatChanged(editedTrove) !== undefined;
+  const edited = originalTrove?.whatChanged(editedTrove) !== undefined;
 
   return (
     <Card p={0}>
       <Heading as="h3" p={3} bg="lightgrey">
-        Your Liquity Trove
+        {title}
       </Heading>
 
       <Box p={2}>
@@ -72,14 +78,14 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
         <StaticRow
           label="Collateral ratio"
           amount={
-            collateralRatioAfterRewards.gt(10)
+            collateralRatioAfterRewards?.gt(10)
               ? "× " + collateralRatioAfterRewards.shorten()
               : collateralRatioPctAfterRewards.prettify()
           }
           color={
-            collateralRatioAfterRewards.gt(1.5)
+            collateralRatioAfterRewards?.gt(1.5)
               ? "success"
-              : collateralRatioAfterRewards.gt(1.1)
+              : collateralRatioAfterRewards?.gt(1.1)
               ? "warning"
               : "danger"
           }

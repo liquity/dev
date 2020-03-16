@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Box, Text, Flex, Loader } from "rimble-ui";
+import { Button, Box, Flex, Loader } from "rimble-ui";
 import { ContractTransaction } from "ethers";
 
 import { Trove, Liquity, Pool } from "@liquity/lib";
@@ -7,10 +7,12 @@ import { Decimal, Difference } from "@liquity/lib/dist/utils";
 import { useToast } from "../hooks/ToastProvider";
 import { TroveEditor } from "./TroveEditor";
 
-const getTroveAction = (
-  property: "collateral" | "debt",
-  difference: Difference
-): [string, (liquity: Liquity, trove: Trove, price: Decimal) => Promise<ContractTransaction>] => {
+type TroveAction = [
+  string,
+  (liquity: Liquity, trove: Trove, price: Decimal) => Promise<ContractTransaction>
+];
+
+const getTroveAction = (property: "collateral" | "debt", difference: Difference): TroveAction => {
   switch (property) {
     case "collateral":
       if (difference.positive) {
@@ -47,9 +49,18 @@ const getTroveAction = (
   }
 };
 
+const getNewTroveAction = (): TroveAction => {
+  return [
+    `Open new Trove`,
+    (liquity: Liquity, trove: Trove, price: Decimal) => {
+      return liquity.createTrove(trove, price);
+    }
+  ];
+};
+
 type TroveActionProps = {
   liquity: Liquity;
-  originalTrove: Trove;
+  originalTrove?: Trove;
   editedTrove: Trove;
   setEditedTrove: (trove: Trove) => void;
   price: Decimal;
@@ -67,7 +78,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
   const [actionState, setActionState] = useState<"idle" | "waitingForUser" | "waitingForNetwork">(
     "idle"
   );
-  const change = originalTrove.whatChanged(editedTrove);
+  const change = (originalTrove || new Trove()).whatChanged(editedTrove);
   const { addMessage } = useToast();
 
   useEffect(() => {
@@ -78,7 +89,9 @@ const TroveAction: React.FC<TroveActionProps> = ({
     return null;
   }
 
-  const [actionName, action] = getTroveAction(change.property, change.difference);
+  const [actionName, action] = !originalTrove
+    ? getNewTroveAction()
+    : getTroveAction(change.property, change.difference);
 
   return (
     <Flex mt={4} justifyContent="center">
@@ -89,13 +102,15 @@ const TroveAction: React.FC<TroveActionProps> = ({
             disabled={
               editedTrove.isBelowMinimumCollateralRatioAt(price) ||
               (pool.isRecoveryModeActiveAt(price) &&
-                editedTrove
-                  .collateralRatioAfterRewardsAt(price)
-                  .lt(originalTrove.collateralRatioAfterRewardsAt(price)))
+                ((!originalTrove && editedTrove.debt.nonZero) ||
+                  (originalTrove &&
+                    editedTrove
+                      .collateralRatioAfterRewardsAt(price)
+                      .lt(originalTrove.collateralRatioAfterRewardsAt(price)))))
             }
             onClick={() => {
               setActionState("waitingForUser");
-              action(liquity, originalTrove, price)
+              action(liquity, originalTrove || editedTrove, price)
                 .then(() => {
                   setActionState("waitingForNetwork");
                 })
@@ -114,7 +129,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
             variant="danger"
             icon="Replay"
             icononly
-            onClick={() => setEditedTrove(originalTrove)}
+            onClick={() => setEditedTrove(originalTrove || new Trove())}
           />
         </>
       ) : (
@@ -137,33 +152,22 @@ type TroveManagerProps = {
 };
 
 export const TroveManager: React.FC<TroveManagerProps> = ({ liquity, trove, price, pool }) => {
-  const [editedTrove, setEditedTrove] = useState(trove);
+  const newTrove = !trove;
+  const originalTrove = trove;
+  const [editedTrove, setEditedTrove] = useState(originalTrove || new Trove());
 
-  useEffect(() => setEditedTrove(trove), [trove]);
-
-  if (!trove || !editedTrove) {
-    return (
-      <>
-        <Box m={5}>
-          <Text fontSize={5}>You don't have a Liquity Trove yet</Text>
-        </Box>
-
-        <Button onClick={() => liquity.createTrove(new Trove({ collateral: 1, debt: 100 }), price)}>
-          Open a new loan
-        </Button>
-      </>
-    );
-  }
+  useEffect(() => setEditedTrove(originalTrove || new Trove()), [originalTrove]);
 
   return (
     <>
       <Box mt={4}>
-        <TroveEditor {...{ originalTrove: trove, editedTrove, setEditedTrove, price }} />
+        <TroveEditor
+          title={newTrove ? "Open a new Liquity Trove" : "Your Liquity Trove"}
+          {...{ originalTrove, editedTrove, setEditedTrove, price }}
+        />
       </Box>
 
-      <TroveAction
-        {...{ liquity, originalTrove: trove, editedTrove, setEditedTrove, price, pool }}
-      />
+      <TroveAction {...{ liquity, originalTrove, editedTrove, setEditedTrove, price, pool }} />
     </>
   );
 };

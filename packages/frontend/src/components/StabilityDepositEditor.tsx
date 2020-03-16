@@ -6,12 +6,14 @@ import { Difference } from "@liquity/lib/dist/utils";
 import { EditableRow, StaticRow } from "./Editor";
 
 type StabilityDepositEditorProps = {
+  title: string;
   originalDeposit: StabilityDeposit;
   editedDeposit: StabilityDeposit;
   setEditedDeposit: (deposit: StabilityDeposit) => void;
 };
 
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
+  title,
   originalDeposit,
   editedDeposit,
   setEditedDeposit
@@ -28,7 +30,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   return (
     <Card p={0}>
       <Heading as="h3" p={3} bg="lightgrey">
-        Your Stability Deposit
+        {title}
       </Heading>
 
       <Box p={2}>

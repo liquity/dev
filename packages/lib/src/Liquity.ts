@@ -13,6 +13,8 @@ import { PoolManager } from "../types/ethers/PoolManager";
 import { PoolManagerFactory } from "../types/ethers/PoolManagerFactory";
 import { CLVToken } from "../types/ethers/CLVToken";
 import { CLVTokenFactory } from "../types/ethers/CLVTokenFactory";
+import { DefaultPool } from "../types/ethers/DefaultPool";
+import { DefaultPoolFactory } from "../types/ethers/DefaultPoolFactory";
 
 interface Poolish {
   readonly activeCollateral: Decimalish;
@@ -173,6 +175,12 @@ export class StabilityDeposit {
   readonly pendingCollateralGain: Decimal;
   readonly pendingDepositLoss: Decimal;
 
+  get isEmpty() {
+    return (
+      this.deposit.isZero && this.pendingCollateralGain.isZero && this.pendingDepositLoss.isZero
+    );
+  }
+
   get depositAfterLoss() {
     return this.deposit.sub(this.pendingDepositLoss);
   }
@@ -215,6 +223,7 @@ export class Liquity {
   private readonly sortedCDPs: SortedCDPs;
   private readonly poolManager: PoolManager;
   private readonly clvToken: CLVToken;
+  private readonly defaultPool: DefaultPool;
   private readonly userAddress?: string;
 
   private constructor(
@@ -223,6 +232,7 @@ export class Liquity {
     sortedCDPs: SortedCDPs,
     poolManager: PoolManager,
     clvToken: CLVToken,
+    defaultPool: DefaultPool,
     userAddress?: string
   ) {
     this.cdpManager = cdpManager;
@@ -230,6 +240,7 @@ export class Liquity {
     this.sortedCDPs = sortedCDPs;
     this.poolManager = poolManager;
     this.clvToken = clvToken;
+    this.defaultPool = defaultPool;
     this.userAddress = userAddress;
   }
 
@@ -237,7 +248,7 @@ export class Liquity {
     const signerOrProvider = userAddress ? provider.getSigner(userAddress) : provider;
     const cdpManager = CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider);
 
-    const [priceFeed, sortedCDPs, clvToken, poolManager] = await Promise.all([
+    const [priceFeed, sortedCDPs, clvToken, [poolManager, defaultPool]] = await Promise.all([
       cdpManager.priceFeedAddress().then(address => {
         return PriceFeedFactory.connect(address, signerOrProvider);
       }),
@@ -248,11 +259,27 @@ export class Liquity {
         return CLVTokenFactory.connect(address, signerOrProvider);
       }),
       cdpManager.poolManagerAddress().then(address => {
-        return PoolManagerFactory.connect(address, signerOrProvider);
+        const poolManager = PoolManagerFactory.connect(address, signerOrProvider);
+
+        return Promise.all([
+          Promise.resolve(poolManager),
+
+          poolManager.defaultPoolAddress().then(address => {
+            return DefaultPoolFactory.connect(address, signerOrProvider);
+          })
+        ]);
       })
     ]);
 
-    return new Liquity(cdpManager, priceFeed, sortedCDPs, poolManager, clvToken, userAddress);
+    return new Liquity(
+      cdpManager,
+      priceFeed,
+      sortedCDPs,
+      poolManager,
+      clvToken,
+      defaultPool,
+      userAddress
+    );
   }
 
   private requireAddress(): string {

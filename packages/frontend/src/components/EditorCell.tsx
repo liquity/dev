@@ -45,6 +45,11 @@ export const StaticCell = styled.div<EditorCellProps & { invalid?: boolean }>`
     css`
       background-color: pink;
     `}
+  ${props =>
+    props.onClick &&
+    css`
+      cursor: text;
+    `}
 `;
 
 export const EditableCell = styled.input<EditorCellProps & { invalid?: boolean }>`

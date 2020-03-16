@@ -27,7 +27,6 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, load
   const liquityState = useAsyncValue(
     useCallback(async () => {
       if (library && account && chainId) {
-        console.log(chainId);
         const cdpManagerAddress = addressesOnNetwork[chainId].cdpManager;
         return Liquity.connect(cdpManagerAddress, library, account);
       }

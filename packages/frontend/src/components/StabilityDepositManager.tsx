@@ -130,7 +130,10 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
   return (
     <>
       <Box mt={4}>
-        <StabilityDepositEditor {...{ originalDeposit: deposit, editedDeposit, setEditedDeposit }} />
+        <StabilityDepositEditor
+          title={deposit.isEmpty ? "Make a Stability Deposit" : "Your Stability Deposit"}
+          {...{ originalDeposit: deposit, editedDeposit, setEditedDeposit }}
+        />
       </Box>
 
       <StabilityDepositAction

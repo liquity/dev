@@ -215,7 +215,11 @@ export class Difference {
     this.number = number;
   }
 
-  static between(d1: Decimalish, d2: Decimalish) {
+  static between(d1: Decimalish | undefined, d2: Decimalish | undefined) {
+    if (!d1 || !d2) {
+      return new Difference(undefined);
+    }
+
     d1 = Decimal.from(d1);
     d2 = Decimal.from(d2);
 
@@ -281,20 +285,20 @@ export class Difference {
 }
 
 export class Percent<
+  T extends {
+    infinite?: T | undefined;
+    absoluteValue?: A | undefined;
+    mul?(hundred: 100): T;
+    toString(precision?: number): string;
+  },
   A extends {
     gte(n: string): boolean;
-  },
-  T extends {
-    infinite: T | undefined;
-    absoluteValue: A | undefined;
-    mul(hundred: 100): T;
-    toString(precision?: number): string;
   }
 > {
   private percent: T;
 
   public constructor(ratio: T) {
-    this.percent = ratio.infinite || ratio.mul(100);
+    this.percent = ratio.infinite || (ratio.mul && ratio.mul(100)) || ratio;
   }
 
   nonZeroish(precision: number) {
@@ -306,7 +310,10 @@ export class Percent<
   }
 
   toString(precision: number) {
-    return this.percent.infinite?.toString() || this.percent.toString(precision) + "%";
+    return (
+      this.percent.toString(precision) +
+      (this.percent.absoluteValue && !this.percent.infinite ? "%" : "")
+    );
   }
 
   prettify() {
