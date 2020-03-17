@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  registry:
+    image: "registry:2"
+    environment:
+      - "REGISTRY_HTTP_ADDR=0.0.0.0:${REGISTRY_HTTP_PORT}"
+      - "REGISTRY_HTTP_TLS_CERTIFICATE=/certs/tls.crt"
+      - "REGISTRY_HTTP_TLS_KEY=/certs/tls.key"
+    ports:
+      - "${REGISTRY_HTTP_PORT}:${REGISTRY_HTTP_PORT}"
+    volumes:
+      - "${REGISTRY_HTTP_TLS_CERTIFICATE}:/certs/tls.crt"
+      - "${REGISTRY_HTTP_TLS_KEY}:/certs/tls.key"
+      - "./data:/var/lib/registry"
+    restart: "always"

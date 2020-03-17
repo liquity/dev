@@ -3,15 +3,15 @@ version: "3"
 services:
   frontend:
     build: "."
-    image: "liquity.server:5678/liquity-frontend"
+    image: "${LIQUITY_REGISTRY_NAME}:${LIQUITY_REGISTRY_PORT}/frontend"
     ports:
-      - "6789:443"
+      - "${LIQUITY_FRONTEND_HTTPS_PORT}:443"
     volumes:
       - "./nginx.conf.tpl:/nginx.conf.tpl"
-      - "${NGINX_SSL_CERTIFICATE:-~/certs/tls.crt}:/certs/tls.crt"
-      - "${NGINX_SSL_CERTIFICATE_KEY:-~/certs/tls.key}:/certs/tls.key"
+      - "${LIQUITY_FRONTEND_TLS_CERTIFICATE}:/certs/tls.crt"
+      - "${LIQUITY_FRONTEND_TLS_CERTIFICATE_KEY}:/certs/tls.key"
     environment:
-      - "NGINX_SERVER_NAME=${NGINX_SERVER_NAME:-liquity.server}"
+      - "NGINX_SERVER_NAME=${LIQUITY_FRONTEND_SERVER_NAME}"
       - "NGINX_SSL_CERTIFICATE=/certs/tls.crt"
       - "NGINX_SSL_CERTIFICATE_KEY=/certs/tls.key"
     command:
@@ -20,3 +20,4 @@ services:
         "-c",
         "envsubst < /nginx.conf.tpl > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'",
       ]
+    restart: "always"
