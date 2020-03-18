@@ -1,7 +1,6 @@
 import Web3 from "web3";
 import { TransactionReceipt } from "web3-eth";
 import { Signer, ContractTransaction } from "ethers";
-import { Provider } from "ethers/providers";
 
 import { LiquityContractAddresses, LiquityContracts } from "../../src/contracts";
 import { connectToContracts } from "../../src/contractConnector";
@@ -99,17 +98,13 @@ const connectContracts = async (
     sortedCDPs,
     stabilityPool
   }: LiquityContracts,
-  signerOrProvider: Signer | Provider
+  deployer: Signer
 ) => {
-  let txCount: number | undefined;
-
-  if (Signer.isSigner(signerOrProvider)) {
-    txCount = await signerOrProvider.provider?.getTransactionCount(signerOrProvider.getAddress());
+  if (!deployer.provider) {
+    throw new Error("Signer must have a provider.");
   }
 
-  if (txCount === undefined) {
-    throw new Error("Can't determine nonce");
-  }
+  const txCount = await deployer.provider.getTransactionCount(deployer.getAddress());
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce => clvToken.setPoolManagerAddress(poolManager.address, { nonce }),
@@ -136,7 +131,7 @@ const connectContracts = async (
     nonce => defaultPool.setActivePoolAddress(activePool.address, { nonce })
   ];
 
-  const txs = await Promise.all(connections.map((connect, i) => connect(txCount! + i)));
+  const txs = await Promise.all(connections.map((connect, i) => connect(txCount + i)));
 
   let i = 0;
   await Promise.all(txs.map(tx => tx.wait().then(() => silent || console.log(`Connected ${++i}`))));
@@ -145,13 +140,13 @@ const connectContracts = async (
 export const deployAndSetupContracts = async (
   web3: Web3,
   artifacts: Truffle.Artifacts,
-  signerOrProvider: Signer | Provider
+  deployer: Signer
 ): Promise<LiquityContracts> => {
   silent || (console.log("Deploying contracts..."), console.log());
   const addresses = await deployContracts(web3, artifacts);
-  const contracts = connectToContracts(addresses, signerOrProvider);
+  const contracts = connectToContracts(addresses, deployer);
   silent || console.log("Connecting contracts...");
-  await connectContracts(contracts, signerOrProvider);
+  await connectContracts(contracts, deployer);
   //await nameRegisterContracts(contracts);
 
   return contracts;

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Heading, Box, Card } from "rimble-ui";
 
-import { Trove } from "@liquity/lib";
+import { Trove, Liquity } from "@liquity/lib";
 import { Decimal, Percent, Difference } from "@liquity/lib/dist/utils";
 import { EditableRow, StaticRow } from "./Editor";
 
@@ -83,9 +83,9 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
               : collateralRatioPctAfterRewards.prettify()
           }
           color={
-            collateralRatioAfterRewards?.gt(1.5)
+            collateralRatioAfterRewards?.gt(Liquity.CRITICAL_COLLATERAL_RATIO)
               ? "success"
-              : collateralRatioAfterRewards?.gt(1.1)
+              : collateralRatioAfterRewards?.gt(Liquity.MINIMUM_COLLATERAL_RATIO)
               ? "warning"
               : "danger"
           }

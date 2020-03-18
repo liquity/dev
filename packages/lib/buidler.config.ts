@@ -42,7 +42,7 @@ const config: BuidlerConfig = {
   networks: {
     dev: {
       url: "http://localhost:8545",
-      accounts: [deployerAccount, devChainRichAccount, ...generateRandomAccounts(10)]
+      accounts: [deployerAccount, devChainRichAccount, ...generateRandomAccounts(40)]
     },
     ...infuraNetwork("ropsten"),
     ...infuraNetwork("rinkeby"),
@@ -98,33 +98,33 @@ task(
   // network, so this task must be called repeatedly (e.g. in an infinite loop) to actually create
   // many Troves.
   async (_taskArgs, bre) => {
-    const [deployer, ...users] = await bre.ethers.signers();
-    const addresses = addressesOnNetwork[bre.network.name];
+    const [deployer, funder, ...randomUsers] = await bre.ethers.signers();
+    const addresses =
+      addressesOnNetwork[bre.network.name] ||
+      addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
 
-    const liquity = await Liquity.connect(
-      addresses.cdpManager,
-      bre.waffle.provider,
-      await deployer.getAddress()
-    );
+    const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
 
-    const price = await liquity.getPrice();
+    const price = await deployerLiquity.getPrice();
     const priceAsNumber = parseFloat(price.toString(4));
 
     let i = 0;
-    for (const user of users) {
+    for (const user of randomUsers) {
       const userAddress = await user.getAddress();
       const collateral = 999 * Math.random() + 1;
       const debt = (priceAsNumber * collateral) / (3 * Math.random() + 1.11);
 
-      const liquity = await Liquity.connect(addresses.cdpManager, bre.waffle.provider, userAddress);
+      const liquity = await Liquity.connect(addresses.cdpManager, user);
 
-      await deployer.sendTransaction({
+      await funder.sendTransaction({
         to: userAddress,
         value: Decimal.from(collateral).bigNumber
       });
 
       await liquity.createTrove(new Trove({ collateral, debt }), price);
-      await liquity.depositQuiInStabilityPool(debt);
+      if (i % 4 === 0) {
+        await liquity.depositQuiInStabilityPool(debt);
+      }
 
       if (++i % 10 === 0) {
         console.log(`Created ${i} Troves.`);

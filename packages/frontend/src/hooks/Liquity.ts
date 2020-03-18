@@ -28,7 +28,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, load
     useCallback(async () => {
       if (library && account && chainId) {
         const cdpManagerAddress = addressesOnNetwork[chainId].cdpManager;
-        return Liquity.connect(cdpManagerAddress, library, account);
+        return Liquity.connect(cdpManagerAddress, library.getSigner(account));
       }
     }, [library, account, chainId])
   );

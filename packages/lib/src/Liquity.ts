@@ -1,4 +1,5 @@
-import { Web3Provider } from "ethers/providers";
+import { Signer } from "ethers";
+import { Provider } from "ethers/providers";
 import { bigNumberify, BigNumber, BigNumberish } from "ethers/utils";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
@@ -47,7 +48,7 @@ export class Pool {
   }
 
   isRecoveryModeActiveAt(price: Decimalish) {
-    return this.totalCollateralRatioAt(price).lt(1.5);
+    return this.totalCollateralRatioAt(price).lt(Liquity.CRITICAL_COLLATERAL_RATIO);
   }
 }
 
@@ -88,7 +89,7 @@ export class Trove {
   }
 
   isBelowMinimumCollateralRatioAt(price: Decimalish) {
-    return this.collateralRatioAfterRewardsAt(price).lt(1.1);
+    return this.collateralRatioAfterRewardsAt(price).lt(Liquity.MINIMUM_COLLATERAL_RATIO);
   }
 
   constructor({
@@ -212,16 +213,18 @@ enum CDPStatus {
 }
 
 export class Liquity {
+  public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
+  public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
+
   public static useHint = true;
 
-  protected price?: Decimal;
+  public readonly userAddress?: string;
 
   private readonly cdpManager: CDPManager;
   private readonly priceFeed: PriceFeed;
   private readonly sortedCDPs: SortedCDPs;
   private readonly poolManager: PoolManager;
   private readonly clvToken: CLVToken;
-  private readonly userAddress?: string;
 
   private constructor(
     cdpManager: CDPManager,
@@ -239,8 +242,11 @@ export class Liquity {
     this.userAddress = userAddress;
   }
 
-  static async connect(cdpManagerAddress: string, provider: Web3Provider, userAddress?: string) {
-    const signerOrProvider = userAddress ? provider.getSigner(userAddress) : provider;
+  static async connect(cdpManagerAddress: string, signerOrProvider: Signer | Provider) {
+    const userAddress = Signer.isSigner(signerOrProvider)
+      ? await signerOrProvider.getAddress()
+      : undefined;
+
     const cdpManager = CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider);
 
     const [priceFeed, sortedCDPs, clvToken, poolManager] = await Promise.all([
@@ -542,5 +548,39 @@ export class Liquity {
       this.clvToken.removeListener(transferFromUser, transferListener);
       this.clvToken.removeListener(transferToUser, transferListener);
     };
+  }
+
+  // Try to find the Trove with the lowest collateral ratio that is still above the minimum ratio
+  // (i.e. it won't be liquidated by a redemption).
+  // If no Trove is above the MCR, then it will find the Trove with the highest collateral ratio.
+  async findLastTroveAboveMinimumCollateralRatio() {
+    const lastTroveAddress = await this.sortedCDPs.getLast();
+
+    if (lastTroveAddress === "0x0") {
+      // No Troves yet
+      return undefined;
+    }
+
+    const { 0: found } = await this.sortedCDPs.findInsertPosition(
+      Liquity.MINIMUM_COLLATERAL_RATIO.bigNumber,
+      lastTroveAddress,
+      lastTroveAddress
+    );
+
+    return found;
+  }
+
+  getNextTrove(address: string) {
+    return this.sortedCDPs.getNext(address);
+  }
+
+  async redeemCollateral(exchangedQui: Decimalish) {
+    const foundAddress = await this.findLastTroveAboveMinimumCollateralRatio();
+
+    if (!foundAddress) {
+      // This should only happen if there are no Troves (yet), in which case: what QUI are you
+      // trying to exchange?
+      throw new Error("There are no Troves");
+    }
   }
 }
