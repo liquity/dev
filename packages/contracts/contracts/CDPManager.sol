@@ -29,7 +29,7 @@ contract CDPManager is Ownable, ICDPManager {
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
     event CDPCreated(address indexed _user, uint arrayIndex);
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
    
     // --- Connected contract declarations ---
     IPoolManager poolManager;
@@ -185,10 +185,9 @@ contract CDPManager is Ownable, ICDPManager {
         checkTCRAndSetRecoveryMode(price); // 26500 gas
         emit CDPUpdated(user, 
                         _CLVAmount, 
-                        msg.value
-                        // CDPs[user].stake,
-                        // CDPs[user].arrayIndex
-                        ); // 3400 gas
+                        msg.value,
+                        CDPs[user].stake
+                        ); 
         return true;
     }
 
@@ -232,9 +231,8 @@ contract CDPManager is Ownable, ICDPManager {
         checkTCRAndSetRecoveryMode(price);
         emit CDPUpdated(_user, 
                         CDPs[_user].debt, 
-                        newColl
-                        // CDPs[_user].stake,
-                        // CDPs[_user].arrayIndex
+                        newColl,
+                        CDPs[_user].stake
                         );
         return true;
     }
@@ -274,9 +272,8 @@ contract CDPManager is Ownable, ICDPManager {
 
         emit CDPUpdated(user, 
                         CDPs[user].debt, 
-                        newColl
-                        // CDPs[user].stake,
-                        // CDPs[user].arrayIndex
+                        newColl,
+                        CDPs[user].stake
                         ); 
         }
          // Remove _amount ETH from ActivePool and send it to the user
@@ -316,9 +313,8 @@ contract CDPManager is Ownable, ICDPManager {
         
         emit CDPUpdated(user, 
                         newDebt, 
-                        CDPs[user].coll  
-                        // CDPs[user].stake,
-                        // CDPs[user].arrayIndex
+                        CDPs[user].coll, 
+                        CDPs[user].stake
                         ); 
         return true; 
     }
@@ -353,9 +349,8 @@ contract CDPManager is Ownable, ICDPManager {
         checkTCRAndSetRecoveryMode(price);
         emit CDPUpdated(user, 
                         newDebt, 
-                        CDPs[user].coll 
-                        // CDPs[user].stake,
-                        // CDPs[user].arrayIndex
+                        CDPs[user].coll,
+                        CDPs[user].stake
                         ); 
         return true;
     }
@@ -399,8 +394,7 @@ contract CDPManager is Ownable, ICDPManager {
         emit CDPUpdated(_user, 
                     0, 
                     0,
-                    // CDPs[_user].stake,
-                    // CDPs[_user].arrayIndex
+                    CDPs[_user].stake
                     );
 
         return true;
@@ -471,9 +465,8 @@ contract CDPManager is Ownable, ICDPManager {
         checkTCRAndSetRecoveryMode(price);
         emit CDPUpdated(_user, 
                     CDPs[_user].debt, 
-                    CDPs[_user].coll
-                    // CDPs[_user].stake,
-                    // CDPs[_user].arrayIndex
+                    CDPs[_user].coll,
+                    CDPs[_user].stake
                     );
     }
 
@@ -560,12 +553,9 @@ contract CDPManager is Ownable, ICDPManager {
                 emit CDPUpdated(
                                 currentCDPuser, 
                                 newDebt, 
-                                newColl
-                                // CDPs[currentCDPuser].stake,
-                                // CDPs[currentCDPuser].arrayIndex
+                                newColl,
+                                CDPs[currentCDPuser].stake
                                 ); // *** 5600 gas
-                // console.log("15. gas left: %s", gasleft()); 
-
                 exchangedCLV = exchangedCLV.add(CLVLot);  // 102 gas    
                 redeemedETH = redeemedETH.add(ETHLot); // 106 gas
             }

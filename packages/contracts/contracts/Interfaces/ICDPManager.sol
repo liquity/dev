@@ -17,7 +17,7 @@ interface ICDPManager {
 
     event CDPCreated(address indexed _user, uint arrayIndex);
 
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
 
     // --- Functions ---
 
