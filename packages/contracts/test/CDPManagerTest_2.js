@@ -542,8 +542,8 @@ contract('CDPManager', async accounts => {
     const S_ETH = await poolManager.S_ETH()
     const S_CLV = await poolManager.S_CLV()
 
-    console.log("S_ETH is " + S_ETH.toString())
-    console.log("S_CLV is " + S_CLV.toString())
+    // console.log("S_ETH is " + S_ETH.toString())
+    // console.log("S_CLV is " + S_CLV.toString())
 
     // Debugging SafeMath overflow:
     //   S_CLV:  1000000000000000000  i.e. 1 CLV per unit staked (correct, bob should have 180 * 1 liquidated)
@@ -573,7 +573,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(carol_isInSortedList)
   })
 
-  it("liquidate(): if withdrawal of StabilityPool ETH gain brings it above the MCR, CDP is re-inserted at a new list position", async () => {
+  it("liquidate(): if application of StabilityPool ETH gain would bring it above the MCR, CDP should remain active", async () => {
     // --- SETUP ---
     await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
     await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
@@ -610,8 +610,7 @@ contract('CDPManager', async accounts => {
     const dennis_Status = dennis_CDP[3]
     assert.equal(dennis_Status, 2)     // Status enum 2 is 'closed'
 
-    /* Now, attempt to liquidate Bob. Bob's StabilityPool ETH gain should be 
-    withdrawn to his CDP, bringing his ICR > MCR.
+    /* Now, attempt to liquidate Bob. Bob's StabilityPool ETH gain would be enough to bring his ICR > MCR.
     
     Thus, his CDP should remain active */
     await cdpManager.liquidate(bob, { from: owner });
@@ -626,16 +625,6 @@ contract('CDPManager', async accounts => {
     //check Bob is in sortedCDPs
     const bob_isInSortedList = await sortedCDPs.contains(bob)
     assert.isTrue(bob_isInSortedList)
-
-    // Now, Bob (ICR = 1.333) should have been reinserted above Alice (ICR=1.111).
-
-    // check last ICR is not Bob:
-    const lastCDP_After = await sortedCDPs.getLast()
-    assert.notEqual(lastCDP_After, bob)
-
-    // check first CDP is Bob:
-    const firstCDP_After = await sortedCDPs.getFirst()
-    assert.equal(firstCDP_After, bob)
   })
 
   it('liquidateCDPs(): closes every CDP with ICR < MCR', async () => {

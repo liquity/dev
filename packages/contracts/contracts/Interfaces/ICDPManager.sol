@@ -9,6 +9,10 @@ interface ICDPManager {
 
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
 
+    event ActivePoolAddressChanged(address _activePoolAddress);
+    
+    event DefaultPoolAddressChanged(address _defaultPoolAddress);
+
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
     event CDPCreated(address indexed _user, uint arrayIndex);
@@ -35,6 +39,10 @@ interface ICDPManager {
     function setCLVToken(address _clvTokenAddress) external;
 
     function setSortedCDPs(address _sortedCDPsAddress) external;
+
+    function setActivePool(address _activePoolAddress) external; 
+
+    function setDefaultPool(address _defaultPoolAddress) external;
 
     function getCDPOwnersCount() external view returns(uint);
 

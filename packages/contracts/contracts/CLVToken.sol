@@ -38,8 +38,11 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     }
 
     function mint(address _account, uint256 _amount) public onlyPoolManager returns (bool) {
-        _mint(_account, _amount);
-        emit CLVTokenBalanceUpdated(_account, _amount);
+        // console.log("00. gas left: %s", gasleft());
+        _mint(_account, _amount); // 32000 gas
+        // console.log("01. gas left: %s", gasleft()); 
+        // emit CLVTokenBalanceUpdated(_account, _amount); // 1350 gas
+        // console.log("02. gas left: %s", gasleft());
         return true;
     }
     
@@ -54,13 +57,13 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     
     function sendToPool(address _sender,  address poolAddress, uint256 _amount) public onlyPoolManager returns (bool) {
         _transfer(_sender, poolAddress, _amount);
-         emit CLVTokenBalanceUpdated(poolAddress, _amount);
+        //  emit CLVTokenBalanceUpdated(poolAddress, _amount);
         return true;
     }
     
     function returnFromPool(address poolAddress, address user, uint256 _amount ) public onlyPoolManager returns (bool) {
         _transfer(poolAddress, user, _amount);
-        emit CLVTokenBalanceUpdated(poolAddress, _amount);
+        // emit CLVTokenBalanceUpdated(poolAddress, _amount);
         return true;
     }
 

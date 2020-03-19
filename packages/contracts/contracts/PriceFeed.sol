@@ -58,8 +58,10 @@ contract PriceFeed is Ownable, IPriceFeed {
     }
 
     function getPrice() public view returns (uint256) {
+        // console.log("PriceFeed.getPrice func start");
         // console.log("00. gas left: %s", gasleft());
         // console.log("01. gas left: %s", gasleft());
+        // console.log("PriceFeed.getPrice func end");
         return price;
     }
 

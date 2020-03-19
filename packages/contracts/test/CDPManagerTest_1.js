@@ -246,6 +246,7 @@ contract('CDPManager', async accounts => {
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
     await cdpManager.liquidate(carol, { from: owner });
+    assert.isFalse(await sortedCDPs.contains(carol))
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
     alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
@@ -534,13 +535,20 @@ contract('CDPManager', async accounts => {
   })
   
   it("withdrawColl(): sends the correct amount of ETH to the user", async () => {
-    await cdpManager.addColl(alice, alice, { from: alice, value: _2_Ether })
+   await cdpManager.addColl(alice, alice, { from: alice, value: _2_Ether })
+   
+    const alice_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(alice))
+    const tx = await cdpManager.withdrawColl(_1_Ether,  alice, { from: alice })
     
-    const txData = await cdpManager.withdrawColl(_1_Ether,  alice, { from: alice })
+    const gasUsed = web3.utils.toBN(tx.receipt.gasUsed)
+    const gasPrice = web3.utils.toBN(await web3.eth.getGasPrice())
+    const gasValueInWei = gasUsed.mul(gasPrice)  
     
-    const ETHSentToAlice = txData.logs[0].args[1].toString() 
-
-    assert.equal(ETHSentToAlice, _1_Ether)
+    const alice_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(alice))
+    
+    const balanceDiff = alice_ETHBalance_After.sub(alice_ETHBalance_Before).add(gasValueInWei)
+    
+    assert.equal(balanceDiff, _1_Ether)
   })
 
   it("withdrawColl(): applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {

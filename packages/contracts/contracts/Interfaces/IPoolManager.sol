@@ -50,6 +50,8 @@ interface IPoolManager {
 
     function getStabilityPoolCLV() external view returns (uint);
 
+    function getCurrentETHGain(address _user) external view returns (uint);
+
     function addColl() external payable returns(bool);
 
     function withdrawColl(address _account, uint _ETH) external returns (bool);

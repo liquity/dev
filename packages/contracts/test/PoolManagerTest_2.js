@@ -27,8 +27,6 @@ contract('PoolManager', async accounts => {
   const _100_Ether = web3.utils.toWei('100', 'ether')
   
   const [ owner, 
-          mockCDPManagerAddress, 
-          mockPoolManagerAddress, 
           defaulter_1, defaulter_2, 
           defaulter_3, 
           alice, 
@@ -89,17 +87,13 @@ contract('PoolManager', async accounts => {
       const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
 
       await connectContracts(contracts, registeredAddresses)
-      await poolManager.setCDPManagerAddress(mockCDPManagerAddress, { from: owner })
     })
 
     // increases recorded CLV at Stability Pool
     it("provideToSP(): increases the Stability Pool CLV balance", async () => {
       // --- SETUP --- Give Alice 200 CLV
-      // use the mockPool to set alice's CLV Balance
-      await clvToken.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
-      await clvToken.mint(alice, 200, { from: mockPoolManagerAddress })
-      // reconnect CLVToken to the real poolManager
-      await clvToken.setPoolManagerAddress(poolManager.address, { from: owner })
+      await cdpManager.addColl(alice, alice, {from: alice, value: _1_Ether})
+      await cdpManager.withdrawCLV(200, alice, {from: alice})
 
       // --- TEST ---
       // check CLV balances before
@@ -120,11 +114,8 @@ contract('PoolManager', async accounts => {
 
     it("provideToSP(): updates the user's deposit record in PoolManager", async () => {
       // --- SETUP --- give Alice 200 CLV
-      // use the mockPool to set alice's CLV Balance
-      await clvToken.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
-      await clvToken.mint(alice, 200, { from: mockPoolManagerAddress })
-      // reconnect CLVToken to the real poolManager
-      await clvToken.setPoolManagerAddress(poolManager.address, { from: owner })
+      await cdpManager.addColl(alice, alice, {from: alice, value: _1_Ether})
+      await cdpManager.withdrawCLV(200, alice, {from: alice})
 
       // --- TEST ---
       // check user's deposit record before
@@ -141,11 +132,8 @@ contract('PoolManager', async accounts => {
 
     it("provideToSP(): reduces the user's CLV balance by the correct amount", async () => {
       // --- SETUP --- Give Alice 200 CLV
-      // use the mockPool to set alice's CLV Balance
-      await clvToken.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
-      await clvToken.mint(alice, 200, { from: mockPoolManagerAddress })
-      // reconnect CLVToken to the real poolManager
-      await clvToken.setPoolManagerAddress(poolManager.address, { from: owner })
+      await cdpManager.addColl(alice, alice, {from: alice, value: _1_Ether})
+      await cdpManager.withdrawCLV(200, alice, {from: alice})
 
       // --- TEST ---
       // check user's deposit record before
@@ -162,8 +150,7 @@ contract('PoolManager', async accounts => {
 
     it("provideToSP(): increases totalCLVDeposits by correct amount", async () => {
       // --- SETUP ---
-      await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
-
+     
       // Whale opens CDP with 50 ETH, adds 2000 CLV to StabilityPool
       await cdpManager.addColl(whale, whale, { from: whale, value: _50_Ether })
       await cdpManager.withdrawCLV('2000000000000000000000', whale, { from: whale })
@@ -175,8 +162,7 @@ contract('PoolManager', async accounts => {
 
     it('provideToSP(): Correctly updates user snapshots of accumulated rewards per unit staked', async () => {
       // --- SETUP ---
-      await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
-
+     
       // Whale opens CDP with 50 ETH, adds 2000 CLV to StabilityPool
       await cdpManager.addColl(whale, whale, { from: whale, value: _50_Ether })
       await cdpManager.withdrawCLV('2000000000000000000000', whale, { from: whale })

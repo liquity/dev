@@ -23,6 +23,7 @@ contract CDPManager is Ownable, ICDPManager {
     // --- Events --- 
     event PoolManagerAddressChanged(address _newPoolManagerAddress);
     event ActivePoolAddressChanged(address _activePoolAddress);
+    event DefaultPoolAddressChanged(address _defaultPoolAddress);
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
@@ -43,6 +44,9 @@ contract CDPManager is Ownable, ICDPManager {
 
     IPool activePool;
     address public activePoolAddress;
+
+    IPool defaultPool;
+    address public defaultPoolAddress;
 
     ICLVToken CLV; 
     address public clvTokenAddress;
@@ -116,6 +120,12 @@ contract CDPManager is Ownable, ICDPManager {
         emit ActivePoolAddressChanged(_activePoolAddress);
     }
 
+    function setDefaultPool(address _defaultPoolAddress) public onlyOwner {
+        defaultPoolAddress = _defaultPoolAddress;
+        defaultPool = IPool(_defaultPoolAddress);
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
+    }
+
     function setPriceFeed(address _priceFeedAddress) public onlyOwner {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(priceFeedAddress);
@@ -131,7 +141,6 @@ contract CDPManager is Ownable, ICDPManager {
     function setSortedCDPs(address _sortedCDPsAddress) public onlyOwner {
         sortedCDPsAddress = _sortedCDPsAddress;
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        sortedCDPs.setMaxSize(1000000);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
     }
 
@@ -152,91 +161,145 @@ contract CDPManager is Ownable, ICDPManager {
     // --- CDP Operations ---
 
     function openLoan(uint _CLVAmount, address _hint) public payable returns (bool) {
-        uint price = priceFeed.getPrice();
-        checkTCRAndSetRecoveryMode(price);
+        // console.log("openLoan func start");
+        // console.log("00. gas left: %s", gasleft());
+        uint price = priceFeed.getPrice(); // 3460 gas
+        // console.log("01. gas left: %s", gasleft());
+        bool recoveryMode = checkTCRAndSetRecoveryMode(price); // 26500 gas
+        // console.log("02. gas left: %s", gasleft());
         
-        address user = _msgSender();
+        address user = _msgSender(); // 28 gas
+        // console.log("03. gas left: %s", gasleft());
         
-        require(CDPs[user].status != Status.active, "CDPManager: Borrower already has an active CDP");
-        require(recoveryMode == false || _CLVAmount == 0, "CDPManager: Debt issuance is not permitted during Recovery Mode");
+        require(CDPs[user].status != Status.active, "CDPManager: Borrower already has an active CDP"); // 943 gas
+        // console.log("04. gas left: %s", gasleft());
+        require(recoveryMode == false || _CLVAmount == 0, "CDPManager: Debt issuance is not permitted during Recovery Mode"); // 840 gas
+        // console.log("05. gas left: %s", gasleft());
         require(getUSDValue(msg.value, price) >= MIN_COLL_IN_USD, 
-                "CDPManager: Dollar value of collateral deposit must equal or exceed the minimum");
-        
-        uint ICR = computeICR(msg.value, _CLVAmount, price);
-        require(ICR >= MCR, "CDPManager: ICR of prospective loan must be >= than the MCR");
+                "CDPManager: Dollar value of collateral deposit must equal or exceed the minimum");  // 543 gas
+        // console.log("06. gas left: %s", gasleft());
+        uint ICR = computeICR(msg.value, _CLVAmount, price);  // 574 gas
+        // console.log("07. gas left: %s", gasleft());
+        require(ICR >= MCR, "CDPManager: ICR of prospective loan must be >= than the MCR"); // 19 gas(!)
+        // console.log("08. gas left: %s", gasleft());
 
-        uint newTCR = getNewTCR(msg.value, _CLVAmount, price);
-        require (newTCR >= CCR, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted");
-        
+        uint newTCR = getNewTCR(msg.value, _CLVAmount, price);  // 25700 gas
+        // console.log("09. gas left: %s", gasleft());
+        require (newTCR >= CCR, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted");  // 10 gas
+        // console.log("10. gas left: %s", gasleft());
+
         // Update loan properties
-        CDPs[user].status = Status.active;
-        CDPs[user].coll = msg.value;
-        CDPs[user].debt = _CLVAmount;
+        CDPs[user].status = Status.active;  // 21000 gas
+        // console.log("11. gas left: %s", gasleft());
+        CDPs[user].coll = msg.value;  // 20100 gas
+        // console.log("12. gas left: %s", gasleft());
+        CDPs[user].debt = _CLVAmount; // 20100 gas
+        // console.log("13. gas left: %s", gasleft());
         
-        updateRewardSnapshots(user);
-        updateStakeAndTotalStakes(user);
+        updateRewardSnapshots(user); // 3300 gas
+        // console.log("14. gas left: %s", gasleft());
+        updateStakeAndTotalStakes(user); // 30500 gas
+        // console.log("15. gas left: %s", gasleft());
 
-        sortedCDPs.insert(user, ICR, price, _hint, _hint);
+        sortedCDPs.insert(user, ICR, price, _hint, _hint); // 94000 gas
+        // console.log("16. gas left: %s", gasleft());
+
         /* push the owner's address to the CDP owners list, and record 
         the corresponding array index on the CDP struct */
-        CDPs[user].arrayIndex = CDPOwners.push(user) - 1;
+        CDPs[user].arrayIndex = CDPOwners.push(user) - 1; // 46800 gas
+        // console.log("17. gas left: %s", gasleft());
 
         // Move the ether to the activePool, and mint CLV to the borrower
-        poolManager.addColl.value(msg.value)();
-        poolManager.withdrawCLV(user, _CLVAmount);
+        poolManager.addColl.value(msg.value)(); // 25500 gas
+        // console.log("18. gas left: %s", gasleft());
+        poolManager.withdrawCLV(user, _CLVAmount); // 50500 gas
+        // console.log("19. gas left: %s", gasleft());
 
-        checkTCRAndSetRecoveryMode(price);
+        checkTCRAndSetRecoveryMode(price); // 26500 gas
+        // console.log("20. gas left: %s", gasleft());
         emit CDPUpdated(user, 
-                        CDPs[user].debt, 
-                        CDPs[user].coll
+                        _CLVAmount, 
+                        msg.value
                         // CDPs[user].stake,
                         // CDPs[user].arrayIndex
-                        );
+                        ); // 3400 gas
+        // console.log("21. gas left: %s", gasleft());
+        // console.log("openLoan func end");
         return true;
     }
 
     // Send ETH as collateral to a CDP
     function addColl(address _user, address _hint) public payable returns (bool) {
+        // console.log("00. gas left: %s", gasleft());
         bool isFirstCollDeposit;
+        // console.log("01. gas left: %s", gasleft());
         uint price = priceFeed.getPrice();
-    
-        if (CDPs[_user].status == Status.nonExistent || CDPs[_user].status == Status.closed ) {
+        // console.log("02. gas left: %s", gasleft());
+
+        Status status = CDPs[_user].status;
+         // console.log("03. gas left: %s", gasleft());
+        // if (CDPs[_user].status == Status.nonExistent || CDPs[_user].status == Status.closed ) {
+        if (status == Status.nonExistent || status == Status.closed ) {
+             // console.log("04. gas left: %s", gasleft());
             require(getUSDValue(msg.value, price) >= MIN_COLL_IN_USD, 
                     "CDPManager: Dollar value of collateral deposit must equal or exceed the minimum");
+            // console.log("05. gas left: %s", gasleft());
             isFirstCollDeposit = true; 
+            // console.log("06. gas left: %s", gasleft());
+            CDPs[_user].status = Status.active;
+            // console.log("07. gas left: %s", gasleft());
         } 
 
-        CDPs[_user].status = Status.active;
+        // CDPs[_user].status = Status.active;
+        // console.log("08. gas left: %s", gasleft());
+        
 
         applyPendingRewards(_user);
+        // console.log("09. gas left: %s", gasleft());
 
         // Update the CDP's coll and stake
-        CDPs[_user].coll = (CDPs[_user].coll).add(msg.value);
+        
+        // CDPs[_user].coll = (CDPs[_user].coll).add(msg.value);
+        // console.log("10. gas left: %s", gasleft());
+        uint newColl = (CDPs[_user].coll).add(msg.value);
+        CDPs[_user].coll = newColl;
+
         updateStakeAndTotalStakes(_user);
+        // console.log("11. gas left: %s", gasleft());
 
         uint newICR = getCurrentICR(_user, price);
+        // console.log("12. gas left: %s", gasleft());
 
         if (isFirstCollDeposit) {
+            // console.log("13. gas left: %s", gasleft());
             sortedCDPs.insert(_user, newICR, price, _hint, _hint);
+            // console.log("14. gas left: %s", gasleft());
              /* push the owner's address to the CDP owners list, and record 
             the corresponding array index on the CDP struct */
             CDPs[_user].arrayIndex = CDPOwners.push(_user) - 1;
+            // console.log("15. gas left: %s", gasleft());
             emit CDPCreated(_user, CDPs[_user].arrayIndex);
+            // console.log("16. gas left: %s", gasleft());
         } else {
             sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);
+            // console.log("17. gas left: %s", gasleft());
         }
 
         // Send the received collateral to PoolManager, to forward to ActivePool
+        // console.log("00. gas left: %s", gasleft());
         poolManager.addColl.value(msg.value)();
+        // console.log("18. gas left: %s", gasleft());
 
         checkTCRAndSetRecoveryMode(price);
-        emit CollateralAdded(_user, msg.value);
+        // console.log("19. gas left: %s", gasleft());
+        // emit CollateralAdded(_user, msg.value);
         emit CDPUpdated(_user, 
                         CDPs[_user].debt, 
-                        CDPs[_user].coll
+                        newColl
                         // CDPs[_user].stake,
                         // CDPs[_user].arrayIndex
                         );
+        // console.log("20. gas left: %s", gasleft());
         return true;
     }
     
@@ -250,13 +313,16 @@ contract CDPManager is Ownable, ICDPManager {
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
        
         applyPendingRewards(user);
-        require(CDPs[user].coll >= _amount, "CDPManager: Insufficient balance for ETH withdrawal");
+        uint coll = CDPs[user].coll;
+        require(coll >= _amount, "CDPManager: Insufficient balance for ETH withdrawal");
         
-        uint newColl = CDPs[user].coll.sub(_amount);
+        uint newColl = coll.sub(_amount);
         require(getUSDValue(newColl, price) >= MIN_COLL_IN_USD  || newColl == 0, 
                 "CDPManager: Remaining collateral must have $USD value >= 20, or be zero");
 
-        uint newICR = getNewICRfromCollDecrease(user, _amount, price);
+        // console.log("00. gas left: %s", gasleft());
+        uint newICR = getNewICRfromCollDecrease(user, _amount, price);  // 6100 gas
+        // console.log("01. gas left: %s", gasleft());
         require(recoveryMode == false, "CDPManager: Collateral withdrawal is not permitted during Recovery Mode");
         require(newICR >= MCR, "CDPManager: Insufficient collateral ratio for ETH withdrawal");
         
@@ -265,15 +331,17 @@ contract CDPManager is Ownable, ICDPManager {
         updateStakeAndTotalStakes(user);
 
         if (newColl == 0) { 
-             closeCDP(user); 
+            //  console.log("00. gas left: %s", gasleft());
+             closeCDP(user);  // gives gas refund
+            //  console.log("01. gas left: %s", gasleft());
         }  else { 
         // Update CDP's position in sortedCDPs
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
 
-        emit CollateralWithdrawn(user, _amount);
+        // emit CollateralWithdrawn(user, _amount);
         emit CDPUpdated(user, 
                         CDPs[user].debt, 
-                        CDPs[user].coll
+                        newColl
                         // CDPs[user].stake,
                         // CDPs[user].arrayIndex
                         ); 
@@ -287,13 +355,15 @@ contract CDPManager is Ownable, ICDPManager {
     // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
     function withdrawCLV(uint _amount, address _hint) public returns (bool) {
         uint price = priceFeed.getPrice();
-        checkTCRAndSetRecoveryMode(price);
+        bool recoveryMode = checkTCRAndSetRecoveryMode(price);
 
         address user = _msgSender();
         
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
         require(_amount > 0, "CDPManager: Amount to withdraw must be larger than 0");
         
+        applyPendingRewards(user);
+
         uint newTCR = getNewTCR(0, _amount, price);
         uint newICR = getNewICRfromDebtIncrease(user, _amount, price);
         
@@ -302,7 +372,8 @@ contract CDPManager is Ownable, ICDPManager {
         require(newICR >= MCR, "CDPManager: Insufficient collateral ratio for CLV withdrawal");
         
         // Increase the CDP's debt
-        CDPs[user].debt = (CDPs[user].debt).add(_amount);
+        uint newDebt = (CDPs[user].debt).add(_amount);
+        CDPs[user].debt = newDebt;
 
         // Update CDP's position in sortedCDPs
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
@@ -310,9 +381,9 @@ contract CDPManager is Ownable, ICDPManager {
         // Mint the given amount of CLV to the owner's address and add them to the ActivePool
         poolManager.withdrawCLV(user, _amount);
         
-        emit CLVWithdrawn(user, _amount);
+        // emit CLVWithdrawn(user, _amount);
         emit CDPUpdated(user, 
-                        CDPs[user].debt, 
+                        newDebt, 
                         CDPs[user].coll  
                         // CDPs[user].stake,
                         // CDPs[user].arrayIndex
@@ -328,12 +399,16 @@ contract CDPManager is Ownable, ICDPManager {
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
         require(_amount > 0, "CDPManager: Repaid amount must be larger than 0");
        
-        require(_amount <= CDPs[user].debt, "CDPManager: Repaid amount is larger than current debt");
-        require(CLV.balanceOf(user) >= _amount, "CDPManager: Sender has insufficient CLV balance");
+       applyPendingRewards(user);
+
+        uint debt = CDPs[user].debt;
+        require(_amount <= debt, "CDPManager: Repaid amount is larger than current debt");
+        // require(CLV.balanceOf(user) >= _amount, "CDPManager: Sender has insufficient CLV balance");
         // TODO: Maybe allow foreign accounts to repay loans
         
         // Update the CDP's debt
-        CDPs[user].debt  = (CDPs[user].debt).sub(_amount);
+        uint newDebt = debt.sub(_amount);
+        CDPs[user].debt  = newDebt;
 
         uint newICR = getCurrentICR(user, price);
         
@@ -345,9 +420,9 @@ contract CDPManager is Ownable, ICDPManager {
 
         checkTCRAndSetRecoveryMode(price);
 
-        emit CLVRepayed(user, _amount);
+        // emit CLVRepayed(user, _amount);
         emit CDPUpdated(user, 
-                        CDPs[user].debt, 
+                        newDebt, 
                         CDPs[user].coll 
                         // CDPs[user].stake,
                         // CDPs[user].arrayIndex
@@ -361,7 +436,7 @@ contract CDPManager is Ownable, ICDPManager {
     // TODO: Left public for initial testing. Make internal.
     function liquidate(address _user) public returns (bool) {
         uint price = priceFeed.getPrice();
-        checkTCRAndSetRecoveryMode(price);
+        bool recoveryMode = checkTCRAndSetRecoveryMode(price);
 
         require(CDPs[_user].status == Status.active, "CDPManager: CDP does not exist or is already closed");
         
@@ -371,45 +446,60 @@ contract CDPManager is Ownable, ICDPManager {
             liquidateNormalMode(_user, price);
         }  
     }
-    
+   
     function liquidateNormalMode(address _user, uint price) internal returns (bool) {
-        uint ICR = getCurrentICR(_user, price);
+        // console.log("00. gas left: %s", gasleft());
+        // uint ICR = getCurrentICR(_user, price); // 6600 gas
+        // console.log("01. gas left: %s", gasleft());
 
-        // If ICR < MCR, withdraw any gains from Stability Pool to the CDP, and re-check ICR
-        if (ICR < MCR) {
-            poolManager.withdrawFromSPtoCDP(_user);
-            ICR = getCurrentICR(_user, price);
-        } else {
-            return false;
-        }
+        // If ICR < MCR, check whether ETH gains from the Stability Pool would bring the ICR above the MCR
+        // if (ICR < MCR) {
+            // console.log("0a. gas left: %s", gasleft());
+            // poolManager.withdrawFromSPtoCDP(_user); // 57000 gas (no SP deposit) / 735000 gas (SP deposit)
+            // console.log("0b. gas left: %s", gasleft());
+            // ICR = getCurrentICR(_user, price); // 6600 gas
+            // console.log("0c. gas left: %s", gasleft());
 
-        // If ICR is now > MCR, update CDP's position in sortedCDPs and return
-        if (ICR > MCR) { 
-            sortedCDPs.reInsert(_user, ICR, price, _user, _user);
-            return false; 
-        } 
-    
+        uint ICR = getNewICRFromPendingSPGain(_user, price);
+
+            // If applying the ETH gain would keep the CDP active, don't liquidate 
+        if (ICR > MCR) { return false; }
+       
+        // console.log("02. gas left: %s", gasleft());
+        
+        // if (ICR > MCR) { 
+        //     return false; 
+        // } 
+        // console.log("03. gas left: %s", gasleft());
         // Apply the CDP's rewards and remove stake
-        applyPendingRewards(_user);
-        removeStake(_user);
+        applyPendingRewards(_user); // 1800 gas
+        // console.log("04. gas left: %s", gasleft());
+        removeStake(_user); // 3600 gas
+        // console.log("05. gas left: %s", gasleft());
 
         // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-        uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
+        uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);  // 89500 gas
+        // console.log("06. gas left: %s", gasleft());
         uint CLVDebtRemainder = remainder[0];
+        // console.log("07. gas left: %s", gasleft());
         uint ETHRemainder = remainder[1];
-
+        // console.log("08. gas left: %s", gasleft());
         redistributeCollAndDebt(ETHRemainder, CLVDebtRemainder);
-        
-        closeCDP(_user);
-        updateSystemSnapshots();
+        // console.log("09. gas left: %s", gasleft());
+        closeCDP(_user); // 61000 gas
+        // console.log("10. gas left: %s", gasleft());
+        updateSystemSnapshots(); // 23000 gas
+        // console.log("11. gas left: %s", gasleft());
         return true;
     }
 
     function liquidateRecoveryMode(address _user, uint price) internal returns (bool) {
         // Withdraw any Stability Pool gains to the CDP
-        poolManager.withdrawFromSPtoCDP(_user);
+        // poolManager.withdrawFromSPtoCDP(_user);
         
-        uint ICR = getCurrentICR(_user, price);
+        // uint ICR = getCurrentICR(_user, price);
+
+        uint ICR = getNewICRFromPendingSPGain(_user, price);
 
         // If ICR <= 100%, redistribute the CDP across all active CDPs
         if (ICR <= 1000000000000000000) {
@@ -484,7 +574,7 @@ contract CDPManager is Ownable, ICDPManager {
     // TODO: Should  be synchronized with PriceFeed and called every time the price is updated
     function liquidateCDPs(uint n) public returns (bool) {  
         uint price = priceFeed.getPrice();
-        checkTCRAndSetRecoveryMode(price);
+        bool recoveryMode = checkTCRAndSetRecoveryMode(price);
 
         if (recoveryMode == true) {
             uint i;
@@ -528,10 +618,7 @@ contract CDPManager is Ownable, ICDPManager {
     TODO: Maybe also use the default pool for redemptions
     TODO: Levy a redemption fee (and maybe also impose a rate limit on redemptions) */
     function redeemCollateral(uint _CLVamount, address _hint) public returns (bool) {
-        // console.log("redeemCollateral begins");
-        // console.log("00. gas left: %s", gasleft());
         // require(CLV.balanceOf(_msgSender()) >= _CLVamount, "CDPManager: Sender has insufficient balance"); // *** 7300 gas
-        // console.log("01. gas left: %s", gasleft());
         uint exchangedCLV;
         uint redeemedETH;
         uint price = priceFeed.getPrice(); // 3500 gas
@@ -675,9 +762,9 @@ contract CDPManager is Ownable, ICDPManager {
         // console.log("01. /gas left: %s", gasleft());
         uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);  // 3700 gas (no rewards!).  ABDK: 3100
         // console.log("02. gas left: %s", gasleft());
-        uint currentETH = (CDPs[_user].coll).add(pendingETHReward); // 1000 gas
+        uint currentETH = CDPs[_user].coll.add(pendingETHReward); // 1000 gas
         // console.log("03. gas left: %s", gasleft());
-        uint currentCLVDebt = (CDPs[_user].debt).add(pendingCLVDebtReward);  // 988 gas
+        uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);  // 988 gas
         // console.log("04. gas left: %s", gasleft());
         // console.log("getCurrentICR::currentETH is %s", currentETH);
         // console.log("getCurrentICR::currentCLVDebt is %s", currentCLVDebt);
@@ -693,8 +780,8 @@ contract CDPManager is Ownable, ICDPManager {
         uint pendingETHReward = computePendingETHReward(_user);
         uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
 
-        uint currentETH = (CDPs[_user].coll).add(pendingETHReward);
-        uint currentCLVDebt = (CDPs[_user].debt).add(pendingCLVDebtReward);
+        uint currentETH = CDPs[_user].coll.add(pendingETHReward);
+        uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);
 
         uint newColl = currentETH.sub(_collDecrease);
         
@@ -706,15 +793,31 @@ contract CDPManager is Ownable, ICDPManager {
         uint pendingETHReward = computePendingETHReward(_user);
         uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
 
-        uint currentETH = (CDPs[_user].coll).add(pendingETHReward);
-        uint currentCLVDebt = (CDPs[_user].debt).add(pendingCLVDebtReward);
+        uint currentETH = CDPs[_user].coll.add(pendingETHReward);
+        uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);
 
         uint newCLVDebt = currentCLVDebt.add(_debtIncrease);
 
         return computeICR(currentETH, newCLVDebt, _price);
     } 
 
+    function getNewICRFromPendingSPGain(address _user, uint price) internal returns (uint) {
+        // Get rewards from direct distributions
+        uint pendingETHReward = computePendingETHReward(_user);
+        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
+
+        // Get ETH Gain from StabilityPool deposit
+        uint ETHGainFromSP = poolManager.getCurrentETHGain(_user);
+        
+        uint newColl = CDPs[_user].coll.add(pendingETHReward).add(ETHGainFromSP);
+        uint newCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);
+
+        uint newICR = computeICR(newColl, newCLVDebt, price);
+        return newICR;
+    }
+
     function computeICR(uint _coll, uint _debt, uint _price) view internal returns(uint) {
+        // console.log("computeICR func start");
         // console.log("00. gas left: %s", gasleft());
         // uint price = priceFeed.getPrice(); // 3579 gas
         // console.log("01. gas left: %s", gasleft());
@@ -741,6 +844,7 @@ contract CDPManager is Ownable, ICDPManager {
             return 2**256 - 1; 
             // console.log("06. gas left: %s", gasleft());
         }
+        // console.log("SortedCDPs.insert func end");
     }
 
     // Add the user's coll and debt rewards earned from liquidations, to their CDP
@@ -833,13 +937,26 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Update user's stake based on their latest collateral value
     function updateStakeAndTotalStakes(address _user) internal returns(bool) {
-        uint oldStake = CDPs[_user].stake;
-        totalStakes = totalStakes.sub(oldStake);
-       
-        uint newStake = computeNewStake(CDPs[_user].coll);
+        // console.log("updateStakeAndTotalStakes func start");
+        // console.log("00. gas left: %s", gasleft());
+        // uint oldStake = CDPs[_user].stake; // 930 gas
+        // console.log("01. gas left: %s", gasleft());
+        // totalStakes = totalStakes.sub(oldStake);  // 1800 gas
+        // console.log("02. gas left: %s", gasleft());
+        // uint newStake = computeNewStake(CDPs[_user].coll); // 1800 gas
+        // console.log("03. gas left: %s", gasleft());
 
+        // CDPs[_user].stake = newStake;  // 20100 gas 
+        // console.log("04. gas left: %s", gasleft());
+        // totalStakes = totalStakes.add(newStake);  // 6000 gas
+        // console.log("05. gas left: %s", gasleft());
+        // console.log("updateStakeAndTotalStakes func end");
+
+        uint newStake = computeNewStake(CDPs[_user].coll); 
+        uint oldStake = CDPs[_user].stake;
         CDPs[_user].stake = newStake;
-        totalStakes = totalStakes.add(newStake);
+        totalStakes = totalStakes.sub(oldStake).add(newStake);
+
         return true;
     }
 
@@ -848,7 +965,6 @@ contract CDPManager is Ownable, ICDPManager {
         if (totalCollateralSnapshot == 0) {
             stake = _coll;
         } else {
-
             // uint ratio = DeciMath.div_toDuint(totalStakesSnapshot, totalCollateralSnapshot);
             // stake = DeciMath.mul_uintByDuint(_coll, ratio);
             stake = ABDKMath64x64.mulu(ABDKMath64x64.divu(totalStakesSnapshot, totalCollateralSnapshot), _coll);
@@ -880,11 +996,14 @@ contract CDPManager is Ownable, ICDPManager {
 
     function closeCDP(address _user) internal returns (bool) {
         CDPs[_user].status = Status.closed;
-        
+        CDPs[_user].coll = 0;
+        CDPs[_user].debt = 0;
+        // console.log("00. gas left: %s", gasleft());
         sortedCDPs.remove(_user);
+        // console.log("01. gas left: %s", gasleft());
         removeCDPOwner(_user);
+        // console.log("02. gas left: %s", gasleft());
 
-        emit CDPClosed(_user);
         return true;
     }
 
@@ -894,8 +1013,8 @@ contract CDPManager is Ownable, ICDPManager {
 
         /* The total collateral snapshot is the sum of all active collateral and all pending rewards
        (ActivePool ETH + DefaultPool ETH), immediately after the liquidation occurs. */
-        uint activeColl = poolManager.getActiveColl();
-        uint liquidatedColl = poolManager.getLiquidatedColl();
+        uint activeColl = activePool.getETH();
+        uint liquidatedColl = defaultPool.getETH();
         totalCollateralSnapshot = activeColl.add(liquidatedColl);
 
         return true;
@@ -905,8 +1024,8 @@ contract CDPManager is Ownable, ICDPManager {
      function updateSystemSnapshots_excludeCollRemainder(uint _collRemainder) internal returns (bool) {
         totalStakesSnapshot = totalStakes;
 
-        uint activeColl = poolManager.getActiveColl();
-        uint liquidatedColl = poolManager.getLiquidatedColl();
+        uint activeColl = activePool.getETH();
+        uint liquidatedColl = defaultPool.getETH();
         totalCollateralSnapshot = activeColl.sub(_collRemainder).add(liquidatedColl);
 
         return true;
@@ -928,43 +1047,70 @@ contract CDPManager is Ownable, ICDPManager {
     // Get the dollar value of collateral, as a duint
     function getUSDValue(uint _coll, uint _price) internal view returns (uint) {
         // return DeciMath.decMul(_price, _coll);
-        return ABDKMath64x64.mulu(ABDKMath64x64.divu(_price, 1000000000000000000), _coll);
-
+        // console.log("00. gas left: %s", gasleft());
+        uint usdValue = ABDKMath64x64.mulu(ABDKMath64x64.divu(_price, 1000000000000000000), _coll);  // 500 gas
+        // console.log("01. gas left: %s", gasleft());
+        return usdValue;
     }
 
     function getNewTCR(uint _collIncrease, uint _debtIncrease, uint _price) public view returns (uint) {
-        uint activeColl = poolManager.getActiveColl();
-        uint activeDebt = poolManager.getActiveDebt();
-        uint liquidatedColl = poolManager.getLiquidatedColl();
-        uint closedDebt = poolManager.getClosedDebt();
+    //    console.log("getNewTCR func start");
+        // uint activeColl = poolManager.getActiveColl();
+        // uint activeDebt = poolManager.getActiveDebt();
+        // uint liquidatedColl = poolManager.getLiquidatedColl();
+        // uint closedDebt = poolManager.getClosedDebt();
+
+        uint activeColl = activePool.getETH();
+        uint activeDebt = activePool.getCLV();
+        uint liquidatedColl = defaultPool.getETH();
+        uint closedDebt = defaultPool.getCLV();
 
         uint totalCollateral = activeColl.add(liquidatedColl).add(_collIncrease);
         uint newTotalDebt = activeDebt.add(closedDebt).add(_debtIncrease);
 
         uint newTCR = computeICR(totalCollateral, newTotalDebt, _price);
-        
+        // console.log("getNewTCR func end");
         return newTCR;
     }
 
     function checkTCRAndSetRecoveryMode(uint _price) public returns (bool){
-        uint activeColl = poolManager.getActiveColl();
-        uint activeDebt = poolManager.getActiveDebt();
-        uint liquidatedColl = poolManager.getLiquidatedColl();
-        uint closedDebt = poolManager.getClosedDebt();
+        // console.log("checkTCRAndSet... func start");
+        // console.log("00. gas left: %s", gasleft());
+        // uint activeColl = poolManager.getActiveColl(); // 6200 gas
+        // console.log("01. gas left: %s", gasleft());
+        // uint activeDebt = poolManager.getActiveDebt(); // 6150 gas
+        // console.log("02. gas left: %s", gasleft());
+        // uint liquidatedColl = poolManager.getLiquidatedColl(); // 6150 gas
+        // console.log("03. gas left: %s", gasleft());
+        // uint closedDebt = poolManager.getClosedDebt(); // 6150 gas
+        // console.log("04. gas left: %s", gasleft());
 
-        uint totalCollateral  = activeColl.add(liquidatedColl);
-        uint totalDebt = activeDebt.add(closedDebt);
+        uint activeColl = activePool.getETH();
+        uint activeDebt = activePool.getCLV();
+        uint liquidatedColl = defaultPool.getETH();
+        uint closedDebt = defaultPool.getCLV();
 
-        uint TCR = computeICR(totalCollateral, totalDebt, _price);
+        uint totalCollateral  = activeColl.add(liquidatedColl); // 86 gas
+        // console.log("05. gas left: %s", gasleft());
+        uint totalDebt = activeDebt.add(closedDebt); // 90 gas
+        // console.log("06. gas left: %s", gasleft());
+
+        uint TCR = computeICR(totalCollateral, totalDebt, _price); // 575 gas
+        // console.log("07. gas left: %s", gasleft());
         
         /* if TCR falls below 150%, trigger recovery mode. If TCR rises above 150%, 
         disable recovery mode */
+        bool recoveryModeInMem;
+
         if ((TCR < 1500000000000000000) && (recoveryMode == false)) {
             recoveryMode = true;
+            recoveryModeInMem = true;
         } else if ((TCR >= 1500000000000000000) && (recoveryMode == true)) {
             recoveryMode = false;
+            recoveryModeInMem = false;
         }
-
-        return true;
+        // console.log("08. gas left: %s", gasleft());  // 900 gas
+        // console.log("checkTCRAndSet... func end");
+        return recoveryModeInMem;
     }
 }

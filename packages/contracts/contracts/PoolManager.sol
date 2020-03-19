@@ -210,7 +210,9 @@ contract PoolManager is Ownable, IPoolManager {
         returns (bool)
     {
         // Send ETH to Active Pool and increase its recorded ETH balance
+        // console.log("0a. gas left: %s", gasleft());
        (bool success, ) = activePoolAddress.call.value(msg.value)("");
+    //    console.log("0b. gas left: %s", gasleft());
        require (success == true, 'PoolManager: transaction to activePool reverted');
        return success;
     }
@@ -221,7 +223,9 @@ contract PoolManager is Ownable, IPoolManager {
         onlyCDPManager
         returns (bool)
     {
+        // console.log("00. gas left: %s", gasleft());
         activePool.sendETH(_account, _ETH);
+        // console.log("01. gas left: %s", gasleft());
         return true;
     }
     
@@ -231,8 +235,12 @@ contract PoolManager is Ownable, IPoolManager {
         onlyCDPManager
         returns (bool)
     {
-        activePool.increaseCLV(_CLV);
-        CLV.mint(_account, _CLV);
+        // console.log("00. gas left: %s", gasleft());
+        activePool.increaseCLV(_CLV);  // 9500
+        // console.log("01. gas left: %s", gasleft());
+        CLV.mint(_account, _CLV);  // 37500
+        // console.log("02. gas left: %s", gasleft());
+
                 
         return true;
     }
@@ -243,9 +251,11 @@ contract PoolManager is Ownable, IPoolManager {
         onlyCDPManager
         returns (bool)
     {
+        // console.log("00. gas left: %s", gasleft());
         activePool.decreaseCLV(_CLV);
+        // console.log("01. gas left: %s", gasleft());
         CLV.burn(_account, _CLV);
-        
+        // console.log("02. gas left: %s", gasleft());
         return true;
     }           
     
@@ -301,31 +311,31 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Return the accumulated change, for the user, for the duration that this deposit was held
-    function getCurrentETHGain(address _user) internal view returns(uint) {
-        uint userDeposit = deposit[_user];
-
+    function getCurrentETHGain(address _user) public view returns(uint) {
+        
         uint snapshotETH = snapshot[_user].ETH;  
+        uint ETHGainPerUnitStaked = S_ETH.sub(snapshotETH); 
 
+        if (ETHGainPerUnitStaked == 0) { return 0; }
         // uint ETHGainPerUnitStaked = S_ETH.sub(snapshotETH);  // duint
         
         // return DeciMath.mul_uintByDuint(userDeposit, ETHGainPerUnitStaked); // uint
 
-        uint ETHGainPerUnitStaked = S_ETH.sub(snapshotETH);  
-
+        uint userDeposit = deposit[_user];
         return ABDKMath64x64.mulu(ABDKMath64x64.divu(ETHGainPerUnitStaked, 1e18), userDeposit);
     }
 
     function getCurrentCLVLoss(address _user) internal view returns(uint) {
-        uint userDeposit = deposit[_user];
 
         uint snapshotCLV = snapshot[_user].CLV; // duint
+        uint CLVLossPerUnitStaked = S_CLV.sub(snapshotCLV); 
 
+        if (CLVLossPerUnitStaked == 0) { return 0; }
         // uint CLVLossPerUnitStaked = S_CLV.sub(snapshotCLV); 
         
         // return DeciMath.mul_uintByDuint(userDeposit, CLVLossPerUnitStaked); // uint
 
-        uint CLVLossPerUnitStaked = S_CLV.sub(snapshotCLV); 
-        
+        uint userDeposit = deposit[_user];
         return ABDKMath64x64.mulu(ABDKMath64x64.divu(CLVLossPerUnitStaked, 1e18), userDeposit);
     }
 
@@ -334,7 +344,7 @@ contract PoolManager is Ownable, IPoolManager {
     // Deposit _amount CLV from _address, to the Stability Pool.
     function depositCLV(address _address, uint _amount) internal returns(bool) {
         require(deposit[_address] == 0, "PoolManager: user already has a StabilityPool deposit");
-        require(CLV.balanceOf(_address) >= _amount, "PoolManager: user has insufficient CLV balance to make deposit");
+        // require(CLV.balanceOf(_address) >= _amount, "PoolManager: user has insufficient CLV balance to make deposit");
         
         // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
         CLV.sendToPool(_address, stabilityPoolAddress, _amount);
@@ -377,10 +387,13 @@ contract PoolManager is Ownable, IPoolManager {
         emit UserDepositChanged(_address, deposit[_address]);
         emit UserSnapshotUpdated(S_CLV, S_ETH);
 
+        // console.log("1. updating system variables");
         // Send CLV to user and decrease CLV in Pool
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV()));
+        // console.log("CLV Share is %s, userDeposit is %s", CLVShare, userDeposit);
         stabilityPool.decreaseCLV(CLVShare);
         stabilityPool.decreaseTotalCLVDeposits(userDeposit);
+        // console.log("2. system variables updated");
 
         // Send ETH to user
         stabilityPool.sendETH(_address, ETHShare);
@@ -391,41 +404,58 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Transfer _address's entitled CLV (userDeposit - CLVLoss) to _address, and their ETHGain to their CDP.
     function retrieveToCDP(address _address) internal returns(uint[2] memory) {
-        uint userDeposit = deposit[_address];
-        require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
-        
-        uint ETHShare = getCurrentETHGain(_address);
-        uint CLVLoss = getCurrentCLVLoss(_address);
+        // console.log("00. gas left: %s", gasleft());
+        uint userDeposit = deposit[_address];  // 900 gas
+        // console.log("01. gas left: %s", gasleft()); 
+        require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');  // 15 gas
+        // console.log("02. gas left: %s", gasleft());
+        uint ETHShare = getCurrentETHGain(_address); // **3300 gas
+        // console.log("03. gas left: %s", gasleft());
+        uint CLVLoss = getCurrentCLVLoss(_address); // 3300 gas
+        // console.log("04. gas left: %s", gasleft());
 
-        uint CLVShare;
+        uint CLVShare;  // 2 gas
+        // console.log("05. gas left: %s", gasleft());
 
         // If user's deposit is an 'overstay', they retrieve 0 CLV
         if (CLVLoss > userDeposit) {
+            // console.log("06. gas left: %s", gasleft());
             CLVShare = 0;
+            // console.log("07. gas left: %s", gasleft());
         } else {
             CLVShare = userDeposit.sub(CLVLoss);
+            // console.log("08. gas left: %s", gasleft());
         }
-
+        // console.log("09. gas left: %s", gasleft());
         // Update deposit and snapshots
-        deposit[_address] = 0;
+        deposit[_address] = 0; // 5000 gas
+        // console.log("10. gas left: %s", gasleft());
 
-        snapshot[_address].CLV = S_CLV;
-        snapshot[_address].ETH = S_ETH;
-
-        emit UserDepositChanged(_address, deposit[_address]);
-        emit UserSnapshotUpdated(S_CLV, S_ETH);
+        snapshot[_address].CLV = S_CLV; // 21000 gas
+        // console.log("11. gas left: %s", gasleft());
+        snapshot[_address].ETH = S_ETH; // 21000 gas
+        // console.log("12. gas left: %s", gasleft());
+        emit UserDepositChanged(_address, deposit[_address]);  //2300 gas
+        // console.log("13. gas left: %s", gasleft());
+        emit UserSnapshotUpdated(S_CLV, S_ETH); //2300 gas
+        // console.log("14. gas left: %s", gasleft());
 
         // Send CLV to user and decrease CLV in StabilityPool
-        CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV()));
-        stabilityPool.decreaseCLV(CLVShare);
-        stabilityPool.decreaseTotalCLVDeposits(userDeposit);
-
+        CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV())); // 45000 gas
+        // console.log("15. gas left: %s", gasleft());
+        stabilityPool.decreaseCLV(CLVShare);  // 10500 gas
+        // console.log("16. gas left: %s", gasleft());
+        stabilityPool.decreaseTotalCLVDeposits(userDeposit); // 9500 gas
+        // console.log("17. gas left: %s", gasleft());
         // Pull ETHShare from StabilityPool, and send to CDP
-        stabilityPool.sendETH(address(this), ETHShare);
+        stabilityPool.sendETH(address(this), ETHShare); // 21000 gas
+        // console.log("18. gas left: %s", gasleft()); 
         //TODO: Potentially use getApproxHint() here
-        cdpManager.addColl.value(ETHShare)(_address, _address);
+        cdpManager.addColl.value(ETHShare)(_address, _address); // 341340 gas
+        // console.log("19. gas left: %s", gasleft());
         
-        uint[2] memory shares = [CLVShare, ETHShare];
+        uint[2] memory shares = [CLVShare, ETHShare]; // 151 gas
+        // console.log("20. gas left: %s", gasleft());
         return shares;
     }
 
@@ -434,8 +464,8 @@ contract PoolManager is Ownable, IPoolManager {
     /* Send ETHGain to user's address, and updates their deposit, 
     setting newDeposit = (oldDeposit - CLVLoss) + amount. */
     function provideToSP(uint _amount) external returns(bool) {
-        // uint price = priceFeed.getPrice();
-        // cdpManager.checkTCRAndSetRecoveryMode(price);
+        uint price = priceFeed.getPrice();
+        cdpManager.checkTCRAndSetRecoveryMode(price);
 
         address user = _msgSender();
         uint[2] memory returnedVals = retrieveToUser(user);
@@ -479,19 +509,25 @@ contract PoolManager is Ownable, IPoolManager {
     /* Transfer the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
     Applies their CLVLoss to the deposit. */
     function withdrawFromSPtoCDP(address _user) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
-        uint price = priceFeed.getPrice();
-        cdpManager.checkTCRAndSetRecoveryMode(price);
-
-        uint userDeposit = deposit[_user];
-        if (userDeposit == 0) { return false; }
+        // console.log("00. gas left: %s", gasleft());
+        uint price = priceFeed.getPrice();  //3500 gas
+        // console.log("01. gas left: %s", gasleft());
+        cdpManager.checkTCRAndSetRecoveryMode(price); // 18500 gas
+        // console.log("02. gas left: %s", gasleft());
+        uint userDeposit = deposit[_user]; // 900 gas
+        // console.log("03. gas left: %s", gasleft());
+        if (userDeposit == 0) { return false; } 
+        // console.log("04. gas left: %s", gasleft());
 
         // Retrieve all CLV to user's CLV balance, and ETH to their CDP
-        uint[2] memory returnedVals = retrieveToCDP(_user);
+        uint[2] memory returnedVals = retrieveToCDP(_user); // 660000 gas
+        // console.log("05. gas left: %s", gasleft());
 
         uint returnedCLV = returnedVals[0];
-
+        // console.log("06. gas left: %s", gasleft());
         // Update deposit, applying CLVLoss
-        depositCLV(_user, returnedCLV);
+        depositCLV(_user, returnedCLV); // 45000 gas
+        // console.log("07. gas left: %s", gasleft());
 
         return true;
     }
@@ -546,50 +582,75 @@ contract PoolManager is Ownable, IPoolManager {
     Only callable from close() and closeCDPs() functions in CDPManager */
     function offset(uint _debt, uint _coll) external payable onlyCDPManager returns (uint[2] memory) 
     {    
+        // console.log("00. gas left: %s", gasleft());
         uint[2] memory remainder;
-        uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
-        uint CLVinPool = stabilityPool.getCLV();
+        // console.log("01. gas left: %s", gasleft());
+        uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits(); // 3500 gas
+        // console.log("02. gas left: %s", gasleft());
+        uint CLVinPool = stabilityPool.getCLV(); // 3500 gas
+        // console.log("03. gas left: %s", gasleft());
         
         // When Stability Pool has no CLV or no deposits, return all debt and coll
         if (CLVinPool == 0 || totalCLVDeposits == 0 ) {
+            // console.log("04. gas left: %s", gasleft());
             remainder[0] = _debt;
+            // console.log("05. gas left: %s", gasleft());
             remainder[1] = _coll;
+            // console.log("06. gas left: %s", gasleft());
             return remainder;
+            // console.log("07. gas left: %s", gasleft());
         }
         
         // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
-        uint debtToOffset = DeciMath.getMin(_debt, CLVinPool);
+        uint debtToOffset = DeciMath.getMin(_debt, CLVinPool);  // 100 gas
+        // console.log("08. gas left: %s", gasleft());
+
         // Collateral to be added in proportion to the debt that is cancelled
         // uint debtRatio =  DeciMath.div_toDuint(debtToOffset, _debt);
         // uint collToAdd = DeciMath.mul_uintByDuint(_coll, debtRatio);
 
+
         int128 debtRatio = ABDKMath64x64.divu(debtToOffset, _debt);
+        // console.log("09. gas left: %s", gasleft());
         uint collToAdd = ABDKMath64x64.mulu(debtRatio, _coll);
+        // console.log("10. gas left: %s", gasleft());
         
         // Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool
         // uint CLVLossPerUnitStaked = DeciMath.div_toDuint(debtToOffset, totalCLVDeposits);
 
         uint CLVLossPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(debtToOffset, totalCLVDeposits), 1e18);
-        S_CLV = S_CLV.add(CLVLossPerUnitStaked);
-        emit S_CLVUpdated(S_CLV);
+        // console.log("11. gas left: %s", gasleft());
+        S_CLV = S_CLV.add(CLVLossPerUnitStaked);  // 6000 gas
+        // console.log("12. gas left: %s", gasleft());
+        emit S_CLVUpdated(S_CLV); // 1800 gas
+        // console.log("13. gas left: %s", gasleft());
         // Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool
         // uint ETHGainPerUnitStaked = DeciMath.div_toDuint(collToAdd, totalCLVDeposits);
         
         uint ETHGainPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(collToAdd, totalCLVDeposits), 1e18);
-        S_ETH = S_ETH.add(ETHGainPerUnitStaked);
-        emit S_ETHUpdated(S_ETH);
+        // console.log("14. gas left: %s", gasleft());
+        S_ETH = S_ETH.add(ETHGainPerUnitStaked); // 6000 gas
+        // console.log("15. gas left: %s", gasleft());
+        emit S_ETHUpdated(S_ETH); // 1800 gas
+        // console.log("16. gas left: %s", gasleft());
         // Cancel the liquidated CLV debt with the CLV in the stability pool
-        activePool.decreaseCLV(debtToOffset);  
-        stabilityPool.decreaseCLV(debtToOffset); 
+        activePool.decreaseCLV(debtToOffset);  // 5300 gas
+        // console.log("17. gas left: %s", gasleft());
+        stabilityPool.decreaseCLV(debtToOffset);  // 10500 gas
+        // console.log("18. gas left: %s", gasleft());
         // Send ETH from Active Pool to Stability Pool
-        activePool.sendETH(stabilityPoolAddress, collToAdd);  
+        activePool.sendETH(stabilityPoolAddress, collToAdd);   // 18500 gas
+        // console.log("19. gas left: %s", gasleft());
         
         // Burn the debt that was successfully offset
-        CLV.burn(stabilityPoolAddress, debtToOffset);
+        CLV.burn(stabilityPoolAddress, debtToOffset); // 22000 gas
+        // console.log("20. gas left: %s", gasleft());
         
         // Return the amount of debt & coll that could not be offset against the Stability Pool due to insufficiency
         remainder[0] = _debt.sub(debtToOffset);
+        // console.log("21. gas left: %s", gasleft());
         remainder[1] = _coll.sub(collToAdd);
+        // console.log("22. gas left: %s", gasleft());
         return remainder;
     }
 

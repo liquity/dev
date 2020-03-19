@@ -75,10 +75,12 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     function increaseTotalCLVDeposits(uint _amount) public onlyPoolManager () {
         totalCLVDeposits = totalCLVDeposits.add(_amount);
+
     }
 
     function decreaseTotalCLVDeposits(uint _amount) public onlyPoolManager () {
         totalCLVDeposits = totalCLVDeposits.sub(_amount);
+        // console.log("new totalCLVDeposits is %s", totalCLVDeposits);
     }
 
     /* Returns the raw ether balance at StabilityPool address.  

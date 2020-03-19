@@ -67,6 +67,7 @@ const connectContracts = async (contracts, registeredAddresses) => {
   await contracts.cdpManager.setPoolManager(registeredAddresses.PoolManager)
   await contracts.cdpManager.setPriceFeed(registeredAddresses.PriceFeed)
   await contracts.cdpManager.setActivePool(registeredAddresses.ActivePool)
+  await contracts.cdpManager.setDefaultPool(registeredAddresses.DefaultPool)
 
   // set PoolManager addr in the Pools
   await contracts.stabilityPool.setPoolManagerAddress(registeredAddresses.PoolManager)
