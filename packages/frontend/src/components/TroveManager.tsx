@@ -53,7 +53,9 @@ const getNewTroveAction = (): TroveAction => {
   return [
     `Open new Trove`,
     (liquity: Liquity, trove: Trove, price: Decimal) => {
-      return liquity.createTrove(trove, price);
+      return trove.debt.nonZero
+        ? liquity.createTrove(trove, price)
+        : liquity.depositEther(new Trove(), trove.collateral, price);
     }
   ];
 };
