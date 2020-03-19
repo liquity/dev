@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { theme } from "rimble-ui";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
 
-import { Liquity, Trove } from "@liquity/lib";
+import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { shortenAddress } from "../utils/shortenAddress";
 
@@ -23,11 +23,11 @@ const Table = styled.table<SpaceProps & LayoutProps>`
   }
 
   & tr td:nth-child(2) {
-    width: 48px;
+    width: 0;
   }
 
-  & tr td:nth-child(6) {
-    width: 48px;
+  & tr td:nth-child(7) {
+    width: 0;
   }
 `;
 
@@ -66,7 +66,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   price
 }) => {
   const [loading, setLoading] = useState(true);
-  const [troves, setTroves] = useState<[string, Trove | undefined][]>();
+  const [troves, setTroves] = useState<[string, Trove | undefined, StabilityDeposit][]>();
 
   const fetchRiskiestTroves = () => {
     let mounted = true;
@@ -133,6 +133,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
               <tr>
                 <th colSpan={2}>Owner</th>
                 <th>Collateral (ETH)</th>
+                <th>Gain (ETH)</th>
                 <th>Debt (QUI)</th>
                 <th>Coll. Ratio</th>
                 <th></th>
@@ -140,16 +141,23 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
             </thead>
             <tbody>
               {troves.map(
-                ([owner, trove]) =>
+                ([owner, trove, deposit]) =>
                   trove && (
                     <tr key={owner}>
                       <td>{shortenAddress(owner)}</td>
                       <td>
                         <CopyToClipboard text={owner}>
-                          <Button.Text mainColor="text" size="small" icon="ContentCopy" icononly />
+                          <Button.Text mainColor="text" size="small" icononly>
+                            <Icon name="ContentCopy" size="16px" />
+                          </Button.Text>
                         </CopyToClipboard>
                       </td>
                       <td>{trove.collateralAfterReward.prettify(4)}</td>
+                      <td>
+                        <Text color={deposit.pendingCollateralGain.gt(0) ? "success" : "text"}>
+                          {deposit.pendingCollateralGain.prettify(4)}
+                        </Text>
+                      </td>
                       <td>{trove.debtAfterReward.prettify()}</td>
                       <td>
                         {(collateralRatio => (
@@ -172,8 +180,16 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                             variant="danger"
                             icon="DeleteForever"
                             icononly
-                            disabled={trove.collateralRatioAfterRewardsAt(price).gte(1.1)}
-                            onClick={() => liquity.liquidate(owner)}
+                            disabled={trove.collateralAfterReward
+                              .add(deposit.pendingCollateralGain)
+                              .mulDiv(price, trove.debtAfterReward)
+                              .gte(1.1)}
+                            onClick={() =>
+                              liquity
+                                .liquidate(owner, trove, deposit, price)
+                                .then(tx => tx.wait())
+                                .then(fetchRiskiestTroves)
+                            }
                           />
                         </Tooltip>
                       </td>

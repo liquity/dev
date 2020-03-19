@@ -156,13 +156,24 @@ export class Decimal {
   }
 
   div(divider: Decimalish) {
-    return new Decimal(this.bigNumber.mul(Decimal.DIGITS).div(Decimal.from(divider).bigNumber));
+    divider = Decimal.from(divider);
+
+    if (divider.isZero) {
+      return Decimal.INFINITY;
+    }
+
+    return new Decimal(this.bigNumber.mul(Decimal.DIGITS).div(divider.bigNumber));
   }
 
   mulDiv(multiplier: Decimalish, divider: Decimalish) {
-    return new Decimal(
-      this.bigNumber.mul(Decimal.from(multiplier).bigNumber).div(Decimal.from(divider).bigNumber)
-    );
+    multiplier = Decimal.from(multiplier);
+    divider = Decimal.from(divider);
+
+    if (divider.isZero) {
+      return Decimal.INFINITY;
+    }
+
+    return new Decimal(this.bigNumber.mul(multiplier.bigNumber).div(divider.bigNumber));
   }
 
   get isZero() {

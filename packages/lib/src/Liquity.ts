@@ -60,9 +60,6 @@ interface Trovish {
 }
 
 const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
-  if (debt.isZero) {
-    return Decimal.INFINITY;
-  }
   return collateral.mulDiv(price, debt);
 };
 
@@ -464,8 +461,11 @@ export class Liquity {
     return new Pool({ activeCollateral, activeDebt, liquidatedCollateral, closedDebt });
   }
 
-  async liquidate(address: string) {
-    return this.cdpManager.liquidate(address, address);
+  async liquidate(address: string, trove: Trove, deposit: StabilityDeposit, price: Decimalish) {
+    return this.cdpManager.liquidate(
+      address,
+      await this.findHint(trove.addCollateral(deposit.pendingCollateralGain), price, address)
+    );
   }
 
   async liquidateMany(maximumNumberOfCDPsToLiquidate: BigNumberish) {
@@ -592,10 +592,17 @@ export class Liquity {
       throw new Error("numberOfTroves must be at least 1");
     }
 
-    const troves: Promise<[string, Trove | undefined]>[] = [];
+    const troves: Promise<[string, Trove | undefined, StabilityDeposit]>[] = [];
 
-    const getTroveWithAddress = (address: string): Promise<[string, Trove | undefined]> =>
-      this.getTrove(address).then(trove => [address, trove]);
+    const getTroveWithAddress = (address: string) =>
+      Promise.all<Trove | undefined, StabilityDeposit>([
+        this.getTrove(address),
+        this.getStabilityDeposit(address)
+      ]).then(([trove, deposit]): [string, Trove | undefined, StabilityDeposit] => [
+        address,
+        trove,
+        deposit
+      ]);
 
     let i = 0;
     let currentAddress = await this.sortedCDPs.getLast();
