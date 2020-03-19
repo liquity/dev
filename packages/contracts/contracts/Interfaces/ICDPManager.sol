@@ -19,19 +19,8 @@ interface ICDPManager {
 
     event CDPUpdated(address indexed _user, uint _debt, uint _coll);
 
-    event CDPClosed(address indexed _user);
-
-    event CollateralAdded(address indexed _user, uint _amountAdded);
-
-    event CollateralWithdrawn(address indexed _user, uint _amountWithdrawn);
-
-    event CLVWithdrawn(address indexed _user, uint _amountWithdrawn);
-
-    event CLVRepayed(address indexed _user, uint _amountRepayed);
-
-    event CollateralRedeemed(address indexed _user, uint exchangedCLV, uint redeemedETH);
-
     // --- Functions ---
+
     function setPoolManager(address _poolManagerAddress) external;
 
     function setPriceFeed(address _priceFeedAddress) external;
@@ -46,7 +35,7 @@ interface ICDPManager {
 
     function getCDPOwnersCount() external view returns(uint);
 
-    function getCurrentICR(address _user, uint price) external view returns(uint);
+    function getCurrentICR(address _user, uint _price) external view returns(uint);
 
     function getApproxHint(uint CR, uint numTrials) external view returns(address);
 
