@@ -1,6 +1,6 @@
 import { Signer } from "ethers";
 import { Provider } from "ethers/providers";
-import { bigNumberify, BigNumber, BigNumberish } from "ethers/utils";
+import { bigNumberify, hexStripZeros, BigNumber, BigNumberish } from "ethers/utils";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
@@ -464,7 +464,11 @@ export class Liquity {
     return new Pool({ activeCollateral, activeDebt, liquidatedCollateral, closedDebt });
   }
 
-  async liquidate(maximumNumberOfCDPsToLiquidate: BigNumberish) {
+  async liquidate(address: string) {
+    return this.cdpManager.liquidate(address, address);
+  }
+
+  async liquidateMany(maximumNumberOfCDPsToLiquidate: BigNumberish) {
     return this.cdpManager.liquidateCDPs(maximumNumberOfCDPsToLiquidate);
   }
 
@@ -556,7 +560,7 @@ export class Liquity {
   async findLastTroveAboveMinimumCollateralRatio() {
     const lastTroveAddress = await this.sortedCDPs.getLast();
 
-    if (lastTroveAddress === "0x0") {
+    if (hexStripZeros(lastTroveAddress) === "0x0") {
       // No Troves yet
       return undefined;
     }
@@ -582,5 +586,30 @@ export class Liquity {
       // trying to exchange?
       throw new Error("There are no Troves");
     }
+  }
+  async getLastTroves(numberOfTroves: number) {
+    if (numberOfTroves < 1) {
+      throw new Error("numberOfTroves must be at least 1");
+    }
+
+    const troves: Promise<[string, Trove | undefined]>[] = [];
+
+    const getTroveWithAddress = (address: string): Promise<[string, Trove | undefined]> =>
+      this.getTrove(address).then(trove => [address, trove]);
+
+    let i = 0;
+    let currentAddress = await this.sortedCDPs.getLast();
+
+    while (hexStripZeros(currentAddress) !== "0x0") {
+      troves.push(getTroveWithAddress(currentAddress));
+
+      if (++i === numberOfTroves) {
+        break;
+      }
+
+      currentAddress = await this.sortedCDPs.getPrev(currentAddress);
+    }
+
+    return Promise.all(troves);
   }
 }

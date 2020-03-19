@@ -45,7 +45,7 @@ export const DeveloperTools: React.FC<DeveloperToolsProps> = ({ liquity, price }
           onClick={() => {
             const numberOfTrovesToLiquidate = numberOfTrovesToLiquidateInputRef.current?.value;
             if (numberOfTrovesToLiquidate) {
-              liquity.liquidate(parseInt(numberOfTrovesToLiquidate));
+              liquity.liquidateMany(parseInt(numberOfTrovesToLiquidate));
             }
           }}
         >

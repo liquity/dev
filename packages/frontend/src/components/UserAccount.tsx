@@ -2,14 +2,13 @@ import React from "react";
 import { Text, Flex, Box, Heading, Icon } from "rimble-ui";
 
 import { Decimal } from "@liquity/lib/dist/utils";
+import { shortenAddress } from "../utils/shortenAddress";
 
 type UserAccountProps = {
   account: string;
   etherBalance: Decimal;
   quiBalance: Decimal;
 };
-
-const shortenAddress = (address: string) => address.substr(0, 6) + "..." + address.substr(-4);
 
 export const UserAccount: React.FC<UserAccountProps> = ({ account, etherBalance, quiBalance }) => {
   return (

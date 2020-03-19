@@ -11,6 +11,7 @@ import { UserAccount } from "./components/UserAccount";
 import { SystemStats } from "./components/SystemStats";
 import { DeveloperTools } from "./components/DeveloperTools";
 import { StabilityDepositManager } from "./components/StabilityDepositManager";
+import { RiskiestTroves } from "./components/RiskiestTroves";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
@@ -81,21 +82,24 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   return (
     <>
       <UserAccount {...{ account, etherBalance, quiBalance }} />
-      <Flex flexWrap="wrap" justifyItems="center" width={[1, 0.6]} mx="auto">
-        <Box mx="auto">
-          {account === deployerAddress ? (
-            <DeveloperTools {...{ liquity, price }} />
-          ) : (
-            <>
-              <TroveManager {...{ liquity, trove, price, pool }} />
-              <StabilityDepositManager {...{ liquity, deposit, trove, price }} />
-            </>
-          )}
-        </Box>
-        <Box mx="auto">
-          <SystemStats {...{ numberOfTroves, price, pool, quiInStabilityPool }} />
-        </Box>
-      </Flex>
+      <Box width={[1, 0.6]} mx="auto">
+        <Flex flexWrap="wrap" justifyItems="center">
+          <Box px={3}>
+            {account === deployerAddress ? (
+              <DeveloperTools {...{ liquity, price }} />
+            ) : (
+              <>
+                <TroveManager {...{ liquity, trove, price, pool }} />
+                <StabilityDepositManager {...{ liquity, deposit, trove, price }} />
+              </>
+            )}
+          </Box>
+          <Box px={3}>
+            <SystemStats {...{ numberOfTroves, price, pool, quiInStabilityPool }} />
+          </Box>
+        </Flex>
+        <RiskiestTroves numberOfTroves={10} {...{ liquity, price }} />
+      </Box>
     </>
   );
 };
@@ -109,7 +113,7 @@ const App = () => {
       width={1}
       minHeight="100vh"
     >
-      <Loader m={2} size="32px" color="near-black" />
+      <Loader m={2} size="32px" color="text" />
       <Heading>Loading...</Heading>
     </Flex>
   );
