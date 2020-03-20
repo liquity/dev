@@ -9,6 +9,9 @@ const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
+const testHelpers = require("../utils/testHelpers.js")
+const getDifference = testHelpers.getDifference
+
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
 const setNameRegistry = deploymentHelpers.setNameRegistry
@@ -30,6 +33,7 @@ contract('CDPManager', async accounts => {
   let functionCaller;
 
   let numAccounts;
+  let price;
 
   /* Open a CDP for each account. CLV debt is 200 CLV each, with collateral beginning at 
   1.5 ether, and rising by 0.01 ether per CDP.  Hence, the ICR of account (i + 1) is always 1% greater than the ICR of account i. 
@@ -77,7 +81,6 @@ contract('CDPManager', async accounts => {
   }
 
   before(async () => {
-    
     priceFeed = await PriceFeed.new()
     clvToken = await CLVToken.new()
     poolManager = await PoolManager.new()
@@ -119,33 +122,35 @@ contract('CDPManager', async accounts => {
     await connectContracts(contracts, registeredAddresses)
 
     numAccounts = 10
+    price = await priceFeed.getPrice()
+
     await makeCDPsInSequence(accounts, numAccounts) 
     // await makeCDPsInParallel(accounts, numAccounts)  
   })
 
   it("setup: makes accounts with ICRs increasing by 1% consecutively", async () => {
     // check first 10 accounts
-    const ICR_0 = (await cdpManager.getCurrentICR(accounts[0])).toString()
-    const ICR_1 = (await cdpManager.getCurrentICR(accounts[1])).toString()
-    const ICR_2 = (await cdpManager.getCurrentICR(accounts[2])).toString()
-    const ICR_3 = (await cdpManager.getCurrentICR(accounts[3])).toString()
-    const ICR_4 = (await cdpManager.getCurrentICR(accounts[4])).toString()
-    const ICR_5 = (await cdpManager.getCurrentICR(accounts[5])).toString()
-    const ICR_6 = (await cdpManager.getCurrentICR(accounts[6])).toString()
-    const ICR_7 = (await cdpManager.getCurrentICR(accounts[7])).toString()
-    const ICR_8 = (await cdpManager.getCurrentICR(accounts[8])).toString()
-    const ICR_9 = (await cdpManager.getCurrentICR(accounts[9])).toString()
+    const ICR_0 = await cdpManager.getCurrentICR(accounts[0], price)
+    const ICR_1 = await cdpManager.getCurrentICR(accounts[1], price)
+    const ICR_2 = await cdpManager.getCurrentICR(accounts[2], price)
+    const ICR_3 = await cdpManager.getCurrentICR(accounts[3], price)
+    const ICR_4 = await cdpManager.getCurrentICR(accounts[4], price)
+    const ICR_5 = await cdpManager.getCurrentICR(accounts[5], price)
+    const ICR_6 = await cdpManager.getCurrentICR(accounts[6], price)
+    const ICR_7 = await cdpManager.getCurrentICR(accounts[7], price)
+    const ICR_8 = await cdpManager.getCurrentICR(accounts[8], price)
+    const ICR_9 = await cdpManager.getCurrentICR(accounts[9], price)
 
-    assert.equal(ICR_0, '2000000000000000000')
-    assert.equal(ICR_1, '2010000000000000000')
-    assert.equal(ICR_2, '2020000000000000000')
-    assert.equal(ICR_3, '2030000000000000000')
-    assert.equal(ICR_4, '2040000000000000000')
-    assert.equal(ICR_5, '2050000000000000000')
-    assert.equal(ICR_6, '2060000000000000000')
-    assert.equal(ICR_7, '2070000000000000000')
-    assert.equal(ICR_8, '2080000000000000000')
-    assert.equal(ICR_9, '2090000000000000000')
+    assert.isAtMost(getDifference(ICR_0, '2000000000000000000'), 100)
+    assert.isAtMost(getDifference(ICR_1, '2010000000000000000'), 100)
+    assert.isAtMost(getDifference(ICR_2, '2020000000000000000'), 100)
+    assert.isAtMost(getDifference(ICR_3, '2030000000000000000'), 100)
+    assert.isAtMost(getDifference(ICR_4, '2040000000000000000'), 100)
+    assert.isAtMost(getDifference(ICR_5, '2050000000000000000'), 100)
+    assert.isAtMost(getDifference(ICR_6, '2060000000000000000'), 100)
+    assert.isAtMost(getDifference(ICR_7, '2070000000000000000'), 100)
+    assert.isAtMost(getDifference(ICR_8, '2080000000000000000'), 100)
+    assert.isAtMost(getDifference(ICR_9, '2090000000000000000'), 100)
   })
 
   it("getApproxHint(): returns the address of a CDP within sqrt(length) positions of the correct insert position", async () => {
@@ -161,7 +166,7 @@ contract('CDPManager', async accounts => {
 
     // const hintAddress_250 = await functionCaller.cdpManager_getApproxHint(CR_250, sqrtLength * 10)
     const hintAddress_250 = await cdpManager.getApproxHint(CR_250, sqrtLength * 10)
-    const ICR_hintAddress_250 = await cdpManager.getCurrentICR(hintAddress_250)
+    const ICR_hintAddress_250 = await cdpManager.getCurrentICR(hintAddress_250, price)
     const ICRPercent_hintAddress_250 = Number(web3.utils.fromWei(ICR_hintAddress_250, 'ether')) * 100
 
     // check the hint position is at most sqrtLength positions away from the correct position
@@ -174,7 +179,7 @@ contract('CDPManager', async accounts => {
 
     // const hintAddress_287 = await functionCaller.cdpManager_getApproxHint(CR_287, sqrtLength * 10)
     const hintAddress_287 = await cdpManager.getApproxHint(CR_287, sqrtLength * 10)
-    const ICR_hintAddress_287 = await cdpManager.getCurrentICR(hintAddress_287)
+    const ICR_hintAddress_287 = await cdpManager.getCurrentICR(hintAddress_287, price)
     const ICRPercent_hintAddress_287 = Number(web3.utils.fromWei(ICR_hintAddress_287, 'ether')) * 100
     
     // check the hint position is at most sqrtLength positions away from the correct position
@@ -187,7 +192,7 @@ contract('CDPManager', async accounts => {
 
     // const hintAddress_213 = await functionCaller.cdpManager_getApproxHint(CR_213, sqrtLength * 10)
     const hintAddress_213 = await cdpManager.getApproxHint(CR_213, sqrtLength * 10)
-    const ICR_hintAddress_213 = await cdpManager.getCurrentICR(hintAddress_213)
+    const ICR_hintAddress_213 = await cdpManager.getCurrentICR(hintAddress_213, price)
     const ICRPercent_hintAddress_213 = Number(web3.utils.fromWei(ICR_hintAddress_213, 'ether')) * 100
     
     // check the hint position is at most sqrtLength positions away from the correct position
@@ -200,7 +205,7 @@ contract('CDPManager', async accounts => {
  
     //  const hintAddress_201 = await functionCaller.cdpManager_getApproxHint(CR_201, sqrtLength * 10)
      const hintAddress_201 = await cdpManager.getApproxHint(CR_201, sqrtLength * 10)
-     const ICR_hintAddress_201 = await cdpManager.getCurrentICR(hintAddress_201)
+     const ICR_hintAddress_201 = await cdpManager.getCurrentICR(hintAddress_201, price)
      const ICRPercent_hintAddress_201 = Number(web3.utils.fromWei(ICR_hintAddress_201, 'ether')) * 100
      
      // check the hint position is at most sqrtLength positions away from the correct position
@@ -225,7 +230,7 @@ contract('CDPManager', async accounts => {
       console.log(`ICR is ${ICR}`)
   
       const hintAddress = await cdpManager.getApproxHint(ICR, sqrtLength * 10)
-      const ICR_hintAddress = await cdpManager.getCurrentICR(hintAddress)
+      const ICR_hintAddress = await cdpManager.getCurrentICR(hintAddress, price)
       const ICRPercent_hintAddress = Number(web3.utils.fromWei(ICR_hintAddress, 'ether')) * 100
       
       // check the hint position is at most sqrtLength positions away from the correct position
@@ -243,11 +248,11 @@ contract('CDPManager', async accounts => {
     // const hintAddress_Max = await functionCaller.cdpManager_getApproxHint(CR_Max, sqrtLength * 10)
     const hintAddress_Max = await cdpManager.getApproxHint(CR_Max, sqrtLength * 10)
 
-    const ICR_hintAddress_Max = await cdpManager.getCurrentICR(hintAddress_Max)
+    const ICR_hintAddress_Max = await cdpManager.getCurrentICR(hintAddress_Max, price)
     const ICRPercent_hintAddress_Max = Number(web3.utils.fromWei(ICR_hintAddress_Max, 'ether')) * 100
 
      const firstCDP = await sortedCDPs.getFirst()
-     const ICR_FirstCDP = await cdpManager.getCurrentICR(firstCDP)
+     const ICR_FirstCDP = await cdpManager.getCurrentICR(firstCDP, price)
      const ICRPercent_FirstCDP = Number(web3.utils.fromWei(ICR_FirstCDP, 'ether')) * 100
  
      // check the hint position is at most sqrtLength positions away from the correct position
@@ -263,11 +268,11 @@ contract('CDPManager', async accounts => {
 
     //  const hintAddress_Min = await functionCaller.cdpManager_getApproxHint(CR_Min, sqrtLength * 10)
     const hintAddress_Min = await cdpManager.getApproxHint(CR_Min, sqrtLength * 10)
-    const ICR_hintAddress_Min = await cdpManager.getCurrentICR(hintAddress_Min)
+    const ICR_hintAddress_Min = await cdpManager.getCurrentICR(hintAddress_Min, price)
     const ICRPercent_hintAddress_Min = Number(web3.utils.fromWei(ICR_hintAddress_Min, 'ether')) * 100
 
      const lastCDP = await sortedCDPs.getLast()
-     const ICR_LastCDP = await cdpManager.getCurrentICR(lastCDP)
+     const ICR_LastCDP = await cdpManager.getCurrentICR(lastCDP, price)
      const ICRPercent_LastCDP = Number(web3.utils.fromWei(ICR_LastCDP, 'ether')) * 100
  
      // check the hint position is at most sqrtLength positions away from the correct position

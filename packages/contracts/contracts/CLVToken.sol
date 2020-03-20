@@ -38,26 +38,22 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     }
 
     function mint(address _account, uint256 _amount) public onlyPoolManager returns (bool) {
-        _mint(_account, _amount);
-        emit CLVTokenBalanceUpdated(_account, _amount);
+        _mint(_account, _amount); // 32000 gas
         return true;
     }
     
     function burn(address _account, uint256 _amount) public onlyPoolManager returns (bool) {
-        _burn(_account, _amount);
-         emit CLVTokenBalanceUpdated(_account, _amount);
+        _burn(_account, _amount); // 17000 gas
         return true;
     }
     
     function sendToPool(address _sender,  address poolAddress, uint256 _amount) public onlyPoolManager returns (bool) {
         _transfer(_sender, poolAddress, _amount);
-         emit CLVTokenBalanceUpdated(poolAddress, _amount);
         return true;
     }
     
     function returnFromPool(address poolAddress, address user, uint256 _amount ) public onlyPoolManager returns (bool) {
         _transfer(poolAddress, user, _amount);
-        emit CLVTokenBalanceUpdated(poolAddress, _amount);
         return true;
     }
 
@@ -244,11 +240,15 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      * - `account` must have at least `amount` tokens.
      */
     function _burn(address account, uint256 amount) internal {
-        require(account != address(0), "ERC20: burn from the zero address");
-
-        clvTokenData.subFromBalance(account, amount);
-        _totalSupply = _totalSupply.sub(amount);
-        emit Transfer(account, address(0), amount);
+        // console.log("00. gas left: %s", gasleft());
+        require(account != address(0), "ERC20: burn from the zero address");  // 38 gas
+        // console.log("01. gas left: %s", gasleft());
+        clvTokenData.subFromBalance(account, amount);  // 9600 gas
+        // console.log("02. gas left: %s", gasleft());
+        _totalSupply = _totalSupply.sub(amount);  // 6000 gas 
+        // console.log("03. gas left: %s", gasleft());
+        emit Transfer(account, address(0), amount); // 1833 gas
+        // console.log("04. gas left: %s", gasleft());
     }
 
     /**

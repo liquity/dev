@@ -13,6 +13,7 @@ const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const DeciMath = artifacts.require("DeciMath")
+const ABDKMath64x64 = artifacts.require("ABDKMath64x64")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const deploymentHelpers = require("../../utils/deploymentHelpers.js")
 
@@ -20,7 +21,6 @@ const getAddresses = deploymentHelpers.getAddresses
 const setNameRegistry = deploymentHelpers.setNameRegistry
 const connectContracts = deploymentHelpers.connectContracts
 const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
-
 
 contract('Gas cost tests', async accounts => {
 
@@ -34,18 +34,26 @@ contract('Gas cost tests', async accounts => {
   const _100_Ether = web3.utils.toWei('100', 'ether')
   const _200_Ether = web3.utils.toWei('200', 'ether')
   
+  const _1e18 = web3.utils.toWei('1', 'ether')
   const _30e18 = web3.utils.toWei('30', 'ether')
   const _50e18 = web3.utils.toWei('50', 'ether')
   const _150e18 = web3.utils.toWei('150', 'ether')
 
+  const _80e18 =  web3.utils.toWei('80', 'ether')
   const _90e18 =  web3.utils.toWei('90', 'ether')
 
   const _100e18 = web3.utils.toWei('100', 'ether')
+  const _101e18 = web3.utils.toWei('101', 'ether')
   const _180e18 = web3.utils.toWei('180', 'ether')
+  const _200e18 = web3.utils.toWei('180', 'ether')
+  const _360e18 = web3.utils.toWei('360', 'ether')
+  const _450e18 = web3.utils.toWei('450', 'ether')
   const _500e18 = web3.utils.toWei('500', 'ether')
   const _900e18 = web3.utils.toWei('900', 'ether')
   const _1000e18 = web3.utils.toWei('1000', 'ether')
   const _1500e18 = web3.utils.toWei('1500', 'ether')
+  const _1700e18 = web3.utils.toWei('1700', 'ether')
+  const _1800e18 = web3.utils.toWei('1800', 'ether')
   const _2000e18 = web3.utils.toWei('2000', 'ether')
 
   const [owner] = accounts;
@@ -72,10 +80,9 @@ contract('Gas cost tests', async accounts => {
 
   before(async () => {
     const deciMath = await DeciMath.new()
+    const abdkMath = await ABDKMath64x64.new()
     DeciMath.setAsDeployed(deciMath)
-    CDPManager.link(deciMath)
-    PoolManager.link(deciMath)
-    FunctionCaller.link(deciMath)
+    ABDKMath64x64.setAsDeployed(abdkMath)
   })
 
   beforeEach(async () => {
@@ -128,6 +135,12 @@ contract('Gas cost tests', async accounts => {
   const randAmountInWei = (min, max) => {
     const amount = Math.random() * (max - min) + min;
     const amountInWei = web3.utils.toWei(amount.toString(), 'ether')
+    return amountInWei
+  }
+
+  const randAmountInGwei = (min, max) => {
+    const amount = Math.floor(Math.random() * (max - min) + min);
+    const amountInWei = web3.utils.toWei(amount.toString(), 'gwei')
     return amountInWei
   }
 
@@ -298,9 +311,11 @@ contract('Gas cost tests', async accounts => {
 
   const getCurrentICR_allAccounts = async (accounts, cdpManager) => {
     const gasCostList = []
+    const price = await priceFeed.getPrice()
+
     for (const account of accounts) {
-      const tx = await functionCaller.cdpManager_getCurrentICR(account)
-      const gas = gasUsed(tx)
+      const tx = await functionCaller.cdpManager_getCurrentICR(account, price)
+      const gas = gasUsed(tx) - 21000
       gasCostList.push(gas)
     }
     return getGasMetrics(gasCostList)
@@ -316,6 +331,7 @@ contract('Gas cost tests', async accounts => {
     const gasCostList = []
     for (const account of accounts) {
       const randCLVAmount = randAmountInWei(min, max)
+      // console.log("redeem starts here")
       const tx = await cdpManager.redeemCollateral(randCLVAmount, account, { from: account })
      
       const gas = gasUsed(tx)
@@ -404,8 +420,43 @@ contract('Gas cost tests', async accounts => {
 
   // --- openLoan() ---
 
-  it.only("", async () => {
+  it("", async () => {
+    const message = 'openLoan(), single account, 0 existing CDPs in system. Adds 10 ether and issues 100 CLV'
+    const tx = await cdpManager.openLoan(_100e18, accounts[2], {from: accounts[2], value: _10_Ether})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => {
+    const message = 'openLoan(), single account, 1 existing CDP in system. Adds 10 ether and issues 100 CLV'
+    await cdpManager.openLoan(_100e18, accounts[1],  {from: accounts[1], value: _10_Ether})
+
+    const tx = await cdpManager.openLoan(_100e18, accounts[2], {from: accounts[2], value: _10_Ether})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => {
+    const message = 'openLoan(), single account, Inserts between 2 existing CDs in system. Adds 10 ether and issues 80 CLV. '
+
+    await cdpManager.openLoan(_100e18, accounts[1],  {from: accounts[1], value: _10_Ether})
+    await cdpManager.openLoan(_50e18, accounts[2],  {from: accounts[2], value: _10_Ether})
+
+    const tx = await cdpManager.openLoan(_80e18, accounts[3], {from: accounts[3], value: _10_Ether})
+
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => {
     const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues 100 CLV'
+  
     const amountETH = _10_Ether
     const amountCLV = _100e18
     const gasResults = await openLoan_allAccounts(_10_Accounts, cdpManager, amountETH, amountCLV)
@@ -415,7 +466,7 @@ contract('Gas cost tests', async accounts => {
     appendData(gasResults, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues less CLV than the previous one'
     const amountETH = _10_Ether
     const amountCLV = 200
@@ -426,7 +477,7 @@ contract('Gas cost tests', async accounts => {
     appendData(gasResults, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'openLoan(), 10 accounts, each account adds 20 ether and issues less CLV than the previous one'
     const amountETH = _20_Ether
     const amountCLV = 200
@@ -438,6 +489,50 @@ contract('Gas cost tests', async accounts => {
   })
 
   // --- addColl() ---
+
+  it("", async () => {
+    const message = 'addColl(), first deposit, 0 CDPs in system. Adds 10 ether'
+  
+    const tx = await cdpManager.addColl(accounts[2], accounts[2], {from: accounts[2], value: _10_Ether})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => {
+    const message = 'addColl(), first deposit,  10 existing CDP in system. Adds 10 ether'
+    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+
+    const tx = await cdpManager.addColl(accounts[2], accounts[2], {from: accounts[2], value: _10_Ether})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => {
+    const message = 'addColl(), second deposit, 0 CDPs in system. Adds 10 ether'
+  
+    await cdpManager.addColl(accounts[2], accounts[2], {from: accounts[2], value: _10_Ether})
+    const tx = await cdpManager.addColl(accounts[2], accounts[2], {from: accounts[2], value: _10_Ether})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => {
+    const message = 'addColl(), second deposit, 10 existing CDPs in system. Adds 10 ether'
+     await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+
+    await cdpManager.addColl(accounts[99], accounts[99], {from: accounts[99], value: _10_Ether})
+    const tx = await cdpManager.addColl(accounts[99], accounts[99], {from: accounts[99], value: _10_Ether})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
 
   it("", async () => {
     const message = 'addColl(), first deposit, 10 accounts, each account adds 10 ether'
@@ -483,6 +578,17 @@ contract('Gas cost tests', async accounts => {
   })
 
   // --- withdrawColl() ---
+
+  it("", async () => {
+    const message = 'withdrawColl(), first withdrawal. 10 accounts in system. 1 account withdraws 5 ether'
+    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+
+    const tx = await cdpManager.withdrawColl(_5_Ether, accounts[9], {from: accounts[9]})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
 
   it("", async () => {
     const message = 'withdrawColl(), first withdrawal, 10 accounts, each account withdraws 5 ether'
@@ -540,6 +646,18 @@ contract('Gas cost tests', async accounts => {
 
     appendData(gasResults, message, data)
   })
+
+  it("", async () => {
+    const message = 'withdrawColl(), first withdrawal. 10 accounts in system. 1 account withdraws 10 ether, leaving CDP empty'
+    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+
+    const tx = await cdpManager.withdrawColl(_10_Ether, accounts[9], {from: accounts[9]})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
 
   it("", async () => {
     const message = 'withdrawColl(), second withdrawal, 10 accounts, each account withdraws 5 ether, leaving CDP empty'
@@ -674,9 +792,10 @@ it("", async () => {
   const randCLVAmount = randAmountInWei(1,180)
   await cdpManager.withdrawCLV(randCLVAmount, accounts[1], {from: accounts[1]})
 
-  const tx = await functionCaller.cdpManager_getCurrentICR(accounts[1])
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.cdpManager_getCurrentICR(accounts[1], price)
 
-  const gas = gasUsed(tx)
+  const gas = gasUsed(tx) - 21000
   logGas(gas, message)
 })
 
@@ -726,20 +845,143 @@ it("", async () => {
   appendData(gasResults, message, data)
 })
 
-// // --- redeemCollateral() ---
-  it("", async () => { 
-    const message = 'redeemCollateral(), redeems 100 CLV, redemption hits 1 CDP'
-    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
-    await withdrawCLV_allAccounts(_10_Accounts, cdpManager, _100e18)
+// --- getCurrentICR() with pending distribution rewards ---
 
-    const gas = await redeemCollateral(accounts[9], cdpManager, _50e18)
+it("", async () => {
+  const message = 'single getCurrentICR() call, WITH pending rewards'
+  
+  await cdpManager.addColl(accounts[1], accounts[1], {from: accounts[1], value: _10_Ether})
+  const randCLVAmount = randAmountInWei(1,180)
+  await cdpManager.withdrawCLV(randCLVAmount, accounts[1], {from: accounts[1]})
+
+   // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+   await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+   await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+
+    // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+   await priceFeed.setPrice(_100e18)
+   await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.cdpManager_getCurrentICR(accounts[1], price)
+
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it("", async () => {
+  const message = 'getCurrentICR(), new CDPs with 10 ether and no withdrawals,  WITH pending rewards'
+  await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+
+   // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+   await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+   await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+
+    // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+   await priceFeed.setPrice(_100e18)
+   await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+
+  const gasResults = await getCurrentICR_allAccounts(_10_Accounts, cdpManager)
+  logGasMetrics(gasResults, message)
+  logAllGasCosts(gasResults)
+
+  appendData(gasResults, message, data)
+})
+
+it("", async () => {
+  const message = 'getCurrentICR(), CDPs with 10 ether and 100 CLV withdrawn, WITH pending rewards'
+  await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+  await withdrawCLV_allAccounts(_10_Accounts, cdpManager, _100e18)
+
+   // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+   await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+   await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+
+    // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+   await priceFeed.setPrice(_100e18)
+   await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+  
+  const gasResults = await getCurrentICR_allAccounts(_10_Accounts, cdpManager)
+  logGasMetrics(gasResults, message)
+  logAllGasCosts(gasResults)
+
+  appendData(gasResults, message, data)
+})
+
+it("", async () => {
+  const message = 'getCurrentICR(), CDPs with 10 ether and random CLV amount withdrawn, WITH pending rewards'
+  await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+  await withdrawCLV_allAccounts_randomAmount(1, 1800, _10_Accounts, cdpManager)
+
+   // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+   await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+   await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+
+    // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+   await priceFeed.setPrice(_100e18)
+   await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+  
+  const gasResults = await getCurrentICR_allAccounts(_10_Accounts, cdpManager)
+  logGasMetrics(gasResults, message)
+  logAllGasCosts(gasResults)
+
+  appendData(gasResults, message, data)
+})
+
+ // --- redeemCollateral() ---
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeems 50 CLV, redemption hits 1 CDP. One account in system, partial redemption'
+    await addColl_allAccounts([accounts[0]], cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts([accounts[0]], cdpManager, _100e18)
+    const gas = await redeemCollateral(accounts[0], cdpManager, _50e18)
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
   })
 
   it("", async () => { 
-    const message = 'redeemCollateral(), redeemed 500 CLV, redemption hits 5 CDPs'
+    const message = 'redeemCollateral(), redeems 50 CLV, redemption hits 1 CDP. No pending rewards. 3 accounts in system, partial redemption'
+    // 3 accounts add coll
+    await addColl_allAccounts(accounts.slice(0,3), cdpManager, _10_Ether)
+    // 3 accounts withdraw successively less CLV
+    await cdpManager.withdrawCLV(_100e18, accounts[0], {from: accounts[0]})
+    await cdpManager.withdrawCLV(_90e18, accounts[1], {from: accounts[1]})
+    await cdpManager.withdrawCLV(_80e18, accounts[2], {from: accounts[2]})
+    
+    console.log("acct 2 in list:" + (await sortedCDPs.contains(accounts[2])))
+    /* Account 2 redeems 50 CLV. It is redeemed from account 0's CDP, 
+    leaving the CDP active with 30 CLV and ((200 *10 - 50 ) / 200 ) = 9.75 ETH. 
+    
+    It's ICR jumps from 2500% to 6500% and it is reinserted at the top of the list.
+    */
+
+    const gas = await redeemCollateral(accounts[2], cdpManager, _50e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeemed 101 CLV, redemption hits 2 CDPs, last redemption is partial'
+    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts(_10_Accounts, cdpManager, _100e18)
+
+    // Whale adds 200 ether, withdraws 500 CLV, redeems 101 CLV
+    await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
+    await cdpManager.withdrawCLV(_500e18, accounts[9], { from: accounts[9]})
+    
+    console.log("acct 9 in list:" + (await sortedCDPs.contains(accounts[9])))
+
+    const gas = await redeemCollateral(accounts[9], cdpManager, _101e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeemed 500 CLV, redemption hits 5 CDPs, all full redemptions'
     await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
     await withdrawCLV_allAccounts(_10_Accounts, cdpManager, _100e18)
 
@@ -747,6 +989,20 @@ it("", async () => {
     await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
     await cdpManager.withdrawCLV(_500e18, accounts[9], { from: accounts[9]})
     const gas = await redeemCollateral(accounts[9], cdpManager, _500e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeemed 450 CLV, redemption hits 5 CDPs,  last redemption is partial (50 of 100 CLV)'
+    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts(_10_Accounts, cdpManager, _100e18)
+
+    // Whale adds 200 ether, withdraws 500 CLV, redeems 500 CLV
+    await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
+    await cdpManager.withdrawCLV(_450e18, accounts[9], { from: accounts[9]})
+    const gas = await redeemCollateral(accounts[9], cdpManager, _450e18)
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
@@ -806,6 +1062,170 @@ it("", async () => {
     appendData(gasResults, message, data)
   })
   
+  // --- redeemCollateral(), with pending redistribution rewards --- 
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeems 50 CLV, redemption hits 1 CDP, WITH pending rewards. One account in system'
+    await cdpManager.addColl(accounts[1], accounts[1], {from: accounts[1], value: _10_Ether})
+    await cdpManager.withdrawCLV(_100e18, accounts[1], { from: accounts[1]})
+
+    // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+    await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+    await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+
+    // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+    await priceFeed.setPrice(_100e18)
+    await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+
+    const tx = await cdpManager.redeemCollateral( _50e18, accounts[1], {from: accounts[1]})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeems 50 CLV, redemption hits 1 CDP. WITH pending rewards. 3 accounts in system.'
+    // 3 accounts add coll
+    await addColl_allAccounts(accounts.slice(0,3), cdpManager, _10_Ether)
+    // 3 accounts withdraw successively less CLV
+    await cdpManager.withdrawCLV(_100e18, accounts[0], {from: accounts[0]})
+    await cdpManager.withdrawCLV(_90e18, accounts[1], {from: accounts[1]})
+    await cdpManager.withdrawCLV(_80e18, accounts[2], {from: accounts[2]})
+    
+    // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+    await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+    await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+
+    // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+    await priceFeed.setPrice(_100e18)
+    await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+
+    /* Account 2 redeems 50 CLV. It is redeemed from account 0's CDP, 
+    leaving the CDP active with 30 CLV and ((200 *10 - 50 ) / 200 ) = 9.75 ETH. 
+    
+    It's ICR jumps from 2500% to 6500% and it is reinserted at the top of the list.
+    */
+
+    const gas = await redeemCollateral(accounts[2], cdpManager, _50e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeemed 500 CLV, WITH pending rewards, redemption hits 5 CDPs, WITH pending rewards'
+    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts(_10_Accounts, cdpManager, _100e18)
+
+    // Whale adds 200 ether, withdraws 500 CLV, redeems 500 CLV
+    await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
+    await cdpManager.withdrawCLV(_500e18, accounts[9], { from: accounts[9]})
+
+    // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+    await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+    await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+
+     // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+    await priceFeed.setPrice(_100e18)
+    await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+
+    const gas = await redeemCollateral(accounts[9], cdpManager, _500e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeemed 1000 CLV, WITH pending rewards, redemption hits 10 CDPs, WITH pending rewards'
+    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts(_10_Accounts, cdpManager, _100e18)
+
+    // Whale adds 200 ether, withdraws 500 CLV, redeems 500 CLV
+    await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
+    await cdpManager.withdrawCLV(_1000e18, accounts[9], { from: accounts[9]})
+
+     // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+     await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+     await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+ 
+      // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+     await priceFeed.setPrice(_100e18)
+     await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+
+    const gas = await redeemCollateral(accounts[9], cdpManager, _1000e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeemed 1500 CLV, WITH pending rewards, redemption hits 15 CDPs, WITH pending rewards'
+    await addColl_allAccounts(_20_Accounts, cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts(_20_Accounts, cdpManager, _100e18)
+
+    // Whale adds 200 ether, withdraws 1500 CLV, redeems 1500 CLV
+    await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
+    await cdpManager.withdrawCLV(_1500e18, accounts[9], { from: accounts[9]})
+
+    //  // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+     await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+     await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+ 
+      // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+     await priceFeed.setPrice(_100e18)
+     await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+
+    const gas = await redeemCollateral(accounts[9], cdpManager, _1500e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(), redeemed 2000 CLV, WITH pending rewards, redemption hits 20 CDPs, WITH pending rewards'
+    await addColl_allAccounts(_30_Accounts, cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts(_30_Accounts, cdpManager, _100e18)
+
+    // Whale adds 200 ether, withdraws 2000 CLV, redeems 2000 CLV
+    await cdpManager.addColl(accounts[9], accounts[9], {from: accounts[9], value: _200_Ether})
+    await cdpManager.withdrawCLV(_2000e18, accounts[9], { from: accounts[9]})
+
+     // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+     await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+     await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+ 
+      // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+     await priceFeed.setPrice(_100e18)
+     await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+
+    const gas = await redeemCollateral(accounts[9], cdpManager, _2000e18)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it("", async () => { 
+    const message = 'redeemCollateral(),  CLV, each redemption only hits the first CDP, never closes it, WITH pending rewards'
+    await addColl_allAccounts(_20_Accounts, cdpManager, _10_Ether)
+    await withdrawCLV_allAccounts(_20_Accounts, cdpManager, _100e18)
+
+     // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+     await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+     await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+ 
+      // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+     await priceFeed.setPrice(_100e18)
+     await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+
+    const gasResults = await redeemCollateral_allAccounts_randomAmount( 1, 10, _10_Accounts, cdpManager)
+    logGasMetrics(gasResults, message)
+    logAllGasCosts(gasResults)
+
+    appendData(gasResults, message, data)
+  })
+
+
  // --- getApproxHint() ---
 
   it("", async () => {
@@ -818,7 +1238,7 @@ it("", async () => {
     for (i = 0; i < 10; i++) {
       randomCR = randAmountInWei(1,5)
       const tx = await functionCaller.cdpManager_getApproxHint(randomCR, 10)
-      const gas = gasUsed(tx)
+      const gas = gasUsed(tx) - 21000
       gasCostList.push(gas)
     }
 
@@ -836,7 +1256,7 @@ it("", async () => {
     
     const CR = '200000000000000000000'
     tx = await functionCaller.cdpManager_getApproxHint(CR, 10)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
@@ -850,7 +1270,7 @@ it("", async () => {
 
     const CR = '200000000000000000000'
     tx = await functionCaller.cdpManager_getApproxHint(CR, 32)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
@@ -863,7 +1283,7 @@ it("", async () => {
     
     const CR = '200000000000000000000'
     tx = await functionCaller.cdpManager_getApproxHint(CR, 100)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
@@ -876,7 +1296,7 @@ it("", async () => {
     
     const CR = '200000000000000000000'
     tx = await functionCaller.cdpManager_getApproxHint(CR, 320)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
@@ -889,7 +1309,7 @@ it("", async () => {
     
     const CR = '200000000000000000000'
     tx = await functionCaller.cdpManager_getApproxHint(CR, 1000)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
@@ -897,14 +1317,14 @@ it("", async () => {
 
   // Slow test
 
-  // it("", async () => { //81mil. gas
+  // it("", async () => { // 81mil. gas
   //   const message = 'getApproxHint(), numTrials = 3200:  i.e. k = 10, list size = 100000'
   //   await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
   //   await withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, cdpManager)
     
   //   const CR = '200000000000000000000'
   //   tx = await functionCaller.cdpManager_getApproxHint(CR, 3200)
-  //   const gas = gasUsed(tx)
+  //   const gas = gasUsed(tx) - 21000
   //   logGas(gas, message)
 
   //   appendData({gas: gas}, message, data)
@@ -920,7 +1340,7 @@ it("", async () => {
     
   //   const CR = '200000000000000000000'
   //   tx = await functionCaller.cdpManager_getApproxHint(CR, 10000)
-  //   const gas = gasUsed(tx)
+  //   const gas = gasUsed(tx) - 21000
   //   logGas(gas, message)
 
   //   appendData({gas: gas}, message, data)
@@ -1032,7 +1452,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[0]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
   await cdpManager.liquidate(accounts[1], { from: accounts[0]})
  
   assert.isFalse(await sortedCDPs.contains(accounts[1]))
@@ -1057,7 +1477,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[0]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
   await cdpManager.liquidate(accounts[1], { from: accounts[0]})
  
   assert.isFalse(await sortedCDPs.contains(accounts[1]))
@@ -1082,7 +1502,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[0]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
   await cdpManager.liquidate(accounts[1], { from: accounts[0]})
  
   assert.isFalse(await sortedCDPs.contains(accounts[1]))
@@ -1158,7 +1578,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[0]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
   await cdpManager.liquidate(accounts[1], { from: accounts[0]})
  
   assert.isFalse(await sortedCDPs.contains(accounts[1]))
@@ -1183,7 +1603,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[0]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
   await cdpManager.liquidate(accounts[1], { from: accounts[0]})
  
   assert.isFalse(await sortedCDPs.contains(accounts[1]))
@@ -1208,7 +1628,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[0]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
   await cdpManager.liquidate(accounts[1], { from: accounts[0]})
  
   assert.isFalse(await sortedCDPs.contains(accounts[1]))
@@ -1263,7 +1683,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[0]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
   await cdpManager.liquidate(accounts[1], { from: accounts[0]})
  
   assert.isFalse(await sortedCDPs.contains(accounts[1]))
@@ -1288,7 +1708,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
   await cdpManager.liquidate(accounts[1], { from: accounts[0]})
  
   assert.isFalse(await sortedCDPs.contains(accounts[1]))
@@ -1303,9 +1723,9 @@ it("", async () => {
 
 // --- liquidate() ---
 
-it("", async () => {
-  const message = 'liquidate() 1 CDP Normal Mode, 10 active CDPs, No funds in SP, no ETH gain in pool'
-  // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+it.only("", async () => {
+  const message = 'liquidate() 1 CDP Normal Mode, 10 active CDPs, No funds in SP, no ETH gain in pool, pure redistribution'
+  // 10 accts each open CDP with 10 ether, withdraw 180 CLV
   await addColl_allAccounts(accounts.slice(2,12), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(2,12), cdpManager, _180e18)
  
@@ -1314,7 +1734,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1323,12 +1743,13 @@ it("", async () => {
   appendData({gas: gas}, message, data)
 })
 
-it("", async () => {
-  const message = 'liquidate() 1 CDP Normal Mode, 10 active CDPs, Funds in SP partially covering liquidation, no ETH gain in pool'
-  // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+it.only("", async () => {
+  const message = 'liquidate() 1 CDP Normal Mode, 10 active CDPs, no ETH gain in pool, offset + redistribution'
+  // 10 accts each open CDP with 10 ether, withdraw 180 CLV
   await addColl_allAccounts(accounts.slice(2,12), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(2,12), cdpManager, _180e18)
  
+  // Account 2 provides 100 CLV to pool
   await poolManager.provideToSP( _100e18, {from:accounts[2]})
 
   //1 acct open CDP with 1 ether and withdraws 180 CLV
@@ -1336,7 +1757,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1345,9 +1766,9 @@ it("", async () => {
   appendData({gas: gas}, message, data)
 })
 
-it("", async () => {
-  const message = 'liquidate() 1 CDP Normal Mode, 10 active CDPs, Funds in SP fully covering liquidation, no ETH gain in pool'
-  // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+it.only("", async () => {
+  const message = 'liquidate() 1 CDP Normal Mode, 10 active CDPs, no ETH gain in pool, pure offset with SP'
+  // 10 accts each open CDP with 10 ether, withdraw 180 CLV
   await addColl_allAccounts(accounts.slice(2,12), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(2,12), cdpManager, _180e18)
  
@@ -1358,7 +1779,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1370,8 +1791,8 @@ it("", async () => {
 //--- 30 CDPs --- 
 
 it("", async () => {
-  const message = 'liquidate()  1 CDP Normal Mode,30 active CDPs, No funds in SP, no ETH gain in pool'
-  // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+  const message = 'liquidate()  1 CDP Normal Mode,30 active CDPs, No funds in SP, no ETH gain in pool, pure redistribution'
+  // 10 accts each open CDP with 10 ether, withdraw 180 CLV
   await addColl_allAccounts(accounts.slice(2,32), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(2,32), cdpManager, _180e18)
  
@@ -1380,7 +1801,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1390,19 +1811,19 @@ it("", async () => {
 })
 
 it("", async () => {
-  const message = 'liquidate() 1 CDP Normal Mode, 30 active CDPs, Funds in SP partially covering liquidation, no ETH gain in pool'
+  const message = 'liquidate() 1 CDP Normal Mode, 30 active CDPs, no ETH gain in pool, SP offset + redistribution'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(2,32), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(2,32), cdpManager, _180e18)
  
   await poolManager.provideToSP( _100e18, {from:accounts[2]})
 
-  //1 acct open CDP with 1 ether and withdraws 180 CLV
+  // 1 acct open CDP with 1 ether and withdraws 180 CLV
   await addColl_allAccounts([accounts[1]], cdpManager, _1_Ether)
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1411,8 +1832,213 @@ it("", async () => {
   appendData({gas: gas}, message, data)
 })
 
+// --- Liquidate wth SP gains ---
+
+// with SP gains (remains active)
+
+it.only("", async () => {
+  const message = 'liquidate() 1 CDP, liquidated CDP has pending SP rewards that keep it active'
+  // 10 accts each open CDP with 10 ether
+  await addColl_allAccounts(accounts.slice(1,11), cdpManager, _10_Ether)
+ 
+  //Account 99 open CDP with 1 ether and withdraws 180 CLV
+  await addColl_allAccounts([accounts[99]], cdpManager, _1_Ether)
+  await cdpManager.withdrawCLV(_180e18, accounts[99], {from: accounts[99]} )
+  
+  // Acct 99 deposits 180 CLV to SP
+  await poolManager.provideToSP(_180e18, {from: accounts[99]} )
+
+   //Account 100 opens CDP with 1 ether and withdraws 180 CLV
+   await addColl_allAccounts([accounts[100]], cdpManager, _1_Ether)
+   await cdpManager.withdrawCLV(_180e18, accounts[100], {from: accounts[100]} )
+
+  // Price drops too $100, accounts 99 and 100 ICR fall below MCR
+  await priceFeed.setPrice(_100e18)
+
+  // Liquidate account 100. Account 100 is removed from system
+  await cdpManager.liquidate(accounts[100], { from: accounts[0]})
+  assert.isFalse(await sortedCDPs.contains(accounts[100]))
+
+  /* Liquidate account 99.  His pending gains from SP are:
+  ETGHGain = 1 
+  CLVLoss = 180
+  
+  The CLV Loss completely cancels with his SP deposit, leaving him with 2 ether and 180CLV debt - i.e 111% ICR.
+  Therefore, he remains active. */
+
+  const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0]})
+  assert.isTrue(await sortedCDPs.contains(accounts[99]))
+
+  const gas = gasUsed(tx)
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+// Liquidate a CDP with SP gains (still closes), full offset with SP
+
+it.only("", async () => {
+  const message = 'liquidate() 1 CDP, liquidated CDP has pending SP rewards, but gets liquidated anyway, pure offset with SP'
+  let price = await priceFeed.getPrice()
+  console.log("price is " + price)
+  // 10 accts each open CDP with 10 ether
+  await addColl_allAccounts(accounts.slice(1,11), cdpManager, _10_Ether)
+ 
+  //Account 99 open CDP with 1 ether and withdraws 180 CLV
+  await addColl_allAccounts([accounts[99]], cdpManager, _1_Ether)
+  await cdpManager.withdrawCLV(_180e18, accounts[99], {from: accounts[99]} )
+  
+  // Acct 99 deposits 1 CLV to SP
+  await poolManager.provideToSP(_1e18, {from: accounts[99]} )
+
+  // Acct 7 withdraws 1800 CLV and deposits it to the SP
+  await cdpManager.withdrawCLV(_1800e18, accounts[7], {from: accounts[7]} )
+  await poolManager.provideToSP(_1800e18, {from: accounts[7]} )
+
+   //Account 100 opens CDP with 1 ether and withdraws 180 CLV
+   await addColl_allAccounts([accounts[100]], cdpManager, _1_Ether)
+   await cdpManager.withdrawCLV(_180e18, accounts[100], {from: accounts[100]} )
+
+  // Price drops too $100, accounts 99 and 100 ICR fall below MCR
+  await priceFeed.setPrice(_100e18)
+  price = await priceFeed.getPrice()
+
+  // Liquidate account 100. Account 100 is removed from system.  Generates SP gains for all SP depositors
+  await cdpManager.liquidate(accounts[100], { from: accounts[0]})
+  assert.isFalse(await sortedCDPs.contains(accounts[100]))
+
+  /* Liquidate account 99.  His pending gains from SP are:
+  ETGHGain = 1/1801
+  CLVLoss = 180/1801
+  
+  His net gain is not enough to bring his CDP above the MCR, and thus in liquidation he is closed. */
+
+  const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0]})
+  assert.isFalse(await sortedCDPs.contains(accounts[99]))
+
+  console.log(`ICR acct 99 after liquidation is ${ await cdpManager.getCurrentICR(accounts[99], price)}`)
+
+  const gas = gasUsed(tx)
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+// Liquidate a CDP with SP gains (still closes), partial offset with SP
+
+it.only("", async () => {
+  const message = 'liquidate() 1 CDP, liquidated CDP has pending SP rewards, but gets liquidated anyway, offset + redistribution'
+  let price = await priceFeed.getPrice()
+  // 10 accts each open CDP with 10 ether
+  await addColl_allAccounts(accounts.slice(1,11), cdpManager, _10_Ether)
+ 
+  //Account 99 open CDP with 1 ether and withdraws 180 CLV
+  await addColl_allAccounts([accounts[99]], cdpManager, _1_Ether)
+  await cdpManager.withdrawCLV(_180e18, accounts[99], {from: accounts[99]} )
+  
+  // Acct 99 deposits 1 CLV to SP
+  await poolManager.provideToSP(_1e18, {from: accounts[99]} )
+
+  // Acct 7 withdraws 1800 CLV and deposits it to the SP
+  await cdpManager.withdrawCLV(_1800e18, accounts[7], {from: accounts[7]} )
+  await poolManager.provideToSP(_1800e18, {from: accounts[7]} )
+
+   //Account 100 opens CDP with 1 ether and withdraws 180 CLV
+   await addColl_allAccounts([accounts[100]], cdpManager, _1_Ether)
+   await cdpManager.withdrawCLV(_180e18, accounts[100], {from: accounts[100]} )
+
+  // Price drops too $100, accounts 99 and 100 ICR fall below MCR
+  await priceFeed.setPrice(_100e18)
+  price = await priceFeed.getPrice()
+
+  // Liquidate account 100. Account 100 is removed from system. Generates SP gains for all SP depositors
+  await cdpManager.liquidate(accounts[100], { from: accounts[0]})
+  assert.isFalse(await sortedCDPs.contains(accounts[100]))
+
+  // Acct 7 withdraws 1500 CLV from SP, leaving ~121 CLV in the  SP)
+  await poolManager.withdrawFromSP(_1500e18, {from: accounts[7]} )
+
+  console.log(`Remaining CLV in SP is ${await poolManager.getStabilityPoolCLV()}`)
+
+  /* Liquidate account 99.  His pending gains from SP are:
+  ETGHGain = 1/1801
+  CLVLoss = 180/1801
+  
+  His net gain is not enough to bring his CDP above the MCR, and thus in liquidation he is closed. 
+  His 180 CLV is partially offset with 121 CLV in the pool. */
+
+  const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0]})
+  assert.isFalse(await sortedCDPs.contains(accounts[99]))
+
+  const gas = gasUsed(tx)
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+
+// With pending dist. rewards and SP gains (still closes) - partial offset (Highest gas cost scenario in Normal Mode)
+it.only("", async () => {
+  const message = 'liquidate() 1 CDP, liquidated CDP has pending SP rewards and redistribution rewards, offset + redistribution.'
+  // 10 accts each open CDP with 10 ether
+  await addColl_allAccounts(accounts.slice(1,11), cdpManager, _10_Ether)
+  // await withdrawCLV_allAccounts(accounts.slice(1,11), cdpManager, _180e18)
+ 
+  //Account 99 and 98 each open CDP with 1 ether, and withdraw 180 CLV
+  await addColl_allAccounts([accounts[99]], cdpManager, _1_Ether)
+  await cdpManager.withdrawCLV(_180e18, accounts[99], {from: accounts[99]} )
+  await addColl_allAccounts([accounts[98]], cdpManager, _1_Ether)
+  await cdpManager.withdrawCLV(_180e18, accounts[98], {from: accounts[98]} )
+  
+  // Acct 99 deposits 1 CLV to SP
+  await poolManager.provideToSP(_1e18, {from: accounts[99]} )
+
+   //Account 97 opens CDP with 1 ether and withdraws 180 CLV
+   await addColl_allAccounts([accounts[97]], cdpManager, _1_Ether)
+   await cdpManager.withdrawCLV(_180e18, accounts[97], {from: accounts[97]} )
+
+  // Price drops too $100, accounts 99 and 100 ICR fall below MCR
+  await priceFeed.setPrice(_100e18)
+  const price = await priceFeed.getPrice()
+
+  // Acct 7 adds 10 ether, withdraws 1800 CLV and deposits it to the SP
+  await addColl_allAccounts([accounts[7]], cdpManager, _10_Ether)
+  await cdpManager.withdrawCLV(_1800e18, accounts[7], {from: accounts[7]} )
+  await poolManager.provideToSP(_1800e18, {from: accounts[7]} )
+
+  /* Liquidate account 97. Account 97 is completely offset against SP and removed from system.
+
+  This creates SP gains for accounts 99 and 7. */
+  await cdpManager.liquidate(accounts[97], { from: accounts[0]})
+  assert.isFalse(await sortedCDPs.contains(accounts[97]))
+
+  // Acct 7 withdraws deposit and gains from SP
+//  await poolManager.withdrawFromSPtoCDP(accounts[7], {from: accounts[7]})
+
+ await poolManager.withdrawFromSP(_1800e18, {from: accounts[7]})
+
+  // Account 98 is liquidated, with nothing in SP pool.  This creates pending rewards from distribution.
+  await cdpManager.liquidate(accounts[98], { from: accounts[0]})
+
+  // Account 7 deposits 1 CLV in the Stability Pool
+  await poolManager.provideToSP(_1e18, {from: accounts[7]} )
+
+  /* Account 99 is liquidated (the relevant tx for gas).  His pending rewards are applied, his SP gains transferred to his CDP,
+  but still his ICR < MCR, and his liquidated CDP (180 CLV) is partially offset against the StabilityPool (90 CLV)*/
+
+  const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0]})
+  assert.isFalse(await sortedCDPs.contains(accounts[99]))
+
+  const gas = gasUsed(tx)
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+
+// --- 30 CDPs ---
 it("", async () => {
-  const message = 'liquidate() 1 CDP Normal Mode, 30 active CDPs, Funds in SP fully covering liquidation, no ETH gain in pool'
+  const message = 'liquidate() 1 CDP Normal Mode, 30 active CDPs, no ETH gain in pool, pure offset with SP'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(2,32), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(2,32), cdpManager, _180e18)
@@ -1424,7 +2050,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1436,7 +2062,7 @@ it("", async () => {
 // // --- liquidateCDPs() ---
 
 it("", async () => {
-  const message = 'liquidateCDPs() Normal Mode liquidates 1 CDP, n = 10, 10 remaining active CDPs, No funds in SP, no ETH gain in pool'
+  const message = 'liquidateCDPs() Normal Mode liquidates 1 CDP, n = 10, 10 remaining active CDPs, no ETH gain in pool, pure redistribution'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(2,12), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(2,12), cdpManager, _180e18)
@@ -1446,7 +2072,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1457,7 +2083,7 @@ it("", async () => {
 
 
 it("", async () => {
-  const message = 'liquidateCDPs() Normal Mode liquidates 2 CDPs, 10 remaining active CDPs, No funds in SP, no ETH gain in pool'
+  const message = 'liquidateCDPs() Normal Mode liquidates 2 CDPs, 10 remaining active CDPs, no ETH gain in pool, pure redistribution'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(3,13), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(3,13), cdpManager, _180e18)
@@ -1469,7 +2095,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[2], {from: accounts[2]} )
 
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1479,7 +2105,7 @@ it("", async () => {
 })
 
 it("", async () => {
-  const message = 'liquidateCDPs() Normal Mode liquidates 3 CDPs, 10 remaining active CDPs, No funds in SP, no ETH gain in pool'
+  const message = 'liquidateCDPs() Normal Mode liquidates 3 CDPs, 10 remaining active CDPs, no ETH gain in pool, pure redistribution'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(4,14), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(4,14), cdpManager, _180e18)
@@ -1489,7 +2115,7 @@ it("", async () => {
   await withdrawCLV_allAccounts(accounts.slice(1,4), cdpManager, _180e18)
  
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1499,7 +2125,7 @@ it("", async () => {
 })
 
 it("", async () => {
-  const message = 'liquidateCDPs() Normal Mode liquidates 10 CDPs, 10 remaining active CDPs, No funds in SP, no ETH gain in pool'
+  const message = 'liquidateCDPs() Normal Mode liquidates 10 CDPs, 10 remaining active CDPs, no ETH gain in pool, pure redistribution'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(11,21), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(11,21), cdpManager, _180e18)
@@ -1509,7 +2135,7 @@ it("", async () => {
   await withdrawCLV_allAccounts(accounts.slice(1,11), cdpManager, _180e18)
  
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1519,7 +2145,7 @@ it("", async () => {
 })
 
 it("", async () => {
-  const message = 'liquidateCDPs() Normal Mode liquidates 30 CDPs, 30 remaining active CDPs, No funds in SP, no ETH gain in pool'
+  const message = 'liquidateCDPs() Normal Mode liquidates 30 CDPs, 30 remaining active CDPs, no ETH gain in pool, pure redistribution'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(31,61), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(31,61), cdpManager, _180e18)
@@ -1529,7 +2155,7 @@ it("", async () => {
   await withdrawCLV_allAccounts(accounts.slice(1,31), cdpManager, _180e18)
  
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1554,7 +2180,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[1], {from: accounts[1]} )
   
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1578,7 +2204,7 @@ it("", async () => {
   await cdpManager.withdrawCLV(_180e18, accounts[2], {from: accounts[2]} )
 
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1600,7 +2226,7 @@ it("", async () => {
   await withdrawCLV_allAccounts(accounts.slice(1,4), cdpManager, _180e18)
  
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1622,7 +2248,7 @@ it("", async () => {
   await withdrawCLV_allAccounts(accounts.slice(1,11), cdpManager, _180e18)
  
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1644,7 +2270,7 @@ it("", async () => {
   await withdrawCLV_allAccounts(accounts.slice(1,31), cdpManager, _180e18)
  
   // Price drops, account[1]'s ICR falls below MCR
-  await priceFeed.setPrice(100)
+  await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0]})
   const gas = gasUsed(tx)
@@ -1667,8 +2293,9 @@ it("", async () => {
   const CR = web3.utils.toWei('3', 'ether')
   const address_0 = '0x0000000000000000000000000000000000000000'
  
-  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
-  const gas = gasUsed(tx)
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
+  const gas = gasUsed(tx) - 21000
   logGas(gas, message)
 
   appendData({gas: gas}, message, data)
@@ -1684,8 +2311,9 @@ it("", async () => {
   const CR = web3.utils.toWei('3', 'ether')
   const address_0 = '0x0000000000000000000000000000000000000000'
  
-  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
-  const gas = gasUsed(tx)
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
+  const gas = gasUsed(tx) - 21000
   logGas(gas, message)
 
   appendData({gas: gas}, message, data)
@@ -1703,8 +2331,9 @@ it("", async () => {
   const CR = web3.utils.toWei('2', 'ether')
   const address_0 = '0x0000000000000000000000000000000000000000'
  
-  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
-  const gas = gasUsed(tx)
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
+  const gas = gasUsed(tx) - 21000
   logGas(gas, message)
 
   appendData({gas: gas}, message, data)
@@ -1719,8 +2348,9 @@ it("", async () => {
   // 200% ICR, lower than CDP at tail of list
   const CR = web3.utils.toWei('2', 'ether')
  
-  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
-  const gas = gasUsed(tx)
+  const price = await priceFeed.getPrice()
+  const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
+  const gas = gasUsed(tx) - 21000
   logGas(gas, message)
 
   appendData({gas: gas}, message, data)
@@ -1736,14 +2366,16 @@ it("", async () => {
     // 200% ICR, lower than CDP at tail of list
     const CR = web3.utils.toWei('2', 'ether')
   
-    const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, address_0, address_0)
-    const gas = gasUsed(tx)
+    const price = await priceFeed.getPrice()
+    const tx = await functionCaller.sortedCDPs_findInsertPosition(CR, price, address_0, address_0)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
   })
 
-// withdrawPenaltyFromSP
+// --- withdrawPenaltyFromSP ---
+
   it("", async () => {
     const message = "withdrawPenaltyFromSP()"
     // Acct 1 withdraws 1500 CLV and provides to StabilityPool
@@ -1761,7 +2393,7 @@ it("", async () => {
     await poolManager.provideToSP(_500e18, { from: accounts[4] })
 
     // price drops
-    await priceFeed.setPrice(100);
+    await priceFeed.setPrice(_100e18);
 
     // account[2] closed
     await cdpManager.liquidate(accounts[2]);
@@ -1782,75 +2414,148 @@ it("", async () => {
     appendData({gas: gas}, message, data)
   })
 
-  // --- DeciMath Functions ---
+  // --- DeciMath Functions - Embedded Library ---
 
-  it.only("", async () => {
-    const message = "decMul() with random args"
+  it("", async () => {
+    const message = "DeciMath public decMul() with random args"
     const rand1 = randAmountInWei(1,200)
     const rand2 = randAmountInWei(1,200)
     const tx = await functionCaller.decimath_decMul(rand1, rand2)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
   })
 
   it("", async () => {
-    const message = "decDiv() with random args"
+    const message = "DeciMath public decDiv() with random args"
     const rand1 = randAmountInWei(1,200)
     const rand2 = randAmountInWei(1,200)
     const tx = await functionCaller.decimath_decDiv(rand1, rand2)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
   })
 
   it("", async () => {
-    const message = "accurateMulDiv() with random args"
+    const message = "DeciMath public accurateMulDiv() with random args"
     const rand1 = randAmountInWei(1,200)
     const rand2 = randAmountInWei(1,200)
     const rand3 = randAmountInWei(1,200)
     const tx = await functionCaller.decimath_accurateMulDiv(rand1, rand2, rand3)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
   })
 
   it("", async () => {
-    const message = "div_toDuint() with random args"
+    const message = "DeciMath public div_toDuint() with random args"
     const rand1 = randAmountInWei(1,200)
     const rand2 = randAmountInWei(1,200)
     const tx = await functionCaller.decimath_div_toDuint(rand1, rand2)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
   })
 
   it("", async () => {
-    const message = "mul_uintByDuint() with random args"
+    const message = "DeciMath public mul_uintByDuint() with random args"
     const rand1 = randAmountInWei(1,200)
     const rand2 = randAmountInWei(1,200)
     const tx = await functionCaller.decimath_mul_uintByDuint(rand1, rand2)
-    const gas = gasUsed(tx)
+    const gas = gasUsed(tx) - 21000
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
   })
 
-  it("Export test data", async () => {
-    fs.writeFile('test/gas/gasTestData.csv', data, (err) => { 
-      if (err) console.log(err)
-    console.log("Gas test data written to /gasTestData.csv") })
-  })
+// --- ABDKMath64x64 functions - embedded library ---
+
+it("", async () => {
+  const message = "ABDKMath mul() with random args"
+  const rand1 = randAmountInWei(1,200)
+  const rand2 = randAmountInWei(1,200)
+  const tx = await functionCaller.abdkMath_mul(rand1, rand2)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
 })
 
+it("", async () => {
+  const message = "ABDKMath div() with random args"
+  const rand1 = randAmountInWei(1,200)
+  const rand2 = randAmountInWei(1,200)
+  const tx = await functionCaller.abdkMath_div(rand1, rand2)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it("", async () => {
+  const message = "ABDKMath mulu() with random args"
+  const rand1 = randAmountInWei(1,200)
+  const rand2 = randAmountInWei(1,200)
+  const tx = await functionCaller.abdkMath_mulu(rand1, rand2)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it("", async () => {
+  const message = "ABDKMath divu() with random args"
+  const rand1 = randAmountInWei(1,200)
+  const rand2 = randAmountInWei(1,200)
+  const tx = await functionCaller.abdkMath_divu(rand1, rand2)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it("", async () => {
+  const message = "ABDKMath fromUInt() with random args"
+  const rand = randAmountInGwei(1,200)
+  console.log("rand is" + rand)
+  // ABDK max arg is ( 2**64 - 1 ), i.e. 9223372036854775807 . 
+  const tx = await functionCaller.abdkMath_fromUInt(rand)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it("", async () => {
+  const message = "ABDKMath toUInt() with random args"
+  const rand = randAmountInGwei(1,200)
+  console.log("rand is" + rand)
+  
+  const tx = await functionCaller.abdkMath_toUInt(rand)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+// TODO abdkMath_divuu (returns uint128)
+
+
+// --- Write test output data to CSV file
+
+it("Export test data", async () => {
+  fs.writeFile('test/gas/gasTestData.csv', data, (err) => { 
+    if (err) console.log(err)
+  console.log("Gas test data written to /gasTestData.csv") })
+})
+
+})
 /* TODO: 
 
--Liquidations with pending rewards from distributions
--Liquidations with pending SP gains (that may / may not stop liquidation) 
 -Liquidations in Recovery Mode
 
 ---

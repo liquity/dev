@@ -9,6 +9,10 @@ const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+
+const testHelpers = require("../utils/testHelpers.js")
+const getDifference = testHelpers.getDifference
+
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
 const setNameRegistry = deploymentHelpers.setNameRegistry
@@ -125,12 +129,23 @@ contract('PoolManager', async accounts => {
     const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
     const activePoolCLV = await activePool.getCLV({ from: mockPoolManagerAddress })
     const price = await priceFeed.getPrice()  // use the actual pool manager contract to get the price
+<<<<<<< HEAD
 
     const expectedTCR = '66666666666666666666'
 
     const TCR = (await poolManager.getTCR()).toString()
 
     assert.deepEqual(TCR, expectedTCR)
+=======
+    
+    const expectedTCR = web3.utils.toBN('66666666666666666666')
+    const TCR = (await poolManager.getTCR())
+    
+    // check expected is within 100 wei of actual
+    const diff = Number(expectedTCR.sub(TCR).abs())
+    console.log(`diff is ${diff}`)
+    assert.isAtMost(diff, 100)
+>>>>>>> gas-optimization
   })
 
   it('getActiveDebt(): returns the total CLV balance of the ActivePool', async () => {

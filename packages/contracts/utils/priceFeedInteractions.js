@@ -53,7 +53,7 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
     console.log(`Testnet: ID of latest price answer from  aggregator: ${latestAnswerID_aggregatorTestnet}`)
     console.log('\n')
 
-    // Call our testnet PriceFeed - get current price, timestamp, and 
+    // Call our testnet PriceFeed - get current price, and timestamp
     const price_PriceFeedTestnet = await testnetPriceFeed.getLatestPrice()
     const timestamp_PriceFeedTestnet = await testnetPriceFeed.getLatestTimestamp()
     console.log(`Testnet: Latest ETH:USD price from deployed PriceFeed: ${price_PriceFeedTestnet}`)
@@ -93,7 +93,8 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
 
     console.log("Get gas costs")
     console.log("\n")
-    // Testnet
+
+    // Testnet - 30-35k gas
     console.log("Call updatePrice() on Testnet")
     const txResponseTestnet = await testnetPriceFeed.updatePrice()
     console.log("waiting for tx to be mined...")
@@ -102,11 +103,19 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
     console.log(`Testnet: updatePrice() gas cost: ${gasTestnet}`)
     console.log('\n')
 
-    // Mainnet
+    // Mainnet - 30-35k gas
     console.log("Call updatePrice() on Mainnet")
     const txResponseMainnet = await mainnetPriceFeed.updatePrice()
     console.log("waiting for tx to be mined...")
     txResponseMainnet.wait()
     const gasMainnet = await getGasFromTxHash(mainnetProvider, txResponseMainnet.hash)
     console.log(`Testnet: updatePrice() gas cost: ${gasMainnet}`)
+
+    /* updatePrice() is a tx (21k) + SStore (5k) + emit event (1.5k) = 27.5k gas
+
+    Therefore, expected gas cost of a getLatestPrice() call is within a CDP function is (35k - 27.5k) 
+    = 7500 gas upper bound.
+    
+    To check, deploy an instance of FunctionCaller contract to ropsten and mainnet, 
+    with a wrapped getLatestPrice() call. */
 })();

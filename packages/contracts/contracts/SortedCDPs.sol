@@ -1,6 +1,5 @@
 pragma solidity ^0.5.11;
 
-
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ICDPManager.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
@@ -58,11 +57,15 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         emit CDPManagerAddressChanged(_CDPManagerAddress);
     }
 
+    constructor() public {
+        data.maxSize = 10000000;
+    }
+
     /*
      * @dev Set the maximum size of the list
      * @param _size Maximum size
      */
-    function setMaxSize(uint256 _size) public {
+    function setMaxSize(uint256 _size) public onlyOwner {
         // New max size must be greater than old max size
         require(_size > data.maxSize);
 
@@ -76,50 +79,81 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function insert(address _id, uint256 _ICR, address _prevId, address _nextId) public {
+
+    function insert(address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) public {
+        // console.log("SortedCDPS.insert called");
+        // console.log("00. gas left: %s", gasleft());
         // List must not be full
-        require(!isFull());
+        require(!isFull());  // 1650 gas
+        // console.log("01. gas left: %s", gasleft());
         // List must not already contain node
-        require(!contains(_id));
+        require(!contains(_id));  // 900 gas
+        // console.log("02. gas left: %s", gasleft());
         // Node id must not be null
-        require(_id != address(0));
+        require(_id != address(0));  // 26 gas
+        // console.log("03. gas left: %s", gasleft());
         // ICR must be non-zero
-        require(_ICR > 0);
+        require(_ICR > 0); // 16 gas
+        // console.log("04. gas left: %s", gasleft());
 
-        address prevId = _prevId;
-        address nextId = _nextId;
+        address prevId = _prevId; // 2 gas
+        // console.log("05. gas left: %s", gasleft());
+        address nextId = _nextId; // 3 gas
+        // console.log("06. gas left: %s", gasleft());
 
-        if (!validInsertPosition(_ICR, prevId, nextId)) {
+        if (!validInsertPosition(_ICR, _price, prevId, nextId)) {
             // Sender's hint was not a valid insert position
             // Use sender's hint to find a valid insert position
-            (prevId, nextId) = findInsertPosition(_ICR, prevId, nextId);
+            (prevId, nextId) = findInsertPosition(_ICR, _price, prevId, nextId);  // 14500k gas with 1 traversals  
         }
-
-        data.nodes[_id].exists = true;
+        // console.log("07. gas left: %s", gasleft());
+        
+         data.nodes[_id].exists = true;  // *** 21000 gas for false --> true
+        
+        // console.log("08. gas left: %s", gasleft());
 
         if (prevId == address(0) && nextId == address(0)) {
+            // console.log("9a. gas left: %s", gasleft());
             // Insert as head and tail
-            data.head = _id;
-            data.tail = _id;
-        } else if (prevId == address(0)) {
+            data.head = _id; // 21000 gas
+            // console.log("9b. gas left: %s", gasleft());
+            data.tail = _id; // 21000 gas
+            // console.log("9bb. gas left: %s", gasleft());
+        } else if (prevId == address(0)) { // 117 gas
+            // console.log("9c. gas left: %s", gasleft());
             // Insert before `prevId` as the head
-            data.nodes[_id].nextId = data.head;
-            data.nodes[data.head].prevId = _id;
-            data.head = _id;
+            data.nodes[_id].nextId = data.head; // 2600 gas
+            // console.log("9d. gas left: %s", gasleft());
+            data.nodes[data.head].prevId = _id;  // 21800 gas
+            // console.log("9e. gas left: %s", gasleft());
+            data.head = _id; // 5800 gas
+            // console.log("9ee. gas left: %s", gasleft());
         } else if (nextId == address(0)) {
+            // console.log("9f. gas left: %s", gasleft());
             // Insert after `nextId` as the tail
             data.nodes[_id].prevId = data.tail;
+            // console.log("9g. gas left: %s", gasleft());
             data.nodes[data.tail].nextId = _id;
+            // console.log("9h. gas left: %s", gasleft());
             data.tail = _id;
-        } else {
+            // console.log("9i. gas left: %s", gasleft());
+        } else { // 127 gas
+            // console.log("9j. gas left: %s", gasleft());
             // Insert at insert position between `prevId` and `nextId`
-            data.nodes[_id].nextId = nextId;
-            data.nodes[_id].prevId = prevId;
-            data.nodes[prevId].nextId = _id;
-            data.nodes[nextId].prevId = _id;
+            data.nodes[_id].nextId = nextId; // 1800 gas
+            // console.log("9k. gas left: %s", gasleft());
+            data.nodes[_id].prevId = prevId; // 21000 gas
+            // console.log("9l. gas left: %s", gasleft());
+            data.nodes[prevId].nextId = _id; // 6000 gas
+            // console.log("9m. gas left: %s", gasleft());
+            data.nodes[nextId].prevId = _id; // 6000 gas
+            // console.log("9n. gas left: %s", gasleft());
         }
 
-        data.size = data.size.add(1);
+        data.size = data.size.add(1); // 5900 gas
+        // ;  
+        // console.log("10. gas left: %s", gasleft());
+        // console.log("SortedCDPs.insert func end");
     }
 
     /*
@@ -128,38 +162,55 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      */
     function remove(address _id) public {
         // List must contain the node
-        require(contains(_id));
+        // console.log("00. gas left: %s", gasleft());
+        require(contains(_id)); // 940 gas
+        // console.log("01. gas left: %s", gasleft());
 
-        if (data.size > 1) {
+        if (data.size > 1) { // 800 gas
+            // console.log("02. gas left: %s", gasleft());
             // List contains more than a single node
-            if (_id == data.head) {
+            if (_id == data.head) { // 800 gas
+                // console.log("03. gas left: %s", gasleft());
                 // The removed node is the head
                 // Set head to next node
-                data.head = data.nodes[_id].nextId;
+                data.head = data.nodes[_id].nextId; // 6800 gas
+                // console.log("04. gas left: %s", gasleft());
                 // Set prev pointer of new head to null
-                data.nodes[data.head].prevId = address(0);
+                data.nodes[data.head].prevId = address(0); // 6700 gas
+                // console.log("05. gas left: %s", gasleft());
             } else if (_id == data.tail) {
+                // console.log("06. gas left: %s", gasleft());
                 // The removed node is the tail
                 // Set tail to previous node
                 data.tail = data.nodes[_id].prevId;
+                // console.log("07. gas left: %s", gasleft());
                 // Set next pointer of new tail to null
                 data.nodes[data.tail].nextId = address(0);
+                // console.log("08. gas left: %s", gasleft());
             } else {
                 // The removed node is neither the head nor the tail
                 // Set next pointer of previous node to the next node
-                data.nodes[data.nodes[_id].prevId].nextId = data.nodes[_id].nextId;
+                // console.log("09. gas left: %s", gasleft());
+                data.nodes[data.nodes[_id].prevId].nextId = data.nodes[_id].nextId; // 7600 gas
+                //  console.log("10. gas left: %s", gasleft());
                 // Set prev pointer of next node to the previous node
-                data.nodes[data.nodes[_id].nextId].prevId = data.nodes[_id].prevId;
+                data.nodes[data.nodes[_id].nextId].prevId = data.nodes[_id].prevId; // 7600 gas
+                //  console.log("11. gas left: %s", gasleft());
             }
         } else {
             // List contains a single node
             // Set the head and tail to null
+            //  console.log("12. gas left: %s", gasleft());
             data.head = address(0);
+            //  console.log("13. gas left: %s", gasleft());
             data.tail = address(0);
+            //  console.log("14. gas left: %s", gasleft());
         }
 
-        delete data.nodes[_id];
-        data.size = data.size.sub(1);
+        delete data.nodes[_id]; // ** 11100 gas
+        // console.log("15. gas left: %s", gasleft());
+        data.size = data.size.sub(1); // ** 5900 gas
+        // console.log("16. gas left: %s", gasleft());
     }
 
     /*
@@ -169,7 +220,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the new insert position
      * @param _nextId Id of next node for the new insert position
      */
-    function reInsert(address _id, uint256 _newICR, address _prevId, address _nextId) public {
+    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) public {
         // List must contain the node
         require(contains(_id));
 
@@ -178,7 +229,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
         if (_newICR > 0) {
             // Insert node if it has a non-zero ICR
-            insert(_id, _newICR, _prevId, _nextId);
+            insert(_id, _newICR, _price, _prevId, _nextId);
         }
     }
 
@@ -254,21 +305,21 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function validInsertPosition(uint256 _ICR, address _prevId, address _nextId) public view returns (bool) {
+    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view returns (bool) {
         if (_prevId == address(0) && _nextId == address(0)) {
             // `(null, null)` is a valid insert position if the list is empty
             return isEmpty();
         } else if (_prevId == address(0)) {
             // `(null, _nextId)` is a valid insert position if `_nextId` is the head of the list
-            return data.head == _nextId && _ICR >= cdpManager.getCurrentICR(_nextId);
+            return data.head == _nextId && _ICR >= cdpManager.getCurrentICR(_nextId, _price);
         } else if (_nextId == address(0)) {
             // `(_prevId, null)` is a valid insert position if `_prevId` is the tail of the list
-            return data.tail == _prevId && _ICR <= cdpManager.getCurrentICR(_prevId);
+            return data.tail == _prevId && _ICR <= cdpManager.getCurrentICR(_prevId, _price);
         } else {
             // `(_prevId, _nextId)` is a valid insert position if they are adjacent nodes and `_ICR` falls between the two nodes' ICRs
             return data.nodes[_prevId].nextId == _nextId && 
-                   cdpManager.getCurrentICR(_prevId) >= _ICR && 
-                   _ICR >= cdpManager.getCurrentICR(_nextId);
+                   cdpManager.getCurrentICR(_prevId, _price) >= _ICR && 
+                   _ICR >= cdpManager.getCurrentICR(_nextId, _price);
         }
     }
 
@@ -277,9 +328,9 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _ICR Node's ICR
      * @param _startId Id of node to start ascending the list from
      */
-    function descendList(uint256 _ICR, address _startId) private view returns (address, address) {
+    function descendList(uint256 _ICR, uint _price, address _startId) private view returns (address, address) {
         // If `_startId` is the head, check if the insert position is before the head
-        if (data.head == _startId && _ICR >= cdpManager.getCurrentICR(_startId)) {
+        if (data.head == _startId && _ICR >= cdpManager.getCurrentICR(_startId, _price)) {
             return (address(0), _startId);
         }
 
@@ -287,7 +338,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address nextId = data.nodes[prevId].nextId;
 
         // Descend the list until we reach the end or until we find a valid insert position
-        while (prevId != address(0) && !validInsertPosition(_ICR, prevId, nextId)) {
+        while (prevId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
             prevId = data.nodes[prevId].nextId;
             nextId = data.nodes[prevId].nextId;
         }
@@ -300,9 +351,9 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _ICR Node's ICR
      * @param _startId Id of node to start descending the list from
      */
-    function ascendList(uint256 _ICR, address _startId) private view returns (address, address) {
+    function ascendList(uint256 _ICR, uint _price, address _startId) private view returns (address, address) {
         // If `_startId` is the tail, check if the insert position is after the tail
-        if (data.tail == _startId && _ICR <= cdpManager.getCurrentICR(_startId)) {
+        if (data.tail == _startId && _ICR <= cdpManager.getCurrentICR(_startId, _price)) {
             return (_startId, address(0));
         }
 
@@ -310,7 +361,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address prevId = data.nodes[nextId].prevId;
 
         // Ascend the list until we reach the end or until we find a valid insertion point
-        while (nextId != address(0) && !validInsertPosition(_ICR, prevId, nextId)) {
+        while (nextId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
             nextId = data.nodes[nextId].prevId;
             prevId = data.nodes[nextId].prevId;
         }
@@ -324,19 +375,19 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function findInsertPosition(uint256 _ICR, address _prevId, address _nextId) public view returns (address, address) {
+    function findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view returns (address, address) {
         address prevId = _prevId;
         address nextId = _nextId;
 
         if (prevId != address(0)) {
-            if (!contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId)) {
+            if (!contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId, _price)) {
                 // `prevId` does not exist anymore or now has a smaller ICR than the given ICR
                 prevId = address(0);
             }
         }
 
         if (nextId != address(0)) {
-            if (!contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId)) {
+            if (!contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId, _price)) {
                 // `nextId` does not exist anymore or now has a larger ICR than the given ICR
                 nextId = address(0);
             }
@@ -344,16 +395,16 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
         if (prevId == address(0) && nextId == address(0)) {
             // No hint - descend list starting from head
-            return descendList(_ICR, data.head);
+            return descendList(_ICR, _price, data.head);
         } else if (prevId == address(0)) {
             // No `prevId` for hint - ascend list starting from `nextId`
-            return ascendList(_ICR, nextId);
+            return ascendList(_ICR, _price, nextId);
         } else if (nextId == address(0)) {
             // No `nextId` for hint - descend list starting from `prevId`
-            return descendList(_ICR, prevId);
+            return descendList(_ICR, _price, prevId);
         } else {
             // Descend list starting from `prevId`
-            return descendList(_ICR, prevId);
+            return descendList(_ICR, _price, prevId);
         }
     }
 }

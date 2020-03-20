@@ -29,7 +29,6 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   let functionCaller
 
   before(async () => {
-
     priceFeed = await PriceFeed.new()
     clvToken = await CLVToken.new()
     poolManager = await PoolManager.new()

@@ -35,7 +35,6 @@ contract('CLVToken', async accounts => {
   let functionCaller
 
   describe('Basic token functions', async () => {
-  
     beforeEach(async () => {
       priceFeed = await PriceFeed.new()
       clvToken = await CLVToken.new()
@@ -109,14 +108,6 @@ contract('CLVToken', async accounts => {
       await clvToken.setPoolManagerAddress(newPoolManagerAddr, { from: owner })
       const poolManagerAddress = await clvToken.poolManagerAddress()
       assert.equal(newPoolManagerAddr, poolManagerAddress)
-    })
-
-    it('setName(): sets a name', async () => {
-      const newName = 'token contract'
-      const bytesName = web3.utils.fromUtf8(newName)
-      await clvToken.setName(bytesName, { from: owner })
-      const name = web3.utils.toUtf8(await clvToken.name())
-      assert.equal(newName, name)
     })
 
     it('mint(): issues correct amount of tokens to the given address', async () => {

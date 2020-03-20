@@ -73,7 +73,7 @@ library DeciMath {
     }
 
     // Accurately multiply one uint by a 'duint'. Returns a uint.
-    function mul_uintByDuint( uint x, uint y_duint)internal view returns (uint prod) {
+    function mul_uintByDuint( uint x, uint y_duint) internal view returns (uint prod) {
         uint x_duint = toDuint(x);
 
         uint prod_duint = decMul(x_duint, y_duint);
@@ -82,7 +82,7 @@ library DeciMath {
         return prod;
     }
 
-    function mul_uintByDuint_roundUp( uint x, uint y_duint)internal view returns (uint prod) {
+    function mul_uintByDuint_roundUp( uint x, uint y_duint) internal view returns (uint prod) {
         uint x_duint = toDuint(x);
 
         uint prod_duint = decMul(x_duint, y_duint);
@@ -124,13 +124,13 @@ library DeciMath {
     }
 
      // --- Normal Solidity multiplication and floor division ---
-    function normalDiv(uint a, uint b) internal view returns(uint) {
-        return SafeMath.div(a, b);
-    }
+    // function normalDiv(uint a, uint b) public view returns(uint) {
+    //     return SafeMath.div(a, b);
+    // }
 
-    function normalMul(uint a, uint b) internal view returns(uint) {
-        return SafeMath.mul(a, b);
-    }  
+    // function normalMul(uint a, uint b) public view returns(uint) {
+    //     return SafeMath.mul(a, b);
+    // }  
 
     // --- Normal min function ---
     function getMin(uint a, uint b) internal view returns(uint) {

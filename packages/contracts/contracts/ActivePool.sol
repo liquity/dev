@@ -46,22 +46,20 @@ contract ActivePool is Ownable, IPool {
     // --- Pool functionality ---
 
     function sendETH(address _account, uint _amount) public onlyPoolManager returns(bool) {
-        ETH = ETH.sub(_amount);
-        (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
-        require (success == true, 'ActivePool: transaction reverted');
-        emit ETHBalanceUpdated(ETH);
-        emit EtherSent(_account, _amount);
+        ETH = ETH.sub(_amount);  // 5980 gas
+        (bool success, ) = _account.call.value(_amount)("");  // 7500 gas.  use call.value()('') as per Consensys latest advice 
+        require (success == true, 'ActivePool: transaction reverted'); // 9 gas
+       
+        emit EtherSent(_account, _amount);  // 1320 gas
         return true;
     }
 
     function increaseCLV(uint _amount) public onlyPoolManager () {
-        CLV  = CLV.add(_amount);
-        emit CLVBalanceUpdated(CLV);
+        CLV  = CLV.add(_amount); // 1700 gas
     }
 
     function decreaseCLV(uint _amount) public onlyPoolManager () {
-        CLV = CLV.sub(_amount);
-        emit CLVBalanceUpdated(CLV);
+        CLV = CLV.sub(_amount); // 6000 gas
     }
 
     /* Returns the raw ether balance at ActivePool address.  

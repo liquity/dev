@@ -9,25 +9,18 @@ interface ICDPManager {
 
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
 
+    event ActivePoolAddressChanged(address _activePoolAddress);
+    
+    event DefaultPoolAddressChanged(address _defaultPoolAddress);
+
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
     event CDPCreated(address indexed _user, uint arrayIndex);
 
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, uint arrayIndex);
-
-    event CDPClosed(address indexed _user);
-
-    event CollateralAdded(address indexed _user, uint _amountAdded);
-
-    event CollateralWithdrawn(address indexed _user, uint _amountWithdrawn);
-
-    event CLVWithdrawn(address indexed _user, uint _amountWithdrawn);
-
-    event CLVRepayed(address indexed _user, uint _amountRepayed);
-
-    event CollateralRedeemed(address indexed _user, uint exchangedCLV, uint redeemedETH);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
 
     // --- Functions ---
+
     function setPoolManager(address _poolManagerAddress) external;
 
     function setPriceFeed(address _priceFeedAddress) external;
@@ -36,9 +29,13 @@ interface ICDPManager {
 
     function setSortedCDPs(address _sortedCDPsAddress) external;
 
+    function setActivePool(address _activePoolAddress) external; 
+
+    function setDefaultPool(address _defaultPoolAddress) external;
+
     function getCDPOwnersCount() external view returns(uint);
 
-    function getCurrentICR(address _user) external view returns(uint);
+    function getCurrentICR(address _user, uint _price) external view returns(uint);
 
     function getApproxHint(uint CR, uint numTrials) external view returns(address);
 
@@ -56,9 +53,9 @@ interface ICDPManager {
 
     function liquidateCDPs(uint _n) external returns(bool);
 
-    function checkTCRAndSetRecoveryMode() external returns(bool);
+    function checkTCRAndSetRecoveryMode(uint _price) external returns(bool);
 
     function redeemCollateral(uint _CLVAmount, address _hint) external returns(bool);
 
-    function getNewTCR(uint collIncrease, uint _debtIncrease) external view returns (uint);
+    function getNewTCR(uint collIncrease, uint _debtIncrease, uint _price) external view returns (uint);
 }

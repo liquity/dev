@@ -1,6 +1,6 @@
 const accountsList = 
-
-        [ { privateKey: "0x06bD75E4440C039c04e0AFf0CDdf2A0EFCaE37bE14dFFAcBe3773DF9c4b6Cc2F", balance: "0xd3c21bcecceda1000000" },
+[ 
+{ privateKey: "0x06bD75E4440C039c04e0AFf0CDdf2A0EFCaE37bE14dFFAcBe3773DF9c4b6Cc2F", balance: "0xd3c21bcecceda1000000" },
 { privateKey: "0xFA13A9eacE21b854AB04fC612EE2De459B4FA77af9cF3BFA9Bebd1A821d3a677", balance: "0xd3c21bcecceda1000000" },
 { privateKey: "0xA0cAF4c9eC7aA43b35444AF57709ba2E2d66b7A0Af0362fc7fbEDC1d12d43f4e", balance: "0xd3c21bcecceda1000000" },
 { privateKey: "0x14Ea45a9d679c2AFec84010bDb54eC63aAbCbC8D60b7DaAF7cD33716Fe5E9A1A", balance: "0xd3c21bcecceda1000000" },

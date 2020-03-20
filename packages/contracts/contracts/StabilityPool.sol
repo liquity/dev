@@ -75,6 +75,7 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     function increaseTotalCLVDeposits(uint _amount) public onlyPoolManager () {
         totalCLVDeposits = totalCLVDeposits.add(_amount);
+
     }
 
     function decreaseTotalCLVDeposits(uint _amount) public onlyPoolManager () {

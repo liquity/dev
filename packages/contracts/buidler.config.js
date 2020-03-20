@@ -6,13 +6,13 @@ const accountsList = accounts.accountsList
 
 module.exports = {
     paths: {
-        contracts: "./contracts",
-        artifacts: "./artifacts"
+        // contracts: "./contracts",
+        // artifacts: "./artifacts"
     },
     solc: {
         optimizer: {
             enabled: true,
-            runs: 1000
+            runs: 10000
         }
     },
     networks: {
