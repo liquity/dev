@@ -85,6 +85,20 @@ contract('CDPManager', async accounts => {
     await connectContracts(contracts, registeredAddresses)
   })
 
+  // --- closeLoan() ---
+  // 
+
+
+
+
+
+
+
+
+
+
+
+
   it("openLoan(): creates a new CDP and assigns the correct collateral and debt amount", async () => {
     const alice_CDP_Before = await cdpManager.CDPs(alice)
     

@@ -24,17 +24,6 @@ contract('PoolManager', async accounts => {
   const _10_Ether = web3.utils.toWei('10', 'ether')
   const _50_Ether = web3.utils.toWei('50', 'ether')
   const _100_Ether = web3.utils.toWei('100', 'ether')
-<<<<<<< HEAD
-
-  const [ owner,
-          mockCDPManagerAddress,
-          mockPoolManagerAddress,
-          defaulter_1, defaulter_2,
-          defaulter_3,
-          alice,
-          whale,
-          bob,
-=======
   
   const [ owner, 
           defaulter_1, defaulter_2, 
@@ -42,7 +31,6 @@ contract('PoolManager', async accounts => {
           alice, 
           whale, 
           bob, 
->>>>>>> gas-optimization
           whale_2 ] = accounts;
 
   let priceFeed
@@ -57,10 +45,6 @@ contract('PoolManager', async accounts => {
   let functionCaller
 
   describe("Stability Pool Mechanisms", async () => {
-<<<<<<< HEAD
-
-=======
->>>>>>> gas-optimization
     beforeEach(async () => {
       priceFeed = await PriceFeed.new()
       clvToken = await CLVToken.new()

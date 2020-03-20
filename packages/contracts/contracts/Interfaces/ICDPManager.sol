@@ -56,6 +56,4 @@ interface ICDPManager {
     function checkTCRAndSetRecoveryMode(uint _price) external returns(bool);
 
     function redeemCollateral(uint _CLVAmount, address _hint) external returns(bool);
-
-    function getNewTCR(uint collIncrease, uint _debtIncrease, uint _price) external view returns (uint);
 }

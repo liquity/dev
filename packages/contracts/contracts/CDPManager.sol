@@ -268,13 +268,12 @@ contract CDPManager is Ownable, ICDPManager {
              closeCDP(user);  
         }  else { 
         // Update CDP's position in sortedCDPs
-        sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
-
-        emit CDPUpdated(user, 
-                        CDPs[user].debt, 
-                        newColl,
-                        CDPs[user].stake
-                        ); 
+            sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
+            emit CDPUpdated(user, 
+                            CDPs[user].debt, 
+                            newColl,
+                            CDPs[user].stake
+                            ); 
         }
          // Remove _amount ETH from ActivePool and send it to the user
         poolManager.withdrawColl(user, _amount);
@@ -353,6 +352,34 @@ contract CDPManager is Ownable, ICDPManager {
                         CDPs[user].stake
                         ); 
         return true;
+    }
+
+    function closeLoan(uint _amount) public returns (bool) {
+        uint price = priceFeed.getPrice();
+        bool recoveryMode = checkTCRAndSetRecoveryMode(price);
+        
+        address user = _msgSender();
+        applyPendingRewards(_user);
+
+        require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
+        uint ICR = getCurrentICR(user, price);
+        require (ICR < 100000000000000000000 || ICR >= MCR, "CDPManager: ICR must not be in liquidation range of 100-110%");
+        
+        require(recoveryMode == false, "CDPManager: Closing a loan is not permitted during Recovery Mode");
+        
+        uint coll = CDPs[_user].coll;
+        uint debt = CDPs[_user].debt;
+        require (_amount >= debt, "CDPManager: Received CLV must cover the CDP's outstanding debt")
+
+        uint newTCR = getNewTCRFromDecrease(coll, debt, price)
+        require (newTCR >= CCR, "CDPManager: Closing the loan must not pull TCR below CCR" )
+        
+        removeStake(_user)
+        closeCDP(_user)
+    
+        // -Tell PM to burn _debt from the user's balance, and send the collateral back to the user
+        poolManager.repayCLV(user, _amount);
+        poolManager.withdrawColl(user, _amount);
     }
 
     // --- CDP Liquidation functions ---
@@ -835,7 +862,7 @@ contract CDPManager is Ownable, ICDPManager {
         return usdValue;
     }
 
-    function getNewTCR(uint _collIncrease, uint _debtIncrease, uint _price) public view returns (uint) {
+    function getNewTCR(uint _collIncrease, uint _debtIncrease, uint _price) internal view returns (uint) {
         uint activeColl = activePool.getETH();
         uint activeDebt = activePool.getCLV();
         uint liquidatedColl = defaultPool.getETH();
@@ -843,6 +870,19 @@ contract CDPManager is Ownable, ICDPManager {
 
         uint totalCollateral = activeColl.add(liquidatedColl).add(_collIncrease);
         uint newTotalDebt = activeDebt.add(closedDebt).add(_debtIncrease);
+
+        uint newTCR = computeICR(totalCollateral, newTotalDebt, _price);
+        return newTCR;
+    }
+
+    function getNewTCRFromDecrease(uint _collDecrease, uint _debtDecrease, uint _price) internal view returns (uint) {
+        uint activeColl = activePool.getETH();
+        uint activeDebt = activePool.getCLV();
+        uint liquidatedColl = defaultPool.getETH();
+        uint closedDebt = defaultPool.getCLV();
+
+        uint totalCollateral = activeColl.add(liquidatedColl).sub(_collDecrease);
+        uint newTotalDebt = activeDebt.add(closedDebt).sub(_debtDecrease);
 
         uint newTCR = computeICR(totalCollateral, newTotalDebt, _price);
         return newTCR;

@@ -129,14 +129,6 @@ contract('PoolManager', async accounts => {
     const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
     const activePoolCLV = await activePool.getCLV({ from: mockPoolManagerAddress })
     const price = await priceFeed.getPrice()  // use the actual pool manager contract to get the price
-<<<<<<< HEAD
-
-    const expectedTCR = '66666666666666666666'
-
-    const TCR = (await poolManager.getTCR()).toString()
-
-    assert.deepEqual(TCR, expectedTCR)
-=======
     
     const expectedTCR = web3.utils.toBN('66666666666666666666')
     const TCR = (await poolManager.getTCR())
@@ -145,7 +137,6 @@ contract('PoolManager', async accounts => {
     const diff = Number(expectedTCR.sub(TCR).abs())
     console.log(`diff is ${diff}`)
     assert.isAtMost(diff, 100)
->>>>>>> gas-optimization
   })
 
   it('getActiveDebt(): returns the total CLV balance of the ActivePool', async () => {
