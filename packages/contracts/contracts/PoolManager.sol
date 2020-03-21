@@ -456,7 +456,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Transfer the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
     Applies their CLVLoss to the deposit. */
-    function withdrawFromSPtoCDP(address _user) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
+    function withdrawFromSPtoCDP(address _user, address _hint) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
         uint price = priceFeed.getPrice();  //3500 gas
    
         cdpManager.checkTCRAndSetRecoveryMode(price); // 18500 gas

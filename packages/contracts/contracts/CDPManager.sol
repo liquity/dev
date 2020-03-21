@@ -359,7 +359,7 @@ contract CDPManager is Ownable, ICDPManager {
         bool recoveryMode = checkTCRAndSetRecoveryMode(price);
         
         address user = _msgSender();
-        applyPendingRewards(_user);
+        applyPendingRewards(user);
 
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
         uint ICR = getCurrentICR(user, price);
@@ -367,15 +367,15 @@ contract CDPManager is Ownable, ICDPManager {
         
         require(recoveryMode == false, "CDPManager: Closing a loan is not permitted during Recovery Mode");
         
-        uint coll = CDPs[_user].coll;
-        uint debt = CDPs[_user].debt;
-        require (_amount >= debt, "CDPManager: Received CLV must cover the CDP's outstanding debt")
+        uint coll = CDPs[user].coll;
+        uint debt = CDPs[user].debt;
+        require (_amount >= debt, "CDPManager: Received CLV must cover the CDP's outstanding debt");
 
-        uint newTCR = getNewTCRFromDecrease(coll, debt, price)
-        require (newTCR >= CCR, "CDPManager: Closing the loan must not pull TCR below CCR" )
+        uint newTCR = getNewTCRFromDecrease(coll, debt, price);
+        require (newTCR >= CCR, "CDPManager: Closing the loan must not pull TCR below CCR" );
         
-        removeStake(_user)
-        closeCDP(_user)
+        removeStake(user);
+        closeCDP(user);
     
         // -Tell PM to burn _debt from the user's balance, and send the collateral back to the user
         poolManager.repayCLV(user, _amount);
@@ -509,7 +509,7 @@ contract CDPManager is Ownable, ICDPManager {
                 address user = sortedCDPs.getLast();
                 uint collRatio = getCurrentICR(user, price);
                 // attempt to close CDP
-                liquidate(user, user);
+                liquidate(user);
                 /* Break loop if the system has left recovery mode and all active CDPs are 
                 above the MCR, or if the loop reaches the first CDP in the sorted list  */
                 if ((recoveryMode == false && collRatio >= MCR) || (user == sortedCDPs.getFirst())) { break; }
@@ -525,7 +525,7 @@ contract CDPManager is Ownable, ICDPManager {
 
                 // Close CDPs if it is under-collateralized
                 if (collRatio < MCR) {
-                    liquidate(user, user);
+                    liquidate(user);
                 } else break;
                 
                 // Break loop if you reach the first CDP in the sorted list 

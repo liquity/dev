@@ -329,10 +329,10 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 5 ether and 900CLV.
-    await cdpManager.liquidate(carol, carol, { from: owner });
+    await cdpManager.liquidate(carol, { from: owner });
 
     // dennis opens a CDP with 2 ether
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await cdpManager.addColl(dennis, { from: dennis, value: _2_Ether })
 
     /* Check that Dennis's recorded stake is the right corrected stake, less than his collateral. A corrected 
     stake is given by the formula: 

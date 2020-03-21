@@ -180,8 +180,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // CDPs are closed
-      await cdpManager.liquidate(defaulter_1, defaulter_1, { from: owner })
-      await cdpManager.liquidate(defaulter_2, defaulter_2, { from: owner });
+      await cdpManager.liquidate(defaulter_1, { from: owner })
+      await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // --- TEST ---
       const S_CLV = (await poolManager.S_CLV())  // expected: 0.18 CLV
@@ -241,8 +241,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.liquidate(defaulter_1, defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.liquidate(defaulter_2, defaulter_2, { from: owner }); // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_2, { from: owner }); // 180 CLV closed
 
       // At this stage, total deposits = 2000 CLV: 1850CLV (from whale) and 150CLV (from Alice)
       const S_CLV_1 = await poolManager.S_CLV()   // expected: 0.18 CLV
@@ -277,7 +277,7 @@ contract('PoolManager', async accounts => {
       assert.equal(totalCLVDeposits, '2500000000000000000000')
 
       // Defaulter 3 CDP is closed
-      await cdpManager.liquidate(defaulter_3, defaulter_3, { from: owner })
+      await cdpManager.liquidate(defaulter_3, { from: owner })
 
       /*  Now, 'S' values have been impacted by 3 'default' events:
        S_CLV = (180/2000 + 180/2000 + 180/2500) = (0.09 + 0.09 + 0.072) = 0.252 CLV
@@ -326,8 +326,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.liquidate(defaulter_1, defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.liquidate(defaulter_2, defaulter_2, { from: owner }) // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_2, { from: owner }) // 180 CLV closed
 
       const S_CLV_1 = (await poolManager.S_CLV())  // expected: 0.18 CLV
       const S_ETH_1 = (await poolManager.S_ETH())  // expected: 0.001 Ether
@@ -383,8 +383,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.liquidate(defaulter_1, defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.liquidate(defaulter_2, defaulter_2, { from: owner }); // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_2, { from: owner }); // 180 CLV closed
 
       // Alice retrieves part of her entitled CLV: 90 CLV
       await poolManager.withdrawFromSP('90000000000000000000', { from: alice })
@@ -424,7 +424,7 @@ contract('PoolManager', async accounts => {
       / Alice's expected rewards:
       / CLV: 150 * 180/2000 = 13.5
       / ETH: 150 * 1/2000 = 0.075 */
-      await cdpManager.liquidate(defaulter_1, defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
 
       //check activePool and StabilityPool Ether before retrieval:
       const active_ETH_Before = await activePool.getETH()
@@ -475,10 +475,10 @@ contract('PoolManager', async accounts => {
       / Alice's expected rewards:
       / CLV: 150 * 180/2000 = 13.5
       / ETH: 150 * 1/2000 = 0.075 */
-      await cdpManager.liquidate(defaulter_1, defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
 
       // Alice sends her ETH Gains to her CDP
-      await poolManager.withdrawFromSPtoCDP(alice, {from: alice})
+      await poolManager.withdrawFromSPtoCDP(alice, alice, {from: alice})
 
       // check Alice's CLVLoss has been applied to her deposit - expect (150 - 13.5) = 136.5 CLV
       alice_deposit_afterDefault = (await poolManager.deposit(alice))
@@ -520,14 +520,14 @@ contract('PoolManager', async accounts => {
       / Alice's expected rewards:
       / CLV: 150 * 180/2000 = 13.5
       / ETH: 150 * 1/2000 = 0.075 */
-      await cdpManager.liquidate(defaulter_1, defaulter_1, { from: owner })  // 180 CLV closed
+      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
 
       //check activePool and StabilityPool Ether before retrieval:
       const active_ETH_Before = await activePool.getETH()
       const stability_ETH_Before = await stabilityPool.getETH()
 
       // Alice retrieves all of her deposit, 150CLV, choosing to redirect to her CDP
-      await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
 
       const active_ETH_After = await activePool.getETH()
       const stability_ETH_After = await stabilityPool.getETH()
@@ -565,8 +565,8 @@ contract('PoolManager', async accounts => {
       // price drops: defaulter's CDPs fall below MCR, whale doesn't
       await priceFeed.setPrice('100000000000000000000');
       // CDPs are closed
-      await cdpManager.liquidate(defaulter_1, defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, defaulter_2, { from: owner });
+      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.liquidate(defaulter_2, { from: owner });
 
       /*
       With 2000 CLV in StabilityPool, each closed CDP contributes:
@@ -605,7 +605,7 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // defaulter 1 gets closed
-      await cdpManager.liquidate(defaulter_1, defaulter_1, { from: owner });
+      await cdpManager.liquidate(defaulter_1, { from: owner });
 
       // whale 2 provides 2000 CLV to StabilityPool
       await cdpManager.addColl(whale_2, whale_2, { from: whale_2, value: _100_Ether })
@@ -613,7 +613,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP('2000000000000000000000', { from: whale_2 })
 
       // defaulter 2 gets closed
-      await cdpManager.liquidate(defaulter_2, defaulter_2, { from: owner });
+      await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Get accumulated rewards per unit staked
       const S_CLV_After = (await poolManager.S_CLV())   // expected: 1.125 CLV
