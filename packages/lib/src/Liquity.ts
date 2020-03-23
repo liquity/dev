@@ -328,33 +328,22 @@ export class Liquity {
   watchTrove(onTroveChanged: (trove: Trove) => void, address = this.requireAddress()) {
     const { CDPCreated, CDPUpdated, CDPClosed } = this.cdpManager.filters;
 
-    const cdpCreated = CDPCreated(address, null);
-    const cdpUpdated = CDPUpdated(address, null, null, null, null);
-    const cdpClosed = CDPClosed(address);
+    const cdpEventFilters = [
+      CDPCreated(address, null),
+      CDPUpdated(address, null, null, null, null),
+      CDPClosed(address)
+    ];
 
-    const cdpCreatedListener = () => {
-      onTroveChanged(new Trove());
-    };
-    const cdpUpdatedListener = (_address: string, debt: BigNumber, collateral: BigNumber) => {
-      // When a CDP is updated, pending rewards are applied to its collateral and debt, and then the
-      // rewards are reset to 0. Therefore we don't need to calculate them here.
-      onTroveChanged(new Trove({ collateral: new Decimal(collateral), debt: new Decimal(debt) }));
-    };
-    const cdpClosedListener = () => {
-      onTroveChanged(new Trove());
+    const cdpListener = () => {
+      this.getTrove(address).then(onTroveChanged);
     };
 
-    this.cdpManager.on(cdpCreated, cdpCreatedListener);
-    this.cdpManager.on(cdpUpdated, cdpUpdatedListener);
-    this.cdpManager.on(cdpClosed, cdpClosedListener);
+    cdpEventFilters.forEach(filter => this.cdpManager.on(filter, cdpListener));
 
     // TODO: we might want to setup a low-freq periodic task to check for any new rewards
 
-    return () => {
-      this.cdpManager.removeListener(cdpCreated, cdpCreatedListener);
-      this.cdpManager.removeListener(cdpUpdated, cdpUpdatedListener);
-      this.cdpManager.removeListener(cdpClosed, cdpClosedListener);
-    };
+    return () =>
+      cdpEventFilters.forEach(filter => this.cdpManager.removeListener(filter, cdpListener));
   }
 
   private async findHint(trove: Trove, price: Decimalish, address: string) {
@@ -470,8 +459,8 @@ export class Liquity {
     const { PriceUpdated } = this.priceFeed.filters;
     const priceUpdated = PriceUpdated(null);
 
-    const priceUpdatedListener = (price: BigNumber) => {
-      onPriceChanged(new Decimal(price));
+    const priceUpdatedListener = () => {
+      this.getPrice().then(onPriceChanged);
     };
 
     this.priceFeed.on(priceUpdated, priceUpdatedListener);
@@ -542,8 +531,8 @@ export class Liquity {
     const { UserDepositChanged } = this.poolManager.filters;
     const userDepositChanged = UserDepositChanged(address, null);
 
-    const userDepositChangedListener = (_address: string, deposit: BigNumber) => {
-      onStabilityDepositChanged(new StabilityDeposit({ deposit: new Decimal(deposit) }));
+    const userDepositChangedListener = () => {
+      this.getStabilityDeposit(address).then(onStabilityDepositChanged);
     };
 
     this.poolManager.on(userDepositChanged, userDepositChangedListener);

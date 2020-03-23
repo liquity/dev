@@ -79,7 +79,6 @@ export const useMyTransactionState = (myId: string | RegExp): TransactionState =
 };
 
 type ButtonlikeProps = {
-  variant?: "success" | "danger";
   disabled: boolean;
   onClick: () => void;
   children: React.ReactNode;
