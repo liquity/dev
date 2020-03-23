@@ -197,10 +197,20 @@ contract('Gas cost tests', async accounts => {
 
   // --- CDPManager gas functions ---
 
-  const openLoan_allAccounts = async( accounts, cdpManager, ETHAmount, CLVAmount) => {
+  const openLoan_allAccounts = async(accounts, cdpManager, ETHAmount, CLVAmount) => {
     const gasCostList = []
     for (const account of accounts) {
       const tx = await cdpManager.openLoan(CLVAmount, account, { from: account, value: ETHAmount })
+      const gas = gasUsed(tx)
+      gasCostList.push(gas)
+    }
+   return getGasMetrics(gasCostList)
+  }
+
+  const closeLoan_allAccounts = async(accounts, cdpManager) => {
+    const gasCostList = []
+    for (const account of accounts) {
+      const tx = await cdpManager.closeLoan({from: account})
       const gas = gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -458,7 +468,7 @@ contract('Gas cost tests', async accounts => {
     const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues 100 CLV'
   
     const amountETH = _10_Ether
-    const amountCLV = _100e18
+    const amountCLV = 0
     const gasResults = await openLoan_allAccounts(_10_Accounts, cdpManager, amountETH, amountCLV)
     logGasMetrics(gasResults, message)
     logAllGasCosts(gasResults)
@@ -482,6 +492,31 @@ contract('Gas cost tests', async accounts => {
     const amountETH = _20_Ether
     const amountCLV = 200
     const gasResults = await openLoan_allAccounts_decreasingCLVAmounts(_10_Accounts, cdpManager, amountETH, amountCLV)
+    logGasMetrics(gasResults, message)
+    logAllGasCosts(gasResults)
+    
+    appendData(gasResults, message, data)
+  })
+
+  // --- closeLoan() ---
+  
+  it.only("", async () => {
+    const message = 'closeLoan(), 10 accounts, 1 account closes its loan'
+    await openLoan_allAccounts_decreasingCLVAmounts(_10_Accounts, cdpManager, _10_Ether, 200)
+
+    const tx = await cdpManager.closeLoan({from: accounts[1]})
+    const gas = gasUsed(tx)
+    logGas(gas, message)
+
+    appendData({gas: gas}, message, data)
+  })
+
+  it.only("", async () => {
+    const message = 'closeLoan(), 20 accounts, each account adds 10 ether and issues less CLV than the previous one. First 10 accounts close their loan. '
+    await openLoan_allAccounts_decreasingCLVAmounts(_20_Accounts, cdpManager, _10_Ether, 200)
+    
+    const gasResults = await closeLoan_allAccounts(_10_Accounts, cdpManager)
+    
     logGasMetrics(gasResults, message)
     logAllGasCosts(gasResults)
     
@@ -1723,7 +1758,7 @@ it("", async () => {
 
 // --- liquidate() ---
 
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidate() 1 CDP Normal Mode, 10 active CDPs, No funds in SP, no ETH gain in pool, pure redistribution'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV
   await addColl_allAccounts(accounts.slice(2,12), cdpManager, _10_Ether)
@@ -1743,7 +1778,7 @@ it.only("", async () => {
   appendData({gas: gas}, message, data)
 })
 
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidate() 1 CDP Normal Mode, 10 active CDPs, no ETH gain in pool, offset + redistribution'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV
   await addColl_allAccounts(accounts.slice(2,12), cdpManager, _10_Ether)
@@ -1766,7 +1801,7 @@ it.only("", async () => {
   appendData({gas: gas}, message, data)
 })
 
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidate() 1 CDP Normal Mode, 10 active CDPs, no ETH gain in pool, pure offset with SP'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV
   await addColl_allAccounts(accounts.slice(2,12), cdpManager, _10_Ether)
@@ -1836,7 +1871,7 @@ it("", async () => {
 
 // with SP gains (remains active)
 
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidate() 1 CDP, liquidated CDP has pending SP rewards that keep it active'
   // 10 accts each open CDP with 10 ether
   await addColl_allAccounts(accounts.slice(1,11), cdpManager, _10_Ether)
@@ -1877,7 +1912,7 @@ it.only("", async () => {
 
 // Liquidate a CDP with SP gains (still closes), full offset with SP
 
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidate() 1 CDP, liquidated CDP has pending SP rewards, but gets liquidated anyway, pure offset with SP'
   let price = await priceFeed.getPrice()
   console.log("price is " + price)
@@ -1926,7 +1961,7 @@ it.only("", async () => {
 
 // Liquidate a CDP with SP gains (still closes), partial offset with SP
 
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidate() 1 CDP, liquidated CDP has pending SP rewards, but gets liquidated anyway, offset + redistribution'
   let price = await priceFeed.getPrice()
   // 10 accts each open CDP with 10 ether
@@ -1978,7 +2013,7 @@ it.only("", async () => {
 
 
 // With pending dist. rewards and SP gains (still closes) - partial offset (Highest gas cost scenario in Normal Mode)
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidate() 1 CDP, liquidated CDP has pending SP rewards and redistribution rewards, offset + redistribution.'
   // 10 accts each open CDP with 10 ether
   await addColl_allAccounts(accounts.slice(1,11), cdpManager, _10_Ether)

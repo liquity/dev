@@ -25,10 +25,18 @@ const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegis
 
 contract('CDPManager', async accounts => {
   const _1_Ether = web3.utils.toWei('1', 'ether')
+  const _2_Ether = web3.utils.toWei('2', 'ether')
+  const _5_Ether = web3.utils.toWei('5', 'ether')
   const _10_Ether = web3.utils.toWei('10', 'ether')
   const _11_Ether = web3.utils.toWei('11', 'ether')
+  const _15_Ether = web3.utils.toWei('15', 'ether')
   const _50_Ether = web3.utils.toWei('50', 'ether')
-  const _98_Ether = web3.utils.toWei('98', 'ether')
+  const _100_Ether = web3.utils.toWei('50', 'ether')
+
+  const _100e18 = web3.utils.toWei('100', 'ether')
+  const _150e18 = web3.utils.toWei('150', 'ether')
+  const _180e18 = web3.utils.toWei('180', 'ether')
+  const _200e18 = web3.utils.toWei('180', 'ether')
 
   const [owner, alice, bob, carol, dennis, whale] = accounts;
   let priceFeed
@@ -86,18 +94,272 @@ contract('CDPManager', async accounts => {
   })
 
   // --- closeLoan() ---
-  // 
 
+  it("closeLoan(): reduces a CDP's collateral to zero", async () => {
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
+    // await cdpManager.withdrawCLV(_100e18, dennis, { from: dennis })
 
+    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+    await cdpManager.withdrawCLV(_100e18, alice, { from: alice })
 
+    const collBefore = ((await cdpManager.CDPs(alice))[1]).toString()
+    assert.equal(collBefore, _1_Ether)
 
+    // Alice attempts to close loan
+    await cdpManager.closeLoan({ from: alice})
 
+    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    assert.equal(collAfter, '0')
+    // check withdrawal was successful
+  })
 
+  it("closeLoan(): reduces a CDP's debt to zero", async () => {
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
 
+    await cdpManager.addColl(alice, alice, { from: alice, value:_1_Ether })
+    await cdpManager.withdrawCLV(_100e18, alice, { from: alice })
 
+    const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
+    assert.equal(debtBefore, _100e18)
 
+    // Alice attempts to close loan
+    await cdpManager.closeLoan({ from: alice})
 
+    const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
+    assert.equal(debtAfter, '0')
+    // check withdrawal was successful
+  })
 
+  it("closeLoan(): sets CDP's stake to zero", async () => {
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
+
+    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+    await cdpManager.withdrawCLV(_100e18, alice, { from: alice })
+
+    const stakeBefore = ((await cdpManager.CDPs(alice))[2]).toString()
+    assert.equal(stakeBefore, _1_Ether)
+
+    // Alice attempts to close loan
+    await cdpManager.closeLoan({ from: alice})
+
+    const stakeAfter = ((await cdpManager.CDPs(alice))[2]).toString()
+    assert.equal(stakeAfter, '0')
+    // check withdrawal was successful
+  })
+
+  it("closeLoan(): closes the CDP", async () => {
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
+    
+    await cdpManager.addColl(alice, alice, { from: alice, value:_1_Ether })
+    await cdpManager.withdrawCLV(_100e18, alice, { from: alice })
+  
+    // Check CDP is active
+    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const status_Before = alice_CDP_Before[3]
+    
+    assert.equal(status_Before, 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
+    
+    // Close the loan
+    await cdpManager.closeLoan({ from: alice})
+
+    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const status_After = alice_CDP_After[3]
+
+    assert.equal(status_After, 2)
+    assert.isFalse(await sortedCDPs.contains(alice))
+  })
+
+  it("closeLoan(): reduces ActivePool ETH and raw ether by correct amount", async () => {
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
+
+    await cdpManager.addColl(alice, alice, { from: alice, value:_1_Ether })
+    await cdpManager.withdrawCLV(_100e18, alice,{ from: alice })
+
+    // Check before
+    const activePool_ETH_before = await activePool.getETH()
+    const activePool_RawEther_before = await web3.eth.getBalance(activePool.address)
+    assert.equal(activePool_ETH_before, _11_Ether)
+    assert.equal(activePool_RawEther_before, _11_Ether)
+
+     // Close the loan
+     await cdpManager.closeLoan({ from: alice})
+
+    // Check after
+    const activePool_ETH_After = await activePool.getETH()
+    const activePool_RawEther_After = await web3.eth.getBalance(activePool.address)
+    assert.equal(activePool_ETH_After, _10_Ether)
+    assert.equal(activePool_RawEther_After, _10_Ether)
+  })
+
+  it("closeLoan(): reduces ActivePool debt by correct amount", async () => {
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
+
+    await cdpManager.addColl(alice, alice, { from: alice, value:_1_Ether })
+    await cdpManager.withdrawCLV(_100e18, alice, { from: alice })
+
+    // Check before
+    const activePool_Debt_before = (await activePool.getETH()).toString()
+    assert.equal(activePool_Debt_before, _11_Ether)
+   
+     // Close the loan
+     await cdpManager.closeLoan({from: alice})
+
+    // Check after
+    const activePool_Debt_After = (await activePool.getCLV()).toString()
+    assert.equal(activePool_Debt_After, 0)
+  })
+
+  it("closeLoan(): updates the the total stakes", async () => {
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
+    //  Alice creates initial CDP with 2 ether
+    await cdpManager.addColl(alice, alice, {from: alice, value: _1_Ether })
+    await cdpManager.addColl(bob, bob, {from: alice, value:  _1_Ether })
+
+    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_Stake_Before = alice_CDP_Before[2].toString()
+    const totalStakes_Before = (await cdpManager.totalStakes()).toString()
+
+    assert.equal(alice_Stake_Before, '1000000000000000000')
+    assert.equal(totalStakes_Before, '12000000000000000000')
+
+    // Alice closes loan
+    await cdpManager.closeLoan({ from: alice })
+
+    // Check stake and total stakes get updated
+    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_Stake_After = alice_CDP_After[2].toString()
+    const totalStakes_After = (await cdpManager.totalStakes()).toString()
+
+    assert.equal(alice_Stake_After, 0)
+    assert.equal(totalStakes_After, _11_Ether)
+  })
+  
+  it("closeLoan(): sends the correct amount of ETH to the user", async () => {
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
+    
+    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+  
+    const alice_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(alice))
+
+    const tx = await cdpManager.closeLoan({ from: alice })
+    
+    const gasUsed = web3.utils.toBN(tx.receipt.gasUsed)
+    const gasPrice = web3.utils.toBN(await web3.eth.getGasPrice())
+    const gasValueInWei = gasUsed.mul(gasPrice)  
+    
+    const alice_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(alice))
+    
+    const balanceDiff = alice_ETHBalance_After.sub(alice_ETHBalance_Before).add(gasValueInWei)
+    
+    assert.equal(balanceDiff, _1_Ether)
+  })
+
+  it("closeLoan(): subtracts the debt of the closed CDP from the Borrower's CLVToken balance", async () => {
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
+    
+    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+    await cdpManager.withdrawCLV(_100e18, alice, { from: alice })
+
+    const alice_CLVBalance_Before = await clvToken.balanceOf(alice)
+    assert.equal(alice_CLVBalance_Before, _100e18) 
+
+    // close loan
+    await cdpManager.closeLoan({ from: alice })
+
+    // check alive CLV balance after
+
+    const alice_CLVBalance_After = await clvToken.balanceOf(alice)
+    assert.equal(alice_CLVBalance_After, 0) 
+  })
+
+  it("closeLoan(): applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
+    // --- SETUP ---
+    // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether
+    await cdpManager.addColl(alice, alice, { from: alice, value: _15_Ether })
+    await cdpManager.addColl(bob, bob, { from: bob, value: _5_Ether })
+    await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
+    
+    // Alice and Bob withdraw 100CLV, Carol withdraws 180CLV
+    await cdpManager.withdrawCLV('100000000000000000000', alice, { from: alice })
+    await cdpManager.withdrawCLV('100000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('180000000000000000000', carol, { from: carol })
+  
+    // --- TEST ---
+
+    // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
+    await priceFeed.setPrice('100000000000000000000');
+    const price = await priceFeed.getPrice()
+
+    // close Carol's CDP, liquidating her 1 ether and 180CLV. Alice and Bob earn rewards.
+    await cdpManager.liquidate(carol, { from: owner });
+
+    // Dennis opens a new CDP with 10 Ether, withdraws CLV and sends 135 CLV to Alice, and 45 CLV to Bob.
+  
+    await cdpManager.addColl(dennis, dennis, {from: dennis, value: _100_Ether})
+    await cdpManager.withdrawCLV(_200e18, dennis, {from: dennis})
+    await clvToken.transfer(alice, '135000000000000000000', {from: dennis})
+    await clvToken.transfer(bob, '45000000000000000000', {from: dennis})
+
+    // check Alice and Bob's reward snapshots are zero before they alter their CDPs
+    alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
+    const alice_ETHrewardSnapshot_Before = alice_rewardSnapshot_Before[0]
+    const alice_CLVDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
+    
+    const bob_rewardSnapshot_Before = await cdpManager.rewardSnapshots(bob)
+    const bob_ETHrewardSnapshot_Before = bob_rewardSnapshot_Before[0]
+    const bob_CLVDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
+
+    assert.equal(alice_ETHrewardSnapshot_Before, 0)
+    assert.equal(alice_CLVDebtRewardSnapshot_Before, 0)
+    assert.equal(bob_ETHrewardSnapshot_Before, 0)
+    assert.equal(bob_CLVDebtRewardSnapshot_Before, 0)
+    
+    /* Check that system rewards-per-unit-staked are correct. When Carol defaulted, 
+    the reward-per-unit-staked due to her CDP liquidation was (1/20) = 0.05 ETH and (180/20) = 9 CLV Debt. */
+    const L_ETH = await cdpManager.L_ETH()
+    const L_CLVDebt = await cdpManager.L_CLVDebt()
+   
+    assert.isAtMost(getDifference(L_ETH, '50000000000000000'), 100)
+    assert.isAtMost(getDifference(L_CLVDebt, '9000000000000000000'), 100)
+
+    const defaultPool_ETH = await defaultPool.getETH()
+    const defaultPool_CLVDebt = await defaultPool.getCLV()
+    
+    // Carol's liquidated coll (1 ETH) and debt (180 CLV) should have entered the Default Pool
+    assert.isAtMost(getDifference(defaultPool_ETH, _1_Ether), 100)
+    assert.isAtMost(getDifference(defaultPool_CLVDebt, _180e18), 100)
+
+    /* Close Alice's loan.
+    
+    Alice, with a stake of 15 ether, should have earned (15 * 1/20)  = 0.75 ETH, and (15 *180/20) = 135 CLV Debt.
+    These rewards are applied when she closes her loan. 
+    
+    Default Pool coll should be (1-0.75) = 0.25 ETH, and DefaultPool debt should be (180-135) = 45 CLV.
+    // check L_ETH and L_CLV reduce by Alice's reward */
+    await cdpManager.closeLoan({ from: alice })
+
+    const defaultPool_ETH_afterAliceCloses = await defaultPool.getETH()
+    const defaultPool_CLVDebt_afterAliceCloses = await defaultPool.getCLV()
+
+    assert.isAtMost(getDifference(defaultPool_ETH_afterAliceCloses, 250000000000000000), 100)
+    assert.isAtMost(getDifference(defaultPool_CLVDebt_afterAliceCloses, 45000000000000000000), 100)
+
+    /* Close Bob's loan.
+
+    Bob, with a stake of 5 ether, should have earned (5 * 1/20)  = 0.25 ETH, and (5 *180/20) = 45 CLV.
+    DefaultPool coll should reduce by 0.25 ETH to 0, and DefaultPool debt should reduce by 45, to 0. */
+
+    await cdpManager.closeLoan({ from: bob })
+
+    const defaultPool_ETH_afterBobCloses = await defaultPool.getETH()
+    const defaultPool_CLVDebt_afterBobCloses = await defaultPool.getCLV()
+
+    assert.isAtMost(getDifference(defaultPool_ETH_afterBobCloses, 0), 100)
+    assert.isAtMost(getDifference(defaultPool_CLVDebt_afterBobCloses, 0), 100)
+  })
+
+ // --- openLoan() ---
 
   it("openLoan(): creates a new CDP and assigns the correct collateral and debt amount", async () => {
     const alice_CDP_Before = await cdpManager.CDPs(alice)

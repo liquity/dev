@@ -143,7 +143,7 @@ contract CDPManager is Ownable, ICDPManager {
         return CDPOwners.length;
     }
     
-    // --- CDP Operations ---
+    // --- Borrower CDP Operations ---
 
     function openLoan(uint _CLVAmount, address _hint) public payable returns (bool) {
         uint price = priceFeed.getPrice(); 
@@ -161,7 +161,7 @@ contract CDPManager is Ownable, ICDPManager {
         require(ICR >= MCR, "CDPManager: ICR of prospective loan must be >= than the MCR"); 
       
         uint newTCR = getNewTCR(msg.value, _CLVAmount, price);  
-        require (newTCR >= CCR, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted");  // 10 gas
+        require (newTCR >= CCR || _CLVAmount == 0, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted");  // 10 gas
        
         // Update loan properties
         CDPs[user].status = Status.active;  // 21000 gas
@@ -326,11 +326,11 @@ contract CDPManager is Ownable, ICDPManager {
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
         require(_amount > 0, "CDPManager: Repaid amount must be larger than 0");
        
-       applyPendingRewards(user);
+        applyPendingRewards(user);
 
         uint debt = CDPs[user].debt;
         require(_amount <= debt, "CDPManager: Repaid amount is larger than current debt");
-        // require(CLV.balanceOf(user) >= _amount, "CDPManager: Sender has insufficient CLV balance");
+        
         // TODO: Maybe allow foreign accounts to repay loans
         
         // Update the CDP's debt
@@ -354,7 +354,7 @@ contract CDPManager is Ownable, ICDPManager {
         return true;
     }
 
-    function closeLoan(uint _amount) public returns (bool) {
+    function closeLoan() public returns (bool) {
         uint price = priceFeed.getPrice();
         bool recoveryMode = checkTCRAndSetRecoveryMode(price);
         
@@ -362,24 +362,24 @@ contract CDPManager is Ownable, ICDPManager {
         applyPendingRewards(user);
 
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
-        uint ICR = getCurrentICR(user, price);
-        require (ICR < 100000000000000000000 || ICR >= MCR, "CDPManager: ICR must not be in liquidation range of 100-110%");
-        
         require(recoveryMode == false, "CDPManager: Closing a loan is not permitted during Recovery Mode");
         
         uint coll = CDPs[user].coll;
         uint debt = CDPs[user].debt;
-        require (_amount >= debt, "CDPManager: Received CLV must cover the CDP's outstanding debt");
 
         uint newTCR = getNewTCRFromDecrease(coll, debt, price);
-        require (newTCR >= CCR, "CDPManager: Closing the loan must not pull TCR below CCR" );
+        require (newTCR >= CCR, "CDPManager: Closing the loan must not pull TCR below CCR");
         
         removeStake(user);
         closeCDP(user);
     
-        // -Tell PM to burn _debt from the user's balance, and send the collateral back to the user
-        poolManager.repayCLV(user, _amount);
-        poolManager.withdrawColl(user, _amount);
+        // Tell PM to burn the debt from the user's balance, and send the collateral back to the user
+        poolManager.repayCLV(user, debt);
+        poolManager.withdrawColl(user, coll);
+
+        checkTCRAndSetRecoveryMode(price);
+        emit CDPUpdated(user, 0, 0, 0);
+        return true; 
     }
 
     // --- CDP Liquidation functions ---
@@ -857,7 +857,7 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     // Get the dollar value of collateral, as a duint
-    function getUSDValue(uint _coll, uint _price) internal view returns (uint) {
+    function getUSDValue(uint _coll, uint _price) public view returns (uint) {
         uint usdValue = ABDKMath64x64.mulu(ABDKMath64x64.divu(_price, 1000000000000000000), _coll);  // 500 gas
         return usdValue;
     }

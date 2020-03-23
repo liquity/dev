@@ -332,7 +332,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(carol, { from: owner });
 
     // dennis opens a CDP with 2 ether
-    await cdpManager.addColl(dennis, { from: dennis, value: _2_Ether })
+    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     /* Check that Dennis's recorded stake is the right corrected stake, less than his collateral. A corrected 
     stake is given by the formula: 
@@ -568,7 +568,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    await cdpManager.liquidate(carol, carol, { from: owner });
+    await cdpManager.liquidate(carol, { from: owner });
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
     alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
@@ -713,7 +713,7 @@ contract('CDPManager', async accounts => {
     assert.equal(activePool_CLV_After, 0)
   })
 
-  it("repayCLV(): increases user CLVToken balance by correct amount", async () => {
+  it("repayCLV(): decreases user CLVToken balance by correct amount", async () => {
     await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
 
     // check before
