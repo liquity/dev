@@ -192,6 +192,12 @@ export class Decimal {
     }
   }
 
+  get finite() {
+    if (!this.eq(Decimal.INFINITY)) {
+      return this;
+    }
+  }
+
   get absoluteValue() {
     return this;
   }
@@ -292,6 +298,10 @@ export class Difference {
 
   get infinite() {
     return this.number?.absoluteValue.infinite && this;
+  }
+
+  get finite() {
+    return this.number?.absoluteValue.finite && this;
   }
 }
 

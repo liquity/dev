@@ -129,6 +129,8 @@ task(
       if (++i % 10 === 0) {
         console.log(`Created ${i} Troves.`);
       }
+
+      await new Promise(resolve => setTimeout(resolve, 4000));
     }
   }
 );

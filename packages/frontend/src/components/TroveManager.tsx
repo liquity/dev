@@ -1,175 +1,135 @@
 import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Loader } from "rimble-ui";
-import { ContractTransaction } from "ethers";
 
 import { Trove, Liquity, Pool } from "@liquity/lib";
-import { Decimal, Difference } from "@liquity/lib/dist/utils";
-import { useToast } from "../hooks/ToastProvider";
+import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { TroveEditor } from "./TroveEditor";
-
-type TroveAction = [
-  string,
-  (liquity: Liquity, trove: Trove, price: Decimal) => Promise<ContractTransaction>
-];
-
-const getTroveAction = (property: "collateral" | "debt", difference: Difference): TroveAction => {
-  switch (property) {
-    case "collateral":
-      if (difference.positive) {
-        return [
-          `Deposit ${difference.absoluteValue!.prettify()} ETH`,
-          (liquity: Liquity, trove: Trove, price: Decimal) => {
-            return liquity.depositEther(trove, difference.absoluteValue!, price);
-          }
-        ];
-      } else {
-        return [
-          `Withdraw ${difference.absoluteValue!.prettify()} ETH`,
-          (liquity: Liquity, trove: Trove, price: Decimal) => {
-            return liquity.withdrawEther(trove, difference.absoluteValue!, price);
-          }
-        ];
-      }
-    case "debt":
-      if (difference.positive) {
-        return [
-          `Borrow ${difference.absoluteValue!.prettify()} QUI`,
-          (liquity: Liquity, trove: Trove, price: Decimal) => {
-            return liquity.borrowQui(trove, difference.absoluteValue!, price);
-          }
-        ];
-      } else {
-        return [
-          `Repay ${difference.absoluteValue!.prettify()} QUI`,
-          (liquity: Liquity, trove: Trove, price: Decimal) => {
-            return liquity.repayQui(trove, difference.absoluteValue!, price);
-          }
-        ];
-      }
-  }
-};
-
-const getNewTroveAction = (): TroveAction => {
-  return [
-    `Open new Trove`,
-    (liquity: Liquity, trove: Trove, price: Decimal) => {
-      return trove.debt.nonZero
-        ? liquity.createTrove(trove, price)
-        : liquity.depositEther(new Trove(), trove.collateral, price);
-    }
-  ];
-};
+import { Transaction, TransactionFunction, useMyTransactionState } from "./Transaction";
 
 type TroveActionProps = {
   liquity: Liquity;
-  originalTrove?: Trove;
+  originalTrove: Trove;
   editedTrove: Trove;
-  setEditedTrove: (trove: Trove) => void;
+  changePending: boolean;
+  setChangePending: (isPending: boolean) => void;
   price: Decimal;
   pool: Pool;
 };
+
+const mcrPercent = new Percent(Liquity.MINIMUM_COLLATERAL_RATIO).toString(0);
 
 const TroveAction: React.FC<TroveActionProps> = ({
   liquity,
   originalTrove,
   editedTrove,
-  setEditedTrove,
+  changePending,
+  setChangePending,
   price,
   pool
 }) => {
-  const [actionState, setActionState] = useState<"idle" | "waitingForUser" | "waitingForNetwork">(
-    "idle"
-  );
-  const change = (originalTrove || new Trove()).whatChanged(editedTrove);
-  const { addMessage } = useToast();
+  const myTransactionId = "trove";
+  const myTransactionState = useMyTransactionState(myTransactionId);
+  const change = originalTrove.whatChanged(editedTrove);
 
   useEffect(() => {
-    setActionState("idle");
-  }, [originalTrove]);
+    if (myTransactionState.type === "idle") {
+      setChangePending(false);
+    } else if (myTransactionState.type === "waitingForApproval") {
+      setChangePending(true);
+    }
+  }, [myTransactionState.type, setChangePending]);
 
   if (!change) {
     return null;
   }
 
-  const [actionName, action] = !originalTrove
-    ? getNewTroveAction()
-    : getTroveAction(change.property, change.difference);
+  const [actionName, send]: [string, TransactionFunction] = originalTrove.isEmpty
+    ? [
+        `Open new Trove`,
+        editedTrove.debt.nonZero
+          ? liquity.createTrove.bind(liquity, editedTrove, price)
+          : liquity.depositEther.bind(liquity, originalTrove, editedTrove.collateral, price)
+      ]
+    : (({ verb, unit, method }): [string, TransactionFunction] => [
+        `${verb} ${change.difference.absoluteValue!.prettify()} ${unit}`,
+        method.bind(liquity, originalTrove, change.difference.absoluteValue!, price)
+      ])(
+        {
+          collateral: [
+            { verb: "Withdraw", unit: "ETH", method: liquity.withdrawEther },
+            { verb: "Deposit", unit: "ETH", method: liquity.depositEther }
+          ],
+          debt: [
+            { verb: "Repay", unit: "QUI", method: liquity.repayQui },
+            { verb: "Borrow", unit: "QUI", method: liquity.borrowQui }
+          ]
+        }[change.property][change.difference.positive ? 1 : 0]
+      );
 
-  return (
+  return myTransactionState.type === "waitingForApproval" ? (
     <Flex mt={4} justifyContent="center">
-      {actionState === "idle" ? (
-        <>
-          <Button
-            mx={2}
-            disabled={
-              editedTrove.isBelowMinimumCollateralRatioAt(price) ||
-              (pool.isRecoveryModeActiveAt(price) &&
-                ((!originalTrove && editedTrove.debt.nonZero) ||
-                  (originalTrove &&
-                    editedTrove
-                      .collateralRatioAfterRewardsAt(price)
-                      .lt(originalTrove.collateralRatioAfterRewardsAt(price)))))
-            }
-            onClick={() => {
-              setActionState("waitingForUser");
-              action(liquity, originalTrove || editedTrove, price)
-                .then(() => {
-                  setActionState("waitingForNetwork");
-                })
-                .catch(() => {
-                  setActionState("idle");
-                  addMessage("Transaction failed", {
-                    variant: "failure"
-                  });
-                });
-            }}
-          >
-            {actionName}
-          </Button>
-          <Button
-            mx={2}
-            variant="danger"
-            icon="Replay"
-            icononly
-            onClick={() => setEditedTrove(originalTrove || new Trove())}
-          />
-        </>
-      ) : (
-        <Button mx={2} disabled>
-          <Loader mr={2} color="white" />
-          {actionState === "waitingForUser"
-            ? "Waiting for your confirmation"
-            : "Transaction in progress"}
-        </Button>
-      )}
+      <Button disabled mx={2}>
+        <Loader mr={2} color="white" />
+        Waiting for your approval
+      </Button>
+    </Flex>
+  ) : changePending ? null : (
+    <Flex mt={4} justifyContent="center">
+      <Transaction
+        id={myTransactionId}
+        requires={[
+          [
+            !editedTrove.isBelowMinimumCollateralRatioAt(price),
+            `Collateral ratio must be at least ${mcrPercent}`
+          ],
+          [
+            !pool.isRecoveryModeActiveAt(price) ||
+              editedTrove.debt.lte(originalTrove.debtAfterReward),
+            "Borrowing QUI is not allowed during recovery mode"
+          ],
+          [
+            !pool.isRecoveryModeActiveAt(price) ||
+              editedTrove.collateral.gte(originalTrove.collateralAfterReward),
+            "Withdrawing ETH is not allowed during recovery mode"
+          ]
+        ]}
+        {...{ send }}
+      >
+        <Button mx={2}>{actionName}</Button>
+      </Transaction>
     </Flex>
   );
 };
 
 type TroveManagerProps = {
   liquity: Liquity;
-  trove?: Trove;
+  trove: Trove;
   price: Decimal;
   pool: Pool;
 };
 
 export const TroveManager: React.FC<TroveManagerProps> = ({ liquity, trove, price, pool }) => {
-  const newTrove = !trove;
   const originalTrove = trove;
-  const [editedTrove, setEditedTrove] = useState(originalTrove || new Trove());
+  const [editedTrove, setEditedTrove] = useState(trove);
+  const [changePending, setChangePending] = useState(false);
 
-  useEffect(() => setEditedTrove(originalTrove || new Trove()), [originalTrove]);
+  useEffect(() => {
+    setEditedTrove(trove);
+    setChangePending(false);
+  }, [trove]);
 
   return (
     <>
       <Box mt={4}>
         <TroveEditor
-          title={newTrove ? "Open a new Liquity Trove" : "Your Liquity Trove"}
-          {...{ originalTrove, editedTrove, setEditedTrove, price }}
+          title={originalTrove.isEmpty ? "Open a new Liquity Trove" : "Your Liquity Trove"}
+          {...{ originalTrove, editedTrove, setEditedTrove, changePending, price }}
         />
       </Box>
 
-      <TroveAction {...{ liquity, originalTrove, editedTrove, setEditedTrove, price, pool }} />
+      <TroveAction
+        {...{ liquity, originalTrove, editedTrove, changePending, setChangePending, price, pool }}
+      />
     </>
   );
 };

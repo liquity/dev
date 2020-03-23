@@ -27,6 +27,7 @@
     "ethers": "^4.0.45",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
+    "react-circular-progressbar": "^2.0.3",
     "react-copy-to-clipboard": "^5.0.2",
     "react-dom": "^16.12.0",
     "react-is": "^16.12.0",
