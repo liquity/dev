@@ -25,7 +25,14 @@ const Table = styled.table<SpaceProps & LayoutProps>`
   }
 
   & tr td:nth-child(2) {
-    width: 0;
+    width: 7%;
+    text-align: left;
+  }
+
+  & tr td:nth-child(3),
+  & tr td:nth-child(4),
+  & tr td:nth-child(5) {
+    width: 18%;
   }
 
   & tr td:nth-child(7) {
@@ -122,10 +129,26 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
             <thead>
               <tr>
                 <th colSpan={2}>Owner</th>
-                <th>Collateral (ETH)</th>
-                <th>Gain (ETH)</th>
-                <th>Debt (QUI)</th>
-                <th>Coll. Ratio</th>
+                <th>
+                  Collateral
+                  <br />
+                  (ETH)
+                </th>
+                <th>
+                  Stab. Gain
+                  <br />
+                  (ETH)
+                </th>
+                <th>
+                  Debt
+                  <br />
+                  (QUI)
+                </th>
+                <th>
+                  Coll.
+                  <br />
+                  Ratio
+                </th>
                 <th></th>
               </tr>
             </thead>
