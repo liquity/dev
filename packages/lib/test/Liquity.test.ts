@@ -197,7 +197,7 @@ describe("Liquity", () => {
       await liquity.liquidateMany(1);
       const otherTrove = await otherLiquities[0].getTrove();
 
-      expect(otherTrove).to.be.undefined;
+      expect(otherTrove.isEmpty).to.be.true;
     });
 
     it("should have a depleted stability deposit and some collateral gain", async () => {
@@ -206,7 +206,7 @@ describe("Liquity", () => {
       expect(deposit).to.deep.equal(
         new StabilityDeposit({
           deposit: 10,
-          pendingCollateralGain: "0.05725641025641026",
+          pendingCollateralGain: "0.05725641025641025",
           pendingDepositLoss: 10
         })
       );
@@ -219,19 +219,19 @@ describe("Liquity", () => {
         new Trove({
           collateral: 2,
           debt: 110,
-          pendingCollateralReward: "0.166043589743589744",
+          pendingCollateralReward: "0.166043589743589742",
           pendingDebtReward: 29
         })
       );
     });
 
-    // Currently failing due to a rounding problem in the contracts
     it("should transfer the gains to the Trove", async () => {
       await liquity.transferCollateralGainToTrove(deposit, trove, price);
       trove = await liquity.getTrove();
       deposit = await liquity.getStabilityDeposit();
 
-      expect(trove).to.deep.equal(new Trove({ collateral: 2.2233, debt: 139 }));
+      // With ABDKMath64x64, a microscopic amount of Ether can get lost
+      expect(trove).to.deep.equal(new Trove({ collateral: "2.22329999999999999", debt: 139 }));
       expect(deposit.isEmpty).to.be.true;
     });
   });
@@ -264,7 +264,7 @@ describe("Liquity", () => {
         });
 
         it("should return undefined", async () => {
-          const foundAddress = await liquity.findLastTroveAboveMinimumCollateralRatio();
+          const foundAddress = await liquity.findLastTroveAboveMinimumCollateralRatio(price);
 
           expect(foundAddress).to.be.undefined;
         });
@@ -294,7 +294,7 @@ describe("Liquity", () => {
         });
 
         it("should find a Trove with ICR >= MCR that's followed by a Trove with ICR < MCR", async () => {
-          const foundAddress = await liquity.findLastTroveAboveMinimumCollateralRatio();
+          const foundAddress = await liquity.findLastTroveAboveMinimumCollateralRatio(price);
           expect(foundAddress).to.not.be.undefined;
 
           const foundTrove = await liquity.getTrove(foundAddress);

@@ -326,13 +326,9 @@ export class Liquity {
   }
 
   watchTrove(onTroveChanged: (trove: Trove) => void, address = this.requireAddress()) {
-    const { CDPCreated, CDPUpdated, CDPClosed } = this.cdpManager.filters;
+    const { CDPCreated, CDPUpdated } = this.cdpManager.filters;
 
-    const cdpEventFilters = [
-      CDPCreated(address, null),
-      CDPUpdated(address, null, null, null, null),
-      CDPClosed(address)
-    ];
+    const cdpEventFilters = [CDPCreated(address, null), CDPUpdated(address, null, null, null)];
 
     const cdpListener = () => {
       this.getTrove(address).then(onTroveChanged);
@@ -357,6 +353,7 @@ export class Liquity {
       return address;
     }
 
+    price = Decimal.from(price);
     const numberOfTrials = bigNumberify(Math.ceil(Math.sqrt(numberOfTroves))); // XXX not multiplying by 10 here
     const collateralRatio = trove.collateralRatioAfterRewardsAt(price).bigNumber;
 
@@ -367,6 +364,7 @@ export class Liquity {
 
     const { 0: hint } = await this.sortedCDPs.findInsertPosition(
       collateralRatio,
+      price.bigNumber,
       approxHint,
       approxHint
     );
@@ -487,18 +485,8 @@ export class Liquity {
     return new Pool({ activeCollateral, activeDebt, liquidatedCollateral, closedDebt });
   }
 
-  async liquidate(
-    address: string,
-    trove: Trove,
-    deposit: StabilityDeposit,
-    price: Decimalish,
-    overrides?: LiquityTransactionOverrides
-  ) {
-    return this.cdpManager.liquidate(
-      address,
-      await this.findHint(trove.addCollateral(deposit.pendingCollateralGain), price, address),
-      { ...overrides }
-    );
+  async liquidate(address: string, overrides?: LiquityTransactionOverrides) {
+    return this.cdpManager.liquidate(address, { ...overrides });
   }
 
   async liquidateMany(
@@ -579,23 +567,22 @@ export class Liquity {
     const transferFromUser = Transfer(address, null, null);
     const transferToUser = Transfer(null, address, null);
 
+    const transferFilters = [transferFromUser, transferToUser];
+
     const transferListener = () => {
       this.getQuiBalance(address).then(onQuiBalanceChanged);
     };
 
-    this.clvToken.on(transferFromUser, transferListener);
-    this.clvToken.on(transferToUser, transferListener);
+    transferFilters.forEach(filter => this.clvToken.on(filter, transferListener));
 
-    return () => {
-      this.clvToken.removeListener(transferFromUser, transferListener);
-      this.clvToken.removeListener(transferToUser, transferListener);
-    };
+    return () =>
+      transferFilters.forEach(filter => this.clvToken.removeListener(filter, transferListener));
   }
 
   // Try to find the Trove with the lowest collateral ratio that is still above the minimum ratio
   // (i.e. it won't be liquidated by a redemption).
   // If no Trove is above the MCR, then it will find the Trove with the highest collateral ratio.
-  async findLastTroveAboveMinimumCollateralRatio() {
+  async findLastTroveAboveMinimumCollateralRatio(price: Decimalish) {
     const lastTroveAddress = await this.sortedCDPs.getLast();
 
     if (hexStripZeros(lastTroveAddress) === "0x0") {
@@ -605,6 +592,7 @@ export class Liquity {
 
     const { 0: found } = await this.sortedCDPs.findInsertPosition(
       Liquity.MINIMUM_COLLATERAL_RATIO.bigNumber,
+      Decimal.from(price).bigNumber,
       lastTroveAddress,
       lastTroveAddress
     );
@@ -616,8 +604,8 @@ export class Liquity {
     return this.sortedCDPs.getNext(address);
   }
 
-  async redeemCollateral(exchangedQui: Decimalish) {
-    const foundAddress = await this.findLastTroveAboveMinimumCollateralRatio();
+  async redeemCollateral(exchangedQui: Decimalish, price: Decimalish) {
+    const foundAddress = await this.findLastTroveAboveMinimumCollateralRatio(price);
 
     if (!foundAddress) {
       // This should only happen if there are no Troves (yet), in which case: what QUI are you
@@ -625,6 +613,7 @@ export class Liquity {
       throw new Error("There are no Troves");
     }
   }
+
   async getLastTroves(numberOfTroves: number) {
     if (numberOfTroves < 1) {
       throw new Error("numberOfTroves must be at least 1");

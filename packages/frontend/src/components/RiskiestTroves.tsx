@@ -204,7 +204,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                               "Collateral ratio not low enough"
                             ]
                           ]}
-                          send={liquity.liquidate.bind(liquity, owner, trove, deposit, price)}
+                          send={liquity.liquidate.bind(liquity, owner)}
                           numberOfConfirmationsToWait={1}
                         >
                           <Button.Text variant="danger" icon="DeleteForever" icononly />

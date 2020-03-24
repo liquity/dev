@@ -46,15 +46,15 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
 
 const deployments = {
   dev: {
-    activePool: "0x788b1f7A4976279305E43A08a5419F95B3B5545a",
-    cdpManager: "0x086063A27f505b8eA5a0E65F2A34B26197ef419C",
-    clvToken: "0x9FB0a538EC610e4fafb7d50338d417E6643463CB",
-    defaultPool: "0x3B7af23BB5B69951c677D39dAe0809C7f3231E50",
-    nameRegistry: "0xa650242F20F748bB861067FDe7B7766Ac17f3e64",
-    poolManager: "0x35b7c50900b5B188536138f43cc6E1b978abF009",
-    priceFeed: "0x74d37CE7E7210401a3432F8c49590723b3e211D2",
-    sortedCDPs: "0x2142F04f584076a1783f6d86159bac83D10256d9",
-    stabilityPool: "0xdB00Fbb08Fa75c77324661Cf46625d7399e954aB"
+    activePool: "0x1a18c503f4bA9611bec3fE1C022132a73ac4b5Ea",
+    cdpManager: "0x7802d01bfA351a17FD13b12E16CEae65cbdd7fEa",
+    clvToken: "0xfc1dAb4b4126b04FC632753eab594FF450fFD58e",
+    defaultPool: "0xeB71e0e24722f23D41585a8fc45A649c0b5a131D",
+    nameRegistry: "0x3982BB6a6b3b44E226Ac407353CB3a83A76fE900",
+    poolManager: "0xCeC72ed82B4F7Bdf3fC365AEe4Cb590BceD4243F",
+    priceFeed: "0x55d0C88598Bb69CF8b4693976725B5f6555C32e0",
+    sortedCDPs: "0xaC26475D71535331134022d4ae650C20C2d36608",
+    stabilityPool: "0x483fc48F3a65cf54540b4DBD2663E9302Aa82FF7"
   },
   ropsten: {
     activePool: "0xc9E61022f5dBDF504a58afa76aacC4220079A9a4",
