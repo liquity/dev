@@ -701,8 +701,15 @@ contract CDPManager is Ownable, ICDPManager {
     function computeICR(uint _coll, uint _debt, uint _price) view internal returns(uint) {
         // Check if the total debt is higher than 0, to avoid division by 0
         if (_debt > 0) {
-            uint newCollRatio = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, _debt), _price);
+            // uint newCollRatio = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, _debt), _price);
+            // return newCollRatio;
+
+            // Temporarily switch back to DeciMath for accuracy
+            uint ratio = DeciMath.div_toDuint(_coll, _debt);
+            uint newCollRatio = DeciMath.decMul(_price, ratio);
+
             return newCollRatio;
+
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
         else {
@@ -746,7 +753,11 @@ contract CDPManager is Ownable, ICDPManager {
        
         uint stake = CDPs[_user].stake;  // 950 gas (no reward)
         
-        uint pendingETHReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
+        // uint pendingETHReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
+
+        // Temporarily switch back to DeciMath for accuracy
+        uint pendingETHReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked);
+
         return pendingETHReward;
     }
 
@@ -757,10 +768,13 @@ contract CDPManager is Ownable, ICDPManager {
        
         if ( rewardPerUnitStaked == 0 ) { return 0; }
        
-        // console.log("00. gas left: %s", gasleft());
         uint stake =  CDPs[_user].stake;  // 900 gas
       
-        uint pendingCLVDebtReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
+        // uint pendingCLVDebtReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
+        
+        // Temporarily switch back to DeciMath for accuracy
+        uint pendingCLVDebtReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked); 
+
         return pendingCLVDebtReward;
     }
 
