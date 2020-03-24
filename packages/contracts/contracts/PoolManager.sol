@@ -369,7 +369,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Transfer _address's entitled CLV (userDeposit - CLVLoss) to _address, and their ETHGain to their CDP.
-    function retrieveToCDP(address _address) internal returns(uint[2] memory) {
+    function retrieveToCDP(address _address, address _hint) internal returns(uint[2] memory) {
         uint userDeposit = deposit[_address];  // 900 gas
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');  // 15 gas
         
@@ -401,7 +401,7 @@ contract PoolManager is Ownable, IPoolManager {
         // Pull ETHShare from StabilityPool, and send to CDP
         stabilityPool.sendETH(address(this), ETHShare); // 21000 gas
         //TODO: Potentially use getApproxHint() here
-        cdpManager.addColl.value(ETHShare)(_address, _address); // 341340 gas
+        cdpManager.addColl.value(ETHShare)(_address, _hint); // 341340 gas
    
         uint[2] memory shares = [CLVShare, ETHShare]; // 151 gas
         return shares;
@@ -465,7 +465,7 @@ contract PoolManager is Ownable, IPoolManager {
         if (userDeposit == 0) { return false; } 
         
         // Retrieve all CLV to user's CLV balance, and ETH to their CDP
-        uint[2] memory returnedVals = retrieveToCDP(_user); // 660000 gas
+        uint[2] memory returnedVals = retrieveToCDP(_user, _hint); // 660000 gas
  
         uint returnedCLV = returnedVals[0];
         

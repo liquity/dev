@@ -15,7 +15,7 @@ interface IPriceFeed {
         
     function getPrice() external view returns(uint);
 
-    // --- Chainlink functions ---
+    // --- Chainlink Mainnet functions ---
     function setAggregator(address _priceAggregatorAddress) external;
 
     function updatePrice() external returns(uint256);
@@ -26,4 +26,16 @@ interface IPriceFeed {
 
     function getLatestTimestamp() external view returns(uint256);
 
+    // --- Chainlink Testnet functions --- 
+    function updatePrice_Testnet() external returns (uint256);
+
+    function setAggregator_Testnet(address _priceAggregatorAddress_Testnet) external;
+
+    function getLatestPrice_Testnet() external view returns (uint256);
+
+    function getLatestTimestamp_Testnet() external view returns (uint256);
+
+    function getPreviousPrice_Testnet(uint256 _n) external view returns (uint256);
+
+    function getPreviousTimestamp_Testnet(uint256 _n) external view returns (uint256);
 }

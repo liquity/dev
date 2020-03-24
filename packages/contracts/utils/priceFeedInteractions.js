@@ -30,7 +30,7 @@ const aggregatorAddressTestnet = "0x8468b2bDCE073A157E560AA4D9CcF6dB1DB98507"
 
 // Addresses of our deployed PriceFeeds
 const priceFeedAddressMainnet = "0xfD7838852b42dE1F9189025523e7A7150b81df72"
-const priceFeedAddressTestnet = "0x885E5383f59C04B789724a06B9e9B638D1c913FD"
+const priceFeedAddressTestnet = "0xEF23fa01A1cFf44058495ea20daC9D64f285ffc4"
 
 // Instantiate contract objects
 const mainnetAggregator = new ethers.Contract(aggregatorAddressMainnet, MainnetAggregatorABI, mainnetWallet);
@@ -54,16 +54,19 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
     console.log('\n')
 
     // Call our testnet PriceFeed - get current price, and timestamp
-    const price_PriceFeedTestnet = await testnetPriceFeed.getLatestPrice()
-    const timestamp_PriceFeedTestnet = await testnetPriceFeed.getLatestTimestamp()
+    const price_PriceFeedTestnet = await testnetPriceFeed.getLatestPrice_Testnet()
+    const timestamp_PriceFeedTestnet = await testnetPriceFeed.getLatestTimestamp_Testnet()
     console.log(`Testnet: Latest ETH:USD price from deployed PriceFeed: ${price_PriceFeedTestnet}`)
     console.log(`Testnet: Timestamp of latest price from deployed PriceFeed: ${timestamp_PriceFeedTestnet}`)
     console.log('\n')
    
-    // Call our testnet PriceFeed - get recent past prices and timestamps
+    let price = await testnetPriceFeed.getPrice()
+    console.log (`stored price in contract is ${price}`)
+
+   // Call our testnet PriceFeed - get recent past prices and timestamps
     for (i = 5; i >= 1; i--) {
-        const previousPrice_PriceFeedTestnet = await testnetPriceFeed.getPreviousPrice(i)
-        const previousTimestamp_PriceFeedTestnet = await testnetPriceFeed.getPreviousTimestamp(i)
+        const previousPrice_PriceFeedTestnet = await testnetPriceFeed.getPreviousPrice_Testnet(i)
+        const previousTimestamp_PriceFeedTestnet = await testnetPriceFeed.getPreviousTimestamp_Testnet(i)
         console.log(`Testnet: Price from ${i} rounds ago is: ${previousPrice_PriceFeedTestnet}`)
         console.log(`Testnet: Timestamp of price from ${i} rounds ago is: ${previousTimestamp_PriceFeedTestnet}`)
         console.log('\n')
@@ -72,44 +75,44 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
     // // --- Mainnet ---
 
     // Calling the mainnet Chainlink aggregator directly 
-    const price_aggregatorMainnet = (await mainnetAggregator.currentAnswer()).toString();
-    const timestamp_aggregatorMainnet = (await mainnetAggregator.updatedHeight()).toString()
-    const latestAnswerID_aggregatorMainnet = (await mainnetAggregator.latestCompletedAnswer()).toString()
-    console.log(`Mainnet: Latest ETH:USD price from aggregator: ${price_aggregatorMainnet}`);
-    console.log(`Mainnet: Timestamp of latest price from aggregator: ${timestamp_aggregatorMainnet}`);
-    console.log(`Mainnet: ID of latest price answer from aggregator: ${latestAnswerID_aggregatorMainnet}`)
-    console.log('\n')
+    // const price_aggregatorMainnet = (await mainnetAggregator.currentAnswer()).toString();
+    // const timestamp_aggregatorMainnet = (await mainnetAggregator.updatedHeight()).toString()
+    // const latestAnswerID_aggregatorMainnet = (await mainnetAggregator.latestCompletedAnswer()).toString()
+    // console.log(`Mainnet: Latest ETH:USD price from aggregator: ${price_aggregatorMainnet}`);
+    // console.log(`Mainnet: Timestamp of latest price from aggregator: ${timestamp_aggregatorMainnet}`);
+    // console.log(`Mainnet: ID of latest price answer from aggregator: ${latestAnswerID_aggregatorMainnet}`)
+    // console.log('\n')
 
-    // Call our mainnet PriceFeed
-    const price_PriceFeedMainnet = (await mainnetPriceFeed.getLatestPrice()).toString()
-    const timestap_PriceFeedMainnet = (await mainnetPriceFeed.getLatestTimestamp()).toString()
-    const latestAnswerID_PriceFeedMainnet = (await mainnetPriceFeed.getLatestAnswerID()).toString()
-    console.log(`Mainnet: Latest ETH:USD price from deployed PriceFeed: ${price_PriceFeedMainnet}`)
-    console.log(`Mainnet: Timestamp of latest price from deployed PriceFeed: ${timestap_PriceFeedMainnet}`)
-    console.log(`Mainnet: ID of latest price answer from deployed PriceFeed: ${latestAnswerID_PriceFeedMainnet}`)
-    console.log('\n')
+    // // Call our mainnet PriceFeed
+    // const price_PriceFeedMainnet = (await mainnetPriceFeed.getLatestPrice()).toString()
+    // const timestap_PriceFeedMainnet = (await mainnetPriceFeed.getLatestTimestamp()).toString()
+    // const latestAnswerID_PriceFeedMainnet = (await mainnetPriceFeed.getLatestAnswerID()).toString()
+    // console.log(`Mainnet: Latest ETH:USD price from deployed PriceFeed: ${price_PriceFeedMainnet}`)
+    // console.log(`Mainnet: Timestamp of latest price from deployed PriceFeed: ${timestap_PriceFeedMainnet}`)
+    // console.log(`Mainnet: ID of latest price answer from deployed PriceFeed: ${latestAnswerID_PriceFeedMainnet}`)
+    // console.log('\n')
 
     // --- Gas costs of updatePrice() ---
 
-    console.log("Get gas costs")
-    console.log("\n")
+    // console.log("Get gas costs")
+    // console.log("\n")
 
     // Testnet - 30-35k gas
     console.log("Call updatePrice() on Testnet")
-    const txResponseTestnet = await testnetPriceFeed.updatePrice()
+    const txResponseTestnet = await testnetPriceFeed.updatePrice_Testnet()
     console.log("waiting for tx to be mined...")
     txResponseTestnet.wait()
     const gasTestnet = await getGasFromTxHash(testnetProvider, txResponseTestnet.hash)
-    console.log(`Testnet: updatePrice() gas cost: ${gasTestnet}`)
+    console.log(`Testnet: updatePrice_testnet() gas cost: ${gasTestnet}`)
     console.log('\n')
 
-    // Mainnet - 30-35k gas
-    console.log("Call updatePrice() on Mainnet")
-    const txResponseMainnet = await mainnetPriceFeed.updatePrice()
-    console.log("waiting for tx to be mined...")
-    txResponseMainnet.wait()
-    const gasMainnet = await getGasFromTxHash(mainnetProvider, txResponseMainnet.hash)
-    console.log(`Testnet: updatePrice() gas cost: ${gasMainnet}`)
+    // // Mainnet - 30-35k gas
+    // console.log("Call updatePrice() on Mainnet")
+    // const txResponseMainnet = await mainnetPriceFeed.updatePrice()
+    // console.log("waiting for tx to be mined...")
+    // txResponseMainnet.wait()
+    // const gasMainnet = await getGasFromTxHash(mainnetProvider, txResponseMainnet.hash)
+    // console.log(`Testnet: updatePrice() gas cost: ${gasMainnet}`)
 
     /* updatePrice() is a tx (21k) + SStore (5k) + emit event (1.5k) = 27.5k gas
 
