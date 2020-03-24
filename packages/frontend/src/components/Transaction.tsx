@@ -79,35 +79,34 @@ export const useMyTransactionState = (myId: string | RegExp): TransactionState =
 };
 
 type ButtonlikeProps = {
-  disabled: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
+  variant?: "danger";
+  onClick?: () => void;
 };
 
 export type TransactionFunction = (
   overrides?: LiquityTransactionOverrides
 ) => Promise<TransactionResponse>;
 
-type TransactionProps = {
+type TransactionProps<C> = {
   id: string;
   tooltip?: string;
   requires?: [boolean, string][];
   send: TransactionFunction;
   numberOfConfirmationsToWait?: number;
-  children: React.ReactElement<ButtonlikeProps>;
+  children: C;
 };
 
-export const Transaction: React.FC<TransactionProps> = ({
+export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
   id,
   tooltip,
   requires,
   send,
-  numberOfConfirmationsToWait = 7,
+  numberOfConfirmationsToWait = 3,
   children
-}) => {
+}: TransactionProps<C>) {
   const { addMessage } = useToast();
   const [transactionState, setTransactionState] = useTransactionState();
-  const trigger = React.Children.only<React.ReactElement<ButtonlikeProps>>(children);
+  const trigger = React.Children.only<C>(children);
 
   const sendTransaction = useCallback(async () => {
     setTransactionState({ type: "waitingForApproval", id });
@@ -143,23 +142,38 @@ export const Transaction: React.FC<TransactionProps> = ({
     .filter(([requirement]) => !requirement)
     .map(([, reason]) => reason);
 
-  // TODO something with the failureReasons
+  if (transactionState.type !== "idle" && transactionState.type !== "confirmed") {
+    failureReasons.push("You must wait for confirmation first");
+  }
 
-  const clonedTrigger = React.cloneElement<ButtonlikeProps>(trigger, {
-    onClick: sendTransaction,
-    disabled:
-      failureReasons.length > 0 ||
-      (transactionState.type !== "idle" && transactionState.type !== "confirmed")
-  });
+  const showFailure = failureReasons.length > 0 && (tooltip ? "asTooltip" : "asChildText");
+
+  const clonedTrigger =
+    showFailure === "asChildText"
+      ? React.cloneElement(
+          trigger,
+          {
+            variant: "danger",
+            onClick: undefined
+          },
+          failureReasons[0]
+        )
+      : showFailure === "asTooltip"
+      ? React.cloneElement(trigger, { variant: "danger", onClick: undefined })
+      : React.cloneElement(trigger, { onClick: sendTransaction });
+
+  if (showFailure === "asTooltip") {
+    tooltip = failureReasons[0];
+  }
 
   return tooltip ? (
     <Tooltip message={tooltip} variant="light" placement="right">
-      {clonedTrigger}
+      <Box opacity={showFailure ? 0.5 : 1}>{clonedTrigger}</Box>
     </Tooltip>
   ) : (
     clonedTrigger
   );
-};
+}
 
 export const TransactionMonitor: React.FC = () => {
   const { provider } = useLiquity();

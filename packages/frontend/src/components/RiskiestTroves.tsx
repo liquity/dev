@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Card, Button, Text, Box, Heading, Loader, Icon, Link } from "rimble-ui";
+import { Card, Button, Text, Box, Heading, Loader, Icon, Link, Tooltip } from "rimble-ui";
 import styled from "styled-components";
 import { theme } from "rimble-ui";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
@@ -157,7 +157,11 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                 ([owner, trove, deposit]) =>
                   !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
                     <tr key={owner}>
-                      <td>{shortenAddress(owner)}</td>
+                      <td>
+                        <Tooltip message={owner} placement="top">
+                          <Text>{shortenAddress(owner)}</Text>
+                        </Tooltip>
+                      </td>
                       <td>
                         <CopyToClipboard text={owner}>
                           <Button.Text mainColor="text" size="small" icononly>
