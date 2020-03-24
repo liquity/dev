@@ -1,22 +1,25 @@
 import React, { useState } from "react";
-import { Heading, Box, Card } from "rimble-ui";
+import { Heading, Box, Card, Link, Icon, Loader } from "rimble-ui";
 
 import { StabilityDeposit } from "@liquity/lib";
 import { Difference } from "@liquity/lib/dist/utils";
 import { EditableRow, StaticRow } from "./Editor";
+import { LoadingOverlay } from "./LoadingOverlay";
 
 type StabilityDepositEditorProps = {
   title: string;
   originalDeposit: StabilityDeposit;
   editedDeposit: StabilityDeposit;
   setEditedDeposit: (deposit: StabilityDeposit) => void;
+  changePending: boolean;
 };
 
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   title,
   originalDeposit,
   editedDeposit,
-  setEditedDeposit
+  setEditedDeposit,
+  changePending
 }) => {
   const editingState = useState<string>();
 
@@ -29,9 +32,38 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
 
   return (
     <Card p={0}>
-      <Heading as="h3" p={3} bg="lightgrey">
+      <Heading
+        as="h3"
+        bg="lightgrey"
+        pl={3}
+        py={2}
+        pr={2}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+      >
         {title}
+        <Box width="40px" height="40px">
+          {edited && !changePending && (
+            <Link
+              color="text"
+              hoverColor="danger"
+              activeColor="danger"
+              display="flex"
+              alignItems="center"
+              onClick={() => setEditedDeposit(originalDeposit)}
+            >
+              <Icon name="Replay" size="40px" />
+            </Link>
+          )}
+        </Box>
       </Heading>
+
+      {changePending && (
+        <LoadingOverlay>
+          <Loader size="24px" color="text" />
+        </LoadingOverlay>
+      )}
 
       <Box p={2}>
         <EditableRow

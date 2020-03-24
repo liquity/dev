@@ -4,14 +4,14 @@ import { useWeb3React } from "@web3-react/core";
 
 import { Liquity, Trove, StabilityDeposit, addressesOnNetwork } from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
-import { useAsyncValue, useAsyncStore } from "../hooks/AsyncValue";
+import { useAsyncValue, useAsyncStore } from "./AsyncValue";
 import { useAccountBalance } from "./AccountBalance";
 
 export const deployerAddress = "0x70E78E2D8B2a4fDb073B7F61c4653c23aE12DDDF";
 
 type LiquityContext = {
   account: string;
-  library: Web3Provider;
+  provider: Web3Provider;
   liquity: Liquity;
 };
 
@@ -22,27 +22,27 @@ type LiquityProviderProps = {
 };
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, loader }) => {
-  const { library, account, chainId } = useWeb3React<Web3Provider>();
+  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
 
   const liquityState = useAsyncValue(
     useCallback(async () => {
-      if (library && account && chainId) {
+      if (provider && account && chainId) {
         const cdpManagerAddress = addressesOnNetwork[chainId].cdpManager;
-        return Liquity.connect(cdpManagerAddress, library.getSigner(account));
+        return Liquity.connect(cdpManagerAddress, provider.getSigner(account));
       }
-    }, [library, account, chainId])
+    }, [provider, account, chainId])
   );
 
-  if (!library || !account || !liquityState.loaded || !liquityState.value) {
-    return React.createElement(React.Fragment, {}, loader);
+  if (!provider || !account || !liquityState.loaded || !liquityState.value) {
+    return <>{loader}</>;
   }
 
   const liquity = liquityState.value;
 
-  return React.createElement(
-    LiquityContext.Provider,
-    { value: { account, library, liquity } },
-    children
+  return (
+    <LiquityContext.Provider value={{ account, provider, liquity }}>
+      {children}
+    </LiquityContext.Provider>
   );
 };
 
@@ -70,7 +70,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
 
   const getTrove = useCallback(() => liquity.getTrove(), [liquity]);
   const watchTrove = useCallback(
-    (onTroveChanged: (trove: Trove | undefined) => void) => {
+    (onTroveChanged: (trove: Trove) => void) => {
       return liquity.watchTrove(onTroveChanged);
     },
     [liquity]

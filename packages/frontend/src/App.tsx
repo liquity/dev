@@ -4,8 +4,9 @@ import { Web3ReactProvider } from "@web3-react/core";
 import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 
 import { LiquityProvider, useLiquity, deployerAddress, useLiquityStore } from "./hooks/Liquity";
-import { ToastProvider } from "./hooks/ToastProvider";
 import { WalletConnector } from "./components/WalletConnector";
+import { ToastProvider } from "./hooks/ToastProvider";
+import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
 import { TroveManager } from "./components/TroveManager";
 import { UserAccount } from "./components/UserAccount";
 import { SystemStats } from "./components/SystemStats";
@@ -57,8 +58,8 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, library, liquity } = useLiquity();
-  const storeState = useLiquityStore(library, account, liquity);
+  const { account, provider, liquity } = useLiquity();
+  const storeState = useLiquityStore(provider, account, liquity);
 
   if (!storeState.loaded) {
     return <>{loader}</>;
@@ -124,7 +125,10 @@ const App = () => {
         <ToastProvider>
           <WalletConnector {...{ loader }}>
             <LiquityProvider {...{ loader }}>
-              <LiquityFrontend {...{ loader }} />
+              <TransactionProvider>
+                <LiquityFrontend {...{ loader }} />
+                <TransactionMonitor />
+              </TransactionProvider>
             </LiquityProvider>
           </WalletConnector>
         </ToastProvider>

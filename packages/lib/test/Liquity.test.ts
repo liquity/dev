@@ -28,7 +28,7 @@ describe("Liquity", () => {
   let otherLiquities: Liquity[];
 
   let price: Decimal;
-  let trove: Trove | undefined;
+  let trove: Trove;
   let deposit: StabilityDeposit;
 
   before(async () => {
@@ -92,7 +92,7 @@ describe("Liquity", () => {
     it("should have no Trove initially", async () => {
       trove = await liquity.getTrove();
 
-      expect(trove).to.be.undefined;
+      expect(trove.isEmpty).to.be.true;
     });
 
     it("should fail to create an empty Trove", async () => {
@@ -118,10 +118,10 @@ describe("Liquity", () => {
     });
 
     it("should close the Trove after withdrawing all the collateral", async () => {
-      await liquity.withdrawEther(trove!, trove!.collateral, price);
+      await liquity.withdrawEther(trove, trove.collateral, price);
       trove = await liquity.getTrove();
 
-      expect(trove).to.be.undefined;
+      expect(trove.isEmpty).to.be.true;
     });
 
     it("should create a Trove that already has debt", async () => {
@@ -134,26 +134,25 @@ describe("Liquity", () => {
     });
 
     it("should fail to withdraw all the collateral while the Trove has debt", async () => {
-      await expect(liquity.withdrawEther(trove!, trove!.collateral, price)).to.eventually.be
-        .rejected;
+      await expect(liquity.withdrawEther(trove, trove.collateral, price)).to.eventually.be.rejected;
     });
 
     it("should repay some debt", async () => {
-      await liquity.repayQui(trove!, 10, price);
+      await liquity.repayQui(trove, 10, price);
       trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(new Trove({ collateral: 1, debt: 90 }));
     });
 
     it("should borrow some more", async () => {
-      await liquity.borrowQui(trove!, 20, price);
+      await liquity.borrowQui(trove, 20, price);
       trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(new Trove({ collateral: 1, debt: 110 }));
     });
 
     it("should deposit more collateral", async () => {
-      await liquity.depositEther(trove!, 1, price);
+      await liquity.depositEther(trove, 1, price);
       trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(new Trove({ collateral: 2, debt: 110 }));
@@ -184,7 +183,7 @@ describe("Liquity", () => {
       await otherLiquities[0].createTrove(new Trove({ collateral: 0.2233, debt: 39 }), price);
       const otherTrove = await otherLiquities[0].getTrove();
 
-      expect(otherTrove?.collateralRatioAt(price).toString()).to.equal("1.145128205128205128");
+      expect(otherTrove.collateralRatioAt(price).toString()).to.equal("1.145128205128205128");
     });
 
     it("the price should take a dip", async () => {
@@ -228,7 +227,7 @@ describe("Liquity", () => {
 
     // Currently failing due to a rounding problem in the contracts
     it("should transfer the gains to the Trove", async () => {
-      await liquity.transferCollateralGainToTrove(deposit, trove!, price);
+      await liquity.transferCollateralGainToTrove(deposit, trove, price);
       trove = await liquity.getTrove();
       deposit = await liquity.getStabilityDeposit();
 
@@ -266,9 +265,8 @@ describe("Liquity", () => {
 
         it("should return undefined", async () => {
           const foundAddress = await liquity.findLastTroveAboveMinimumCollateralRatio();
-          const foundTrove = await liquity.getTrove(foundAddress);
 
-          expect(foundTrove).to.be.undefined;
+          expect(foundAddress).to.be.undefined;
         });
       });
 
@@ -300,13 +298,13 @@ describe("Liquity", () => {
           expect(foundAddress).to.not.be.undefined;
 
           const foundTrove = await liquity.getTrove(foundAddress);
-          expect(foundTrove?.collateralRatioAt(price).toString()).to.equal("1.1");
+          expect(foundTrove.collateralRatioAt(price).toString()).to.equal("1.1");
 
           const nextAddress = await liquity.getNextTrove(foundAddress!);
           expect(nextAddress).to.not.be.undefined;
 
           const nextTrove = await liquity.getTrove(nextAddress);
-          expect(nextTrove?.collateralRatioAt(price).toString()).to.equal("1");
+          expect(nextTrove.collateralRatioAt(price).toString()).to.equal("1");
         });
       });
     });

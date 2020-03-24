@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Card, Button, Text, Box, Heading, Loader, Icon, Link, Tooltip } from "rimble-ui";
 import styled from "styled-components";
@@ -8,6 +8,8 @@ import { space, SpaceProps, layout, LayoutProps } from "styled-system";
 import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { shortenAddress } from "../utils/shortenAddress";
+import { LoadingOverlay } from "./LoadingOverlay";
+import { Transaction, useMyTransactionState } from "./Transaction";
 
 const Table = styled.table<SpaceProps & LayoutProps>`
   ${space}
@@ -23,7 +25,14 @@ const Table = styled.table<SpaceProps & LayoutProps>`
   }
 
   & tr td:nth-child(2) {
-    width: 0;
+    width: 7%;
+    text-align: left;
+  }
+
+  & tr td:nth-child(3),
+  & tr td:nth-child(4),
+  & tr td:nth-child(5) {
+    width: 18%;
   }
 
   & tr td:nth-child(7) {
@@ -39,36 +48,19 @@ type RiskiestTrovesProps = {
   price: Decimal;
 };
 
-const LoadingOverlay = styled.div<SpaceProps>`
-  ${space}
-
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 2;
-
-  background-color: rgba(255, 255, 255, 0.66);
-
-  display: flex;
-  justify-content: end;
-  align-items: start;
-`;
-
-LoadingOverlay.defaultProps = { p: 3 };
-
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   liquity,
   numberOfTroves,
   price
 }) => {
   const [loading, setLoading] = useState(true);
-  const [troves, setTroves] = useState<[string, Trove | undefined, StabilityDeposit][]>();
+  const [troves, setTroves] = useState<[string, Trove, StabilityDeposit][]>();
+  const myTransactionState = useMyTransactionState(/^liquidate-/);
 
-  const fetchRiskiestTroves = () => {
+  const [reload, setReload] = useState({});
+  const forceReload = useCallback(() => setReload({}), []);
+
+  useEffect(() => {
     let mounted = true;
 
     setLoading(true);
@@ -83,9 +75,13 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
     return () => {
       mounted = false;
     };
-  };
+  }, [liquity, numberOfTroves, reload]);
 
-  useEffect(fetchRiskiestTroves, [liquity, numberOfTroves]);
+  useEffect(() => {
+    if (myTransactionState.type === "confirmed") {
+      forceReload();
+    }
+  }, [myTransactionState.type, forceReload]);
 
   return (
     <Box mt={3} p={3}>
@@ -104,12 +100,13 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
           <Link
             color="text"
             hoverColor="success"
+            activeColor="success"
             display="flex"
             alignItems="center"
-            onClick={fetchRiskiestTroves}
+            onClick={forceReload}
             opacity={loading ? 0 : 1}
           >
-            <Icon name="Refresh" size="40" />
+            <Icon name="Refresh" size="40px" />
           </Link>
         </Heading>
 
@@ -132,19 +129,39 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
             <thead>
               <tr>
                 <th colSpan={2}>Owner</th>
-                <th>Collateral (ETH)</th>
-                <th>Gain (ETH)</th>
-                <th>Debt (QUI)</th>
-                <th>Coll. Ratio</th>
+                <th>
+                  Collateral
+                  <br />
+                  (ETH)
+                </th>
+                <th>
+                  Stab. Gain
+                  <br />
+                  (ETH)
+                </th>
+                <th>
+                  Debt
+                  <br />
+                  (QUI)
+                </th>
+                <th>
+                  Coll.
+                  <br />
+                  Ratio
+                </th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {troves.map(
                 ([owner, trove, deposit]) =>
-                  trove && (
+                  !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
                     <tr key={owner}>
-                      <td>{shortenAddress(owner)}</td>
+                      <td>
+                        <Tooltip message={owner} placement="top">
+                          <Text>{shortenAddress(owner)}</Text>
+                        </Tooltip>
+                      </td>
                       <td>
                         <CopyToClipboard text={owner}>
                           <Button.Text mainColor="text" size="small" icononly>
@@ -175,23 +192,23 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                         ))(trove.collateralRatioAfterRewardsAt(price))}
                       </td>
                       <td>
-                        <Tooltip message="Liquidate" variant="light" placement="right">
-                          <Button.Text
-                            variant="danger"
-                            icon="DeleteForever"
-                            icononly
-                            disabled={trove.collateralAfterReward
-                              .add(deposit.pendingCollateralGain)
-                              .mulDiv(price, trove.debtAfterReward)
-                              .gte(1.1)}
-                            onClick={() =>
-                              liquity
-                                .liquidate(owner, trove, deposit, price)
-                                .then(tx => tx.wait())
-                                .then(fetchRiskiestTroves)
-                            }
-                          />
-                        </Tooltip>
+                        <Transaction
+                          id={`liquidate-${owner}`}
+                          tooltip="Liquidate"
+                          requires={[
+                            [
+                              trove.collateralAfterReward
+                                .add(deposit.pendingCollateralGain)
+                                .mulDiv(price, trove.debtAfterReward)
+                                .lt(1.1),
+                              "Collateral ratio not low enough"
+                            ]
+                          ]}
+                          send={liquity.liquidate.bind(liquity, owner, trove, deposit, price)}
+                          numberOfConfirmationsToWait={1}
+                        >
+                          <Button.Text variant="danger" icon="DeleteForever" icononly />
+                        </Transaction>
                       </td>
                     </tr>
                   )
