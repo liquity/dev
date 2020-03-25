@@ -46,26 +46,26 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
 
 const deployments = {
   dev: {
-    activePool: "0x1a18c503f4bA9611bec3fE1C022132a73ac4b5Ea",
-    cdpManager: "0x7802d01bfA351a17FD13b12E16CEae65cbdd7fEa",
-    clvToken: "0xfc1dAb4b4126b04FC632753eab594FF450fFD58e",
-    defaultPool: "0xeB71e0e24722f23D41585a8fc45A649c0b5a131D",
-    nameRegistry: "0x3982BB6a6b3b44E226Ac407353CB3a83A76fE900",
-    poolManager: "0xCeC72ed82B4F7Bdf3fC365AEe4Cb590BceD4243F",
-    priceFeed: "0x55d0C88598Bb69CF8b4693976725B5f6555C32e0",
-    sortedCDPs: "0xaC26475D71535331134022d4ae650C20C2d36608",
-    stabilityPool: "0x483fc48F3a65cf54540b4DBD2663E9302Aa82FF7"
+    activePool: "0xA6e48001D69A5D615095F0375d60dd71fd393b37",
+    cdpManager: "0x3bF4a33F720538B71286e3f28cF5D372D70b5Fe5",
+    clvToken: "0xe083645D212b6b3EaDd31DA2F0A0A6eA33D332E8",
+    defaultPool: "0xe3159fAb97078E0D89E4C44A54B7A099b57dF451",
+    nameRegistry: "0x5D3244da881173EfdBCE78686eD2AB07A7CaF69d",
+    poolManager: "0x12E11FfF08D980b8f9e4A688f894f5B2c0FC82b6",
+    priceFeed: "0xD0D72701Ac7c4a4d68364f4343C4f11Ee5d7Bc45",
+    sortedCDPs: "0xF8D1317cedD241cA0f7DFFbefaF4d3Da4bc65266",
+    stabilityPool: "0xD679AA92Df211dc09FdDE7b49E4E27ED4ec50079"
   },
   ropsten: {
-    activePool: "0xc9E61022f5dBDF504a58afa76aacC4220079A9a4",
-    cdpManager: "0x28c941d6A29b86036C18249C175CE2084f3983e7",
-    clvToken: "0x44027D91b96edEC05fA68FAB4a63f4FafF8a3215",
-    defaultPool: "0xfb34D074b790BbDFC33D8ded25429E911D04F46e",
-    nameRegistry: "0x2068AeCa3506ad11E6271c2EF243a3288b9aF58E",
-    poolManager: "0x9cfdce391bEFe2cf01ce6F3dAb4A44fC0DE272BE",
-    priceFeed: "0x6dAC2E9E108E3CeA3cF52f3229C85491E4fddAdB",
-    sortedCDPs: "0xe6a00Af68CB07c1fF7Bb1fd5Ec7fdC3ea562F018",
-    stabilityPool: "0xF51951d51886ecd7b553C585238bb5Ab252400cB"
+    activePool: "0x1CaC8ca10122C410ba0EACAB3909DCB51c683F39",
+    cdpManager: "0x903B7887d50a19378443a7CeabD5835C3d4Ea06f",
+    clvToken: "0x0F1821C6648A8d56eb59f46d6AaDB6e2b801eeFf",
+    defaultPool: "0xBa5d54075901DDbe7e72d4592840B19593fFBf75",
+    nameRegistry: "0x9DC807a7CD3ef2c5a0DDfb74B653F1E737b28Cf1",
+    poolManager: "0xc54241325ba08Cd248ec7014AD417B6461c09F8A",
+    priceFeed: "0xEF23fa01A1cFf44058495ea20daC9D64f285ffc4",
+    sortedCDPs: "0xa0D6c2c3a16f8afEE4ea42b13f389281952CB5D2",
+    stabilityPool: "0x1c5cE3057F8Aeb3903a5C9bEFEB05db8D568aE8C"
   },
   rinkeby: {
     activePool: "0x710E14FBbaC14D819Be9a21E2089ebfdb8e3a95E",

@@ -52,7 +52,8 @@ const deployContract = async (web3: Web3, artifacts: Truffle.Artifacts, contract
   if (!silent) {
     console.log({
       contractAddress: contract.address,
-      blockNumber: receipt.blockNumber
+      blockNumber: receipt.blockNumber,
+      gasUsed: receipt.gasUsed
     });
     console.log();
   }
