@@ -21,10 +21,12 @@ export const UserAccount: React.FC<UserAccountProps> = ({ account, etherBalance,
       borderBottom="1px solid lightgrey"
     >
       <Flex alignItems="center">
-        <Text.span mr={3} fontSize={5}>
+        <Text mr={3} fontSize={5}>
           ℚ
-        </Text.span>
+        </Text>
         <Heading>Liquity</Heading>
+        <Box mx={3} mt={1} width="0px" height="100%" borderLeft="1px solid lightgrey" />
+        <Heading fontWeight={2}>Developer Interface (Beta)</Heading>
       </Flex>
       <Flex alignItems="center">
         <Icon name="AccountCircle" size="28px" />
