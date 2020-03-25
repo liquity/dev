@@ -37,15 +37,16 @@ contractABIs = [
         // console.log(`tx hash  of ${name} deployment is is: ${txHash}`)
         const receipt = await ethers.provider.getTransactionReceipt(txHash)
         const gas = receipt.gasUsed
-        console.log(`Gas cost of ${name} deployment is is: ${gas}`)
+        console.log(`${name}: ${gas}`)
         return gas
       }
     
     const getBytecodeSize = (contractABI) => {
+            
             const bytecodeLength = (contractABI.bytecode.length / 2) - 1 
             const deployedBytecodeLength = (contractABI.deployedBytecode.length / 2) - 1 
-            console.log(`${contractABI.contractName} bytecode length: ${bytecodeLength}`)
-            console.log(`${contractABI.contractName} deployed bytecode length: ${deployedBytecodeLength}`)
+            console.log(`${contractABI.contractName}: ${bytecodeLength}`)
+            // console.log(`${contractABI.contractName} deployed bytecode length: ${deployedBytecodeLength}`)
             }
 
 async function main() {
@@ -84,11 +85,13 @@ async function main() {
     const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
     await connectContracts(contracts, registeredAddresses)
 
+    console.log(`Gas costs for deployments: `)
     for (contractName of Object.keys(contracts)) {
         await getGasFromContractDeployment(contracts[contractName], contractName);
     }
     console.log(`\n`)
 
+    console.log(`Contract bytecode lengths:`)
     for (abi of contractABIs) {
        getBytecodeSize(abi)
     }
