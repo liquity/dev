@@ -283,11 +283,18 @@ describe("Liquity", () => {
     });
 
     it("should redeem some collateral", async () => {
-      await liquity.redeemCollateral(55, price);
+      const tx = await liquity.redeemCollateral(55, price);
+      const receipt = await tx.wait();
+      expect(receipt.gasUsed).to.not.be.undefined;
 
       const balance = new Decimal(await provider.getBalance(user.getAddress()));
 
-      expect(balance.toString()).to.equal("100.275");
+      expect(balance.toString()).to.equal(
+        Decimal.from(100.275)
+          .sub(new Decimal(tx.gasPrice.mul(receipt.gasUsed!)))
+          .toString()
+      );
+
       expect((await liquity.getQuiBalance()).toString()).to.equal("45");
 
       expect((await otherLiquities[0].getTrove()).debt.toString()).to.equal("5");
