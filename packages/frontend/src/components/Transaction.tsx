@@ -149,7 +149,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
     .map(([, reason]) => reason);
 
   if (transactionState.type !== "idle" && transactionState.type !== "confirmed") {
-    failureReasons.push("You must wait for confirmation first");
+    failureReasons.push("You must wait for confirmation");
   }
 
   const showFailure = failureReasons.length > 0 && (tooltip ? "asTooltip" : "asChildText");

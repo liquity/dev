@@ -80,12 +80,14 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           }
         ></EditableRow>
 
-        <StaticRow
-          label="Gain"
-          amount={originalDeposit.pendingCollateralGain.prettify(4)}
-          color={originalDeposit.pendingCollateralGain.nonZero && "success"}
-          unit="ETH"
-        />
+        {!originalDeposit.isEmpty && (
+          <StaticRow
+            label="Gain"
+            amount={originalDeposit.pendingCollateralGain.prettify(4)}
+            color={originalDeposit.pendingCollateralGain.nonZero && "success"}
+            unit="ETH"
+          />
+        )}
       </Box>
     </Card>
   );

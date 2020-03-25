@@ -14,6 +14,7 @@ import { DeveloperTools } from "./components/DeveloperTools";
 import { StabilityDepositManager } from "./components/StabilityDepositManager";
 import { RiskiestTroves } from "./components/RiskiestTroves";
 import { PriceManager } from "./components/PriceManager";
+import { RedemptionManager } from "./components/RedemptionManager";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
@@ -93,6 +94,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
               <>
                 <TroveManager {...{ liquity, trove, price, pool }} />
                 <StabilityDepositManager {...{ liquity, deposit, trove, price }} />
+                <RedemptionManager {...{ liquity, price }} />
               </>
             )}
           </Box>
