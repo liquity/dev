@@ -481,6 +481,10 @@ export class Liquity {
     return this.priceFeed.setPrice(Decimal.from(price).bigNumber, { ...overrides });
   }
 
+  async updatePrice(overrides?: LiquityTransactionOverrides) {
+    return this.priceFeed.updatePrice_Testnet({ ...overrides });
+  }
+
   async getPool() {
     const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
       [
