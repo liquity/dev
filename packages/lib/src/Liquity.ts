@@ -1,7 +1,6 @@
 import { Signer } from "ethers";
 import { Provider } from "ethers/providers";
-import { TransactionOverrides } from "../types/ethers";
-import { bigNumberify, hexStripZeros, BigNumber, BigNumberish } from "ethers/utils";
+import { bigNumberify, BigNumberish } from "ethers/utils";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
@@ -213,6 +212,8 @@ export class StabilityDeposit {
   }
 }
 
+const addressZero = "0x0000000000000000000000000000000000000000";
+
 enum CDPStatus {
   nonExistent,
   active,
@@ -342,7 +343,7 @@ export class Liquity {
       cdpEventFilters.forEach(filter => this.cdpManager.removeListener(filter, cdpListener));
   }
 
-  private async findHint(trove: Trove, price: Decimalish, address: string) {
+  async _findHintForCollateralRatio(collateralRatio: Decimal, price: Decimal, address: string) {
     if (!Liquity.useHint) {
       return address;
     }
@@ -353,17 +354,15 @@ export class Liquity {
       return address;
     }
 
-    price = Decimal.from(price);
     const numberOfTrials = bigNumberify(Math.ceil(Math.sqrt(numberOfTroves))); // XXX not multiplying by 10 here
-    const collateralRatio = trove.collateralRatioAfterRewardsAt(price).bigNumber;
 
     const approxHint = await this.cdpManager.getApproxHint(
-      collateralRatio,
+      collateralRatio.bigNumber,
       bigNumberify(numberOfTrials)
     );
 
     const { 0: hint } = await this.sortedCDPs.findInsertPosition(
-      collateralRatio,
+      collateralRatio.bigNumber,
       price.bigNumber,
       approxHint,
       approxHint
@@ -372,12 +371,18 @@ export class Liquity {
     return hint;
   }
 
+  _findHint(trove: Trove, price: Decimal, address: string) {
+    const collateralRatio = trove.collateralRatioAfterRewardsAt(price);
+
+    return this._findHintForCollateralRatio(collateralRatio, price, address);
+  }
+
   async createTrove(trove: Trove, price: Decimalish, overrides?: LiquityTransactionOverrides) {
     const address = this.requireAddress();
 
     return this.cdpManager.openLoan(
       trove.debt.bigNumber,
-      await this.findHint(trove, price, address),
+      await this._findHint(trove, Decimal.from(price), address),
       { value: trove.collateral.bigNumber, ...overrides }
     );
   }
@@ -391,10 +396,14 @@ export class Liquity {
   ) {
     const finalTrove = initialTrove.addCollateral(depositedEther);
 
-    return this.cdpManager.addColl(address, await this.findHint(finalTrove, price, address), {
-      value: Decimal.from(depositedEther).bigNumber,
-      ...overrides
-    });
+    return this.cdpManager.addColl(
+      address,
+      await this._findHint(finalTrove, Decimal.from(price), address),
+      {
+        value: Decimal.from(depositedEther).bigNumber,
+        ...overrides
+      }
+    );
   }
 
   async withdrawEther(
@@ -408,7 +417,7 @@ export class Liquity {
 
     return this.cdpManager.withdrawColl(
       Decimal.from(withdrawnEther).bigNumber,
-      await this.findHint(finalTrove, price, address),
+      await this._findHint(finalTrove, Decimal.from(price), address),
       { ...overrides }
     );
   }
@@ -424,7 +433,7 @@ export class Liquity {
 
     return this.cdpManager.withdrawCLV(
       Decimal.from(borrowedQui).bigNumber,
-      await this.findHint(finalTrove, price, address),
+      await this._findHint(finalTrove, Decimal.from(price), address),
       { ...overrides }
     );
   }
@@ -440,7 +449,7 @@ export class Liquity {
 
     return this.cdpManager.repayCLV(
       Decimal.from(repaidQui).bigNumber,
-      await this.findHint(finalTrove, price, address),
+      await this._findHint(finalTrove, Decimal.from(price), address),
       { ...overrides }
     );
   }
@@ -549,7 +558,7 @@ export class Liquity {
 
     return this.poolManager.withdrawFromSPtoCDP(
       address,
-      await this.findHint(finalTrove, price, address),
+      await this._findHint(finalTrove, Decimal.from(price), address),
       { ...overrides }
     );
   }
@@ -579,39 +588,38 @@ export class Liquity {
       transferFilters.forEach(filter => this.clvToken.removeListener(filter, transferListener));
   }
 
-  // Try to find the Trove with the lowest collateral ratio that is still above the minimum ratio
-  // (i.e. it won't be liquidated by a redemption).
-  // If no Trove is above the MCR, then it will find the Trove with the highest collateral ratio.
-  async findLastTroveAboveMinimumCollateralRatio(price: Decimalish) {
-    const lastTroveAddress = await this.sortedCDPs.getLast();
+  async _findCollateralRatioOfPartiallyRedeemedTrove(exchangedQui: Decimal, price: Decimal) {
+    return new Decimal(
+      await this.cdpManager.getICRofPartiallyRedeemedCDP(exchangedQui.bigNumber, price.bigNumber)
+    );
+  }
 
-    if (hexStripZeros(lastTroveAddress) === "0x0") {
-      // No Troves yet
-      return undefined;
+  async _findRedemptionHint(exchangedQui: Decimal, price: Decimal) {
+    if (!Liquity.useHint) {
+      return addressZero;
     }
 
-    const { 0: found } = await this.sortedCDPs.findInsertPosition(
-      Liquity.MINIMUM_COLLATERAL_RATIO.bigNumber,
-      Decimal.from(price).bigNumber,
-      lastTroveAddress,
-      lastTroveAddress
+    const collateralRatio = await this._findCollateralRatioOfPartiallyRedeemedTrove(
+      exchangedQui,
+      price
     );
 
-    return found;
+    return this._findHintForCollateralRatio(collateralRatio, price, addressZero);
   }
 
-  getNextTrove(address: string) {
-    return this.sortedCDPs.getNext(address);
-  }
+  async redeemCollateral(
+    exchangedQui: Decimalish,
+    price: Decimalish,
+    overrides?: LiquityTransactionOverrides
+  ) {
+    exchangedQui = Decimal.from(exchangedQui);
+    price = Decimal.from(price);
 
-  async redeemCollateral(exchangedQui: Decimalish, price: Decimalish) {
-    const foundAddress = await this.findLastTroveAboveMinimumCollateralRatio(price);
-
-    if (!foundAddress) {
-      // This should only happen if there are no Troves (yet), in which case: what QUI are you
-      // trying to exchange?
-      throw new Error("There are no Troves");
-    }
+    return this.cdpManager.redeemCollateral(
+      exchangedQui.bigNumber,
+      await this._findRedemptionHint(exchangedQui, price),
+      { ...overrides }
+    );
   }
 
   async getLastTroves(numberOfTroves: number) {
@@ -630,7 +638,7 @@ export class Liquity {
     let i = 0;
     let currentAddress = await this.sortedCDPs.getLast();
 
-    while (hexStripZeros(currentAddress) !== "0x0") {
+    while (currentAddress !== addressZero) {
       troves.push(getTroveWithAddress(currentAddress));
 
       if (++i === numberOfTroves) {
