@@ -1,3 +1,4 @@
+// Vanilla Node js script
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const PoolManager = artifacts.require("./PoolManager.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");

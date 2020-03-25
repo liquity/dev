@@ -464,7 +464,7 @@ contract('Gas cost tests', async accounts => {
     appendData({gas: gas}, message, data)
   })
 
-  it("", async () => {
+  it.only("", async () => {
     const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues 100 CLV'
   
     const amountETH = _10_Ether
@@ -476,7 +476,7 @@ contract('Gas cost tests', async accounts => {
     appendData(gasResults, message, data)
   })
 
-  it("", async () => {
+  it.only("", async () => {
     const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues less CLV than the previous one'
     const amountETH = _10_Ether
     const amountCLV = 200

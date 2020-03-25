@@ -28,23 +28,23 @@ library DeciMath {
 
     /* Accurately calculate (x * y) / z. Converts all arguments to 'duints', performs 
     calculations, then converts the result back to uint before returning. */
-    function accurateMulDiv(uint x, uint y, uint z) internal view returns (uint fraction) {
-        require( z!= 0, "DeciMath: can not divide by zero");
-    // convert all uint to duint
-        uint x_duint = toDuint(x);
-        uint y_duint = toDuint(y);
-        uint z_duint = toDuint(z);
+    // function accurateMulDiv(uint x, uint y, uint z) internal view returns (uint fraction) {
+    //     require( z!= 0, "DeciMath: can not divide by zero");
+    // // convert all uint to duint
+    //     uint x_duint = toDuint(x);
+    //     uint y_duint = toDuint(y);
+    //     uint z_duint = toDuint(z);
 
-        //  (x * y).  If y is guaranteed to be an integer (i.e. not duint) could use normalMul(x_duint, y) here to save gas.
-        uint prod_duint = decMul(x_duint, y_duint); 
-        // (x* y) / z
-        uint res_duint = decDiv(prod_duint, z_duint);   
+    //     //  (x * y).  If y is guaranteed to be an integer (i.e. not duint) could use normalMul(x_duint, y) here to save gas.
+    //     uint prod_duint = decMul(x_duint, y_duint); 
+    //     // (x* y) / z
+    //     uint res_duint = decDiv(prod_duint, z_duint);   
 
-        // convert result back to uint
-        uint result = fromDuint(res_duint);
+    //     // convert result back to uint
+    //     uint result = fromDuint(res_duint);
 
-        return result;
-    }
+    //     return result;
+    // }
 
     // Accurately divides one 'duint' by another. Returns a 'duint'
     function decDiv(uint x, uint y) internal view returns (uint quotient) {
@@ -82,14 +82,14 @@ library DeciMath {
         return prod;
     }
 
-    function mul_uintByDuint_roundUp( uint x, uint y_duint) internal view returns (uint prod) {
-        uint x_duint = toDuint(x);
+    // function mul_uintByDuint_roundUp( uint x, uint y_duint) internal view returns (uint prod) {
+    //     uint x_duint = toDuint(x);
 
-        uint prod_duint = decMul(x_duint, y_duint);
-        uint prod = fromDuint_roundUp(prod_duint);
+    //     uint prod_duint = decMul(x_duint, y_duint);
+    //     uint prod = fromDuint_roundUp(prod_duint);
 
-        return prod;
-    }
+    //     return prod;
+    // }
 
      // --- Helpers. Convert to and from duints ---
 

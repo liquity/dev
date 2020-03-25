@@ -1,4 +1,5 @@
 usePlugin("@nomiclabs/buidler-truffle5");
+usePlugin("@nomiclabs/buidler-ethers");
 
 const accounts = require("./accountsList.js");
 
@@ -12,7 +13,7 @@ module.exports = {
     solc: {
         optimizer: {
             enabled: true,
-            runs: 10000
+            runs: 1
         }
     },
     networks: {

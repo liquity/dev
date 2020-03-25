@@ -59,9 +59,9 @@ contract FunctionCaller {
 
     // --- DeciMath public functions ---
 
-    function decimath_accurateMulDiv(uint x, uint y, uint z) public returns(uint fraction) {
-        return DeciMath.accurateMulDiv(x ,y, z);
-    }
+    // function decimath_accurateMulDiv(uint x, uint y, uint z) public returns(uint fraction) {
+    //     return DeciMath.accurateMulDiv(x ,y, z);
+    // }
 
     function getMin(uint a, uint b) public returns(uint) {
         return DeciMath.getMin(a, b);
