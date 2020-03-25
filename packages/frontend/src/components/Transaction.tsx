@@ -131,7 +131,11 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
       console.log(error);
 
       addMessage("Transaction failed", {
-        variant: "failure"
+        variant: "failure",
+        secondaryMessage:
+          error instanceof Error
+            ? `${error.name !== "Error" ? `${error.name}: ` : ""}${error.message}`
+            : ""
       });
 
       setTransactionState({ type: "idle" });

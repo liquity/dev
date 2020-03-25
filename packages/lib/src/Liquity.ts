@@ -477,8 +477,8 @@ export class Liquity {
     };
   }
 
-  async setPrice(price: Decimalish) {
-    return this.priceFeed.setPrice(Decimal.from(price).bigNumber);
+  async setPrice(price: Decimalish, overrides?: LiquityTransactionOverrides) {
+    return this.priceFeed.setPrice(Decimal.from(price).bigNumber, { ...overrides });
   }
 
   async getPool() {
