@@ -544,12 +544,14 @@ contract CDPManager is Ownable, ICDPManager {
      */
     function redeemCollateral(uint _CLVamount, address _hint) public returns (bool) {
         uint exchangedCLV;
-        uint redeemedETH;
         uint price = priceFeed.getPrice(); // 3500 gas
+        address currentCDPuser = sortedCDPs.getLast();  // 3500 gas (for 10 CDPs in list)
+
         // Loop through the CDPs starting from the one with lowest collateral ratio until _amount of CLV is exchanged for collateral
         while (exchangedCLV < _CLVamount) {
+            // Save the address of the CDP preceding the current one, before potentially modifying the list
+            address nextUserToCheck = sortedCDPs.getPrev(currentCDPuser);
             
-            address currentCDPuser = sortedCDPs.getLast();  // 3500 gas (for 10 CDPs in list)
             // Break the loop if there is no more active debt to cancel with the received CLV
             // if (poolManager.getActiveDebt() == 0) break;
             if (activePool.getCLV() == 0) break;   
@@ -576,7 +578,14 @@ contract CDPManager is Ownable, ICDPManager {
                 poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); // *** 57000 gas
                
                 // Update the sortedCDPs list and the redeemed amount
-                sortedCDPs.reInsert(currentCDPuser, getCurrentICR(currentCDPuser, price), price, _hint, _hint); // *** 62000 gas
+                if (newDebt == 0) {
+                    // No debt left in the CDP, therefore new ICR must be "infinite".
+                    // Passing zero as hint will cause sortedCDPs to descend the list from the head, which is the correct insert position.
+                    sortedCDPs.reInsert(currentCDPuser, 2**256 - 1, price, address(0), address(0)); // *** 62000 gas
+                } else {
+                    sortedCDPs.reInsert(currentCDPuser, getCurrentICR(currentCDPuser, price), price, _hint, _hint); // *** 62000 gas
+                }
+
                 emit CDPUpdated(
                                 currentCDPuser, 
                                 newDebt, 
@@ -584,12 +593,40 @@ contract CDPManager is Ownable, ICDPManager {
                                 CDPs[currentCDPuser].stake
                                 ); // *** 5600 gas
                 exchangedCLV = exchangedCLV.add(CLVLot);  // 102 gas    
-                redeemedETH = redeemedETH.add(ETHLot); // 106 gas
             }
+
+            currentCDPuser = nextUserToCheck;
         }
     } 
 
     // --- Helper functions ---
+
+    /* getICRofPartiallyRedeemedCDP() - TODO: write comment
+     */
+    function getICRofPartiallyRedeemedCDP(uint _CLVamount, uint _price) public view returns (uint) {
+        uint remainingCLV = _CLVamount;
+        address currentCDPuser = sortedCDPs.getLast();
+
+        while (remainingCLV > 0) {
+            if (getCurrentICR(currentCDPuser, _price) >= MCR) {
+                uint CLVDebt = CDPs[currentCDPuser].debt.add(computePendingCLVDebtReward(currentCDPuser));
+
+                if (CLVDebt > remainingCLV) {
+                    uint ETH = CDPs[currentCDPuser].coll.add(computePendingETHReward(currentCDPuser));
+                    uint newDebt = CLVDebt.sub(remainingCLV);
+                    uint newColl = ETH.sub(uint(ABDKMath64x64.divu(remainingCLV, uint(ABDKMath64x64.divu(_price, 1e18)))));
+
+                    return computeICR(newColl, newDebt, _price);
+                } else {
+                    remainingCLV = remainingCLV.sub(CLVDebt);
+                }
+            }
+
+            currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
+        }
+
+        return 0; /* We use 0 (which is not a valid ICR) to indicate no partial redemption */
+    }
 
      /* getApproxHint() - return address of a CDP that is, on average, (length / numTrials) positions away in the 
     sortedCDPs list from the correct insert position of the CDP to be inserted. 
@@ -709,7 +746,6 @@ contract CDPManager is Ownable, ICDPManager {
             uint newCollRatio = DeciMath.decMul(_price, ratio);
 
             return newCollRatio;
-
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
         else {

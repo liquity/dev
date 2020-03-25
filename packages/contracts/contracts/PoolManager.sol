@@ -400,7 +400,6 @@ contract PoolManager is Ownable, IPoolManager {
        
         // Pull ETHShare from StabilityPool, and send to CDP
         stabilityPool.sendETH(address(this), ETHShare); // 21000 gas
-        //TODO: Potentially use getApproxHint() here
         cdpManager.addColl.value(ETHShare)(_address, _hint); // 341340 gas
    
         uint[2] memory shares = [CLVShare, ETHShare]; // 151 gas

@@ -251,62 +251,48 @@ describe("Liquity", () => {
   };
 
   describe("Redemption", () => {
-    describe(".findLastTroveAboveMinimumCollateralRatio()", () => {
-      describe("when there are no Troves", () => {
-        before(async () => {
-          // Deploy new instances of the contracts, for a clean slate
-          addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
-          [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
-            deployer,
-            user,
-            ...otherUsers.slice(0, 3)
-          ]);
-        });
+    before(async () => {
+      // Deploy new instances of the contracts, for a clean slate
+      addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
+      [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
+        deployer,
+        user,
+        ...otherUsers.slice(0, 3)
+      ]);
 
-        it("should return undefined", async () => {
-          const foundAddress = await liquity.findLastTroveAboveMinimumCollateralRatio(price);
+      await sendToEach(otherUsers, 1.1);
 
-          expect(foundAddress).to.be.undefined;
-        });
-      });
+      price = Decimal.from(200);
+      await deployerLiquity.setPrice(price);
 
-      describe("when there are Troves above and below the minimum collateral ratio", () => {
-        before(async () => {
-          await sendToEach(otherUsers, 1.2);
+      await Promise.all([
+        liquity.createTrove(new Trove({ collateral: 20, debt: 100 }), price),
+        otherLiquities[0].createTrove(new Trove({ collateral: 1, debt: 10 }), price),
+        otherLiquities[1].createTrove(new Trove({ collateral: 1, debt: 20 }), price),
+        otherLiquities[2].createTrove(new Trove({ collateral: 1, debt: 30 }), price)
+      ]);
+    });
 
-          price = Decimal.from(110);
-          await deployerLiquity.setPrice(price);
+    it("should find a hint for the partial redemption", async () => {
+      const hint = await liquity._findCollateralRatioOfPartiallyRedeemedTrove(
+        Decimal.from(55),
+        price
+      );
 
-          // Make sure TCR is healthy enough to allow creating a few Troves near the minimum ICR
-          await liquity.createTrove(new Trove({ collateral: 2 }), price);
+      expect(hint.toString()).to.equal("39");
+    });
 
-          // Right now the price is 110, soon to be dropped to 100.
-          // We make 1 Trove that will drop below the MCR,
-          // and 2 Troves that will end up with ICR == MCR
-          await Promise.all([
-            otherLiquities[0].createTrove(new Trove({ collateral: 1.1, debt: 110 }), price),
-            otherLiquities[1].createTrove(new Trove({ collateral: 1.1, debt: 100 }), price),
-            otherLiquities[2].createTrove(new Trove({ collateral: 1.1, debt: 100 }), price)
-          ]);
+    it("should redeem some collateral", async () => {
+      await liquity.redeemCollateral(55, price);
 
-          price = Decimal.from(100);
-          await deployerLiquity.setPrice(price);
-        });
+      const balance = new Decimal(await provider.getBalance(user.getAddress()));
 
-        it("should find a Trove with ICR >= MCR that's followed by a Trove with ICR < MCR", async () => {
-          const foundAddress = await liquity.findLastTroveAboveMinimumCollateralRatio(price);
-          expect(foundAddress).to.not.be.undefined;
+      expect(balance.toString()).to.equal("100.275");
+      expect((await liquity.getQuiBalance()).toString()).to.equal("45");
 
-          const foundTrove = await liquity.getTrove(foundAddress);
-          expect(foundTrove.collateralRatioAt(price).toString()).to.equal("1.1");
-
-          const nextAddress = await liquity.getNextTrove(foundAddress!);
-          expect(nextAddress).to.not.be.undefined;
-
-          const nextTrove = await liquity.getTrove(nextAddress);
-          expect(nextTrove.collateralRatioAt(price).toString()).to.equal("1");
-        });
-      });
+      expect((await otherLiquities[0].getTrove()).debt.toString()).to.equal("5");
+      expect((await otherLiquities[1].getTrove()).debt.toString()).to.equal("0");
+      expect((await otherLiquities[2].getTrove()).debt.toString()).to.equal("0");
     });
   });
 });
