@@ -90,6 +90,7 @@ export type TransactionFunction = (
 type TransactionProps<C> = {
   id: string;
   tooltip?: string;
+  tooltipPlacement?: string;
   requires?: [boolean, string][];
   send: TransactionFunction;
   numberOfConfirmationsToWait?: number;
@@ -99,6 +100,7 @@ type TransactionProps<C> = {
 export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
   id,
   tooltip,
+  tooltipPlacement,
   requires,
   send,
   numberOfConfirmationsToWait = 3,
@@ -131,7 +133,11 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
       console.log(error);
 
       addMessage("Transaction failed", {
-        variant: "failure"
+        variant: "failure",
+        secondaryMessage:
+          error instanceof Error
+            ? `${error.name !== "Error" ? `${error.name}: ` : ""}${error.message}`
+            : ""
       });
 
       setTransactionState({ type: "idle" });
@@ -143,7 +149,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
     .map(([, reason]) => reason);
 
   if (transactionState.type !== "idle" && transactionState.type !== "confirmed") {
-    failureReasons.push("You must wait for confirmation first");
+    failureReasons.push("You must wait for confirmation");
   }
 
   const showFailure = failureReasons.length > 0 && (tooltip ? "asTooltip" : "asChildText");
@@ -167,7 +173,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
   }
 
   return tooltip ? (
-    <Tooltip message={tooltip} variant="light" placement="right">
+    <Tooltip message={tooltip} variant="light" placement={tooltipPlacement || "right"}>
       <Box opacity={showFailure ? 0.5 : 1}>{clonedTrigger}</Box>
     </Tooltip>
   ) : (

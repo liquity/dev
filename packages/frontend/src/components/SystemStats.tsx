@@ -27,7 +27,6 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
       <Heading as="h3" mb={2}>
         System
       </Heading>
-      <Text>Price of ETH: ${price.prettify()}</Text>
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
       <Text>QUI in circulation: {pool.totalDebt.shorten()}</Text>
       {quiInStabilityPoolPct && (

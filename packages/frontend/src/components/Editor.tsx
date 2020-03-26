@@ -5,19 +5,20 @@ import { Label, StaticCell, EditableCell } from "./EditorCell";
 
 type RowProps = {
   label: string;
+  hideLabel?: boolean;
   unit?: string;
 };
 
-const Row: React.FC<RowProps> = ({ label, unit, children }) => {
+const Row: React.FC<RowProps> = ({ label, hideLabel, unit, children }) => {
   return (
     <Flex width="450px" alignItems="stretch">
-      <Label width={unit ? 0.25 : 0.4}>{label}</Label>
+      {!hideLabel && <Label width={unit ? 0.25 : 0.4}>{label}</Label>}
       {unit && (
         <StaticCell bg="#eee" width={0.15} textAlign="center">
           {unit}
         </StaticCell>
       )}
-      <Box width={0.6}>{children}</Box>
+      <Box width={!hideLabel ? 0.6 : 0.85}>{children}</Box>
     </Flex>
   );
 };
@@ -82,6 +83,7 @@ type EditableRowProps = Omit<
 
 export const EditableRow: React.FC<EditableRowProps> = ({
   label,
+  hideLabel,
   unit,
   amount,
   color,
@@ -107,7 +109,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   }, [editedAmount]);
 
   return (
-    <Row {...{ label, unit }}>
+    <Row {...{ label, hideLabel, unit }}>
       {editing === label ? (
         <EditableCell
           ref={inputRef}

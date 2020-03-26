@@ -13,6 +13,8 @@ import { SystemStats } from "./components/SystemStats";
 import { DeveloperTools } from "./components/DeveloperTools";
 import { StabilityDepositManager } from "./components/StabilityDepositManager";
 import { RiskiestTroves } from "./components/RiskiestTroves";
+import { PriceManager } from "./components/PriceManager";
+import { RedemptionManager } from "./components/RedemptionManager";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
@@ -83,20 +85,22 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   return (
     <>
       <UserAccount {...{ account, etherBalance, quiBalance }} />
-      <Box width={[1, 0.6]} mx="auto">
+      <Box width="862px" mx="auto">
         <Flex flexWrap="wrap" justifyItems="center">
-          <Box px={3}>
+          <Box px={3} width="500px">
             {account === deployerAddress ? (
               <DeveloperTools {...{ liquity, price }} />
             ) : (
               <>
                 <TroveManager {...{ liquity, trove, price, pool }} />
                 <StabilityDepositManager {...{ liquity, deposit, trove, price }} />
+                <RedemptionManager {...{ liquity, price }} />
               </>
             )}
           </Box>
-          <Box px={3}>
+          <Box px={3} width="362px">
             <SystemStats {...{ numberOfTroves, price, pool, quiInStabilityPool }} />
+            <PriceManager {...{ liquity, price }} />
           </Box>
         </Flex>
         <RiskiestTroves numberOfTroves={10} {...{ liquity, price }} />
