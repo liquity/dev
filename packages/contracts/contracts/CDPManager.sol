@@ -588,7 +588,7 @@ contract CDPManager is Ownable, ICDPManager {
     after redemption, and pass a hint for its position in the sortedCDPs list along with the ICR value that the hint was found for.
 
     If another transaction modifies the list between calling getICRofPartiallyRedeemedCDP() and passing the hint to redeemCollateral(), it
-    is very likey that the last (partially) redeemed CDP would end up with a different ICR than what the hint is for. In this case the
+    is very likely that the last (partially) redeemed CDP would end up with a different ICR than what the hint is for. In this case the
     redemption will stop after the last completely redeemed CDP and the sender will keep the remaining CLV amount, which they can attempt
     to redeem later.
      */
