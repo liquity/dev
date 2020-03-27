@@ -31,12 +31,14 @@ contract('CDPManager', async accounts => {
   const _11_Ether = web3.utils.toWei('11', 'ether')
   const _15_Ether = web3.utils.toWei('15', 'ether')
   const _50_Ether = web3.utils.toWei('50', 'ether')
-  const _100_Ether = web3.utils.toWei('50', 'ether')
+  const _100_Ether = web3.utils.toWei('100', 'ether')
 
   const _100e18 = web3.utils.toWei('100', 'ether')
   const _150e18 = web3.utils.toWei('150', 'ether')
   const _180e18 = web3.utils.toWei('180', 'ether')
-  const _200e18 = web3.utils.toWei('180', 'ether')
+  const _200e18 = web3.utils.toWei('200', 'ether')
+
+  const _18_zeros = '000000000000000000'
 
   const [owner, alice, bob, carol, dennis, whale] = accounts;
   let priceFeed
@@ -949,47 +951,121 @@ contract('CDPManager', async accounts => {
     assert.isFalse(carol_CDP_isInSortedList)
   })
 
-  // it('redeemCollateral(): sends CLV to the lowest ICR CDPs, cancelling with correct amount of debt', async () => {
-  //   // --- SETUP ---
+  it('getICRofPartiallyRedeemedCDP(): calculates what the ICR of the last CDP involved in a redemption will be', async () => {
+    // --- SETUP ---
+    await cdpManager.openLoan( '10' + _18_zeros, alice, { from: alice, value:  _1_Ether })
+    await cdpManager.openLoan( '20' + _18_zeros, bob,   { from: bob,   value:  _1_Ether })
+    await cdpManager.openLoan( '30' + _18_zeros, carol, { from: carol, value:  _1_Ether })
+    
+    const price = await priceFeed.getPrice()
+    assert.equal(price, '200' + _18_zeros)
 
-  //   // create 4 CDPs
-  //   await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
-  //   await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
-  //   await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
-  //   // start Dennis with a high ICR
-  //   await cdpManager.addColl(dennis, dennis, { from: dennis, value: _98_Ether })
+    // --- TEST ---
+    const newICR = await cdpManager.getICRofPartiallyRedeemedCDP('55' + _18_zeros, price)
+    assert.equal(newICR, '39' + _18_zeros)
+  });
 
-  //   await cdpManager.withdrawCLV('5000000000000000000', alice, { from: alice }) // alice withdraws 5 CLV
-  //   await cdpManager.withdrawCLV('8000000000000000000', bob, { from: bob }) // bob withdraws 8 CLV
-  //   await cdpManager.withdrawCLV('10000000000000000000', carol, { from: carol }) // carol withdraws 10 CLV 
-  //   await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis }) // dennis withdraws 150 CLV
+  it('redeemCollateral(): cancels the provided CLV with debt from CDPs with the lowest ICRs and sends an equivalent amount of Ether', async () => {
+    // --- SETUP ---
 
-  //   const dennis_CLVBalance_Before = (await clvToken.balanceOf(dennis)).toString()
-  //   assert.equal(dennis_CLVBalance_Before, '150000000000000000000')
+    await cdpManager.openLoan(  '5' + _18_zeros, alice,  { from: alice,  value:    _1_Ether })
+    await cdpManager.openLoan(  '8' + _18_zeros, bob,    { from: bob,    value:    _1_Ether })
+    await cdpManager.openLoan( '10' + _18_zeros, carol,  { from: carol,  value:    _1_Ether })
+    // start Dennis with a high ICR
+    await cdpManager.openLoan('150' + _18_zeros, dennis, { from: dennis, value:  _100_Ether })
 
-  //   // --- TEST --- 
+    const dennis_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(dennis))
 
-  //   // Dennis redeems 20 CLV
-  //   await cdpManager.redeemCollateral('20000000000000000000', dennis, { from: dennis })
+    const dennis_CLVBalance_Before = await clvToken.balanceOf(dennis)
+    assert.equal(dennis_CLVBalance_Before, '150' + _18_zeros)
 
-  //   const alice_CDP_After = await cdpManager.CDPs(alice)
-  //   const bob_CDP_After = await cdpManager.CDPs(bob)
-  //   const carol_CDP_After = await cdpManager.CDPs(carol)
+    const price = await priceFeed.getPrice()
+    assert.equal(price, '200' + _18_zeros)
 
-  //   const alice_debt_After = alice_CDP_After[0].toString()
-  //   const bob_debt_After = bob_CDP_After[0].toString()
-  //   const carol_debt_After = carol_CDP_After[0].toString()
+    // --- TEST --- 
 
-  //   /* check that Dennis' redeemed 20 CLV has been cancelled with debt from Bobs's CDP (8) and Carol's CDP (10).
-  //   The remaining lot (2) is sent to Alice's CDP, who had the best ICR.
-  //   It leaves her with (3) CLV debt. */
-  //   assert.equal(alice_debt_After, '3000000000000000000')
-  //   assert.equal(bob_debt_After, '0')
-  //   assert.equal(carol_debt_After, '0')
+    // Find hint for redeeming 20 CLV
+    const hintICR = await cdpManager.getICRofPartiallyRedeemedCDP('20' + _18_zeros, price)
+    // We don't need to use getApproxHint for this test, since it's not the subject of this
+    // test case, and the list is very small, so the correct position is quickly found
+    const { 0: hint } = await sortedCDPs.findInsertPosition(hintICR, price, dennis, dennis)
 
-  //   const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
-  //   assert.equal(dennis_CLVBalance_After, '130000000000000000000')
-  // })
+    // Dennis redeems 20 CLV
+    // Don't pay for gas, as it makes it easier to calculate the received Ether
+    await cdpManager.redeemCollateral('20' + _18_zeros, hint, hintICR, { from: dennis, gasPrice: 0 })
+
+    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const bob_CDP_After = await cdpManager.CDPs(bob)
+    const carol_CDP_After = await cdpManager.CDPs(carol)
+
+    const alice_debt_After = alice_CDP_After[0].toString()
+    const bob_debt_After = bob_CDP_After[0].toString()
+    const carol_debt_After = carol_CDP_After[0].toString()
+
+    /* check that Dennis' redeemed 20 CLV has been cancelled with debt from Bobs's CDP (8) and Carol's CDP (10).
+    The remaining lot (2) is sent to Alice's CDP, who had the best ICR.
+    It leaves her with (3) CLV debt. */
+    assert.equal(alice_debt_After, '3' + _18_zeros)
+    assert.equal(bob_debt_After, '0')
+    assert.equal(carol_debt_After, '0')
+
+    const dennis_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(dennis))
+    const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
+    assert.equal(receivedETH, web3.utils.toWei('0.1', 'ether'))
+
+    const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
+    assert.equal(dennis_CLVBalance_After, '130' + _18_zeros)
+  })
+
+  it('redeemCollateral(): performs a partial redemption if the hint has gotten out-of-date', async () => {
+    // --- SETUP ---
+
+    await cdpManager.openLoan(  '5' + _18_zeros, alice,  { from: alice,  value:    _1_Ether })
+    await cdpManager.openLoan(  '8' + _18_zeros, bob,    { from: bob,    value:    _1_Ether })
+    await cdpManager.openLoan( '10' + _18_zeros, carol,  { from: carol,  value:    _1_Ether })
+    await cdpManager.openLoan('150' + _18_zeros, dennis, { from: dennis, value:  _100_Ether })
+
+    const dennis_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(dennis))
+
+    const dennis_CLVBalance_Before = await clvToken.balanceOf(dennis)
+    assert.equal(dennis_CLVBalance_Before, '150' + _18_zeros)
+
+    const price = await priceFeed.getPrice()
+    assert.equal(price, '200' + _18_zeros)
+
+    // --- TEST --- 
+
+    const hintICR = await cdpManager.getICRofPartiallyRedeemedCDP('20' + _18_zeros, price)
+    const { 0: hint } = await sortedCDPs.findInsertPosition(hintICR, price, dennis, dennis)
+
+    // Oops, another transaction gets in the way
+    {
+      const hintICR = await cdpManager.getICRofPartiallyRedeemedCDP('1' + _18_zeros, price)
+      const { 0: hint } = await sortedCDPs.findInsertPosition(hintICR, price, dennis, dennis)
+
+      // Alice redeems 1 CLV from Carol's CDP
+      await cdpManager.redeemCollateral('1' + _18_zeros, hint, hintICR, { from: alice })
+    }
+
+    // Dennis tries to redeem 20 CLV
+    await cdpManager.redeemCollateral('20' + _18_zeros, hint, hintICR, { from: dennis, gasPrice: 0 })
+
+    // Since Alice already redeemed 1 CLV from Carol's CDP, Dennis was only able to redeem:
+    //  - 9 CLV from Carol's
+    //  - 8 CLV from Bob's
+    // for a total of 17 CLV.
+
+    // Dennis calculated his hint for redeeming 2 CLV from Alice's CDP, but after Alice's transaction
+    // got in the way, he would have needed to redeem 3 CLV to fully complete his redemption of 20 CLV.
+    // This would have required a different hint, therefore he ended up with a partial redemption.
+
+    const dennis_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(dennis))
+    const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
+    assert.equal(receivedETH, web3.utils.toWei('0.085', 'ether'))
+
+    const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
+    assert.equal(dennis_CLVBalance_After, '133' + _18_zeros)
+  })
 })
 
 contract('Reset chain state', async accounts => { })
