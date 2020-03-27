@@ -1,6 +1,6 @@
 import { Signer } from "ethers";
 import { Provider } from "ethers/providers";
-import { bigNumberify, BigNumberish } from "ethers/utils";
+import { bigNumberify, BigNumberish, BigNumber } from "ethers/utils";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
@@ -598,9 +598,9 @@ export class Liquity {
     );
   }
 
-  async _findRedemptionHint(exchangedQui: Decimal, price: Decimal) {
+  async _findRedemptionHint(exchangedQui: Decimal, price: Decimal): Promise<[string, Decimal]> {
     if (!Liquity.useHint) {
-      return addressZero;
+      return [addressZero, Decimal.INFINITY];
     }
 
     const collateralRatio = await this._findCollateralRatioOfPartiallyRedeemedTrove(
@@ -608,7 +608,10 @@ export class Liquity {
       price
     );
 
-    return this._findHintForCollateralRatio(collateralRatio, price, addressZero);
+    return [
+      await this._findHintForCollateralRatio(collateralRatio, price, addressZero),
+      collateralRatio
+    ];
   }
 
   async redeemCollateral(
@@ -619,11 +622,11 @@ export class Liquity {
     exchangedQui = Decimal.from(exchangedQui);
     price = Decimal.from(price);
 
-    return this.cdpManager.redeemCollateral(
-      exchangedQui.bigNumber,
-      await this._findRedemptionHint(exchangedQui, price),
-      { ...overrides }
-    );
+    const [hint, hintICR] = await this._findRedemptionHint(exchangedQui, price);
+
+    return this.cdpManager.redeemCollateral(exchangedQui.bigNumber, hint, hintICR.bigNumber, {
+      ...overrides
+    });
   }
 
   async getLastTroves(numberOfTroves: number) {

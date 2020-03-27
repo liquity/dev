@@ -231,7 +231,7 @@ describe("Liquity", () => {
       deposit = await liquity.getStabilityDeposit();
 
       // With ABDKMath64x64, a microscopic amount of Ether can get lost
-      expect(trove).to.deep.equal(new Trove({ collateral: "2.22329999999999999", debt: 139 }));
+      expect(trove).to.deep.equal(new Trove({ collateral: "2.223299999999999991", debt: 139 }));
       expect(deposit.isEmpty).to.be.true;
     });
   });
@@ -273,7 +273,7 @@ describe("Liquity", () => {
       ]);
     });
 
-    it("should find a hint for the partial redemption", async () => {
+    it("should find a hint for partial redemption", async () => {
       const hint = await liquity._findCollateralRatioOfPartiallyRedeemedTrove(
         Decimal.from(55),
         price
