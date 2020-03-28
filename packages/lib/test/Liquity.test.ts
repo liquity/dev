@@ -98,20 +98,19 @@ describe("Liquity", () => {
     it("should fail to create an empty Trove", async () => {
       const emptyTrove = new Trove();
 
-      await expect(liquity.createTrove(emptyTrove, price)).to.eventually.be.rejected;
+      await expect(liquity.openTrove(emptyTrove, price)).to.eventually.be.rejected;
     });
 
     it("should fail to create a Trove with too little collateral", async () => {
       const troveWithTooLittleCollateral = new Trove({ collateral: 0.05 });
 
-      await expect(liquity.createTrove(troveWithTooLittleCollateral, price)).to.eventually.be
-        .rejected;
+      await expect(liquity.openTrove(troveWithTooLittleCollateral, price)).to.eventually.be.rejected;
     });
 
     it("should create a Trove with only collateral", async () => {
       const troveWithOnlyCollateral = new Trove({ collateral: 1 });
 
-      await liquity.createTrove(troveWithOnlyCollateral, price);
+      await liquity.openTrove(troveWithOnlyCollateral, price);
       trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(troveWithOnlyCollateral);
@@ -127,7 +126,7 @@ describe("Liquity", () => {
     it("should create a Trove that already has debt", async () => {
       const troveWithSomeDebt = new Trove({ collateral: 1, debt: 100 });
 
-      await liquity.createTrove(troveWithSomeDebt, price);
+      await liquity.openTrove(troveWithSomeDebt, price);
       trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(troveWithSomeDebt);
@@ -180,7 +179,7 @@ describe("Liquity", () => {
     });
 
     it("other user should make a Trove with very low ICR", async () => {
-      await otherLiquities[0].createTrove(new Trove({ collateral: 0.2233, debt: 39 }), price);
+      await otherLiquities[0].openTrove(new Trove({ collateral: 0.2233, debt: 39 }), price);
       const otherTrove = await otherLiquities[0].getTrove();
 
       expect(otherTrove.collateralRatioAt(price).toString()).to.equal("1.145128205128205128");
@@ -266,10 +265,10 @@ describe("Liquity", () => {
       await deployerLiquity.setPrice(price);
 
       await Promise.all([
-        liquity.createTrove(new Trove({ collateral: 20, debt: 100 }), price),
-        otherLiquities[0].createTrove(new Trove({ collateral: 1, debt: 10 }), price),
-        otherLiquities[1].createTrove(new Trove({ collateral: 1, debt: 20 }), price),
-        otherLiquities[2].createTrove(new Trove({ collateral: 1, debt: 30 }), price)
+        liquity.openTrove(new Trove({ collateral: 20, debt: 100 }), price),
+        otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 10 }), price),
+        otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 20 }), price),
+        otherLiquities[2].openTrove(new Trove({ collateral: 1, debt: 30 }), price)
       ]);
     });
 

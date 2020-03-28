@@ -121,7 +121,7 @@ task(
         value: Decimal.from(collateral).bigNumber
       });
 
-      await liquity.createTrove(new Trove({ collateral, debt }), price);
+      await liquity.openTrove(new Trove({ collateral, debt }), price);
       if (i % 4 === 0) {
         await liquity.depositQuiInStabilityPool(debt);
       }

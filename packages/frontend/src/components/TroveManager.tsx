@@ -50,7 +50,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
     ? editedTrove.debt.nonZero
       ? ([
           "Open new Trove",
-          liquity.createTrove.bind(liquity, editedTrove, price),
+          liquity.openTrove.bind(liquity, editedTrove, price),
           [[!pool.isRecoveryModeActiveAt(price), "Can't borrow QUI during recovery mode"]]
         ] as const)
       : ([
@@ -58,6 +58,15 @@ const TroveAction: React.FC<TroveActionProps> = ({
           liquity.depositEther.bind(liquity, originalTrove, editedTrove.collateral, price),
           []
         ] as const)
+    : editedTrove.isEmpty
+    ? ([
+        "Close Trove",
+        liquity.closeTrove.bind(liquity),
+        [
+          [!pool.isRecoveryModeActiveAt(price), "Can't close Trove during recovery mode"],
+          [quiBalance.gte(originalTrove.debtAfterReward), "You don't have enough QUI"]
+        ]
+      ] as const)
     : (([verb, unit, method, extraRequirements]) =>
         [
           `${verb} ${change.difference.absoluteValue!.prettify()} ${unit}`,

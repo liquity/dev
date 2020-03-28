@@ -381,7 +381,7 @@ export class Liquity {
     return this._findHintForCollateralRatio(collateralRatio, price, address);
   }
 
-  async createTrove(trove: Trove, price: Decimalish, overrides?: LiquityTransactionOverrides) {
+  async openTrove(trove: Trove, price: Decimalish, overrides?: LiquityTransactionOverrides) {
     const address = this.requireAddress();
 
     return this.cdpManager.openLoan(
@@ -389,6 +389,10 @@ export class Liquity {
       await this._findHint(trove, Decimal.from(price), address),
       { value: trove.collateral.bigNumber, ...overrides }
     );
+  }
+
+  async closeTrove(overrides?: LiquityTransactionOverrides) {
+    return this.cdpManager.closeLoan({ ...overrides });
   }
 
   async depositEther(
