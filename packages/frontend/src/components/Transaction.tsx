@@ -91,7 +91,7 @@ type TransactionProps<C> = {
   id: string;
   tooltip?: string;
   tooltipPlacement?: string;
-  requires?: [boolean, string][];
+  requires?: readonly (readonly [boolean, string])[];
   send: TransactionFunction;
   numberOfConfirmationsToWait?: number;
   children: C;

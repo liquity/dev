@@ -98,6 +98,10 @@ export class Trove {
     return this.collateralRatioAfterRewardsAt(price).lt(Liquity.MINIMUM_COLLATERAL_RATIO);
   }
 
+  isBelowCriticalCollateralRatioAt(price: Decimalish) {
+    return this.collateralRatioAfterRewardsAt(price).lt(Liquity.CRITICAL_COLLATERAL_RATIO);
+  }
+
   constructor({
     collateral = 0,
     debt = 0,

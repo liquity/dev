@@ -92,7 +92,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
               <DeveloperTools {...{ liquity, price }} />
             ) : (
               <>
-                <TroveManager {...{ liquity, trove, price, pool }} />
+                <TroveManager {...{ liquity, trove, price, pool, quiBalance }} />
                 <StabilityDepositManager {...{ liquity, deposit, trove, price }} />
                 <RedemptionManager {...{ liquity, price }} />
               </>
