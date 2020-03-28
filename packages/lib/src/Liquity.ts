@@ -35,20 +35,11 @@ export class Pool {
     this.closedDebt = Decimal.from(closedDebt);
   }
 
-  get totalCollateral() {
-    return this.activeCollateral.add(this.liquidatedCollateral);
-  }
-
-  get totalDebt() {
-    return this.activeDebt.add(this.closedDebt);
-  }
-
-  totalCollateralRatioAt(price: Decimalish) {
-    return calculateCollateralRatio(this.totalCollateral, this.totalDebt, price);
-  }
-
-  isRecoveryModeActiveAt(price: Decimalish) {
-    return this.totalCollateralRatioAt(price).lt(Liquity.CRITICAL_COLLATERAL_RATIO);
+  get total() {
+    return new Trove({
+      collateral: this.activeCollateral.add(this.liquidatedCollateral),
+      debt: this.activeDebt.add(this.closedDebt)
+    });
   }
 }
 
@@ -114,42 +105,44 @@ export class Trove {
     this.pendingDebtReward = Decimal.from(pendingDebtReward);
   }
 
-  addCollateral(addedCollateral: Decimalish): Trove {
+  add(that: Trovish) {
     return new Trove({
-      collateral: this.collateralAfterReward.add(addedCollateral),
-      debt: this.debtAfterReward
+      collateral: this.collateralAfterReward.add(that.collateral || 0),
+      debt: this.debtAfterReward.add(that.debt || 0)
     });
   }
 
-  addDebt(addedDebt: Decimalish): Trove {
+  addCollateral(collateral: Decimalish) {
+    return this.add({ collateral });
+  }
+
+  addDebt(debt: Decimalish) {
+    return this.add({ debt });
+  }
+
+  subtract(that: Trovish) {
     return new Trove({
-      collateral: this.collateralAfterReward,
-      debt: this.debtAfterReward.add(addedDebt)
+      collateral: this.collateralAfterReward.sub(that.collateral || 0),
+      debt: this.debtAfterReward.sub(that.debt || 0)
     });
   }
 
-  subtractCollateral(subtractedCollateral: Decimalish): Trove {
-    return new Trove({
-      collateral: this.collateralAfterReward.sub(subtractedCollateral),
-      debt: this.debtAfterReward
-    });
+  subtractCollateral(collateral: Decimalish) {
+    return this.subtract({ collateral });
   }
 
-  subtractDebt(subtractedDebt: Decimalish): Trove {
-    return new Trove({
-      collateral: this.collateralAfterReward,
-      debt: this.debtAfterReward.sub(subtractedDebt)
-    });
+  subtractDebt(debt: Decimalish) {
+    return this.subtract({ debt });
   }
 
-  setCollateral(collateral: Decimalish): Trove {
+  setCollateral(collateral: Decimalish) {
     return new Trove({
       collateral,
       debt: this.debtAfterReward
     });
   }
 
-  setDebt(debt: Decimalish): Trove {
+  setDebt(debt: Decimalish) {
     return new Trove({
       collateral: this.collateralAfterReward,
       debt

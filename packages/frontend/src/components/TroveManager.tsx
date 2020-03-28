@@ -51,7 +51,12 @@ const TroveAction: React.FC<TroveActionProps> = ({
       ? ([
           "Open new Trove",
           liquity.openTrove.bind(liquity, editedTrove, price),
-          [[!pool.isRecoveryModeActiveAt(price), "Can't borrow QUI during recovery mode"]]
+          [
+            [
+              !pool.total.isBelowCriticalCollateralRatioAt(price),
+              "Can't borrow QUI during recovery mode"
+            ]
+          ]
         ] as const)
       : ([
           "Open new Trove",
@@ -63,7 +68,10 @@ const TroveAction: React.FC<TroveActionProps> = ({
         "Close Trove",
         liquity.closeTrove.bind(liquity),
         [
-          [!pool.isRecoveryModeActiveAt(price), "Can't close Trove during recovery mode"],
+          [
+            !pool.total.isBelowCriticalCollateralRatioAt(price),
+            "Can't close Trove during recovery mode"
+          ],
           [quiBalance.gte(originalTrove.debtAfterReward), "You don't have enough QUI"]
         ]
       ] as const)
@@ -79,7 +87,12 @@ const TroveAction: React.FC<TroveActionProps> = ({
               "Withdraw",
               "ETH",
               liquity.withdrawEther,
-              [[!pool.isRecoveryModeActiveAt(price), "Can't withdraw ETH during recovery mode"]]
+              [
+                [
+                  !pool.total.isBelowCriticalCollateralRatioAt(price),
+                  "Can't withdraw ETH during recovery mode"
+                ]
+              ]
             ],
             ["Deposit", "ETH", liquity.depositEther, []]
           ],
@@ -94,7 +107,12 @@ const TroveAction: React.FC<TroveActionProps> = ({
               "Borrow",
               "QUI",
               liquity.borrowQui,
-              [[!pool.isRecoveryModeActiveAt(price), "Can't borrow QUI during recovery mode"]]
+              [
+                [
+                  !pool.total.isBelowCriticalCollateralRatioAt(price),
+                  "Can't borrow QUI during recovery mode"
+                ]
+              ]
             ]
           ]
         } as const)[change.property][change.difference.positive ? 1 : 0]
@@ -122,9 +140,9 @@ const TroveAction: React.FC<TroveActionProps> = ({
             `Collateral ratio must be at least ${mcrPercent}`
           ],
           [
-            !editedTrove
-              .addCollateral(pool.totalCollateral)
-              .addDebt(pool.totalDebt)
+            !pool.total
+              .subtract(originalTrove)
+              .add(editedTrove)
               .isBelowCriticalCollateralRatioAt(price),
             `Total collateral ratio would fall below ${ccrPercent}`
           ]
