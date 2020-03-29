@@ -1,4 +1,5 @@
 const accountsList = 
+//  5000 accounts, with 1mil ether each
 [ 
 { privateKey: "0x06bD75E4440C039c04e0AFf0CDdf2A0EFCaE37bE14dFFAcBe3773DF9c4b6Cc2F", balance: "0xd3c21bcecceda1000000" },
 { privateKey: "0xFA13A9eacE21b854AB04fC612EE2De459B4FA77af9cF3BFA9Bebd1A821d3a677", balance: "0xd3c21bcecceda1000000" },
