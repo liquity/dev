@@ -535,73 +535,99 @@ contract CDPManager is Ownable, ICDPManager {
         }
         return true;
     }
-            
-    /* Send _amount CLV to the system and redeem the corresponding amount of collateral from as many CDPs as are needed to fill the redemption
+
+    // Redeem as much collateral as possible from _cdpUser's CDP in exchange for CLV up to _maxCLVamount
+    function redeemCollateralFromCDP(address _cdpUser, uint _maxCLVamount, uint _price, address _hint, uint _hintICR) internal returns (uint) {
+        // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP
+        uint CLVLot = DeciMath.getMin(_maxCLVamount, CDPs[_cdpUser].debt); // 1200 gas
+        uint ETHLot = uint(ABDKMath64x64.divu(CLVLot, uint(ABDKMath64x64.divu(_price, 1e18))));
+
+        // Decrease the debt and collateral of the current CDP according to the lot and corresponding ETH to send
+        uint newDebt = (CDPs[_cdpUser].debt).sub(CLVLot);
+        uint newColl = (CDPs[_cdpUser].coll).sub(ETHLot);
+
+        if (newDebt == 0) {
+            // No debt left in the CDP, therefore new ICR must be "infinite".
+            // Passing zero as hint will cause sortedCDPs to descend the list from the head, which is the correct insert position.
+            sortedCDPs.reInsert(_cdpUser, 2**256 - 1, _price, address(0), address(0)); // *** 62000 gas
+        } else {
+            uint newICR = computeICR(newColl, newDebt, _price);
+
+            // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
+            // certainly result in running out of gas.
+            if (newICR != _hintICR) return 0;
+
+            sortedCDPs.reInsert(_cdpUser, newICR, _price, _hint, _hint); // *** 62000 gas
+        }
+
+        CDPs[_cdpUser].debt = newDebt; // 6200 gas
+        CDPs[_cdpUser].coll = newColl; // 6200 gas
+
+        // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()
+        poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); // *** 57000 gas
+
+        emit CDPUpdated(
+                        _cdpUser,
+                        newDebt,
+                        newColl,
+                        CDPs[_cdpUser].stake
+                        ); // *** 5600 gas
+
+        return CLVLot;
+    }
+
+    /* Send _CLVamount CLV to the system and redeem the corresponding amount of collateral from as many CDPs as are needed to fill the redemption
      request.  Applies pending rewards to a CDP before reducing its debt and coll.
-    
+
     Note that if _amount is very large, this function can run out of gas. This can be easily avoided by splitting the total _amount
     in appropriate chunks and calling the function multiple times.
+
+    All CDPs that are redeemed from -- with the likely exception of the last one -- will end up with no debt left, therefore they will be
+    reinsterted at the top of the sortedCDPs list. If the last CDP does have some remaining debt, the reinsertion could be anywhere in the
+    list, therefore it requires a hint. A frontend should use getICRofPartiallyRedeemedCDP() to calculate what the ICR of this CDP will be
+    after redemption, and pass a hint for its position in the sortedCDPs list along with the ICR value that the hint was found for.
+
+    If another transaction modifies the list between calling getICRofPartiallyRedeemedCDP() and passing the hint to redeemCollateral(), it
+    is very likely that the last (partially) redeemed CDP would end up with a different ICR than what the hint is for. In this case the
+    redemption will stop after the last completely redeemed CDP and the sender will keep the remaining CLV amount, which they can attempt
+    to redeem later.
      */
-    function redeemCollateral(uint _CLVamount, address _hint) public returns (bool) {
-        uint exchangedCLV;
+    function redeemCollateral(uint _CLVamount, address _hint, uint _hintICR) public returns (bool) {
+        uint remainingCLV = _CLVamount;
         uint price = priceFeed.getPrice(); // 3500 gas
         address currentCDPuser = sortedCDPs.getLast();  // 3500 gas (for 10 CDPs in list)
 
         // Loop through the CDPs starting from the one with lowest collateral ratio until _amount of CLV is exchanged for collateral
-        while (exchangedCLV < _CLVamount) {
+        while (remainingCLV > 0) {
             // Save the address of the CDP preceding the current one, before potentially modifying the list
             address nextUserToCheck = sortedCDPs.getPrev(currentCDPuser);
-            
+
             // Break the loop if there is no more active debt to cancel with the received CLV
-            // if (poolManager.getActiveDebt() == 0) break;
-            if (activePool.getCLV() == 0) break;   
-            
+            if (activePool.getCLV() == 0) break;
+
             // Close CDPs along the way that turn out to be under-collateralized
             if (getCurrentICR(currentCDPuser, price) < MCR) {
                 liquidate(currentCDPuser);
             }
             else {
                 applyPendingRewards(currentCDPuser); // *** 46000 gas (no rewards!)
-              
-                // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the current CDP 
-                uint CLVLot = DeciMath.getMin(_CLVamount.sub(exchangedCLV), CDPs[currentCDPuser].debt); // 1200 gas
-                uint ETHLot = uint(ABDKMath64x64.divu(CLVLot, uint(ABDKMath64x64.divu(price, 1e18))));
-               
-                // Decrease the debt and collateral of the current CDP according to the lot and corresponding ETH to send
-                uint newDebt = (CDPs[currentCDPuser].debt).sub(CLVLot);
-                CDPs[currentCDPuser].debt = newDebt; // 6200 gas
-               
-                uint newColl = (CDPs[currentCDPuser].coll).sub(ETHLot);
-                CDPs[currentCDPuser].coll = newColl; // 6200 gas
-                
-                // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()
-                poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); // *** 57000 gas
-               
-                // Update the sortedCDPs list and the redeemed amount
-                if (newDebt == 0) {
-                    // No debt left in the CDP, therefore new ICR must be "infinite".
-                    // Passing zero as hint will cause sortedCDPs to descend the list from the head, which is the correct insert position.
-                    sortedCDPs.reInsert(currentCDPuser, 2**256 - 1, price, address(0), address(0)); // *** 62000 gas
-                } else {
-                    sortedCDPs.reInsert(currentCDPuser, getCurrentICR(currentCDPuser, price), price, _hint, _hint); // *** 62000 gas
-                }
 
-                emit CDPUpdated(
-                                currentCDPuser, 
-                                newDebt, 
-                                newColl,
-                                CDPs[currentCDPuser].stake
-                                ); // *** 5600 gas
-                exchangedCLV = exchangedCLV.add(CLVLot);  // 102 gas    
+                uint CLVLot = redeemCollateralFromCDP(currentCDPuser, remainingCLV, price, _hint, _hintICR);
+                if (CLVLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last CDP
+
+                remainingCLV = remainingCLV.sub(CLVLot);  // 102 gas
             }
 
             currentCDPuser = nextUserToCheck;
         }
-    } 
+    }
 
     // --- Helper functions ---
 
-    /* getICRofPartiallyRedeemedCDP() - TODO: write comment
+    /* getICRofPartiallyRedeemedCDP() - Helper function for redeemCollateral().
+     *
+     * Find the last CDP that will modified by calling redeemCollateral() with the same _CLVamount
+     * and _price, and calculate what its new ICR will be after the redemption.
      */
     function getICRofPartiallyRedeemedCDP(uint _CLVamount, uint _price) public view returns (uint) {
         uint remainingCLV = _CLVamount;

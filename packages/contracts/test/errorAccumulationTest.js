@@ -669,22 +669,29 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
 })
   /* --- TODO:
  
- - Error accumulation from repeated Liquidations AND applying rewards (expect growth as per the separate tests)
- - Stakes computations. More complex - errors compound
+ - Stakes computations. Errors occur in stake = totalColl/totalStakes.  
+ 
+ Two contributions to accumulated error:
 
-  ----
+ -Truncation in division (-)
+ -Previous error baked in to totalStakes, reducing the denominator (+)
+
+ Test to see if error is stable or grows. 
+
+  -----
   Findings with ABDK64 throughout:
+  -----
 
   1) Reward applications accumulate ETH and CLVDebt error in DefaultPool
+
   2) Liquidations accumulate ETH and CLVDebt error in DefaultPool
+
   3) Liquidations with partial offset send slightly too little to StabilityPool, and redistribute slightly too much
   
   4) StabilityPool Withdrawals accumulate ETH error in the StabilityPool
+
   5) StabilityPool Withdrawals can accumulate CLVLoss in the StabilityPool (i.e. they distribute too much CLV), and can block
-  the final deposit withdrawl
-
-
-
+  the final deposit withdrawal
 
   */
 
