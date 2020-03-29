@@ -55,5 +55,7 @@ interface ICDPManager {
 
     function checkTCRAndSetRecoveryMode(uint _price) external returns(bool);
 
-    function redeemCollateral(uint _CLVAmount, address _hint) external returns(bool);
+    function getICRofPartiallyRedeemedCDP(uint _CLVamount, uint _price) external view returns (uint);
+
+    function redeemCollateral(uint _CLVAmount, address _hint, uint _hintICR) external returns(bool);
 }
