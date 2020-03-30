@@ -196,9 +196,27 @@ export const TransactionMonitor: React.FC = () => {
   useEffect(() => {
     if (id && hash && numberOfConfirmationsToWait) {
       let didParseLogs = false;
+      let confirmations = 0;
 
-      const blockListener = async () => {
+      const blockListener = async (blockNumber: number) => {
         const transactionReceipt = await provider.getTransactionReceipt(hash);
+
+        if (!transactionReceipt) {
+          console.log(`Block #${blockNumber} doesn't include tx ${hash}`);
+          return;
+        }
+
+        if (
+          transactionReceipt.blockNumber &&
+          transactionReceipt.confirmations &&
+          transactionReceipt.confirmations > confirmations
+        ) {
+          // The block that mines the transaction is the 1st confirmation
+          const blockNumber = transactionReceipt.blockNumber + transactionReceipt.confirmations - 1;
+          confirmations = transactionReceipt.confirmations;
+
+          console.log(`Block #${blockNumber} ${confirmations}-confirms tx ${hash}`);
+        }
 
         if (transactionReceipt.logs && !didParseLogs) {
           const [parsedLogs, unparsedLogs] = parseLogs(transactionReceipt.logs, interfaces);
@@ -216,7 +234,7 @@ export const TransactionMonitor: React.FC = () => {
           didParseLogs = true;
         }
 
-        if (transactionReceipt?.confirmations) {
+        if (transactionReceipt.confirmations) {
           if (transactionReceipt.confirmations >= numberOfConfirmationsToWait) {
             setTransactionState({
               type: "confirmed",

@@ -66,7 +66,11 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const getPrice = useCallback(() => liquity.getPrice(), [liquity]);
   const watchPrice = useCallback(
     (onPriceChanged: (price: Decimal) => void) => {
-      return liquity.watchPrice(onPriceChanged);
+      const logged = (price: Decimal) => {
+        console.log(`Update price to ${price}`);
+        onPriceChanged(price);
+      };
+      return liquity.watchPrice(logged);
     },
     [liquity]
   );
@@ -74,7 +78,15 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const getTrove = useCallback(() => liquity.getTrove(), [liquity]);
   const watchTrove = useCallback(
     (onTroveChanged: (trove: Trove) => void) => {
-      return liquity.watchTrove(onTroveChanged);
+      const logged = (trove: Trove) => {
+        console.log("Update trove to:");
+        console.log(`{ collateral: ${trove.collateral},`);
+        console.log(`  debt: ${trove.debt},`);
+        console.log(`  pendingCollateralReward: ${trove.pendingCollateralReward},`);
+        console.log(`  pendingDebtReward: ${trove.pendingDebtReward} }`);
+        onTroveChanged(trove);
+      };
+      return liquity.watchTrove(logged);
     },
     [liquity]
   );
@@ -82,7 +94,14 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const getStabilityDeposit = useCallback(() => liquity.getStabilityDeposit(), [liquity]);
   const watchStabilityDeposit = useCallback(
     (onStabilityDepositChanged: (deposit: StabilityDeposit) => void) => {
-      return liquity.watchStabilityDeposit(onStabilityDepositChanged);
+      const logged = (deposit: StabilityDeposit) => {
+        console.log("Update deposit to:");
+        console.log(`{ deposit: ${deposit.deposit},`);
+        console.log(`  pendingDepositLoss: ${deposit.pendingDepositLoss},`);
+        console.log(`  pendingCollateralGain: ${deposit.pendingCollateralGain} }`);
+        onStabilityDepositChanged(deposit);
+      };
+      return liquity.watchStabilityDeposit(logged);
     },
     [liquity]
   );
@@ -90,7 +109,11 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const getQuiBalance = useCallback(() => liquity.getQuiBalance(), [liquity]);
   const watchQuiBalance = useCallback(
     (onQuiBalanceChanged: (balance: Decimal) => void) => {
-      return liquity.watchQuiBalance(onQuiBalanceChanged);
+      const logged = (balance: Decimal) => {
+        console.log(`Update quiBalance to ${balance}`);
+        onQuiBalanceChanged(balance);
+      };
+      return liquity.watchQuiBalance(logged);
     },
     [liquity]
   );
