@@ -14,7 +14,9 @@ export const useAccountBalance = (provider: Web3Provider, account: string) => {
   const watchAccountBalance = useCallback(
     (onAccountBalanceChanged: (value: Decimal) => void) => {
       const balanceChangedListener = (balance: BigNumber) => {
-        onAccountBalanceChanged(new Decimal(balance));
+        const etherBalance = new Decimal(balance);
+        console.log(`Update etherBalance to ${etherBalance}`);
+        onAccountBalanceChanged(etherBalance);
       };
 
       provider.on(account, balanceChangedListener);

@@ -199,10 +199,18 @@ export const TransactionMonitor: React.FC = () => {
     if (id && hash && numberOfConfirmationsToWait) {
       let didParseLogs = false;
       let confirmations = 0;
+      let seenBlock = 0;
 
       const blockListener = async (blockNumber: number) => {
-        const transactionReceipt = await provider.getTransactionReceipt(hash);
+        if (blockNumber <= seenBlock) {
+          // Sometimes, when blocks are produced quickly, we get a burst of block events from
+          // ethers.js. They come in reverse order for some reason. In any case, there's no need
+          // to rerun the listener for stale events as we're always fetching the latest data.
+          return;
+        }
+        seenBlock = blockNumber;
 
+        const transactionReceipt = await provider.getTransactionReceipt(hash);
         if (!transactionReceipt) {
           console.log(`Block #${blockNumber} doesn't include tx ${hash}`);
           return;
