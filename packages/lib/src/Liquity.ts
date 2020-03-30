@@ -595,6 +595,10 @@ export class Liquity {
       transferFilters.forEach(filter => this.clvToken.removeListener(filter, transferListener));
   }
 
+  sendQui(toAddress: string, amount: Decimalish, overrides?: LiquityTransactionOverrides) {
+    return this.clvToken.transfer(toAddress, Decimal.from(amount).bigNumber, { ...overrides });
+  }
+
   async _findCollateralRatioOfPartiallyRedeemedTrove(exchangedQui: Decimal, price: Decimal) {
     return new Decimal(
       await this.cdpManager.getICRofPartiallyRedeemedCDP(exchangedQui.bigNumber, price.bigNumber)

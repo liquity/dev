@@ -255,7 +255,7 @@ describe("Liquity", () => {
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
-          ...otherUsers.slice(0, 4)
+          ...otherUsers.slice(0, 5)
         ]);
 
         await sendToEach(otherUsers, 2.1);
@@ -263,33 +263,44 @@ describe("Liquity", () => {
         price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
 
-        await liquity.openTrove(new Trove({ collateral: 10, debt: 300 }), price);
+        // Use this account to print QUI
+        await liquity.openTrove(new Trove({ collateral: 10, debt: 500 }), price);
 
-        await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 100 }), price);
-        await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 100 }), price);
-        await otherLiquities[2].openTrove(new Trove({ collateral: 2, debt: 300 }), price);
+        // otherLiquities[0-2] will be independent stability depositors
+        await liquity.sendQui(otherLiquities[0].userAddress!, 300);
+        await liquity.sendQui(otherLiquities[1].userAddress!, 100);
+        await liquity.sendQui(otherLiquities[2].userAddress!, 100);
+
+        // otherLiquities[3-4] will be Trove owners whose Troves get liquidated
         await otherLiquities[3].openTrove(new Trove({ collateral: 2, debt: 300 }), price);
+        await otherLiquities[4].openTrove(new Trove({ collateral: 2, debt: 300 }), price);
 
-        await liquity.depositQuiInStabilityPool(300);
-        await otherLiquities[0].depositQuiInStabilityPool(100);
+        await otherLiquities[0].depositQuiInStabilityPool(300);
+        await otherLiquities[1].depositQuiInStabilityPool(100);
+        // otherLiquities[2] doesn't deposit yet
 
+        // Tank the price so we can liquidate
         price = Decimal.from(150);
         await deployerLiquity.setPrice(price);
 
-        await liquity.liquidate(otherLiquities[2].userAddress!);
-        expect((await otherLiquities[2].getTrove()).isEmpty).to.be.true;
-
-        await otherLiquities[1].depositQuiInStabilityPool(100);
-
+        // Liquidate first victim
         await liquity.liquidate(otherLiquities[3].userAddress!);
         expect((await otherLiquities[3].getTrove()).isEmpty).to.be.true;
 
+        // Now otherLiquities[2] makes their deposit too
+        await otherLiquities[2].depositQuiInStabilityPool(100);
+
+        // Liquidate second victim
+        await liquity.liquidate(otherLiquities[4].userAddress!);
+        expect((await otherLiquities[4].getTrove()).isEmpty).to.be.true;
+
+        // Stability Pool is now empty
         expect((await liquity.getQuiInStabilityPool()).toString()).to.equal("0");
       });
 
       // Currently failing due to a problem with the backend
       it.skip("should still be able to withdraw remaining deposit", async () => {
-        for (const l of [liquity, otherLiquities[0], otherLiquities[1]]) {
+        for (const l of [otherLiquities[0], otherLiquities[1], otherLiquities[2]]) {
           const stabilityDeposit = await l.getStabilityDeposit();
           await l.withdrawQuiFromStabilityPool(stabilityDeposit.depositAfterLoss);
         }
