@@ -5,7 +5,7 @@ import { TransactionResponse } from "ethers/providers";
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-import { LiquityTransactionOverrides } from "@liquity/lib";
+import { LiquityTransactionOverrides, parseLogs, logDescriptionToString } from "@liquity/lib";
 import { useLiquity } from "../hooks/Liquity";
 import { useToast } from "../hooks/ToastProvider";
 
@@ -37,9 +37,9 @@ type TransactionWaitingForConfirmations = {
 };
 
 type TransactionConfirmed = {
-  id: string;
   type: "confirmed";
-  confirmations: number;
+  id: string;
+  numberOfConfirmationsToWait: number;
 };
 
 type TransactionState =
@@ -182,47 +182,68 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
 }
 
 export const TransactionMonitor: React.FC = () => {
-  const { provider } = useLiquity();
+  const { provider, interfaces } = useLiquity();
   const [transactionState, setTransactionState] = useTransactionState();
 
-  const monitoredTransaction =
-    transactionState.type === "waitingForConfirmations"
-      ? {
-          id: transactionState.id,
-          hash: transactionState.hash,
-          numberOfConfirmationsToWait: transactionState.numberOfConfirmationsToWait
-        }
+  const id = transactionState.type !== "idle" ? transactionState.id : undefined;
+  const hash =
+    transactionState.type === "waitingForConfirmations" ? transactionState.hash : undefined;
+  const numberOfConfirmationsToWait =
+    transactionState.type === "waitingForConfirmations" || transactionState.type === "confirmed"
+      ? transactionState.numberOfConfirmationsToWait
       : undefined;
 
   useEffect(() => {
-    if (monitoredTransaction) {
+    if (id && hash && numberOfConfirmationsToWait) {
+      let didParseLogs = false;
+
       const blockListener = async () => {
-        const transactionReceipt = await provider.getTransactionReceipt(monitoredTransaction.hash);
+        const transactionReceipt = await provider.getTransactionReceipt(hash);
+
+        if (transactionReceipt.logs && !didParseLogs) {
+          const [parsedLogs, unparsedLogs] = parseLogs(transactionReceipt.logs, interfaces);
+
+          console.log(`Logs of tx ${hash}:`);
+          parsedLogs.forEach(([contractName, logDescription]) =>
+            console.log(`  ${contractName}.${logDescriptionToString(logDescription)}`)
+          );
+
+          if (unparsedLogs.length > 0) {
+            console.warn("Warning: not all logs were parsed. Unparsed logs:");
+            console.warn(unparsedLogs);
+          }
+
+          didParseLogs = true;
+        }
 
         if (transactionReceipt?.confirmations) {
-          if (transactionReceipt.confirmations >= monitoredTransaction.numberOfConfirmationsToWait) {
+          if (transactionReceipt.confirmations >= numberOfConfirmationsToWait) {
             setTransactionState({
               type: "confirmed",
-              id: monitoredTransaction.id,
-              confirmations: monitoredTransaction.numberOfConfirmationsToWait
+              id,
+              numberOfConfirmationsToWait
             });
           } else {
             setTransactionState({
               type: "waitingForConfirmations",
-              ...monitoredTransaction,
+              id,
+              hash,
+              numberOfConfirmationsToWait,
               confirmations: transactionReceipt.confirmations
             });
           }
         }
       };
 
+      console.log(`Start monitoring tx ${hash}`);
       provider.on("block", blockListener);
 
       return () => {
+        console.log(`Finish monitoring tx ${hash}`);
         provider.removeListener("block", blockListener);
       };
     }
-  }, [provider, monitoredTransaction, setTransactionState]);
+  }, [provider, interfaces, id, hash, numberOfConfirmationsToWait, setTransactionState]);
 
   useEffect(() => {
     if (transactionState.type === "confirmed") {
@@ -244,9 +265,8 @@ export const TransactionMonitor: React.FC = () => {
     return null;
   }
 
-  const confirmations = transactionState.confirmations;
-  const numberOfConfirmationsToWait =
-    transactionState.type === "waitingForConfirmations"
+  const confirmations =
+    transactionState.type === "confirmed"
       ? transactionState.numberOfConfirmationsToWait
       : transactionState.confirmations;
 

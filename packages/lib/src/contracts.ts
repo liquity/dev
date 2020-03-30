@@ -1,3 +1,5 @@
+import { Contract } from "ethers";
+
 import { ActivePool } from "../types/ethers/ActivePool";
 import { CDPManager } from "../types/ethers/CDPManager";
 import { CLVToken } from "../types/ethers/CLVToken";
@@ -21,6 +23,8 @@ export interface LiquityContractAddresses {
 }
 
 export interface LiquityContracts {
+  [name: string]: Contract;
+
   activePool: ActivePool;
   cdpManager: CDPManager;
   clvToken: CLVToken;

@@ -1,6 +1,6 @@
 import { Signer } from "ethers";
 import { Provider } from "ethers/providers";
-import { bigNumberify, BigNumberish, BigNumber } from "ethers/utils";
+import { bigNumberify, BigNumberish } from "ethers/utils";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
@@ -238,19 +238,21 @@ export class Liquity {
   private readonly poolManager: PoolManager;
   private readonly clvToken: CLVToken;
 
-  private constructor(
-    cdpManager: CDPManager,
-    priceFeed: PriceFeed,
-    sortedCDPs: SortedCDPs,
-    poolManager: PoolManager,
-    clvToken: CLVToken,
+  constructor(
+    contracts: {
+      cdpManager: CDPManager;
+      priceFeed: PriceFeed;
+      sortedCDPs: SortedCDPs;
+      poolManager: PoolManager;
+      clvToken: CLVToken;
+    },
     userAddress?: string
   ) {
-    this.cdpManager = cdpManager;
-    this.priceFeed = priceFeed;
-    this.sortedCDPs = sortedCDPs;
-    this.poolManager = poolManager;
-    this.clvToken = clvToken;
+    this.cdpManager = contracts.cdpManager;
+    this.priceFeed = contracts.priceFeed;
+    this.sortedCDPs = contracts.sortedCDPs;
+    this.poolManager = contracts.poolManager;
+    this.clvToken = contracts.clvToken;
     this.userAddress = userAddress;
   }
 
@@ -276,7 +278,7 @@ export class Liquity {
       })
     ]);
 
-    return new Liquity(cdpManager, priceFeed, sortedCDPs, poolManager, clvToken, userAddress);
+    return new Liquity({ cdpManager, priceFeed, sortedCDPs, poolManager, clvToken }, userAddress);
   }
 
   private requireAddress(): string {
