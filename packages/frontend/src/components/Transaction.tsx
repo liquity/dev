@@ -115,7 +115,9 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
 
     try {
       const { hash } = await send({
-        // TODO recommend a gasPrice
+        // TODO get a safe gas price from ethgasstation
+        // Note that this only applies to mainnet though, which we don't support yet
+        gasPrice: 2000000000
       });
 
       if (!hash) {
