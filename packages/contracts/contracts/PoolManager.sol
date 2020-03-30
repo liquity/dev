@@ -296,7 +296,14 @@ contract PoolManager is Ownable, IPoolManager {
         if (ETHGainPerUnitStaked == 0) { return 0; }
       
         uint userDeposit = deposit[_user];
-        return ABDKMath64x64.mulu(ABDKMath64x64.divu(ETHGainPerUnitStaked, 1e18), userDeposit);
+
+        // DeciMath
+        return DeciMath.mul_uintByDuint(ETHGainPerUnitStaked, userDeposit);
+        
+        // ABDK
+        // return ABDKMath64x64.mulu(ABDKMath64x64.divu(ETHGainPerUnitStaked, 1e18), userDeposit);
+        
+
     }
 
     function getCurrentCLVLoss(address _user) internal view returns(uint) {
@@ -306,7 +313,12 @@ contract PoolManager is Ownable, IPoolManager {
         if (CLVLossPerUnitStaked == 0) { return 0; }
     
         uint userDeposit = deposit[_user];
-        return ABDKMath64x64.mulu(ABDKMath64x64.divu(CLVLossPerUnitStaked, 1e18), userDeposit);
+
+        // DeciMath
+        return DeciMath.mul_uintByDuint(CLVLossPerUnitStaked, userDeposit);
+
+        // ABDK
+        // return ABDKMath64x64.mulu(ABDKMath64x64.divu(CLVLossPerUnitStaked, 1e18), userDeposit);
     }
 
     // --- Internal StabilityPool functions --- 
@@ -540,13 +552,21 @@ contract PoolManager is Ownable, IPoolManager {
         uint collToAdd = ABDKMath64x64.mulu(debtRatio, _coll);
         
         // Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool
-        uint CLVLossPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(debtToOffset, totalCLVDeposits), 1e18);
+        // DeciMath
+        uint CLVLossPerUnitStaked = DeciMath.div_toDuint(debtToOffset, totalCLVDeposits);
+        
+        // ABDK
+        // uint CLVLossPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(debtToOffset, totalCLVDeposits), 1e18);
 
         S_CLV = S_CLV.add(CLVLossPerUnitStaked);  // 6000 gas
         emit S_CLVUpdated(S_CLV); // 1800 gas
    
         // Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool
-        uint ETHGainPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(collToAdd, totalCLVDeposits), 1e18);
+        // DeciMath
+        uint ETHGainPerUnitStaked = DeciMath.div_toDuint(collToAdd, totalCLVDeposits);
+
+        // ABDK
+        // uint ETHGainPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(collToAdd, totalCLVDeposits), 1e18);
 
         S_ETH = S_ETH.add(ETHGainPerUnitStaked); // 6000 gas
         emit S_ETHUpdated(S_ETH); // 1800 gas

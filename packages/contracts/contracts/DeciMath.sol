@@ -55,6 +55,11 @@ library DeciMath {
         return quotient;
     }
 
+    // basic, no correction for floor div
+    // function decDiv(uint x, uint y) internal view returns (uint quotient) {
+    //     return SafeMath.div(SafeMath.mul(x, _1E18), y);
+    // }
+
      // Accurately multiplies two 'duints'. Returns a 'duint'
     function decMul(uint x, uint y) internal view returns (uint prod) {
         uint prod_xy = SafeMath.mul(x, y);
@@ -62,6 +67,11 @@ library DeciMath {
 
         return prod;
     }
+
+    // basic, no correction 
+    //  function decMul(uint x, uint y) internal view returns (uint prod) {
+    //     return SafeMath.div(SafeMath.mul(x, y), _1E18);
+    // }
 
     // Accurately divides one uint by another. Returns a 'duint'
     function div_toDuint(uint x, uint y) internal view returns (uint quotient) {

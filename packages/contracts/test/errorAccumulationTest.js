@@ -28,7 +28,6 @@ const setNameRegistry = deploymentHelpers.setNameRegistry
 const connectContracts = deploymentHelpers.connectContracts
 const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
 
-
 contract('CDPManager', async accounts => {
   let priceFeed
   let clvToken
@@ -78,7 +77,7 @@ contract('CDPManager', async accounts => {
     }
 
     const contractAddresses = getAddresses(contracts)
-    await setNameRegistry(contractAddresses, nameRegistry, { from: owner })
+    await setNameRegistry(contractAddresses, nameRegistry, { from: accounts[0] })
     const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
 
     await connectContracts(contracts, registeredAddresses)
@@ -109,9 +108,13 @@ contract('CDPManager', async accounts => {
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
   })
   /*
-  ABDK:
+  ABDK64, no error correction:
   ETH left in Default Pool is: 34
   CLVDebt left in Default Pool is: 98
+
+  DeciMath, no error correction:
+  ETH left in Default Pool is: 7
+  CLVDebt left in Default Pool is: 37
   */
 
   it("101 accounts with random coll. 1 liquidation. 100 accounts do a CDP operation (apply rewards)", async () => {
@@ -137,9 +140,12 @@ contract('CDPManager', async accounts => {
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
   })
    /*
-    ABDK:
+    ABDK64, no error correction:
     ETH left in Default Pool is: 908
     CLVDebt left in Default Pool is: 108
+
+    DeciMath, no error correction:
+    --Subtraction Overflow
     */
 
   it("11 accounts. 1 liquidation. 10 accounts do CDP operations (apply rewards)", async () => {
@@ -163,9 +169,14 @@ contract('CDPManager', async accounts => {
     console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
   })
-  /* With ABDK:
+  /* 
+  ABDK64, no error correction:
   ETH left in Default Pool is: 64
-  CLVDebt left in Default Pool is: 75 */
+  CLVDebt left in Default Pool is: 75 
+  
+  DeciMath, no error correction:
+  --Subtraction Overflow
+  */
 
   it("101 accounts. 1 liquidation. 100 accounts do CDP operations (apply rewards)", async () => {
     await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: moneyVals._100_Ether })
@@ -188,9 +199,13 @@ contract('CDPManager', async accounts => {
     console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
   })
-  /* With ABDK:
+  /*ABDK64, no error correction:
   ETH left in Default Pool is: 100
-  CLVDebt left in Default Pool is: 180 */
+  CLVDebt left in Default Pool is: 180 
+  
+  DeciMath, no error correction:
+  --Subtraction Overflow
+  */
 
   it("1001 accounts. 1 liquidation. 1000 accounts do CDP operations (apply rewards)", async () => {
     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._1000_Ether })
@@ -213,9 +228,13 @@ contract('CDPManager', async accounts => {
     console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}:`)
   })
-  /* With ABDK:
+  /*
+     ABDK64, no error correction:
   ETH left in Default Pool is: 1000
-  CLVDebt left in Default Pool is: 180: */
+  CLVDebt left in Default Pool is: 180: 
+  
+  DeciMath, no error correction:
+  */
 
 
   // --- Error accumulation from repeated Liquidations  - pure distribution, empty SP  ---
@@ -255,9 +274,13 @@ contract('CDPManager', async accounts => {
     console.log(`Accumulated ETH difference between Default and Active Pools is: ${totalETHPoolDifference}`)
     console.log(`Accumulated CLVDebt difference between Active and Default Pools is: ${totalCLVDebtPoolDifference}`)
   })
-  /* ABDK64, no error correction:
+  /* ABDK64, no error correction
   Accumulated ETH difference between Default and Active Pools is: 0
   Accumulated CLVDebt difference between Active and Default Pools is: 0
+  
+  DeciMath, no error correction:
+  Accumulated ETH difference between Default and Active Pools is: 0
+Accumulated CLVDebt difference between Active and Default Pools is: 0
   */
 
   it("11 accounts. 10 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
@@ -295,6 +318,15 @@ contract('CDPManager', async accounts => {
   /* ABDK64, no error correction:
   ETH difference between total pending rewards and DefaultPool: 700
   CLVDebt difference between total pending rewards and DefaultPool: 800
+
+  ABDK64 WITH correction:
+  ETH difference between total pending rewards and DefaultPool: 300
+  CLVDebt difference between total pending rewards and DefaultPool: 400
+  
+  DeciMath, no error correction:
+  ETH difference between total pending rewards and DefaultPool: -100
+CLVDebt difference between total pending rewards and DefaultPool: -200
+
   */
 
   it("101 accounts. 100 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
@@ -309,8 +341,8 @@ contract('CDPManager', async accounts => {
     // Grab total active coll and debt before liquidations
     for (account of accounts.slice(1, 101)) {
       await cdpManager.liquidate(account)
-
     }
+
     const L_ETH = await cdpManager.L_ETH()
     const L_CLVDebt = await cdpManager.L_CLVDebt()
 
@@ -332,9 +364,19 @@ contract('CDPManager', async accounts => {
   /* ABDK64, no error correction:
   ETH difference between total pending rewards and DefaultPool: 51000
   CLVDebt difference between total pending rewards and DefaultPool: 55000
+  
+  ABDK64 WITH correction:
+  
+  ETH difference between total pending rewards and DefaultPool: 31000
+  CLVDebt difference between total pending rewards and DefaultPool: 31000
+
+  DeciMath, no error correction:
+
+  ETH difference between total pending rewards and DefaultPool: 2000
+  CLVDebt difference between total pending rewards and DefaultPool: -2000
   */
 
- it("11 accounts with random ETH and proportional CLV (180:1). 10 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
+ it.only("11 accounts with random ETH and proportional CLV (180:1). 10 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
   await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._100_Ether })
 
   await openLoan_allAccounts_randomETH_ProportionalCLV(1, 2, accounts.slice(0, 11), cdpManager, 180)
@@ -369,9 +411,17 @@ contract('CDPManager', async accounts => {
  /* ABDK64, no error correction:
  ETH difference between total pending rewards and DefaultPool: 4500
 CLVDebt difference between total pending rewards and DefaultPool: 8000
-  */
 
-  it("101 accounts with random ETH and proportional CLV (180:1). 100 liquidations. Check 1) (DefaultPool - totalDistributionRewards) difference, and 2) ", async () => {
+ABDK64 WITH correction:
+ETH difference between total pending rewards and DefaultPool: 300
+CLVDebt difference between total pending rewards and DefaultPool: 300
+  
+DeciMath, no error correction:
+ETH difference between total pending rewards and DefaultPool: 0
+CLVDebt difference between total pending rewards and DefaultPool: -200
+*/
+
+  it.only("101 accounts with random ETH and proportional CLV (180:1). 100 liquidations. Check 1) (DefaultPool - totalDistributionRewards) difference, and 2) ", async () => {
     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._1000_Ether })
 
     await openLoan_allAccounts_randomETH_ProportionalCLV(1, 2, accounts.slice(0, 101), cdpManager, 180)
@@ -407,6 +457,14 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
   /* ABDK64, no error correction:
   ETH difference between total pending rewards and DefaultPool: 53900
   CLVDebt difference between total pending rewards and DefaultPool: 61000
+
+  ABDK64 WITH correction:
+  ETH difference between total pending rewards and DefaultPool: 31300
+  CLVDebt difference between total pending rewards and DefaultPool: 30000
+  
+  DeciMath, no error correction:
+  ETH difference between total pending rewards and DefaultPool: -4300
+CLVDebt difference between total pending rewards and DefaultPool: -8000
   */
 
   // --- Error accumulation from repeated Liquidations - SP Pool, partial offsets  ---
@@ -445,9 +503,13 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
     console.log(`ETH difference between total pending distribution rewards and DefaultPool: ${ETHRewardDifference} `)
     console.log(`CLVDebt difference between total pending distribution rewards and DefaultPool: ${CLVDebtRewardDifference} `)
   })
-  /* With ABDK:
+  /* ABDK64, no error correction
   ETH difference between total pending distribution rewards and DefaultPool: 550
   CLVDebt difference between total pending distribution rewards and DefaultPool: 600
+  
+  DeciMath, no error correction:
+  ETH difference between total pending distribution rewards and DefaultPool: 150
+CLVDebt difference between total pending distribution rewards and DefaultPool: -200
   */
 
   it("101 accounts. 100 liquidations, partial offsets. Check (DefaultPool - totalRewards) differences", async () => {
@@ -484,9 +546,13 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
      console.log(`ETH difference between total pending distribution rewards and DefaultPool: ${ETHRewardDifference} `)
      console.log(`CLVDebt difference between total pending distribution rewards and DefaultPool: ${CLVDebtRewardDifference} `)
    })
-  /* With ABDK:
+  /* ABDK64, no error correction
   ETH difference between total pending distribution rewards and DefaultPool: 7600 
   CLVDebt difference between total pending distribution rewards and DefaultPool: 8900
+  
+  DeciMath, no error correction:
+  ETH difference between total pending distribution rewards and DefaultPool: -700
+CLVDebt difference between total pending distribution rewards and DefaultPool: 200
   */
 
   // --- Error accumulation from SP withdrawals ---
@@ -526,13 +592,17 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
     console.log(`Surplus ETH left in in Stability Pool is ${SP_ETH}`)
     console.log(`CLV insufficiency in Stability Pool is ${SP_CLV_Insufficiency}`)
    })
-   /* ABDK 
+   /* ABDK64, no error correction
    // Sometimes subtraction overflows on last withdrawal from SP - error leaves insufficient CLV in Pool.
       Noticed when reward shares are recurring fractions.
 
     Error in ETH gain accumulates in the Pool.
     Surplus ETH left in in Stability Pool is 530
     CLV insufficiency in Stability Pool is 530
+    
+    DeciMath, no error correction:
+    Surplus ETH left in in Stability Pool is 0
+    CLV insufficiency in Stability Pool is 0
     */
 
    it("101 accounts. 100 Borrowers add to SP. 1 liquidation, 100 Borrowers withdraw all their SP funds", async () => {
@@ -570,12 +640,17 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
     console.log(`Surplus ETH left in in Stability Pool is ${SP_ETH}`)
     console.log(`CLV insufficiency in Stability Pool is ${SP_CLV_Insufficiency}`)
    })
-   /* ABDK:
+   /* ABDK64, no error correction
    Surplus ETH left in in Stability Pool is 5300
    CLV insufficiency in Stability Pool is 5300
-    */
+    
+   DeciMath, no error correction:
+   Surplus ETH left in in Stability Pool is 0
+   CLV insufficiency in Stability Pool is 0
 
-   it.only("11 accounts. 10 Borrowers add to SP, random CLV amounts. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
+   */
+
+   it("11 accounts. 10 Borrowers add to SP, random CLV amounts. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens loan with 100 CLV
      await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._100_Ether })
      await cdpManager.withdrawCLV(moneyVals._100e18, accounts[999], {from: accounts[999]})
@@ -614,16 +689,19 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
     console.log(`Surplus ETH left in in Stability Pool is ${SP_ETH}`)
     console.log(`CLV insufficiency in Stability Pool is ${SP_CLV_Insufficiency}`)
    })
-   /* ABDK 
+   /* ABDK64, no error correction
    // Sometimes subtraction overflows on last withdrawal from SP - error leaves insufficient CLV in Pool.
       Noticed when reward shares are recurring fractions.
 
     Error in ETH gain accumulates in the Pool.
     Surplus ETH left in in Stability Pool is 84
     CLV insufficiency in Stability Pool is 442
+
+    DeciMath, no error correction:
+    -- Subtraction Overflow
     */
 
-   it.only("11 accounts. 10 Borrowers add to SP, random CLV amounts. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
+   it("101 accounts. 10 Borrowers add to SP, random CLV amounts. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens loan with 100 CLV
      await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._100_Ether })
      await cdpManager.withdrawCLV(moneyVals._100e18, accounts[999], {from: accounts[999]})
@@ -662,9 +740,13 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
     console.log(`Surplus ETH left in in Stability Pool is ${SP_ETH}`)
     console.log(`CLV insufficiency in Stability Pool is ${SP_CLV_Insufficiency}`)
    })
-   /* ABDK 
+   /* ABDK64, no error correction
    Surplus ETH left in in Stability Pool is 3321
    CLV insufficiency in Stability Pool is 1112
+
+   DeciMath, no error correction:
+    Surplus ETH left in in Stability Pool is 1373
+    CLV insufficiency in Stability Pool is -13
   */ 
 })
   /* --- TODO:
@@ -682,6 +764,8 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
   Findings with ABDK64 throughout:
   -----
 
+  ABDK64:
+
   1) Reward applications accumulate ETH and CLVDebt error in DefaultPool
 
   2) Liquidations accumulate ETH and CLVDebt error in DefaultPool
@@ -692,6 +776,14 @@ CLVDebt difference between total pending rewards and DefaultPool: 8000
 
   5) StabilityPool Withdrawals can accumulate CLVLoss in the StabilityPool (i.e. they distribute too much CLV), and can block
   the final deposit withdrawal
+
+  DeciMath:
+
+  1) Lower error overall - 5-10x
+
+  2) Similar noticable error accumulation
+
+  3) Errors more likely to be negative, and cause subtraction overflows
 
   */
 
