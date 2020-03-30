@@ -31,6 +31,20 @@ describe("Liquity", () => {
   let trove: Trove;
   let deposit: StabilityDeposit;
 
+  const sendToEach = async (users: Signer[], value: Decimalish) => {
+    const txCount = await provider.getTransactionCount(funder.getAddress());
+
+    return Promise.all(
+      users.map((user, i) =>
+        funder.sendTransaction({
+          to: user.getAddress(),
+          value: Decimal.from(value).bigNumber,
+          nonce: txCount + i
+        })
+      )
+    );
+  };
+
   before(async () => {
     [deployer, funder, user, ...otherUsers] = await ethers.signers();
     addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
@@ -233,21 +247,55 @@ describe("Liquity", () => {
       expect(trove).to.deep.equal(new Trove({ collateral: "2.223299999999999991", debt: 139 }));
       expect(deposit.isEmpty).to.be.true;
     });
+
+    describe("when people overstay", () => {
+      before(async () => {
+        // Deploy new instances of the contracts, for a clean slate
+        addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
+        [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
+          deployer,
+          user,
+          ...otherUsers.slice(0, 4)
+        ]);
+
+        await sendToEach(otherUsers, 2.1);
+
+        price = Decimal.from(200);
+        await deployerLiquity.setPrice(price);
+
+        await liquity.openTrove(new Trove({ collateral: 10, debt: 300 }), price);
+
+        await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 100 }), price);
+        await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 100 }), price);
+        await otherLiquities[2].openTrove(new Trove({ collateral: 2, debt: 300 }), price);
+        await otherLiquities[3].openTrove(new Trove({ collateral: 2, debt: 300 }), price);
+
+        await liquity.depositQuiInStabilityPool(300);
+        await otherLiquities[0].depositQuiInStabilityPool(100);
+
+        price = Decimal.from(150);
+        await deployerLiquity.setPrice(price);
+
+        await liquity.liquidate(otherLiquities[2].userAddress!);
+        expect((await otherLiquities[2].getTrove()).isEmpty).to.be.true;
+
+        await otherLiquities[1].depositQuiInStabilityPool(100);
+
+        await liquity.liquidate(otherLiquities[3].userAddress!);
+        expect((await otherLiquities[3].getTrove()).isEmpty).to.be.true;
+
+        expect((await liquity.getQuiInStabilityPool()).toString()).to.equal("0");
+      });
+
+      // Currently failing due to a problem with the backend
+      it.skip("should still be able to withdraw remaining deposit", async () => {
+        for (const l of [liquity, otherLiquities[0], otherLiquities[1]]) {
+          const stabilityDeposit = await l.getStabilityDeposit();
+          await l.withdrawQuiFromStabilityPool(stabilityDeposit.depositAfterLoss);
+        }
+      });
+    });
   });
-
-  const sendToEach = async (users: Signer[], value: Decimalish) => {
-    const txCount = await provider.getTransactionCount(funder.getAddress());
-
-    return Promise.all(
-      users.map((user, i) =>
-        funder.sendTransaction({
-          to: user.getAddress(),
-          value: Decimal.from(value).bigNumber,
-          nonce: txCount + i
-        })
-      )
-    );
-  };
 
   describe("Redemption", () => {
     before(async () => {
