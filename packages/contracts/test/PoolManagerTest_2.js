@@ -31,7 +31,9 @@ contract('PoolManager', async accounts => {
           alice, 
           whale, 
           bob, 
-          whale_2 ] = accounts;
+          whale_2,
+          erin, 
+          flyn ] = accounts;
 
   let priceFeed
   let clvToken
@@ -644,6 +646,62 @@ contract('PoolManager', async accounts => {
       assert.isAtMost(getDifference(alice_Remainder, '3333333333333333333'), 100)
       assert.isAtMost(getDifference(bob_Reward, '416666666666666667'), 100)
     })
+
+    it.only('withdrawPenaltyFromSP(): Alice overstays and withdraws, she should be removed from the Pool', async () => {
+      //// --- SETUP ---
+      // Whale withdraws 1500 CLV and provides to StabilityPool
+      await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
+      await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
+      await cdpManager.withdrawCLV('1500000000000000000000', whale, { from: whale })
+      await poolManager.provideToSP('1500000000000000000000', { from: whale })
+
+        // 3 CDPs opened, each withdraws 1500 CLV
+        await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _10_Ether })
+        await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _10_Ether })
+        await cdpManager.addColl(defaulter_3, defaulter_3, { from: defaulter_3, value: _10_Ether })
+        await cdpManager.withdrawCLV('1500000000000000000000', defaulter_1, { from: defaulter_1 })
+        await cdpManager.withdrawCLV('1500000000000000000000', defaulter_2, { from: defaulter_2 })
+        await cdpManager.withdrawCLV('1500000000000000000000', defaulter_3, { from: defaulter_3 })
+
+      // Alice makes deposit #1: 500 CLV
+      await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV('500000000000000000000', alice, { from: alice })
+      await poolManager.provideToSP('500000000000000000000', { from: alice })
+
+      // price drops: defaulters fall below MCR
+      await priceFeed.setPrice('100000000000000000000');
+
+      // defaulter 1 gets closed
+      await cdpManager.liquidate(defaulter_1, { from: owner });
+
+      // whale 2 provides 2000 CLV to StabilityPool
+      await cdpManager.addColl(whale_2, whale_2, { from: whale_2, value: _100_Ether })
+      await cdpManager.withdrawCLV('2000000000000000000000', whale_2, { from: whale_2 })
+      await poolManager.provideToSP('2000000000000000000000', { from: whale_2 })
+
+      console.log(`Raw CLV in SP before liquidation 2 is: ${await stabilityPool.getCLV()}`)
+      console.log(`Whale 2's SP deposit before liq 2: ${await poolManager.deposit(whale_2)}`)
+      console.log(`Whale 1's SP deposit before liq 2: ${await poolManager.deposit(whale)}`)
+      
+      // defaulter 2 gets closed, absorbed by whale 2 and alice
+      await cdpManager.liquidate(defaulter_2, { from: owner });
+
+      console.log(`Raw CLV in SP after liq 2 is: ${await stabilityPool.getCLV()}`)
+      console.log(`Whale 2's SP deposit after liq 2: ${await poolManager.deposit(whale_2)}`)
+
+      console.log("whale withdraws from SP")
+      await poolManager.withdrawFromSP('3500000000000000000000', { from: whale })
+      console.log(`S_CLV after liq 2 is ${await poolManager.S_CLV()}`)  
+      console.log(`S_ETH after liq 2 is ${await poolManager.S_ETH()}`)
+
+      console.log(`Raw CLV in SP after liq 2 is: ${await stabilityPool.getCLV()}`)
+      console.log(`Whale 2's SP deposit after liq 2: ${await poolManager.deposit(whale_2)}`)
+
+      // Whale 2 should be able to withdraw
+      await poolManager.withdrawFromSP('3500000000000000000000', { from: whale_2 }
+    })
+
+    // TODO - simpler test for overstay issue
   })
 })
 
