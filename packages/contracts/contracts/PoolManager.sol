@@ -505,8 +505,12 @@ contract PoolManager is Ownable, IPoolManager {
        
         Depositor's ETH entitlement is reduced to ETHGain * (deposit/CLVLoss).
         The claimant retrieves ETHGain * (1 - deposit/CLVLoss). */
+        // ABDK
         int128 ratio = ABDKMath64x64.divu(depositAmount, CLVLoss);  
         uint depositorRemainder = ABDKMath64x64.mulu(ratio, ETHGain); 
+
+        // // Pure div to decimal
+        // uint depositorRemainder = ETHGain.mul(depositAmount).div(CLVLoss);
         
         uint claimantReward = ETHGain.sub(depositorRemainder);
         
@@ -548,13 +552,26 @@ contract PoolManager is Ownable, IPoolManager {
         uint debtToOffset = DeciMath.getMin(_debt, CLVinPool);  // 100 gas
   
         // Collateral to be added in proportion to the debt that is cancelled
+
+        // Pure integer division
+        // uint collToAdd = _coll.mul(debtToOffset).div(_debt);
+        
+        // DeciMath
+        // uint debtRatio = DeciMath.div_toDuint(debtToOffset, _debt)
+        // uint collToAdd = DeciMath.mul_uintByDuint(_coll, debtRatio)
+
+        // ABDK
         int128 debtRatio = ABDKMath64x64.divu(debtToOffset, _debt);
         uint collToAdd = ABDKMath64x64.mulu(debtRatio, _coll);
         
         // Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool
+        
+        // Pure division to decimal
+        // uint CLVLossPerUnitStaked = debtToOffset.mul(1e18).div(totalCLVDeposits);
+
         // DeciMath
         uint CLVLossPerUnitStaked = DeciMath.div_toDuint(debtToOffset, totalCLVDeposits);
-        
+    
         // ABDK
         // uint CLVLossPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(debtToOffset, totalCLVDeposits), 1e18);
 
@@ -562,6 +579,10 @@ contract PoolManager is Ownable, IPoolManager {
         emit S_CLVUpdated(S_CLV); // 1800 gas
    
         // Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool
+        
+        // Pure division to decimal
+        // uint ETHGainedPerUnitStaked = colltoAdd.mul(1e18).div(totalCLVDeposits);
+        
         // DeciMath
         uint ETHGainPerUnitStaked = DeciMath.div_toDuint(collToAdd, totalCLVDeposits);
 

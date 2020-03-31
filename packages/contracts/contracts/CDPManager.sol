@@ -540,6 +540,11 @@ contract CDPManager is Ownable, ICDPManager {
     function redeemCollateralFromCDP(address _cdpUser, uint _maxCLVamount, uint _price, address _hint, uint _hintICR) internal returns (uint) {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP
         uint CLVLot = DeciMath.getMin(_maxCLVamount, CDPs[_cdpUser].debt); // 1200 gas
+        
+        // Basic div to decimal
+        // uint ETHLot = CLVLot.mul(1e18).div(price);
+        
+        // ABDK
         uint ETHLot = uint(ABDKMath64x64.divu(CLVLot, uint(ABDKMath64x64.divu(_price, 1e18))));
 
         // Decrease the debt and collateral of the current CDP according to the lot and corresponding ETH to send
@@ -640,6 +645,11 @@ contract CDPManager is Ownable, ICDPManager {
                 if (CLVDebt > remainingCLV) {
                     uint ETH = CDPs[currentCDPuser].coll.add(computePendingETHReward(currentCDPuser));
                     uint newDebt = CLVDebt.sub(remainingCLV);
+
+                    // Pure div to integer
+                    // uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
+
+                    // ABDK
                     uint newColl = ETH.sub(uint(ABDKMath64x64.divu(remainingCLV, uint(ABDKMath64x64.divu(_price, 1e18)))));
 
                     return computeICR(newColl, newDebt, _price);
@@ -764,10 +774,15 @@ contract CDPManager is Ownable, ICDPManager {
     function computeICR(uint _coll, uint _debt, uint _price) view internal returns(uint) {
         // Check if the total debt is higher than 0, to avoid division by 0
         if (_debt > 0) {
+
+            // Pure div to decimal
+            // uint newCollRatio = _coll.mul(price).div(_debt);
+
+            // ABDK
             // uint newCollRatio = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, _debt), _price);
             // return newCollRatio;
 
-            // Temporarily switch back to DeciMath for accuracy
+            // DeciMath
             uint ratio = DeciMath.div_toDuint(_coll, _debt);
             uint newCollRatio = DeciMath.decMul(_price, ratio);
 
@@ -815,9 +830,14 @@ contract CDPManager is Ownable, ICDPManager {
        
         uint stake = CDPs[_user].stake;  // 950 gas (no reward)
         
+
+        // Pure div to decimal
+        // uint pendingETHReward = stake.mul(rewardPerUnitStaked).div(1e18);
+
+        // ABDK
         // uint pendingETHReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
 
-        // Temporarily switch back to DeciMath for accuracy
+        // DeciMath
         uint pendingETHReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked);
 
         return pendingETHReward;
@@ -832,9 +852,13 @@ contract CDPManager is Ownable, ICDPManager {
        
         uint stake =  CDPs[_user].stake;  // 900 gas
       
+        // Pure div to decimal
+        // uint pendingCLVDebtReward = stake.mul(rewardPerUnitStaked).div(1e18);
+        
+        // ABDK
         // uint pendingCLVDebtReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
         
-        // Temporarily switch back to DeciMath for accuracy
+        // DeciMath
         uint pendingCLVDebtReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked); 
 
         return pendingCLVDebtReward;
@@ -862,6 +886,14 @@ contract CDPManager is Ownable, ICDPManager {
         if (totalCollateralSnapshot == 0) {
             stake = _coll;
         } else {
+
+            // Pure integer division
+            //stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot)
+
+            // DeciMath
+            // stake = DeciMath.mul_uintByDuint(_coll, DeciMath.div_toDuint(totalStakesSnapshot, totalCollateralSnapshot));
+
+            // ABDK
             stake = ABDKMath64x64.mulu(ABDKMath64x64.divu(totalStakesSnapshot, totalCollateralSnapshot), _coll);
         }
      return stake;
@@ -879,6 +911,10 @@ contract CDPManager is Ownable, ICDPManager {
                 uint ETHRewardPerUnitStaked;
                 uint CLVDebtRewardPerUnitStaked;
 
+                // Pure div to decimal 
+                // ETHRewardPerUnitStaked = _coll.mul(1e18).div(totalStakes);
+                // CLVDebtRewardPerUnitStaked = _debt.mul(1e18).div(totalStakes);
+
                 // // DeciMath
                 // ETHRewardPerUnitStaked = truncateDigits(DeciMath.div_toDuint(_coll, totalStakes), 0);
                 // CLVDebtRewardPerUnitStaked = truncateDigits(DeciMath.div_toDuint(_debt, totalStakes), 0);
@@ -890,8 +926,8 @@ contract CDPManager is Ownable, ICDPManager {
                 ETHRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, totalStakes), 1e18);
                 CLVDebtRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_debt, totalStakes), 1e18);
        
-                console.log("ETHRewardPerUnitStaked is %s", ETHRewardPerUnitStaked);
-                console.log("CLVDebtRewardPerUnitStaked is %s", CLVDebtRewardPerUnitStaked);
+                // console.log("ETHRewardPerUnitStaked is %s", ETHRewardPerUnitStaked);
+                // console.log("CLVDebtRewardPerUnitStaked is %s", CLVDebtRewardPerUnitStaked);
 
                 // ABDK with correction
                 if (lastETHError_Redistribution >= 0) {
@@ -910,12 +946,12 @@ contract CDPManager is Ownable, ICDPManager {
                 }
 
                // Multiply fractions back with the denominator to get the error, and save it
-                console.log("total stakes is %s", totalStakes);
-                console.log("_coll is %s", _coll);
-                console.log("lastETHError_Redistribution is %s", uint(lastETHError_Redistribution));
-                console.log("lastCLVDebtError_Redistribution is %s", uint(lastETHError_Redistribution));
-                console.log("ETHRewardPerUnitStaked is %s", ETHRewardPerUnitStaked);
-                console.log("ETHRewardPerUnitStaked * totalStakes /1e18 is %s", ETHRewardPerUnitStaked.mul(totalStakes).div(1e18));
+                // console.log("total stakes is %s", totalStakes);
+                // console.log("_coll is %s", _coll);
+                // console.log("lastETHError_Redistribution is %s", uint(lastETHError_Redistribution));
+                // console.log("lastCLVDebtError_Redistribution is %s", uint(lastETHError_Redistribution));
+                // console.log("ETHRewardPerUnitStaked is %s", ETHRewardPerUnitStaked);
+                // console.log("ETHRewardPerUnitStaked * totalStakes /1e18 is %s", ETHRewardPerUnitStaked.mul(totalStakes).div(1e18));
 
                 lastETHError_Redistribution =  int(_coll) - int(ETHRewardPerUnitStaked.mul(totalStakes).div(1e18));
                 lastCLVDebtError_Redistribution = int(_debt) - int(CLVDebtRewardPerUnitStaked.mul(totalStakes).div(1e18));
@@ -982,6 +1018,11 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Get the dollar value of collateral, as a duint
     function getUSDValue(uint _coll, uint _price) public view returns (uint) {
+
+        // Pure div to decimal
+        // uint usdValue = _price.mul(_coll).div(1e18);
+
+        // ABDK
         uint usdValue = ABDKMath64x64.mulu(ABDKMath64x64.divu(_price, 1000000000000000000), _coll);  // 500 gas
         return usdValue;
     }

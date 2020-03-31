@@ -376,7 +376,7 @@ CLVDebt difference between total pending rewards and DefaultPool: -200
   CLVDebt difference between total pending rewards and DefaultPool: -2000
   */
 
- it.only("11 accounts with random ETH and proportional CLV (180:1). 10 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
+ it("11 accounts with random ETH and proportional CLV (180:1). 10 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
   await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._100_Ether })
 
   await openLoan_allAccounts_randomETH_ProportionalCLV(1, 2, accounts.slice(0, 11), cdpManager, 180)
@@ -421,7 +421,7 @@ ETH difference between total pending rewards and DefaultPool: 0
 CLVDebt difference between total pending rewards and DefaultPool: -200
 */
 
-  it.only("101 accounts with random ETH and proportional CLV (180:1). 100 liquidations. Check 1) (DefaultPool - totalDistributionRewards) difference, and 2) ", async () => {
+  it("101 accounts with random ETH and proportional CLV (180:1). 100 liquidations. Check 1) (DefaultPool - totalDistributionRewards) difference, and 2) ", async () => {
     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._1000_Ether })
 
     await openLoan_allAccounts_randomETH_ProportionalCLV(1, 2, accounts.slice(0, 101), cdpManager, 180)
@@ -748,7 +748,165 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 2
     Surplus ETH left in in Stability Pool is 1373
     CLV insufficiency in Stability Pool is -13
   */ 
+
+ it.only("10 accounts. 10x liquidate -> addColl. Check stake and totalStakes (On-chain data vs off-chain simulation)", async () => {
+  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._1000_Ether })
+  await openLoan_allAccounts(accounts.slice(1, 11), cdpManager, moneyVals._1_Ether, moneyVals._180e18)
+
+  await priceFeed.setPrice(moneyVals._100e18)
+ 
+  // Starting values for parallel off-chain computation
+  let offchainTotalStakes = await cdpManager.totalStakes()
+  let offchainTotalColl = await activePool.getETH()
+  let offchainStake = web3.utils.toBN(0)
+  let stakeDifference = web3.utils.toBN(0)
+  let totalStakesDifference = web3.utils.toBN(0)
+
+  // Loop over account range, alternately liquidating a CDP and opening a new loan
+  for (i = 1; i < 10; i++) {
+    console.log(i +".")
+  
+    const stakeOfCDPToLiquidate = (await cdpManager.CDPs(accounts[i]))[2]
+    
+    const newEntrantColl = web3.utils.toBN(moneyVals._2_Ether)
+    
+    /* Off-chain computation of new stake.  
+    Remove the old stake from total, calculate the new stake, add new stake to total. */
+    offchainTotalStakes = offchainTotalStakes.sub(stakeOfCDPToLiquidate)
+    offchainTotalColl = offchainTotalColl
+    // New loan opening creates a new stake, then adds 
+    offchainStake = (newEntrantColl.mul(offchainTotalStakes)).div(offchainTotalColl)
+    offchainTotalStakes = offchainTotalStakes.add(offchainStake)
+    offchainTotalColl = offchainTotalColl.add(newEntrantColl)
+   
+    // Liquidate CDP 'i', and open loan from account '999 - i'
+    await cdpManager.liquidate(accounts[i], {from: accounts[0]})
+    await cdpManager.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
+  
+    // Grab new stake and totalStakes on-chain
+    const newStake = (await cdpManager.CDPs(accounts[999 - i]))[2] 
+    const totalStakes = await cdpManager.totalStakes()
+    
+    stakeDifference = offchainStake.sub(newStake)
+    totalStakesDifference = offchainTotalStakes.sub(totalStakes)
+  }
+
+  console.log(`Final difference in the last stake made, between on-chain and actual: ${stakeDifference}`)
+  console.log(`Final difference in the last totalStakes value, between on-chain and actual: ${totalStakesDifference}`)
 })
+/* ABDK64, no error correction:
+   Surplus ETH left in in Stability Pool is 3321
+   CLV insufficiency in Stability Pool is 1112
+*/
+
+
+ it.only("10 accounts. 10x liquidate -> addColl. Random coll. Check stake and totalStakes (On-chain data vs off-chain simulation)", async () => {
+  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._1000_Ether })
+  await openLoan_allAccounts(accounts.slice(1, 11), cdpManager, moneyVals._1_Ether, moneyVals._180e18)
+
+  await priceFeed.setPrice(moneyVals._100e18)
+ 
+  // Starting values for parallel off-chain computation
+  let offchainTotalStakes = await cdpManager.totalStakes()
+  let offchainTotalColl = await activePool.getETH()
+  let offchainStake = web3.utils.toBN(0)
+  let stakeDifference = web3.utils.toBN(0)
+  let totalStakesDifference = web3.utils.toBN(0)
+
+  // Loop over account range, alternately liquidating a CDP and opening a new loan
+  for (i = 1; i < 10; i++) {
+    console.log(i +".")
+  
+    const stakeOfCDPToLiquidate = (await cdpManager.CDPs(accounts[i]))[2]
+    
+    const newEntrantColl = web3.utils.toBN(randAmountInWei(1, 100))
+    
+    /* Off-chain computation of new stake.  
+    Remove the old stake from total, calculate the new stake, add new stake to total. */
+    offchainTotalStakes = offchainTotalStakes.sub(stakeOfCDPToLiquidate)
+    offchainTotalColl = offchainTotalColl
+    // New loan opening creates a new stake, then adds 
+    offchainStake = (newEntrantColl.mul(offchainTotalStakes)).div(offchainTotalColl)
+    offchainTotalStakes = offchainTotalStakes.add(offchainStake)
+    offchainTotalColl = offchainTotalColl.add(newEntrantColl)
+   
+    // Liquidate CDP 'i', and open loan from account '999 - i'
+    await cdpManager.liquidate(accounts[i], {from: accounts[0]})
+    await cdpManager.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
+  
+    // Grab new stake and totalStakes on-chain
+    const newStake = (await cdpManager.CDPs(accounts[999 - i]))[2] 
+    const totalStakes = await cdpManager.totalStakes()
+    
+    stakeDifference = offchainStake.sub(newStake)
+    totalStakesDifference = offchainTotalStakes.sub(totalStakes)
+  }
+
+  console.log(`Final difference in the last stake made, between on-chain and actual: ${stakeDifference}`)
+  console.log(`Final difference in the last totalStakes value, between on-chain and actual: ${totalStakesDifference}`)
+})
+/* ABDK64, no error correction:
+Final difference in the last stake made, between on-chain and actual: 2
+Final difference in the last totalStakes value, between on-chain and actual: 7
+*/
+
+it.only("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and totalStakes (On-chain data vs off-chain simulation)", async () => {
+  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._1000_Ether })
+  await openLoan_allAccounts(accounts.slice(1, 101), cdpManager, moneyVals._1_Ether, moneyVals._180e18)
+
+  await priceFeed.setPrice(moneyVals._100e18)
+ 
+  // Starting values for parallel off-chain computation
+  let offchainTotalStakes = await cdpManager.totalStakes()
+  let offchainTotalColl = await activePool.getETH()
+  let offchainStake = web3.utils.toBN(0)
+  let stakeDifference = web3.utils.toBN(0)
+  let totalStakesDifference = web3.utils.toBN(0)
+
+  // Loop over account range, alternately liquidating a CDP and opening a new loan
+  for (i = 1; i < 100; i++) {
+    console.log(i +".")
+  
+    const stakeOfCDPToLiquidate = (await cdpManager.CDPs(accounts[i]))[2]
+    
+    const newEntrantColl = web3.utils.toBN(randAmountInWei(1, 100))
+    
+    /* Off-chain computation of new stake.  
+    Remove the old stake from total, calculate the new stake, add new stake to total. */
+    offchainTotalStakes = offchainTotalStakes.sub(stakeOfCDPToLiquidate)
+    offchainTotalColl = offchainTotalColl
+    // New loan opening creates a new stake, then adds 
+    offchainStake = (newEntrantColl.mul(offchainTotalStakes)).div(offchainTotalColl)
+    offchainTotalStakes = offchainTotalStakes.add(offchainStake)
+    offchainTotalColl = offchainTotalColl.add(newEntrantColl)
+   
+    // Liquidate CDP 'i', and open loan from account '999 - i'
+    await cdpManager.liquidate(accounts[i], {from: accounts[0]})
+    await cdpManager.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
+  
+    // Grab new stake and totalStakes on-chain
+    const newStake = (await cdpManager.CDPs(accounts[999 - i]))[2] 
+    const totalStakes = await cdpManager.totalStakes()
+    
+    stakeDifference = offchainStake.sub(newStake)
+    totalStakesDifference = offchainTotalStakes.sub(totalStakes)
+  }
+
+  console.log(`Final difference in the last stake made, between on-chain and actual: ${stakeDifference}`)
+  console.log(`Final difference in the last totalStakes value, between on-chain and actual: ${totalStakesDifference}`)
+})
+/* ABDK64, no error correction:
+Final difference in the last stake made, between on-chain and actual: 1
+Final difference in the last totalStakes value, between on-chain and actual: 321
+*/
+
+
+
+
+
+
+})
+
   /* --- TODO:
  
  - Stakes computations. Errors occur in stake = totalColl/totalStakes.  
