@@ -540,6 +540,11 @@ contract CDPManager is Ownable, ICDPManager {
     function redeemCollateralFromCDP(address _cdpUser, uint _maxCLVamount, uint _price, address _hint, uint _hintICR) internal returns (uint) {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP
         uint CLVLot = DeciMath.getMin(_maxCLVamount, CDPs[_cdpUser].debt); // 1200 gas
+        
+        // Basic div to decimal
+        // uint ETHLot = CLVLot.mul(1e18).div(price);
+        
+        // ABDK
         uint ETHLot = uint(ABDKMath64x64.divu(CLVLot, uint(ABDKMath64x64.divu(_price, 1e18))));
 
         // Decrease the debt and collateral of the current CDP according to the lot and corresponding ETH to send
@@ -640,6 +645,11 @@ contract CDPManager is Ownable, ICDPManager {
                 if (CLVDebt > remainingCLV) {
                     uint ETH = CDPs[currentCDPuser].coll.add(computePendingETHReward(currentCDPuser));
                     uint newDebt = CLVDebt.sub(remainingCLV);
+
+                    // Pure div to integer
+                    // uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
+
+                    // ABDK
                     uint newColl = ETH.sub(uint(ABDKMath64x64.divu(remainingCLV, uint(ABDKMath64x64.divu(_price, 1e18)))));
 
                     return computeICR(newColl, newDebt, _price);
@@ -764,10 +774,15 @@ contract CDPManager is Ownable, ICDPManager {
     function computeICR(uint _coll, uint _debt, uint _price) view internal returns(uint) {
         // Check if the total debt is higher than 0, to avoid division by 0
         if (_debt > 0) {
+
+            // Pure div to decimal
+            // uint newCollRatio = _coll.mul(price).div(_debt);
+
+            // ABDK
             // uint newCollRatio = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, _debt), _price);
             // return newCollRatio;
 
-            // Temporarily switch back to DeciMath for accuracy
+            // DeciMath
             uint ratio = DeciMath.div_toDuint(_coll, _debt);
             uint newCollRatio = DeciMath.decMul(_price, ratio);
 
@@ -815,9 +830,14 @@ contract CDPManager is Ownable, ICDPManager {
        
         uint stake = CDPs[_user].stake;  // 950 gas (no reward)
         
+
+        // Pure div to decimal
+        // uint pendingETHReward = stake.mul(rewardPerUnitStaked).div(1e18);
+
+        // ABDK
         // uint pendingETHReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
 
-        // Temporarily switch back to DeciMath for accuracy
+        // DeciMath
         uint pendingETHReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked);
 
         return pendingETHReward;
@@ -832,9 +852,13 @@ contract CDPManager is Ownable, ICDPManager {
        
         uint stake =  CDPs[_user].stake;  // 900 gas
       
+        // Pure div to decimal
+        // uint pendingCLVDebtReward = stake.mul(rewardPerUnitStaked).div(1e18);
+        
+        // ABDK
         // uint pendingCLVDebtReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
         
-        // Temporarily switch back to DeciMath for accuracy
+        // DeciMath
         uint pendingCLVDebtReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked); 
 
         return pendingCLVDebtReward;
@@ -862,10 +886,21 @@ contract CDPManager is Ownable, ICDPManager {
         if (totalCollateralSnapshot == 0) {
             stake = _coll;
         } else {
+
+            // Pure integer division
+            //stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot)
+
+            // DeciMath
+            // stake = DeciMath.mul_uintByDuint(_coll, DeciMath.div_toDuint(totalStakesSnapshot, totalCollateralSnapshot));
+
+            // ABDK
             stake = ABDKMath64x64.mulu(ABDKMath64x64.divu(totalStakesSnapshot, totalCollateralSnapshot), _coll);
         }
      return stake;
     }
+
+    int lastETHError_Redistribution;
+    int lastCLVDebtError_Redistribution;
 
     function redistributeCollAndDebt(uint _coll, uint _debt) internal returns (bool) {
         if (_debt > 0) {
@@ -873,15 +908,64 @@ contract CDPManager is Ownable, ICDPManager {
                 /*If debt could not be offset entirely, add the coll and debt rewards-per-unit-staked 
                 to the running totals. */
               
-                uint ETHRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, totalStakes), 1e18);
-                uint CLVDebtRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_debt, totalStakes), 1e18);
-                
+                uint ETHRewardPerUnitStaked;
+                uint CLVDebtRewardPerUnitStaked;
+
+                // Pure div to decimal 
+                // ETHRewardPerUnitStaked = _coll.mul(1e18).div(totalStakes);
+                // CLVDebtRewardPerUnitStaked = _debt.mul(1e18).div(totalStakes);
+
+                // // DeciMath
+                // ETHRewardPerUnitStaked = truncateDigits(DeciMath.div_toDuint(_coll, totalStakes), 0);
+                // CLVDebtRewardPerUnitStaked = truncateDigits(DeciMath.div_toDuint(_debt, totalStakes), 0);
+               
+                // console.log("ETHRewardPerUnitStaked is %s", ETHRewardPerUnitStaked);
+                // console.log("CLVDebtRewardPerUnitStaked is %s", CLVDebtRewardPerUnitStaked);
+
+                // ABDK
+                ETHRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, totalStakes), 1e18);
+                CLVDebtRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_debt, totalStakes), 1e18);
+       
+                // console.log("ETHRewardPerUnitStaked is %s", ETHRewardPerUnitStaked);
+                // console.log("CLVDebtRewardPerUnitStaked is %s", CLVDebtRewardPerUnitStaked);
+
+                // ABDK with correction
+                if (lastETHError_Redistribution >= 0) {
+                    ETHRewardPerUnitStaked = truncateDigits(ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll.add(uint(lastETHError_Redistribution)), totalStakes), 1e18), 0);
+                    // ETHRewardPerUnitStaked = truncateDigits(ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll.add(0), totalStakes), 1e18), 2);
+                } else {
+                    ETHRewardPerUnitStaked = truncateDigits(ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll.sub(uint(-lastETHError_Redistribution)), totalStakes), 1e18), 0); 
+                    // ETHRewardPerUnitStaked = truncateDigits(ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll.sub(0), totalStakes), 1e18), 0); 
+                }
+
+                if (lastCLVDebtError_Redistribution >= 0) {
+                    CLVDebtRewardPerUnitStaked = truncateDigits(ABDKMath64x64.mulu(ABDKMath64x64.divu(_debt.add(uint(lastCLVDebtError_Redistribution)), totalStakes), 1e18), 0);
+                } else {
+                    CLVDebtRewardPerUnitStaked = truncateDigits(ABDKMath64x64.mulu(ABDKMath64x64.divu(_debt.sub(uint(-lastCLVDebtError_Redistribution)), totalStakes), 1e18), 0);
+                    // CLVDebtRewardPerUnitStaked = truncateDigits(ABDKMath64x64.mulu(ABDKMath64x64.divu(_debt.sub(0), totalStakes), 1e18), 0);
+                }
+
+               // Multiply fractions back with the denominator to get the error, and save it
+                // console.log("total stakes is %s", totalStakes);
+                // console.log("_coll is %s", _coll);
+                // console.log("lastETHError_Redistribution is %s", uint(lastETHError_Redistribution));
+                // console.log("lastCLVDebtError_Redistribution is %s", uint(lastETHError_Redistribution));
+                // console.log("ETHRewardPerUnitStaked is %s", ETHRewardPerUnitStaked);
+                // console.log("ETHRewardPerUnitStaked * totalStakes /1e18 is %s", ETHRewardPerUnitStaked.mul(totalStakes).div(1e18));
+
+                lastETHError_Redistribution =  int(_coll) - int(ETHRewardPerUnitStaked.mul(totalStakes).div(1e18));
+                lastCLVDebtError_Redistribution = int(_debt) - int(CLVDebtRewardPerUnitStaked.mul(totalStakes).div(1e18));
+
                 L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
                 L_CLVDebt = L_CLVDebt.add(CLVDebtRewardPerUnitStaked);
             }
             // Transfer coll and debt from ActivePool to DefaultPool
             poolManager.liquidate(_debt, _coll);
         } 
+    }
+
+    function truncateDigits(uint num, uint digits) internal returns (uint) {
+        return (num.div(10**digits)).mul(10**digits);
     }
 
     function closeCDP(address _user) internal returns (bool) {
