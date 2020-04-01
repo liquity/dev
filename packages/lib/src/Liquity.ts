@@ -15,34 +15,6 @@ import { PoolManagerFactory } from "../types/ethers/PoolManagerFactory";
 import { CLVToken } from "../types/ethers/CLVToken";
 import { CLVTokenFactory } from "../types/ethers/CLVTokenFactory";
 
-interface Poolish {
-  readonly activeCollateral: Decimalish;
-  readonly activeDebt: Decimalish;
-  readonly liquidatedCollateral: Decimalish;
-  readonly closedDebt: Decimalish;
-}
-
-export class Pool {
-  readonly activeCollateral: Decimal;
-  readonly activeDebt: Decimal;
-  readonly liquidatedCollateral: Decimal;
-  readonly closedDebt: Decimal;
-
-  constructor({ activeCollateral, activeDebt, liquidatedCollateral, closedDebt }: Poolish) {
-    this.activeCollateral = Decimal.from(activeCollateral);
-    this.activeDebt = Decimal.from(activeDebt);
-    this.liquidatedCollateral = Decimal.from(liquidatedCollateral);
-    this.closedDebt = Decimal.from(closedDebt);
-  }
-
-  get total() {
-    return new Trove({
-      collateral: this.activeCollateral.add(this.liquidatedCollateral),
-      debt: this.activeDebt.add(this.closedDebt)
-    });
-  }
-}
-
 interface Trovish {
   readonly collateral?: Decimalish;
   readonly debt?: Decimalish;
@@ -77,20 +49,20 @@ export class Trove {
     return this.debt.add(this.pendingDebtReward);
   }
 
-  collateralRatioAt(price: Decimalish): Decimal {
+  collateralRatio(price: Decimalish): Decimal {
     return calculateCollateralRatio(this.collateral, this.debt, price);
   }
 
-  collateralRatioAfterRewardsAt(price: Decimalish): Decimal {
+  collateralRatioAfterRewards(price: Decimalish): Decimal {
     return calculateCollateralRatio(this.collateralAfterReward, this.debtAfterReward, price);
   }
 
-  isBelowMinimumCollateralRatioAt(price: Decimalish) {
-    return this.collateralRatioAfterRewardsAt(price).lt(Liquity.MINIMUM_COLLATERAL_RATIO);
+  collateralRatioIsBelowMinimum(price: Decimalish) {
+    return this.collateralRatioAfterRewards(price).lt(Liquity.MINIMUM_COLLATERAL_RATIO);
   }
 
-  isBelowCriticalCollateralRatioAt(price: Decimalish) {
-    return this.collateralRatioAfterRewardsAt(price).lt(Liquity.CRITICAL_COLLATERAL_RATIO);
+  collateralRatioIsBelowCritical(price: Decimalish) {
+    return this.collateralRatioAfterRewards(price).lt(Liquity.CRITICAL_COLLATERAL_RATIO);
   }
 
   constructor({
@@ -371,7 +343,7 @@ export class Liquity {
   }
 
   _findHint(trove: Trove, price: Decimal, address: string) {
-    const collateralRatio = trove.collateralRatioAfterRewardsAt(price);
+    const collateralRatio = trove.collateralRatioAfterRewards(price);
 
     return this._findHintForCollateralRatio(collateralRatio, price, address);
   }
@@ -488,7 +460,7 @@ export class Liquity {
     return this.priceFeed.updatePrice_Testnet({ ...overrides });
   }
 
-  async getPool() {
+  async getTotal() {
     const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
       [
         this.poolManager.getActiveColl(),
@@ -498,7 +470,12 @@ export class Liquity {
       ].map(promise => promise.then(bigNumber => new Decimal(bigNumber)))
     );
 
-    return new Pool({ activeCollateral, activeDebt, liquidatedCollateral, closedDebt });
+    return new Trove({
+      collateral: activeCollateral,
+      debt: activeDebt,
+      pendingCollateralReward: liquidatedCollateral,
+      pendingDebtReward: closedDebt
+    });
   }
 
   async liquidate(address: string, overrides?: LiquityTransactionOverrides) {

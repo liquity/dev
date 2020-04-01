@@ -196,7 +196,7 @@ describe("Liquity", () => {
       await otherLiquities[0].openTrove(new Trove({ collateral: 0.2233, debt: 39 }), price);
       const otherTrove = await otherLiquities[0].getTrove();
 
-      expect(otherTrove.collateralRatioAt(price).toString()).to.equal("1.145128205128205128");
+      expect(otherTrove.collateralRatio(price).toString()).to.equal("1.145128205128205128");
     });
 
     it("the price should take a dip", async () => {

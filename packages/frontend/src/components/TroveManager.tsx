@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Loader } from "rimble-ui";
 
-import { Trove, Liquity, Pool } from "@liquity/lib";
+import { Trove, Liquity } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { TroveEditor } from "./TroveEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
@@ -13,7 +13,7 @@ type TroveActionProps = {
   changePending: boolean;
   setChangePending: (isPending: boolean) => void;
   price: Decimal;
-  pool: Pool;
+  total: Trove;
   quiBalance: Decimal;
 };
 
@@ -27,7 +27,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
   changePending,
   setChangePending,
   price,
-  pool,
+  total,
   quiBalance
 }) => {
   const myTransactionId = "trove";
@@ -51,12 +51,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
       ? ([
           "Open new Trove",
           liquity.openTrove.bind(liquity, editedTrove, price),
-          [
-            [
-              !pool.total.isBelowCriticalCollateralRatioAt(price),
-              "Can't borrow QUI during recovery mode"
-            ]
-          ]
+          [[!total.collateralRatioIsBelowCritical(price), "Can't borrow QUI during recovery mode"]]
         ] as const)
       : ([
           "Open new Trove",
@@ -68,10 +63,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
         "Close Trove",
         liquity.closeTrove.bind(liquity),
         [
-          [
-            !pool.total.isBelowCriticalCollateralRatioAt(price),
-            "Can't close Trove during recovery mode"
-          ],
+          [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
           [quiBalance.gte(originalTrove.debtAfterReward), "You don't have enough QUI"]
         ]
       ] as const)
@@ -89,7 +81,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
               liquity.withdrawEther,
               [
                 [
-                  !pool.total.isBelowCriticalCollateralRatioAt(price),
+                  !total.collateralRatioIsBelowCritical(price),
                   "Can't withdraw ETH during recovery mode"
                 ]
               ]
@@ -109,7 +101,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
               liquity.borrowQui,
               [
                 [
-                  !pool.total.isBelowCriticalCollateralRatioAt(price),
+                  !total.collateralRatioIsBelowCritical(price),
                   "Can't borrow QUI during recovery mode"
                 ]
               ]
@@ -136,14 +128,14 @@ const TroveAction: React.FC<TroveActionProps> = ({
             "Collateral must be worth at least $20"
           ],
           [
-            !editedTrove.isBelowMinimumCollateralRatioAt(price),
+            !editedTrove.collateralRatioIsBelowMinimum(price),
             `Collateral ratio must be at least ${mcrPercent}`
           ],
           [
-            !pool.total
+            !total
               .subtract(originalTrove)
               .add(editedTrove)
-              .isBelowCriticalCollateralRatioAt(price),
+              .collateralRatioIsBelowCritical(price),
             `Total collateral ratio would fall below ${ccrPercent}`
           ]
         ]}
@@ -159,7 +151,7 @@ type TroveManagerProps = {
   liquity: Liquity;
   trove: Trove;
   price: Decimal;
-  pool: Pool;
+  total: Trove;
   quiBalance: Decimal;
 };
 
@@ -167,7 +159,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
   liquity,
   trove,
   price,
-  pool,
+  total,
   quiBalance
 }) => {
   const originalTrove = trove;
@@ -196,7 +188,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
           changePending,
           setChangePending,
           price,
-          pool,
+          total,
           quiBalance
         }}
       />
