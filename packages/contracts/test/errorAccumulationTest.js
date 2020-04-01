@@ -21,6 +21,7 @@ const openLoan_allAccounts_randomETH_ProportionalCLV = testHelpers.openLoan_allA
 const provideToSP_allAccounts_randomAmount = testHelpers.provideToSP_allAccounts_randomAmount
 
 const randAmountInWei = testHelpers.randAmountInWei
+const randAmountInGwei = testHelpers.randAmountInGwei
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
@@ -764,8 +765,6 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 2
 
   // Loop over account range, alternately liquidating a CDP and opening a new loan
   for (i = 1; i < 10; i++) {
-    console.log(i +".")
-  
     const stakeOfCDPToLiquidate = (await cdpManager.CDPs(accounts[i]))[2]
     
     const newEntrantColl = web3.utils.toBN(moneyVals._2_Ether)
@@ -795,8 +794,15 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 2
   console.log(`Final difference in the last totalStakes value, between on-chain and actual: ${totalStakesDifference}`)
 })
 /* ABDK64, no error correction:
-   Surplus ETH left in in Stability Pool is 3321
-   CLV insufficiency in Stability Pool is 1112
+  Final difference in the last stake made, between on-chain and actual: 0
+  Final difference in the last totalStakes value, between on-chain and actual: 0
+
+  Final difference in the last stake made, between on-chain and actual: 0
+  Final difference in the last totalStakes value, between on-chain and actual: -7
+
+  Pure integer division, no correction:
+
+
 */
 
 
@@ -815,8 +821,6 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 2
 
   // Loop over account range, alternately liquidating a CDP and opening a new loan
   for (i = 1; i < 10; i++) {
-    console.log(i +".")
-  
     const stakeOfCDPToLiquidate = (await cdpManager.CDPs(accounts[i]))[2]
     
     const newEntrantColl = web3.utils.toBN(randAmountInWei(1, 100))
@@ -848,6 +852,15 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 2
 /* ABDK64, no error correction:
 Final difference in the last stake made, between on-chain and actual: 2
 Final difference in the last totalStakes value, between on-chain and actual: 7
+
+DeciMath, no error correction:
+Final difference in the last stake made, between on-chain and actual: 8
+Final difference in the last totalStakes value, between on-chain and actual: -68
+
+Pure integer division, no correction:
+
+
+
 */
 
 it.only("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and totalStakes (On-chain data vs off-chain simulation)", async () => {
@@ -865,11 +878,9 @@ it.only("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and t
 
   // Loop over account range, alternately liquidating a CDP and opening a new loan
   for (i = 1; i < 100; i++) {
-    console.log(i +".")
-  
     const stakeOfCDPToLiquidate = (await cdpManager.CDPs(accounts[i]))[2]
     
-    const newEntrantColl = web3.utils.toBN(randAmountInWei(1, 100))
+    const newEntrantColl = web3.utils.toBN(randAmountInWei(12, 73422))
     
     /* Off-chain computation of new stake.  
     Remove the old stake from total, calculate the new stake, add new stake to total. */
@@ -898,6 +909,13 @@ it.only("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and t
 /* ABDK64, no error correction:
 Final difference in the last stake made, between on-chain and actual: 1
 Final difference in the last totalStakes value, between on-chain and actual: 321
+
+DeciMath, no error correction:
+Final difference in the last stake made, between on-chain and actual: -20
+Final difference in the last totalStakes value, between on-chain and actual: -138
+
+Pure integer division, no correction:
+
 */
 
 

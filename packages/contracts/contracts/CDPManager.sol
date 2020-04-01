@@ -888,13 +888,13 @@ contract CDPManager is Ownable, ICDPManager {
         } else {
 
             // Pure integer division
-            //stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot)
+            stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot);
 
             // DeciMath
             // stake = DeciMath.mul_uintByDuint(_coll, DeciMath.div_toDuint(totalStakesSnapshot, totalCollateralSnapshot));
 
             // ABDK
-            stake = ABDKMath64x64.mulu(ABDKMath64x64.divu(totalStakesSnapshot, totalCollateralSnapshot), _coll);
+            // stake = ABDKMath64x64.mulu(ABDKMath64x64.divu(totalStakesSnapshot, totalCollateralSnapshot), _coll);
         }
      return stake;
     }
