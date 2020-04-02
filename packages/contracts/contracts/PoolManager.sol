@@ -70,6 +70,10 @@ contract PoolManager is Ownable, IPoolManager {
     // Map users to their individual snapshots of S_CLV and the S_ETH
     mapping (address => Snapshot) public snapshot;
 
+    // Error trackers for the offset calculation
+    uint lastETHError_Offset;
+    uint lastCLVLossError_Offset;
+
     // --- Modifiers ---
     modifier onlyCDPManager() {
         require(_msgSender() == cdpManagerAddress, "PoolManager: Caller is not the CDPManager");
@@ -148,8 +152,13 @@ contract PoolManager is Ownable, IPoolManager {
         }
 
         // Calculate TCR
-        int128 collToDebtRatio = ABDKMath64x64.divu(totalCollateral, totalDebt);
-        uint TCR = ABDKMath64x64.mulu(collToDebtRatio, price);
+
+        // Pure division to decimal
+        uint TCR = totalCollateral.mul(price).div(totalDebt);
+
+        // ABDK
+        // int128 collToDebtRatio = ABDKMath64x64.divu(totalCollateral, totalDebt);
+        // uint TCR = ABDKMath64x64.mulu(collToDebtRatio, price);
 
         return TCR;
     }
@@ -297,13 +306,14 @@ contract PoolManager is Ownable, IPoolManager {
       
         uint userDeposit = deposit[_user];
 
+        // Pure multiplication to integer
+        return userDeposit.mul(ETHGainPerUnitStaked).div(1e18);
+        
         // DeciMath
-        return DeciMath.mul_uintByDuint(ETHGainPerUnitStaked, userDeposit);
+        // return DeciMath.mul_uintByDuint(ETHGainPerUnitStaked, userDeposit);
         
         // ABDK
         // return ABDKMath64x64.mulu(ABDKMath64x64.divu(ETHGainPerUnitStaked, 1e18), userDeposit);
-        
-
     }
 
     function getCurrentCLVLoss(address _user) internal view returns(uint) {
@@ -314,8 +324,11 @@ contract PoolManager is Ownable, IPoolManager {
     
         uint userDeposit = deposit[_user];
 
+        // Pure multiplication to integer
+        return userDeposit.mul(CLVLossPerUnitStaked).div(1e18);
+
         // DeciMath
-        return DeciMath.mul_uintByDuint(CLVLossPerUnitStaked, userDeposit);
+        // return DeciMath.mul_uintByDuint(CLVLossPerUnitStaked, userDeposit);
 
         // ABDK
         // return ABDKMath64x64.mulu(ABDKMath64x64.divu(CLVLossPerUnitStaked, 1e18), userDeposit);
@@ -506,11 +519,11 @@ contract PoolManager is Ownable, IPoolManager {
         Depositor's ETH entitlement is reduced to ETHGain * (deposit/CLVLoss).
         The claimant retrieves ETHGain * (1 - deposit/CLVLoss). */
         // ABDK
-        int128 ratio = ABDKMath64x64.divu(depositAmount, CLVLoss);  
-        uint depositorRemainder = ABDKMath64x64.mulu(ratio, ETHGain); 
+        // int128 ratio = ABDKMath64x64.divu(depositAmount, CLVLoss);  
+        // uint depositorRemainder = ABDKMath64x64.mulu(ratio, ETHGain); 
 
-        // // Pure div to decimal
-        // uint depositorRemainder = ETHGain.mul(depositAmount).div(CLVLoss);
+        // Pure division to integer
+        uint depositorRemainder = ETHGain.mul(depositAmount).div(CLVLoss);
         
         uint claimantReward = ETHGain.sub(depositorRemainder);
         
@@ -540,7 +553,6 @@ contract PoolManager is Ownable, IPoolManager {
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits(); // 3500 gas
         uint CLVinPool = stabilityPool.getCLV(); // 3500 gas
 
-        
         // When Stability Pool has no CLV or no deposits, return all debt and coll
         if (CLVinPool == 0 || totalCLVDeposits == 0 ) {
             remainder[0] = _debt;
@@ -551,43 +563,51 @@ contract PoolManager is Ownable, IPoolManager {
         // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
         uint debtToOffset = DeciMath.getMin(_debt, CLVinPool);  // 100 gas
   
-        // Collateral to be added in proportion to the debt that is cancelled
+        // --- Collateral to be added in proportion to the debt that is cancelled ---
 
-        // Pure integer division
-        // uint collToAdd = _coll.mul(debtToOffset).div(_debt);
+        // Pure division to integer
+        uint collToAdd = _coll.mul(debtToOffset).div(_debt);
         
         // DeciMath
         // uint debtRatio = DeciMath.div_toDuint(debtToOffset, _debt)
         // uint collToAdd = DeciMath.mul_uintByDuint(_coll, debtRatio)
 
         // ABDK
-        int128 debtRatio = ABDKMath64x64.divu(debtToOffset, _debt);
-        uint collToAdd = ABDKMath64x64.mulu(debtRatio, _coll);
+        // int128 debtRatio = ABDKMath64x64.divu(debtToOffset, _debt);
+        // uint collToAdd = ABDKMath64x64.mulu(debtRatio, _coll);
         
-        // Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool
-        
+        /* 
+        Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool.
+        Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool */
+
+        // --- Reward per-unit-staked calculation ---
+
         // Pure division to decimal
         // uint CLVLossPerUnitStaked = debtToOffset.mul(1e18).div(totalCLVDeposits);
+        // uint ETHGainPerUnitStaked = collToAdd.mul(1e18).div(totalCLVDeposits);
 
         // DeciMath
-        uint CLVLossPerUnitStaked = DeciMath.div_toDuint(debtToOffset, totalCLVDeposits);
+        // uint CLVLossPerUnitStaked = DeciMath.div_toDuint(debtToOffset, totalCLVDeposits);
+        // uint ETHGainPerUnitStaked = DeciMath.div_toDuint(collToAdd, totalCLVDeposits);
     
         // ABDK
         // uint CLVLossPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(debtToOffset, totalCLVDeposits), 1e18);
-
-        S_CLV = S_CLV.add(CLVLossPerUnitStaked);  // 6000 gas
-        emit S_CLVUpdated(S_CLV); // 1800 gas
-   
-        // Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool
-        
-        // Pure division to decimal
-        // uint ETHGainedPerUnitStaked = colltoAdd.mul(1e18).div(totalCLVDeposits);
-        
-        // DeciMath
-        uint ETHGainPerUnitStaked = DeciMath.div_toDuint(collToAdd, totalCLVDeposits);
-
-        // ABDK
         // uint ETHGainPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(collToAdd, totalCLVDeposits), 1e18);
+       
+        // Division with correction 
+        uint CLVLossNumerator = debtToOffset.mul(1e18).add(lastCLVLossError_Offset);
+        uint ETHNumerator = collToAdd.mul(1e18).add(lastETHError_Offset);
+       
+        uint CLVLossPerUnitStaked = CLVLossNumerator.div(totalCLVDeposits);
+        uint ETHGainPerUnitStaked = ETHNumerator.div(totalCLVDeposits);
+
+        lastCLVLossError_Offset = CLVLossNumerator.sub(CLVLossPerUnitStaked.mul(totalCLVDeposits));
+        lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(totalCLVDeposits));
+
+        // ----
+
+         S_CLV = S_CLV.add(CLVLossPerUnitStaked);  // 6000 gas
+        emit S_CLVUpdated(S_CLV); // 1800 gas
 
         S_ETH = S_ETH.add(ETHGainPerUnitStaked); // 6000 gas
         emit S_ETHUpdated(S_ETH); // 1800 gas

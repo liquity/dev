@@ -14,6 +14,11 @@ class MoneyValues {
   static _200_Ether = web3.utils.toWei('200', 'ether')
   static _1000_Ether = web3.utils.toWei('1000', 'ether')
   static _10000_Ether = web3.utils.toWei('10000', 'ether')
+  static _1million_Ether = web3.utils.toWei('1000000', 'ether')
+  static _10million_Ether = web3.utils.toWei('10000000', 'ether')
+  static _100million_Ether = web3.utils.toWei('100000000', 'ether')
+  static _1billion_Ether = web3.utils.toWei('1000000000', 'ether')
+  static _10billion_Ether = web3.utils.toWei('10000000000', 'ether')
   
   static _1e18 = web3.utils.toWei('1', 'ether')
   static _5e18 = web3.utils.toWei('1', 'ether')
