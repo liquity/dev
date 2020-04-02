@@ -32,7 +32,7 @@ contract CDPManager is Ownable, ICDPManager {
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
    
     // --- Connected contract declarations ---
-    
+
     IPoolManager poolManager;
     address public poolManagerAddress;
 
@@ -866,6 +866,9 @@ contract CDPManager is Ownable, ICDPManager {
      return stake;
     }
 
+    int lastETHError_Redistribution;
+    int lastCLVDebtError_Redistribution;
+
     function redistributeCollAndDebt(uint _coll, uint _debt) internal returns (bool) {
         if (_debt > 0) {
             if (totalStakes > 0) {
@@ -888,6 +891,10 @@ contract CDPManager is Ownable, ICDPManager {
             // Transfer coll and debt from ActivePool to DefaultPool
             poolManager.liquidate(_debt, _coll);
         } 
+    }
+
+    function truncateDigits(uint num, uint digits) internal returns (uint) {
+        return (num.div(10**digits)).mul(10**digits);
     }
 
     function closeCDP(address _user) internal returns (bool) {
