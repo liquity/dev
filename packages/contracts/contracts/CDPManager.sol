@@ -7,7 +7,6 @@ import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPoolManager.sol";
 import "./DeciMath.sol";
-import "./ABDKMath64x64.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@nomiclabs/buidler/console.sol";
@@ -21,6 +20,7 @@ contract CDPManager is Ownable, ICDPManager {
     enum Status { nonExistent, active, closed }
     
     // --- Events --- 
+
     event PoolManagerAddressChanged(address _newPoolManagerAddress);
     event ActivePoolAddressChanged(address _activePoolAddress);
     event DefaultPoolAddressChanged(address _defaultPoolAddress);
@@ -32,6 +32,7 @@ contract CDPManager is Ownable, ICDPManager {
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
    
     // --- Connected contract declarations ---
+    
     IPoolManager poolManager;
     address public poolManagerAddress;
 
@@ -156,7 +157,7 @@ contract CDPManager is Ownable, ICDPManager {
         address user = _msgSender(); 
        
         require(CDPs[user].status != Status.active, "CDPManager: Borrower already has an active CDP"); 
-        require(recoveryMode == false || _CLVAmount == 0, "CDPManager: Debt issuance is not permitted during Recovery Mode"); // 840 gas
+        require(recoveryMode == false || _CLVAmount == 0, "CDPManager: Debt issuance is not permitted during Recovery Mode"); 
         
         require(getUSDValue(msg.value, price) >= MIN_COLL_IN_USD, 
                 "CDPManager: Dollar value of collateral deposit must equal or exceed the minimum");  
@@ -165,28 +166,28 @@ contract CDPManager is Ownable, ICDPManager {
         require(ICR >= MCR, "CDPManager: ICR of prospective loan must be >= than the MCR"); 
       
         uint newTCR = getNewTCR(msg.value, _CLVAmount, price);  
-        require (newTCR >= CCR || _CLVAmount == 0, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted");  // 10 gas
+        require (newTCR >= CCR || _CLVAmount == 0, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted"); 
        
         // Update loan properties
-        CDPs[user].status = Status.active;  // 21000 gas
-        CDPs[user].coll = msg.value;  // 20100 gas
-        CDPs[user].debt = _CLVAmount; // 20100 gas
+        CDPs[user].status = Status.active;  
+        CDPs[user].coll = msg.value;  
+        CDPs[user].debt = _CLVAmount; 
        
-        updateRewardSnapshots(user); // 3300 gas
-        updateStakeAndTotalStakes(user); // 30500 gas
+        updateRewardSnapshots(user); 
+        updateStakeAndTotalStakes(user); 
         
-        sortedCDPs.insert(user, ICR, price, _hint, _hint); // 94000 gas
+        sortedCDPs.insert(user, ICR, price, _hint, _hint); 
         
         /* push the owner's address to the CDP owners list, and record 
         the corresponding array index on the CDP struct */
-        CDPs[user].arrayIndex = CDPOwners.push(user) - 1; // 46800 gas
+        CDPs[user].arrayIndex = CDPOwners.push(user) - 1; 
         
         // Move the ether to the activePool, and mint CLV to the borrower
-        poolManager.addColl.value(msg.value)(); // 25500 gas
+        poolManager.addColl.value(msg.value)(); 
     
-        poolManager.withdrawCLV(user, _CLVAmount); // 50500 gas
+        poolManager.withdrawCLV(user, _CLVAmount); 
        
-        checkTCRAndSetRecoveryMode(price); // 26500 gas
+        checkTCRAndSetRecoveryMode(price); 
         emit CDPUpdated(user, 
                         _CLVAmount, 
                         msg.value,
@@ -259,7 +260,7 @@ contract CDPManager is Ownable, ICDPManager {
                 "CDPManager: Remaining collateral must have $USD value >= 20, or be zero");
 
      
-        uint newICR = getNewICRfromCollDecrease(user, _amount, price);  // 6100 gas
+        uint newICR = getNewICRfromCollDecrease(user, _amount, price); 
 
         require(recoveryMode == false, "CDPManager: Collateral withdrawal is not permitted during Recovery Mode");
         require(newICR >= MCR, "CDPManager: Insufficient collateral ratio for ETH withdrawal");
@@ -411,17 +412,17 @@ contract CDPManager is Ownable, ICDPManager {
         if (ICR > MCR) { return false; }
        
         // Apply the CDP's rewards and remove stake
-        applyPendingRewards(_user); // 1800 gas 
-        removeStake(_user); // 3600 gas
+        applyPendingRewards(_user); 
+        removeStake(_user); 
     
         // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-        uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);  // 89500 gas
+        uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
         uint CLVDebtRemainder = remainder[0];
         uint ETHRemainder = remainder[1];
        
         redistributeCollAndDebt(ETHRemainder, CLVDebtRemainder);
-        closeCDP(_user); // 61000 gas
-        updateSystemSnapshots(); // 23000 gas
+        closeCDP(_user); 
+        updateSystemSnapshots();
         emit CDPUpdated(_user, 
                     0, 
                     0,
@@ -543,14 +544,11 @@ contract CDPManager is Ownable, ICDPManager {
     // Redeem as much collateral as possible from _cdpUser's CDP in exchange for CLV up to _maxCLVamount
     function redeemCollateralFromCDP(address _cdpUser, uint _maxCLVamount, uint _price, address _hint, uint _hintICR) internal returns (uint) {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP
-        uint CLVLot = DeciMath.getMin(_maxCLVamount, CDPs[_cdpUser].debt); // 1200 gas
+        uint CLVLot = DeciMath.getMin(_maxCLVamount, CDPs[_cdpUser].debt); 
         
         // Pure division to integer
         uint ETHLot = CLVLot.mul(1e18).div(_price);
         
-        // ABDK
-        // uint ETHLot = uint(ABDKMath64x64.divu(CLVLot, uint(ABDKMath64x64.divu(_price, 1e18))));
-
         // Decrease the debt and collateral of the current CDP according to the lot and corresponding ETH to send
         uint newDebt = (CDPs[_cdpUser].debt).sub(CLVLot);
         uint newColl = (CDPs[_cdpUser].coll).sub(ETHLot);
@@ -558,7 +556,7 @@ contract CDPManager is Ownable, ICDPManager {
         if (newDebt == 0) {
             // No debt left in the CDP, therefore new ICR must be "infinite".
             // Passing zero as hint will cause sortedCDPs to descend the list from the head, which is the correct insert position.
-            sortedCDPs.reInsert(_cdpUser, 2**256 - 1, _price, address(0), address(0)); // *** 62000 gas
+            sortedCDPs.reInsert(_cdpUser, 2**256 - 1, _price, address(0), address(0)); 
         } else {
             uint newICR = computeICR(newColl, newDebt, _price);
 
@@ -566,21 +564,21 @@ contract CDPManager is Ownable, ICDPManager {
             // certainly result in running out of gas.
             if (newICR != _hintICR) return 0;
 
-            sortedCDPs.reInsert(_cdpUser, newICR, _price, _hint, _hint); // *** 62000 gas
+            sortedCDPs.reInsert(_cdpUser, newICR, _price, _hint, _hint); 
         }
 
-        CDPs[_cdpUser].debt = newDebt; // 6200 gas
-        CDPs[_cdpUser].coll = newColl; // 6200 gas
+        CDPs[_cdpUser].debt = newDebt;
+        CDPs[_cdpUser].coll = newColl; 
 
         // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()
-        poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); // *** 57000 gas
+        poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); 
 
         emit CDPUpdated(
                         _cdpUser,
                         newDebt,
                         newColl,
                         CDPs[_cdpUser].stake
-                        ); // *** 5600 gas
+                        ); 
 
         return CLVLot;
     }
@@ -603,8 +601,8 @@ contract CDPManager is Ownable, ICDPManager {
      */
     function redeemCollateral(uint _CLVamount, address _hint, uint _hintICR) public returns (bool) {
         uint remainingCLV = _CLVamount;
-        uint price = priceFeed.getPrice(); // 3500 gas
-        address currentCDPuser = sortedCDPs.getLast();  // 3500 gas (for 10 CDPs in list)
+        uint price = priceFeed.getPrice(); 
+        address currentCDPuser = sortedCDPs.getLast(); 
 
         // Loop through the CDPs starting from the one with lowest collateral ratio until _amount of CLV is exchanged for collateral
         while (remainingCLV > 0) {
@@ -619,12 +617,12 @@ contract CDPManager is Ownable, ICDPManager {
                 liquidate(currentCDPuser);
             }
             else {
-                applyPendingRewards(currentCDPuser); // *** 46000 gas (no rewards!)
+                applyPendingRewards(currentCDPuser);
 
                 uint CLVLot = redeemCollateralFromCDP(currentCDPuser, remainingCLV, price, _hint, _hintICR);
                 if (CLVLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last CDP
 
-                remainingCLV = remainingCLV.sub(CLVLot);  // 102 gas
+                remainingCLV = remainingCLV.sub(CLVLot); 
             }
 
             currentCDPuser = nextUserToCheck;
@@ -650,11 +648,7 @@ contract CDPManager is Ownable, ICDPManager {
                     uint ETH = CDPs[currentCDPuser].coll.add(computePendingETHReward(currentCDPuser));
                     uint newDebt = CLVDebt.sub(remainingCLV);
 
-                    // Pure division to integer
                     uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
-
-                    // ABDK
-                    // uint newColl = ETH.sub(uint(ABDKMath64x64.divu(remainingCLV, uint(ABDKMath64x64.divu(_price, 1e18)))));
 
                     return computeICR(newColl, newDebt, _price);
                 } else {
@@ -723,13 +717,13 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Return the current collateral ratio (ICR) of a given CDP. Takes pending coll/debt rewards into account.
     function getCurrentICR(address _user, uint _price) public view returns(uint) {
-        uint pendingETHReward = computePendingETHReward(_user); // 3700 gas (no rewards!)  ABDK: 3100
-        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);  // 3700 gas (no rewards!).  ABDK: 3100
+        uint pendingETHReward = computePendingETHReward(_user); 
+        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user); 
         
-        uint currentETH = CDPs[_user].coll.add(pendingETHReward); // 1000 gas
-        uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);  // 988 gas
+        uint currentETH = CDPs[_user].coll.add(pendingETHReward); 
+        uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward); 
        
-        uint ICR = computeICR(currentETH, currentCLVDebt, _price);  // 3500-5000 gas - low/high depends on zero/non-zero debt. ABDK: 100-500
+        uint ICR = computeICR(currentETH, currentCLVDebt, _price);  
         return ICR;
     }
 
@@ -782,14 +776,6 @@ contract CDPManager is Ownable, ICDPManager {
             // Pure division to decimal
             uint newCollRatio = _coll.mul(_price).div(_debt);
 
-            // ABDK
-            // uint newCollRatio = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, _debt), _price);
-            // return newCollRatio;
-
-            // DeciMath
-            // uint ratio = DeciMath.div_toDuint(_coll, _debt);
-            // uint newCollRatio = DeciMath.decMul(_price, ratio);
-
             return newCollRatio;
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
@@ -801,18 +787,18 @@ contract CDPManager is Ownable, ICDPManager {
     // Add the user's coll and debt rewards earned from liquidations, to their CDP
     function applyPendingRewards(address _user) internal returns(bool) {
         if (rewardSnapshots[_user].ETH == L_ETH) { return false; }
-        require(CDPs[_user].status == Status.active, "CDPManager: user must have an active CDP");  // 2866 gas (no rewards)
+        require(CDPs[_user].status == Status.active, "CDPManager: user must have an active CDP"); 
 
         // Compute pending rewards
-        uint pendingETHReward = computePendingETHReward(_user); // 5530 gas  (no rewards)
-        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);  // 5540 gas  (no rewards)
+        uint pendingETHReward = computePendingETHReward(_user); 
+        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);  
 
         // Apply pending rewards
-        CDPs[_user].coll = CDPs[_user].coll.add(pendingETHReward);  // 3800 gas (no rewards)
-        CDPs[_user].debt = CDPs[_user].debt.add(pendingCLVDebtReward); // 3800 gas (no rewards)
+        CDPs[_user].coll = CDPs[_user].coll.add(pendingETHReward);  
+        CDPs[_user].debt = CDPs[_user].debt.add(pendingCLVDebtReward); 
 
         // Tell PM to transfer from DefaultPool to ActivePool when user claims rewards.
-        poolManager.applyPendingRewards(pendingCLVDebtReward, pendingETHReward);  // 33000 gas (no rewards)
+        poolManager.applyPendingRewards(pendingCLVDebtReward, pendingETHReward); 
 
         updateRewardSnapshots(_user); // 5259 (no rewards)
         return true;
@@ -820,52 +806,36 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Update user's snapshots of L_ETH and L_CLVDebt to reflect the current values
     function updateRewardSnapshots(address _user) internal returns(bool) {
-        rewardSnapshots[_user].ETH = L_ETH; // 1700 gas (no rewards)
-        rewardSnapshots[_user].CLVDebt = L_CLVDebt; // 1700 gas (no rewards)
+        rewardSnapshots[_user].ETH = L_ETH; 
+        rewardSnapshots[_user].CLVDebt = L_CLVDebt; 
         return true;
     }
-
-    // uint lastETHError_computePendingETH;
     
     // Get the user's pending accumulated ETH reward, earned by its stake
     function computePendingETHReward(address _user) internal view returns(uint) {
-        uint snapshotETH = rewardSnapshots[_user].ETH; // 913 gas (no reward)
+        uint snapshotETH = rewardSnapshots[_user].ETH; 
         uint rewardPerUnitStaked = L_ETH.sub(snapshotETH); 
         
         if ( rewardPerUnitStaked == 0 ) { return 0; }
        
-        uint stake = CDPs[_user].stake;  // 950 gas (no reward)
+        uint stake = CDPs[_user].stake;
         
-        // Pure division to decimal
         uint pendingETHReward = stake.mul(rewardPerUnitStaked).div(1e18);
-
-        // ABDK
-        // uint pendingETHReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
-
-        // DeciMath
-        // uint pendingETHReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked);
 
         return pendingETHReward;
     }
 
      // Get the user's pending accumulated CLV reward, earned by its stake
     function computePendingCLVDebtReward(address _user) internal view returns(uint) {
-        uint snapshotCLVDebt = rewardSnapshots[_user].CLVDebt;  // 900 gas
+        uint snapshotCLVDebt = rewardSnapshots[_user].CLVDebt;  
         uint rewardPerUnitStaked = L_CLVDebt.sub(snapshotCLVDebt); 
        
         if ( rewardPerUnitStaked == 0 ) { return 0; }
        
-        uint stake =  CDPs[_user].stake;  // 900 gas
+        uint stake =  CDPs[_user].stake; 
       
-        // Pure division to decimal
         uint pendingCLVDebtReward = stake.mul(rewardPerUnitStaked).div(1e18);
-        
-        // ABDK
-        // uint pendingCLVDebtReward = ABDKMath64x64.mulu(ABDKMath64x64.divu(rewardPerUnitStaked, 1e18), stake);
-        
-        // DeciMath
-        // uint pendingCLVDebtReward = DeciMath.mul_uintByDuint(stake, rewardPerUnitStaked); 
-
+     
         return pendingCLVDebtReward;
     }
 
@@ -891,15 +861,7 @@ contract CDPManager is Ownable, ICDPManager {
         if (totalCollateralSnapshot == 0) {
             stake = _coll;
         } else {
-
-            // Pure division to integer
             stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot);
-
-            // DeciMath
-            // stake = DeciMath.mul_uintByDuint(_coll, DeciMath.div_toDuint(totalStakesSnapshot, totalCollateralSnapshot));
-
-            // ABDK
-            // stake = ABDKMath64x64.mulu(ABDKMath64x64.divu(totalStakesSnapshot, totalCollateralSnapshot), _coll);
         }
      return stake;
     }
@@ -910,20 +872,6 @@ contract CDPManager is Ownable, ICDPManager {
                 /*If debt could not be offset entirely, add the coll and debt rewards-per-unit-staked 
                 to the running totals. */
               
-                // ---
-
-                // Pure div to decimal 
-                // uint ETHRewardPerUnitStaked = _coll.mul(1e18).div(totalStakes);
-                // uint CLVDebtRewardPerUnitStaked = _debt.mul(1e18).div(totalStakes);
-
-                // // DeciMath
-                // uint ETHRewardPerUnitStaked = DeciMath.div_toDuint(_coll, totalStakes);
-                // uint CLVDebtRewardPerUnitStaked = DeciMath.div_toDuint(_debt, totalStakes);
-
-                // ABDK
-                // uint ETHRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_coll, totalStakes), 1e18);
-                // uint CLVDebtRewardPerUnitStaked = ABDKMath64x64.mulu(ABDKMath64x64.divu(_debt, totalStakes), 1e18);
-       
                 // Division with correction
                 uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
                 uint CLVDebtNumerator = _debt.mul(1e18).add(lastCLVDebtError_Redistribution);
@@ -933,8 +881,6 @@ contract CDPManager is Ownable, ICDPManager {
 
                 lastETHError_Redistribution = ETHNumerator.sub(ETHRewardPerUnitStaked.mul(totalStakes));
                 lastCLVDebtError_Redistribution = CLVDebtNumerator.sub(CLVDebtRewardPerUnitStaked.mul(totalStakes));
-
-                // ---
 
                 L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
                 L_CLVDebt = L_CLVDebt.add(CLVDebtRewardPerUnitStaked);
@@ -994,12 +940,8 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Get the dollar value of collateral, as a duint
     function getUSDValue(uint _coll, uint _price) public view returns (uint) {
-
-        // Pure multiplication to decimal
         uint usdValue = _price.mul(_coll).div(1e18);
 
-        // ABDK
-        // uint usdValue = ABDKMath64x64.mulu(ABDKMath64x64.divu(_price, 1000000000000000000), _coll);  // 500 gas
         return usdValue;
     }
 
@@ -1035,11 +977,11 @@ contract CDPManager is Ownable, ICDPManager {
         uint liquidatedColl = defaultPool.getETH();
         uint closedDebt = defaultPool.getCLV();
 
-        uint totalCollateral  = activeColl.add(liquidatedColl); // 86 gas
+        uint totalCollateral  = activeColl.add(liquidatedColl);
        
-        uint totalDebt = activeDebt.add(closedDebt); // 90 gas
+        uint totalDebt = activeDebt.add(closedDebt); 
 
-        uint TCR = computeICR(totalCollateral, totalDebt, _price); // 575 gas
+        uint TCR = computeICR(totalCollateral, totalDebt, _price); 
         
         /* if TCR falls below 150%, trigger recovery mode. If TCR rises above 150%, 
         disable recovery mode */

@@ -95,11 +95,11 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 10)) {
-      // apply rewards
       cdpManager.addColl(account, account, { from: account, value: 1 })
     }
 
     await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
+    
     // check DefaultPool
     const ETH_DefaultPool = await defaultPool.getETH()
     const CLVDebt_DefaultPool = await defaultPool.getCLV()
@@ -131,7 +131,6 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 100)) {
-      // apply rewards
       cdpManager.addColl(account, account, { from: account, value: 1 })
     }
    
@@ -165,7 +164,6 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 10)) {
-      // apply rewards
       cdpManager.addColl(account, account, { from: account, value: 1 })
     }
 
@@ -200,7 +198,6 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 99)) {
-      // apply rewards
       cdpManager.addColl(account, account, { from: account, value: 1 })
     }
     await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
@@ -233,7 +230,6 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 999)) {
-      // apply rewards
       cdpManager.addColl(account, account, { from: account, value: 1 })
     }
     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: 1 })
@@ -291,8 +287,7 @@ contract('CDPManager', async accounts => {
       totalETHPoolDifference.add(activePoolETH.sub(defaultPoolETH))
       totalCLVDebtPoolDifference.add(activePoolCLVDebt.sub(defaultPoolCLVDebt))
     }
-    // Grab total liquidated coll and debt after liquidations
-
+    
     console.log(`Accumulated ETH difference between Default and Active Pools is: ${totalETHPoolDifference}`)
     console.log(`Accumulated CLVDebt difference between Active and Default Pools is: ${totalCLVDebtPoolDifference}`)
   })
@@ -319,7 +314,6 @@ Accumulated CLVDebt difference between Active and Default Pools is: 0
 
     await cdpManager.liquidate(accounts[0])
 
-    // Grab total active coll and debt before liquidations
     for (account of accounts.slice(1, 11)) {
       await cdpManager.liquidate(account)
     }
@@ -368,7 +362,6 @@ CLVDebt difference between total pending rewards and DefaultPool: 0
 
     await cdpManager.liquidate(accounts[0])
 
-    // Grab total active coll and debt before liquidations
     for (account of accounts.slice(1, 101)) {
       await cdpManager.liquidate(account)
     }
@@ -417,7 +410,6 @@ CLVDebt difference between total pending rewards and DefaultPool: 0
 
   await cdpManager.liquidate(accounts[0])
 
-  // Grab total active coll and debt before liquidations
   for (account of accounts.slice(1, 11)) {
     await cdpManager.liquidate(account)
 
@@ -466,7 +458,6 @@ CLVDebt difference between total pending rewards and DefaultPool: 100
 
     await cdpManager.liquidate(accounts[0])
 
-    // Grab total active coll and debt before liquidations
     for (account of accounts.slice(1, 101)) {
       await cdpManager.liquidate(account)
     }
@@ -668,7 +659,7 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 0
      // Account 0 (to be liquidated) opens a loan
      await cdpManager.openLoan(moneyVals._100e18, accounts[0],{from: accounts[0], value: moneyVals._1_Ether})
 
-     // 9 Accounts open loans and provide to SP
+     // 10 Accounts open loans and provide to SP
      await openLoan_allAccounts(accounts.slice(1, 101), cdpManager, moneyVals._1_Ether, moneyVals._100e18)
      await provideToSP_allAccounts(accounts.slice(1,101), poolManager, moneyVals._50e18)
      
@@ -717,7 +708,7 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 0
      // Account 0 (to be liquidated) opens a loan
      await cdpManager.openLoan(moneyVals._100e18, accounts[0],{from: accounts[0], value: moneyVals._1_Ether})
 
-     // 9 Accounts open loans and provide to SP
+     // 10 Accounts open loans and provide to SP
      await openLoan_allAccounts(accounts.slice(1, 11), cdpManager, moneyVals._1_Ether, moneyVals._100e18)
      await provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,11), poolManager)
 
@@ -776,7 +767,7 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 0
      // Account 0 (to be liquidated) opens a loan
      await cdpManager.openLoan(moneyVals._100e18, accounts[0],{from: accounts[0], value: moneyVals._1_Ether})
 
-     // 9 Accounts open loans and provide to SP
+     // 100 Accounts open loans and provide to SP
      await openLoan_allAccounts(accounts.slice(1, 101), cdpManager, moneyVals._1_Ether, moneyVals._100e18)
      await provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,101), poolManager)
 
@@ -833,7 +824,7 @@ CLV insufficiency in Stability Pool is 1960
    // Account 0 (to be liquidated) opens a loan
    await cdpManager.openLoan(moneyVals._100e18, accounts[0],{from: accounts[0], value: moneyVals._1_Ether})
 
-   // 9 Accounts open loans and provide to SP
+   // 500 Accounts open loans and provide to SP
    await openLoan_allAccounts(accounts.slice(1, 501), cdpManager, moneyVals._1_Ether, moneyVals._100e18)
    await provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,501), poolManager)
 
@@ -1094,6 +1085,7 @@ it("101 accounts with random large coll, magnitude ~1e8 ether. 1 liquidation. 50
   await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._1000_Ether })
   await cdpManager.openLoan(moneyVals._180e18, accounts[0], { from: accounts[0], value: moneyVals._1_Ether })
 
+   // Troves open with 100-200 million ether
   await openLoan_allAccounts_randomETH(100000000, 200000000, accounts.slice(1, 100), cdpManager, moneyVals._180e18)
 
   await priceFeed.setPrice(moneyVals._100e18)
@@ -1128,6 +1120,7 @@ it("101 accounts with random large coll, magnitude ~1e8 ether. 1 liquidation. 50
 it("11 accounts with random ETH and proportional CLV (180:1). 10 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
   await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._1billion_Ether })
 
+  // Troves open with 100-200 million ether and proportional CLV Debt
   await openLoan_allAccounts_randomETH_ProportionalCLV(100000000, 200000000, accounts.slice(0, 11), cdpManager, 180)
 
   await priceFeed.setPrice(moneyVals._100e18)
@@ -1169,6 +1162,7 @@ CLVDebt difference between total pending rewards and DefaultPool: 1000000000
   it("101 accounts with random ETH and proportional CLV (180:1). 100 liquidations. Check 1) (DefaultPool - totalDistributionRewards) difference, and 2) ", async () => {
     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._10billion_Ether })
 
+    // Troves open with 100-200 million ether and proportional CLV Debt
     await openLoan_allAccounts_randomETH_ProportionalCLV(100000000, 200000000, accounts.slice(0, 101), cdpManager, 180)
 
     await priceFeed.setPrice(moneyVals._100e18)
