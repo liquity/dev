@@ -28,15 +28,19 @@ contract('PoolManager', async accounts => {
   const _100_Ether = web3.utils.toWei('100', 'ether')
 
   const [owner,
-    defaulter_1, defaulter_2,
+    defaulter_1, 
+    defaulter_2,
     defaulter_3,
-    alice,
     whale,
-    bob,
     whale_2,
+    alice,
+    bob,
     carol,
+    dennis,
     erin,
-    flyn] = accounts;
+    flyn,
+    graham,
+] = accounts;
 
   let priceFeed
   let clvToken
@@ -694,7 +698,7 @@ contract('PoolManager', async accounts => {
       await poolManager.withdrawFromSP('2000000000000000000000', { from: whale_2 })
     })
 
-    it.only('withdrawPenaltyFromSP(): After an unremoved overstay, totalCLVDeposits updates correctly with withdrawals', async () => {
+    it('withdrawPenaltyFromSP(): After an unremoved overstay, the raw CLV in the Pool updates correctly upon withdrawal', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
@@ -705,8 +709,8 @@ contract('PoolManager', async accounts => {
 
       await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _1_Ether })
       await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _1_Ether })
-      await cdpManager.withdrawCLV(moneyVals._180e18, defaulter_1, { from: defaulter_1 })
-      await cdpManager.withdrawCLV(moneyVals._180e18, defaulter_2, { from: defaulter_2 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_2, { from: defaulter_2 })
 
       // Price drops
       await priceFeed.setPrice(moneyVals._100e18);
@@ -743,6 +747,106 @@ contract('PoolManager', async accounts => {
       await poolManager.withdrawFromSP(moneyVals._50e18, { from: carol })
       const SP_CLV_afterCarolWithdraws = await stabilityPool.getCLV()
       assert.equal(SP_CLV_afterCarolWithdraws, 0) 
+    })
+
+    it.only('withdrawPenaltyFromSP(): After an unremoved overstay, new depositors have the correct CLV Loss upon a new liquidation', async () => {
+      // whale supports TCR
+      await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
+
+      // alice deposits 100 CLV to the SP
+      await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, alice, { from: alice })
+      await poolManager.provideToSP(moneyVals._100e18, { from: alice })
+
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _1_Ether })
+      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _1_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_2, { from: defaulter_2 })
+
+      // Price drops
+      await priceFeed.setPrice(moneyVals._100e18);
+
+      // defaulter_1 liquidated. 100 CLV  absorbed by Pool, which empties it.  Alice CLVLoss = 100.
+      await cdpManager.liquidate(defaulter_1, { from: owner })
+
+      // Bob and carol open loans, withdraws 100 CLV and deposits to Stability Pool
+      await cdpManager.addColl(bob, bob, { from: bob, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
+      await poolManager.provideToSP(moneyVals._100e18, { from: bob })
+
+      await cdpManager.addColl(carol, carol, { from: carol, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, carol, { from: carol })
+      await poolManager.provideToSP(moneyVals._100e18, { from: carol })
+      
+      // Defaulter 2 liquidated. Bob and Carol *should* receive a CLVLoss of 50 each
+      await cdpManager.liquidate(defaulter_2, { from: owner })
+    
+      const bob_S_CLV_Snapshot = (await poolManager.snapshot(bob))[1]
+      const carol_S_CLV_Snapshot = (await poolManager.snapshot(carol))[1]
+
+      const bob_deposit = await poolManager.deposit(bob)
+      const carol_deposit = await poolManager.deposit(carol)
+    
+      const S_CLV = await poolManager.S_CLV()
+      console.log("S_CLV is" + S_CLV)
+
+      const bob_CLVLoss = bob_deposit.mul(S_CLV.sub(bob_S_CLV_Snapshot)).div(web3.utils.toBN('1000000000000000000'))
+      const carol_CLVLoss = carol_deposit.mul(S_CLV.sub(carol_S_CLV_Snapshot)).div(web3.utils.toBN('1000000000000000000'))
+
+      console.log(`Bob's CLV Loss after a liquidation of 100 CLV is: ${bob_CLVLoss} `)
+      console.log(`Carol's CLV Loss after a liquidation of 100 CLV is: ${carol_CLVLoss} `)
+
+      assert.equal(bob_CLVLoss.toString(), moneyVals._50e18)
+      assert.equal(carol_CLVLoss.toString(), moneyVals._50e18)
+    })
+
+    it.only('withdrawPenaltyFromSP(): After an unremoved overstay, new depositors withdraw the correct amount of CLV after a new liquidation', async () => {
+      // whale supports TCR
+      await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
+
+      // alice deposits 100 CLV to the SP
+      await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, alice, { from: alice })
+      await poolManager.provideToSP(moneyVals._100e18, { from: alice })
+
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _1_Ether })
+      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _1_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_2, { from: defaulter_2 })
+
+      // Price drops
+      await priceFeed.setPrice(moneyVals._100e18);
+
+      // defaulter_1 liquidated. 100 CLV  absorbed by Pool, which empties it.  Alice's CLVLoss = 100.
+      await cdpManager.liquidate(defaulter_1, { from: owner })
+
+      // Bob, carol, dennis, erin, flyn open loans, withdraws 100 CLV and deposits to Stability Pool
+      await cdpManager.openLoan(moneyVals._100e18, bob, {from: bob, value: _10_Ether})
+      await cdpManager.openLoan(moneyVals._100e18, carol, {from: carol, value: _10_Ether})
+      await cdpManager.openLoan(moneyVals._100e18, dennis, {from: dennis, value: _10_Ether})
+      await cdpManager.openLoan(moneyVals._100e18, erin, {from: erin, value: _10_Ether})
+      await cdpManager.openLoan(moneyVals._100e18, flyn, {from: flyn, value: _10_Ether})
+
+      await poolManager.provideToSP(moneyVals._100e18, { from: bob })
+      await poolManager.provideToSP(moneyVals._100e18, { from: carol })
+      await poolManager.provideToSP(moneyVals._100e18, { from: dennis })
+      await poolManager.provideToSP(moneyVals._100e18, { from: erin })
+      await poolManager.provideToSP(moneyVals._100e18, { from: flyn })
+    
+      // Defaulter 2 liquidated. Bob, Carol, Dennis, Erin, Flyn should receive 20 CLV Loss each, leaving them with
+      // withdrawable deposits of 80 CLV.
+      await cdpManager.liquidate(defaulter_2, { from: owner })
+  
+     await poolManager.withdrawFromSP(moneyVals._100e18, { from: bob } )
+     assert.equal((await clvToken.balanceOf(bob)).toString(), moneyVals._80e18)
+     await poolManager.withdrawFromSP(moneyVals._100e18, { from: carol } )
+     assert.equal((await clvToken.balanceOf(carol)).toString(), moneyVals._80e18)
+     await poolManager.withdrawFromSP(moneyVals._100e18, { from: dennis } )
+     assert.equal((await clvToken.balanceOf(dennis)).toString(), moneyVals._80e18)
+     await poolManager.withdrawFromSP(moneyVals._100e18, { from: erin } )
+     assert.equal((await clvToken.balanceOf(erin)).toString(), moneyVals._80e18)
+     await poolManager.withdrawFromSP(moneyVals._100e18, { from: flyn } )
+     assert.equal((await clvToken.balanceOf(flyn)).toString(), moneyVals._80e18)
     })
   })
 })

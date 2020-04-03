@@ -866,9 +866,6 @@ contract CDPManager is Ownable, ICDPManager {
      return stake;
     }
 
-    int lastETHError_Redistribution;
-    int lastCLVDebtError_Redistribution;
-
     function redistributeCollAndDebt(uint _coll, uint _debt) internal returns (bool) {
         if (_debt > 0) {
             if (totalStakes > 0) {

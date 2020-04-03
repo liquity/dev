@@ -474,8 +474,7 @@ contract PoolManager is Ownable, IPoolManager {
     and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
     Returns the amount of debt that could not be cancelled, and the corresponding ether.
     Only callable from close() and closeCDPs() functions in CDPManager */
-    function offset(uint _debt, uint _coll) external payable onlyCDPManager returns (uint[2] memory) 
-    {    
+    function offset(uint _debt, uint _coll) external payable onlyCDPManager returns (uint[2] memory) {    
         uint[2] memory remainder;
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits(); 
         uint CLVinPool = stabilityPool.getCLV(); 

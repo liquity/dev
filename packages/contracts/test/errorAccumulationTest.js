@@ -700,7 +700,7 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 0
 
    */
 
-   it("11 accounts. 10 Borrowers add to SP, random CLV amounts. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
+   it.only("11 accounts. 10 Borrowers add to SP, random CLV amounts. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens loan with 100 CLV
      await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: moneyVals._100_Ether })
      await cdpManager.withdrawCLV(moneyVals._100e18, accounts[999], {from: accounts[999]})
