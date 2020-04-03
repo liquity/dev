@@ -1,8 +1,16 @@
 import React, { createContext, useContext, useCallback } from "react";
+import { Interface } from "ethers/utils";
 import { Web3Provider } from "ethers/providers";
 import { useWeb3React } from "@web3-react/core";
 
-import { Liquity, Trove, StabilityDeposit, addressesOnNetwork } from "@liquity/lib";
+import {
+  Liquity,
+  Trove,
+  StabilityDeposit,
+  addressesOnNetwork,
+  connectToContracts,
+  contractsToInterfaces
+} from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue, useAsyncStore } from "./AsyncValue";
 import { useAccountBalance } from "./AccountBalance";
@@ -12,6 +20,7 @@ export const deployerAddress = "0x70E78E2D8B2a4fDb073B7F61c4653c23aE12DDDF";
 type LiquityContext = {
   account: string;
   provider: Web3Provider;
+  interfaces: { [address: string]: [string, Interface] };
   liquity: Liquity;
 };
 
@@ -24,23 +33,17 @@ type LiquityProviderProps = {
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, loader }) => {
   const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
 
-  const liquityState = useAsyncValue(
-    useCallback(async () => {
-      if (provider && account && chainId) {
-        const cdpManagerAddress = addressesOnNetwork[chainId].cdpManager;
-        return Liquity.connect(cdpManagerAddress, provider.getSigner(account));
-      }
-    }, [provider, account, chainId])
-  );
-
-  if (!provider || !account || !liquityState.loaded || !liquityState.value) {
+  if (!provider || !account || !chainId) {
     return <>{loader}</>;
   }
 
-  const liquity = liquityState.value;
+  const addresses = addressesOnNetwork[chainId];
+  const contracts = connectToContracts(addresses, provider.getSigner(account));
+  const interfaces = contractsToInterfaces(contracts);
+  const liquity = new Liquity(contracts, account);
 
   return (
-    <LiquityContext.Provider value={{ account, provider, liquity }}>
+    <LiquityContext.Provider value={{ account, provider, interfaces, liquity }}>
       {children}
     </LiquityContext.Provider>
   );
@@ -58,12 +61,16 @@ export const useLiquity = () => {
 
 export const useLiquityStore = (provider: Web3Provider, account: string, liquity: Liquity) => {
   const getNumberOfTroves = useCallback(() => liquity.getNumberOfTroves(), [liquity]);
-  const getPool = useCallback(() => liquity.getPool(), [liquity]);
+  const getTotal = useCallback(() => liquity.getTotal(), [liquity]);
 
   const getPrice = useCallback(() => liquity.getPrice(), [liquity]);
   const watchPrice = useCallback(
     (onPriceChanged: (price: Decimal) => void) => {
-      return liquity.watchPrice(onPriceChanged);
+      const logged = (price: Decimal) => {
+        console.log(`Update price to ${price}`);
+        onPriceChanged(price);
+      };
+      return liquity.watchPrice(logged);
     },
     [liquity]
   );
@@ -71,7 +78,15 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const getTrove = useCallback(() => liquity.getTrove(), [liquity]);
   const watchTrove = useCallback(
     (onTroveChanged: (trove: Trove) => void) => {
-      return liquity.watchTrove(onTroveChanged);
+      const logged = (trove: Trove) => {
+        console.log("Update trove to:");
+        console.log(`{ collateral: ${trove.collateral},`);
+        console.log(`  debt: ${trove.debt},`);
+        console.log(`  pendingCollateralReward: ${trove.pendingCollateralReward},`);
+        console.log(`  pendingDebtReward: ${trove.pendingDebtReward} }`);
+        onTroveChanged(trove);
+      };
+      return liquity.watchTrove(logged);
     },
     [liquity]
   );
@@ -79,7 +94,14 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const getStabilityDeposit = useCallback(() => liquity.getStabilityDeposit(), [liquity]);
   const watchStabilityDeposit = useCallback(
     (onStabilityDepositChanged: (deposit: StabilityDeposit) => void) => {
-      return liquity.watchStabilityDeposit(onStabilityDepositChanged);
+      const logged = (deposit: StabilityDeposit) => {
+        console.log("Update deposit to:");
+        console.log(`{ deposit: ${deposit.deposit},`);
+        console.log(`  pendingDepositLoss: ${deposit.pendingDepositLoss},`);
+        console.log(`  pendingCollateralGain: ${deposit.pendingCollateralGain} }`);
+        onStabilityDepositChanged(deposit);
+      };
+      return liquity.watchStabilityDeposit(logged);
     },
     [liquity]
   );
@@ -87,7 +109,11 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const getQuiBalance = useCallback(() => liquity.getQuiBalance(), [liquity]);
   const watchQuiBalance = useCallback(
     (onQuiBalanceChanged: (balance: Decimal) => void) => {
-      return liquity.watchQuiBalance(onQuiBalanceChanged);
+      const logged = (balance: Decimal) => {
+        console.log(`Update quiBalance to ${balance}`);
+        onQuiBalanceChanged(balance);
+      };
+      return liquity.watchQuiBalance(logged);
     },
     [liquity]
   );
@@ -103,7 +129,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     numberOfTroves: useAsyncValue(getNumberOfTroves),
     trove: useAsyncValue(getTrove, watchTrove),
     deposit: useAsyncValue(getStabilityDeposit, watchStabilityDeposit),
-    pool: useAsyncValue(getPool),
+    total: useAsyncValue(getTotal),
     quiInStabilityPool: useAsyncValue(getQuiInStabilityPool)
   });
 };

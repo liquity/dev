@@ -189,7 +189,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                           >
                             {new Percent(collateralRatio).prettify()}
                           </Text>
-                        ))(trove.collateralRatioAfterRewardsAt(price))}
+                        ))(trove.collateralRatioAfterRewards(price))}
                       </td>
                       <td>
                         <Transaction

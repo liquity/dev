@@ -12,10 +12,10 @@ type PriceManagerProps = {
 };
 
 export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) => {
-  const [editedPrice, setEditedPrice] = useState(price.prettify());
+  const [editedPrice, setEditedPrice] = useState(price.toString(2));
 
   useEffect(() => {
-    setEditedPrice(price.prettify());
+    setEditedPrice(price.toString(2));
   }, [price]);
 
   return (

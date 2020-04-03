@@ -77,7 +77,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
     numberOfTroves,
     price,
     trove,
-    pool,
+    total,
     deposit,
     quiInStabilityPool
   } = storeState.value;
@@ -92,14 +92,14 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
               <DeveloperTools {...{ liquity, price }} />
             ) : (
               <>
-                <TroveManager {...{ liquity, trove, price, pool }} />
+                <TroveManager {...{ liquity, trove, price, total, quiBalance }} />
                 <StabilityDepositManager {...{ liquity, deposit, trove, price }} />
                 <RedemptionManager {...{ liquity, price }} />
               </>
             )}
           </Box>
           <Box px={3} width="362px">
-            <SystemStats {...{ numberOfTroves, price, pool, quiInStabilityPool }} />
+            <SystemStats {...{ numberOfTroves, price, total, quiInStabilityPool }} />
             <PriceManager {...{ liquity, price }} />
           </Box>
         </Flex>
