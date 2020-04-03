@@ -77,10 +77,10 @@ export class Trove {
     this.pendingDebtReward = Decimal.from(pendingDebtReward);
   }
 
-  add(that: Trovish) {
+  add({ collateral = 0, debt = 0, pendingCollateralReward = 0, pendingDebtReward = 0 }: Trovish) {
     return new Trove({
-      collateral: this.collateralAfterReward.add(that.collateral || 0),
-      debt: this.debtAfterReward.add(that.debt || 0)
+      collateral: this.collateralAfterReward.add(collateral).add(pendingCollateralReward),
+      debt: this.debtAfterReward.add(debt).add(pendingDebtReward)
     });
   }
 
@@ -92,10 +92,15 @@ export class Trove {
     return this.add({ debt });
   }
 
-  subtract(that: Trovish) {
+  subtract({
+    collateral = 0,
+    debt = 0,
+    pendingCollateralReward = 0,
+    pendingDebtReward = 0
+  }: Trovish) {
     return new Trove({
-      collateral: this.collateralAfterReward.sub(that.collateral || 0),
-      debt: this.debtAfterReward.sub(that.debt || 0)
+      collateral: this.collateralAfterReward.sub(collateral).sub(pendingCollateralReward),
+      debt: this.debtAfterReward.sub(debt).sub(pendingDebtReward)
     });
   }
 
@@ -321,8 +326,8 @@ export class Liquity {
 
     const numberOfTroves = (await this.getNumberOfTroves()).toNumber();
 
-    if (!numberOfTroves) {
-      return address;
+    if (!numberOfTroves || collateralRatio.infinite) {
+      return addressZero;
     }
 
     const numberOfTrials = bigNumberify(Math.ceil(Math.sqrt(numberOfTroves))); // XXX not multiplying by 10 here
@@ -483,10 +488,10 @@ export class Liquity {
   }
 
   async liquidateMany(
-    maximumNumberOfCDPsToLiquidate: BigNumberish,
+    maximumNumberOfTrovesToLiquidate: BigNumberish,
     overrides?: LiquityTransactionOverrides
   ) {
-    return this.cdpManager.liquidateCDPs(maximumNumberOfCDPsToLiquidate, { ...overrides });
+    return this.cdpManager.liquidateCDPs(maximumNumberOfTrovesToLiquidate, { ...overrides });
   }
 
   async getStabilityDeposit(address = this.requireAddress()) {
@@ -640,5 +645,9 @@ export class Liquity {
     }
 
     return Promise.all(troves);
+  }
+
+  _getFirstTroveAddress() {
+    return this.sortedCDPs.getFirst();
   }
 }

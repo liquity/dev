@@ -1,10 +1,13 @@
-import { Wallet } from "ethers";
+import fs from "fs";
+
+import { Wallet, Signer } from "ethers";
+import { bigNumberify, BigNumber } from "ethers/utils";
 import { task, usePlugin, BuidlerConfig } from "@nomiclabs/buidler/config";
 import { NetworkConfig } from "@nomiclabs/buidler/types";
 
 import { deployAndSetupContracts, setSilent } from "./test/utils/deploy";
 import { Liquity, Trove } from "./src/Liquity";
-import { Decimal } from "./utils";
+import { Decimal, Difference } from "./utils";
 import { CDPManagerFactory } from "./types/ethers/CDPManagerFactory";
 import { PoolManagerFactory } from "./types/ethers/PoolManagerFactory";
 import { PriceFeedFactory } from "./types/ethers/PriceFeedFactory";
@@ -132,6 +135,245 @@ task(
 
       await new Promise(resolve => setTimeout(resolve, 4000));
     }
+  }
+);
+
+task(
+  "chaos",
+  "Chaotically interact with the system and monitor pool errors",
+  async (_taskArgs, bre) => {
+    const benford = (max: number) => Math.floor(Math.exp(Math.log(max) * Math.random()));
+
+    const truncateLastDigits = (n: number) => {
+      if (n > 100000) {
+        return 1000 * Math.floor(n / 1000);
+      } else if (n > 10000) {
+        return 100 * Math.floor(n / 100);
+      } else if (n > 1000) {
+        return 10 * Math.floor(n / 10);
+      } else {
+        return n;
+      }
+    };
+
+    const connectUsers = (users: Signer[]) =>
+      Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
+
+    const [deployer, funder, ...randomUsers] = await bre.ethers.signers();
+
+    const addresses =
+      addressesOnNetwork[bre.network.name] ||
+      addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+
+    const [deployerLiquity, funderLiquity, ...randomLiquities] = await connectUsers([
+      deployer,
+      funder,
+      ...randomUsers
+    ]);
+
+    let price = await deployerLiquity.getPrice();
+
+    let funderTrove = await funderLiquity.getTrove();
+    if (funderTrove.isEmpty) {
+      await funderLiquity.openTrove(new Trove({ collateral: 10000, debt: 1000000 }), price);
+    }
+
+    let totalNumberOfLiquidations = bigNumberify(0);
+
+    for (let i = 1; i <= 25; ++i) {
+      price = price.add(100 * Math.random() + 150).div(2);
+      await deployerLiquity.setPrice(price);
+      price = await deployerLiquity.getPrice();
+
+      console.log();
+      console.log(`[Round #${i}]`);
+      console.log(`Price: ${price}`);
+
+      for (const liquity of randomLiquities) {
+        if (Math.random() < 0.5) {
+          const trove = await liquity.getTrove();
+          let total = await liquity.getTotal();
+
+          if (trove.isEmpty) {
+            let newTrove: Trove;
+
+            do {
+              let collateral: Decimal, debt: Decimal;
+              let randomValue = truncateLastDigits(benford(1000));
+
+              if (Math.random() < 0.5) {
+                collateral = Decimal.from(randomValue);
+
+                const maxDebt = parseInt(
+                  price
+                    .mul(collateral)
+                    .div(1.1)
+                    .toString(0)
+                );
+
+                debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
+              } else {
+                debt = Decimal.from(100 * randomValue);
+                collateral = Decimal.from(
+                  debt
+                    .div(price)
+                    .mul(10 + benford(20))
+                    .div(10)
+                    .toString(1)
+                );
+              }
+
+              newTrove = new Trove({ collateral, debt });
+            } while (newTrove.collateralRatioIsBelowMinimum(price));
+
+            while (total.add(newTrove).collateralRatioIsBelowCritical(price)) {
+              // Would fail to open the Trove due to TCR
+              newTrove = new Trove({
+                collateral: newTrove.collateral.mul(2),
+                debt: newTrove.debt
+              });
+            }
+
+            console.log(`ICR = ${newTrove.collateralRatio(price)}`);
+
+            await funder.sendTransaction({
+              to: liquity.userAddress,
+              value: newTrove.collateral.bigNumber
+            });
+
+            // console.log(
+            //   `openTrove(ICR = ${newTrove.collateralRatio(
+            //     price
+            //   )}, TCR = ${total.collateralRatioAfterRewards(price)})`
+            // );
+
+            await liquity.openTrove(newTrove, price);
+          } else {
+            while (total.subtract(trove).collateralRatioIsBelowCritical(price)) {
+              // Would fail to close Trove due to TCR
+              const funderTrove = await funderLiquity.getTrove();
+              await funderLiquity.depositEther(funderTrove, benford(50000), price);
+
+              total = await liquity.getTotal();
+            }
+
+            // console.log("closeTrove()");
+
+            await funderLiquity.sendQui(liquity.userAddress!, trove.debtAfterReward);
+            await liquity.closeTrove();
+          }
+        } else {
+          const exchangedQui = benford(5000);
+
+          // console.log(`redeemCollateral(${exchangedQui})`);
+
+          await funderLiquity.sendQui(liquity.userAddress!, exchangedQui);
+
+          const numberOfTrovesBefore = await liquity.getNumberOfTroves();
+          await liquity.redeemCollateral(exchangedQui, price);
+          const numberOfTrovesAfter = await liquity.getNumberOfTroves();
+          const numberOfLiquidations = numberOfTrovesBefore.sub(numberOfTrovesAfter);
+
+          if (!numberOfLiquidations.isZero()) {
+            totalNumberOfLiquidations = totalNumberOfLiquidations.add(numberOfLiquidations);
+            console.log(`Liquidated ${numberOfLiquidations} Trove(s).`);
+          }
+        }
+
+        const quiBalance = await liquity.getQuiBalance();
+        await liquity.sendQui(funderLiquity.userAddress!, quiBalance);
+      }
+
+      console.log(`Completed ${randomLiquities.length} operations.`);
+      console.log(`TCR = ${(await funderLiquity.getTotal()).collateralRatioAfterRewards(price)}`);
+    }
+
+    const total = await funderLiquity.getTotal();
+    const numberOfTroves = await funderLiquity.getNumberOfTroves();
+
+    console.log();
+    console.log(`Number of Troves: ${numberOfTroves}`);
+    console.log(`Total collateral: ${total.collateralAfterReward}`);
+
+    fs.appendFileSync(
+      "chaos.csv",
+      `${numberOfTroves},${totalNumberOfLiquidations},${total.collateralAfterReward}\n`
+    );
+  }
+);
+
+task(
+  "order",
+  "End chaos and restore order by liquidating every Trove except the Funder's",
+  async (_taskArgs, bre) => {
+    const connectUsers = (users: Signer[]) =>
+      Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
+
+    const [deployer, funder] = await bre.ethers.signers();
+
+    const addresses =
+      addressesOnNetwork[bre.network.name] ||
+      addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+
+    const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder]);
+
+    const priceBefore = await deployerLiquity.getPrice();
+
+    if ((await funderLiquity._getFirstTroveAddress()) !== funderLiquity.userAddress) {
+      let funderTrove = await funderLiquity.getTrove();
+
+      if (funderTrove.debtAfterReward.isZero) {
+        await funderLiquity.borrowQui(funderTrove, 1, priceBefore);
+        funderTrove = await funderLiquity.getTrove();
+      }
+
+      await funderLiquity.repayQui(funderTrove, funderTrove.debtAfterReward, priceBefore);
+    }
+
+    if ((await funderLiquity._getFirstTroveAddress()) !== funderLiquity.userAddress) {
+      throw new Error("didn't manage to hoist Funder's Trove to head of SortedCDPs");
+    }
+
+    await deployerLiquity.setPrice(0.001);
+
+    const initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
+
+    let numberOfTroves: BigNumber;
+    while ((numberOfTroves = await funderLiquity.getNumberOfTroves()).gt(1)) {
+      const numberOfTrovesToLiquidate = numberOfTroves.gt(10) ? 10 : numberOfTroves.sub(1);
+
+      console.log(`${numberOfTroves} Troves left.`);
+      await funderLiquity.liquidateMany(numberOfTrovesToLiquidate);
+    }
+
+    await deployerLiquity.setPrice(priceBefore);
+
+    if (!(await funderLiquity.getNumberOfTroves()).eq(1)) {
+      throw new Error("didn't manage to liquidate every Trove");
+    }
+
+    const funderTrove = await funderLiquity.getTrove();
+    const total = await funderLiquity.getTotal();
+
+    const collateralDifference = Difference.between(
+      total.collateralAfterReward,
+      funderTrove.collateralAfterReward
+    );
+    const debtDifference = Difference.between(total.debtAfterReward, funderTrove.debtAfterReward);
+
+    console.log();
+    console.log("Discrepancies:");
+    console.log(`Collateral: ${collateralDifference}`);
+    console.log(`Debt: ${debtDifference}`);
+
+    fs.appendFileSync(
+      "chaos.csv",
+      `${numberOfTroves},` +
+        `${initialNumberOfTroves.sub(1)},` +
+        `${total.collateralAfterReward},` +
+        `${collateralDifference.absoluteValue?.bigNumber},` +
+        `${debtDifference.absoluteValue?.bigNumber}\n`
+    );
   }
 );
 
