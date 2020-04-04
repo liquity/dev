@@ -1,11 +1,16 @@
-import React, { useState, useContext, useEffect, useCallback } from "react";
+import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
 import { Flex, Text, Box, Tooltip } from "rimble-ui";
 import { TransactionResponse } from "ethers/providers";
 
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-import { LiquityTransactionOverrides, parseLogs, logDescriptionToString } from "@liquity/lib";
+import {
+  LiquityTransactionOverrides,
+  parseLogs,
+  logDescriptionToString,
+  contractsToInterfaces
+} from "@liquity/lib";
 import { useLiquity } from "../hooks/Liquity";
 import { useToast } from "../hooks/ToastProvider";
 
@@ -184,8 +189,9 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
 }
 
 export const TransactionMonitor: React.FC = () => {
-  const { provider, interfaces } = useLiquity();
+  const { provider, contracts, account } = useLiquity();
   const [transactionState, setTransactionState] = useTransactionState();
+  const interfaces = useMemo(() => contractsToInterfaces(contracts), [contracts]);
 
   const id = transactionState.type !== "idle" ? transactionState.id : undefined;
   const hash =
@@ -233,7 +239,12 @@ export const TransactionMonitor: React.FC = () => {
 
           console.log(`Logs of tx ${hash}:`);
           parsedLogs.forEach(([contractName, logDescription]) =>
-            console.log(`  ${contractName}.${logDescriptionToString(logDescription)}`)
+            console.log(
+              `  ${contractName}.${logDescriptionToString(logDescription, {
+                [account]: ["user"],
+                ...interfaces
+              })}`
+            )
           );
 
           if (unparsedLogs.length > 0) {
@@ -271,7 +282,7 @@ export const TransactionMonitor: React.FC = () => {
         provider.removeListener("block", blockListener);
       };
     }
-  }, [provider, interfaces, id, hash, numberOfConfirmationsToWait, setTransactionState]);
+  }, [provider, account, interfaces, id, hash, numberOfConfirmationsToWait, setTransactionState]);
 
   useEffect(() => {
     if (transactionState.type === "confirmed") {

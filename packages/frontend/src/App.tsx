@@ -60,7 +60,7 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, provider, liquity } = useLiquity();
+  const { account, provider, liquity, contracts } = useLiquity();
   const storeState = useLiquityStore(provider, account, liquity);
 
   if (!storeState.loaded) {
@@ -68,8 +68,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   }
 
   // For console tinkering ;-)
-  (window as any).liquity = liquity;
-  (window as any).store = storeState.value;
+  Object.assign(window, { contracts, liquity, store: storeState.value });
 
   const {
     etherBalance,

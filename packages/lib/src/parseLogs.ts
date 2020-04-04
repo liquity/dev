@@ -35,7 +35,13 @@ export const parseLogs = (
 
 const VERY_BIG = bigNumberify(10).pow(9);
 
-export const logDescriptionToString = (logDescription: LogDescription) => {
+const substituteName = (address: string, names: { [address: string]: [string, Interface?] }) =>
+  address in names ? names[address][0] : address;
+
+export const logDescriptionToString = (
+  logDescription: LogDescription,
+  names?: { [address: string]: [string, Interface?] }
+) => {
   const prettyValues = Array.from(logDescription.values as ArrayLike<unknown>).map(value => {
     if (BigNumber.isBigNumber(value)) {
       if (value.gte(VERY_BIG)) {
@@ -44,7 +50,11 @@ export const logDescriptionToString = (logDescription: LogDescription) => {
         return value.toString();
       }
     } else if (typeof value === "string") {
-      return value === "0x0000000000000000000000000000000000000000" ? "address(0)" : value;
+      return value === "0x0000000000000000000000000000000000000000"
+        ? "address(0)"
+        : names
+        ? substituteName(value, names)
+        : value;
     } else {
       return String(value);
     }
