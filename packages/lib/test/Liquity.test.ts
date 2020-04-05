@@ -31,6 +31,20 @@ describe("Liquity", () => {
   let trove: Trove;
   let deposit: StabilityDeposit;
 
+  const sendToEach = async (users: Signer[], value: Decimalish) => {
+    const txCount = await provider.getTransactionCount(funder.getAddress());
+
+    return Promise.all(
+      users.map((user, i) =>
+        funder.sendTransaction({
+          to: user.getAddress(),
+          value: Decimal.from(value).bigNumber,
+          nonce: txCount + i
+        })
+      )
+    );
+  };
+
   before(async () => {
     [deployer, funder, user, ...otherUsers] = await ethers.signers();
     addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
@@ -98,20 +112,19 @@ describe("Liquity", () => {
     it("should fail to create an empty Trove", async () => {
       const emptyTrove = new Trove();
 
-      await expect(liquity.createTrove(emptyTrove, price)).to.eventually.be.rejected;
+      await expect(liquity.openTrove(emptyTrove, price)).to.eventually.be.rejected;
     });
 
     it("should fail to create a Trove with too little collateral", async () => {
       const troveWithTooLittleCollateral = new Trove({ collateral: 0.05 });
 
-      await expect(liquity.createTrove(troveWithTooLittleCollateral, price)).to.eventually.be
-        .rejected;
+      await expect(liquity.openTrove(troveWithTooLittleCollateral, price)).to.eventually.be.rejected;
     });
 
     it("should create a Trove with only collateral", async () => {
       const troveWithOnlyCollateral = new Trove({ collateral: 1 });
 
-      await liquity.createTrove(troveWithOnlyCollateral, price);
+      await liquity.openTrove(troveWithOnlyCollateral, price);
       trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(troveWithOnlyCollateral);
@@ -127,7 +140,7 @@ describe("Liquity", () => {
     it("should create a Trove that already has debt", async () => {
       const troveWithSomeDebt = new Trove({ collateral: 1, debt: 100 });
 
-      await liquity.createTrove(troveWithSomeDebt, price);
+      await liquity.openTrove(troveWithSomeDebt, price);
       trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(troveWithSomeDebt);
@@ -180,10 +193,10 @@ describe("Liquity", () => {
     });
 
     it("other user should make a Trove with very low ICR", async () => {
-      await otherLiquities[0].createTrove(new Trove({ collateral: 0.2233, debt: 39 }), price);
+      await otherLiquities[0].openTrove(new Trove({ collateral: 0.2233, debt: 39 }), price);
       const otherTrove = await otherLiquities[0].getTrove();
 
-      expect(otherTrove.collateralRatioAt(price).toString()).to.equal("1.145128205128205128");
+      expect(otherTrove.collateralRatio(price).toString()).to.equal("1.145128205128205128");
     });
 
     it("the price should take a dip", async () => {
@@ -234,21 +247,66 @@ describe("Liquity", () => {
       expect(trove).to.deep.equal(new Trove({ collateral: "2.223299999999999991", debt: 139 }));
       expect(deposit.isEmpty).to.be.true;
     });
+
+    describe("when people overstay", () => {
+      before(async () => {
+        // Deploy new instances of the contracts, for a clean slate
+        addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
+        [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
+          deployer,
+          user,
+          ...otherUsers.slice(0, 5)
+        ]);
+
+        await sendToEach(otherUsers, 2.1);
+
+        price = Decimal.from(200);
+        await deployerLiquity.setPrice(price);
+
+        // Use this account to print QUI
+        await liquity.openTrove(new Trove({ collateral: 10, debt: 500 }), price);
+
+        // otherLiquities[0-2] will be independent stability depositors
+        await liquity.sendQui(otherLiquities[0].userAddress!, 300);
+        await liquity.sendQui(otherLiquities[1].userAddress!, 100);
+        await liquity.sendQui(otherLiquities[2].userAddress!, 100);
+
+        // otherLiquities[3-4] will be Trove owners whose Troves get liquidated
+        await otherLiquities[3].openTrove(new Trove({ collateral: 2, debt: 300 }), price);
+        await otherLiquities[4].openTrove(new Trove({ collateral: 2, debt: 300 }), price);
+
+        await otherLiquities[0].depositQuiInStabilityPool(300);
+        await otherLiquities[1].depositQuiInStabilityPool(100);
+        // otherLiquities[2] doesn't deposit yet
+
+        // Tank the price so we can liquidate
+        price = Decimal.from(150);
+        await deployerLiquity.setPrice(price);
+
+        // Liquidate first victim
+        await liquity.liquidate(otherLiquities[3].userAddress!);
+        expect((await otherLiquities[3].getTrove()).isEmpty).to.be.true;
+
+        // Now otherLiquities[2] makes their deposit too
+        await otherLiquities[2].depositQuiInStabilityPool(100);
+
+        // Liquidate second victim
+        await liquity.liquidate(otherLiquities[4].userAddress!);
+        expect((await otherLiquities[4].getTrove()).isEmpty).to.be.true;
+
+        // Stability Pool is now empty
+        expect((await liquity.getQuiInStabilityPool()).toString()).to.equal("0");
+      });
+
+      // Currently failing due to a problem with the backend
+      it.skip("should still be able to withdraw remaining deposit", async () => {
+        for (const l of [otherLiquities[0], otherLiquities[1], otherLiquities[2]]) {
+          const stabilityDeposit = await l.getStabilityDeposit();
+          await l.withdrawQuiFromStabilityPool(stabilityDeposit.depositAfterLoss);
+        }
+      });
+    });
   });
-
-  const sendToEach = async (users: Signer[], value: Decimalish) => {
-    const txCount = await provider.getTransactionCount(funder.getAddress());
-
-    return Promise.all(
-      users.map((user, i) =>
-        funder.sendTransaction({
-          to: user.getAddress(),
-          value: Decimal.from(value).bigNumber,
-          nonce: txCount + i
-        })
-      )
-    );
-  };
 
   describe("Redemption", () => {
     before(async () => {
@@ -266,10 +324,10 @@ describe("Liquity", () => {
       await deployerLiquity.setPrice(price);
 
       await Promise.all([
-        liquity.createTrove(new Trove({ collateral: 20, debt: 100 }), price),
-        otherLiquities[0].createTrove(new Trove({ collateral: 1, debt: 10 }), price),
-        otherLiquities[1].createTrove(new Trove({ collateral: 1, debt: 20 }), price),
-        otherLiquities[2].createTrove(new Trove({ collateral: 1, debt: 30 }), price)
+        liquity.openTrove(new Trove({ collateral: 20, debt: 100 }), price),
+        otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 10 }), price),
+        otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 20 }), price),
+        otherLiquities[2].openTrove(new Trove({ collateral: 1, debt: 30 }), price)
       ]);
     });
 

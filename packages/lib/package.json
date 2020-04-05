@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "yarn run typechain && tsc --project tsconfig.dist.json",
+    "buidler": "buidler",
     "deploy": "buidler deploy",
     "deploy-warzone": "buidler deploy-warzone",
     "test": "buidler test",

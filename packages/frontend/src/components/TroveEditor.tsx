@@ -36,13 +36,13 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
   const collateralRatioAfterRewards =
     (editedTrove.collateralAfterReward.nonZero || editedTrove.debtAfterReward.nonZero) &&
-    editedTrove.collateralRatioAfterRewardsAt(price);
+    editedTrove.collateralRatioAfterRewards(price);
   const collateralRatioPctAfterRewards = new Percent(
     collateralRatioAfterRewards || { toString: () => "N/A" }
   );
   const pendingCollateralRatioChange = Difference.between(
-    editedTrove.collateralRatioAfterRewardsAt(price),
-    originalTrove.collateralRatioAt(price).finite
+    editedTrove.collateralRatioAfterRewards(price),
+    originalTrove.collateralRatio(price).finite
   );
   const pendingCollateralRatioChangePct = new Percent(pendingCollateralRatioChange);
 

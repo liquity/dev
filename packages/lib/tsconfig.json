@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["test", "types"],
+  "include": ["src", "test", "types"],
   "files": [
     "buidler.config.ts",
     "../../node_modules/@nomiclabs/buidler-web3/src/type-extensions.d.ts",
