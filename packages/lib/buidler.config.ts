@@ -1,4 +1,5 @@
 import fs from "fs";
+import "colors";
 
 import { Wallet, Signer } from "ethers";
 import { bigNumberify, BigNumber } from "ethers/utils";
@@ -7,7 +8,7 @@ import { NetworkConfig } from "@nomiclabs/buidler/types";
 
 import { deployAndSetupContracts, setSilent } from "./test/utils/deploy";
 import { Liquity, Trove } from "./src/Liquity";
-import { Decimal, Difference } from "./utils";
+import { Decimal, Difference, Decimalish, Percent } from "./utils";
 import { CDPManagerFactory } from "./types/ethers/CDPManagerFactory";
 import { PoolManagerFactory } from "./types/ethers/PoolManagerFactory";
 import { PriceFeedFactory } from "./types/ethers/PriceFeedFactory";
@@ -376,5 +377,73 @@ task(
     );
   }
 );
+
+task("check-sorting", "Check if Troves are sorted by ICR", async (_taskArgs, bre) => {
+  const shortenAddress = (address: string) => address.substr(0, 6) + "..." + address.substr(-4);
+
+  const troveToString = (address: string, trove: Trove, price: Decimalish) => {
+    return (
+      `[${shortenAddress(address)}]: ` +
+      `ICR = ${new Percent(trove.collateralRatioAfterRewards(price)).toString(2)}, ` +
+      `ICR w/o reward = ${new Percent(trove.collateralRatio(price)).toString(2)}, ` +
+      `coll = ${trove.collateral.toString(2)}, ` +
+      `debt = ${trove.debt.toString(2)}, ` +
+      `coll reward = ${trove.pendingCollateralReward.toString(2)}, ` +
+      `debt reward = ${trove.pendingDebtReward.toString(2)}`
+    );
+  };
+
+  const trovesAreSortedByICR = async (liquity: Liquity, price: Decimalish) => {
+    let current = await liquity._getFirstTroveAddress();
+
+    if (!current) {
+      // Empty list is sorted
+      return true;
+    }
+
+    let sorted = true;
+
+    let currentTrove = await liquity.getTrove(current);
+    console.log(`   ${troveToString(current, currentTrove, price)}`);
+
+    let next: string | undefined;
+
+    while ((next = await liquity._getNextTroveAddress(current))) {
+      const nextTrove = await liquity.getTrove(next);
+
+      if (
+        nextTrove
+          .collateralRatioAfterRewards(price)
+          .gt(currentTrove.collateralRatioAfterRewards(price))
+      ) {
+        console.log(`!! ${troveToString(next, nextTrove, price)}`.red);
+        sorted = false;
+      } else {
+        console.log(`   ${troveToString(next, nextTrove, price)}`);
+      }
+
+      current = next;
+      currentTrove = nextTrove;
+    }
+
+    return sorted;
+  };
+
+  const [deployer] = await bre.ethers.signers();
+
+  const addresses =
+    addressesOnNetwork[bre.network.name] ||
+    addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+
+  const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
+
+  const price = await deployerLiquity.getPrice();
+
+  if (!(await trovesAreSortedByICR(deployerLiquity, price))) {
+    throw new Error("not all Troves are sorted");
+  }
+
+  console.log("All Troves are sorted.");
+});
 
 export default config;

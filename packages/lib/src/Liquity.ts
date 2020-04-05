@@ -647,7 +647,15 @@ export class Liquity {
     return Promise.all(troves);
   }
 
-  _getFirstTroveAddress() {
-    return this.sortedCDPs.getFirst();
+  async _getFirstTroveAddress() {
+    const first = await this.sortedCDPs.getFirst();
+
+    return first !== addressZero ? first : undefined;
+  }
+
+  async _getNextTroveAddress(address: string) {
+    const next = await this.sortedCDPs.getNext(address);
+
+    return next !== addressZero ? next : undefined;
   }
 }
