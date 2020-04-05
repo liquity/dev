@@ -453,6 +453,92 @@ contract('PoolManager', async accounts => {
       assert.isAtMost(getDifference(stability_ETH_Difference, '-75000000000000000'), 100)
     })
 
+    // --- Tests that check any rounding error in accumulated CLVLoss in the SP "favors the Pool" ---
+
+    it("withdrawFromSP(): All depositors are able to withdraw from the SP to their account", async () => {
+      // Whale opens loan 
+      await cdpManager.addColl(accounts[999], accounts[999], { from: whale, value: moneyVals._100_Ether })
+      
+      // Future defaulter opens loan
+      await cdpManager.openLoan(moneyVals._100e18, accounts[0],{from: defaulter_1, value: moneyVals._1_Ether})
+ 
+      // 6 Accounts open loans and provide to SP
+      const depositors = [alice, bob, carol, dennis, erin, flyn]
+      for (account of depositors) {
+        await cdpManager.openLoan(moneyVals._100e18, account, {from: account, value: moneyVals._1_Ether})
+        await poolManager.provideToSP(moneyVals._100e18, {from: account} )
+      }
+      
+      await priceFeed.setPrice(moneyVals._100e18)
+      await cdpManager.liquidate(defaulter_1)
+  
+      // All depositors attempt to withdraw
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: alice})
+        assert.equal((await poolManager.deposit(alice)).toString(), '0')
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: bob})
+        assert.equal((await poolManager.deposit(alice)).toString(), '0')
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: carol})
+        assert.equal((await poolManager.deposit(alice)).toString(), '0')
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: dennis})
+        assert.equal((await poolManager.deposit(alice)).toString(), '0')
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: erin})
+        assert.equal((await poolManager.deposit(alice)).toString(), '0')
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: flyn})
+        assert.equal((await poolManager.deposit(alice)).toString(), '0')
+
+        const totalDeposits = (await stabilityPool.totalCLVDeposits()).toString()
+
+        assert.equal(totalDeposits, '0')
+    })
+
+    it("withdrawFromSP(): Each depositor withdraws an amount <= their (deposit - CLVLoss)", async () => {
+      // Whale opens loan 
+      await cdpManager.addColl(accounts[999], accounts[999], { from: whale, value: moneyVals._100_Ether })
+      
+      // Future defaulter opens loan
+      await cdpManager.openLoan(moneyVals._100e18, accounts[0],{from: defaulter_1, value: moneyVals._1_Ether})
+ 
+      // 6 Accounts open loans and provide to SP
+      const depositors = [alice, bob, carol, dennis, erin, flyn]
+      for (account of depositors) {
+        await cdpManager.openLoan(moneyVals._100e18, account, {from: account, value: moneyVals._1_Ether})
+        await poolManager.provideToSP(moneyVals._100e18, {from: account} )
+      }
+      
+      await priceFeed.setPrice(moneyVals._100e18)
+      await cdpManager.liquidate(defaulter_1)
+  
+      /* All depositors attempt to withdraw.  From a distribution of 100 CLV, each depositor receives
+      CLVLoss = 16.666666666666666666 CLV
+
+      and thus with a deposit of 100 CLV, each should withdraw 83.333333333333333333 CLV (in practice, slightly less due to rounding error)
+      */
+
+        const expectedWithdrawnCLVAmount = web3.utils.toBN('83333333333333333333')
+  
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: alice})
+        assert.isTrue((await clvToken.balanceOf(alice)).lte(expectedWithdrawnCLVAmount))
+        console.log((await clvToken.balanceOf(alice)).toString())
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: bob})
+        assert.isTrue((await clvToken.balanceOf(bob)).lte(expectedWithdrawnCLVAmount))
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: carol})
+        assert.isTrue((await clvToken.balanceOf(carol)).lte(expectedWithdrawnCLVAmount))
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: dennis})
+        assert.isTrue((await clvToken.balanceOf(dennis)).lte(expectedWithdrawnCLVAmount))
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: erin})
+        assert.isTrue((await clvToken.balanceOf(erin)).lte(expectedWithdrawnCLVAmount))
+        await poolManager.withdrawFromSP(moneyVals._100e18, {from: flyn})
+        assert.isTrue((await clvToken.balanceOf(flyn)).lte(expectedWithdrawnCLVAmount))
+
+        const totalDeposits = (await stabilityPool.totalCLVDeposits()).toString()
+
+        assert.equal(totalDeposits, '0')
+    })
+
+
+    // --- withdrawFromSPtoCDP ---
+
+
     it("withdrawFromSPtoCDP(): Applies CLVLoss to user's deposit, and redirects ETH reward to user's CDP", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
@@ -548,6 +634,89 @@ contract('PoolManager', async accounts => {
       // check Pool ETH values change by Alice's ETHGain, i.e 0.075 ETH
       assert.isAtMost(getDifference(active_ETH_Difference, '75000000000000000'), 100)
       assert.isAtMost(getDifference(stability_ETH_Difference, '-75000000000000000'), 100)
+    })
+
+    it("withdrawFromSPtoCDP(): All depositors are able to withdraw their ETH gain from the SP to their CDP", async () => {
+      // Whale opens loan 
+      await cdpManager.addColl(accounts[999], accounts[999], { from: whale, value: moneyVals._100_Ether })
+      
+      // Future defaulter opens loan
+      await cdpManager.openLoan(moneyVals._100e18, accounts[0],{from: defaulter_1, value: moneyVals._1_Ether})
+ 
+      // 6 Accounts open loans and provide to SP
+      const depositors = [alice, bob, carol, dennis, erin, flyn]
+      for (account of depositors) {
+        await cdpManager.openLoan(moneyVals._100e18, account, {from: account, value: moneyVals._1_Ether})
+        await poolManager.provideToSP(moneyVals._100e18, {from: account} )
+      }
+      
+      await priceFeed.setPrice(moneyVals._100e18)
+      await cdpManager.liquidate(defaulter_1)
+  
+      // All depositors attempt to withdraw
+        const tx1 = await poolManager.withdrawFromSPtoCDP(alice, alice, {from: alice})
+        assert.isTrue(tx1.receipt.status)
+        const tx2 = await poolManager.withdrawFromSPtoCDP(bob, bob, {from: bob})
+        assert.isTrue(tx1.receipt.status)
+        const tx3 = await poolManager.withdrawFromSPtoCDP(carol, carol, {from: carol})
+        assert.isTrue(tx1.receipt.status)
+        const tx4 = await poolManager.withdrawFromSPtoCDP(dennis, dennis, {from: dennis})
+        assert.isTrue(tx1.receipt.status)
+        const tx5 = await poolManager.withdrawFromSPtoCDP(erin, erin, {from: erin})
+        assert.isTrue(tx1.receipt.status)
+        const tx6 = await poolManager.withdrawFromSPtoCDP(flyn, flyn, {from: flyn})
+        assert.isTrue(tx1.receipt.status)
+    })
+
+    it("withdrawFromSPToCDP(): All depositors withdraw, each withdraw their correct ETH gain", async () => {
+      // Whale opens loan 
+      await cdpManager.addColl(accounts[999], accounts[999], { from: whale, value: moneyVals._100_Ether })
+      
+      // Future defaulter opens loan
+      await cdpManager.openLoan(moneyVals._100e18, accounts[0],{from: defaulter_1, value: moneyVals._1_Ether})
+ 
+      // 6 Accounts open loans and provide to SP
+      const depositors = [alice, bob, carol, dennis, erin, flyn]
+      for (account of depositors) {
+        await cdpManager.openLoan(moneyVals._100e18, account, {from: account, value: moneyVals._1_Ether})
+        await poolManager.provideToSP(moneyVals._100e18, {from: account} )
+      }
+      
+      await priceFeed.setPrice(moneyVals._100e18)
+      await cdpManager.liquidate(defaulter_1)
+  
+      /* All depositors attempt to withdraw their ETH gain to their CDP. From a distribution of 1 ETH, each depositor 
+      receives
+      ETH Gain = 0.1666... ETH
+
+      Thus, expected new collateral for each depositor with 1 Ether in their trove originally, is 1.1666... ETH
+      */
+        const expectedNewCollateral = web3.utils.toBN('1166666666666666666')
+  
+        await poolManager.withdrawFromSPtoCDP(alice, alice, {from: alice})
+        aliceColl = (await cdpManager.CDPs(alice))[1]
+        assert.isAtMost(getDifference(aliceColl, expectedNewCollateral), 100)
+     
+        await poolManager.withdrawFromSPtoCDP(bob, bob, {from: bob})
+        bobColl = (await cdpManager.CDPs(bob))[1]
+        assert.isAtMost(getDifference(bobColl, expectedNewCollateral), 100)
+      
+        await poolManager.withdrawFromSPtoCDP(carol, carol, {from: carol})
+        carolColl = (await cdpManager.CDPs(carol))[1]
+        assert.isAtMost(getDifference(carolColl, expectedNewCollateral), 100)
+        
+        await poolManager.withdrawFromSPtoCDP(dennis, dennis, {from: dennis})
+        dennisColl = (await cdpManager.CDPs(dennis))[1]
+        assert.isAtMost(getDifference(dennisColl, expectedNewCollateral), 100)
+       
+        await poolManager.withdrawFromSPtoCDP(erin, erin, {from: erin})
+        erinColl = (await cdpManager.CDPs(erin))[1]
+        assert.isAtMost(getDifference(erinColl, expectedNewCollateral), 100)
+   
+        await poolManager.withdrawFromSPtoCDP(flyn, flyn, {from: flyn})
+        flynColl = (await cdpManager.CDPs(flyn))[1]
+        assert.isAtMost(getDifference(flynColl, expectedNewCollateral), 100)
+      
     })
 
     it("offset(): increases S_ETH and S_CLV by correct amounts", async () => {
@@ -655,7 +824,9 @@ contract('PoolManager', async accounts => {
       assert.isAtMost(getDifference(bob_Reward, '416666666666666667'), 100)
     })
 
-    it('withdrawPenaltyFromSP(): After an unremoved overstay, a previous depositor can withdraw their deposit', async () => {
+    // --- SP overstay scenario tests ---
+
+    it('After an unremoved overstay, a previous depositor can withdraw their deposit', async () => {
       // --- SETUP ---
       // Whale withdraws 1500 CLV and provides to StabilityPool
       await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
@@ -695,10 +866,15 @@ contract('PoolManager', async accounts => {
       await poolManager.withdrawFromSP('2000000000000000000000', { from: whale })
 
       // Whale 2 should be able to withdraw
-      await poolManager.withdrawFromSP('2000000000000000000000', { from: whale_2 })
+      const tx = await poolManager.withdrawFromSP('2000000000000000000000', { from: whale_2 })
+      assert.isTrue(tx.receipt.status)
+
+      const whaleDeposit = (await poolManager.deposit(whale)).toString()
+      assert.equal(whaleDeposit, 0)
+
     })
 
-    it('withdrawPenaltyFromSP(): After an unremoved overstay, the raw CLV in the Pool updates correctly upon withdrawal', async () => {
+    it('After an unremoved overstay, the raw CLV in the Pool updates correctly upon withdrawal', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
@@ -749,7 +925,7 @@ contract('PoolManager', async accounts => {
       assert.equal(SP_CLV_afterCarolWithdraws, 0) 
     })
 
-    it.only('withdrawPenaltyFromSP(): After an unremoved overstay, new depositors have the correct CLV Loss upon a new liquidation', async () => {
+    it('After an unremoved overstay, new depositors have the correct CLV Loss upon a new liquidation', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
@@ -800,7 +976,7 @@ contract('PoolManager', async accounts => {
       assert.equal(carol_CLVLoss.toString(), moneyVals._50e18)
     })
 
-    it.only('withdrawPenaltyFromSP(): After an unremoved overstay, new depositors withdraw the correct amount of CLV after a new liquidation', async () => {
+    it('After an unremoved overstay, new depositors withdraw the correct amount of CLV after a new liquidation', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 

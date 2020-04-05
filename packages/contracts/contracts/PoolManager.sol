@@ -496,15 +496,15 @@ contract PoolManager is Ownable, IPoolManager {
         Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool.
         Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool */
 
-        // Division with correction 
-        uint CLVLossNumerator = debtToOffset.mul(1e18).add(lastCLVLossError_Offset);
+        // Division with corrections
+        uint CLVLossNumerator = debtToOffset.mul(1e18).sub(lastCLVLossError_Offset);
         uint ETHNumerator = collToAdd.mul(1e18).add(lastETHError_Offset);
        
-        uint CLVLossPerUnitStaked = CLVLossNumerator.div(totalCLVDeposits);
-        uint ETHGainPerUnitStaked = ETHNumerator.div(totalCLVDeposits);
+        uint CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits)).add(1);  // Add 1 to make the error in the quotient positive
+        uint ETHGainPerUnitStaked = ETHNumerator.div(totalCLVDeposits); // Error in quotient is negative
 
-        lastCLVLossError_Offset = CLVLossNumerator.sub(CLVLossPerUnitStaked.mul(totalCLVDeposits));
-        lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(totalCLVDeposits));
+        lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(totalCLVDeposits)).sub(CLVLossNumerator);
+        lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(totalCLVDeposits));  
 
         S_CLV = S_CLV.add(CLVLossPerUnitStaked); 
         emit S_CLVUpdated(S_CLV); 
