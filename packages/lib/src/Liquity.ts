@@ -20,6 +20,8 @@ interface Trovish {
   readonly debt?: Decimalish;
   readonly pendingCollateralReward?: Decimalish;
   readonly pendingDebtReward?: Decimalish;
+
+  readonly _stake?: Decimalish;
 }
 
 const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
@@ -31,6 +33,8 @@ export class Trove {
   readonly debt: Decimal;
   readonly pendingCollateralReward: Decimal;
   readonly pendingDebtReward: Decimal;
+
+  readonly _stake?: Decimal;
 
   get isEmpty() {
     return (
@@ -69,12 +73,14 @@ export class Trove {
     collateral = 0,
     debt = 0,
     pendingCollateralReward = 0,
-    pendingDebtReward = 0
+    pendingDebtReward = 0,
+    _stake = undefined
   }: Trovish = {}) {
     this.collateral = Decimal.from(collateral);
     this.debt = Decimal.from(debt);
     this.pendingCollateralReward = Decimal.from(pendingCollateralReward);
     this.pendingDebtReward = Decimal.from(pendingDebtReward);
+    this._stake = _stake ? Decimal.from(_stake) : undefined;
   }
 
   add({ collateral = 0, debt = 0, pendingCollateralReward = 0, pendingDebtReward = 0 }: Trovish) {
@@ -298,7 +304,8 @@ export class Liquity {
       collateral: new Decimal(cdp.coll),
       debt: new Decimal(cdp.debt),
       pendingCollateralReward,
-      pendingDebtReward
+      pendingDebtReward,
+      _stake: new Decimal(cdp.stake)
     });
   }
 
