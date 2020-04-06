@@ -605,12 +605,9 @@ contract CDPManager is Ownable, ICDPManager {
         address currentCDPuser = sortedCDPs.getLast(); 
 
         // Loop through the CDPs starting from the one with lowest collateral ratio until _amount of CLV is exchanged for collateral
-        while (remainingCLV > 0) {
+        while (remainingCLV > 0 && currentCDPuser != address(0)) {
             // Save the address of the CDP preceding the current one, before potentially modifying the list
             address nextUserToCheck = sortedCDPs.getPrev(currentCDPuser);
-
-            // Break the loop if there is no more active debt to cancel with the received CLV
-            if (activePool.getCLV() == 0) break;
 
             // Close CDPs along the way that turn out to be under-collateralized
             if (getCurrentICR(currentCDPuser, price) < MCR) {
@@ -640,7 +637,7 @@ contract CDPManager is Ownable, ICDPManager {
         uint remainingCLV = _CLVamount;
         address currentCDPuser = sortedCDPs.getLast();
 
-        while (remainingCLV > 0) {
+        while (remainingCLV > 0 && currentCDPuser != address(0)) {
             if (getCurrentICR(currentCDPuser, _price) >= MCR) {
                 uint CLVDebt = CDPs[currentCDPuser].debt.add(computePendingCLVDebtReward(currentCDPuser));
 
