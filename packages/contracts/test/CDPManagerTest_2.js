@@ -1066,6 +1066,33 @@ contract('CDPManager', async accounts => {
     const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
     assert.equal(dennis_CLVBalance_After, '133' + _18_zeros)
   })
+
+  it.only('redeemCollateral(): can redeem even if only CDPs with ICR < MCR have debt', async () => {
+    // --- SETUP ---
+
+    await cdpManager.openLoan('0', alice, { from: alice, value: _10_Ether })
+    await cdpManager.openLoan('100' + _18_zeros, bob, { from: bob, value: _1_Ether })
+
+    await clvToken.transfer(carol, '100' + _18_zeros, { from: bob })
+
+    const price = '100' + _18_zeros
+    await priceFeed.setPrice(price)
+
+    // --- TEST --- 
+
+    const carol_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(carol))
+    
+    const hintICR = await cdpManager.getICRofPartiallyRedeemedCDP('100' + _18_zeros, price)
+    const { 0: hint } = await sortedCDPs.findInsertPosition(hintICR, price, alice, alice)
+    await cdpManager.redeemCollateral('100' + _18_zeros, hint, hintICR, { from: carol, gasPrice: 0 })
+
+    const carol_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(carol))
+    const receivedETH = carol_ETHBalance_After.sub(carol_ETHBalance_Before)
+    assert.equal(receivedETH, '1' + _18_zeros)
+
+    const carol_CLVBalance_After = (await clvToken.balanceOf(carol)).toString()
+    assert.equal(carol_CLVBalance_After, '0')
+  })
 })
 
 contract('Reset chain state', async accounts => { })
