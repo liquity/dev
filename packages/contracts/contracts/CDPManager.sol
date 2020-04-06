@@ -568,7 +568,8 @@ contract CDPManager is Ownable, ICDPManager {
         }
 
         CDPs[_cdpUser].debt = newDebt;
-        CDPs[_cdpUser].coll = newColl; 
+        CDPs[_cdpUser].coll = newColl;
+        updateStakeAndTotalStakes(_cdpUser);
 
         // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()
         poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); 
