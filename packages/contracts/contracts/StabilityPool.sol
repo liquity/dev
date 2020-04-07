@@ -19,6 +19,7 @@ contract StabilityPool is Ownable, IStabilityPool {
     //  Only changes when users deposit/withdraw.
     uint256 public totalCLVDeposits; 
 
+    
     constructor() public {}
 
     // --- Contract setters ---
