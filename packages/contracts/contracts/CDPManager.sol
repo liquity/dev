@@ -405,10 +405,8 @@ contract CDPManager is Ownable, ICDPManager {
     }
    
     function liquidateNormalMode(address _user, uint price) internal returns (bool) {
-        /* If ICR < MCR, check whether ETH gains from the Stability Pool would bring the ICR above the MCR.
-        If so, don't liquidate */
-        
-        uint ICR = getNewICRFromPendingSPGain(_user, price);
+        // If ICR < MCR, don't liquidate 
+        uint ICR = getCurrentICR(_user, price);
         if (ICR > MCR) { return false; }
        
         // Apply the CDP's rewards and remove stake
@@ -433,7 +431,7 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     function liquidateRecoveryMode(address _user, uint price) internal returns (bool) {
-        uint ICR = getNewICRFromPendingSPGain(_user, price);
+        uint ICR = getCurrentICR(_user, price);
 
         // If ICR <= 100%, redistribute the CDP across all active CDPs
         if (ICR <= 1000000000000000000) {
@@ -754,20 +752,23 @@ contract CDPManager is Ownable, ICDPManager {
         return computeICR(currentETH, newCLVDebt, _price);
     } 
 
-    function getNewICRFromPendingSPGain(address _user, uint price) internal returns (uint) {
-        // Get rewards from direct distributions
-        uint pendingETHReward = computePendingETHReward(_user);
-        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
+    /*  Deprecrated function - liquidations now do not consider the pending SP gain, and
+    are now conditional only on the raw ICR. */
 
-        // Get ETH Gain from StabilityPool deposit
-        uint ETHGainFromSP = poolManager.getCurrentETHGain(_user);
+    // function getNewICRFromPendingSPGain(address _user, uint price) internal returns (uint) {
+    //     // Get rewards from direct distributions
+    //     uint pendingETHReward = computePendingETHReward(_user);
+    //     uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
+
+    //     // Get ETH Gain from StabilityPool deposit
+    //     uint ETHGainFromSP = poolManager.getCurrentETHGain(_user);
         
-        uint newColl = CDPs[_user].coll.add(pendingETHReward).add(ETHGainFromSP);
-        uint newCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);
+    //     uint newColl = CDPs[_user].coll.add(pendingETHReward).add(ETHGainFromSP);
+    //     uint newCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);
 
-        uint newICR = computeICR(newColl, newCLVDebt, price);
-        return newICR;
-    }
+    //     uint newICR = computeICR(newColl, newCLVDebt, price);
+    //     return newICR;
+    // }
 
     function computeICR(uint _coll, uint _debt, uint _price) view internal returns(uint) {
         // Check if the total debt is higher than 0, to avoid division by 0

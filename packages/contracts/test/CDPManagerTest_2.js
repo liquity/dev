@@ -790,119 +790,119 @@ contract('CDPManager', async accounts => {
     assert.isAtMost(getDifference(L_CLVDebt_AfterBobLiquidated, '98000000000000000000'), 100)
   })
 
-  it("liquidate(): CDP remains active if withdrawal of its StabilityPool ETH gain brings it above the MCR", async () => {
-    // --- SETUP ---
-    await cdpManager.addColl(whale, whale, { from: whale, value: _10_Ether })
-    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
-    await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _1_Ether })
+  // it("liquidate(): CDP remains active if withdrawal of its StabilityPool ETH gain brings it above the MCR", async () => {
+  //   // --- SETUP ---
+  //   await cdpManager.addColl(whale, whale, { from: whale, value: _10_Ether })
+  //   await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+  //   await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
+  //   await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
+  //   await cdpManager.addColl(dennis, dennis, { from: dennis, value: _1_Ether })
 
-    //  Bob and Carol and Dennis withdraw 180 CLV
-    await cdpManager.withdrawCLV('180000000000000000000', bob, { from: bob })
-    await cdpManager.withdrawCLV('180000000000000000000', carol, { from: carol })
-    await cdpManager.withdrawCLV('180000000000000000000', dennis, { from: dennis })
+  //   //  Bob and Carol and Dennis withdraw 180 CLV
+  //   await cdpManager.withdrawCLV('180000000000000000000', bob, { from: bob })
+  //   await cdpManager.withdrawCLV('180000000000000000000', carol, { from: carol })
+  //   await cdpManager.withdrawCLV('180000000000000000000', dennis, { from: dennis })
 
-    // --- TEST ---
+  //   // --- TEST ---
 
-    // Bob sends 180CLV to the StabilityPool
-    await poolManager.provideToSP('180000000000000000000', { from: bob })
+  //   // Bob sends 180CLV to the StabilityPool
+  //   await poolManager.provideToSP('180000000000000000000', { from: bob })
 
-    // price drops to 1ETH:100CLV, reducing Bob's ICR and Carol's ICR below MCR
-    await priceFeed.setPrice('100000000000000000000');
+  //   // price drops to 1ETH:100CLV, reducing Bob's ICR and Carol's ICR below MCR
+  //   await priceFeed.setPrice('100000000000000000000');
 
-    /*  Liquidate Dennis. His CLVDebt (180 CLV) is entirely offset against Bob's StabilityPool deposit (180 CLV). 
-    As the only StabilityPool depositor, Bob earns a gain of 1 ETH (the entire liquidated ETH from Dennis' CDP) */
-    await cdpManager.liquidate(dennis, { from: owner });
+  //   /*  Liquidate Dennis. His CLVDebt (180 CLV) is entirely offset against Bob's StabilityPool deposit (180 CLV). 
+  //   As the only StabilityPool depositor, Bob earns a gain of 1 ETH (the entire liquidated ETH from Dennis' CDP) */
+  //   await cdpManager.liquidate(dennis, { from: owner });
 
-    // log S_ETH and S_CLV
-    const S_ETH = await poolManager.S_ETH()
-    const S_CLV = await poolManager.S_CLV()
+  //   // log S_ETH and S_CLV
+  //   const S_ETH = await poolManager.S_ETH()
+  //   const S_CLV = await poolManager.S_CLV()
 
-    // console.log("S_ETH is " + S_ETH.toString())
-    // console.log("S_CLV is " + S_CLV.toString())
+  //   // console.log("S_ETH is " + S_ETH.toString())
+  //   // console.log("S_CLV is " + S_CLV.toString())
 
-    // Debugging SafeMath overflow:
-    //   S_CLV:  1000000000000000000  i.e. 1 CLV per unit staked (correct, bob should have 180 * 1 liquidated)
-    /*   S_ETH:     5555555555555556  i.e. 0.0055555.. ETH  per unit staked ( ?? ) 
-    ahhhh OK, so because of the rounding up, then when computing actual reward, it's slightly high, 
-    and higher than what's in the Pool. */
+  //   // Debugging SafeMath overflow:
+  //   //   S_CLV:  1000000000000000000  i.e. 1 CLV per unit staked (correct, bob should have 180 * 1 liquidated)
+  //   /*   S_ETH:     5555555555555556  i.e. 0.0055555.. ETH  per unit staked ( ?? ) 
+  //   ahhhh OK, so because of the rounding up, then when computing actual reward, it's slightly high, 
+  //   and higher than what's in the Pool. */
 
-    /* Now, attempt to liquidate Bob and Carol. Carol should be liquidated, but Bob's StabilityPool ETH gain should be 
-    withdrawn to his CDP, bringing his ICR > MCR. Thus, his CDP should remain active */
-    await cdpManager.liquidate(bob, { from: owner });
-    await cdpManager.liquidate(carol, { from: owner });
+  //   /* Now, attempt to liquidate Bob and Carol. Carol should be liquidated, but Bob's StabilityPool ETH gain should be 
+  //   withdrawn to his CDP, bringing his ICR > MCR. Thus, his CDP should remain active */
+  //   await cdpManager.liquidate(bob, { from: owner });
+  //   await cdpManager.liquidate(carol, { from: owner });
 
-    // check Bob's CDP is active, Carol's CDP is closed
-    const bob_CDP = await cdpManager.CDPs(bob)
-    const carol_CDP = await cdpManager.CDPs(carol)
-    const bob_Status = bob_CDP[3]
-    const carol_Status = carol_CDP[3]
+  //   // check Bob's CDP is active, Carol's CDP is closed
+  //   const bob_CDP = await cdpManager.CDPs(bob)
+  //   const carol_CDP = await cdpManager.CDPs(carol)
+  //   const bob_Status = bob_CDP[3]
+  //   const carol_Status = carol_CDP[3]
 
-    assert.equal(bob_Status, 1)     // Status enum 1 is 'active'
-    assert.equal(carol_Status, 2)   // Status enum 2 is 'closed'
+  //   assert.equal(bob_Status, 1)     // Status enum 1 is 'active'
+  //   assert.equal(carol_Status, 2)   // Status enum 2 is 'closed'
 
-    //check Bob is in sortedCDPs, and Carol is not
-    const bob_isInSortedList = await sortedCDPs.contains(bob)
-    const carol_isInSortedList = await sortedCDPs.contains(carol)
+  //   //check Bob is in sortedCDPs, and Carol is not
+  //   const bob_isInSortedList = await sortedCDPs.contains(bob)
+  //   const carol_isInSortedList = await sortedCDPs.contains(carol)
 
-    assert.isTrue(bob_isInSortedList)
-    assert.isFalse(carol_isInSortedList)
-  })
+  //   assert.isTrue(bob_isInSortedList)
+  //   assert.isFalse(carol_isInSortedList)
+  // })
 
-  it("liquidate(): if application of StabilityPool ETH gain would bring it above the MCR, CDP should remain active", async () => {
-    // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
-    await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _1_Ether })
+  // it("liquidate(): if application of StabilityPool ETH gain would bring it above the MCR, CDP should remain active", async () => {
+  //   // --- SETUP ---
+  //   await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+  //   await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
+  //   await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
+  //   await cdpManager.addColl(dennis, dennis, { from: dennis, value: _1_Ether })
 
-    //  Bob withdraws 150 CLV
-    await cdpManager.withdrawCLV('150000000000000000000', bob, { from: bob })
-    // Dennis withdraws 140 CLV
-    await cdpManager.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+  //   //  Bob withdraws 150 CLV
+  //   await cdpManager.withdrawCLV('150000000000000000000', bob, { from: bob })
+  //   // Dennis withdraws 140 CLV
+  //   await cdpManager.withdrawCLV('140000000000000000000', dennis, { from: dennis })
 
-    // --- TEST ---
+  //   // --- TEST ---
 
-    // Bob sends 150CLV to the StabilityPool
-    await poolManager.provideToSP('150000000000000000000', { from: bob })
+  //   // Bob sends 150CLV to the StabilityPool
+  //   await poolManager.provideToSP('150000000000000000000', { from: bob })
 
-    // price drops to 1ETH:100CLV, reducing Bob's ICR, and Dennis's ICR below MCR
-    await priceFeed.setPrice('100000000000000000000');
+  //   // price drops to 1ETH:100CLV, reducing Bob's ICR, and Dennis's ICR below MCR
+  //   await priceFeed.setPrice('100000000000000000000');
 
-    // Alice withdraws 90CLV, resulting in an ICR = 1.111...
-    await cdpManager.withdrawCLV('90000000000000000000', alice, { from: alice })
+  //   // Alice withdraws 90CLV, resulting in an ICR = 1.111...
+  //   await cdpManager.withdrawCLV('90000000000000000000', alice, { from: alice })
 
-    // check last CDP is bob
+  //   // check last CDP is bob
 
-    const lastCDP_Before = await sortedCDPs.getLast()
-    assert.equal(lastCDP_Before, bob)
+  //   const lastCDP_Before = await sortedCDPs.getLast()
+  //   assert.equal(lastCDP_Before, bob)
 
-    /*  Liquidate Dennis. His CLVDebt (140 CLV) is entirely offset against Bob's StabilityPool deposit (180 CLV). 
-    As the only StabilityPool depositor, Bob earns a gain of 1 ETH (the entire liquidated ETH from Dennis' CDP) */
-    await cdpManager.liquidate(dennis, { from: owner });
+  //   /*  Liquidate Dennis. His CLVDebt (140 CLV) is entirely offset against Bob's StabilityPool deposit (180 CLV). 
+  //   As the only StabilityPool depositor, Bob earns a gain of 1 ETH (the entire liquidated ETH from Dennis' CDP) */
+  //   await cdpManager.liquidate(dennis, { from: owner });
 
-    // check Dennis's CDP is closed
-    const dennis_CDP = await cdpManager.CDPs(dennis)
-    const dennis_Status = dennis_CDP[3]
-    assert.equal(dennis_Status, 2)     // Status enum 2 is 'closed'
+  //   // check Dennis's CDP is closed
+  //   const dennis_CDP = await cdpManager.CDPs(dennis)
+  //   const dennis_Status = dennis_CDP[3]
+  //   assert.equal(dennis_Status, 2)     // Status enum 2 is 'closed'
 
-    /* Now, attempt to liquidate Bob. Bob's StabilityPool ETH gain would be enough to bring his ICR > MCR.
+  //   /* Now, attempt to liquidate Bob. Bob's StabilityPool ETH gain would be enough to bring his ICR > MCR.
     
-    Thus, his CDP should remain active */
-    await cdpManager.liquidate(bob, { from: owner });
+  //   Thus, his CDP should remain active */
+  //   await cdpManager.liquidate(bob, { from: owner });
 
-    // check Bob's CDP is active
-    const bob_CDP = await cdpManager.CDPs(bob)
-    const bob_Status = bob_CDP[3]
-    assert.equal(bob_Status, 1)     // Status enum 1 is 'active'
+  //   // check Bob's CDP is active
+  //   const bob_CDP = await cdpManager.CDPs(bob)
+  //   const bob_Status = bob_CDP[3]
+  //   assert.equal(bob_Status, 1)     // Status enum 1 is 'active'
 
-    // Bob's ICR should now be: (2 * 100) / 150 = 1.3333...
+  //   // Bob's ICR should now be: (2 * 100) / 150 = 1.3333...
 
-    //check Bob is in sortedCDPs
-    const bob_isInSortedList = await sortedCDPs.contains(bob)
-    assert.isTrue(bob_isInSortedList)
-  })
+  //   //check Bob is in sortedCDPs
+  //   const bob_isInSortedList = await sortedCDPs.contains(bob)
+  //   assert.isTrue(bob_isInSortedList)
+  // })
 
   it('liquidateCDPs(): closes every CDP with ICR < MCR', async () => {
     // --- SETUP ---
