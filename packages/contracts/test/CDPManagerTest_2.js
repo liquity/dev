@@ -951,28 +951,36 @@ contract('CDPManager', async accounts => {
     assert.isFalse(carol_CDP_isInSortedList)
   })
 
-  it('getICRofPartiallyRedeemedCDP(): calculates what the ICR of the last CDP involved in a redemption will be', async () => {
+  it('getRedemptionHints(): gets the address of the first CDP and the final ICR of the last CDP involved in a redemption', async () => {
     // --- SETUP ---
-    await cdpManager.openLoan( '10' + _18_zeros, alice, { from: alice, value:  _1_Ether })
-    await cdpManager.openLoan( '20' + _18_zeros, bob,   { from: bob,   value:  _1_Ether })
-    await cdpManager.openLoan( '30' + _18_zeros, carol, { from: carol, value:  _1_Ether })
-    
-    const price = await priceFeed.getPrice()
-    assert.equal(price, '200' + _18_zeros)
+    await cdpManager.openLoan( '10' + _18_zeros, alice,  { from: alice,  value: _1_Ether })
+    await cdpManager.openLoan( '20' + _18_zeros, bob,    { from: bob,    value: _1_Ether })
+    await cdpManager.openLoan( '30' + _18_zeros, carol,  { from: carol,  value: _1_Ether })
+    // Dennis' CDP should be untouched by redemption, because its ICR will be < 110% after the price drop
+    await cdpManager.openLoan('180' + _18_zeros, dennis, { from: dennis, value: _1_Ether })
+
+    // Drop the price
+    const price = '100' + _18_zeros
+    await priceFeed.setPrice(price);
 
     // --- TEST ---
-    const newICR = await cdpManager.getICRofPartiallyRedeemedCDP('55' + _18_zeros, price)
-    assert.equal(newICR, '39' + _18_zeros)
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintICR
+    } = await cdpManager.getRedemptionHints('55' + _18_zeros, price)
+
+    assert.equal(firstRedemptionHint, carol)
+    assert.equal(partialRedemptionHintICR, '19' + _18_zeros)
   });
 
   it('redeemCollateral(): cancels the provided CLV with debt from CDPs with the lowest ICRs and sends an equivalent amount of Ether', async () => {
     // --- SETUP ---
 
-    await cdpManager.openLoan(  '5' + _18_zeros, alice,  { from: alice,  value:    _1_Ether })
-    await cdpManager.openLoan(  '8' + _18_zeros, bob,    { from: bob,    value:    _1_Ether })
-    await cdpManager.openLoan( '10' + _18_zeros, carol,  { from: carol,  value:    _1_Ether })
+    await cdpManager.openLoan(  '5' + _18_zeros, alice,  { from: alice,  value:   _1_Ether })
+    await cdpManager.openLoan(  '8' + _18_zeros, bob,    { from: bob,    value:   _1_Ether })
+    await cdpManager.openLoan( '10' + _18_zeros, carol,  { from: carol,  value:   _1_Ether })
     // start Dennis with a high ICR
-    await cdpManager.openLoan('150' + _18_zeros, dennis, { from: dennis, value:  _100_Ether })
+    await cdpManager.openLoan('150' + _18_zeros, dennis, { from: dennis, value: _100_Ether })
 
     const dennis_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(dennis))
 
@@ -984,15 +992,33 @@ contract('CDPManager', async accounts => {
 
     // --- TEST --- 
 
-    // Find hint for redeeming 20 CLV
-    const hintICR = await cdpManager.getICRofPartiallyRedeemedCDP('20' + _18_zeros, price)
+    // Find hints for redeeming 20 CLV
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintICR
+    } = await cdpManager.getRedemptionHints('20' + _18_zeros, price)
+
     // We don't need to use getApproxHint for this test, since it's not the subject of this
     // test case, and the list is very small, so the correct position is quickly found
-    const { 0: hint } = await sortedCDPs.findInsertPosition(hintICR, price, dennis, dennis)
+    const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
+      partialRedemptionHintICR,
+      price,
+      dennis,
+      dennis
+    )
 
     // Dennis redeems 20 CLV
     // Don't pay for gas, as it makes it easier to calculate the received Ether
-    await cdpManager.redeemCollateral('20' + _18_zeros, hint, hintICR, { from: dennis, gasPrice: 0 })
+    await cdpManager.redeemCollateral(
+      '20' + _18_zeros,
+      firstRedemptionHint,
+      partialRedemptionHint,
+      partialRedemptionHintICR,
+      {
+        from: dennis,
+        gasPrice: 0
+      }
+    )
 
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const bob_CDP_After = await cdpManager.CDPs(bob)
@@ -1035,20 +1061,53 @@ contract('CDPManager', async accounts => {
 
     // --- TEST --- 
 
-    const hintICR = await cdpManager.getICRofPartiallyRedeemedCDP('20' + _18_zeros, price)
-    const { 0: hint } = await sortedCDPs.findInsertPosition(hintICR, price, dennis, dennis)
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintICR
+    } = await cdpManager.getRedemptionHints('20' + _18_zeros, price)
+
+    const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
+      partialRedemptionHintICR,
+      price,
+      dennis,
+      dennis
+    )
 
     // Oops, another transaction gets in the way
     {
-      const hintICR = await cdpManager.getICRofPartiallyRedeemedCDP('1' + _18_zeros, price)
-      const { 0: hint } = await sortedCDPs.findInsertPosition(hintICR, price, dennis, dennis)
+      const {
+        firstRedemptionHint,
+        partialRedemptionHintICR
+      } = await cdpManager.getRedemptionHints('1' + _18_zeros, price)
+
+      const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
+        partialRedemptionHintICR,
+        price,
+        dennis,
+        dennis
+      )
 
       // Alice redeems 1 CLV from Carol's CDP
-      await cdpManager.redeemCollateral('1' + _18_zeros, hint, hintICR, { from: alice })
+      await cdpManager.redeemCollateral(
+        '1' + _18_zeros,
+        firstRedemptionHint,
+        partialRedemptionHint,
+        partialRedemptionHintICR,
+        { from: alice }
+      )
     }
 
     // Dennis tries to redeem 20 CLV
-    await cdpManager.redeemCollateral('20' + _18_zeros, hint, hintICR, { from: dennis, gasPrice: 0 })
+    await cdpManager.redeemCollateral(
+      '20' + _18_zeros,
+      firstRedemptionHint,
+      partialRedemptionHint,
+      partialRedemptionHintICR,
+      {
+        from: dennis,
+        gasPrice: 0
+      }
+    )
 
     // Since Alice already redeemed 1 CLV from Carol's CDP, Dennis was only able to redeem:
     //  - 9 CLV from Carol's
@@ -1067,7 +1126,7 @@ contract('CDPManager', async accounts => {
     assert.equal(dennis_CLVBalance_After, '133' + _18_zeros)
   })
 
-  it.only('redeemCollateral(): can redeem even if only CDPs with ICR < MCR have debt', async () => {
+  it("redeemCollateral(): can redeem even if there's no active debt", async () => {
     // --- SETUP ---
 
     await cdpManager.openLoan('0', alice, { from: alice, value: _10_Ether })
@@ -1078,13 +1137,23 @@ contract('CDPManager', async accounts => {
     const price = '100' + _18_zeros
     await priceFeed.setPrice(price)
 
+    // Liquidate Bob's CDP
+    await cdpManager.liquidateCDPs(1)
+
     // --- TEST --- 
 
     const carol_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(carol))
     
-    const hintICR = await cdpManager.getICRofPartiallyRedeemedCDP('100' + _18_zeros, price)
-    const { 0: hint } = await sortedCDPs.findInsertPosition(hintICR, price, alice, alice)
-    await cdpManager.redeemCollateral('100' + _18_zeros, hint, hintICR, { from: carol, gasPrice: 0 })
+    await cdpManager.redeemCollateral(
+      '100' + _18_zeros,
+      alice,
+      '0x0000000000000000000000000000000000000000',
+      0,
+      {
+        from: carol,
+        gasPrice: 0
+      }
+    )
 
     const carol_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(carol))
     const receivedETH = carol_ETHBalance_After.sub(carol_ETHBalance_Before)
@@ -1093,6 +1162,87 @@ contract('CDPManager', async accounts => {
     const carol_CLVBalance_After = (await clvToken.balanceOf(carol)).toString()
     assert.equal(carol_CLVBalance_After, '0')
   })
+
+  it("redeemCollateral(): doesn't touch CDPs with ICR < 110%", async () => {
+    // --- SETUP ---
+
+    await cdpManager.openLoan('100' + _18_zeros, alice, { from: alice, value: _10_Ether })
+    await cdpManager.openLoan('100' + _18_zeros, bob,   { from: bob,   value:  _1_Ether })
+
+    await clvToken.transfer(carol, '100' + _18_zeros, { from: bob })
+
+    // Put Bob's CDP below 110% ICR
+    const price = '100' + _18_zeros
+    await priceFeed.setPrice(price)
+
+    // --- TEST --- 
+
+    await cdpManager.redeemCollateral(
+      '100' + _18_zeros,
+      bob,
+      '0x0000000000000000000000000000000000000000',
+      0,
+      { from: carol }
+    );
+
+    // Alice's CDP was cleared of debt
+    const { debt: alice_Debt_After } = await cdpManager.CDPs(alice)
+    assert.equal(alice_Debt_After, '0')
+
+    // Bob's CDP was left untouched
+    const { debt: bob_Debt_After } = await cdpManager.CDPs(bob)
+    assert.equal(bob_Debt_After, '100' + _18_zeros)
+  });
+
+  it("redeemCollateral(): finds the last CDP with ICR == 110% even if there is more than one", async () => {
+    // --- SETUP ---
+
+    await cdpManager.openLoan('100' + _18_zeros, alice,  { from: alice,  value: _1_Ether })
+    await cdpManager.openLoan('100' + _18_zeros, bob,    { from: bob,    value: _1_Ether })
+    await cdpManager.openLoan('100' + _18_zeros, carol,  { from: carol,  value: _1_Ether })
+    await cdpManager.openLoan('101' + _18_zeros, dennis, { from: dennis, value: _1_Ether })
+
+    await clvToken.transfer(dennis, '100' + _18_zeros, { from: alice })
+    await clvToken.transfer(dennis, '100' + _18_zeros, { from: bob   })
+    await clvToken.transfer(dennis, '100' + _18_zeros, { from: carol })
+  
+    // This will put Dennis slightly below 110%, and everyone else exactly at 110%
+    const price = '110' + _18_zeros
+    await priceFeed.setPrice(price)
+
+    const orderOfCDPs = [];
+    let current = await sortedCDPs.getFirst();
+
+    while (current !== '0x0000000000000000000000000000000000000000') {
+      orderOfCDPs.push(current);
+      current = await sortedCDPs.getNext(current);
+    }  
+
+    assert.deepEqual(orderOfCDPs, [carol, bob, alice, dennis]);
+
+    // --- TEST --- 
+
+    await cdpManager.redeemCollateral(
+      '300' + _18_zeros,
+      carol, // try to trick redeemCollateral by passing a hint that doesn't exactly point to the
+             // last CDP with ICR == 110% (which would be Alice's)
+      '0x0000000000000000000000000000000000000000',
+      0,
+      { from: dennis }
+    );
+
+    const { debt: alice_Debt_After } = await cdpManager.CDPs(alice)
+    assert.equal(alice_Debt_After, '0')
+
+    const { debt: bob_Debt_After } = await cdpManager.CDPs(bob)
+    assert.equal(bob_Debt_After, '0')
+
+    const { debt: carol_Debt_After } = await cdpManager.CDPs(carol)
+    assert.equal(carol_Debt_After, '0')
+
+    const { debt: dennis_Debt_After } = await cdpManager.CDPs(dennis)
+    assert.equal(dennis_Debt_After, '101' + _18_zeros)
+  });
 })
 
 contract('Reset chain state', async accounts => { })

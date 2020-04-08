@@ -34,7 +34,7 @@ export class Trove {
   readonly pendingCollateralReward: Decimal;
   readonly pendingDebtReward: Decimal;
 
-  readonly _stake?: Decimal;
+  readonly _stake: Decimal;
 
   get isEmpty() {
     return (
@@ -74,13 +74,13 @@ export class Trove {
     debt = 0,
     pendingCollateralReward = 0,
     pendingDebtReward = 0,
-    _stake = undefined
+    _stake = collateral
   }: Trovish = {}) {
     this.collateral = Decimal.from(collateral);
     this.debt = Decimal.from(debt);
     this.pendingCollateralReward = Decimal.from(pendingCollateralReward);
     this.pendingDebtReward = Decimal.from(pendingDebtReward);
-    this._stake = _stake ? Decimal.from(_stake) : undefined;
+    this._stake = Decimal.from(_stake);
   }
 
   add({ collateral = 0, debt = 0, pendingCollateralReward = 0, pendingDebtReward = 0 }: Trovish) {
@@ -588,24 +588,26 @@ export class Liquity {
     return this.clvToken.transfer(toAddress, Decimal.from(amount).bigNumber, { ...overrides });
   }
 
-  async _findCollateralRatioOfPartiallyRedeemedTrove(exchangedQui: Decimal, price: Decimal) {
-    return new Decimal(
-      await this.cdpManager.getICRofPartiallyRedeemedCDP(exchangedQui.bigNumber, price.bigNumber)
-    );
-  }
-
-  async _findRedemptionHint(exchangedQui: Decimal, price: Decimal): Promise<[string, Decimal]> {
+  async _findRedemptionHints(
+    exchangedQui: Decimal,
+    price: Decimal
+  ): Promise<[string, string, Decimal]> {
     if (!Liquity.useHint) {
-      return [addressZero, Decimal.INFINITY];
+      return [addressZero, addressZero, Decimal.INFINITY];
     }
 
-    const collateralRatio = await this._findCollateralRatioOfPartiallyRedeemedTrove(
-      exchangedQui,
-      price
-    );
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintICR
+    } = await this.cdpManager.getRedemptionHints(exchangedQui.bigNumber, price.bigNumber);
+
+    const collateralRatio = new Decimal(partialRedemptionHintICR);
 
     return [
-      await this._findHintForCollateralRatio(collateralRatio, price, addressZero),
+      firstRedemptionHint,
+      collateralRatio.nonZero
+        ? await this._findHintForCollateralRatio(collateralRatio, price, addressZero)
+        : addressZero,
       collateralRatio
     ];
   }
@@ -618,11 +620,21 @@ export class Liquity {
     exchangedQui = Decimal.from(exchangedQui);
     price = Decimal.from(price);
 
-    const [hint, hintICR] = await this._findRedemptionHint(exchangedQui, price);
+    const [
+      firstRedemptionHint,
+      partialRedemptionHint,
+      partialRedemptionHintICR
+    ] = await this._findRedemptionHints(exchangedQui, price);
 
-    return this.cdpManager.redeemCollateral(exchangedQui.bigNumber, hint, hintICR.bigNumber, {
-      ...overrides
-    });
+    return this.cdpManager.redeemCollateral(
+      exchangedQui.bigNumber,
+      firstRedemptionHint,
+      partialRedemptionHint,
+      partialRedemptionHintICR.bigNumber,
+      {
+        ...overrides
+      }
+    );
   }
 
   async getLastTroves(numberOfTroves: number) {

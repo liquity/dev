@@ -63,10 +63,7 @@ describe("Liquity", () => {
     if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
       await funder.sendTransaction({
         to: user.getAddress(),
-        value: targetBalance
-          .add(txCost)
-          .sub(balance)
-          .add(1),
+        value: targetBalance.add(txCost).sub(balance).add(1),
         gasLimit
       });
 
@@ -232,7 +229,7 @@ describe("Liquity", () => {
         new Trove({
           collateral: 2,
           debt: 110,
-          pendingCollateralReward: "0.166043589743589742",
+          pendingCollateralReward: "0.166043589743589744",
           pendingDebtReward: 29
         })
       );
@@ -243,8 +240,14 @@ describe("Liquity", () => {
       trove = await liquity.getTrove();
       deposit = await liquity.getStabilityDeposit();
 
-      // With ABDKMath64x64, a microscopic amount of Ether can get lost
-      expect(trove).to.deep.equal(new Trove({ collateral: "2.223299999999999991", debt: 139 }));
+      expect(trove).to.deep.equal(
+        new Trove({
+          collateral: "2.223299999999999994",
+          debt: 139,
+          _stake: "2.052867274257567554"
+        })
+      );
+
       expect(deposit.isEmpty).to.be.true;
     });
 
@@ -331,13 +334,14 @@ describe("Liquity", () => {
       ]);
     });
 
-    it("should find a hint for partial redemption", async () => {
-      const hint = await liquity._findCollateralRatioOfPartiallyRedeemedTrove(
-        Decimal.from(55),
-        price
-      );
+    it("should find hints for redemption", async () => {
+      const redemptionHints = await liquity._findRedemptionHints(Decimal.from(55), price);
 
-      expect(hint.toString()).to.equal("39");
+      expect(redemptionHints).to.deep.equal([
+        otherLiquities[2].userAddress!,
+        liquity.userAddress!,
+        Decimal.from("39")
+      ]);
     });
 
     it("should redeem some collateral", async () => {
