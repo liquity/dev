@@ -623,7 +623,7 @@ contract CDPManager is Ownable, ICDPManager {
             currentCDPuser = _firstRedemptionHint;
 
             if (!sortedCDPs.validInsertPosition(MCR, price, currentCDPuser, sortedCDPs.getNext(currentCDPuser))) {
-                // _startingHint has gotten out-of-date. There is a good chance that another transaction redeemed from it,
+                // _firstRedemptionHint has gotten out-of-date. There is a good chance that another transaction redeemed from it,
                 // therefore the hint could be way off. It's better to restart the search from the end of the list.
                 currentCDPuser = sortedCDPs.getLast();
             }
