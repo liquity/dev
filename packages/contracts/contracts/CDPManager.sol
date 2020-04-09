@@ -591,6 +591,18 @@ contract CDPManager is Ownable, ICDPManager {
         return CLVLot;
     }
 
+    function validFirstRedemptionHint(address _firstRedemptionHint, uint _price) internal view returns (bool) {
+        if (_firstRedemptionHint == address(0) ||
+            !sortedCDPs.contains(_firstRedemptionHint) ||
+            getCurrentICR(_firstRedemptionHint, _price) < MCR
+        ) {
+            return false;
+        }
+
+        address nextCDP = sortedCDPs.getNext(_firstRedemptionHint);
+        return nextCDP == address(0) || getCurrentICR(nextCDP, _price) < MCR;
+    }
+
     /* Send _CLVamount CLV to the system and redeem the corresponding amount of collateral from as many CDPs as are needed to fill the redemption
      request.  Applies pending rewards to a CDP before reducing its debt and coll.
 
@@ -619,25 +631,18 @@ contract CDPManager is Ownable, ICDPManager {
         uint price = priceFeed.getPrice();
         address currentCDPuser;
 
-        if (_firstRedemptionHint != address(0)) {
+        if (validFirstRedemptionHint(_firstRedemptionHint, price)) {
             currentCDPuser = _firstRedemptionHint;
-
-            if (!sortedCDPs.validInsertPosition(MCR, price, currentCDPuser, sortedCDPs.getNext(currentCDPuser))) {
-                // _firstRedemptionHint has gotten out-of-date. There is a good chance that another transaction redeemed from it,
-                // therefore the hint could be way off. It's better to restart the search from the end of the list.
-                currentCDPuser = sortedCDPs.getLast();
-            }
         } else {
             currentCDPuser = sortedCDPs.getLast();
+
+            while (currentCDPuser != address(0) && getCurrentICR(currentCDPuser, price) < MCR) {
+                currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
+            }
         }
 
-        (currentCDPuser, ) = sortedCDPs.findInsertPosition(MCR, price, currentCDPuser, currentCDPuser);
-        // Searching for an insert position for MCR - 1 to ensure currentCDPuser (AKA prevId) is the last CDP with ICR >= MCR
-        // even if there are multiple CDPs with exactly ICR == MCR.
-        (currentCDPuser, ) = sortedCDPs.findInsertPosition(MCR - 1, price, currentCDPuser, currentCDPuser);
-
         // Loop through the CDPs starting from the one with lowest collateral ratio until _amount of CLV is exchanged for collateral
-        while (remainingCLV > 0 && currentCDPuser != address(0)) {
+        while (currentCDPuser != address(0) && remainingCLV > 0) {
             // Save the address of the CDP preceding the current one, before potentially modifying the list
             address nextUserToCheck = sortedCDPs.getPrev(currentCDPuser);
 
@@ -673,13 +678,13 @@ contract CDPManager is Ownable, ICDPManager {
         uint remainingCLV = _CLVamount;
         address currentCDPuser = sortedCDPs.getLast();
 
-        while (getCurrentICR(currentCDPuser, _price) < MCR && currentCDPuser != address(0)) {
+        while (currentCDPuser != address(0) && getCurrentICR(currentCDPuser, _price) < MCR) {
             currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
         }
 
         firstRedemptionHint = currentCDPuser;
 
-        while (remainingCLV > 0 && currentCDPuser != address(0)) {
+        while (currentCDPuser != address(0) && remainingCLV > 0) {
             uint CLVDebt = CDPs[currentCDPuser].debt.add(computePendingCLVDebtReward(currentCDPuser));
 
             if (CLVDebt > remainingCLV) {
