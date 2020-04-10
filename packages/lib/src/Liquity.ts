@@ -12,6 +12,12 @@ import { PriceFeed } from "../types/ethers/PriceFeed";
 import { PriceFeedFactory } from "../types/ethers/PriceFeedFactory";
 import { PoolManager } from "../types/ethers/PoolManager";
 import { PoolManagerFactory } from "../types/ethers/PoolManagerFactory";
+import { ActivePool } from "../types/ethers/ActivePool";
+import { ActivePoolFactory } from "../types/ethers/ActivePoolFactory";
+import { DefaultPool } from "../types/ethers/DefaultPool";
+import { DefaultPoolFactory } from "../types/ethers/DefaultPoolFactory";
+import { StabilityPool } from "../types/ethers/StabilityPool";
+import { StabilityPoolFactory } from "../types/ethers/StabilityPoolFactory";
 import { CLVToken } from "../types/ethers/CLVToken";
 import { CLVTokenFactory } from "../types/ethers/CLVTokenFactory";
 
@@ -27,6 +33,8 @@ interface Trovish {
 const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
   return collateral.mulDiv(price, debt);
 };
+
+type TroveChange = { property: "collateral" | "debt"; difference: Difference };
 
 export class Trove {
   readonly collateral: Decimal;
@@ -132,7 +140,7 @@ export class Trove {
     });
   }
 
-  whatChanged(that: Trove): { property: "collateral" | "debt"; difference: Difference } | undefined {
+  whatChanged(that: Trove): TroveChange | undefined {
     if (!that.collateralAfterReward.eq(this.collateralAfterReward)) {
       return {
         property: "collateral",
@@ -144,6 +152,27 @@ export class Trove {
         property: "debt",
         difference: Difference.between(that.debtAfterReward, this.debtAfterReward)
       };
+    }
+  }
+
+  apply({ property, difference }: TroveChange) {
+    switch (property) {
+      case "collateral":
+        if (difference.positive) {
+          return this.addCollateral(difference.absoluteValue!);
+        } else if (difference.absoluteValue!.lt(this.collateralAfterReward)) {
+          return this.subtractCollateral(difference.absoluteValue!);
+        } else {
+          return this.setCollateral(0);
+        }
+      case "debt":
+        if (difference.positive) {
+          return this.addDebt(difference.absoluteValue!);
+        } else if (difference.absoluteValue!.lt(this.debtAfterReward)) {
+          return this.subtractDebt(difference.absoluteValue!);
+        } else {
+          return this.setDebt(0);
+        }
     }
   }
 }
@@ -207,6 +236,23 @@ export type LiquityTransactionOverrides = {
   chainId?: number | Promise<number>;
 };
 
+const debouncingDelayMs = 50;
+
+const debounce = (listener: () => void) => {
+  let timeoutId: number | undefined = undefined;
+
+  return () => {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+
+    timeoutId = setTimeout(() => {
+      listener();
+      timeoutId = undefined;
+    }, debouncingDelayMs);
+  };
+};
+
 export class Liquity {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
@@ -218,24 +264,33 @@ export class Liquity {
   private readonly cdpManager: CDPManager;
   private readonly priceFeed: PriceFeed;
   private readonly sortedCDPs: SortedCDPs;
-  private readonly poolManager: PoolManager;
   private readonly clvToken: CLVToken;
+  private readonly poolManager: PoolManager;
+  private readonly activePool: ActivePool;
+  private readonly defaultPool: DefaultPool;
+  private readonly stabilityPool: StabilityPool;
 
   constructor(
     contracts: {
       cdpManager: CDPManager;
       priceFeed: PriceFeed;
       sortedCDPs: SortedCDPs;
-      poolManager: PoolManager;
       clvToken: CLVToken;
+      poolManager: PoolManager;
+      activePool: ActivePool;
+      defaultPool: DefaultPool;
+      stabilityPool: StabilityPool;
     },
     userAddress?: string
   ) {
     this.cdpManager = contracts.cdpManager;
     this.priceFeed = contracts.priceFeed;
     this.sortedCDPs = contracts.sortedCDPs;
-    this.poolManager = contracts.poolManager;
     this.clvToken = contracts.clvToken;
+    this.poolManager = contracts.poolManager;
+    this.activePool = contracts.activePool;
+    this.defaultPool = contracts.defaultPool;
+    this.stabilityPool = contracts.stabilityPool;
     this.userAddress = userAddress;
   }
 
@@ -246,7 +301,12 @@ export class Liquity {
 
     const cdpManager = CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider);
 
-    const [priceFeed, sortedCDPs, clvToken, poolManager] = await Promise.all([
+    const [
+      priceFeed,
+      sortedCDPs,
+      clvToken,
+      [poolManager, activePool, defaultPool, stabilityPool]
+    ] = await Promise.all([
       cdpManager.priceFeedAddress().then(address => {
         return PriceFeedFactory.connect(address, signerOrProvider);
       }),
@@ -257,11 +317,37 @@ export class Liquity {
         return CLVTokenFactory.connect(address, signerOrProvider);
       }),
       cdpManager.poolManagerAddress().then(address => {
-        return PoolManagerFactory.connect(address, signerOrProvider);
+        const poolManager = PoolManagerFactory.connect(address, signerOrProvider);
+
+        return Promise.all([
+          Promise.resolve(poolManager),
+
+          poolManager.activePoolAddress().then(address => {
+            return ActivePoolFactory.connect(address, signerOrProvider);
+          }),
+          poolManager.defaultPoolAddress().then(address => {
+            return DefaultPoolFactory.connect(address, signerOrProvider);
+          }),
+          poolManager.stabilityPoolAddress().then(address => {
+            return StabilityPoolFactory.connect(address, signerOrProvider);
+          })
+        ]);
       })
     ]);
 
-    return new Liquity({ cdpManager, priceFeed, sortedCDPs, poolManager, clvToken }, userAddress);
+    return new Liquity(
+      {
+        cdpManager,
+        priceFeed,
+        sortedCDPs,
+        poolManager,
+        activePool,
+        defaultPool,
+        stabilityPool,
+        clvToken
+      },
+      userAddress
+    );
   }
 
   private requireAddress(): string {
@@ -311,19 +397,30 @@ export class Liquity {
 
   watchTrove(onTroveChanged: (trove: Trove) => void, address = this.requireAddress()) {
     const { CDPCreated, CDPUpdated } = this.cdpManager.filters;
+    const { EtherSent } = this.activePool.filters;
 
     const cdpEventFilters = [CDPCreated(address, null), CDPUpdated(address, null, null, null)];
+    const etherSent = EtherSent(null, null);
 
     const cdpListener = () => {
       this.getTrove(address).then(onTroveChanged);
     };
 
+    const liquidationListener = debounce(cdpListener);
+
+    const etherSentListener = (toAddress: string, amount: any) => {
+      if (toAddress === this.defaultPool.address) {
+        liquidationListener();
+      }
+    };
+
     cdpEventFilters.forEach(filter => this.cdpManager.on(filter, cdpListener));
+    this.activePool.on(etherSent, etherSentListener);
 
-    // TODO: we might want to setup a low-freq periodic task to check for any new rewards
-
-    return () =>
+    return () => {
       cdpEventFilters.forEach(filter => this.cdpManager.removeListener(filter, cdpListener));
+      this.activePool.removeListener(etherSent, etherSentListener);
+    };
   }
 
   async _findHintForCollateralRatio(collateralRatio: Decimal, price: Decimal, address: string) {
