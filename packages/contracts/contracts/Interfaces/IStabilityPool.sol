@@ -29,7 +29,7 @@ interface IStabilityPool {
     
     function increaseTotalCLVDeposits(uint _amount) external;
 
-    function decreaseTotalCLVDeposits(uint _amount)  external;
+    function decreaseTotalCLVDeposits(uint _amount)  external returns (uint);
 
     function sendETH(address _account, uint _amount) external returns(bool);
 

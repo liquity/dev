@@ -68,15 +68,15 @@ contract PoolManager is Ownable, IPoolManager {
     uint public S_CLV;
     uint public S_ETH;
 
-    // Total pending CLV loss 'earned' by deposits, yet to be applied
-    uint public totalCLVLoss;
-
     // Map users to their individual snapshots of S_CLV and the S_ETH
     mapping (address => Snapshot) public snapshot;
 
     // Error trackers for the offset calculation
     uint lastETHError_Offset;
     uint lastCLVLossError_Offset;
+
+    // track the number of liquidations that have impacted the Stability Pool
+    uint public liquidationCounter;
 
     // --- Modifiers ---
 
@@ -269,6 +269,67 @@ contract PoolManager is Ownable, IPoolManager {
         return userDeposit.mul(CLVLossPerUnitStaked).div(1e18);
     }
 
+    
+    // function getCLVShare(uint deposit, uint CLVLoss) internal view returns(uint) {
+    //     uint normalCLVShare = deposit.sub(CLVLoss);
+    //     uint maxCLVShareWithOverstay = getMaxCLVShareWithOverstay(deposit, CLVLoss);
+    //     return DeciMath.getMin(normalCLVShare, maxCLVShareWithOverstay);
+    // }
+
+    // function getMaxCLVShareWithOverstay(uint deposit, uint CLVLoss) internal view returns (uint) {
+
+    //     uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
+    //     uint rawCLV = stabilityPool.getCLV();
+
+    //     /* Correct for the expected small positive error in S_CLV
+    //      TODO: 1Calculate a lower upper bound for the error in S_CLV, 1e9 is generous. */
+        
+    //     console.log("S_CLV is %s", S_CLV);
+
+    //     uint corrected_S_CLV;
+    //     if (S_CLV > 0) { corrected_S_CLV = S_CLV.sub(1e9); }
+
+    //     // /* wrong - totalCLVLoss needs to be tracked, not given by aggregate, as the multiplier includes deposits
+    //     // that came before CLV loss happened.  The total CLVLoss is sum(d(S-s0)), not sum(d)*S */
+    //     // uint totalCLVLoss = totalCLVDeposits.mul(corrected_S_CLV).div(1e18);
+     
+    //     console.log("totalCLVLoss %s", totalCLVLoss);
+    //     console.log("totalCLVDeposits %s", totalCLVDeposits);
+
+    //     /* with no overstayers in the system, (totalCLVDeposits - totalCLVLoss) == rawCLV in the Pool.
+    
+    //     With an overstayer present, (totalCLVDeposits - totalCLVLoss) > rawCLV in the Pool. totalCLVDeposits is bigger
+    //     than it should be, because the CLV contributed by the deposit has already been 'used up', yet the deposit
+    //     remains included in the total. */
+    //     uint correctionFraction;
+    //     uint maxCLVShare;
+    //     uint normalShare;
+
+    //     /* handle the case where an overstay "hangover" equals or exceeds the total CLV deposits.  In this case,
+    //     just set max withdrawal share to 0. */
+    //     if (totalCLVLoss >= totalCLVDeposits) {
+    //         // maxCLVShare = 0;
+    //     } else {
+    //         correctionFraction = rawCLV.mul(1e18).div(totalCLVDeposits.sub(totalCLVLoss));
+    //         normalShare = deposit.sub(CLVLoss);
+
+    //         console.log("rawCLV is %s", rawCLV);
+    //         console.log("totalCLVDeposits.sub(totalCLVLoss) is %s", totalCLVDeposits.sub(totalCLVLoss));
+    //         console.log("correctionFraction is %s", correctionFraction);
+    //         console.log("normal share is %s", normalShare);
+    //         console.log("normalShare.mul(correctionFraction).div(1e18) is %s", normalShare.mul(correctionFraction).div(1e18));
+
+
+    //         maxCLVShare = DeciMath.getMin(normalShare, normalShare.mul(correctionFraction).div(1e18));
+    //     }
+    //     return (maxCLVShare);
+    // }
+    
+
+    function poolContainsOverstays() internal view returns (bool) {
+        return true;
+    }
+
     // --- Internal StabilityPool functions --- 
 
     // Deposit _amount CLV from _address, to the Stability Pool.
@@ -296,24 +357,30 @@ contract PoolManager is Ownable, IPoolManager {
     function retrieveToUser(address _address) internal returns(uint[2] memory) {
         uint userDeposit = deposit[_address];
 
-        uint ETHShare = getCurrentETHGain(_address);
-        uint CLVLoss = getCurrentCLVLoss(_address);
+        uint ETHShare;
+        uint CLVLoss;
+
+        if (userDeposit == 0) { return [ETHShare, CLVLoss];}
+
+        ETHShare = getCurrentETHGain(_address);
+        CLVLoss = getCurrentCLVLoss(_address);
 
         uint CLVShare;
-        
-        stabilityPool.decreaseTotalCLVDeposits(userDeposit);
+    
+        uint totalCLVDeposits = stabilityPool.decreaseTotalCLVDeposits(userDeposit);
         
         /* If user's deposit is an 'overstay', they retrieve 0 CLV, and any 'excess' CLV Loss is fed
         back to the reward sum, so that it can be applied to all active deposits */
         if (CLVLoss > userDeposit) {
             CLVShare = 0;
 
-            uint excessCLVLoss = CLVLoss.sub(userDeposit);
-            uint excessCLVLossPerUnitStaked = excessCLVLoss.mul(1e18).div(stabilityPool.getTotalCLVDeposits());
-            S_CLV = S_CLV.add(excessCLVLossPerUnitStaked);
+            // add the excess CLVLoss back to the Pool
+            uint overstayedCLVLoss = CLVLoss.sub(userDeposit);
+            uint overstayedCLVLossPerUnitStaked = overstayedCLVLoss.mul(1e18).div(totalCLVDeposits);
+            S_CLV = S_CLV.add(overstayedCLVLossPerUnitStaked);
 
         } else {
-            CLVShare = userDeposit.sub(CLVLoss);
+            CLVShare = poolContainsOverstays() ? userDeposit.sub(CLVLoss) : 0;
         }
 
         // Update deposit and snapshots
@@ -328,9 +395,6 @@ contract PoolManager is Ownable, IPoolManager {
         // Send CLV to user, decrease CLV in Pool, and decrease total CLV Loss
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV()));
         stabilityPool.decreaseCLV(CLVShare);
-        console.log("totalCLVLoss before retrieve sub is %s", totalCLVLoss);
-        console.log("CLVloss before retrieve sub is %s", CLVLoss);
-        totalCLVLoss = totalCLVLoss.sub(CLVLoss);
         
         // Send ETH to user
         stabilityPool.sendETH(_address, ETHShare);
@@ -349,18 +413,19 @@ contract PoolManager is Ownable, IPoolManager {
       
         uint CLVShare;  
 
-        stabilityPool.decreaseTotalCLVDeposits(userDeposit); 
+        uint totalCLVDeposits = stabilityPool.decreaseTotalCLVDeposits(userDeposit);
       
         // If user's deposit is an 'overstay', they retrieve 0 CLV
         if (CLVLoss > userDeposit) {
             CLVShare = 0;
 
-            uint excessCLVLoss = CLVLoss.sub(userDeposit);
-            uint excessCLVLossPerUnitStaked = excessCLVLoss.mul(1e18).div(stabilityPool.getTotalCLVDeposits());
-            S_CLV = S_CLV.add(excessCLVLossPerUnitStaked);
+            // add the excess CLVLoss back to the Pool
+            uint overstayedCLVLoss = CLVLoss.sub(userDeposit);
+            uint overstayedCLVLossPerUnitStaked = overstayedCLVLoss.mul(1e18).div(totalCLVDeposits);
+            S_CLV = S_CLV.add(overstayedCLVLossPerUnitStaked);
 
         } else {
-            CLVShare = userDeposit.sub(CLVLoss);
+            CLVShare = poolContainsOverstays() ? userDeposit.sub(CLVLoss) : 0;
         }
 
         // Update deposit and snapshots
@@ -373,8 +438,7 @@ contract PoolManager is Ownable, IPoolManager {
         // Send CLV to user and decrease CLV in StabilityPool
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV())); // 45000 gas
         stabilityPool.decreaseCLV(CLVShare);
-        totalCLVLoss = totalCLVLoss.sub(CLVLoss);
-       
+
         // Pull ETHShare from StabilityPool, and send to CDP
         stabilityPool.sendETH(address(this), ETHShare); 
         cdpManager.addColl.value(ETHShare)(_address, _hint); 
@@ -532,9 +596,6 @@ contract PoolManager is Ownable, IPoolManager {
         S_ETH = S_ETH.add(ETHGainPerUnitStaked);
         emit S_ETHUpdated(S_ETH); 
 
-        totalCLVLoss = totalCLVLoss.add(debtToOffset);
-        console.log("totalCLVLoss after offset add is %s", totalCLVLoss);
-      
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLV(debtToOffset);  
         stabilityPool.decreaseCLV(debtToOffset); 

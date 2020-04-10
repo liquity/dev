@@ -1,7 +1,11 @@
 require('web3')
 
 class MoneyValues {
+  static _300_Finney = web3.utils.toWei('300', 'finney')
+  static _400_Finney = web3.utils.toWei('400', 'finney')
+  static _500_Finney = web3.utils.toWei('500', 'finney')
   static _1_Ether = web3.utils.toWei('1', 'ether')
+
   static _2_Ether = web3.utils.toWei('2', 'ether')
   static _3_Ether = web3.utils.toWei('2', 'ether')
   static _4_Ether = web3.utils.toWei('2', 'ether')
@@ -21,12 +25,13 @@ class MoneyValues {
   static _10billion_Ether = web3.utils.toWei('10000000000', 'ether')
   
   static _1e18 = web3.utils.toWei('1', 'ether')
-  static _5e18 = web3.utils.toWei('1', 'ether')
-  static _10e18 = web3.utils.toWei('1', 'ether')
+  static _5e18 = web3.utils.toWei('5', 'ether')
+  static _10e18 = web3.utils.toWei('10', 'ether')
   static _13e18 = web3.utils.toWei('13', 'ether')
   static _30e18 = web3.utils.toWei('30', 'ether')
-  static _40e18 = web3.utils.toWei('30', 'ether')
+  static _40e18 = web3.utils.toWei('40', 'ether')
   static _50e18 = web3.utils.toWei('50', 'ether')
+  static _55e18 = web3.utils.toWei('55', 'ether')
   static _80e18 =  web3.utils.toWei('80', 'ether')
   static _90e18 =  web3.utils.toWei('90', 'ether')
   static _100e18 = web3.utils.toWei('100', 'ether')
