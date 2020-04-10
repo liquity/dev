@@ -2,7 +2,7 @@ import fs from "fs";
 import "colors";
 
 import { Wallet, Signer } from "ethers";
-import { bigNumberify, BigNumber } from "ethers/utils";
+import { BigNumber } from "ethers/utils";
 import { task, usePlugin, BuidlerConfig } from "@nomiclabs/buidler/config";
 import { NetworkConfig } from "@nomiclabs/buidler/types";
 
@@ -273,6 +273,28 @@ task(
       await deployerLiquity.setPrice(price);
       price = await deployerLiquity.getPrice();
 
+      const trovesBefore = await getListOfTroves(deployerLiquity);
+      //const numberOfTrovesBefore = (await deployerLiquity.getNumberOfTroves()).toNumber();
+
+      console.log(`[deployer] liquidateUpTo(30)`);
+      await deployerLiquity.liquidateUpTo(30); // Anything higher may run out of gas
+
+      const trovesAfter = await getListOfTroves(deployerLiquity);
+      const liquidatedTroves = listDifference(trovesBefore, trovesAfter);
+      // const numberOfTrovesAfter = (await deployerLiquity.getNumberOfTroves()).toNumber();
+
+      if (liquidatedTroves.length > 0) {
+        totalNumberOfLiquidations += liquidatedTroves.length;
+        for (const liquidatedTrove of liquidatedTroves) {
+          console.log(`// Liquidated ${shortenAddress(liquidatedTrove)}`);
+        }
+      }
+      // if (numberOfTrovesAfter < numberOfTrovesBefore) {
+      //   const numberOfLiquidations = numberOfTrovesBefore - numberOfTrovesAfter;
+      //   totalNumberOfLiquidations += numberOfLiquidations;
+      //   console.log(`// Liquidated ${numberOfLiquidations} Trove(s)`);
+      // }
+
       for (const liquity of randomLiquities) {
         if (Math.random() < 0.5) {
           const trove = await liquity.getTrove();
@@ -344,27 +366,8 @@ task(
 
           await funderLiquity.sendQui(liquity.userAddress!, exchangedQui);
 
-          // const trovesBefore = await getListOfTroves(liquity);
-          const numberOfTrovesBefore = (await liquity.getNumberOfTroves()).toNumber();
-
           console.log(`[${shortenAddress(liquity.userAddress!)}] redeemCollateral(${exchangedQui})`);
           await liquity.redeemCollateral(exchangedQui, price);
-
-          // const trovesAfter = await getListOfTroves(liquity);
-          // const liquidatedTroves = listDifference(trovesBefore, trovesAfter);
-          const numberOfTrovesAfter = (await liquity.getNumberOfTroves()).toNumber();
-
-          // if (liquidatedTroves.length > 0) {
-          //   totalNumberOfLiquidations += liquidatedTroves.length;
-          //   for (const liquidatedTrove of liquidatedTroves) {
-          //     console.log(`// Liquidated ${shortenAddress(liquidatedTrove)}`);
-          //   }
-          // }
-          if (numberOfTrovesAfter < numberOfTrovesBefore) {
-            const numberOfLiquidations = numberOfTrovesBefore - numberOfTrovesAfter;
-            totalNumberOfLiquidations += numberOfLiquidations;
-            console.log(`// Liquidated ${numberOfLiquidations} Trove(s)`);
-          }
         }
 
         const quiBalance = await liquity.getQuiBalance();
@@ -435,7 +438,7 @@ task(
       const numberOfTrovesToLiquidate = numberOfTroves.gt(10) ? 10 : numberOfTroves.sub(1);
 
       console.log(`${numberOfTroves} Troves left.`);
-      await funderLiquity.liquidateMany(numberOfTrovesToLiquidate);
+      await funderLiquity.liquidateUpTo(numberOfTrovesToLiquidate);
     }
 
     await deployerLiquity.setPrice(priceBefore);

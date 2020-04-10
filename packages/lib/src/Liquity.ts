@@ -494,7 +494,7 @@ export class Liquity {
     return this.cdpManager.liquidate(address, { ...overrides });
   }
 
-  async liquidateMany(
+  async liquidateUpTo(
     maximumNumberOfTrovesToLiquidate: BigNumberish,
     overrides?: LiquityTransactionOverrides
   ) {

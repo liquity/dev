@@ -204,7 +204,7 @@ describe("Liquity", () => {
     });
 
     it("should liquidate other user's Trove", async () => {
-      await liquity.liquidateMany(1);
+      await liquity.liquidateUpTo(1);
       const otherTrove = await otherLiquities[0].getTrove();
 
       expect(otherTrove.isEmpty).to.be.true;
