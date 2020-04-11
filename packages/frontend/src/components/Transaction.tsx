@@ -12,7 +12,6 @@ import {
   contractsToInterfaces
 } from "@liquity/lib";
 import { useLiquity } from "../hooks/Liquity";
-import { useToast } from "../hooks/ToastProvider";
 
 const circularProgressbarStyle = {
   strokeWidth: 10,
@@ -28,8 +27,19 @@ type TransactionIdle = {
   type: "idle";
 };
 
+type TransactionFailed = {
+  type: "failed";
+  id: string;
+  error: unknown;
+};
+
 type TransactionWaitingForApproval = {
   type: "waitingForApproval";
+  id: string;
+};
+
+type TransactionCancelled = {
+  type: "cancelled";
   id: string;
 };
 
@@ -49,7 +59,9 @@ type TransactionConfirmed = {
 
 type TransactionState =
   | TransactionIdle
+  | TransactionFailed
   | TransactionWaitingForApproval
+  | TransactionCancelled
   | TransactionWaitingForConfirmations
   | TransactionConfirmed;
 
@@ -83,6 +95,12 @@ export const useMyTransactionState = (myId: string | RegExp): TransactionState =
     : { type: "idle" };
 };
 
+const hasMessage = (error: unknown): error is { message: string } =>
+  typeof error === "object" &&
+  error !== null &&
+  "message" in error &&
+  typeof (error as { message: unknown }).message === "string";
+
 type ButtonlikeProps = {
   variant?: "danger";
   onClick?: () => void;
@@ -111,7 +129,6 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
   numberOfConfirmationsToWait = 3,
   children
 }: TransactionProps<C>) {
-  const { addMessage } = useToast();
   const [transactionState, setTransactionState] = useTransactionState();
   const trigger = React.Children.only<C>(children);
 
@@ -139,23 +156,22 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
     } catch (error) {
       console.log(error);
 
-      addMessage("Transaction failed", {
-        variant: "failure",
-        secondaryMessage:
-          error instanceof Error
-            ? `${error.name !== "Error" ? `${error.name}: ` : ""}${error.message}`
-            : ""
-      });
-
-      setTransactionState({ type: "idle" });
+      if (hasMessage(error) && error.message.includes("User denied transaction signature")) {
+        setTransactionState({ type: "cancelled", id });
+      } else {
+        setTransactionState({ type: "failed", id, error });
+      }
     }
-  }, [send, id, setTransactionState, addMessage, numberOfConfirmationsToWait]);
+  }, [send, id, setTransactionState, numberOfConfirmationsToWait]);
 
   const failureReasons = (requires || [])
     .filter(([requirement]) => !requirement)
     .map(([, reason]) => reason);
 
-  if (transactionState.type !== "idle" && transactionState.type !== "confirmed") {
+  if (
+    transactionState.type === "waitingForApproval" ||
+    transactionState.type === "waitingForConfirmations"
+  ) {
     failureReasons.push("You must wait for confirmation");
   }
 
@@ -194,11 +210,20 @@ export const TransactionMonitor: React.FC = () => {
   const interfaces = useMemo(() => contractsToInterfaces(contracts), [contracts]);
 
   const id = transactionState.type !== "idle" ? transactionState.id : undefined;
+
   const hash =
     transactionState.type === "waitingForConfirmations" ? transactionState.hash : undefined;
+
   const numberOfConfirmationsToWait =
     transactionState.type === "waitingForConfirmations" || transactionState.type === "confirmed"
       ? transactionState.numberOfConfirmationsToWait
+      : undefined;
+
+  const confirmations =
+    transactionState.type === "waitingForConfirmations"
+      ? transactionState.confirmations
+      : transactionState.type === "confirmed"
+      ? numberOfConfirmationsToWait
       : undefined;
 
   useEffect(() => {
@@ -285,7 +310,11 @@ export const TransactionMonitor: React.FC = () => {
   }, [provider, account, interfaces, id, hash, numberOfConfirmationsToWait, setTransactionState]);
 
   useEffect(() => {
-    if (transactionState.type === "confirmed") {
+    if (
+      transactionState.type === "confirmed" ||
+      transactionState.type === "failed" ||
+      transactionState.type === "cancelled"
+    ) {
       let cancelled = false;
 
       setTimeout(() => {
@@ -304,15 +333,18 @@ export const TransactionMonitor: React.FC = () => {
     return null;
   }
 
-  const confirmations =
-    transactionState.type === "confirmed"
-      ? transactionState.numberOfConfirmationsToWait
-      : transactionState.confirmations;
-
   return (
     <Flex
       alignItems="center"
-      bg={transactionState.type === "confirmed" ? "success" : "primary"}
+      bg={
+        transactionState.type === "confirmed"
+          ? "success"
+          : transactionState.type === "cancelled"
+          ? "warning"
+          : transactionState.type === "failed"
+          ? "danger"
+          : "primary"
+      }
       p={3}
       pl={4}
       position="fixed"
@@ -323,18 +355,24 @@ export const TransactionMonitor: React.FC = () => {
     >
       <Box width="40px" height="40px" mr={3}>
         <CircularProgressbarWithChildren
-          value={confirmations}
-          maxValue={numberOfConfirmationsToWait}
+          value={confirmations || 0}
+          maxValue={numberOfConfirmationsToWait || 1}
           {...circularProgressbarStyle}
         >
           <Text fontSize={1} fontWeight={3} color="white">
-            {confirmations}/{numberOfConfirmationsToWait}
+            {transactionState.type === "failed" || transactionState.type === "cancelled"
+              ? "✖"
+              : `${confirmations}/${numberOfConfirmationsToWait}`}
           </Text>
         </CircularProgressbarWithChildren>
       </Box>
       <Text fontSize={3} color="white">
         {transactionState.type === "waitingForConfirmations"
-          ? `Waiting for confirmation`
+          ? "Waiting for confirmation"
+          : transactionState.type === "cancelled"
+          ? "Cancelled"
+          : transactionState.type === "failed"
+          ? "Failed"
           : "Confirmed"}
       </Text>
     </Flex>

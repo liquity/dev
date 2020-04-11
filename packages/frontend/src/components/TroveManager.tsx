@@ -35,10 +35,10 @@ const TroveAction: React.FC<TroveActionProps> = ({
   const change = originalTrove.whatChanged(editedTrove);
 
   useEffect(() => {
-    if (myTransactionState.type === "idle") {
-      setChangePending(false);
-    } else if (myTransactionState.type === "waitingForApproval") {
+    if (myTransactionState.type === "waitingForApproval") {
       setChangePending(true);
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
+      setChangePending(false);
     }
   }, [myTransactionState.type, setChangePending]);
 

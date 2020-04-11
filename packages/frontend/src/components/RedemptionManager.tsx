@@ -32,10 +32,10 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     myTransactionState.type === "confirmed";
 
   useEffect(() => {
-    if (myTransactionState.type === "idle") {
-      setChangePending(false);
-    } else if (myTransactionState.type === "waitingForApproval") {
+    if (myTransactionState.type === "waitingForApproval") {
       setChangePending(true);
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
+      setChangePending(false);
     } else if (tentativelyConfirmed) {
       setExchangedQui(Decimal.from(0));
       setChangePending(false);
