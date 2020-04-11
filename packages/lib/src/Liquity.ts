@@ -618,6 +618,31 @@ export class Liquity {
     });
   }
 
+  watchTotal(onTotalChanged: (total: Trove) => void) {
+    const { Transfer } = this.clvToken.filters;
+
+    const mint = Transfer(addressZero, null, null);
+    const burn = Transfer(null, addressZero, null);
+    const transferFromDefaultPool = Transfer(this.defaultPool.address, null, null);
+    const transferToDefaultPool = Transfer(null, this.defaultPool.address, null);
+
+    const clvEventFilters = [mint, burn, transferFromDefaultPool, transferToDefaultPool];
+
+    const totalListener = debounce(() => {
+      this.getTotal().then(onTotalChanged);
+    });
+
+    clvEventFilters.forEach(filter => this.clvToken.on(filter, totalListener));
+    this.activePool.provider.on(this.activePool.address, totalListener);
+    this.defaultPool.provider.on(this.defaultPool.address, totalListener);
+
+    return () => {
+      clvEventFilters.forEach(filter => this.clvToken.removeListener(filter, totalListener));
+      this.activePool.provider.removeListener(this.activePool.address, totalListener);
+      this.defaultPool.provider.removeListener(this.defaultPool.address, totalListener);
+    };
+  }
+
   async liquidate(address: string, overrides?: LiquityTransactionOverrides) {
     return this.cdpManager.liquidate(address, { ...overrides });
   }

@@ -63,6 +63,20 @@ export const useLiquity = () => {
 
 export const useLiquityStore = (provider: Web3Provider, account: string, liquity: Liquity) => {
   const getTotal = useCallback(() => liquity.getTotal(), [liquity]);
+  const watchTotal = useCallback(
+    (onTotalChanged: (total: Trove) => void) => {
+      const logged = (total: Trove) => {
+        console.log("Update total to:");
+        console.log(`{ collateral: ${total.collateral},`);
+        console.log(`  debt: ${total.debt},`);
+        console.log(`  pendingCollateralReward: ${total.pendingCollateralReward},`);
+        console.log(`  pendingDebtReward: ${total.pendingDebtReward} }`);
+        onTotalChanged(total);
+      };
+      return liquity.watchTotal(logged);
+    },
+    [liquity]
+  );
 
   const getNumberOfTroves = useCallback(() => liquity.getNumberOfTroves(), [liquity]);
   const watchNumberOfTroves = useCallback(
@@ -142,7 +156,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     numberOfTroves: useAsyncValue(getNumberOfTroves, watchNumberOfTroves),
     trove: useAsyncValue(getTrove, watchTrove),
     deposit: useAsyncValue(getStabilityDeposit, watchStabilityDeposit),
-    total: useAsyncValue(getTotal),
+    total: useAsyncValue(getTotal, watchTotal),
     quiInStabilityPool: useAsyncValue(getQuiInStabilityPool)
   });
 };
