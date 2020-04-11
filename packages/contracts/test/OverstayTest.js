@@ -136,11 +136,11 @@ contract('PoolManager', async accounts => {
       assert.isTrue(poolContainsOverstay)
     })
 
-    it.only('The oldest active cohort is updated with every liquidation', async () => {
+    it.only('The current cohort is updated with every liquidation', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
-      assert.equal((await poolManager.oldestActiveCohort()).toString(), '0')
+      assert.equal((await poolManager.currentCohort()).toString(), '0')
 
       // alice deposits 100 CLV to the SP
       await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
@@ -149,19 +149,33 @@ contract('PoolManager', async accounts => {
 
       await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _1_Ether })
       await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _1_Ether })
+      await cdpManager.addColl(defaulter_3, defaulter_3, { from: defaulter_2, value: _1_Ether })
       await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
       await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_2, { from: defaulter_2 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_3, { from: defaulter_3 })
 
       // Price drops
       await priceFeed.setPrice(moneyVals._100e18);
 
+      // Liquidation offset against SP - increments current cohort by 1
       await cdpManager.liquidate(defaulter_1, { from: owner })
 
-      assert.equal((await poolManager.oldestActiveCohort()).toString(), '1')
+      assert.equal((await poolManager.currentCohort()).toString(), '1')
 
+      // Liquidation is pure trove redistributon, no SP offset - no change to current cohort
       await cdpManager.liquidate(defaulter_2, { from: owner })
 
-      assert.equal((await poolManager.oldestActiveCohort()).toString(), '2')
+      assert.equal((await poolManager.currentCohort()).toString(), '1')
+
+      // Bob deposits 100 CLV to the SP
+      await cdpManager.addColl(bob, bob, { from: bob, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
+      await poolManager.provideToSP(moneyVals._100e18, { from: bob })
+
+      // Liquidation offset against SP - increments current cohort by 1
+      await cdpManager.liquidate(defaulter_3, { from: owner })
+
+      assert.equal((await poolManager.currentCohort()).toString(), '2')
     })
 
     it.only('New SP deposits are assigned to the correct cohorts', async () => {
@@ -185,21 +199,21 @@ contract('PoolManager', async accounts => {
 
       await cdpManager.liquidate(defaulter_1, { from: owner })
 
-       // bob deposits 100 CLV to the SP
-       await cdpManager.addColl(alice, alice, { from: bob, value: _10_Ether })
-       await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
-       await poolManager.provideToSP(moneyVals._100e18, { from: bob })
- 
-       assert.equal((await poolManager.userToCohort(bob)).toString(), '1')
+      // Bob deposits 100 CLV to the SP
+      await cdpManager.addColl(bob, bob, { from: bob, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
+      await poolManager.provideToSP(moneyVals._100e18, { from: bob })
 
-       await cdpManager.liquidate(defaulter_2, { from: owner })
+      assert.equal((await poolManager.userToCohort(bob)).toString(), '1')
 
-       // alice deposits 100 CLV to the SP
-       await cdpManager.addColl(alice, alice, { from: carol, value: _10_Ether })
-       await cdpManager.withdrawCLV(moneyVals._100e18, carol, { from: carol })
-       await poolManager.provideToSP(moneyVals._100e18, { from: carol })
- 
-       assert.equal((await poolManager.userToCohort(carol)).toString(), '2')
+      await cdpManager.liquidate(defaulter_2, { from: owner })
+
+      // Carol deposits 100 CLV to the SP
+      await cdpManager.addColl(carol, carol, { from: carol, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, carol, { from: carol })
+      await poolManager.provideToSP(moneyVals._100e18, { from: carol })
+
+      assert.equal((await poolManager.userToCohort(carol)).toString(), '2')
     })
 
     it.only('clearOverstayCohort(): It clears the overstayers from the oldest active cohort', async () => {
@@ -221,14 +235,14 @@ contract('PoolManager', async accounts => {
 
       await cdpManager.liquidate(defaulter_1, { from: owner })
 
-       // bob deposits 100 CLV to the SP
-       await cdpManager.addColl(alice, alice, { from: bob, value: _10_Ether })
-       await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
-       await poolManager.provideToSP(moneyVals._100e18, { from: bob })
+      // bob deposits 100 CLV to the SP
+      await cdpManager.addColl(bob, bob, { from: bob, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
+      await poolManager.provideToSP(moneyVals._100e18, { from: bob })
 
-       await cdpManager.liquidate(defaulter_2, { from: owner })
+      await cdpManager.liquidate(defaulter_2, { from: owner })
 
-      assert.equal((await poolManager.deposit(alice)).toString(), moneyVals_100e18)
+      assert.equal((await poolManager.deposit(alice)).toString(), moneyVals._100e18)
       await poolManager.clearOldestActiveCohort()
       assert.equal((await poolManager.deposit(alice)).toString(), '0')
     })
@@ -281,7 +295,7 @@ contract('PoolManager', async accounts => {
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: bob })
       assert.equal((await clvToken.balanceOf(bob)).toString(), '0')
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: carol })
-      assert.equal((await clvToken.balanceOf(carol)).toString(),'0')
+      assert.equal((await clvToken.balanceOf(carol)).toString(), '0')
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: dennis })
       assert.equal((await clvToken.balanceOf(dennis)).toString(), '0')
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: erin })
@@ -462,14 +476,14 @@ contract('PoolManager', async accounts => {
       // defaulter_2 liquidated. Expect Bob's CLVLoss = 25, Alice's CLVLoss = 125
       await cdpManager.liquidate(defaulter_2, { from: owner })
 
-     // Carol opens loan with 100 CLV and provides 100 CLV to SP
+      // Carol opens loan with 100 CLV and provides 100 CLV to SP
       await cdpManager.openLoan(moneyVals._100e18, carol, { from: carol, value: _10_Ether })
       await poolManager.provideToSP(moneyVals._100e18, { from: carol })
 
       // Alice fully withdraws.  Expect her 25 excess CLVLoss to be fed back the pool - 12.5 each for Bob and Carol
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: alice })
 
-     // Defaulter 3 liquidated. Bob should receive 20 CLV Loss, Carol should receive 20 CLV Loss
+      // Defaulter 3 liquidated. Bob should receive 20 CLV Loss, Carol should receive 20 CLV Loss
       await cdpManager.liquidate(defaulter_3, { from: owner })
 
       /* Bob, Carol fully withdraw.  Bob's CLV loss should be (25+12.5+20) = 57.5, Carol's CLV Loss should be (12.5+20) = 32.5.
@@ -481,7 +495,7 @@ contract('PoolManager', async accounts => {
       const carol_CLVBalance = (await clvToken.balanceOf(carol)).toString()
 
       assert.equal(bob_CLVBalance, '42500000000000000000')
-      assert.equal(carol_CLVBalance,'67500000000000000000')
+      assert.equal(carol_CLVBalance, '67500000000000000000')
     })
 
     // 6.

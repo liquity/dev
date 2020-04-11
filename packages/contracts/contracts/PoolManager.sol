@@ -346,8 +346,9 @@ contract PoolManager is Ownable, IPoolManager {
         // Record the deposit made by user
         deposit[_address] = _amount;
 
-        // Record the cohort in which the deposit is made
+        // Record the cohort in which the deposit is made, and add the depositor to the current cohort array
         userToCohort[_address] = currentCohort;
+        cohorts[currentCohort].push(_address);
     
         // Record new individual snapshots of the running totals S_CLV and S_ETH for the user
         snapshot[_address].CLV = S_CLV;
@@ -630,14 +631,17 @@ contract PoolManager is Ownable, IPoolManager {
     O(n) reads.
      */
     function cohortContainsOverstays(uint cohort) internal view returns (bool) {
+        console.log("cohort length: %s", cohorts[cohort].length);
         for (uint i = 0; i < cohorts[cohort].length; i++) {
             address user = cohorts[cohort][i];
-
+            console.log("user: %s, i: %s", user, i);
             // If the user has been added to a more recent cohort, or has zero deposit, skip them
             if (userToCohort[user] != cohort || deposit[user] == 0) { continue; }
 
             uint CLVLoss = getCurrentCLVLoss(user);
+            console.log("clv loss: %s", CLVLoss);
             uint userDeposit = deposit[user];
+             console.log("userDeposit: %s", userDeposit);
 
             // If one deposit within a cohort is an overstay, they all are
             if (CLVLoss >  userDeposit) {
@@ -649,7 +653,14 @@ contract PoolManager is Ownable, IPoolManager {
         }
     }
 
-    // O(n) reads
+    /* Search the oldest active cohort for an active and correctly-placed deposit.  
+    
+    If none, update the oldest active cohort.
+    
+    In practice, called at every withdrawal -- So, if the current oldest cohort contains no actives,
+    the next cohort will, as the withdrawal has, at most, removed one deposit from the current oldest cohort.
+    
+    O(n) reads. */ 
     function updateOldestActiveCohort() public returns (uint) {
         uint length = cohorts[oldestActiveCohort].length;
          
@@ -691,7 +702,7 @@ contract PoolManager is Ownable, IPoolManager {
             uint ETHGain = getCurrentETHGain(user);
             
             // Compute the overstayer's entitled ETHGain, and their excess ETHGain and CLVLoss
-            uint excessCLVLoss = userDeposit.sub(CLVLoss);
+            uint excessCLVLoss = CLVLoss.sub(userDeposit);
             totalExcessCLVLoss = totalExcessCLVLoss.add(excessCLVLoss);
         
             uint entitledETHGain  = ETHGain.mul(userDeposit).div(CLVLoss);
