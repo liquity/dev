@@ -1,47 +1,47 @@
-require('web3')
+const web3 = require('web3')
 
-class MoneyValues {
-  static _1_Ether = web3.utils.toWei('1', 'ether')
-  static _2_Ether = web3.utils.toWei('2', 'ether')
-  static _3_Ether = web3.utils.toWei('2', 'ether')
-  static _4_Ether = web3.utils.toWei('2', 'ether')
-  static _5_Ether = web3.utils.toWei('5', 'ether')
-  static _10_Ether = web3.utils.toWei('10', 'ether')
-  static _15_Ether = web3.utils.toWei('15', 'ether')
-  static _20_Ether = web3.utils.toWei('20', 'ether')
-  static _98_Ether = web3.utils.toWei('98', 'ether')
-  static _100_Ether = web3.utils.toWei('100', 'ether')
-  static _200_Ether = web3.utils.toWei('200', 'ether')
-  static _1000_Ether = web3.utils.toWei('1000', 'ether')
-  static _10000_Ether = web3.utils.toWei('10000', 'ether')
-  static _1million_Ether = web3.utils.toWei('1000000', 'ether')
-  static _10million_Ether = web3.utils.toWei('10000000', 'ether')
-  static _100million_Ether = web3.utils.toWei('100000000', 'ether')
-  static _1billion_Ether = web3.utils.toWei('1000000000', 'ether')
-  static _10billion_Ether = web3.utils.toWei('10000000000', 'ether')
+const MoneyValues = {
+  _1_Ether: web3.utils.toWei('1', 'ether'),
+  _2_Ether: web3.utils.toWei('2', 'ether'),
+  _3_Ether: web3.utils.toWei('2', 'ether'),
+  _4_Ether: web3.utils.toWei('2', 'ether'),
+  _5_Ether: web3.utils.toWei('5', 'ether'),
+  _10_Ether: web3.utils.toWei('10', 'ether'),
+  _15_Ether: web3.utils.toWei('15', 'ether'),
+  _20_Ether: web3.utils.toWei('20', 'ether'),
+  _98_Ether: web3.utils.toWei('98', 'ether'),
+  _100_Ether: web3.utils.toWei('100', 'ether'),
+  _200_Ether: web3.utils.toWei('200', 'ether'),
+  _1000_Ether: web3.utils.toWei('1000', 'ether'),
+  _10000_Ether: web3.utils.toWei('10000', 'ether'),
+  _1million_Ether: web3.utils.toWei('1000000', 'ether'),
+  _10million_Ether: web3.utils.toWei('10000000', 'ether'),
+  _100million_Ether: web3.utils.toWei('100000000', 'ether'),
+  _1billion_Ether: web3.utils.toWei('1000000000', 'ether'),
+  _10billion_Ether: web3.utils.toWei('10000000000', 'ether'),
   
-  static _1e18 = web3.utils.toWei('1', 'ether')
-  static _5e18 = web3.utils.toWei('1', 'ether')
-  static _10e18 = web3.utils.toWei('1', 'ether')
-  static _13e18 = web3.utils.toWei('13', 'ether')
-  static _30e18 = web3.utils.toWei('30', 'ether')
-  static _50e18 = web3.utils.toWei('50', 'ether')
-  static _80e18 =  web3.utils.toWei('80', 'ether')
-  static _90e18 =  web3.utils.toWei('90', 'ether')
-  static _100e18 = web3.utils.toWei('100', 'ether')
-  static _101e18 = web3.utils.toWei('101', 'ether')
-  static _150e18 = web3.utils.toWei('150', 'ether')
-  static _180e18 = web3.utils.toWei('180', 'ether')
-  static _200e18 = web3.utils.toWei('180', 'ether')
-  static _360e18 = web3.utils.toWei('360', 'ether')
-  static _450e18 = web3.utils.toWei('450', 'ether')
-  static _500e18 = web3.utils.toWei('500', 'ether')
-  static _900e18 = web3.utils.toWei('900', 'ether')
-  static _1000e18 = web3.utils.toWei('1000', 'ether')
-  static _1500e18 = web3.utils.toWei('1500', 'ether')
-  static _1700e18 = web3.utils.toWei('1700', 'ether')
-  static _1800e18 = web3.utils.toWei('1800', 'ether')
-  static _2000e18 = web3.utils.toWei('2000', 'ether')
+  _1e18: web3.utils.toWei('1', 'ether'),
+  _5e18: web3.utils.toWei('1', 'ether'),
+  _10e18: web3.utils.toWei('1', 'ether'),
+  _13e18: web3.utils.toWei('13', 'ether'),
+  _30e18: web3.utils.toWei('30', 'ether'),
+  _50e18: web3.utils.toWei('50', 'ether'),
+  _80e18:  web3.utils.toWei('80', 'ether'),
+  _90e18:  web3.utils.toWei('90', 'ether'),
+  _100e18: web3.utils.toWei('100', 'ether'),
+  _101e18: web3.utils.toWei('101', 'ether'),
+  _150e18: web3.utils.toWei('150', 'ether'),
+  _180e18: web3.utils.toWei('180', 'ether'),
+  _200e18: web3.utils.toWei('180', 'ether'),
+  _360e18: web3.utils.toWei('360', 'ether'),
+  _450e18: web3.utils.toWei('450', 'ether'),
+  _500e18: web3.utils.toWei('500', 'ether'),
+  _900e18: web3.utils.toWei('900', 'ether'),
+  _1000e18: web3.utils.toWei('1000', 'ether'),
+  _1500e18: web3.utils.toWei('1500', 'ether'),
+  _1700e18: web3.utils.toWei('1700', 'ether'),
+  _1800e18: web3.utils.toWei('1800', 'ether'),
+  _2000e18: web3.utils.toWei('2000', 'ether')
 }
 
 // TODO: Make classes for function export

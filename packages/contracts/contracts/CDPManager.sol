@@ -540,7 +540,15 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     // Redeem as much collateral as possible from _cdpUser's CDP in exchange for CLV up to _maxCLVamount
-    function redeemCollateralFromCDP(address _cdpUser, uint _maxCLVamount, uint _price, address _hint, uint _hintICR) internal returns (uint) {
+    function redeemCollateralFromCDP(
+        address _cdpUser,
+        uint _maxCLVamount,
+        uint _price,
+        address _partialRedemptionHint,
+        uint _partialRedemptionHintICR
+    )
+        internal returns (uint)
+    {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP
         uint CLVLot = DeciMath.getMin(_maxCLVamount, CDPs[_cdpUser].debt); 
         
@@ -560,9 +568,9 @@ contract CDPManager is Ownable, ICDPManager {
 
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
             // certainly result in running out of gas.
-            if (newICR != _hintICR) return 0;
+            if (newICR != _partialRedemptionHintICR) return 0;
 
-            sortedCDPs.reInsert(_cdpUser, newICR, _price, _hint, _hint); 
+            sortedCDPs.reInsert(_cdpUser, newICR, _price, _partialRedemptionHint, _partialRedemptionHint);
         }
 
         CDPs[_cdpUser].debt = newDebt;
@@ -582,6 +590,18 @@ contract CDPManager is Ownable, ICDPManager {
         return CLVLot;
     }
 
+    function validFirstRedemptionHint(address _firstRedemptionHint, uint _price) internal view returns (bool) {
+        if (_firstRedemptionHint == address(0) ||
+            !sortedCDPs.contains(_firstRedemptionHint) ||
+            getCurrentICR(_firstRedemptionHint, _price) < MCR
+        ) {
+            return false;
+        }
+
+        address nextCDP = sortedCDPs.getNext(_firstRedemptionHint);
+        return nextCDP == address(0) || getCurrentICR(nextCDP, _price) < MCR;
+    }
+
     /* Send _CLVamount CLV to the system and redeem the corresponding amount of collateral from as many CDPs as are needed to fill the redemption
      request.  Applies pending rewards to a CDP before reducing its debt and coll.
 
@@ -590,75 +610,97 @@ contract CDPManager is Ownable, ICDPManager {
 
     All CDPs that are redeemed from -- with the likely exception of the last one -- will end up with no debt left, therefore they will be
     reinsterted at the top of the sortedCDPs list. If the last CDP does have some remaining debt, the reinsertion could be anywhere in the
-    list, therefore it requires a hint. A frontend should use getICRofPartiallyRedeemedCDP() to calculate what the ICR of this CDP will be
+    list, therefore it requires a hint. A frontend should use getRedemptionHints() to calculate what the ICR of this CDP will be
     after redemption, and pass a hint for its position in the sortedCDPs list along with the ICR value that the hint was found for.
 
-    If another transaction modifies the list between calling getICRofPartiallyRedeemedCDP() and passing the hint to redeemCollateral(), it
+    If another transaction modifies the list between calling getRedemptionHints() and passing the hints to redeemCollateral(), it
     is very likely that the last (partially) redeemed CDP would end up with a different ICR than what the hint is for. In this case the
     redemption will stop after the last completely redeemed CDP and the sender will keep the remaining CLV amount, which they can attempt
     to redeem later.
      */
-    function redeemCollateral(uint _CLVamount, address _hint, uint _hintICR) public returns (bool) {
+    function redeemCollateral(
+        uint _CLVamount,
+        address _firstRedemptionHint,
+        address _partialRedemptionHint,
+        uint _partialRedemptionHintICR
+    )
+        public returns (bool)
+    {
         uint remainingCLV = _CLVamount;
-        uint price = priceFeed.getPrice(); 
-        address currentCDPuser = sortedCDPs.getLast(); 
+        uint price = priceFeed.getPrice();
+        address currentCDPuser;
+
+        if (validFirstRedemptionHint(_firstRedemptionHint, price)) {
+            currentCDPuser = _firstRedemptionHint;
+        } else {
+            currentCDPuser = sortedCDPs.getLast();
+
+            while (currentCDPuser != address(0) && getCurrentICR(currentCDPuser, price) < MCR) {
+                currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
+            }
+        }
 
         // Loop through the CDPs starting from the one with lowest collateral ratio until _amount of CLV is exchanged for collateral
-        while (remainingCLV > 0) {
+        while (currentCDPuser != address(0) && remainingCLV > 0) {
             // Save the address of the CDP preceding the current one, before potentially modifying the list
             address nextUserToCheck = sortedCDPs.getPrev(currentCDPuser);
 
-            // Break the loop if there is no more active debt to cancel with the received CLV
-            if (activePool.getCLV() == 0) break;
+            applyPendingRewards(currentCDPuser);
 
-            // Close CDPs along the way that turn out to be under-collateralized
-            if (getCurrentICR(currentCDPuser, price) < MCR) {
-                liquidate(currentCDPuser);
-            }
-            else {
-                applyPendingRewards(currentCDPuser);
+            uint CLVLot = redeemCollateralFromCDP(
+                currentCDPuser,
+                remainingCLV,
+                price,
+                _partialRedemptionHint,
+                _partialRedemptionHintICR
+            );
 
-                uint CLVLot = redeemCollateralFromCDP(currentCDPuser, remainingCLV, price, _hint, _hintICR);
-                if (CLVLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last CDP
+            if (CLVLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last CDP
 
-                remainingCLV = remainingCLV.sub(CLVLot); 
-            }
-
+            remainingCLV = remainingCLV.sub(CLVLot);
             currentCDPuser = nextUserToCheck;
         }
     }
 
     // --- Helper functions ---
 
-    /* getICRofPartiallyRedeemedCDP() - Helper function for redeemCollateral().
+    /* getRedemptionHints() - Helper function for redeemCollateral().
      *
-     * Find the last CDP that will modified by calling redeemCollateral() with the same _CLVamount
-     * and _price, and calculate what its new ICR will be after the redemption.
+     * Find the first and last CDPs that will modified by calling redeemCollateral() with the same _CLVamount and _price,
+     * and return the address of the first one and the final ICR of the last one.
      */
-    function getICRofPartiallyRedeemedCDP(uint _CLVamount, uint _price) public view returns (uint) {
+    function getRedemptionHints(uint _CLVamount, uint _price)
+        public
+        view
+        returns (address firstRedemptionHint, uint partialRedemptionHintICR)
+    {
         uint remainingCLV = _CLVamount;
         address currentCDPuser = sortedCDPs.getLast();
 
-        while (remainingCLV > 0) {
-            if (getCurrentICR(currentCDPuser, _price) >= MCR) {
-                uint CLVDebt = CDPs[currentCDPuser].debt.add(computePendingCLVDebtReward(currentCDPuser));
+        while (currentCDPuser != address(0) && getCurrentICR(currentCDPuser, _price) < MCR) {
+            currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
+        }
 
-                if (CLVDebt > remainingCLV) {
-                    uint ETH = CDPs[currentCDPuser].coll.add(computePendingETHReward(currentCDPuser));
-                    uint newDebt = CLVDebt.sub(remainingCLV);
+        firstRedemptionHint = currentCDPuser;
 
-                    uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
+        while (currentCDPuser != address(0) && remainingCLV > 0) {
+            uint CLVDebt = CDPs[currentCDPuser].debt.add(computePendingCLVDebtReward(currentCDPuser));
 
-                    return computeICR(newColl, newDebt, _price);
-                } else {
-                    remainingCLV = remainingCLV.sub(CLVDebt);
-                }
+            if (CLVDebt > remainingCLV) {
+                uint ETH = CDPs[currentCDPuser].coll.add(computePendingETHReward(currentCDPuser));
+                uint newDebt = CLVDebt.sub(remainingCLV);
+
+                uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
+
+                partialRedemptionHintICR = computeICR(newColl, newDebt, _price);
+
+                break;
+            } else {
+                remainingCLV = remainingCLV.sub(CLVDebt);
             }
 
             currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
         }
-
-        return 0; /* We use 0 (which is not a valid ICR) to indicate no partial redemption */
     }
 
      /* getApproxHint() - return address of a CDP that is, on average, (length / numTrials) positions away in the 
