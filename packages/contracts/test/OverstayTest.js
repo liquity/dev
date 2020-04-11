@@ -93,6 +93,146 @@ contract('PoolManager', async accounts => {
 
       await connectContracts(contracts, registeredAddresses)
     })
+
+    // --- Overstay Cohort Functionality ---
+
+    it.only('poolContainsOverstays(): returns true if there is an overstay', async () => {
+      // whale supports TCR
+      await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
+
+      // alice deposits 100 CLV to the SP
+      await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, alice, { from: alice })
+      await poolManager.provideToSP(moneyVals._100e18, { from: alice })
+
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _1_Ether })
+      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _1_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_2, { from: defaulter_2 })
+
+      // Price drops
+      await priceFeed.setPrice(moneyVals._100e18);
+
+      // defaulter_1 liquidated. 100 CLV  absorbed by Pool, which empties it.  Alice's CLVLoss = 100.
+      await cdpManager.liquidate(defaulter_1, { from: owner })
+
+      // Bob, carol, dennis, erin, flyn open loans, withdraws 100 CLV and deposits to Stability Pool
+      await cdpManager.openLoan(moneyVals._100e18, bob, { from: bob, value: _10_Ether })
+      await cdpManager.openLoan(moneyVals._100e18, carol, { from: carol, value: _10_Ether })
+      await cdpManager.openLoan(moneyVals._100e18, dennis, { from: dennis, value: _10_Ether })
+      await cdpManager.openLoan(moneyVals._100e18, erin, { from: erin, value: _10_Ether })
+      await cdpManager.openLoan(moneyVals._100e18, flyn, { from: flyn, value: _10_Ether })
+
+      await poolManager.provideToSP(moneyVals._100e18, { from: bob })
+      await poolManager.provideToSP(moneyVals._100e18, { from: carol })
+      await poolManager.provideToSP(moneyVals._100e18, { from: dennis })
+      await poolManager.provideToSP(moneyVals._100e18, { from: erin })
+      await poolManager.provideToSP(moneyVals._100e18, { from: flyn })
+
+      // Defaulter 2 liquidated. Expect Alice's CLVLoss > 100, overstay.
+      await cdpManager.liquidate(defaulter_2, { from: owner })
+
+      const poolContainsOverstay = await poolManager.poolContainsOverstays()
+      assert.isTrue(poolContainsOverstay)
+    })
+
+    it.only('The oldest active cohort is updated with every liquidation', async () => {
+      // whale supports TCR
+      await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
+
+      assert.equal((await poolManager.oldestActiveCohort()).toString(), '0')
+
+      // alice deposits 100 CLV to the SP
+      await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, alice, { from: alice })
+      await poolManager.provideToSP(moneyVals._100e18, { from: alice })
+
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _1_Ether })
+      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _1_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_2, { from: defaulter_2 })
+
+      // Price drops
+      await priceFeed.setPrice(moneyVals._100e18);
+
+      await cdpManager.liquidate(defaulter_1, { from: owner })
+
+      assert.equal((await poolManager.oldestActiveCohort()).toString(), '1')
+
+      await cdpManager.liquidate(defaulter_2, { from: owner })
+
+      assert.equal((await poolManager.oldestActiveCohort()).toString(), '2')
+    })
+
+    it.only('New SP deposits are assigned to the correct cohorts', async () => {
+      // whale supports TCR
+      await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
+
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _1_Ether })
+      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _1_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_2, { from: defaulter_2 })
+
+      // alice deposits 100 CLV to the SP
+      await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, alice, { from: alice })
+      await poolManager.provideToSP(moneyVals._100e18, { from: alice })
+
+      assert.equal((await poolManager.userToCohort(alice)).toString(), '0')
+
+      // Price drops
+      await priceFeed.setPrice(moneyVals._100e18);
+
+      await cdpManager.liquidate(defaulter_1, { from: owner })
+
+       // bob deposits 100 CLV to the SP
+       await cdpManager.addColl(alice, alice, { from: bob, value: _10_Ether })
+       await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
+       await poolManager.provideToSP(moneyVals._100e18, { from: bob })
+ 
+       assert.equal((await poolManager.userToCohort(bob)).toString(), '1')
+
+       await cdpManager.liquidate(defaulter_2, { from: owner })
+
+       // alice deposits 100 CLV to the SP
+       await cdpManager.addColl(alice, alice, { from: carol, value: _10_Ether })
+       await cdpManager.withdrawCLV(moneyVals._100e18, carol, { from: carol })
+       await poolManager.provideToSP(moneyVals._100e18, { from: carol })
+ 
+       assert.equal((await poolManager.userToCohort(carol)).toString(), '2')
+    })
+
+    it.only('clearOverstayCohort(): It clears the overstayers from the oldest active cohort', async () => {
+      // whale supports TCR
+      await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
+
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _1_Ether })
+      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _1_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_2, { from: defaulter_2 })
+
+      // alice deposits 100 CLV to the SP
+      await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+      await cdpManager.withdrawCLV(moneyVals._100e18, alice, { from: alice })
+      await poolManager.provideToSP(moneyVals._100e18, { from: alice })
+
+      // Price drops
+      await priceFeed.setPrice(moneyVals._100e18);
+
+      await cdpManager.liquidate(defaulter_1, { from: owner })
+
+       // bob deposits 100 CLV to the SP
+       await cdpManager.addColl(alice, alice, { from: bob, value: _10_Ether })
+       await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
+       await poolManager.provideToSP(moneyVals._100e18, { from: bob })
+
+       await cdpManager.liquidate(defaulter_2, { from: owner })
+
+      assert.equal((await poolManager.deposit(alice)).toString(), moneyVals_100e18)
+      await poolManager.clearOldestActiveCohort()
+      assert.equal((await poolManager.deposit(alice)).toString(), '0')
+    })
+
     // --- Overstay tests - withdraw 0 CLV if system contains an overstay ---
 
     /* Expectations:
@@ -151,7 +291,7 @@ contract('PoolManager', async accounts => {
     })
 
     // 2. 
-    it.only('Basic unremoved overstay - overstayer leaves before a liquidation - new depositors withdraw correct amounts of CLV', async () => {
+    it('Basic unremoved overstay - overstayer leaves before a liquidation - new depositors withdraw correct amounts of CLV', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
@@ -196,7 +336,7 @@ contract('PoolManager', async accounts => {
     })
 
     //3. 
-    it.only('Basic unremoved overstay - overstayer leaves after a liquidation - new depositors withdraw correct amounts of CLV', async () => {
+    it('Basic unremoved overstay - overstayer leaves after a liquidation - new depositors withdraw correct amounts of CLV', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
@@ -291,7 +431,7 @@ contract('PoolManager', async accounts => {
     })
 
     // 5.
-    it.only('Complex unremoved overstay - overstayer withdraws from pool before the last liquidation - new depositors withdraw correct amounts of CLV', async () => {
+    it('Complex unremoved overstay - overstayer withdraws from pool before the last liquidation - new depositors withdraw correct amounts of CLV', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
@@ -345,7 +485,7 @@ contract('PoolManager', async accounts => {
     })
 
     // 6.
-    it.only('Complex unremoved overstay - overstayer withdraws from pool after the last liquidation - new depositors withdraw correct amounts of CLV', async () => {
+    it('Complex unremoved overstay - overstayer withdraws from pool after the last liquidation - new depositors withdraw correct amounts of CLV', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 

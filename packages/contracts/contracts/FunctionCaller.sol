@@ -19,6 +19,10 @@ contract FunctionCaller {
     IPriceFeed priceFeed;
     address priceFeedAddress;
 
+
+    uint[] public numberArray;
+    mapping (uint => uint) numberMapping;
+
     // --- Dependency setters ---
 
     function setCDPManagerAddress(address _cdpManagerAddress) public {
@@ -168,6 +172,34 @@ contract FunctionCaller {
     function abdkMath_toUInt_view(int128 x) public view returns(int128) {
         uint64 z = ABDKMath64x64.toUInt(x);  
         return z;
+    }
+
+
+    // ---  Array setters and clearers ---
+
+    
+    function setNumberArray(uint n) public {
+        for(uint i = 0; i < n; i ++) {
+            numberArray.push(i);
+        }
+    }
+
+    function zeroNumberArray(uint n) public {
+          for(uint i = 0; i < n; i ++) {
+            numberArray[i] = 0;
+        }
+    }
+
+    function setNumberMapping(uint n) public {
+        for(uint i = 0; i < n; i ++) {
+            numberMapping[i] = 1;
+        }
+    }
+
+    function zeroNumberMapping(uint n) public {
+          for(uint i = 0; i < n; i ++) {
+            numberMapping[i] = 0;
+        }
     }
 
 }

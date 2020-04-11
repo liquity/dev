@@ -464,7 +464,7 @@ contract('Gas cost tests', async accounts => {
     appendData({gas: gas}, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues 100 CLV'
   
     const amountETH = _10_Ether
@@ -476,7 +476,7 @@ contract('Gas cost tests', async accounts => {
     appendData(gasResults, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues less CLV than the previous one'
     const amountETH = _10_Ether
     const amountCLV = 200
@@ -500,7 +500,7 @@ contract('Gas cost tests', async accounts => {
 
   // --- closeLoan() ---
   
-  it.only("", async () => {
+  it("", async () => {
     const message = 'closeLoan(), 10 accounts, 1 account closes its loan'
     await openLoan_allAccounts_decreasingCLVAmounts(_10_Accounts, cdpManager, _10_Ether, 200)
 
@@ -511,7 +511,7 @@ contract('Gas cost tests', async accounts => {
     appendData({gas: gas}, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'closeLoan(), 20 accounts, each account adds 10 ether and issues less CLV than the previous one. First 10 accounts close their loan. '
     await openLoan_allAccounts_decreasingCLVAmounts(_20_Accounts, cdpManager, _10_Ether, 200)
     
@@ -2577,7 +2577,57 @@ it("", async () => {
   appendData({gas: gas}, message, data)
 })
 
-// TODO abdkMath_divuu (returns uint128)
+// --- Gas refund checks ---
+
+// Array
+it.only("", async () => {
+  const message = "SSTORE 100 elements in a number array"
+
+  const tx = await functionCaller.setNumberArray(100)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it.only("", async () => {
+  const message = "Zero 100 elements in a number array"
+  await functionCaller.setNumberArray(100)
+
+  const tx = await functionCaller.zeroNumberArray(100)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+// Mapping
+
+/* Compared to array:
+- ~5% cheaper to SSTORE 0 => non-0 
+- ~15% cheaper to SSTORE non-0 => 0
+
+*/
+it.only("", async () => {
+  const message = "SSTORE 100 elements in a (uint => uint) mapping"
+
+  const tx = await functionCaller.setNumberMapping(100)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it.only("", async () => {
+  const message = "Zero 100 elements in a (uint => uint) mapping"
+  await functionCaller.setNumberMapping(100)
+
+  const tx = await functionCaller.zeroNumberMapping(100)
+  const gas = gasUsed(tx) - 21000
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
 
 
 // --- Write test output data to CSV file

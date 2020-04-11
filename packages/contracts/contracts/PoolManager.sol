@@ -75,8 +75,13 @@ contract PoolManager is Ownable, IPoolManager {
     uint lastETHError_Offset;
     uint lastCLVLossError_Offset;
 
-    // track the number of liquidations that have impacted the Stability Pool
-    uint public liquidationCounter;
+    // A deposit is placed in a cohort that corresponds to the most recent liquidation offset with the Stability Pool. 
+
+    mapping (uint => address[]) public cohorts;
+    mapping (address => uint) public userToCohort;
+
+    uint public currentCohort;
+    uint public oldestActiveCohort;
 
     // --- Modifiers ---
 
@@ -269,7 +274,9 @@ contract PoolManager is Ownable, IPoolManager {
         return userDeposit.mul(CLVLossPerUnitStaked).div(1e18);
     }
 
-    
+
+    // --- Formula-based  CLV Share adjustment with overstay ---
+
     // function getCLVShare(uint deposit, uint CLVLoss) internal view returns(uint) {
     //     uint normalCLVShare = deposit.sub(CLVLoss);
     //     uint maxCLVShareWithOverstay = getMaxCLVShareWithOverstay(deposit, CLVLoss);
@@ -325,11 +332,6 @@ contract PoolManager is Ownable, IPoolManager {
     //     return (maxCLVShare);
     // }
     
-
-    function poolContainsOverstays() internal view returns (bool) {
-        return true;
-    }
-
     // --- Internal StabilityPool functions --- 
 
     // Deposit _amount CLV from _address, to the Stability Pool.
@@ -343,6 +345,9 @@ contract PoolManager is Ownable, IPoolManager {
         
         // Record the deposit made by user
         deposit[_address] = _amount;
+
+        // Record the cohort in which the deposit is made
+        userToCohort[_address] = currentCohort;
     
         // Record new individual snapshots of the running totals S_CLV and S_ETH for the user
         snapshot[_address].CLV = S_CLV;
@@ -383,14 +388,14 @@ contract PoolManager is Ownable, IPoolManager {
             CLVShare = poolContainsOverstays() ? userDeposit.sub(CLVLoss) : 0;
         }
 
-        // Update deposit and snapshots
+        // Update deposit
         deposit[_address] = 0;
 
-        snapshot[_address].CLV = S_CLV;
-        snapshot[_address].ETH = S_ETH;
+        /* If deposit was in the oldest cohort, there is a chance it was the last active deposit in that cohort - in which case, we update
+        the oldest active cohort */
+        if (userToCohort[_address] == oldestActiveCohort) { updateOldestActiveCohort(); }
 
         emit UserDepositChanged(_address, deposit[_address]);
-        emit UserSnapshotUpdated(S_CLV, S_ETH);
 
         // Send CLV to user, decrease CLV in Pool, and decrease total CLV Loss
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV()));
@@ -428,12 +433,14 @@ contract PoolManager is Ownable, IPoolManager {
             CLVShare = poolContainsOverstays() ? userDeposit.sub(CLVLoss) : 0;
         }
 
-        // Update deposit and snapshots
+        // Update deposit
         deposit[_address] = 0; 
-        snapshot[_address].CLV = S_CLV; 
-        snapshot[_address].ETH = S_ETH; 
+   
+        /* If deposit was in the oldest cohort, there is a chance it was the last active deposit in that cohort - in which case, we update
+        the oldest active cohort */
+        if (userToCohort[_address] == oldestActiveCohort) {updateOldestActiveCohort();}
+
         emit UserDepositChanged(_address, deposit[_address]); 
-        emit UserSnapshotUpdated(S_CLV, S_ETH); 
       
         // Send CLV to user and decrease CLV in StabilityPool
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV())); // 45000 gas
@@ -540,12 +547,9 @@ contract PoolManager is Ownable, IPoolManager {
         
         // Update deposit and snapshots
         deposit[depositor] = 0;
-        snapshot[depositor].CLV = S_CLV;
-        snapshot[depositor].ETH = S_ETH;
-
+  
         emit UserDepositChanged(depositor, deposit[depositor]);
-        emit UserSnapshotUpdated(S_CLV, S_ETH);
-
+   
         // Send reward to claimant, and remainder to depositor
         stabilityPool.sendETH(claimant, claimantReward);
         stabilityPool.sendETH(depositor, depositorRemainder);
@@ -599,6 +603,7 @@ contract PoolManager is Ownable, IPoolManager {
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLV(debtToOffset);  
         stabilityPool.decreaseCLV(debtToOffset); 
+        currentCohort = currentCohort.add(1);
        
         // Send ETH from Active Pool to Stability Pool
         activePool.sendETH(stabilityPoolAddress, collToAdd);  
@@ -610,6 +615,107 @@ contract PoolManager is Ownable, IPoolManager {
         remainder[0] = _debt.sub(debtToOffset);
         remainder[1] = _coll.sub(collToAdd);
         return remainder;
+    }
+
+    //  --- Cohort functionality ---
+
+    // If the pool contains overstays, overstays will be found in the oldest active cohort. O(n) reads.
+    function poolContainsOverstays() public view returns (bool) {
+        return cohortContainsOverstays(oldestActiveCohort);
+    }
+
+    /* Check whether a cohort's active deposits are all overstayers by checking the first active deposit we find.  
+    As rewards are issued proportionally, all deposits within a cohort will become overstayers upon the same liquidation.
+    
+    O(n) reads.
+     */
+    function cohortContainsOverstays(uint cohort) internal view returns (bool) {
+        for (uint i = 0; i < cohorts[cohort].length; i++) {
+            address user = cohorts[cohort][i];
+
+            // If the user has been added to a more recent cohort, or has zero deposit, skip them
+            if (userToCohort[user] != cohort || deposit[user] == 0) { continue; }
+
+            uint CLVLoss = getCurrentCLVLoss(user);
+            uint userDeposit = deposit[user];
+
+            // If one deposit within a cohort is an overstay, they all are
+            if (CLVLoss >  userDeposit) {
+                return true;
+            } else if (CLVLoss <= userDeposit) {
+                return false;
+            }
+         return false;
+        }
+    }
+
+    // O(n) reads
+    function updateOldestActiveCohort() public returns (uint) {
+        uint length = cohorts[oldestActiveCohort].length;
+         
+         for (uint i = 0; i < length; i++) {
+            address user = cohorts[oldestActiveCohort][i];
+        
+            // Check deposit is active, and is currently in this cohort
+            if ( deposit[user] > 0 && userToCohort[user] == i) { 
+                return oldestActiveCohort;
+            }
+        }
+        oldestActiveCohort = oldestActiveCohort.add(1);
+        return oldestActiveCohort;
+    }
+
+    // O(n) operations (and O(n) gas refunds)
+    function clearOldestActiveCohort() public returns (bool) {
+        if (cohortContainsOverstays(oldestActiveCohort)) {
+            clearOverstayCohort(oldestActiveCohort);
+            
+            oldestActiveCohort = oldestActiveCohort.add(1);
+            return true;
+        }
+        return false;
+    }
+
+    /* Clear all overstayers from a cohort, and feed their excess ETHGain and CLVLoss back to the pool.  
+    O(n) operations (and O(n) gas refunds). */
+    function clearOverstayCohort(uint cohort) internal returns (bool) {
+        uint totalCLVDeposits;
+        uint totalExcessCLVLoss;
+        uint totalExcessETHGain;
+
+        for (uint i = 0; i < cohorts[cohort].length; i++) {
+            address user = cohorts[cohort][i];
+            uint userDeposit = deposit[user];
+
+            uint CLVLoss = getCurrentCLVLoss(user);
+            uint ETHGain = getCurrentETHGain(user);
+            
+            // Compute the overstayer's entitled ETHGain, and their excess ETHGain and CLVLoss
+            uint excessCLVLoss = userDeposit.sub(CLVLoss);
+            totalExcessCLVLoss = totalExcessCLVLoss.add(excessCLVLoss);
+        
+            uint entitledETHGain  = ETHGain.mul(userDeposit).div(CLVLoss);
+            uint excessETHGain = ETHGain.sub(entitledETHGain);
+            totalExcessETHGain = totalExcessETHGain.add(excessETHGain);
+
+            deposit[user] = 0;
+          
+            emit UserDepositChanged(user, 0);
+
+            // send entitled ETH gain to the overstayer
+            stabilityPool.sendETH(user, entitledETHGain);
+        }
+
+        uint newTotalCLVDeposits = stabilityPool.decreaseTotalCLVDeposits(totalCLVDeposits);
+
+        uint totalExcessCLVLossPerUnitStaked = totalExcessCLVLoss.mul(1e18).div(newTotalCLVDeposits);
+        uint totalExcessETHGainPerUnitStaked = totalExcessETHGain.mul(1e18).div(newTotalCLVDeposits);
+        
+        // Redistribute excess CLVLoss ETHGain to Pool
+        S_CLV = S_CLV.add(totalExcessCLVLossPerUnitStaked);
+        S_ETH = S_ETH.add(totalExcessETHGainPerUnitStaked);
+
+        return true;
     }
 
     function () external payable onlyStabilityPoolorActivePool {}
