@@ -8,7 +8,8 @@ import {
   StabilityDeposit,
   addressesOnNetwork,
   connectToContracts,
-  LiquityContracts
+  LiquityContracts,
+  DEV_CHAIN_ID
 } from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue, useAsyncStore } from "./AsyncValue";
@@ -21,6 +22,7 @@ type LiquityContext = {
   provider: Web3Provider;
   contracts: LiquityContracts;
   liquity: Liquity;
+  devChain: boolean;
 };
 
 const LiquityContext = createContext<LiquityContext | undefined>(undefined);
@@ -39,9 +41,10 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, load
   const addresses = addressesOnNetwork[chainId];
   const contracts = connectToContracts(addresses, provider.getSigner(account));
   const liquity = new Liquity(contracts, account);
+  const devChain = chainId === DEV_CHAIN_ID;
 
   return (
-    <LiquityContext.Provider value={{ account, provider, contracts, liquity }}>
+    <LiquityContext.Provider value={{ account, provider, contracts, liquity, devChain }}>
       {children}
     </LiquityContext.Provider>
   );

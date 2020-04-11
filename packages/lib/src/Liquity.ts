@@ -160,18 +160,22 @@ export class Trove {
       case "collateral":
         if (difference.positive) {
           return this.addCollateral(difference.absoluteValue!);
-        } else if (difference.absoluteValue!.lt(this.collateralAfterReward)) {
-          return this.subtractCollateral(difference.absoluteValue!);
-        } else {
-          return this.setCollateral(0);
+        } else if (difference.negative) {
+          if (difference.absoluteValue!.lt(this.collateralAfterReward)) {
+            return this.subtractCollateral(difference.absoluteValue!);
+          } else {
+            return this.setCollateral(0);
+          }
         }
       case "debt":
         if (difference.positive) {
           return this.addDebt(difference.absoluteValue!);
-        } else if (difference.absoluteValue!.lt(this.debtAfterReward)) {
-          return this.subtractDebt(difference.absoluteValue!);
-        } else {
-          return this.setDebt(0);
+        } else if (difference.negative) {
+          if (difference.absoluteValue!.lt(this.debtAfterReward)) {
+            return this.subtractDebt(difference.absoluteValue!);
+          } else {
+            return this.setDebt(0);
+          }
         }
     }
   }
@@ -217,6 +221,18 @@ export class StabilityDeposit {
   calculateDifference(that: StabilityDeposit) {
     if (!that.depositAfterLoss.eq(this.depositAfterLoss)) {
       return Difference.between(that.depositAfterLoss, this.depositAfterLoss);
+    }
+  }
+
+  apply(difference: Difference) {
+    if (difference.positive) {
+      return new StabilityDeposit({ deposit: this.depositAfterLoss.add(difference.absoluteValue!) });
+    } else if (difference.negative) {
+      return new StabilityDeposit({
+        deposit: difference.absoluteValue!.lt(this.depositAfterLoss)
+          ? this.depositAfterLoss.sub(difference.absoluteValue!)
+          : 0
+      });
     }
   }
 }
@@ -619,16 +635,29 @@ export class Liquity {
     address = this.requireAddress()
   ) {
     const { UserDepositChanged } = this.poolManager.filters;
+    const { EtherSent } = this.activePool.filters;
+
     const userDepositChanged = UserDepositChanged(address, null);
+    const etherSent = EtherSent(null, null);
 
     const userDepositChangedListener = () => {
       this.getStabilityDeposit(address).then(onStabilityDepositChanged);
     };
 
+    const stabilityPoolOffsetListener = debounce(userDepositChangedListener);
+
+    const etherSentListener = (toAddress: string) => {
+      if (toAddress === this.stabilityPool.address) {
+        stabilityPoolOffsetListener();
+      }
+    };
+
     this.poolManager.on(userDepositChanged, userDepositChangedListener);
+    this.activePool.on(etherSent, etherSentListener);
 
     return () => {
       this.poolManager.removeListener(userDepositChanged, userDepositChangedListener);
+      this.activePool.removeListener(etherSent, etherSentListener);
     };
   }
 

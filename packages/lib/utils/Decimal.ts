@@ -285,11 +285,11 @@ export class Difference {
   }
 
   get positive() {
-    return (this.number?.sign === "+" && this) || undefined;
+    return this.number?.sign === "+" ? this : undefined;
   }
 
   get negative() {
-    return (this.number?.sign === "-" && this) || undefined;
+    return this.number?.sign === "-" ? this : undefined;
   }
 
   get absoluteValue() {

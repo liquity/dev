@@ -50,15 +50,15 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
 
 const deployments = {
   dev: {
-    activePool: "0x32060B7F3550404fb581c3507c5d0Ae4D6dD8b83",
-    cdpManager: "0x01A8E706c280F66F02e3c5d536fC84327283326E",
-    clvToken: "0xe4aF230C94FeC7631EFE4d6Fe40166aa25A11e3F",
-    defaultPool: "0x35cD85A6234740D4BF5070615415D562c32bA8b0",
-    nameRegistry: "0x8b6ed8F873a066B285c2316E2b06D9730eA7De95",
-    poolManager: "0xD5040aF0082DaA3441dc2ACdcDaBf3caD16D3184",
-    priceFeed: "0xB4bEfb2CFbb9F6926BadA9eBadc43fbB58c15B79",
-    sortedCDPs: "0xb0aB86F804d0132cf06c914503A14dcFb27a112f",
-    stabilityPool: "0x9BdF80460c6f986E88950B3A071d89F0Bc16Fd31"
+    activePool: "0xADABdCFb51bcb71a9A6136749915f46906BE03E2",
+    cdpManager: "0xd72d0c059BeFA56f2767594aE56B6f88c687f156",
+    clvToken: "0xcbA839c8776b823533B62c9ef9F319c779fE1530",
+    defaultPool: "0x95d0703cD60af870fB0EADFca4ca58F9e129587F",
+    nameRegistry: "0x87638B5BC21E6C3b3070E45B571021fFC463f0A9",
+    poolManager: "0x8E91F6757FC2B7a1591c9CE7ab6d1Bcd7E1D9E58",
+    priceFeed: "0x040a5527e176cB3cEb78DeD36D7EdE700cbF72B4",
+    sortedCDPs: "0xBf27b0B4324329C0b9e5C7d02bA9DE88741bC415",
+    stabilityPool: "0x6F257881DbC4e9D4DBfe3A2FBc66bEb68Fb478Fd"
   },
   ropsten: {
     activePool: "0x568edce5b5F5ba4C4f4542E9ca54a16A2129f5d9",
@@ -106,14 +106,18 @@ const deployments = {
   }
 };
 
+export const DEV_CHAIN_ID = 17;
+
 export const addressesOnNetwork: {
   [network: string]: LiquityContractAddresses;
   [chainId: number]: LiquityContractAddresses;
 } = {
   ...deployments,
+
   3: deployments.ropsten,
   4: deployments.rinkeby,
   5: deployments.goerli,
-  17: deployments.dev,
-  42: deployments.kovan
+  42: deployments.kovan,
+
+  [DEV_CHAIN_ID]: deployments.dev
 };

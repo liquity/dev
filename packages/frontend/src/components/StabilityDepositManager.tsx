@@ -85,13 +85,30 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
   trove,
   price
 }) => {
-  const originalDeposit = deposit;
+  const [originalDeposit, setOriginalDeposit] = useState(deposit);
   const [editedDeposit, setEditedDeposit] = useState(deposit);
   const [changePending, setChangePending] = useState(false);
 
   useEffect(() => {
-    setEditedDeposit(deposit);
-    setChangePending(false);
+    setOriginalDeposit(deposit);
+
+    if (changePending && !deposit.deposit.eq(originalDeposit.deposit)) {
+      setEditedDeposit(deposit);
+      setChangePending(false);
+    } else {
+      if (editedDeposit.isEmpty) {
+        return;
+      }
+
+      const difference = originalDeposit.calculateDifference(editedDeposit);
+
+      if (difference) {
+        setEditedDeposit(deposit.apply(difference)!);
+      } else {
+        setEditedDeposit(deposit);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deposit]);
 
   return (

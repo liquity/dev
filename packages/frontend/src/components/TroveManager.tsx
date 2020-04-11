@@ -132,7 +132,10 @@ const TroveAction: React.FC<TroveActionProps> = ({
             `Collateral ratio must be at least ${mcrPercent}`
           ],
           [
-            !total.subtract(originalTrove).add(editedTrove).collateralRatioIsBelowCritical(price),
+            !total
+              .subtract(originalTrove)
+              .add(editedTrove)
+              .collateralRatioIsBelowCritical(price),
             `Total collateral ratio would fall below ${ccrPercent}`
           ]
         ]}
@@ -166,7 +169,10 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
   useEffect(() => {
     setOriginalTrove(trove);
 
-    if (changePending) {
+    if (
+      changePending &&
+      (!trove.collateral.eq(originalTrove.collateral) || !trove.debt.eq(originalTrove.debt))
+    ) {
       setEditedTrove(trove);
       setChangePending(false);
     } else {
@@ -177,11 +183,12 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
       const change = originalTrove.whatChanged(editedTrove);
 
       if (change) {
-        setEditedTrove(trove.apply(change));
+        setEditedTrove(trove.apply(change)!);
       } else {
         setEditedTrove(trove);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trove]);
 
   return (

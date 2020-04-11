@@ -68,7 +68,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   }
 
   // For console tinkering ;-)
-  Object.assign(window, { contracts, liquity, store: storeState.value });
+  Object.assign(window, { provider, contracts, liquity, store: storeState.value });
 
   const {
     etherBalance,

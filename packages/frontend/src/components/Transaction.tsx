@@ -130,7 +130,10 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
   children
 }: TransactionProps<C>) {
   const [transactionState, setTransactionState] = useTransactionState();
+  const { devChain } = useLiquity();
   const trigger = React.Children.only<C>(children);
+
+  numberOfConfirmationsToWait = devChain ? 1 : numberOfConfirmationsToWait;
 
   const sendTransaction = useCallback(async () => {
     setTransactionState({ type: "waitingForApproval", id });
