@@ -1,6 +1,6 @@
 import { Signer } from "ethers";
 import { Provider } from "ethers/providers";
-import { bigNumberify, BigNumberish } from "ethers/utils";
+import { bigNumberify, BigNumberish, BigNumber } from "ethers/utils";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
@@ -556,6 +556,21 @@ export class Liquity {
 
   getNumberOfTroves() {
     return this.cdpManager.getCDPOwnersCount();
+  }
+
+  watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: BigNumber) => void) {
+    const { CDPUpdated } = this.cdpManager.filters;
+    const cdpUpdated = CDPUpdated(null, null, null, null);
+
+    const cdpUpdatedListener = debounce(() => {
+      this.getNumberOfTroves().then(onNumberOfTrovesChanged);
+    });
+
+    this.cdpManager.on(cdpUpdated, cdpUpdatedListener);
+
+    return () => {
+      this.cdpManager.removeListener(cdpUpdated, cdpUpdatedListener);
+    };
   }
 
   async getPrice() {

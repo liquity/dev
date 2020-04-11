@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useCallback } from "react";
+import { BigNumber } from "ethers/utils";
 import { Web3Provider } from "ethers/providers";
 import { useWeb3React } from "@web3-react/core";
 
@@ -61,8 +62,19 @@ export const useLiquity = () => {
 };
 
 export const useLiquityStore = (provider: Web3Provider, account: string, liquity: Liquity) => {
-  const getNumberOfTroves = useCallback(() => liquity.getNumberOfTroves(), [liquity]);
   const getTotal = useCallback(() => liquity.getTotal(), [liquity]);
+
+  const getNumberOfTroves = useCallback(() => liquity.getNumberOfTroves(), [liquity]);
+  const watchNumberOfTroves = useCallback(
+    (onNumberOfTrovesChanged: (numberOfTroves: BigNumber) => void) => {
+      const logged = (numberOfTroves: BigNumber) => {
+        console.log(`Update numberOfTroves to ${numberOfTroves}`);
+        onNumberOfTrovesChanged(numberOfTroves);
+      };
+      return liquity.watchNumberOfTroves(logged);
+    },
+    [liquity]
+  );
 
   const getPrice = useCallback(() => liquity.getPrice(), [liquity]);
   const watchPrice = useCallback(
@@ -127,7 +139,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     etherBalance: useAccountBalance(provider, account),
     quiBalance: useAsyncValue(getQuiBalance, watchQuiBalance),
     price: useAsyncValue(getPrice, watchPrice),
-    numberOfTroves: useAsyncValue(getNumberOfTroves),
+    numberOfTroves: useAsyncValue(getNumberOfTroves, watchNumberOfTroves),
     trove: useAsyncValue(getTrove, watchTrove),
     deposit: useAsyncValue(getStabilityDeposit, watchStabilityDeposit),
     total: useAsyncValue(getTotal),
