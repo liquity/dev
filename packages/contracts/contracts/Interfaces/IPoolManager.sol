@@ -17,7 +17,7 @@ interface IPoolManager {
 
     event UserSnapshotUpdated(uint _CLV, uint _ETH);
 
-    event S_CLVUpdated(uint _S_CLV);
+    event S_CLVUpdated(uint _P_CLV);
 
     event S_ETHUpdated(uint _S_ETH);
 
@@ -72,8 +72,6 @@ interface IPoolManager {
     function withdrawFromSP(uint _amount) external returns(bool);
 
     function withdrawFromSPtoCDP(address _user, address _hint) external returns(bool);
-
-    function withdrawPenaltyFromSP(address _address) external returns(bool);
 
     function offset(uint _debt, uint _coll) external payable returns(uint[2] memory);
 }

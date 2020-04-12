@@ -24,9 +24,9 @@ contract PoolManager is Ownable, IPoolManager {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     
-    event UserSnapshotUpdated(int128 _CLV, int128 _ETH);
-    event S_CLVUpdated(int128 _S_CLV);
-    event S_ETHUpdated(int128 _S_ETH);
+    event UserSnapshotUpdated(uint _CLV, uint _ETH);
+    event P_CLVUpdated(uint _P_CLV);
+    event S_ETHUpdated(uint _S_ETH);
     event UserDepositChanged(address indexed _user, uint _amount);
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
@@ -59,13 +59,16 @@ contract PoolManager is Ownable, IPoolManager {
         uint CLV;
     }
     
-    /* Track the sums of accumulated rewards per unit staked: S_CLV and S_ETH. During it's lifetime, each deposit earns:
+    /* Running product by which to multiply an initial deposit, in order to find the current compounded deposit, given
+    a series of liquidations, which each absorb some CLVLoss from the deposit. 
 
-    A CLV *loss* of ( deposit * [S_CLV - S_CLV(0)] )
-    An ETH *gain* of ( deposit * [S_ETH - S_ETH(0)] )
-    
-    Where S_CLV(0) and S_ETH(0) are snapshots of S_CLV and S_ETH taken at the instant the deposit was made */
-    uint public S_CLV;
+    During its lifetime, a deposit's value evolves from d0 to (d0 * [ P_CLV / P_CLV(0)] ), where P_CLV(0) 
+    is the snapshot of P_CLV taken at the instant the deposit was made.  18 DP decimal.  */
+    uint public P_CLV = 1e18;
+
+    /* Sum of accumulated ETH gains per unit staked.  During it's lifetime, each deposit d0 earns:
+    An ETH *gain* of ( d0 * [S_ETH - S_ETH(0)] ), where S_ETH(0) is the snapshot of S_ETH taken at the instant
+    the deposit was made. 18 DP decimal.  */
     uint public S_ETH;
 
     // Map users to their individual snapshots of S_CLV and the S_ETH
@@ -243,27 +246,35 @@ contract PoolManager is Ownable, IPoolManager {
         return true;
     }
 
-    // Return the accumulated change, for the user, for the duration that this deposit was held
+    /* Return the accumulated ETH Gain for the user, for the duration that this deposit was held.
+
+    Given by the formula:  E = d0 * (S_ETH - S_ETH(0))/P_CLV(0)
+    
+    where S_ETH(0), P_CLV(0) are snapshots of the sum S_ETH and product P_ETH, respectively.
+    */
     function getCurrentETHGain(address _user) public view returns(uint) {
-        uint snapshotETH = snapshot[_user].ETH;  
-        uint ETHGainPerUnitStaked = S_ETH.sub(snapshotETH); 
-
-        if (ETHGainPerUnitStaked == 0) { return 0; }
-      
         uint userDeposit = deposit[_user];
+        uint snapshot_S_ETH = snapshot[_user].ETH;  
+        uint snapshot_P_CLV = snapshot[_user].CLV;
+        
+        uint ETHGain = userDeposit.mul(S_ETH.sub(snapshot_S_ETH).div(snapshot_P_CLV)); 
 
-        return userDeposit.mul(ETHGainPerUnitStaked).div(1e18);
+        return ETHGain;
     }
 
-    function getCurrentCLVLoss(address _user) internal view returns(uint) {
-        uint snapshotCLV = snapshot[_user].CLV; 
-        uint CLVLossPerUnitStaked = S_CLV.sub(snapshotCLV); 
+    /* Return the user's compounded deposit.  
 
-        if (CLVLossPerUnitStaked == 0) { return 0; }
+    Given by the formula:  d = d0 * P_CLV/P_CLV(0)
     
+    where P_CLV(0) is the snapshot of the product P_ETH.
+    */
+    function getCompoundedCLVDeposit(address _user) internal view returns(uint) {
         uint userDeposit = deposit[_user];
+        uint snapshot_P_CLV = snapshot[_user].CLV; 
 
-        return userDeposit.mul(CLVLossPerUnitStaked).div(1e18);
+        uint compoundedDeposit = userDeposit.mul(P_CLV.mul(1e18).div(snapshot_P_CLV));
+
+        return compoundedDeposit;
     }
 
     // --- Internal StabilityPool functions --- 
@@ -280,11 +291,11 @@ contract PoolManager is Ownable, IPoolManager {
         // Record the deposit made by user
         deposit[_address] = _amount;
     
-        // Record new individual snapshots of the running totals S_CLV and S_ETH for the user
-        snapshot[_address].CLV = S_CLV;
+        // Record new individual snapshots of the running product P_CLV and sum S_ETH for the user
+        snapshot[_address].CLV = P_CLV;
         snapshot[_address].ETH = S_ETH;
 
-        emit UserSnapshotUpdated(S_CLV, S_ETH);
+        emit UserSnapshotUpdated(P_CLV, S_ETH);
         emit UserDepositChanged(_address, _amount);
         return true;
     }
@@ -293,35 +304,22 @@ contract PoolManager is Ownable, IPoolManager {
     function retrieveToUser(address _address) internal returns(uint[2] memory) {
         uint userDeposit = deposit[_address];
 
-        uint ETHShare = getCurrentETHGain(_address);
-        uint CLVLoss = getCurrentCLVLoss(_address);
-        uint CLVShare;
+        uint ETHGain = getCurrentETHGain(_address);
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(_address);
 
-        // If user's deposit is an 'overstay', they retrieve 0 CLV
-        if (CLVLoss > userDeposit) {
-            CLVShare = 0;
-        } else {
-            CLVShare = userDeposit.sub(CLVLoss);
-        }
-
-        // Update deposit and snapshots
         deposit[_address] = 0;
 
-        snapshot[_address].CLV = S_CLV;
-        snapshot[_address].ETH = S_ETH;
-
         emit UserDepositChanged(_address, deposit[_address]);
-        emit UserSnapshotUpdated(S_CLV, S_ETH);
 
         // Send CLV to user and decrease CLV in Pool
-        CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV()));
-        stabilityPool.decreaseCLV(CLVShare);
-        stabilityPool.decreaseTotalCLVDeposits(userDeposit);
+        CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(compoundedCLVDeposit, stabilityPool.getCLV()));
+        stabilityPool.decreaseCLV(compoundedCLVDeposit);
+        stabilityPool.decreaseTotalCLVDeposits(compoundedCLVDeposit);
     
         // Send ETH to user
-        stabilityPool.sendETH(_address, ETHShare);
+        stabilityPool.sendETH(_address, ETHGain);
 
-        uint[2] memory shares = [CLVShare, ETHShare];
+        uint[2] memory shares = [compoundedCLVDeposit, ETHGain];
         return shares;
     }
 
@@ -330,36 +328,24 @@ contract PoolManager is Ownable, IPoolManager {
         uint userDeposit = deposit[_address];  
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
         
-        uint ETHShare = getCurrentETHGain(_address); 
-        uint CLVLoss = getCurrentCLVLoss(_address); 
+        uint ETHGain = getCurrentETHGain(_address);
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(_address);
       
-        uint CLVShare;  
-      
-        // If user's deposit is an 'overstay', they retrieve 0 CLV
-        if (CLVLoss > userDeposit) {
-            CLVShare = 0;
-        } else {
-            CLVShare = userDeposit.sub(CLVLoss);
-        }
-
-        // Update deposit and snapshots
         deposit[_address] = 0; 
-        snapshot[_address].CLV = S_CLV; 
-        snapshot[_address].ETH = S_ETH; 
+       
         emit UserDepositChanged(_address, deposit[_address]); 
-        emit UserSnapshotUpdated(S_CLV, S_ETH); 
       
         // Send CLV to user and decrease CLV in StabilityPool
-        CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(CLVShare, stabilityPool.getCLV())); // 45000 gas
+        CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(compoundedCLVDeposit, stabilityPool.getCLV()));
         
-        stabilityPool.decreaseCLV(CLVShare);
+        stabilityPool.decreaseCLV(compoundedCLVDeposit);
         stabilityPool.decreaseTotalCLVDeposits(userDeposit); 
        
         // Pull ETHShare from StabilityPool, and send to CDP
-        stabilityPool.sendETH(address(this), ETHShare); 
-        cdpManager.addColl.value(ETHShare)(_address, _hint); 
+        stabilityPool.sendETH(address(this), ETHGain); 
+        cdpManager.addColl.value(ETHGain)(_address, _hint); 
    
-        uint[2] memory shares = [CLVShare, ETHShare]; 
+        uint[2] memory shares = [compoundedCLVDeposit, ETHGain]; 
         return shares;
     }
 
@@ -430,46 +416,6 @@ contract PoolManager is Ownable, IPoolManager {
         return true;
     }
 
-    /* Withdraw a 'penalty' fraction of an overstayed depositor's ETHGain.  
-    
-    Callable by anyone when _depositor's CLVLoss > deposit. */
-    function withdrawPenaltyFromSP(address _address) external returns(bool) {
-        uint price = priceFeed.getPrice();
-        cdpManager.checkTCRAndSetRecoveryMode(price);
-
-        address claimant = _msgSender();
-        address depositor = _address;
-        
-        uint CLVLoss = getCurrentCLVLoss(depositor);
-        uint depositAmount = deposit[depositor];
-        require(CLVLoss > depositAmount, "PoolManager: depositor has not overstayed");
-
-        uint ETHGain = getCurrentETHGain(depositor);
-
-        /* Depositor is penalised for overstaying - i.e. letting CLVLoss grow larger than their deposit.
-       
-        Depositor's ETH entitlement is reduced to ETHGain * (deposit/CLVLoss).
-        The claimant retrieves ETHGain * (1 - deposit/CLVLoss). */
-       
-        uint depositorRemainder = ETHGain.mul(depositAmount).div(CLVLoss);
-        uint claimantReward = ETHGain.sub(depositorRemainder);
-        
-        // Update deposit and snapshots
-        deposit[depositor] = 0;
-        snapshot[depositor].CLV = S_CLV;
-        snapshot[depositor].ETH = S_ETH;
-
-        emit UserDepositChanged(depositor, deposit[depositor]);
-        emit UserSnapshotUpdated(S_CLV, S_ETH);
-
-        // Send reward to claimant, and remainder to depositor
-        stabilityPool.sendETH(claimant, claimantReward);
-        stabilityPool.sendETH(depositor, depositorRemainder);
-        emit OverstayPenaltyClaimed(claimant, claimantReward, depositor, depositorRemainder);
-
-        return true;
-    }
-
      /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
     and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
     Returns the amount of debt that could not be cancelled, and the corresponding ether.
@@ -492,25 +438,29 @@ contract PoolManager is Ownable, IPoolManager {
         // Collateral to be added in proportion to the debt that is cancelled 
         uint collToAdd = _coll.mul(debtToOffset).div(_debt);
         
-        /* 
-        Update the running total S_CLV by adding the ratio between the distributed debt and the CLV in the pool.
-        Update the running total S_ETH by adding the ratio between the distributed collateral and the ETH in the pool */
-
-        // Division with corrections
         uint CLVLossNumerator = debtToOffset.mul(1e18).sub(lastCLVLossError_Offset);
         uint ETHNumerator = collToAdd.mul(1e18).add(lastETHError_Offset);
        
+        // compute the CLV and ETH rewards 
         uint CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits)).add(1);  // Add 1 to make the error in the quotient positive
         uint ETHGainPerUnitStaked = ETHNumerator.div(totalCLVDeposits); // Error in quotient is negative
 
         lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(totalCLVDeposits)).sub(CLVLossNumerator);
         lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(totalCLVDeposits));  
 
-        S_CLV = S_CLV.add(CLVLossPerUnitStaked); 
-        emit S_CLVUpdated(S_CLV); 
+        uint productFactor = uint(1e18).sub(CLVLossPerUnitStaked);
 
-        S_ETH = S_ETH.add(ETHGainPerUnitStaked);
+        // TODO: Error correction for P_CLV and marginalETHGain?
+        P_CLV = P_CLV.mul(productFactor).div(1e18); 
+        emit S_CLVUpdated(P_CLV); 
+
+        uint marginalETHGain = ETHGainPerUnitStaked.mul(P_CLV).div(1e18);
+
+        S_ETH = S_ETH.add(marginalETHGain);
         emit S_ETHUpdated(S_ETH); 
+
+        // Decrease totalDeposits
+        totalCLVDeposits = totalCLVDeposits.sub(debtToOffset);
       
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLV(debtToOffset);  
