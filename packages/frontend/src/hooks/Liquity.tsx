@@ -145,9 +145,17 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     [liquity]
   );
 
-  const getQuiInStabilityPool = useCallback(() => {
-    return liquity.getQuiInStabilityPool();
-  }, [liquity]);
+  const getQuiInStabilityPool = useCallback(() => liquity.getQuiInStabilityPool(), [liquity]);
+  const watchQuiInStabilityPool = useCallback(
+    (onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) => {
+      const logged = (quiInStabilityPool: Decimal) => {
+        console.log(`Update quiInStabilityPool to ${quiInStabilityPool}`);
+        onQuiInStabilityPoolChanged(quiInStabilityPool);
+      };
+      return liquity.watchQuiInStabilityPool(logged);
+    },
+    [liquity]
+  );
 
   return useAsyncStore({
     etherBalance: useAccountBalance(provider, account),
@@ -157,6 +165,6 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     trove: useAsyncValue(getTrove, watchTrove),
     deposit: useAsyncValue(getStabilityDeposit, watchStabilityDeposit),
     total: useAsyncValue(getTotal, watchTotal),
-    quiInStabilityPool: useAsyncValue(getQuiInStabilityPool)
+    quiInStabilityPool: useAsyncValue(getQuiInStabilityPool, watchQuiInStabilityPool)
   });
 };

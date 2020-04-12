@@ -729,25 +729,47 @@ export class Liquity {
     return new Decimal(await this.poolManager.getStabilityPoolCLV());
   }
 
+  watchQuiInStabilityPool(onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) {
+    const { Transfer } = this.clvToken.filters;
+
+    const transferQuiFromStabilityPool = Transfer(this.stabilityPool.address, null, null);
+    const transferQuiToStabilityPool = Transfer(null, this.stabilityPool.address, null);
+
+    const stabilityPoolQuiFilters = [transferQuiFromStabilityPool, transferQuiToStabilityPool];
+
+    const stabilityPoolQuiListener = debounce(() => {
+      this.getQuiInStabilityPool().then(onQuiInStabilityPoolChanged);
+    });
+
+    stabilityPoolQuiFilters.forEach(filter => this.clvToken.on(filter, stabilityPoolQuiListener));
+
+    return () =>
+      stabilityPoolQuiFilters.forEach(filter =>
+        this.clvToken.removeListener(filter, stabilityPoolQuiListener)
+      );
+  }
+
   async getQuiBalance(address = this.requireAddress()) {
     return new Decimal(await this.clvToken.balanceOf(address));
   }
 
   watchQuiBalance(onQuiBalanceChanged: (balance: Decimal) => void, address = this.requireAddress()) {
     const { Transfer } = this.clvToken.filters;
-    const transferFromUser = Transfer(address, null, null);
-    const transferToUser = Transfer(null, address, null);
+    const transferQuiFromUser = Transfer(address, null, null);
+    const transferQuiToUser = Transfer(null, address, null);
 
-    const transferFilters = [transferFromUser, transferToUser];
+    const quiTransferFilters = [transferQuiFromUser, transferQuiToUser];
 
-    const transferListener = () => {
+    const quiTransferListener = () => {
       this.getQuiBalance(address).then(onQuiBalanceChanged);
     };
 
-    transferFilters.forEach(filter => this.clvToken.on(filter, transferListener));
+    quiTransferFilters.forEach(filter => this.clvToken.on(filter, quiTransferListener));
 
     return () =>
-      transferFilters.forEach(filter => this.clvToken.removeListener(filter, transferListener));
+      quiTransferFilters.forEach(filter =>
+        this.clvToken.removeListener(filter, quiTransferListener)
+      );
   }
 
   sendQui(toAddress: string, amount: Decimalish, overrides?: LiquityTransactionOverrides) {
