@@ -96,7 +96,7 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
       setEditedDeposit(deposit);
       setChangePending(false);
     } else {
-      if (editedDeposit.isEmpty) {
+      if (!originalDeposit.isEmpty && editedDeposit.isEmpty) {
         return;
       }
 

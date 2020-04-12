@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
 import { Flex, Text, Box, Tooltip } from "rimble-ui";
-import { TransactionResponse } from "ethers/providers";
+import { TransactionResponse, Provider } from "ethers/providers";
+import { hexDataSlice, hexDataLength, defaultAbiCoder } from "ethers/utils";
 
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -157,12 +158,16 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
         numberOfConfirmationsToWait
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
 
       if (hasMessage(error) && error.message.includes("User denied transaction signature")) {
         setTransactionState({ type: "cancelled", id });
       } else {
-        setTransactionState({ type: "failed", id, error });
+        setTransactionState({
+          type: "failed",
+          id,
+          error: new Error("Failed to send transaction (try again)")
+        });
       }
     }
   }, [send, id, setTransactionState, numberOfConfirmationsToWait]);
@@ -206,6 +211,19 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
     clonedTrigger
   );
 }
+
+const tryToGetRevertReason = async (provider: Provider, hash: string) => {
+  try {
+    const tx = await provider.getTransaction(hash);
+    const result = await provider.call(tx, tx.blockNumber);
+
+    if (hexDataLength(result) % 32 === 4 && hexDataSlice(result, 0, 4) === "0x08c379a0") {
+      return (defaultAbiCoder.decode(["string"], hexDataSlice(result, 4)) as [string])[0];
+    }
+  } catch {
+    return undefined;
+  }
+};
 
 export const TransactionMonitor: React.FC = () => {
   const { provider, contracts, account } = useLiquity();
@@ -260,6 +278,20 @@ export const TransactionMonitor: React.FC = () => {
           confirmations = transactionReceipt.confirmations;
 
           console.log(`Block #${blockNumber} ${confirmations}-confirms tx ${hash}`);
+        }
+
+        if (transactionReceipt.status === 0) {
+          const reason = await tryToGetRevertReason(provider, hash);
+
+          console.error(`Tx ${hash} reverted${reason ? ` (${reason})` : ""}`);
+
+          setTransactionState({
+            type: "failed",
+            id,
+            error: new Error(`Reverted${reason ? `: ${reason}` : ""}`)
+          });
+
+          return;
         }
 
         if (transactionReceipt.logs && !didParseLogs) {
@@ -375,7 +407,9 @@ export const TransactionMonitor: React.FC = () => {
           : transactionState.type === "cancelled"
           ? "Cancelled"
           : transactionState.type === "failed"
-          ? "Failed"
+          ? hasMessage(transactionState.error)
+            ? transactionState.error.message
+            : "Failed"
           : "Confirmed"}
       </Text>
     </Flex>
