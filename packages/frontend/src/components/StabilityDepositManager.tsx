@@ -14,6 +14,7 @@ type StabilityDepositActionProps = {
   setChangePending: (isPending: boolean) => void;
   trove: Trove;
   price: Decimal;
+  quiBalance: Decimal;
 };
 
 const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
@@ -23,7 +24,8 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   changePending,
   setChangePending,
   trove,
-  price
+  price,
+  quiBalance
 }) => {
   const myTransactionId = "stability-deposit";
   const myTransactionState = useMyTransactionState(myTransactionId);
@@ -41,20 +43,23 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     return null;
   }
 
-  const [actionName, send] = difference
-    ? [
-        `${
-          difference.positive ? "Deposit" : "Withdraw"
-        } ${difference.absoluteValue!.prettify()} QUI`,
-        (difference.positive
-          ? liquity.depositQuiInStabilityPool
-          : liquity.withdrawQuiFromStabilityPool
-        ).bind(liquity, difference.absoluteValue!)
-      ]
-    : [
+  const [actionName, send, requires] = difference
+    ? difference.positive
+      ? ([
+          `Deposit ${difference.absoluteValue!.prettify()} QUI`,
+          liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!),
+          [[quiBalance.gte(difference.absoluteValue!), "You don't have enough QUI"]]
+        ] as const)
+      : ([
+          `Withdraw ${difference.absoluteValue!.prettify()} QUI`,
+          liquity.withdrawQuiFromStabilityPool.bind(liquity, difference.absoluteValue!),
+          []
+        ] as const)
+    : ([
         `Transfer ${originalDeposit.pendingCollateralGain.prettify(4)} ETH to Trove`,
-        liquity.transferCollateralGainToTrove.bind(liquity, originalDeposit, trove, price)
-      ];
+        liquity.transferCollateralGainToTrove.bind(liquity, originalDeposit, trove, price),
+        []
+      ] as const);
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex mt={4} justifyContent="center">
@@ -65,7 +70,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     </Flex>
   ) : changePending ? null : (
     <Flex mt={4} justifyContent="center">
-      <Transaction id={myTransactionId} {...{ send }}>
+      <Transaction id={myTransactionId} {...{ send, requires }}>
         <Button mx={2}>{actionName}</Button>
       </Transaction>
     </Flex>
@@ -77,13 +82,15 @@ type StabilityDepositManagerProps = {
   deposit: StabilityDeposit;
   trove: Trove;
   price: Decimal;
+  quiBalance: Decimal;
 };
 
 export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = ({
   liquity,
   deposit,
   trove,
-  price
+  price,
+  quiBalance
 }) => {
   const [originalDeposit, setOriginalDeposit] = useState(deposit);
   const [editedDeposit, setEditedDeposit] = useState(deposit);
@@ -128,7 +135,8 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
           changePending,
           setChangePending,
           trove,
-          price
+          price,
+          quiBalance
         }}
       />
     </>
