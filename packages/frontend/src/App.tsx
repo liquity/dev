@@ -22,23 +22,21 @@ const EthersWeb3ReactProvider: React.FC = ({ children }) => {
       getLibrary={(provider: AsyncSendable) => {
         // Uncomment this to log requests
 
-        // let timeOfLastRequest = new Date().getTime();
         // let numberOfRequests = 0;
 
         // setInterval(() => {
-        //   console.log(`Requests per minute: ${numberOfRequests}`);
+        //   if (numberOfRequests > 10) {
+        //     console.log(`Avg. req/s: ${numberOfRequests / 10}`);
+        //   }
         //   numberOfRequests = 0;
-        // }, 60000);
+        // }, 10000);
 
         // const loggedSend = <A extends any[], R, F extends (...args: A) => R>(realSend: F) => (
         //   ...args: A
         // ): R => {
-        //   const now = new Date().getTime();
-        //   console.log(`Time since last request: ${now - timeOfLastRequest} ms`);
-        //   timeOfLastRequest = now;
         //   ++numberOfRequests;
 
-        //   console.log(args[0]);
+        //   //console.log(args[0]);
         //   return realSend(...args);
         // };
 
