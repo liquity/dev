@@ -96,7 +96,7 @@ contract('PoolManager', async accounts => {
 
     // --- Overstay Cohort Functionality ---
 
-    it.only('poolContainsOverstays(): returns true if there is an overstay', async () => {
+    it('poolContainsOverstays(): returns true if there is an overstay', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
@@ -136,16 +136,15 @@ contract('PoolManager', async accounts => {
       assert.isTrue(poolContainsOverstay)
     })
 
-    it.only('The current cohort is updated with every liquidation', async () => {
+    it('The current cohort is updated with every liquidation', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
-      assert.equal((await poolManager.currentCohort()).toString(), '0')
+      assert.equal((await poolManager.currentCohort()).toString(), '1')
 
-      // alice deposits 100 CLV to the SP
-      await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
-      await cdpManager.withdrawCLV(moneyVals._100e18, alice, { from: alice })
-      await poolManager.provideToSP(moneyVals._100e18, { from: alice })
+      // whale deposits 300 CLV to the SP
+      await cdpManager.withdrawCLV(moneyVals._300e18, whale, { from: whale })
+      await poolManager.provideToSP(moneyVals._300e18, { from: whale })
 
       await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: _1_Ether })
       await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: _1_Ether })
@@ -160,25 +159,20 @@ contract('PoolManager', async accounts => {
       // Liquidation offset against SP - increments current cohort by 1
       await cdpManager.liquidate(defaulter_1, { from: owner })
 
-      assert.equal((await poolManager.currentCohort()).toString(), '1')
+      assert.equal((await poolManager.currentCohort()).toString(), '2')
 
       // Liquidation is pure trove redistributon, no SP offset - no change to current cohort
       await cdpManager.liquidate(defaulter_2, { from: owner })
 
-      assert.equal((await poolManager.currentCohort()).toString(), '1')
-
-      // Bob deposits 100 CLV to the SP
-      await cdpManager.addColl(bob, bob, { from: bob, value: _10_Ether })
-      await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
-      await poolManager.provideToSP(moneyVals._100e18, { from: bob })
+      assert.equal((await poolManager.currentCohort()).toString(), '3')
 
       // Liquidation offset against SP - increments current cohort by 1
       await cdpManager.liquidate(defaulter_3, { from: owner })
 
-      assert.equal((await poolManager.currentCohort()).toString(), '2')
+      assert.equal((await poolManager.currentCohort()).toString(), '4')
     })
 
-    it.only('New SP deposits are assigned to the correct cohorts', async () => {
+    it('New SP deposits are assigned to the correct cohorts', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
@@ -192,7 +186,8 @@ contract('PoolManager', async accounts => {
       await cdpManager.withdrawCLV(moneyVals._100e18, alice, { from: alice })
       await poolManager.provideToSP(moneyVals._100e18, { from: alice })
 
-      assert.equal((await poolManager.userToCohort(alice)).toString(), '0')
+      // check cohort
+      assert.equal((await poolManager.deposits(alice))[1].toString(), '1')
 
       // Price drops
       await priceFeed.setPrice(moneyVals._100e18);
@@ -204,7 +199,7 @@ contract('PoolManager', async accounts => {
       await cdpManager.withdrawCLV(moneyVals._100e18, bob, { from: bob })
       await poolManager.provideToSP(moneyVals._100e18, { from: bob })
 
-      assert.equal((await poolManager.userToCohort(bob)).toString(), '1')
+      assert.equal((await poolManager.deposits(bob))[1].toString(), '2')
 
       await cdpManager.liquidate(defaulter_2, { from: owner })
 
@@ -213,10 +208,10 @@ contract('PoolManager', async accounts => {
       await cdpManager.withdrawCLV(moneyVals._100e18, carol, { from: carol })
       await poolManager.provideToSP(moneyVals._100e18, { from: carol })
 
-      assert.equal((await poolManager.userToCohort(carol)).toString(), '2')
+      assert.equal((await poolManager.deposits(carol))[1].toString(), '3')
     })
 
-    it.only('clearOverstayCohort(): It clears the overstayers from the oldest active cohort', async () => {
+    it('clearOverstayCohort(): It clears the overstayers from the oldest active cohort', async () => {
       // whale supports TCR
       await cdpManager.addColl(whale, whale, { from: whale, value: _100_Ether })
 
@@ -242,9 +237,10 @@ contract('PoolManager', async accounts => {
 
       await cdpManager.liquidate(defaulter_2, { from: owner })
 
-      assert.equal((await poolManager.deposit(alice)).toString(), moneyVals._100e18)
+      // Check deposit amount before and after clearing the oldest active cohort
+      assert.equal((await poolManager.deposits(alice))[0].toString(), moneyVals._100e18)
       await poolManager.clearOldestActiveCohort()
-      assert.equal((await poolManager.deposit(alice)).toString(), '0')
+      assert.equal((await poolManager.deposits(alice))[0].toString(), '0')
     })
 
     // --- Overstay tests - withdraw 0 CLV if system contains an overstay ---

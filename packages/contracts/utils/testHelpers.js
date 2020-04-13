@@ -39,6 +39,7 @@ class MoneyValues {
   static _150e18 = web3.utils.toWei('150', 'ether')
   static _180e18 = web3.utils.toWei('180', 'ether')
   static _200e18 = web3.utils.toWei('180', 'ether')
+  static _300e18 = web3.utils.toWei('300', 'ether')
   static _360e18 = web3.utils.toWei('360', 'ether')
   static _450e18 = web3.utils.toWei('450', 'ether')
   static _500e18 = web3.utils.toWei('500', 'ether')
