@@ -29,7 +29,6 @@ type StaticAmountsProps = {
   pendingAmount?: string;
   pendingColor?: string;
   onClick?: () => void;
-  edited?: boolean;
   invalid?: boolean;
 };
 
@@ -39,7 +38,6 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
   pendingAmount,
   pendingColor,
   onClick,
-  edited,
   invalid
 }) => {
   return (
@@ -49,7 +47,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
           {amount}
         </Text>
 
-        <Text fontSize={2} color={pendingColor} opacity={edited ? 1 : 0.5}>
+        <Text fontSize={2} color={pendingColor}>
           {pendingAmount &&
             `${pendingAmount
               .replace("++", "▲▲")
@@ -91,8 +89,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   pendingColor,
   editingState,
   editedAmount,
-  setEditedAmount,
-  edited
+  setEditedAmount
 }) => {
   const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
@@ -128,7 +125,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
         />
       ) : (
         <StaticAmounts
-          {...{ amount, color, pendingAmount, pendingColor, edited, invalid }}
+          {...{ amount, color, pendingAmount, pendingColor, invalid }}
           onClick={() => setEditing(label)}
         />
       )}

@@ -121,7 +121,6 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({ liquity, p
               //hideLabel
               amount={exchangedQui.prettify()}
               unit="QUI"
-              {...{ edited }}
               {...{ editingState }}
               editedAmount={exchangedQui.toString(2)}
               setEditedAmount={editedQui => setExchangedQui(Decimal.from(editedQui))}
@@ -132,7 +131,6 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({ liquity, p
               //hideLabel
               amount={exchangedQui.div(price).prettify(4)}
               unit="ETH"
-              {...{ edited }}
               {...{ editingState }}
               editedAmount={exchangedQui.div(price).toString(4)}
               setEditedAmount={editedEth => setExchangedQui(Decimal.from(editedEth).mul(price))}
