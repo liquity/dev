@@ -1,5 +1,5 @@
-import { Signer } from "ethers";
-import { Provider } from "ethers/providers";
+import { Signer, Event } from "ethers";
+import { Provider, BlockTag } from "ethers/providers";
 import { bigNumberify, BigNumberish, BigNumber } from "ethers/utils";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
@@ -254,20 +254,34 @@ export type LiquityTransactionOverrides = {
 
 const debouncingDelayMs = 50;
 
-const debounce = (listener: () => void) => {
+const debounce = (listener: (latestBlock: number) => void) => {
   let timeoutId: number | undefined = undefined;
+  let latestBlock: number = 0;
 
-  return () => {
+  return (...args: any[]) => {
+    const event = args[args.length - 1] as Event;
+
+    if (event.blockNumber !== undefined && event.blockNumber > latestBlock) {
+      latestBlock = event.blockNumber;
+    }
+
     if (timeoutId !== undefined) {
       clearTimeout(timeoutId);
     }
 
     timeoutId = setTimeout(() => {
-      listener();
+      listener(latestBlock);
       timeoutId = undefined;
     }, debouncingDelayMs);
   };
 };
+
+// Workaround for typechain not defining the override parameter on constant functions (AKA calls)
+const callOn = <R>(blockTag: BlockTag | undefined, func: () => R): R => {
+  return (func as (overrides: { blockTag?: BlockTag }) => R)({ blockTag });
+};
+
+const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 
 export class Liquity {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
@@ -384,19 +398,20 @@ export class Liquity {
     return reward;
   }
 
-  async getTrove(address = this.requireAddress()): Promise<Trove> {
-    const cdp = await this.cdpManager.CDPs(address);
+  async getTrove(address = this.requireAddress(), block?: BlockTag): Promise<Trove> {
+    const [cdp, snapshot, L_ETH, L_CLVDebt] = await Promise.all([
+      callOn(block, this.cdpManager.CDPs.bind(this.cdpManager, address)),
+      callOn(block, this.cdpManager.rewardSnapshots.bind(this.cdpManager, address)),
+      callOn(block, this.cdpManager.L_ETH.bind(this.cdpManager)).then(decimalify),
+      callOn(block, this.cdpManager.L_CLVDebt.bind(this.cdpManager)).then(decimalify)
+    ]);
 
     if (cdp.status !== CDPStatus.active) {
       return new Trove();
     }
 
-    const snapshot = await this.cdpManager.rewardSnapshots(address);
     const snapshotETH = new Decimal(snapshot.ETH);
     const snapshotCLVDebt = new Decimal(snapshot.CLVDebt);
-
-    const L_ETH = new Decimal(await this.cdpManager.L_ETH());
-    const L_CLVDebt = new Decimal(await this.cdpManager.L_CLVDebt());
 
     const stake = new Decimal(cdp.stake);
     const pendingCollateralReward = Liquity.computePendingReward(snapshotETH, L_ETH, stake);
@@ -418,23 +433,23 @@ export class Liquity {
     const cdpEventFilters = [CDPCreated(address, null), CDPUpdated(address, null, null, null)];
     const etherSent = EtherSent(null, null);
 
-    const cdpListener = () => {
-      this.getTrove(address).then(onTroveChanged);
-    };
+    const troveListener = debounce((block: number) => {
+      this.getTrove(address, block).then(onTroveChanged);
+    });
 
-    const liquidationListener = debounce(cdpListener);
-
-    const etherSentListener = (toAddress: string, amount: any) => {
+    const etherSentListener = (toAddress: string, _amount: BigNumber, event: Event) => {
       if (toAddress === this.defaultPool.address) {
-        liquidationListener();
+        // Liquidation while Stability Pool is empty
+        // There might be new rewards in the Trove
+        troveListener(event);
       }
     };
 
-    cdpEventFilters.forEach(filter => this.cdpManager.on(filter, cdpListener));
+    cdpEventFilters.forEach(filter => this.cdpManager.on(filter, troveListener));
     this.activePool.on(etherSent, etherSentListener);
 
     return () => {
-      cdpEventFilters.forEach(filter => this.cdpManager.removeListener(filter, cdpListener));
+      cdpEventFilters.forEach(filter => this.cdpManager.removeListener(filter, troveListener));
       this.activePool.removeListener(etherSent, etherSentListener);
     };
   }
@@ -554,16 +569,16 @@ export class Liquity {
     );
   }
 
-  getNumberOfTroves() {
-    return this.cdpManager.getCDPOwnersCount();
+  getNumberOfTroves(block?: BlockTag) {
+    return callOn(block, this.cdpManager.getCDPOwnersCount.bind(this.cdpManager));
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: BigNumber) => void) {
     const { CDPUpdated } = this.cdpManager.filters;
     const cdpUpdated = CDPUpdated(null, null, null, null);
 
-    const cdpUpdatedListener = debounce(() => {
-      this.getNumberOfTroves().then(onNumberOfTrovesChanged);
+    const cdpUpdatedListener = debounce((block: number) => {
+      this.getNumberOfTroves(block).then(onNumberOfTrovesChanged);
     });
 
     this.cdpManager.on(cdpUpdated, cdpUpdatedListener);
@@ -573,17 +588,17 @@ export class Liquity {
     };
   }
 
-  async getPrice() {
-    return new Decimal(await this.priceFeed.getPrice());
+  async getPrice(block?: BlockTag) {
+    return new Decimal(await callOn(block, this.priceFeed.getPrice.bind(this.priceFeed)));
   }
 
   watchPrice(onPriceChanged: (price: Decimal) => void) {
     const { PriceUpdated } = this.priceFeed.filters;
     const priceUpdated = PriceUpdated(null);
 
-    const priceUpdatedListener = () => {
-      this.getPrice().then(onPriceChanged);
-    };
+    const priceUpdatedListener = debounce((block: number) => {
+      this.getPrice(block).then(onPriceChanged);
+    });
 
     this.priceFeed.on(priceUpdated, priceUpdatedListener);
 
@@ -600,14 +615,14 @@ export class Liquity {
     return this.priceFeed.updatePrice_Testnet({ ...overrides });
   }
 
-  async getTotal() {
+  async getTotal(block?: BlockTag) {
     const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
       [
-        this.poolManager.getActiveColl(),
-        this.poolManager.getActiveDebt(),
-        this.poolManager.getLiquidatedColl(),
-        this.poolManager.getClosedDebt()
-      ].map(promise => promise.then(bigNumber => new Decimal(bigNumber)))
+        callOn(block, this.poolManager.getActiveColl.bind(this.poolManager)),
+        callOn(block, this.poolManager.getActiveDebt.bind(this.poolManager)),
+        callOn(block, this.poolManager.getLiquidatedColl.bind(this.poolManager)),
+        callOn(block, this.poolManager.getClosedDebt.bind(this.poolManager))
+      ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
     return new Trove({
@@ -619,27 +634,17 @@ export class Liquity {
   }
 
   watchTotal(onTotalChanged: (total: Trove) => void) {
-    const { Transfer } = this.clvToken.filters;
+    const { CDPUpdated } = this.cdpManager.filters;
+    const cdpUpdated = CDPUpdated(null, null, null, null);
 
-    const mint = Transfer(addressZero, null, null);
-    const burn = Transfer(null, addressZero, null);
-    const transferFromDefaultPool = Transfer(this.defaultPool.address, null, null);
-    const transferToDefaultPool = Transfer(null, this.defaultPool.address, null);
-
-    const clvEventFilters = [mint, burn, transferFromDefaultPool, transferToDefaultPool];
-
-    const totalListener = debounce(() => {
-      this.getTotal().then(onTotalChanged);
+    const totalListener = debounce((block: number) => {
+      this.getTotal(block).then(onTotalChanged);
     });
 
-    clvEventFilters.forEach(filter => this.clvToken.on(filter, totalListener));
-    this.activePool.provider.on(this.activePool.address, totalListener);
-    this.defaultPool.provider.on(this.defaultPool.address, totalListener);
+    this.cdpManager.on(cdpUpdated, totalListener);
 
     return () => {
-      clvEventFilters.forEach(filter => this.clvToken.removeListener(filter, totalListener));
-      this.activePool.provider.removeListener(this.activePool.address, totalListener);
-      this.defaultPool.provider.removeListener(this.defaultPool.address, totalListener);
+      this.cdpManager.removeListener(cdpUpdated, totalListener);
     };
   }
 
@@ -654,15 +659,16 @@ export class Liquity {
     return this.cdpManager.liquidateCDPs(maximumNumberOfTrovesToLiquidate, { ...overrides });
   }
 
-  async getStabilityDeposit(address = this.requireAddress()) {
-    const deposit = new Decimal(await this.poolManager.deposit(address));
+  async getStabilityDeposit(address = this.requireAddress(), block?: BlockTag) {
+    const [deposit, snapshot, S_ETH, S_CLV] = await Promise.all([
+      callOn(block, this.poolManager.deposit.bind(this.poolManager, address)).then(decimalify),
+      callOn(block, this.poolManager.snapshot.bind(this.poolManager, address)),
+      callOn(block, this.poolManager.S_ETH.bind(this.poolManager)).then(decimalify),
+      callOn(block, this.poolManager.S_CLV.bind(this.poolManager)).then(decimalify)
+    ]);
 
-    const snapshot = await this.poolManager.snapshot(address);
     const snapshotETH = new Decimal(snapshot.ETH);
     const snapshotCLV = new Decimal(snapshot.CLV);
-
-    const S_ETH = new Decimal(await this.poolManager.S_ETH());
-    const S_CLV = new Decimal(await this.poolManager.S_CLV());
 
     const pendingCollateralGain = Liquity.computePendingReward(snapshotETH, S_ETH, deposit);
     const pendingDepositLoss = Liquity.computePendingReward(snapshotCLV, S_CLV, deposit);
@@ -680,23 +686,23 @@ export class Liquity {
     const userDepositChanged = UserDepositChanged(address, null);
     const etherSent = EtherSent(null, null);
 
-    const userDepositChangedListener = () => {
-      this.getStabilityDeposit(address).then(onStabilityDepositChanged);
-    };
+    const depositListener = debounce((block: number) => {
+      this.getStabilityDeposit(address, block).then(onStabilityDepositChanged);
+    });
 
-    const stabilityPoolOffsetListener = debounce(userDepositChangedListener);
-
-    const etherSentListener = (toAddress: string) => {
+    const etherSentListener = (toAddress: string, _amount: BigNumber, event: Event) => {
       if (toAddress === this.stabilityPool.address) {
-        stabilityPoolOffsetListener();
+        // Liquidation while Stability Pool has some deposits
+        // There may be new gains
+        depositListener(event);
       }
     };
 
-    this.poolManager.on(userDepositChanged, userDepositChangedListener);
+    this.poolManager.on(userDepositChanged, depositListener);
     this.activePool.on(etherSent, etherSentListener);
 
     return () => {
-      this.poolManager.removeListener(userDepositChanged, userDepositChangedListener);
+      this.poolManager.removeListener(userDepositChanged, depositListener);
       this.activePool.removeListener(etherSent, etherSentListener);
     };
   }
@@ -725,8 +731,10 @@ export class Liquity {
     );
   }
 
-  async getQuiInStabilityPool() {
-    return new Decimal(await this.poolManager.getStabilityPoolCLV());
+  async getQuiInStabilityPool(block?: BlockTag) {
+    return new Decimal(
+      await callOn(block, this.poolManager.getStabilityPoolCLV.bind(this.poolManager))
+    );
   }
 
   watchQuiInStabilityPool(onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) {
@@ -737,8 +745,8 @@ export class Liquity {
 
     const stabilityPoolQuiFilters = [transferQuiFromStabilityPool, transferQuiToStabilityPool];
 
-    const stabilityPoolQuiListener = debounce(() => {
-      this.getQuiInStabilityPool().then(onQuiInStabilityPoolChanged);
+    const stabilityPoolQuiListener = debounce((block: number) => {
+      this.getQuiInStabilityPool(block).then(onQuiInStabilityPoolChanged);
     });
 
     stabilityPoolQuiFilters.forEach(filter => this.clvToken.on(filter, stabilityPoolQuiListener));
@@ -749,8 +757,8 @@ export class Liquity {
       );
   }
 
-  async getQuiBalance(address = this.requireAddress()) {
-    return new Decimal(await this.clvToken.balanceOf(address));
+  async getQuiBalance(address = this.requireAddress(), block?: BlockTag) {
+    return new Decimal(await callOn(block, this.clvToken.balanceOf.bind(this.clvToken, address)));
   }
 
   watchQuiBalance(onQuiBalanceChanged: (balance: Decimal) => void, address = this.requireAddress()) {
@@ -760,9 +768,9 @@ export class Liquity {
 
     const quiTransferFilters = [transferQuiFromUser, transferQuiToUser];
 
-    const quiTransferListener = () => {
-      this.getQuiBalance(address).then(onQuiBalanceChanged);
-    };
+    const quiTransferListener = debounce((block: number) => {
+      this.getQuiBalance(address, block).then(onQuiBalanceChanged);
+    });
 
     quiTransferFilters.forEach(filter => this.clvToken.on(filter, quiTransferListener));
 
