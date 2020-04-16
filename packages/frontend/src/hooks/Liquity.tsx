@@ -66,11 +66,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const watchTotal = useCallback(
     (onTotalChanged: (total: Trove) => void) => {
       const logged = (total: Trove) => {
-        console.log("Update total to:");
-        console.log(`{ collateral: ${total.collateral},`);
-        console.log(`  debt: ${total.debt},`);
-        console.log(`  pendingCollateralReward: ${total.pendingCollateralReward},`);
-        console.log(`  pendingDebtReward: ${total.pendingDebtReward} }`);
+        console.log(`Update total to\n${total}`);
         onTotalChanged(total);
       };
       return liquity.watchTotal(logged);
@@ -106,11 +102,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const watchTrove = useCallback(
     (onTroveChanged: (trove: Trove) => void) => {
       const logged = (trove: Trove) => {
-        console.log("Update trove to:");
-        console.log(`{ collateral: ${trove.collateral},`);
-        console.log(`  debt: ${trove.debt},`);
-        console.log(`  pendingCollateralReward: ${trove.pendingCollateralReward},`);
-        console.log(`  pendingDebtReward: ${trove.pendingDebtReward} }`);
+        console.log(`Update trove to\n${trove}`);
         onTroveChanged(trove);
       };
       return liquity.watchTrove(logged);
@@ -122,10 +114,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const watchStabilityDeposit = useCallback(
     (onStabilityDepositChanged: (deposit: StabilityDeposit) => void) => {
       const logged = (deposit: StabilityDeposit) => {
-        console.log("Update deposit to:");
-        console.log(`{ deposit: ${deposit.deposit},`);
-        console.log(`  pendingDepositLoss: ${deposit.pendingDepositLoss},`);
-        console.log(`  pendingCollateralGain: ${deposit.pendingCollateralGain} }`);
+        console.log(`Update deposit to\n${deposit}`);
         onStabilityDepositChanged(deposit);
       };
       return liquity.watchStabilityDeposit(logged);

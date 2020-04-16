@@ -91,6 +91,15 @@ export class Trove {
     this._stake = Decimal.from(_stake);
   }
 
+  toString() {
+    return (
+      `{ collateral: ${this.collateral},\n` +
+      `  debt: ${this.debt},\n` +
+      `  pendingCollateralReward: ${this.pendingCollateralReward},\n` +
+      `  pendingDebtReward: ${this.pendingDebtReward} }`
+    );
+  }
+
   add({ collateral = 0, debt = 0, pendingCollateralReward = 0, pendingDebtReward = 0 }: Trovish) {
     return new Trove({
       collateral: this.collateralAfterReward.add(collateral).add(pendingCollateralReward),
@@ -216,6 +225,14 @@ export class StabilityDeposit {
     } else {
       this.pendingDepositLoss = this.deposit;
     }
+  }
+
+  toString() {
+    return (
+      `{ deposit: ${this.deposit},\n` +
+      `  pendingDepositLoss: ${this.pendingDepositLoss},\n` +
+      `  pendingCollateralGain: ${this.pendingCollateralGain} }`
+    );
   }
 
   calculateDifference(that: StabilityDeposit) {

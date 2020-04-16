@@ -270,15 +270,20 @@ export const TransactionMonitor: React.FC = () => {
             if (receipt.logs && !dumpedLogs) {
               const [parsedLogs, unparsedLogs] = parseLogs(receipt.logs, interfaces);
 
-              console.log(`Logs of tx ${tx.hash}:`);
-              parsedLogs.forEach(([contractName, logDescription]) =>
+              if (parsedLogs.length > 0) {
                 console.log(
-                  `  ${contractName}.${logDescriptionToString(logDescription, {
-                    [account]: ["user"],
-                    ...interfaces
-                  })}`
-                )
-              );
+                  `Logs of tx ${tx.hash}:\n` +
+                    `${parsedLogs
+                      .map(
+                        ([contractName, logDescription]) =>
+                          `  ${contractName}.${logDescriptionToString(logDescription, {
+                            [account]: ["user"],
+                            ...interfaces
+                          })}`
+                      )
+                      .join("\n")}`
+                );
+              }
 
               if (unparsedLogs.length > 0) {
                 console.warn("Warning: not all logs were parsed. Unparsed logs:");
