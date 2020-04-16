@@ -1,14 +1,11 @@
 import assert from "assert";
 import { BigNumber, bigNumberify } from "ethers/utils";
+import { MaxUint256 } from "ethers/constants";
 
 export type Decimalish = Decimal | number | string;
 
 export class Decimal {
-  static readonly INFINITY = new Decimal(
-    bigNumberify(2)
-      .pow(256)
-      .sub(1)
-  );
+  static readonly INFINITY = new Decimal(MaxUint256);
 
   static readonly PRECISION = 18;
   static readonly DIGITS = Decimal.getDigits(Decimal.PRECISION);

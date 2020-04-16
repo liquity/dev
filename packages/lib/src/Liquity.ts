@@ -1,6 +1,7 @@
 import { Signer, Event } from "ethers";
 import { Provider, BlockTag } from "ethers/providers";
 import { bigNumberify, BigNumberish, BigNumber } from "ethers/utils";
+import { AddressZero } from "ethers/constants";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
@@ -254,8 +255,6 @@ export class StabilityDeposit {
   }
 }
 
-const addressZero = "0x0000000000000000000000000000000000000000";
-
 enum CDPStatus {
   nonExistent,
   active,
@@ -473,13 +472,13 @@ export class Liquity {
 
   async _findHintForCollateralRatio(collateralRatio: Decimal, price: Decimal, address: string) {
     if (!Liquity.useHint) {
-      return address;
+      return AddressZero;
     }
 
     const numberOfTroves = (await this.getNumberOfTroves()).toNumber();
 
     if (!numberOfTroves || collateralRatio.infinite) {
-      return addressZero;
+      return AddressZero;
     }
 
     const numberOfTrials = bigNumberify(Math.ceil(Math.sqrt(numberOfTroves))); // XXX not multiplying by 10 here
@@ -806,7 +805,7 @@ export class Liquity {
     price: Decimal
   ): Promise<[string, string, Decimal]> {
     if (!Liquity.useHint) {
-      return [addressZero, addressZero, Decimal.INFINITY];
+      return [AddressZero, AddressZero, Decimal.INFINITY];
     }
 
     const {
@@ -819,8 +818,8 @@ export class Liquity {
     return [
       firstRedemptionHint,
       collateralRatio.nonZero
-        ? await this._findHintForCollateralRatio(collateralRatio, price, addressZero)
-        : addressZero,
+        ? await this._findHintForCollateralRatio(collateralRatio, price, AddressZero)
+        : AddressZero,
       collateralRatio
     ];
   }
@@ -866,7 +865,7 @@ export class Liquity {
     let i = 0;
     let currentAddress = await this.sortedCDPs.getLast();
 
-    while (currentAddress !== addressZero) {
+    while (currentAddress !== AddressZero) {
       troves.push(getTroveWithAddress(currentAddress));
 
       if (++i === numberOfTroves) {
@@ -882,12 +881,12 @@ export class Liquity {
   async _getFirstTroveAddress() {
     const first = await this.sortedCDPs.getFirst();
 
-    return first !== addressZero ? first : undefined;
+    return first !== AddressZero ? first : undefined;
   }
 
   async _getNextTroveAddress(address: string) {
     const next = await this.sortedCDPs.getNext(address);
 
-    return next !== addressZero ? next : undefined;
+    return next !== AddressZero ? next : undefined;
   }
 }
