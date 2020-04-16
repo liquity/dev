@@ -3,7 +3,7 @@ import "colors";
 
 import { Wallet, Signer } from "ethers";
 import { BigNumber } from "ethers/utils";
-import { task, usePlugin, BuidlerConfig } from "@nomiclabs/buidler/config";
+import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config";
 import { NetworkConfig } from "@nomiclabs/buidler/types";
 
 import { deployAndSetupContracts, setSilent } from "./test/utils/deploy";
@@ -11,8 +11,8 @@ import { Liquity, Trove } from "./src/Liquity";
 import { Decimal, Difference, Decimalish, Percent } from "./utils";
 import { CDPManagerFactory } from "./types/ethers/CDPManagerFactory";
 import { PoolManagerFactory } from "./types/ethers/PoolManagerFactory";
-import { PriceFeedFactory } from "./types/ethers/PriceFeedFactory";
-import { NameRegistryFactory } from "./types/ethers/NameRegistryFactory";
+// import { PriceFeedFactory } from "./types/ethers/PriceFeedFactory";
+// import { NameRegistryFactory } from "./types/ethers/NameRegistryFactory";
 import { addressesOf, addressesOnNetwork } from "./src/contracts";
 
 usePlugin("@nomiclabs/buidler-web3");
@@ -70,30 +70,24 @@ task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) =>
   console.log();
 });
 
-task(
-  "update-pricefeed",
-  "Deploys the latest version of PriceFeed then introduces it to other contracts",
-  async (_taskArgs, bre) => {
+type SetPriceFeedParams = { priceFeedAddress: string };
+
+task("set-pricefeed", "Set the address of the PriceFeed in the deployed contracts")
+  .addPositionalParam("priceFeedAddress", "Address of new PriceFeed", undefined, types.string)
+  .setAction(async ({ priceFeedAddress }: SetPriceFeedParams, bre) => {
     const [deployer] = await bre.ethers.signers();
     const addresses = addressesOnNetwork[bre.network.name];
 
-    addresses.priceFeed = (await bre.artifacts.require("PriceFeed").new()).address;
-
-    const priceFeed = PriceFeedFactory.connect(addresses.priceFeed, deployer);
+    // const priceFeed = PriceFeedFactory.connect(addresses.priceFeed, deployer);
     const cdpManager = CDPManagerFactory.connect(addresses.cdpManager, deployer);
     const poolManager = PoolManagerFactory.connect(addresses.poolManager, deployer);
-    const nameRegistry = NameRegistryFactory.connect(addresses.nameRegistry, deployer);
+    // const nameRegistry = NameRegistryFactory.connect(addresses.nameRegistry, deployer);
 
-    await priceFeed.setCDPManagerAddress(cdpManager.address);
-    await cdpManager.setPriceFeed(priceFeed.address);
-    await poolManager.setPriceFeed(priceFeed.address);
-    await nameRegistry.updateAddress("PriceFeed", priceFeed.address);
-
-    for (const [contractName, address] of Object.entries(addresses)) {
-      console.log(`${contractName}: "${address}",`);
-    }
-  }
-);
+    // await priceFeed.setCDPManagerAddress(cdpManager.address);
+    await cdpManager.setPriceFeed(priceFeedAddress);
+    await poolManager.setPriceFeed(priceFeedAddress);
+    // await nameRegistry.updateAddress("PriceFeed", priceFeed.address);
+  });
 
 task(
   "deploy-warzone",
@@ -310,7 +304,12 @@ task(
               if (Math.random() < 0.5) {
                 collateral = Decimal.from(randomValue);
 
-                const maxDebt = parseInt(price.mul(collateral).div(1.1).toString(0));
+                const maxDebt = parseInt(
+                  price
+                    .mul(collateral)
+                    .div(1.1)
+                    .toString(0)
+                );
 
                 debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
               } else {
