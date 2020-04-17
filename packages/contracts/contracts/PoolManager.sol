@@ -28,7 +28,8 @@ contract PoolManager is Ownable, IPoolManager {
     event P_CLVUpdated(uint _P_CLV);
     event S_ETHUpdated(uint _S_ETH);
     event UserDepositChanged(address indexed _user, uint _amount);
-    event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
+    event ETHGainWithdrawn(address indexed _user, uint _ETH);
+    event ETHGainWithdrawnToCDP(address indexed _CDPOwner, uint _ETH);
 
     // --- Connected contract declarations ---
 
@@ -52,7 +53,7 @@ contract PoolManager is Ownable, IPoolManager {
    
    // --- Data structures ---
    
-    mapping (address => uint) public deposit;
+    mapping (address => uint) public deposits;
 
     struct Snapshot {
         uint ETH;
@@ -60,7 +61,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
     
     /* Running product by which to multiply an initial deposit, in order to find the current compounded deposit, given
-    a series of liquidations, which each absorb some CLVLoss from the deposit. 
+    a series of liquidations, each of which cancel some CLV debt with the deposit. 
 
     During its lifetime, a deposit's value evolves from d0 to (d0 * [ P_CLV / P_CLV(0)] ), where P_CLV(0) 
     is the snapshot of P_CLV taken at the instant the deposit was made.  18 DP decimal.  */
@@ -253,12 +254,11 @@ contract PoolManager is Ownable, IPoolManager {
     where S_ETH(0), P_CLV(0) are snapshots of the sum S_ETH and product P_ETH, respectively.
     */
     function getCurrentETHGain(address _user) public view returns(uint) {
-        uint userDeposit = deposit[_user];
+        uint userDeposit = deposits[_user];
         uint snapshot_S_ETH = snapshot[_user].ETH;  
         uint snapshot_P_CLV = snapshot[_user].CLV;
-        
-        uint ETHGain = userDeposit.mul(S_ETH.sub(snapshot_S_ETH).div(snapshot_P_CLV)); 
-
+   
+        uint ETHGain = userDeposit.mul(S_ETH.sub(snapshot_S_ETH)).div(snapshot_P_CLV); 
         return ETHGain;
     }
 
@@ -269,10 +269,11 @@ contract PoolManager is Ownable, IPoolManager {
     where P_CLV(0) is the snapshot of the product P_ETH.
     */
     function getCompoundedCLVDeposit(address _user) internal view returns(uint) {
-        uint userDeposit = deposit[_user];
+        uint userDeposit = deposits[_user];
         uint snapshot_P_CLV = snapshot[_user].CLV; 
+        console.log(" snapshot[_user].CLV: %s",  snapshot[_user].CLV);
 
-        uint compoundedDeposit = userDeposit.mul(P_CLV.mul(1e18).div(snapshot_P_CLV));
+        uint compoundedDeposit = userDeposit.mul(P_CLV).div(snapshot_P_CLV);
 
         return compoundedDeposit;
     }
@@ -281,7 +282,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Deposit _amount CLV from _address, to the Stability Pool.
     function depositCLV(address _address, uint _amount) internal returns(bool) {
-        require(deposit[_address] == 0, "PoolManager: user already has a StabilityPool deposit");
+        require(deposits[_address] == 0, "PoolManager: user already has a StabilityPool deposit");
     
         // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
         CLV.sendToPool(_address, stabilityPoolAddress, _amount);
@@ -289,7 +290,7 @@ contract PoolManager is Ownable, IPoolManager {
         stabilityPool.increaseTotalCLVDeposits(_amount);
         
         // Record the deposit made by user
-        deposit[_address] = _amount;
+        deposits[_address] = _amount;
     
         // Record new individual snapshots of the running product P_CLV and sum S_ETH for the user
         snapshot[_address].CLV = P_CLV;
@@ -302,22 +303,23 @@ contract PoolManager is Ownable, IPoolManager {
 
    // Transfers _address's entitled CLV (CLVDeposit - CLVLoss) and their ETHGain, to _address.
     function retrieveToUser(address _address) internal returns(uint[2] memory) {
-        uint userDeposit = deposit[_address];
+        uint userDeposit = deposits[_address];
 
         uint ETHGain = getCurrentETHGain(_address);
         uint compoundedCLVDeposit = getCompoundedCLVDeposit(_address);
+        deposits[_address] = 0;
 
-        deposit[_address] = 0;
-
-        emit UserDepositChanged(_address, deposit[_address]);
+        emit UserDepositChanged(_address, 0);
 
         // Send CLV to user and decrease CLV in Pool
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(compoundedCLVDeposit, stabilityPool.getCLV()));
+    
         stabilityPool.decreaseCLV(compoundedCLVDeposit);
         stabilityPool.decreaseTotalCLVDeposits(compoundedCLVDeposit);
     
         // Send ETH to user
         stabilityPool.sendETH(_address, ETHGain);
+        emit ETHGainWithdrawn(_address, ETHGain);
 
         uint[2] memory shares = [compoundedCLVDeposit, ETHGain];
         return shares;
@@ -325,15 +327,15 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Transfer _address's entitled CLV (userDeposit - CLVLoss) to _address, and their ETHGain to their CDP.
     function retrieveToCDP(address _address, address _hint) internal returns(uint[2] memory) {
-        uint userDeposit = deposit[_address];  
+        uint userDeposit = deposits[_address];  
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
         
         uint ETHGain = getCurrentETHGain(_address);
         uint compoundedCLVDeposit = getCompoundedCLVDeposit(_address);
       
-        deposit[_address] = 0; 
+        deposits[_address] = 0; 
        
-        emit UserDepositChanged(_address, deposit[_address]); 
+        emit UserDepositChanged(_address, 0); 
       
         // Send CLV to user and decrease CLV in StabilityPool
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(compoundedCLVDeposit, stabilityPool.getCLV()));
@@ -344,6 +346,7 @@ contract PoolManager is Ownable, IPoolManager {
         // Pull ETHShare from StabilityPool, and send to CDP
         stabilityPool.sendETH(address(this), ETHGain); 
         cdpManager.addColl.value(ETHGain)(_address, _hint); 
+        emit ETHGainWithdrawnToCDP(_address, ETHGain);
    
         uint[2] memory shares = [compoundedCLVDeposit, ETHGain]; 
         return shares;
@@ -358,12 +361,20 @@ contract PoolManager is Ownable, IPoolManager {
         cdpManager.checkTCRAndSetRecoveryMode(price);
 
         address user = _msgSender();
-        uint[2] memory returnedVals = retrieveToUser(user);
 
+        // If user has no deposit, make one with _amount
+        if (deposits[user] == 0) {
+            depositCLV(user, _amount);
+            return true;
+        }
+
+        /* If user already has a deposit, retrieve their ETH gain and current deposit,
+         then make a new composite deposit */
+        uint[2] memory returnedVals = retrieveToUser(user);
         uint returnedCLV = returnedVals[0];
 
         uint newDeposit = returnedCLV + _amount;
-        depositCLV(msg.sender, newDeposit);
+        depositCLV(user, newDeposit);
 
         return true;
     }
@@ -380,7 +391,7 @@ contract PoolManager is Ownable, IPoolManager {
         cdpManager.checkTCRAndSetRecoveryMode(price);
 
         address user = _msgSender();
-        uint userDeposit = deposit[user];
+        uint userDeposit = deposits[user];
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
 
         // Retrieve all CLV and ETH for the user
@@ -402,7 +413,7 @@ contract PoolManager is Ownable, IPoolManager {
         uint price = priceFeed.getPrice();  
    
         cdpManager.checkTCRAndSetRecoveryMode(price); 
-        uint userDeposit = deposit[_user]; 
+        uint userDeposit = deposits[_user]; 
        
         if (userDeposit == 0) { return false; } 
         
@@ -451,16 +462,16 @@ contract PoolManager is Ownable, IPoolManager {
         uint productFactor = uint(1e18).sub(CLVLossPerUnitStaked);
 
         // TODO: Error correction for P_CLV and marginalETHGain?
-        P_CLV = P_CLV.mul(productFactor).div(1e18); 
-        emit S_CLVUpdated(P_CLV); 
-
         uint marginalETHGain = ETHGainPerUnitStaked.mul(P_CLV).div(1e18);
 
         S_ETH = S_ETH.add(marginalETHGain);
         emit S_ETHUpdated(S_ETH); 
 
-        // Decrease totalDeposits
-        totalCLVDeposits = totalCLVDeposits.sub(debtToOffset);
+        P_CLV = P_CLV.mul(productFactor).div(1e18); 
+        emit P_CLVUpdated(P_CLV); 
+
+        // Decrease totalCLVDeposits
+        stabilityPool.decreaseTotalCLVDeposits(debtToOffset);
       
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLV(debtToOffset);  

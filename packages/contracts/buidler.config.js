@@ -21,7 +21,8 @@ module.exports = {
             accounts: accountsList,
             // expanded gas limits for testing
             gas: 9000000000,  // tx gas limit
-            blockGasLimit: 9000000000 
+            blockGasLimit: 9000000000, 
+            gasPrice: 20000000000
         }
     },
     mocha: { timeout: 12000000 },
