@@ -273,7 +273,7 @@ export const TransactionMonitor: React.FC = () => {
               if (parsedLogs.length > 0) {
                 console.log(
                   `Logs of tx ${tx.hash}:\n` +
-                    `${parsedLogs
+                    parsedLogs
                       .map(
                         ([contractName, logDescription]) =>
                           `  ${contractName}.${logDescriptionToString(logDescription, {
@@ -281,7 +281,7 @@ export const TransactionMonitor: React.FC = () => {
                             ...interfaces
                           })}`
                       )
-                      .join("\n")}`
+                      .join("\n")
                 );
               }
 

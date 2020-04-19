@@ -3,6 +3,9 @@ import { Web3Provider, AsyncSendable } from "ethers/providers";
 import { Web3ReactProvider } from "@web3-react/core";
 import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 
+import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import { Decimal, Difference, Percent } from "@liquity/lib/dist/utils";
+
 import { LiquityProvider, useLiquity, deployerAddress, useLiquityStore } from "./hooks/Liquity";
 import { WalletConnector } from "./components/WalletConnector";
 import { ToastProvider } from "./hooks/ToastProvider";
@@ -66,7 +69,18 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   }
 
   // For console tinkering ;-)
-  Object.assign(window, { provider, contracts, liquity, store: storeState.value });
+  Object.assign(window, {
+    provider,
+    contracts,
+    liquity,
+    store: storeState.value,
+    Liquity,
+    Trove,
+    StabilityDeposit,
+    Decimal,
+    Difference,
+    Percent
+  });
 
   const {
     etherBalance,
