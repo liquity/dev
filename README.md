@@ -2,7 +2,7 @@
 
 Liquity is a collateralized stablecoin platform. Users can lock up ether, and issue stablecoin tokens (CLV) to their own Ethereum address, and subsequently transfer those tokens to any other Ethereum address.
 
-The stablecoin tokens are economically guaranteed to maintain value of 1 CLV = $1 USD, due to two system properties:
+The stablecoin tokens are economically guaranteed to maintain value of 1 CLV = \$1 USD, due to two system properties:
 
 1. The system will always be over-collateralized - the dollar value of the locked ether exceeds the dollar value of the issued stablecoins
 
@@ -16,7 +16,7 @@ The Liquity system regularly updates the ETH:USD price via a decentralized data 
 
 ## Liquidation
 
-Liquity redistributes the collateral and debt from under-collateralized loans. It distributes primarily to CLV holders who have added tokens to the Stability Pool.  
+Liquity redistributes the collateral and debt from under-collateralized loans. It distributes primarily to CLV holders who have added tokens to the Stability Pool.
 
 Any user may deposit CLV tokens to the Stability Pool. This allows them to earn “rewards” over time, from liquidated CDPs. Stability Pool depositors can expect a net gain from their deposited tokens, as they receive a share of the collateral surplus of liquidated CDPs.
 
@@ -28,7 +28,7 @@ Secondly, if the Pool is not sufficient to cancel with the liquidated debt, the 
 
 ## Rewards From Liquidations
 
-Stability Pool depositors earn rewards in ether over time. When they withdraw all or part of their deposited tokens, or top up their deposit, they system sends them their accumulated ETH gains. 
+Stability Pool depositors earn rewards in ether over time. When they withdraw all or part of their deposited tokens, or top up their deposit, they system sends them their accumulated ETH gains.
 
 Similarly, a CDP’s accumulated rewards from liquidations are automatically applied when the owner performs any operation - e.g. adding/withdrawing collateral, or issuing/repaying CLV.
 
@@ -46,7 +46,7 @@ Liquity follows the default Truffle project structure. The project runs on Truff
 
 ### Directories
 
-- `packages/front-end/` - Contains the front-end React app for the user-facing web interface
+- `packages/frontend/` - Contains the front-end React app for the user-facing web interface
 - `packages/lib/` - A layer between the front-end and smart contracts that handles the intermediate logic and low-level transactions
 - `packages/contracts/` The backend development folder, contains the Truffle/Buidler project, contracts and tests
 - `packages/contracts/contracts/` -The core back end smart contracts written in Solidity
@@ -78,8 +78,8 @@ The two main contracts - `CDPManager.sol` and `PoolManager.sol` - hold the user-
 
 ### Data and Value Silo Contracts
 
-These contracts hold ether and/or tokens for their respective parts of the system, and contain minimal logic. 
- 
+These contracts hold ether and/or tokens for their respective parts of the system, and contain minimal logic.
+
 `CLVTokenData.sol` - contains the record of stablecoin balances.
 
 `StabilityPool.sol` stores ether and stablecoin tokens deposited by users in the StabilityPool.
@@ -129,52 +129,51 @@ The project will eventually be deployed on the Ropsten testnet.
 
 ## Running Tests
 
-Run all tests with `truffle test`, or run a specific test with` truffle test ./test/contractTest.js`
+Run all tests with `truffle test`, or run a specific test with `truffle test ./test/contractTest.js`
 
 It is recommended to first launch an instance of Ganache with plenty of ether (e.g. 10k) for each account, e.g:
 
 `ganache-cli -I 4447 -p 7545 --gasLimit=9900000 -e 10000`
 
-
 ## Units for Quantities
 
-Unless otherwise specified, all ether quantities are expressed in units of wei. 
+Unless otherwise specified, all ether quantities are expressed in units of wei.
 
 All ratios, CLV quantities, and the ETH:USD price are integer representations of decimals, to 18 decimal places of precision. For example:
 
-| **uint representation of decimal** | **Number**       |
-|--------------------------------|---------------|
-| 1100000000000000000                        | 1.1          |
-| 200000000000000000000                         | 200           |
-| 1000000000000000000                         | 1             |
-| 5432100000000000000                   | 5.4321        |
-| 34560000000                    | 0.00000003456 |
-| 370000000000000000000                       | 370           |
-| 1                              | 1e-18         |
+| **uint representation of decimal** | **Number**    |
+| ---------------------------------- | ------------- |
+| 1100000000000000000                | 1.1           |
+| 200000000000000000000              | 200           |
+| 1000000000000000000                | 1             |
+| 5432100000000000000                | 5.4321        |
+| 34560000000                        | 0.00000003456 |
+| 370000000000000000000              | 370           |
+| 1                                  | 1e-18         |
 
 etc.
 
 ## Public Data
 
 All data structures with the ‘public’ visibility specifier are ‘gettable’, with getters automatically generated by the compiler. Simply call `CDPManager::MCR()` to get the MCR, etc.
- 
+
 ## Public User-Facing Functions
 
 ### Borrower CDP Operations - _CDPManager.sol_
 
-`openLoan(uint _CLVAmount)`: payable function that creates a CDP for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional - the collateral must exceed $20 in value, and the resulting collateral ratio must exceed the minimum (110% in normal circumstances).
+`openLoan(uint _CLVAmount)`: payable function that creates a CDP for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional - the collateral must exceed \$20 in value, and the resulting collateral ratio must exceed the minimum (110% in normal circumstances).
 
 `userCreateCDP()`: creates a CDP for the caller, with zero collateral and debt.
 
-`addColl(address _user, address _hint)`: payable function that adds the received ether to the given user’s CDP. If the user does not have a CDP, a new one is opened. Allows any user to add ether to any other user’s CDP. The initial ether must exceed $20 USD in value.
+`addColl(address _user, address _hint)`: payable function that adds the received ether to the given user’s CDP. If the user does not have a CDP, a new one is opened. Allows any user to add ether to any other user’s CDP. The initial ether must exceed \$20 USD in value.
 
-`withdrawColl(uint _amount, address _hint)`: withdraws `_amount` of collateral from the caller’s CDP. Executes only if the user has an active CDP, and the withdrawal would not pull the user’s CDP below the minimum collateral ratio. If it is a partial withdrawal, it must not leave a remaining collateral with value below $20 USD.
+`withdrawColl(uint _amount, address _hint)`: withdraws `_amount` of collateral from the caller’s CDP. Executes only if the user has an active CDP, and the withdrawal would not pull the user’s CDP below the minimum collateral ratio. If it is a partial withdrawal, it must not leave a remaining collateral with value below \$20 USD.
 
 `withdrawCLV(uint _amount, address_hint)`: issues `_amount` of CLV from the caller’s CDP to the caller. Executes only if the resultant collateral ratio would remain above the minimum.
 
 `repayCLV(uint _amount, uint _hint)`: repay `_amount` of CLV to the caller’s CDP.
 
-### CDPManager Liquidation Functions  - _CDPManager.sol_
+### CDPManager Liquidation Functions - _CDPManager.sol_
 
 `liquidate(address _user)`: callable by anyone, attempts to liquidate the CDP of `_user`. Executes successfully if `_user`’s CDP is below the minimum collateral ratio (MCR).
 
@@ -186,19 +185,19 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `getCDPOwnersCount(`): get the number of active CDPs in the system
 
-### Stability Pool Functions - *PoolManager.sol*
+### Stability Pool Functions - _PoolManager.sol_
 
 `provideToSP(uint _amount)`: allows stablecoin holders to deposit `_amount` of CLV to the Stability Pool. If they already have tokens in the pool, it sends all accumulated ETH gains to their address. It tops up their CLV deposit by `_amount`, and reduces their CLV balance by `_amount`.
 
 `withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of CLV from the Stability Pool. Sends all their accumulated ETH gains to their address, and increases their CLV balance by `_amount`. Any CLV left after withdrawal remains in the Stability Pool and will earn further rewards for the user.
 
-`withdrawFromSPtoCDP(address _user)`: sends the user’s entire accumulated ETH gain to their address, and updates their CLV deposit. If called by an externally owned account, the argument _user must be the calling account.
+`withdrawFromSPtoCDP(address _user)`: sends the user’s entire accumulated ETH gain to their address, and updates their CLV deposit. If called by an externally owned account, the argument \_user must be the calling account.
 
 `withdrawPenaltyFromSP(address _address)`: if a user has ‘overstayed’ in the Stability Pool past the point at which their deposit was depleted, their subsequent ETH gains are available for anyone to claim. This function sends any claimable ETH to the caller’s address, and any legitimate ETH gain (from before the overstay penalty began) to the `_address`.
 
-### Individual Pool Functions - *StabilityPool.sol*, *ActivePool.sol*, *DefaultPool.sol*
+### Individual Pool Functions - _StabilityPool.sol_, _ActivePool.sol_, _DefaultPool.sol_
 
-`getRawEtherBalance()`: returns the actual raw ether balance of the contract. Distinct from the ETH public variable, which returns the total recorded ETH deposits. 
+`getRawEtherBalance()`: returns the actual raw ether balance of the contract. Distinct from the ETH public variable, which returns the total recorded ETH deposits.
 
 ### Name Registry
 
@@ -214,9 +213,9 @@ A hint is the address of a CDP with a position in the sorted list close to the c
 
 All CDP operations take a ‘hint’ argument. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call.
 
-The `CDPManager::getApproxHint()` function can be used to generate a useful hint, which can then be passed as an argument to the desired CDP operation or to `SortedCDPs::findInsertPosition()` to get an exact hint. 
+The `CDPManager::getApproxHint()` function can be used to generate a useful hint, which can then be passed as an argument to the desired CDP operation or to `SortedCDPs::findInsertPosition()` to get an exact hint.
 
-`getApproxHint()` takes two arguments: `CR`, and `numTrials`.  The function randomly selects `numTrials` amount of CDPs, and returns the one with the closest position in the list to where a CDP with a collateral ratio of `CR` should be inserted.  It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case O(sqrt(n)), if k >= 10.
+`getApproxHint()` takes two arguments: `CR`, and `numTrials`. The function randomly selects `numTrials` amount of CDPs, and returns the one with the closest position in the list to where a CDP with a collateral ratio of `CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case O(sqrt(n)), if k >= 10.
 
 **CDP operation without a hint**
 
@@ -231,7 +230,7 @@ Gas cost will be worst case O(n), where n is the size of the `SortedCDPs` list.
 2. The front end computes a new collateral ratio locally, based on the change in collateral and/or debt.
 3. Call `CDPManager::getApproxHint()`, passing it the computed collateral ratio. Returns an address close to the correct insert position
 4. Call `SortedCDPs::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`.
-5. Pass the exact position as an argument to the CDP operation function call. (Note that the hint may become slightly inexact due to  pending transactions that are processed first, though this is gracefully handled by the system.)
+5. Pass the exact position as an argument to the CDP operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be O(1).
 
