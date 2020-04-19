@@ -1,5 +1,7 @@
 # Liquity System Summary
 
+![Tests](https://github.com/cvalkan/cleverage/workflows/Tests/badge.svg)
+
 Liquity is a collateralized stablecoin platform. Users can lock up ether, and issue stablecoin tokens (CLV) to their own Ethereum address, and subsequently transfer those tokens to any other Ethereum address.
 
 The stablecoin tokens are economically guaranteed to maintain value of 1 CLV = \$1 USD, due to two system properties:
