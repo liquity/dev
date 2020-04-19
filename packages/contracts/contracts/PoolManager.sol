@@ -452,12 +452,16 @@ contract PoolManager is Ownable, IPoolManager {
         uint CLVLossNumerator = debtToOffset.mul(1e18).sub(lastCLVLossError_Offset);
         uint ETHNumerator = collToAdd.mul(1e18).add(lastETHError_Offset);
        
+       console.log("CLVLossNumerator is %s", CLVLossNumerator);
+       console.log("totalCLVDeposits is %s", totalCLVDeposits);
         // compute the CLV and ETH rewards 
-        uint CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits)).add(1);  // Add 1 to make the error in the quotient positive
+        uint CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits));  
         uint ETHGainPerUnitStaked = ETHNumerator.div(totalCLVDeposits); // Error in quotient is negative
 
         lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(totalCLVDeposits)).sub(CLVLossNumerator);
         lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(totalCLVDeposits));  
+
+        console.log("CLVLossPerUnitStaked is %s", CLVLossPerUnitStaked);
 
         uint productFactor = uint(1e18).sub(CLVLossPerUnitStaked);
 
@@ -474,6 +478,8 @@ contract PoolManager is Ownable, IPoolManager {
         stabilityPool.decreaseTotalCLVDeposits(debtToOffset);
       
         // Cancel the liquidated CLV debt with the CLV in the stability pool
+        // console.log("debtToOffset is %s", debtToOffset);
+        // console.log("activePool.getCLV() is %s", activePool.getCLV());
         activePool.decreaseCLV(debtToOffset);  
         stabilityPool.decreaseCLV(debtToOffset); 
        
