@@ -8,7 +8,7 @@
   },
   "scripts": {
     "compile": "buidler compile",
-    "test": "buidler test"
+    "test": "buidler test test/*.js"
   },
   "keywords": [],
   "author": "",
