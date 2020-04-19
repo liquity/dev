@@ -46,8 +46,11 @@ const MoneyValues = {
 
 // TODO: Make classes for function export
 
-const getDifference = (_BN, numberString) => {
-  return Number(_BN.sub(web3.utils.toBN(numberString)).abs())
+const getDifference = (x, y) => {
+  x_BN = web3.utils.toBN(x)
+  y_BN = web3.utils.toBN(y)
+
+  return Number(x_BN.sub(y_BN).abs())
 }
 
 const getGasMetrics = (gasCostList) => {

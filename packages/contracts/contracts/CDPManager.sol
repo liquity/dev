@@ -166,7 +166,6 @@ contract CDPManager is Ownable, ICDPManager {
         require(ICR >= MCR, "CDPManager: ICR of prospective loan must be >= than the MCR"); 
       
         uint newTCR = getNewTCR(msg.value, _CLVAmount, price);  
-        require (newTCR >= CCR || _CLVAmount == 0, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted"); 
        
         // Update loan properties
         CDPs[user].status = Status.active;  
@@ -373,7 +372,6 @@ contract CDPManager is Ownable, ICDPManager {
         uint debt = CDPs[user].debt;
 
         uint newTCR = getNewTCRFromDecrease(coll, debt, price);
-        require (newTCR >= CCR, "CDPManager: Closing the loan must not pull TCR below CCR");
         
         removeStake(user);
         closeCDP(user);

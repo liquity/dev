@@ -100,7 +100,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is 150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // console.log("TCR is" + TCR)
@@ -125,7 +125,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -140,7 +140,6 @@ contract('CDPManager', async accounts => {
       assert.fail(txData)
     } catch (err) {
       assert.include(err.message, 'revert')
-      assert.include(err.message, 'Debt issuance is not permitted during Recovery Mode')
     }
   })
 
@@ -153,7 +152,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -177,7 +176,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -208,7 +207,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -235,7 +234,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -262,7 +261,7 @@ contract('CDPManager', async accounts => {
 
     // Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -290,7 +289,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // --- TEST ---
     const recoveryMode_Before = await cdpManager.recoveryMode();
@@ -309,7 +308,7 @@ contract('CDPManager', async accounts => {
 
      //  Alice and Bob withdraw such that the TCR is ~150%
      await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-     await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+     await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -337,7 +336,7 @@ contract('CDPManager', async accounts => {
 
    //  Alice and Bob withdraw such that the TCR is ~150%
    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-   await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+   await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -379,8 +378,8 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
-    await cdpManager.withdrawCLV('390000000000000000000', dennis, { from: dennis })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -421,7 +420,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -464,8 +463,8 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is 150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
-    await cdpManager.withdrawCLV('390000000000000000000', dennis, { from: dennis })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     // Alice deposits to SP
     await poolManager.provideToSP('400000000000000000000', { from: alice })
@@ -550,7 +549,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     //  Bob withdraws 2000 CLV, bringing his ICR to 210%
     await cdpManager.withdrawCLV('2000000000000000000000', bob, { from: bob })
@@ -644,7 +643,7 @@ contract('CDPManager', async accounts => {
 
      //  Alice and Dennis withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', dennis, { from: dennis })
+    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     // Alice deposits 400CLV to the Stability Pool
     await poolManager.provideToSP('400000000000000000000', { from: alice })
