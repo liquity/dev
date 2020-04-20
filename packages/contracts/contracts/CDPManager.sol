@@ -62,8 +62,6 @@ contract CDPManager is Ownable, ICDPManager {
         Status status;
         uint arrayIndex;
     }
-    
-    bool public recoveryMode;
 
     mapping (address => CDP) public CDPs;
 
@@ -152,7 +150,7 @@ contract CDPManager is Ownable, ICDPManager {
 
     function openLoan(uint _CLVAmount, address _hint) public payable returns (bool) {
         uint price = priceFeed.getPrice(); 
-        bool recoveryMode = checkTCRAndSetRecoveryMode(price); 
+        bool recoveryMode = checkRecoveryMode(); 
         
         address user = _msgSender(); 
        
@@ -166,6 +164,7 @@ contract CDPManager is Ownable, ICDPManager {
         require(ICR >= MCR, "CDPManager: ICR of prospective loan must be >= than the MCR"); 
       
         uint newTCR = getNewTCR(msg.value, _CLVAmount, price);  
+        require (newTCR >= CCR || _CLVAmount == 0, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted"); 
        
         // Update loan properties
         CDPs[user].status = Status.active;  
@@ -186,7 +185,6 @@ contract CDPManager is Ownable, ICDPManager {
     
         poolManager.withdrawCLV(user, _CLVAmount); 
        
-        checkTCRAndSetRecoveryMode(price); 
         emit CDPUpdated(user, 
                         _CLVAmount, 
                         msg.value,
@@ -232,7 +230,6 @@ contract CDPManager is Ownable, ICDPManager {
         // Send the received collateral to PoolManager, to forward to ActivePool
         poolManager.addColl.value(msg.value)();
   
-        checkTCRAndSetRecoveryMode(price);
         emit CDPUpdated(_user, 
                         CDPs[_user].debt, 
                         newColl,
@@ -245,7 +242,7 @@ contract CDPManager is Ownable, ICDPManager {
     // TODO: Check re-entrancy protection
     function withdrawColl(uint _amount, address _hint) public returns (bool) {
         uint price = priceFeed.getPrice();
-        checkTCRAndSetRecoveryMode(price);
+        bool recoveryMode = checkRecoveryMode();
 
         address user = _msgSender();
         require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
@@ -258,7 +255,6 @@ contract CDPManager is Ownable, ICDPManager {
         require(getUSDValue(newColl, price) >= MIN_COLL_IN_USD  || newColl == 0, 
                 "CDPManager: Remaining collateral must have $USD value >= 20, or be zero");
 
-     
         uint newICR = getNewICRfromCollDecrease(user, _amount, price); 
 
         require(recoveryMode == false, "CDPManager: Collateral withdrawal is not permitted during Recovery Mode");
@@ -288,7 +284,7 @@ contract CDPManager is Ownable, ICDPManager {
     // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
     function withdrawCLV(uint _amount, address _hint) public returns (bool) {
         uint price = priceFeed.getPrice();
-        bool recoveryMode = checkTCRAndSetRecoveryMode(price);
+        bool recoveryMode = checkRecoveryMode();
 
         address user = _msgSender();
         
@@ -349,7 +345,6 @@ contract CDPManager is Ownable, ICDPManager {
         // Burn the received amount of CLV from the user's balance, and remove it from the ActivePool
         poolManager.repayCLV(user, _amount);
         
-        checkTCRAndSetRecoveryMode(price);
         emit CDPUpdated(user, 
                         newDebt, 
                         CDPs[user].coll,
@@ -360,7 +355,7 @@ contract CDPManager is Ownable, ICDPManager {
 
     function closeLoan() public returns (bool) {
         uint price = priceFeed.getPrice();
-        bool recoveryMode = checkTCRAndSetRecoveryMode(price);
+        bool recoveryMode = checkRecoveryMode();
         
         address user = _msgSender();
         applyPendingRewards(user);
@@ -380,7 +375,6 @@ contract CDPManager is Ownable, ICDPManager {
         poolManager.repayCLV(user, debt);
         poolManager.withdrawColl(user, coll);
 
-        checkTCRAndSetRecoveryMode(price);
         emit CDPUpdated(user, 0, 0, 0);
         return true; 
     }
@@ -391,7 +385,7 @@ contract CDPManager is Ownable, ICDPManager {
     // TODO: Left public for initial testing. Make internal.
     function liquidate(address _user) public returns (bool) {
         uint price = priceFeed.getPrice();
-        bool recoveryMode = checkTCRAndSetRecoveryMode(price);
+        bool recoveryMode = checkRecoveryMode();
 
         require(CDPs[_user].status == Status.active, "CDPManager: CDP does not exist or is already closed");
         
@@ -490,7 +484,6 @@ contract CDPManager is Ownable, ICDPManager {
                 sortedCDPs.reInsert(_user, newICR, price, _user, _user); 
             }
         } 
-        checkTCRAndSetRecoveryMode(price);
         emit CDPUpdated(_user, 
                     CDPs[_user].debt, 
                     CDPs[_user].coll,
@@ -502,7 +495,7 @@ contract CDPManager is Ownable, ICDPManager {
     // TODO: Should  be synchronized with PriceFeed and called every time the price is updated
     function liquidateCDPs(uint n) public returns (bool) {  
         uint price = priceFeed.getPrice();
-        bool recoveryMode = checkTCRAndSetRecoveryMode(price);
+        bool recoveryMode = checkRecoveryMode();
 
         if (recoveryMode == true) {
             uint i;
@@ -513,7 +506,7 @@ contract CDPManager is Ownable, ICDPManager {
                 liquidate(user);
                 /* Break loop if the system has left recovery mode and all active CDPs are 
                 above the MCR, or if the loop reaches the first CDP in the sorted list  */
-                if ((recoveryMode == false && collRatio >= MCR) || (user == sortedCDPs.getFirst())) { break; }
+                if ((checkRecoveryMode() == false && collRatio >= MCR) || (user == sortedCDPs.getFirst())) { break; }
                 i++;
             }
             return true;
@@ -1017,29 +1010,23 @@ contract CDPManager is Ownable, ICDPManager {
         return newTCR;
     }
 
-    function checkTCRAndSetRecoveryMode(uint _price) public returns (bool){
+    function checkRecoveryMode() public view returns (bool){
+        uint price = priceFeed.getPrice();
+
         uint activeColl = activePool.getETH();
         uint activeDebt = activePool.getCLV();
         uint liquidatedColl = defaultPool.getETH();
         uint closedDebt = defaultPool.getCLV();
 
-        uint totalCollateral  = activeColl.add(liquidatedColl);
-       
+        uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt); 
 
-        uint TCR = computeICR(totalCollateral, totalDebt, _price); 
+        uint TCR = computeICR(totalCollateral, totalDebt, price); 
         
-        /* if TCR falls below 150%, trigger recovery mode. If TCR rises above 150%, 
-        disable recovery mode */
-        bool recoveryModeInMem;
-
-        if ((TCR < 1500000000000000000) && (recoveryMode == false)) {
-            recoveryMode = true;
-            recoveryModeInMem = true;
-        } else if ((TCR >= 1500000000000000000) && (recoveryMode == true)) {
-            recoveryMode = false;
-            recoveryModeInMem = false;
+        if (TCR < CCR) {
+            return true;
+        } else {
+            return false;
         }
-        return recoveryModeInMem;
     }
 }

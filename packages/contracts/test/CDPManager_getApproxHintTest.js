@@ -71,7 +71,6 @@ contract('CDPManager', async accounts => {
     console.time('makeCDPsInSequence')
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-      console.log("coll is" + coll)
       await cdpManager.addColl(account, account, { from: account, value: coll })
       await cdpManager.withdrawCLV('200000000000000000000', account, { from: account })
   
@@ -223,11 +222,9 @@ contract('CDPManager', async accounts => {
       const min = 200
       const max = 200 + numAccounts
       const ICR_Percent = (Math.floor(Math.random() * (max - min) + min)) 
-      console.log(`Run ${i}: random ICR is ${ICR_Percent}`)
 
       // Convert ICR to a duint
       const ICR = web3.utils.toWei((ICR_Percent * 10).toString(), 'finney') 
-      console.log(`ICR is ${ICR}`)
   
       const hintAddress = await cdpManager.getApproxHint(ICR, sqrtLength * 10)
       const ICR_hintAddress = await cdpManager.getCurrentICR(hintAddress, price)
