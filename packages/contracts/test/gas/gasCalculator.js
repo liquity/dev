@@ -464,7 +464,7 @@ contract('Gas cost tests', async accounts => {
     appendData({gas: gas}, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues 100 CLV'
   
     const amountETH = _10_Ether
@@ -476,7 +476,7 @@ contract('Gas cost tests', async accounts => {
     appendData(gasResults, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'openLoan(), 10 accounts, each account adds 10 ether and issues less CLV than the previous one'
     const amountETH = _10_Ether
     const amountCLV = 200
@@ -500,7 +500,7 @@ contract('Gas cost tests', async accounts => {
 
   // --- closeLoan() ---
   
-  it.only("", async () => {
+  it("", async () => {
     const message = 'closeLoan(), 10 accounts, 1 account closes its loan'
     await openLoan_allAccounts_decreasingCLVAmounts(_10_Accounts, cdpManager, _10_Ether, 200)
 
@@ -511,7 +511,7 @@ contract('Gas cost tests', async accounts => {
     appendData({gas: gas}, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'closeLoan(), 20 accounts, each account adds 10 ether and issues less CLV than the previous one. First 10 accounts close their loan. '
     await openLoan_allAccounts_decreasingCLVAmounts(_20_Accounts, cdpManager, _10_Ether, 200)
     

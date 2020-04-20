@@ -55,11 +55,15 @@ contract PoolManager is Ownable, IPoolManager {
    
     mapping (address => uint) public deposits;
 
+  
+
     struct Snapshot {
         uint ETH;
         uint CLV;
+        uint scale;
     }
-    
+
+
     /* Running product by which to multiply an initial deposit, in order to find the current compounded deposit, given
     a series of liquidations, each of which cancel some CLV debt with the deposit. 
 
@@ -70,7 +74,13 @@ contract PoolManager is Ownable, IPoolManager {
     /* Sum of accumulated ETH gains per unit staked.  During it's lifetime, each deposit d0 earns:
     An ETH *gain* of ( d0 * [S_ETH - S_ETH(0)] ), where S_ETH(0) is the snapshot of S_ETH taken at the instant
     the deposit was made. 18 DP decimal.  */
-    uint public S_ETH;
+    // uint public S_ETH;
+
+      // Every time the scale of P shifts by 1e18, the scale is incremented by 1
+    uint public scale;
+
+    // record the sum S at different scales
+    mapping (uint => uint) public scaleToSum;
 
     // Map users to their individual snapshots of S_CLV and the S_ETH
     mapping (address => Snapshot) public snapshot;
@@ -246,19 +256,31 @@ contract PoolManager is Ownable, IPoolManager {
         CLV.burn(_account, _CLV); 
         return true;
     }
-
     /* Return the accumulated ETH Gain for the user, for the duration that this deposit was held.
 
     Given by the formula:  E = d0 * (S_ETH - S_ETH(0))/P_CLV(0)
     
     where S_ETH(0), P_CLV(0) are snapshots of the sum S_ETH and product P_ETH, respectively.
     */
+
     function getCurrentETHGain(address _user) public view returns(uint) {
         uint userDeposit = deposits[_user];
         uint snapshot_S_ETH = snapshot[_user].ETH;  
         uint snapshot_P_CLV = snapshot[_user].CLV;
-   
-        uint ETHGain = userDeposit.mul(S_ETH.sub(snapshot_S_ETH)).div(snapshot_P_CLV); 
+        uint snapshot_scale = snapshot[_user].scale;
+
+        uint ETHGain;
+        uint scaleDiff = scale.sub(snapshot_scale);
+
+        if (scaleDiff == 0) { 
+            ETHGain = userDeposit.mul(scaleToSum[scale].sub(snapshot_S_ETH)).div(snapshot_P_CLV);
+        } else {
+            uint firstPortion = scaleToSum[scale.sub(1)].sub(snapshot_S_ETH);
+            uint secondPortion = scaleToSum[scale].div(1e18);
+
+            ETHGain = userDeposit.mul(firstPortion.add(secondPortion)).div(snapshot_P_CLV);
+        }
+
         return ETHGain;
     }
 
@@ -271,9 +293,20 @@ contract PoolManager is Ownable, IPoolManager {
     function getCompoundedCLVDeposit(address _user) internal view returns(uint) {
         uint userDeposit = deposits[_user];
         uint snapshot_P_CLV = snapshot[_user].CLV; 
+        uint snapshot_scale = snapshot[_user].scale;
+
+        uint compoundedDeposit;
+        uint scaleDiff = scale.sub(snapshot_scale);
+        
         console.log(" snapshot[_user].CLV: %s",  snapshot[_user].CLV);
 
-        uint compoundedDeposit = userDeposit.mul(P_CLV).div(snapshot_P_CLV);
+        if (scaleDiff == 0) { 
+            compoundedDeposit = userDeposit.mul(P_CLV).div(snapshot_P_CLV);
+        } else if (scaleDiff == 1) {
+            compoundedDeposit = (P_CLV >= snapshot_P_CLV) ? userDeposit.mul(P_CLV).div(snapshot_P_CLV).div(1e18) : 0;
+        } else if (scaleDiff > 1) {
+            compoundedDeposit = 0;
+        }
 
         return compoundedDeposit;
     }
@@ -294,9 +327,10 @@ contract PoolManager is Ownable, IPoolManager {
     
         // Record new individual snapshots of the running product P_CLV and sum S_ETH for the user
         snapshot[_address].CLV = P_CLV;
-        snapshot[_address].ETH = S_ETH;
+        snapshot[_address].ETH = scaleToSum[scale];
+        snapshot[_address].scale = scale;
 
-        emit UserSnapshotUpdated(P_CLV, S_ETH);
+        emit UserSnapshotUpdated(snapshot[_address].CLV, snapshot[_address].ETH);
         emit UserDepositChanged(_address, _amount);
         return true;
     }
@@ -449,16 +483,22 @@ contract PoolManager is Ownable, IPoolManager {
         // Collateral to be added in proportion to the debt that is cancelled 
         uint collToAdd = _coll.mul(debtToOffset).div(_debt);
         
+         console.log("debtToOffset is %s", debtToOffset);
+       console.log("lastCLVLossError_Offset is %s", lastCLVLossError_Offset);
         uint CLVLossNumerator = debtToOffset.mul(1e18).sub(lastCLVLossError_Offset);
         uint ETHNumerator = collToAdd.mul(1e18).add(lastETHError_Offset);
        
        console.log("CLVLossNumerator is %s", CLVLossNumerator);
        console.log("totalCLVDeposits is %s", totalCLVDeposits);
+
         // compute the CLV and ETH rewards 
-        uint CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits));  
+        uint CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits)).add(1);  
         uint ETHGainPerUnitStaked = ETHNumerator.div(totalCLVDeposits); // Error in quotient is negative
 
+        console.log("CLVLossPerUnitStaked is %s", CLVLossPerUnitStaked);
+        console.log("ETHGainPerUnitStaked is %s", ETHGainPerUnitStaked);
         lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(totalCLVDeposits)).sub(CLVLossNumerator);
+        console.log("lastCLVLossError_Offset 2 is %s", lastCLVLossError_Offset);
         lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(totalCLVDeposits));  
 
         console.log("CLVLossPerUnitStaked is %s", CLVLossPerUnitStaked);
@@ -466,13 +506,24 @@ contract PoolManager is Ownable, IPoolManager {
         uint productFactor = uint(1e18).sub(CLVLossPerUnitStaked);
 
         // TODO: Error correction for P_CLV and marginalETHGain?
+        
+        // Update the sum:
         uint marginalETHGain = ETHGainPerUnitStaked.mul(P_CLV).div(1e18);
+        scaleToSum[scale] = scaleToSum[scale].add(marginalETHGain);
+        // S_ETH = S_ETH.add(marginalETHGain);
+        emit S_ETHUpdated(scaleToSum[scale]); 
 
-        S_ETH = S_ETH.add(marginalETHGain);
-        emit S_ETHUpdated(S_ETH); 
+        /* if multiplication by the product factor would round P to zero,
+        increment the scale */
+        if (P_CLV.mul(productFactor) < 1e18) {
+            P_CLV = P_CLV.mul(productFactor);
+            scale = scale.add(1);
+         } else {
+            P_CLV = P_CLV.mul(productFactor).div(1e18); 
+        }
 
-        P_CLV = P_CLV.mul(productFactor).div(1e18); 
         emit P_CLVUpdated(P_CLV); 
+
 
         // Decrease totalCLVDeposits
         stabilityPool.decreaseTotalCLVDeposits(debtToOffset);
