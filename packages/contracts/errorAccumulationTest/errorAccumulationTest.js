@@ -9,7 +9,7 @@ const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 
-const testHelpers = require("../../utils/testHelpers.js")
+const testHelpers = require("../utils/testHelpers.js")
 
 const moneyVals = testHelpers.MoneyValues
 const provideToSP_allAccounts = testHelpers.provideToSP_allAccounts
@@ -21,7 +21,7 @@ const provideToSP_allAccounts_randomAmount = testHelpers.provideToSP_allAccounts
 const randAmountInWei = testHelpers.randAmountInWei
 const randAmountInGwei = testHelpers.randAmountInGwei
 
-const deploymentHelpers = require("../../utils/deploymentHelpers.js")
+const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
 const setNameRegistry = deploymentHelpers.setNameRegistry
 const connectContracts = deploymentHelpers.connectContracts
