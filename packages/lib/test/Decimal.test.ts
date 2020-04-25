@@ -1,12 +1,8 @@
 import { describe, it } from "mocha";
-import chai, { expect } from "chai";
+import { expect } from "chai";
 import { bigNumberify } from "ethers/utils";
-import { solidity } from "ethereum-waffle";
 
 import { Decimal } from "../utils";
-
-// want assertions on BigNumbers
-chai.use(solidity);
 
 describe("Decimal", () => {
   describe(".from()", () => {

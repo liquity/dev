@@ -1,12 +1,9 @@
 import { describe, before, it } from "mocha";
-import chai, { expect } from "chai";
+import { expect } from "chai";
 import { Signer } from "ethers";
-import { solidity } from "ethereum-waffle";
 import { web3, artifacts, ethers } from "@nomiclabs/buidler";
 
 import { deployAndSetupContracts } from "./utils/deploy";
-
-chai.use(solidity);
 
 describe("utils/deploy", () => {
   let deployer: Signer;

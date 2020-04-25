@@ -2,7 +2,6 @@ import { describe, before, it } from "mocha";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { Signer } from "ethers";
-import { solidity } from "ethereum-waffle";
 import { web3, artifacts, ethers, waffle } from "@nomiclabs/buidler";
 
 import { deployAndSetupContracts } from "./utils/deploy";
@@ -12,7 +11,6 @@ import { Liquity, Trove, StabilityDeposit } from "../src/Liquity";
 
 const provider = waffle.provider;
 
-chai.use(solidity);
 chai.use(chaiAsPromised);
 
 describe("Liquity", () => {
