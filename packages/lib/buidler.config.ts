@@ -1,23 +1,20 @@
 import fs from "fs";
 import "colors";
 
-import { Wallet, Signer } from "ethers";
-import { BigNumber } from "ethers/utils";
+import { Wallet } from "@ethersproject/wallet";
+import { Signer } from "@ethersproject/abstract-signer";
+import { BigNumber } from "@ethersproject/bignumber";
 import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config";
 import { NetworkConfig } from "@nomiclabs/buidler/types";
 
 import { deployAndSetupContracts, setSilent } from "./test/utils/deploy";
 import { Liquity, Trove } from "./src/Liquity";
 import { Decimal, Difference, Decimalish, Percent } from "./utils";
-import { CDPManagerFactory } from "./types/ethers/CDPManagerFactory";
-import { PoolManagerFactory } from "./types/ethers/PoolManagerFactory";
-// import { PriceFeedFactory } from "./types/ethers/PriceFeedFactory";
-// import { NameRegistryFactory } from "./types/ethers/NameRegistryFactory";
-import { addressesOf, addressesOnNetwork } from "./src/contracts";
+import { addressesOf, addressesOnNetwork, connectToContracts } from "./src/contracts";
 
 usePlugin("@nomiclabs/buidler-web3");
 usePlugin("@nomiclabs/buidler-truffle5");
-usePlugin("@nomiclabs/buidler-waffle");
+usePlugin("buidler-ethers-v5");
 
 const generateRandomAccounts = (numberOfAccounts: number) => {
   const accounts = new Array<string>(numberOfAccounts);
@@ -60,7 +57,7 @@ const config: BuidlerConfig = {
 };
 
 task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) => {
-  const [deployer] = await bre.ethers.signers();
+  const [deployer] = await bre.ethers.getSigners();
 
   setSilent(false);
   const contracts = await deployAndSetupContracts(bre.web3, bre.artifacts, deployer);
@@ -75,18 +72,16 @@ type SetPriceFeedParams = { priceFeedAddress: string };
 task("set-pricefeed", "Set the address of the PriceFeed in the deployed contracts")
   .addPositionalParam("priceFeedAddress", "Address of new PriceFeed", undefined, types.string)
   .setAction(async ({ priceFeedAddress }: SetPriceFeedParams, bre) => {
-    const [deployer] = await bre.ethers.signers();
-    const addresses = addressesOnNetwork[bre.network.name];
+    const [deployer] = await bre.ethers.getSigners();
 
-    // const priceFeed = PriceFeedFactory.connect(addresses.priceFeed, deployer);
-    const cdpManager = CDPManagerFactory.connect(addresses.cdpManager, deployer);
-    const poolManager = PoolManagerFactory.connect(addresses.poolManager, deployer);
-    // const nameRegistry = NameRegistryFactory.connect(addresses.nameRegistry, deployer);
+    const { cdpManager, poolManager, priceFeed } = connectToContracts(
+      addressesOnNetwork[bre.network.name],
+      deployer
+    );
 
     // await priceFeed.setCDPManagerAddress(cdpManager.address);
     await cdpManager.setPriceFeed(priceFeedAddress);
     await poolManager.setPriceFeed(priceFeedAddress);
-    // await nameRegistry.updateAddress("PriceFeed", priceFeed.address);
   });
 
 task(
@@ -96,7 +91,7 @@ task(
   // network, so this task must be called repeatedly (e.g. in an infinite loop) to actually create
   // many Troves.
   async (_taskArgs, bre) => {
-    const [deployer, funder, ...randomUsers] = await bre.ethers.signers();
+    const [deployer, funder, ...randomUsers] = await bre.ethers.getSigners();
     const addresses =
       addressesOnNetwork[bre.network.name] ||
       addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
@@ -237,7 +232,7 @@ task(
     const connectUsers = (users: Signer[]) =>
       Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
 
-    const [deployer, funder, ...randomUsers] = await bre.ethers.signers();
+    const [deployer, funder, ...randomUsers] = await bre.ethers.getSigners();
 
     const addresses =
       addressesOnNetwork[bre.network.name] ||
@@ -304,12 +299,7 @@ task(
               if (Math.random() < 0.5) {
                 collateral = Decimal.from(randomValue);
 
-                const maxDebt = parseInt(
-                  price
-                    .mul(collateral)
-                    .div(1.1)
-                    .toString(0)
-                );
+                const maxDebt = parseInt(price.mul(collateral).div(1.1).toString(0));
 
                 debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
               } else {
@@ -403,7 +393,7 @@ task(
     const connectUsers = (users: Signer[]) =>
       Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
 
-    const [deployer, funder] = await bre.ethers.signers();
+    const [deployer, funder] = await bre.ethers.getSigners();
 
     const addresses =
       addressesOnNetwork[bre.network.name] ||
@@ -472,7 +462,7 @@ task(
 );
 
 task("check-sorting", "Check if Troves are sorted by ICR", async (_taskArgs, bre) => {
-  const [deployer] = await bre.ethers.signers();
+  const [deployer] = await bre.ethers.getSigners();
 
   const addresses =
     addressesOnNetwork[bre.network.name] ||

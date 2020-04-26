@@ -1,26 +1,22 @@
-import { Signer, Event } from "ethers";
-import { Provider, BlockTag } from "ethers/providers";
-import { bigNumberify, BigNumberish, BigNumber } from "ethers/utils";
-import { AddressZero } from "ethers/constants";
+import { Signer } from "@ethersproject/abstract-signer";
+import { Event } from "@ethersproject/contracts";
+import { BigNumberish, BigNumber } from "@ethersproject/bignumber";
+import { Provider, BlockTag } from "@ethersproject/abstract-provider";
+import { AddressZero } from "@ethersproject/constants";
 
 import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
-import { CDPManager } from "../types/ethers/CDPManager";
-import { CDPManagerFactory } from "../types/ethers/CDPManagerFactory";
-import { SortedCDPs } from "../types/ethers/SortedCDPs";
-import { SortedCDPsFactory } from "../types/ethers/SortedCDPsFactory";
-import { PriceFeed } from "../types/ethers/PriceFeed";
-import { PriceFeedFactory } from "../types/ethers/PriceFeedFactory";
-import { PoolManager } from "../types/ethers/PoolManager";
-import { PoolManagerFactory } from "../types/ethers/PoolManagerFactory";
-import { ActivePool } from "../types/ethers/ActivePool";
-import { ActivePoolFactory } from "../types/ethers/ActivePoolFactory";
-import { DefaultPool } from "../types/ethers/DefaultPool";
-import { DefaultPoolFactory } from "../types/ethers/DefaultPoolFactory";
-import { StabilityPool } from "../types/ethers/StabilityPool";
-import { StabilityPoolFactory } from "../types/ethers/StabilityPoolFactory";
-import { CLVToken } from "../types/ethers/CLVToken";
-import { CLVTokenFactory } from "../types/ethers/CLVTokenFactory";
+import {
+  CDPManager,
+  SortedCDPs,
+  PriceFeed,
+  PoolManager,
+  ActivePool,
+  DefaultPool,
+  StabilityPool,
+  CLVToken
+} from "../types";
+import { connectToContractsViaCdpManager } from "./contracts";
 
 interface Trovish {
   readonly collateral?: Decimalish;
@@ -345,55 +341,9 @@ export class Liquity {
       ? await signerOrProvider.getAddress()
       : undefined;
 
-    const cdpManager = CDPManagerFactory.connect(cdpManagerAddress, signerOrProvider);
+    const contracts = await connectToContractsViaCdpManager(cdpManagerAddress, signerOrProvider);
 
-    const [
-      priceFeed,
-      sortedCDPs,
-      clvToken,
-      [poolManager, activePool, defaultPool, stabilityPool]
-    ] = await Promise.all([
-      cdpManager.priceFeedAddress().then(address => {
-        return PriceFeedFactory.connect(address, signerOrProvider);
-      }),
-      cdpManager.sortedCDPsAddress().then(address => {
-        return SortedCDPsFactory.connect(address, signerOrProvider);
-      }),
-      cdpManager.clvTokenAddress().then(address => {
-        return CLVTokenFactory.connect(address, signerOrProvider);
-      }),
-      cdpManager.poolManagerAddress().then(address => {
-        const poolManager = PoolManagerFactory.connect(address, signerOrProvider);
-
-        return Promise.all([
-          Promise.resolve(poolManager),
-
-          poolManager.activePoolAddress().then(address => {
-            return ActivePoolFactory.connect(address, signerOrProvider);
-          }),
-          poolManager.defaultPoolAddress().then(address => {
-            return DefaultPoolFactory.connect(address, signerOrProvider);
-          }),
-          poolManager.stabilityPoolAddress().then(address => {
-            return StabilityPoolFactory.connect(address, signerOrProvider);
-          })
-        ]);
-      })
-    ]);
-
-    return new Liquity(
-      {
-        cdpManager,
-        priceFeed,
-        sortedCDPs,
-        poolManager,
-        activePool,
-        defaultPool,
-        stabilityPool,
-        clvToken
-      },
-      userAddress
-    );
+    return new Liquity(contracts, userAddress);
   }
 
   private requireAddress(): string {
@@ -481,11 +431,11 @@ export class Liquity {
       return AddressZero;
     }
 
-    const numberOfTrials = bigNumberify(Math.ceil(Math.sqrt(numberOfTroves))); // XXX not multiplying by 10 here
+    const numberOfTrials = BigNumber.from(Math.ceil(Math.sqrt(numberOfTroves))); // XXX not multiplying by 10 here
 
     const approxHint = await this.cdpManager.getApproxHint(
       collateralRatio.bigNumber,
-      bigNumberify(numberOfTrials)
+      numberOfTrials
     );
 
     const { 0: hint } = await this.sortedCDPs.findInsertPosition(

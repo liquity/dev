@@ -1,15 +1,15 @@
 import { describe, before, it } from "mocha";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { Signer } from "ethers";
-import { web3, artifacts, ethers, waffle } from "@nomiclabs/buidler";
+import { Signer } from "@ethersproject/abstract-signer";
+import { web3, artifacts, ethers } from "@nomiclabs/buidler";
 
 import { deployAndSetupContracts } from "./utils/deploy";
 import { Decimal, Decimalish } from "../utils/Decimal";
 import { LiquityContractAddresses, addressesOf } from "../src/contracts";
 import { Liquity, Trove, StabilityDeposit } from "../src/Liquity";
 
-const provider = waffle.provider;
+const provider = ethers.provider;
 
 chai.use(chaiAsPromised);
 
@@ -44,7 +44,7 @@ describe("Liquity", () => {
   };
 
   before(async () => {
-    [deployer, funder, user, ...otherUsers] = await ethers.signers();
+    [deployer, funder, user, ...otherUsers] = await ethers.getSigners();
     addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
   });
 
@@ -61,7 +61,10 @@ describe("Liquity", () => {
     if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
       await funder.sendTransaction({
         to: user.getAddress(),
-        value: targetBalance.add(txCost).sub(balance).add(1),
+        value: targetBalance
+          .add(txCost)
+          .sub(balance)
+          .add(1),
         gasLimit
       });
 
@@ -86,7 +89,7 @@ describe("Liquity", () => {
       }
     }
 
-    expect(await provider.getBalance(user.getAddress())).to.equal(targetBalance);
+    expect(`${await provider.getBalance(user.getAddress())}`).to.equal(`${targetBalance}`);
   });
 
   it("should connect to contracts by CDPManager address", async () => {

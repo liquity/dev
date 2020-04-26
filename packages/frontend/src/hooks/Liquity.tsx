@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useCallback } from "react";
-import { BigNumber } from "ethers/utils";
-import { Web3Provider } from "ethers/providers";
+import { BigNumber } from "@ethersproject/bignumber";
+import { Provider } from "@ethersproject/abstract-provider";
+import { JsonRpcProvider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
 import {
@@ -20,7 +21,7 @@ export const deployerAddress = "0x70E78E2D8B2a4fDb073B7F61c4653c23aE12DDDF";
 
 type LiquityContext = {
   account: string;
-  provider: Web3Provider;
+  provider: Provider;
   contracts: LiquityContracts;
   liquity: Liquity;
   devChain: boolean;
@@ -33,7 +34,7 @@ type LiquityProviderProps = {
 };
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, loader }) => {
-  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
+  const { library: provider, account, chainId } = useWeb3React<JsonRpcProvider>();
 
   if (!provider || !account || !chainId) {
     return <>{loader}</>;
@@ -61,7 +62,7 @@ export const useLiquity = () => {
   return liquityContext;
 };
 
-export const useLiquityStore = (provider: Web3Provider, account: string, liquity: Liquity) => {
+export const useLiquityStore = (provider: Provider, account: string, liquity: Liquity) => {
   const getTotal = useCallback(() => liquity.getTotal(), [liquity]);
   const watchTotal = useCallback(
     (onTotalChanged: (total: Trove) => void) => {
