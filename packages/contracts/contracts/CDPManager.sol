@@ -239,7 +239,6 @@ contract CDPManager is Ownable, ICDPManager {
     }
     
     // Withdraw ETH collateral from a CDP
-    // TODO: Check re-entrancy protection
     function withdrawColl(uint _amount, address _hint) public returns (bool) {
         uint price = priceFeed.getPrice();
         bool recoveryMode = checkRecoveryMode();
@@ -330,8 +329,6 @@ contract CDPManager is Ownable, ICDPManager {
 
         uint debt = CDPs[user].debt;
         require(_amount <= debt, "CDPManager: Repaid amount is larger than current debt");
-        
-        // TODO: Maybe allow foreign accounts to repay loans
         
         // Update the CDP's debt
         uint newDebt = debt.sub(_amount);
@@ -480,7 +477,7 @@ contract CDPManager is Ownable, ICDPManager {
                 updateStakeAndTotalStakes(_user);
                
                 uint newICR = getCurrentICR(_user, price);
-                // TODO: use getApproxHint() here? Analyze gas usage and find size of list at which getApproxHint() is a net gas-saver
+          
                 sortedCDPs.reInsert(_user, newICR, price, _user, _user); 
             }
         } 
@@ -492,7 +489,6 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     // Closes a maximum number of n multiple under-collateralized CDPs, starting from the one with the lowest collateral ratio
-    // TODO: Should  be synchronized with PriceFeed and called every time the price is updated
     function liquidateCDPs(uint n) public returns (bool) {  
         uint price = priceFeed.getPrice();
         bool recoveryMode = checkRecoveryMode();
