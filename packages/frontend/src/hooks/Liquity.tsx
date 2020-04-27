@@ -7,7 +7,7 @@ import {
   Liquity,
   Trove,
   StabilityDeposit,
-  addressesOnNetwork,
+  deploymentOnNetwork,
   connectToContracts,
   LiquityContracts,
   DEV_CHAIN_ID
@@ -24,6 +24,8 @@ type LiquityContext = {
   contracts: LiquityContracts;
   liquity: Liquity;
   devChain: boolean;
+  contractsVersion: string;
+  deploymentDate: number;
 };
 
 const LiquityContext = createContext<LiquityContext | undefined>(undefined);
@@ -39,13 +41,15 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, load
     return <>{loader}</>;
   }
 
-  const addresses = addressesOnNetwork[chainId];
+  const { addresses, version: contractsVersion, deploymentDate } = deploymentOnNetwork[chainId];
   const contracts = connectToContracts(addresses, provider.getSigner(account));
   const liquity = new Liquity(contracts, account);
   const devChain = chainId === DEV_CHAIN_ID;
 
   return (
-    <LiquityContext.Provider value={{ account, provider, contracts, liquity, devChain }}>
+    <LiquityContext.Provider
+      value={{ account, provider, contracts, liquity, devChain, contractsVersion, deploymentDate }}
+    >
       {children}
     </LiquityContext.Provider>
   );

@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import "colors";
 
 import { Wallet, Signer } from "ethers";
@@ -13,7 +14,7 @@ import { CDPManagerFactory } from "./types/ethers/CDPManagerFactory";
 import { PoolManagerFactory } from "./types/ethers/PoolManagerFactory";
 // import { PriceFeedFactory } from "./types/ethers/PriceFeedFactory";
 // import { NameRegistryFactory } from "./types/ethers/NameRegistryFactory";
-import { addressesOf, addressesOnNetwork } from "./src/contracts";
+import { addressesOf, deploymentOnNetwork } from "./src/contracts";
 
 usePlugin("@nomiclabs/buidler-web3");
 usePlugin("@nomiclabs/buidler-truffle5");
@@ -66,7 +67,16 @@ task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) =>
   const contracts = await deployAndSetupContracts(bre.web3, bre.artifacts, deployer);
 
   console.log();
-  console.log(addressesOf(contracts));
+  console.log({
+    [bre.network.name]: {
+      addresses: addressesOf(contracts),
+      version: fs
+        .readFileSync(path.join(bre.config.paths.artifacts, "version"))
+        .toString()
+        .trim(),
+      deploymentDate: new Date().getTime()
+    }
+  });
   console.log();
 });
 
@@ -76,7 +86,7 @@ task("set-pricefeed", "Set the address of the PriceFeed in the deployed contract
   .addPositionalParam("priceFeedAddress", "Address of new PriceFeed", undefined, types.string)
   .setAction(async ({ priceFeedAddress }: SetPriceFeedParams, bre) => {
     const [deployer] = await bre.ethers.signers();
-    const addresses = addressesOnNetwork[bre.network.name];
+    const { addresses } = deploymentOnNetwork[bre.network.name];
 
     // const priceFeed = PriceFeedFactory.connect(addresses.priceFeed, deployer);
     const cdpManager = CDPManagerFactory.connect(addresses.cdpManager, deployer);
@@ -97,9 +107,9 @@ task(
   // many Troves.
   async (_taskArgs, bre) => {
     const [deployer, funder, ...randomUsers] = await bre.ethers.signers();
-    const addresses =
-      addressesOnNetwork[bre.network.name] ||
-      addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+    const { addresses } = deploymentOnNetwork[bre.network.name] || {
+      addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+    };
 
     const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
 
@@ -239,9 +249,9 @@ task(
 
     const [deployer, funder, ...randomUsers] = await bre.ethers.signers();
 
-    const addresses =
-      addressesOnNetwork[bre.network.name] ||
-      addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+    const { addresses } = deploymentOnNetwork[bre.network.name] || {
+      addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+    };
 
     const [deployerLiquity, funderLiquity, ...randomLiquities] = await connectUsers([
       deployer,
@@ -405,9 +415,9 @@ task(
 
     const [deployer, funder] = await bre.ethers.signers();
 
-    const addresses =
-      addressesOnNetwork[bre.network.name] ||
-      addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+    const { addresses } = deploymentOnNetwork[bre.network.name] || {
+      addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+    };
 
     const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder]);
 
@@ -474,9 +484,9 @@ task(
 task("check-sorting", "Check if Troves are sorted by ICR", async (_taskArgs, bre) => {
   const [deployer] = await bre.ethers.signers();
 
-  const addresses =
-    addressesOnNetwork[bre.network.name] ||
-    addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+  const { addresses } = deploymentOnNetwork[bre.network.name] || {
+    addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+  };
 
   const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
 

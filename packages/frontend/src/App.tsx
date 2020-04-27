@@ -61,7 +61,7 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, provider, liquity, contracts } = useLiquity();
+  const { account, provider, liquity, contracts, contractsVersion, deploymentDate } = useLiquity();
   const storeState = useLiquityStore(provider, account, liquity);
 
   if (!storeState.loaded) {
@@ -110,7 +110,16 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
             )}
           </Box>
           <Box px={3} width="362px">
-            <SystemStats {...{ numberOfTroves, price, total, quiInStabilityPool }} />
+            <SystemStats
+              {...{
+                numberOfTroves,
+                price,
+                total,
+                quiInStabilityPool,
+                contractsVersion,
+                deploymentDate
+              }}
+            />
             <PriceManager {...{ liquity, price }} />
           </Box>
         </Flex>
