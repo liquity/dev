@@ -197,10 +197,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                           tooltip="Liquidate"
                           requires={[
                             [
-                              trove.collateralAfterReward
-                                .add(deposit.pendingCollateralGain)
-                                .mulDiv(price, trove.debtAfterReward)
-                                .lt(1.1),
+                              trove.collateralRatioIsBelowMinimum(price),
                               "Collateral ratio not low enough"
                             ]
                           ]}

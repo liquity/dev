@@ -27,11 +27,11 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
   const pendingCollateralChange = Difference.between(
     editedTrove.collateralAfterReward,
-    originalTrove.collateral.nonZero
+    originalTrove.collateralAfterReward.nonZero
   );
   const pendingDebtChange = Difference.between(
     editedTrove.debtAfterReward,
-    originalTrove.debt.nonZero
+    originalTrove.debtAfterReward.nonZero
   );
 
   const collateralRatioAfterRewards =
@@ -42,7 +42,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   );
   const pendingCollateralRatioChange = Difference.between(
     editedTrove.collateralRatioAfterRewards(price),
-    originalTrove.collateralRatio(price).finite
+    originalTrove.collateralRatioAfterRewards(price).finite
   );
   const pendingCollateralRatioChangePct = new Percent(pendingCollateralRatioChange);
 
@@ -90,7 +90,6 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           pendingAmount={pendingCollateralChange.nonZero?.prettify()}
           pendingColor={pendingCollateralChange.positive ? "success" : "danger"}
           unit="ETH"
-          {...{ edited }}
           {...{ editingState }}
           editedAmount={editedTrove.collateralAfterReward.toString(4)}
           setEditedAmount={(editedCollateral: string) =>
@@ -104,7 +103,6 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           pendingAmount={pendingDebtChange.nonZero?.prettify()}
           pendingColor={pendingDebtChange.positive ? "danger" : "success"}
           unit="QUI"
-          {...{ edited }}
           {...{ editingState }}
           editedAmount={editedTrove.debtAfterReward.toString(2)}
           setEditedAmount={(editedDebt: string) => setEditedTrove(editedTrove.setDebt(editedDebt))}
@@ -132,7 +130,6 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
               : pendingCollateralRatioChangePct.nonZeroish(2)?.prettify()
           }
           pendingColor={pendingCollateralRatioChange.positive ? "success" : "danger"}
-          {...{ edited }}
         />
       </Box>
     </Card>

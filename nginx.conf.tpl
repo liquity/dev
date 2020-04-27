@@ -3,6 +3,11 @@ worker_processes auto;
 events {}
 
 http {
+  include mime.types;
+
+  gzip on;
+  gzip_types text/css application/javascript;
+
   ssl_session_cache   shared:SSL:10m;
   ssl_session_timeout 10m;
 

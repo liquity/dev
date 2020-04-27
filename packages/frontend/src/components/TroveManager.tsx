@@ -35,10 +35,10 @@ const TroveAction: React.FC<TroveActionProps> = ({
   const change = originalTrove.whatChanged(editedTrove);
 
   useEffect(() => {
-    if (myTransactionState.type === "idle") {
-      setChangePending(false);
-    } else if (myTransactionState.type === "waitingForApproval") {
+    if (myTransactionState.type === "waitingForApproval") {
       setChangePending(true);
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
+      setChangePending(false);
     }
   }, [myTransactionState.type, setChangePending]);
 
@@ -162,13 +162,33 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
   total,
   quiBalance
 }) => {
-  const originalTrove = trove;
+  const [originalTrove, setOriginalTrove] = useState(trove);
   const [editedTrove, setEditedTrove] = useState(trove);
   const [changePending, setChangePending] = useState(false);
 
   useEffect(() => {
-    setEditedTrove(trove);
-    setChangePending(false);
+    setOriginalTrove(trove);
+
+    if (
+      changePending &&
+      (!trove.collateral.eq(originalTrove.collateral) || !trove.debt.eq(originalTrove.debt))
+    ) {
+      setEditedTrove(trove);
+      setChangePending(false);
+    } else {
+      if (!originalTrove.isEmpty && editedTrove.isEmpty) {
+        return;
+      }
+
+      const change = originalTrove.whatChanged(editedTrove);
+
+      if (change) {
+        setEditedTrove(trove.apply(change)!);
+      } else {
+        setEditedTrove(trove);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trove]);
 
   return (

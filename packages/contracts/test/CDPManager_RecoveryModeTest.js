@@ -100,7 +100,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is 150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // console.log("TCR is" + TCR)
@@ -125,7 +125,7 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -140,7 +140,6 @@ contract('CDPManager', async accounts => {
       assert.fail(txData)
     } catch (err) {
       assert.include(err.message, 'revert')
-      assert.include(err.message, 'Debt issuance is not permitted during Recovery Mode')
     }
   })
 
@@ -153,10 +152,10 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    // const TCR = (await poolManager.getTCR()).toString()
-    // assert.equal(TCR, '1500000000000000000')
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
 
@@ -177,10 +176,10 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    // const TCR = (await poolManager.getTCR()).toString()
-    // assert.equal(TCR, '1500000000000000000')
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
 
@@ -196,11 +195,6 @@ contract('CDPManager', async accounts => {
     }
   })
 
-
-  //---
-
-
-
   it("withdrawColl(): reverts if system is in recovery mode", async () => {
     // --- SETUP ---
     await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
@@ -208,11 +202,11 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    // const TCR = (await poolManager.getTCR()).toString()
-    // assert.equal(TCR, '1500000000000000000')
-
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+    
     // --- TEST ---
 
     // price drops to 1ETH:150CLV, reducing TCR below 150%
@@ -228,19 +222,19 @@ contract('CDPManager', async accounts => {
     }
   })
 
-  it("checkTCRandSetRecoveryMode(): changes recoveryMode to true if TCR falls below CCR", async () => {
+  it("checkRecoveryMode(): Returns true if TCR falls below CCR", async () => {
     // --- SETUP ---
     await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
     await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    // const TCR = (await poolManager.getTCR()).toString()
-    // assert.equal(TCR, '1500000000000000000')
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
 
-    const recoveryMode_Before = await cdpManager.recoveryMode();
+    const recoveryMode_Before = await cdpManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_Before)
 
     // --- TEST ---
@@ -248,68 +242,65 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:150CLV, reducing TCR below 150%.  setPrice() calls checkTCRAndSetRecoveryMode() internally.
     await priceFeed.setPrice('150000000000000000000')
     
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
+    // const price = await priceFeed.getPrice()
+    // await cdpManager.checkTCRAndSetRecoveryMode(price)
 
-    const recoveryMode_After = await cdpManager.recoveryMode();
+    const recoveryMode_After = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_After)
   })
 
-  it("checkTCRandSetRecoveryMode(): leaves recoveryMode set to true if TCR stays less than CCR", async () => {
+  it("checkRecoveryMode(): Returns true if TCR stays less than CCR", async () => {
     // --- SETUP ---
     await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
     await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     // Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    // const TCR = (await poolManager.getTCR()).toString()
-    // assert.equal(TCR, '1500000000000000000')
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
 
     // price drops to 1ETH:150CLV, reducing TCR below 150%
     await priceFeed.setPrice('150000000000000000000')
 
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode_Before = await cdpManager.recoveryMode();
+    const recoveryMode_Before = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_Before)
 
     await cdpManager.addColl(alice, alice, { from: alice, value: '1' })
 
-    const recoveryMode_After = await cdpManager.recoveryMode();
+    const recoveryMode_After = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_After)
   })
 
-  it("checkTCRandSetRecoveryMode(): recoveryMode stays false if TCR stays above CCR", async () => {
+  it("checkRecoveryMode(): returns false if TCR stays above CCR", async () => {
     // --- SETUP ---
     await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
     await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-
-    //  Alice and Bob withdraw such that the TCR is ~150%
+    
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // --- TEST ---
-    const recoveryMode_Before = await cdpManager.recoveryMode();
+    const recoveryMode_Before = await cdpManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_Before)
 
     await cdpManager.withdrawColl(_1_Ether, alice, { from: alice })
 
-    const recoveryMode_After = await cdpManager.recoveryMode();
+    const recoveryMode_After = await cdpManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_After)
   })
 
-  it("checkTCRandSetRecoveryMode(): changes recoveryMode to false if TCR rises above CCR", async () => {
+  it("checkRecoveryMode(): returns false if TCR rises above CCR", async () => {
     // --- SETUP ---
     await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
     await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
 
      //  Alice and Bob withdraw such that the TCR is ~150%
      await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-     await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+     await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -318,13 +309,12 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:150CLV, reducing TCR below 150%
     await priceFeed.setPrice('150000000000000000000')
 
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
+    const recoveryMode_Before = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_Before)
 
     await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
 
-    const recoveryMode_After = await cdpManager.recoveryMode();
+    const recoveryMode_After = await cdpManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_After)
   })
 
@@ -337,7 +327,7 @@ contract('CDPManager', async accounts => {
 
    //  Alice and Bob withdraw such that the TCR is ~150%
    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-   await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+   await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -352,9 +342,9 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
- 
     const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
+
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // check Bob's ICR falls to 75%
@@ -379,8 +369,8 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
-    await cdpManager.withdrawCLV('390000000000000000000', dennis, { from: dennis })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -389,9 +379,7 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%, and all CDPs below 100% ICR
     await priceFeed.setPrice('100000000000000000000')
 
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Dennis is liquidated
@@ -421,10 +409,10 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    // const TCR = (await poolManager.getTCR()).toString()
-    // assert.equal(TCR, '1500000000000000000')
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
 
     const bob_CDPStatus_Before = (await cdpManager.CDPs(bob))[3]
     const bob_CDP_isInSortedList_Before = await sortedCDPs.contains(bob)
@@ -435,10 +423,9 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
- 
     const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+ 
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // check Bob's ICR falls to 75%
@@ -464,8 +451,8 @@ contract('CDPManager', async accounts => {
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is 150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
-    await cdpManager.withdrawCLV('390000000000000000000', dennis, { from: dennis })
+    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     // Alice deposits to SP
     await poolManager.provideToSP('400000000000000000000', { from: alice })
@@ -483,9 +470,7 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%, and all CDPs below 100% ICR
     await priceFeed.setPrice('100000000000000000000')
  
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // liquidate bob
@@ -522,10 +507,9 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR to 120%
     await priceFeed.setPrice('100000000000000000000')
- 
     const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+ 
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // check Bob's ICR falls to 105%
@@ -548,19 +532,24 @@ contract('CDPManager', async accounts => {
     await cdpManager.addColl(bob, bob, { from: bob, value: _21_Ether })
     await cdpManager.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
 
-    //  Alice and Bob withdraw such that the TCR is ~150%
+    //  Alice and Dennis withdraw such that their ICR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     //  Bob withdraws 2000 CLV, bringing his ICR to 210%
     await cdpManager.withdrawCLV('2000000000000000000000', bob, { from: bob })
+
+    const totalStakesSnaphot_1 = (await cdpManager.totalStakesSnapshot()).toString()
+    const totalCollateralSnapshot_1 = (await cdpManager.totalCollateralSnapshot()).toString()
+    assert.equal(totalStakesSnaphot_1, 0)
+    assert.equal(totalCollateralSnapshot_1, 0)
+
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%, and all CDPs below 100% ICR
     await priceFeed.setPrice('100000000000000000000')
- 
     const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+ 
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Dennis is liquidated
@@ -571,11 +560,11 @@ contract('CDPManager', async accounts => {
   
     Check snapshots. Dennis' liquidated collateral is distributed and remains in the system. His 
     stake is removed, leaving 27 ether total collateral, and 24 ether total stakes. */
-    const totalStakesSnaphot_before = (await cdpManager.totalStakesSnapshot()).toString()
-    const totalCollateralSnapshot_before = (await cdpManager.totalCollateralSnapshot()).toString()
-
-    assert.equal(totalStakesSnaphot_before, _24_Ether)
-    assert.equal(totalCollateralSnapshot_before, _27_Ether)
+    
+    const totalStakesSnaphot_2 = (await cdpManager.totalStakesSnapshot()).toString()
+    const totalCollateralSnapshot_2 = (await cdpManager.totalCollateralSnapshot()).toString()
+    assert.equal(totalStakesSnaphot_2, _24_Ether)
+    assert.equal(totalCollateralSnapshot_2, _27_Ether)
 
     // check Bob's ICR is now in range 100% < ICR 110%
     const _110percent = web3.utils.toBN('1100000000000000000')
@@ -591,12 +580,10 @@ contract('CDPManager', async accounts => {
 
     /* After Bob's liquidation, Bob's stake (21 ether) should be removed from total stakes, 
     but his collateral should remain in the system. */
-    const totalStakesSnaphot_After = (await cdpManager.totalStakesSnapshot())
-    const totalCollateralSnapshot_After = (await cdpManager.totalCollateralSnapshot())
-
-    assert.equal(totalStakesSnaphot_After, _3_Ether)
-    // total collateral should always be 9, as all liquidations in this test case are full redistributions
-    assert.equal(totalCollateralSnapshot_After, _27_Ether)
+    const totalStakesSnaphot_3 = (await cdpManager.totalStakesSnapshot())
+    const totalCollateralSnapshot_3 = (await cdpManager.totalCollateralSnapshot())
+    assert.equal(totalStakesSnaphot_3, _3_Ether)
+    assert.equal(totalCollateralSnapshot_3, _27_Ether)   // total collateral should always be 9, as all liquidations in this test case are full redistributions
   })
 
   it("liquidate(), with 100% < ICR < 110%: closes the CDP and removes it from the CDP array", async () => {
@@ -616,10 +603,10 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
- 
     const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+ 
+    
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // check Bob's ICR has fallen to 105%
@@ -644,7 +631,7 @@ contract('CDPManager', async accounts => {
 
      //  Alice and Dennis withdraw such that the TCR is ~150%
     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('390000000000000000000', dennis, { from: dennis })
+    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     // Alice deposits 400CLV to the Stability Pool
     await poolManager.provideToSP('400000000000000000000', { from: alice })
@@ -655,10 +642,9 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
- 
     const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+ 
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // check Bob's ICR has fallen to 105%
@@ -699,8 +685,8 @@ contract('CDPManager', async accounts => {
     const S_CLV_After = (await poolManager.S_CLV()).toString()
     const S_ETH_After = (await poolManager.S_ETH()).toString()
 
-    assert.equal(S_CLV_After, '1000000000000000000')
-    assert.equal(S_ETH_After, '10500000000000000')
+    assert.isAtMost(getDifference(S_CLV_After, '1000000000000000000'), 100)
+    assert.isAtMost(getDifference(S_ETH_After, '10500000000000000'), 100)
 
     /* Now, check redistribution to active CDPs. Remainders of 1600 CLV and 16.8 ether are distributed.
     
@@ -714,8 +700,8 @@ contract('CDPManager', async accounts => {
     const L_CLVDebt = (await cdpManager.L_CLVDebt()).toString()
     const L_ETH = (await cdpManager.L_ETH()).toString()
 
-    assert.equal(L_CLVDebt, '266666666666666666667')
-    assert.equal(L_ETH, '2800000000000000000')
+    assert.isAtMost(getDifference(L_CLVDebt, '266666666666666666667'), 100)
+    assert.isAtMost(getDifference(L_ETH, '2800000000000000000'), 100)
   })
 
   // --- liquidate(), applied to loan with ICR > 110% that has the lowest ICR 
@@ -735,10 +721,9 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
- 
     const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+ 
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Check Bob's ICR is >110% but still lowest
@@ -801,10 +786,9 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
- 
     const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+ 
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Check Bob's ICR is > 110% but still lowest
@@ -850,9 +834,7 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
  
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // check stake and totalStakes before
@@ -892,9 +874,7 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
  
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // check system snapshots before
@@ -935,9 +915,7 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
  
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Check Bob's CDP is active
@@ -979,9 +957,7 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
  
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Check Bob's CDP is active
@@ -1023,9 +999,7 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
  
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Liquidate Bob
@@ -1078,9 +1052,7 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
  
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Check snapshots before
@@ -1123,9 +1095,7 @@ contract('CDPManager', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
  
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode = await cdpManager.recoveryMode()
+    const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Liquidate Bob
@@ -1142,8 +1112,8 @@ contract('CDPManager', async accounts => {
     const S_CLV_After = (await poolManager.S_CLV()).toString()
     const S_ETH_After = (await poolManager.S_ETH()).toString()
 
-    assert.equal(S_CLV_After, '1000000000000000000')
-    assert.equal(S_ETH_After, '12000000000000000')
+    assert.isAtMost(getDifference(S_CLV_After, '1000000000000000000'), 100)
+    assert.isAtMost(getDifference(S_ETH_After, '12000000000000000'), 100)
 
     /* For this Recovery Mode test case, there should be no redistribution of remainder to active CDPs. 
     Redistribution rewards-per-unit-staked should be zero. */
@@ -1184,10 +1154,9 @@ contract('CDPManager', async accounts => {
     // price drops
     // price drops to 1ETH:90CLV, reducing TCR below 150%
     await priceFeed.setPrice('90000000000000000000')
- 
     const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode_Before = await cdpManager.recoveryMode()
+ 
+    const recoveryMode_Before = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode_Before)
 
     // check TCR < 150%
@@ -1253,7 +1222,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidateCDPs(10);
 
     // check system is no longer in Recovery Mode
-    const recoveryMode_After = await cdpManager.recoveryMode()
+    const recoveryMode_After = await cdpManager.checkRecoveryMode()
     assert.isFalse(recoveryMode_After)
 
     // After liquidation, TCR should rise to above 150%. 
@@ -1315,12 +1284,11 @@ contract('CDPManager', async accounts => {
 
     // price drops to 1ETH:85CLV, reducing TCR below 150%
     await priceFeed.setPrice('85000000000000000000')
+    const price = await priceFeed.getPrice()
 
     // check Recovery Mode kicks in
      
-    const price = await priceFeed.getPrice()
-    await cdpManager.checkTCRAndSetRecoveryMode(price)
-    const recoveryMode_Before = await cdpManager.recoveryMode()
+    const recoveryMode_Before = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode_Before)
 
     // check TCR < 150%
@@ -1367,7 +1335,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidateCDPs(6);
 
     // check system is no longer in Recovery Mode
-    const recoveryMode_After = await cdpManager.recoveryMode()
+    const recoveryMode_After = await cdpManager.checkRecoveryMode()
     assert.isFalse(recoveryMode_After)
 
     // After liquidation, TCR should rise to above 150%. 

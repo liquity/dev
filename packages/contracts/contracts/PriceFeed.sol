@@ -76,7 +76,6 @@ contract PriceFeed is Ownable, IPriceFeed {
     TODO: remove before mainnet deployment. */
     function setPrice(uint256 _price) public returns (bool) {
         price = _price;
-        cdpManager.checkTCRAndSetRecoveryMode(price);
         emit PriceUpdated(price);
         return true;
     }

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useCallback } from "react";
+import { BigNumber } from "ethers/utils";
 import { Web3Provider } from "ethers/providers";
 import { useWeb3React } from "@web3-react/core";
 
@@ -6,9 +7,10 @@ import {
   Liquity,
   Trove,
   StabilityDeposit,
-  addressesOnNetwork,
+  deploymentOnNetwork,
   connectToContracts,
-  LiquityContracts
+  LiquityContracts,
+  DEV_CHAIN_ID
 } from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue, useAsyncStore } from "./AsyncValue";
@@ -21,6 +23,9 @@ type LiquityContext = {
   provider: Web3Provider;
   contracts: LiquityContracts;
   liquity: Liquity;
+  devChain: boolean;
+  contractsVersion: string;
+  deploymentDate: number;
 };
 
 const LiquityContext = createContext<LiquityContext | undefined>(undefined);
@@ -36,12 +41,15 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, load
     return <>{loader}</>;
   }
 
-  const addresses = addressesOnNetwork[chainId];
+  const { addresses, version: contractsVersion, deploymentDate } = deploymentOnNetwork[chainId];
   const contracts = connectToContracts(addresses, provider.getSigner(account));
   const liquity = new Liquity(contracts, account);
+  const devChain = chainId === DEV_CHAIN_ID;
 
   return (
-    <LiquityContext.Provider value={{ account, provider, contracts, liquity }}>
+    <LiquityContext.Provider
+      value={{ account, provider, contracts, liquity, devChain, contractsVersion, deploymentDate }}
+    >
       {children}
     </LiquityContext.Provider>
   );
@@ -58,8 +66,29 @@ export const useLiquity = () => {
 };
 
 export const useLiquityStore = (provider: Web3Provider, account: string, liquity: Liquity) => {
-  const getNumberOfTroves = useCallback(() => liquity.getNumberOfTroves(), [liquity]);
   const getTotal = useCallback(() => liquity.getTotal(), [liquity]);
+  const watchTotal = useCallback(
+    (onTotalChanged: (total: Trove) => void) => {
+      const logged = (total: Trove) => {
+        console.log(`Update total to\n${total}`);
+        onTotalChanged(total);
+      };
+      return liquity.watchTotal(logged);
+    },
+    [liquity]
+  );
+
+  const getNumberOfTroves = useCallback(() => liquity.getNumberOfTroves(), [liquity]);
+  const watchNumberOfTroves = useCallback(
+    (onNumberOfTrovesChanged: (numberOfTroves: BigNumber) => void) => {
+      const logged = (numberOfTroves: BigNumber) => {
+        console.log(`Update numberOfTroves to ${numberOfTroves}`);
+        onNumberOfTrovesChanged(numberOfTroves);
+      };
+      return liquity.watchNumberOfTroves(logged);
+    },
+    [liquity]
+  );
 
   const getPrice = useCallback(() => liquity.getPrice(), [liquity]);
   const watchPrice = useCallback(
@@ -77,11 +106,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const watchTrove = useCallback(
     (onTroveChanged: (trove: Trove) => void) => {
       const logged = (trove: Trove) => {
-        console.log("Update trove to:");
-        console.log(`{ collateral: ${trove.collateral},`);
-        console.log(`  debt: ${trove.debt},`);
-        console.log(`  pendingCollateralReward: ${trove.pendingCollateralReward},`);
-        console.log(`  pendingDebtReward: ${trove.pendingDebtReward} }`);
+        console.log(`Update trove to\n${trove}`);
         onTroveChanged(trove);
       };
       return liquity.watchTrove(logged);
@@ -93,10 +118,7 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
   const watchStabilityDeposit = useCallback(
     (onStabilityDepositChanged: (deposit: StabilityDeposit) => void) => {
       const logged = (deposit: StabilityDeposit) => {
-        console.log("Update deposit to:");
-        console.log(`{ deposit: ${deposit.deposit},`);
-        console.log(`  pendingDepositLoss: ${deposit.pendingDepositLoss},`);
-        console.log(`  pendingCollateralGain: ${deposit.pendingCollateralGain} }`);
+        console.log(`Update deposit to\n${deposit}`);
         onStabilityDepositChanged(deposit);
       };
       return liquity.watchStabilityDeposit(logged);
@@ -116,18 +138,26 @@ export const useLiquityStore = (provider: Web3Provider, account: string, liquity
     [liquity]
   );
 
-  const getQuiInStabilityPool = useCallback(() => {
-    return liquity.getQuiInStabilityPool();
-  }, [liquity]);
+  const getQuiInStabilityPool = useCallback(() => liquity.getQuiInStabilityPool(), [liquity]);
+  const watchQuiInStabilityPool = useCallback(
+    (onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) => {
+      const logged = (quiInStabilityPool: Decimal) => {
+        console.log(`Update quiInStabilityPool to ${quiInStabilityPool}`);
+        onQuiInStabilityPoolChanged(quiInStabilityPool);
+      };
+      return liquity.watchQuiInStabilityPool(logged);
+    },
+    [liquity]
+  );
 
   return useAsyncStore({
     etherBalance: useAccountBalance(provider, account),
     quiBalance: useAsyncValue(getQuiBalance, watchQuiBalance),
     price: useAsyncValue(getPrice, watchPrice),
-    numberOfTroves: useAsyncValue(getNumberOfTroves),
+    numberOfTroves: useAsyncValue(getNumberOfTroves, watchNumberOfTroves),
     trove: useAsyncValue(getTrove, watchTrove),
     deposit: useAsyncValue(getStabilityDeposit, watchStabilityDeposit),
-    total: useAsyncValue(getTotal),
-    quiInStabilityPool: useAsyncValue(getQuiInStabilityPool)
+    total: useAsyncValue(getTotal, watchTotal),
+    quiInStabilityPool: useAsyncValue(getQuiInStabilityPool, watchQuiInStabilityPool)
   });
 };

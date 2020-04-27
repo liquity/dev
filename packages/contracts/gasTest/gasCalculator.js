@@ -15,7 +15,7 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const DeciMath = artifacts.require("DeciMath")
 const ABDKMath64x64 = artifacts.require("ABDKMath64x64")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
-const deploymentHelpers = require("../../utils/deploymentHelpers.js")
+const deploymentHelpers = require("../utils/deploymentHelpers.js")
 
 const getAddresses = deploymentHelpers.getAddresses
 const setNameRegistry = deploymentHelpers.setNameRegistry
@@ -332,18 +332,47 @@ contract('Gas cost tests', async accounts => {
   }
 
   const redeemCollateral = async (redeemer, cdpManager, CLVAmount) => {
-    const tx = await cdpManager.redeemCollateral(CLVAmount, redeemer, { from: redeemer })
+    const price = await priceFeed.getPrice()
+    const redemptionHints = await cdpManager.getRedemptionHints(CLVAmount, price)
+    const firstRedemptionHint = redemptionHints[0]
+    const partialRedemptionHintICR = redemptionHints[1]
+
+    const approxPartialRedemptionHint = await cdpManager.getApproxHint(partialRedemptionHintICR, 1000)
+    const exactPartialRedemptionHint = (await sortedCDPs.findInsertPosition(partialRedemptionHintICR,
+                                                                          price,
+                                                                          approxPartialRedemptionHint,
+                                                                          approxPartialRedemptionHint))[0]
+                                                                 
+    const tx = await cdpManager.redeemCollateral(CLVAmount, 
+                                                firstRedemptionHint, 
+                                                exactPartialRedemptionHint, 
+                                                partialRedemptionHintICR, 
+                                                { from: redeemer })
     const gas = await gasUsed(tx)
     return gas
   }
 
   const redeemCollateral_allAccounts_randomAmount = async (min, max, accounts, cdpManager) => {
     const gasCostList = []
-    for (const account of accounts) {
+    const price = await priceFeed.getPrice()
+
+    for (const redeemer of accounts) {
       const randCLVAmount = randAmountInWei(min, max)
-      // console.log("redeem starts here")
-      const tx = await cdpManager.redeemCollateral(randCLVAmount, account, { from: account })
-     
+      const redemptionHints = await cdpManager.getRedemptionHints(randCLVAmount, price)
+      const firstRedemptionHint = redemptionHints[0]
+      const partialRedemptionHintICR = redemptionHints[1]
+  
+      const approxPartialRedemptionHint = await cdpManager.getApproxHint(partialRedemptionHintICR, 1000)
+      const exactPartialRedemptionHint = (await sortedCDPs.findInsertPosition(partialRedemptionHintICR,
+                                                                            price,
+                                                                            approxPartialRedemptionHint,
+                                                                            approxPartialRedemptionHint))[0]
+                                                                  
+      const tx = await cdpManager.redeemCollateral(randCLVAmount, 
+                                                  firstRedemptionHint, 
+                                                  exactPartialRedemptionHint, 
+                                                  partialRedemptionHintICR, 
+                                                  { from: redeemer })
       const gas = gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -413,7 +442,8 @@ contract('Gas cost tests', async accounts => {
   const withdrawFromSPtoCDP_allAccounts = async (accounts, poolManager) => {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await poolManager.withdrawFromSPtoCDP(account, { from: account })
+
+      const tx = await poolManager.withdrawFromSPtoCDP(account, account, { from: account })
       const gas = gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -1085,17 +1115,19 @@ it("", async () => {
     appendData({gas: gas}, message, data)
   })
 
-  it("", async () => { 
-    const message = 'redeemCollateral(),  CLV, each redemption only hits the first CDP, never closes it'
-    await addColl_allAccounts(_20_Accounts, cdpManager, _10_Ether)
-    await withdrawCLV_allAccounts(_20_Accounts, cdpManager, _100e18)
+  // Slow test
 
-    const gasResults = await redeemCollateral_allAccounts_randomAmount( 1, 10, _10_Accounts, cdpManager)
-    logGasMetrics(gasResults, message)
-    logAllGasCosts(gasResults)
+  // it("", async () => { 
+  //   const message = 'redeemCollateral(),  CLV, each redemption only hits the first CDP, never closes it'
+  //   await addColl_allAccounts(_20_Accounts, cdpManager, _10_Ether)
+  //   await withdrawCLV_allAccounts(_20_Accounts, cdpManager, _100e18)
 
-    appendData(gasResults, message, data)
-  })
+  //   const gasResults = await redeemCollateral_allAccounts_randomAmount( 1, 10, _10_Accounts, cdpManager)
+  //   logGasMetrics(gasResults, message)
+  //   logAllGasCosts(gasResults)
+
+  //   appendData(gasResults, message, data)
+  // })
   
   // --- redeemCollateral(), with pending redistribution rewards --- 
 
@@ -1112,8 +1144,8 @@ it("", async () => {
     await priceFeed.setPrice(_100e18)
     await cdpManager.liquidate(accounts[999], { from: accounts[0]})
 
-    const tx = await cdpManager.redeemCollateral( _50e18, accounts[1], {from: accounts[1]})
-    const gas = gasUsed(tx)
+    const gas = await redeemCollateral(accounts[1], cdpManager, _50e18)
+
     logGas(gas, message)
 
     appendData({gas: gas}, message, data)
@@ -1240,25 +1272,27 @@ it("", async () => {
     appendData({gas: gas}, message, data)
   })
 
-  it("", async () => { 
-    const message = 'redeemCollateral(),  CLV, each redemption only hits the first CDP, never closes it, WITH pending rewards'
-    await addColl_allAccounts(_20_Accounts, cdpManager, _10_Ether)
-    await withdrawCLV_allAccounts(_20_Accounts, cdpManager, _100e18)
+  // Slow test
 
-     // acct 999 adds coll, withdraws CLV, sits at 111% ICR
-     await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
-     await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
+  // it("", async () => { 
+  //   const message = 'redeemCollateral(),  CLV, each redemption only hits the first CDP, never closes it, WITH pending rewards'
+  //   await addColl_allAccounts(_20_Accounts, cdpManager, _10_Ether)
+  //   await withdrawCLV_allAccounts(_20_Accounts, cdpManager, _100e18)
+
+  //    // acct 999 adds coll, withdraws CLV, sits at 111% ICR
+  //    await cdpManager.addColl(accounts[999], accounts[999], {from: accounts[999], value: _1_Ether})
+  //    await cdpManager.withdrawCLV(_180e18, accounts[999], { from: accounts[999]})
  
-      // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
-     await priceFeed.setPrice(_100e18)
-     await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+  //     // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
+  //    await priceFeed.setPrice(_100e18)
+  //    await cdpManager.liquidate(accounts[999], { from: accounts[0]})
 
-    const gasResults = await redeemCollateral_allAccounts_randomAmount( 1, 10, _10_Accounts, cdpManager)
-    logGasMetrics(gasResults, message)
-    logAllGasCosts(gasResults)
+  //   const gasResults = await redeemCollateral_allAccounts_randomAmount( 1, 10, _10_Accounts, cdpManager)
+  //   logGasMetrics(gasResults, message)
+  //   logAllGasCosts(gasResults)
 
-    appendData(gasResults, message, data)
-  })
+  //   appendData(gasResults, message, data)
+  // })
 
 
  // --- getApproxHint() ---
@@ -1324,33 +1358,33 @@ it("", async () => {
     appendData({gas: gas}, message, data)
   })
 
-  it("", async () => { //8mil. gas
-    const message = 'getApproxHint(), numTrials = 320: i.e. k = 10, list size = 1000'
-    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
-    await withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, cdpManager)
+  // Slow tests
+
+  // it("", async () => { //8mil. gas
+  //   const message = 'getApproxHint(), numTrials = 320: i.e. k = 10, list size = 1000'
+  //   await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+  //   await withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, cdpManager)
     
-    const CR = '200000000000000000000'
-    tx = await functionCaller.cdpManager_getApproxHint(CR, 320)
-    const gas = gasUsed(tx) - 21000
-    logGas(gas, message)
+  //   const CR = '200000000000000000000'
+  //   tx = await functionCaller.cdpManager_getApproxHint(CR, 320)
+  //   const gas = gasUsed(tx) - 21000
+  //   logGas(gas, message)
 
-    appendData({gas: gas}, message, data)
-  })
+  //   appendData({gas: gas}, message, data)
+  // })
 
-  it("", async () => { // 25mil. gas
-    const message = 'getApproxHint(), numTrials = 1000:  i.e. k = 10, list size = 10000'
-    await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
-    await withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, cdpManager)
+  // it("", async () => { // 25mil. gas
+  //   const message = 'getApproxHint(), numTrials = 1000:  i.e. k = 10, list size = 10000'
+  //   await addColl_allAccounts(_10_Accounts, cdpManager, _10_Ether)
+  //   await withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, cdpManager)
     
-    const CR = '200000000000000000000'
-    tx = await functionCaller.cdpManager_getApproxHint(CR, 1000)
-    const gas = gasUsed(tx) - 21000
-    logGas(gas, message)
+  //   const CR = '200000000000000000000'
+  //   tx = await functionCaller.cdpManager_getApproxHint(CR, 1000)
+  //   const gas = gasUsed(tx) - 21000
+  //   logGas(gas, message)
 
-    appendData({gas: gas}, message, data)
-  })
-
-  // Slow test
+  //   appendData({gas: gas}, message, data)
+  // })
 
   // it("", async () => { // 81mil. gas
   //   const message = 'getApproxHint(), numTrials = 3200:  i.e. k = 10, list size = 100000'
@@ -1380,7 +1414,6 @@ it("", async () => {
 
   //   appendData({gas: gas}, message, data)
   // })
-
 
   // --- PoolManager functions ---
 
@@ -1869,7 +1902,7 @@ it("", async () => {
 
 // --- Liquidate wth SP gains ---
 
-// with SP gains (remains active)
+// with SP gains
 
 it("", async () => {
   const message = 'liquidate() 1 CDP, liquidated CDP has pending SP rewards that keep it active'
@@ -1894,15 +1927,8 @@ it("", async () => {
   await cdpManager.liquidate(accounts[100], { from: accounts[0]})
   assert.isFalse(await sortedCDPs.contains(accounts[100]))
 
-  /* Liquidate account 99.  His pending gains from SP are:
-  ETGHGain = 1 
-  CLVLoss = 180
-  
-  The CLV Loss completely cancels with his SP deposit, leaving him with 2 ether and 180CLV debt - i.e 111% ICR.
-  Therefore, he remains active. */
-
   const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0]})
-  assert.isTrue(await sortedCDPs.contains(accounts[99]))
+  assert.isFalse(await sortedCDPs.contains(accounts[99]))
 
   const gas = gasUsed(tx)
   logGas(gas, message)
@@ -1941,12 +1967,6 @@ it("", async () => {
   // Liquidate account 100. Account 100 is removed from system.  Generates SP gains for all SP depositors
   await cdpManager.liquidate(accounts[100], { from: accounts[0]})
   assert.isFalse(await sortedCDPs.contains(accounts[100]))
-
-  /* Liquidate account 99.  His pending gains from SP are:
-  ETGHGain = 1/1801
-  CLVLoss = 180/1801
-  
-  His net gain is not enough to bring his CDP above the MCR, and thus in liquidation he is closed. */
 
   const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0]})
   assert.isFalse(await sortedCDPs.contains(accounts[99]))
@@ -1994,13 +2014,6 @@ it("", async () => {
   await poolManager.withdrawFromSP(_1500e18, {from: accounts[7]} )
 
   console.log(`Remaining CLV in SP is ${await poolManager.getStabilityPoolCLV()}`)
-
-  /* Liquidate account 99.  His pending gains from SP are:
-  ETGHGain = 1/1801
-  CLVLoss = 180/1801
-  
-  His net gain is not enough to bring his CDP above the MCR, and thus in liquidation he is closed. 
-  His 180 CLV is partially offset with 121 CLV in the pool. */
 
   const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0]})
   assert.isFalse(await sortedCDPs.contains(accounts[99]))
@@ -2057,9 +2070,6 @@ it("", async () => {
 
   // Account 7 deposits 1 CLV in the Stability Pool
   await poolManager.provideToSP(_1e18, {from: accounts[7]} )
-
-  /* Account 99 is liquidated (the relevant tx for gas).  His pending rewards are applied, his SP gains transferred to his CDP,
-  but still his ICR < MCR, and his liquidated CDP (180 CLV) is partially offset against the StabilityPool (90 CLV)*/
 
   const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0]})
   assert.isFalse(await sortedCDPs.contains(accounts[99]))
@@ -2473,17 +2483,17 @@ it("", async () => {
     appendData({gas: gas}, message, data)
   })
 
-  it("", async () => {
-    const message = "DeciMath public accurateMulDiv() with random args"
-    const rand1 = randAmountInWei(1,200)
-    const rand2 = randAmountInWei(1,200)
-    const rand3 = randAmountInWei(1,200)
-    const tx = await functionCaller.decimath_accurateMulDiv(rand1, rand2, rand3)
-    const gas = gasUsed(tx) - 21000
-    logGas(gas, message)
+  // it("", async () => {
+  //   const message = "DeciMath public accurateMulDiv() with random args"
+  //   const rand1 = randAmountInWei(1,200)
+  //   const rand2 = randAmountInWei(1,200)
+  //   const rand3 = randAmountInWei(1,200)
+  //   const tx = await functionCaller.decimath_accurateMulDiv(rand1, rand2, rand3)
+  //   const gas = gasUsed(tx) - 21000
+  //   logGas(gas, message)
 
-    appendData({gas: gas}, message, data)
-  })
+  //   appendData({gas: gas}, message, data)
+  // })
 
   it("", async () => {
     const message = "DeciMath public div_toDuint() with random args"

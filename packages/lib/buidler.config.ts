@@ -1,9 +1,10 @@
 import fs from "fs";
+import path from "path";
 import "colors";
 
 import { Wallet, Signer } from "ethers";
-import { bigNumberify, BigNumber } from "ethers/utils";
-import { task, usePlugin, BuidlerConfig } from "@nomiclabs/buidler/config";
+import { BigNumber } from "ethers/utils";
+import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config";
 import { NetworkConfig } from "@nomiclabs/buidler/types";
 
 import { deployAndSetupContracts, setSilent } from "./test/utils/deploy";
@@ -11,9 +12,9 @@ import { Liquity, Trove } from "./src/Liquity";
 import { Decimal, Difference, Decimalish, Percent } from "./utils";
 import { CDPManagerFactory } from "./types/ethers/CDPManagerFactory";
 import { PoolManagerFactory } from "./types/ethers/PoolManagerFactory";
-import { PriceFeedFactory } from "./types/ethers/PriceFeedFactory";
-import { NameRegistryFactory } from "./types/ethers/NameRegistryFactory";
-import { addressesOf, addressesOnNetwork } from "./src/contracts";
+// import { PriceFeedFactory } from "./types/ethers/PriceFeedFactory";
+// import { NameRegistryFactory } from "./types/ethers/NameRegistryFactory";
+import { addressesOf, deploymentOnNetwork } from "./src/contracts";
 
 usePlugin("@nomiclabs/buidler-web3");
 usePlugin("@nomiclabs/buidler-truffle5");
@@ -66,34 +67,37 @@ task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) =>
   const contracts = await deployAndSetupContracts(bre.web3, bre.artifacts, deployer);
 
   console.log();
-  console.log(addressesOf(contracts));
+  console.log({
+    [bre.network.name]: {
+      addresses: addressesOf(contracts),
+      version: fs
+        .readFileSync(path.join(bre.config.paths.artifacts, "version"))
+        .toString()
+        .trim(),
+      deploymentDate: new Date().getTime()
+    }
+  });
   console.log();
 });
 
-task(
-  "update-pricefeed",
-  "Deploys the latest version of PriceFeed then introduces it to other contracts",
-  async (_taskArgs, bre) => {
+type SetPriceFeedParams = { priceFeedAddress: string };
+
+task("set-pricefeed", "Set the address of the PriceFeed in the deployed contracts")
+  .addPositionalParam("priceFeedAddress", "Address of new PriceFeed", undefined, types.string)
+  .setAction(async ({ priceFeedAddress }: SetPriceFeedParams, bre) => {
     const [deployer] = await bre.ethers.signers();
-    const addresses = addressesOnNetwork[bre.network.name];
+    const { addresses } = deploymentOnNetwork[bre.network.name];
 
-    addresses.priceFeed = (await bre.artifacts.require("PriceFeed").new()).address;
-
-    const priceFeed = PriceFeedFactory.connect(addresses.priceFeed, deployer);
+    // const priceFeed = PriceFeedFactory.connect(addresses.priceFeed, deployer);
     const cdpManager = CDPManagerFactory.connect(addresses.cdpManager, deployer);
     const poolManager = PoolManagerFactory.connect(addresses.poolManager, deployer);
-    const nameRegistry = NameRegistryFactory.connect(addresses.nameRegistry, deployer);
+    // const nameRegistry = NameRegistryFactory.connect(addresses.nameRegistry, deployer);
 
-    await priceFeed.setCDPManagerAddress(cdpManager.address);
-    await cdpManager.setPriceFeed(priceFeed.address);
-    await poolManager.setPriceFeed(priceFeed.address);
-    await nameRegistry.updateAddress("PriceFeed", priceFeed.address);
-
-    for (const [contractName, address] of Object.entries(addresses)) {
-      console.log(`${contractName}: "${address}",`);
-    }
-  }
-);
+    // await priceFeed.setCDPManagerAddress(cdpManager.address);
+    await cdpManager.setPriceFeed(priceFeedAddress);
+    await poolManager.setPriceFeed(priceFeedAddress);
+    // await nameRegistry.updateAddress("PriceFeed", priceFeed.address);
+  });
 
 task(
   "deploy-warzone",
@@ -103,9 +107,9 @@ task(
   // many Troves.
   async (_taskArgs, bre) => {
     const [deployer, funder, ...randomUsers] = await bre.ethers.signers();
-    const addresses =
-      addressesOnNetwork[bre.network.name] ||
-      addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+    const { addresses } = deploymentOnNetwork[bre.network.name] || {
+      addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+    };
 
     const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
 
@@ -245,9 +249,9 @@ task(
 
     const [deployer, funder, ...randomUsers] = await bre.ethers.signers();
 
-    const addresses =
-      addressesOnNetwork[bre.network.name] ||
-      addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+    const { addresses } = deploymentOnNetwork[bre.network.name] || {
+      addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+    };
 
     const [deployerLiquity, funderLiquity, ...randomLiquities] = await connectUsers([
       deployer,
@@ -273,6 +277,28 @@ task(
       await deployerLiquity.setPrice(price);
       price = await deployerLiquity.getPrice();
 
+      const trovesBefore = await getListOfTroves(deployerLiquity);
+      //const numberOfTrovesBefore = (await deployerLiquity.getNumberOfTroves()).toNumber();
+
+      console.log(`[deployer] liquidateUpTo(30)`);
+      await deployerLiquity.liquidateUpTo(30); // Anything higher may run out of gas
+
+      const trovesAfter = await getListOfTroves(deployerLiquity);
+      const liquidatedTroves = listDifference(trovesBefore, trovesAfter);
+      // const numberOfTrovesAfter = (await deployerLiquity.getNumberOfTroves()).toNumber();
+
+      if (liquidatedTroves.length > 0) {
+        totalNumberOfLiquidations += liquidatedTroves.length;
+        for (const liquidatedTrove of liquidatedTroves) {
+          console.log(`// Liquidated ${shortenAddress(liquidatedTrove)}`);
+        }
+      }
+      // if (numberOfTrovesAfter < numberOfTrovesBefore) {
+      //   const numberOfLiquidations = numberOfTrovesBefore - numberOfTrovesAfter;
+      //   totalNumberOfLiquidations += numberOfLiquidations;
+      //   console.log(`// Liquidated ${numberOfLiquidations} Trove(s)`);
+      // }
+
       for (const liquity of randomLiquities) {
         if (Math.random() < 0.5) {
           const trove = await liquity.getTrove();
@@ -288,7 +314,12 @@ task(
               if (Math.random() < 0.5) {
                 collateral = Decimal.from(randomValue);
 
-                const maxDebt = parseInt(price.mul(collateral).div(1.1).toString(0));
+                const maxDebt = parseInt(
+                  price
+                    .mul(collateral)
+                    .div(1.1)
+                    .toString(0)
+                );
 
                 debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
               } else {
@@ -344,27 +375,8 @@ task(
 
           await funderLiquity.sendQui(liquity.userAddress!, exchangedQui);
 
-          // const trovesBefore = await getListOfTroves(liquity);
-          const numberOfTrovesBefore = (await liquity.getNumberOfTroves()).toNumber();
-
           console.log(`[${shortenAddress(liquity.userAddress!)}] redeemCollateral(${exchangedQui})`);
           await liquity.redeemCollateral(exchangedQui, price);
-
-          // const trovesAfter = await getListOfTroves(liquity);
-          // const liquidatedTroves = listDifference(trovesBefore, trovesAfter);
-          const numberOfTrovesAfter = (await liquity.getNumberOfTroves()).toNumber();
-
-          // if (liquidatedTroves.length > 0) {
-          //   totalNumberOfLiquidations += liquidatedTroves.length;
-          //   for (const liquidatedTrove of liquidatedTroves) {
-          //     console.log(`// Liquidated ${shortenAddress(liquidatedTrove)}`);
-          //   }
-          // }
-          if (numberOfTrovesAfter < numberOfTrovesBefore) {
-            const numberOfLiquidations = numberOfTrovesBefore - numberOfTrovesAfter;
-            totalNumberOfLiquidations += numberOfLiquidations;
-            console.log(`// Liquidated ${numberOfLiquidations} Trove(s)`);
-          }
         }
 
         const quiBalance = await liquity.getQuiBalance();
@@ -403,9 +415,9 @@ task(
 
     const [deployer, funder] = await bre.ethers.signers();
 
-    const addresses =
-      addressesOnNetwork[bre.network.name] ||
-      addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+    const { addresses } = deploymentOnNetwork[bre.network.name] || {
+      addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+    };
 
     const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder]);
 
@@ -435,7 +447,7 @@ task(
       const numberOfTrovesToLiquidate = numberOfTroves.gt(10) ? 10 : numberOfTroves.sub(1);
 
       console.log(`${numberOfTroves} Troves left.`);
-      await funderLiquity.liquidateMany(numberOfTrovesToLiquidate);
+      await funderLiquity.liquidateUpTo(numberOfTrovesToLiquidate);
     }
 
     await deployerLiquity.setPrice(priceBefore);
@@ -472,9 +484,9 @@ task(
 task("check-sorting", "Check if Troves are sorted by ICR", async (_taskArgs, bre) => {
   const [deployer] = await bre.ethers.signers();
 
-  const addresses =
-    addressesOnNetwork[bre.network.name] ||
-    addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer));
+  const { addresses } = deploymentOnNetwork[bre.network.name] || {
+    addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+  };
 
   const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
 

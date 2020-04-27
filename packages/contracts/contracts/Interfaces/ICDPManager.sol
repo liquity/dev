@@ -53,7 +53,7 @@ interface ICDPManager {
 
     function liquidateCDPs(uint _n) external returns(bool);
 
-    function checkTCRAndSetRecoveryMode(uint _price) external returns(bool);
+    function checkRecoveryMode() external view returns(bool);
 
     function getRedemptionHints(uint _CLVamount, uint _price) external view returns (address, uint);
 

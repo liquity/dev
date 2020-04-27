@@ -25,7 +25,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
 
   const pendingDepositChange = Difference.between(
     editedDeposit.depositAfterLoss,
-    originalDeposit.deposit
+    originalDeposit.depositAfterLoss.nonZero
   );
 
   const edited = originalDeposit.calculateDifference(editedDeposit) !== undefined;
@@ -72,7 +72,6 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           pendingAmount={pendingDepositChange.nonZero?.prettify()}
           pendingColor={pendingDepositChange.positive ? "success" : "danger"}
           unit="QUI"
-          {...{ edited }}
           {...{ editingState }}
           editedAmount={editedDeposit.depositAfterLoss.toString(2)}
           setEditedAmount={(editedDeposit: string) =>

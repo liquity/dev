@@ -14,6 +14,7 @@ type RedemptionActionProps = {
   setExchangedQui: (exchangedQui: Decimal) => void;
   changePending: boolean;
   setChangePending: (isPending: boolean) => void;
+  quiBalance: Decimal;
 };
 
 const RedemptionAction: React.FC<RedemptionActionProps> = ({
@@ -22,7 +23,8 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   exchangedQui,
   setExchangedQui,
   changePending,
-  setChangePending
+  setChangePending,
+  quiBalance
 }) => {
   const myTransactionId = "redemption";
   const myTransactionState = useMyTransactionState(myTransactionId);
@@ -32,10 +34,10 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     myTransactionState.type === "confirmed";
 
   useEffect(() => {
-    if (myTransactionState.type === "idle") {
-      setChangePending(false);
-    } else if (myTransactionState.type === "waitingForApproval") {
+    if (myTransactionState.type === "waitingForApproval") {
       setChangePending(true);
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
+      setChangePending(false);
     } else if (tentativelyConfirmed) {
       setExchangedQui(Decimal.from(0));
       setChangePending(false);
@@ -57,7 +59,11 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     </Flex>
   ) : changePending ? null : (
     <Flex mt={4} justifyContent="center">
-      <Transaction id={myTransactionId} {...{ send }}>
+      <Transaction
+        id={myTransactionId}
+        requires={[[quiBalance.gte(exchangedQui), "You don't have enough QUI"]]}
+        {...{ send }}
+      >
         <Button mx={2}>Exchange {exchangedQui.prettify()} QUI</Button>
       </Transaction>
     </Flex>
@@ -67,9 +73,14 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
 type RedemptionManagerProps = {
   liquity: Liquity;
   price: Decimal;
+  quiBalance: Decimal;
 };
 
-export const RedemptionManager: React.FC<RedemptionManagerProps> = ({ liquity, price }) => {
+export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
+  liquity,
+  price,
+  quiBalance
+}) => {
   const zero = Decimal.from(0);
   const [exchangedQui, setExchangedQui] = useState(zero);
   const [changePending, setChangePending] = useState(false);
@@ -121,7 +132,6 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({ liquity, p
               //hideLabel
               amount={exchangedQui.prettify()}
               unit="QUI"
-              {...{ edited }}
               {...{ editingState }}
               editedAmount={exchangedQui.toString(2)}
               setEditedAmount={editedQui => setExchangedQui(Decimal.from(editedQui))}
@@ -132,7 +142,6 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({ liquity, p
               //hideLabel
               amount={exchangedQui.div(price).prettify(4)}
               unit="ETH"
-              {...{ edited }}
               {...{ editingState }}
               editedAmount={exchangedQui.div(price).toString(4)}
               setEditedAmount={editedEth => setExchangedQui(Decimal.from(editedEth).mul(price))}
@@ -142,7 +151,15 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({ liquity, p
       </Box>
 
       <RedemptionAction
-        {...{ liquity, price, exchangedQui, setExchangedQui, changePending, setChangePending }}
+        {...{
+          liquity,
+          price,
+          exchangedQui,
+          setExchangedQui,
+          changePending,
+          setChangePending,
+          quiBalance
+        }}
       />
     </>
   );

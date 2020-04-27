@@ -63,7 +63,7 @@ contract FunctionCaller {
     //     return DeciMath.accurateMulDiv(x ,y, z);
     // }
 
-    function getMin(uint a, uint b) public returns(uint) {
+    function getMin(uint a, uint b) public view returns(uint) {
         return DeciMath.getMin(a, b);
     }
 

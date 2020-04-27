@@ -156,9 +156,15 @@ contract PoolManager is Ownable, IPoolManager {
     
     // Return the total collateral ratio (TCR) of the system, based on the most recent ETH:USD price
     function getTCR() view public returns (uint) {
-        uint totalCollateral = activePool.getETH();
-        uint totalDebt = activePool.getCLV();
         uint price = priceFeed.getPrice();
+
+        uint activeColl = activePool.getETH();
+        uint activeDebt = activePool.getCLV();
+        uint liquidatedColl = defaultPool.getETH();
+        uint closedDebt = defaultPool.getCLV();
+
+        uint totalCollateral = activeColl.add(liquidatedColl);
+        uint totalDebt = activeDebt.add(closedDebt); 
 
         // Handle edge cases of div-by-0
         if(totalCollateral == 0 && totalDebt == 0 ) {
@@ -401,9 +407,6 @@ contract PoolManager is Ownable, IPoolManager {
     /* Send ETHGain to user's address, and updates their deposit, 
     setting newDeposit = (oldDeposit - CLVLoss) + amount. */
     function provideToSP(uint _amount) external returns(bool) {
-        uint price = priceFeed.getPrice();
-        cdpManager.checkTCRAndSetRecoveryMode(price);
-
         address user = _msgSender();
 
         // If user has no deposit, make one with _amount
@@ -431,9 +434,6 @@ contract PoolManager is Ownable, IPoolManager {
 
     In all cases, the entire ETHGain is sent to user, and the CLVLoss is applied to their deposit. */
     function withdrawFromSP(uint _amount) external returns(bool) {
-        uint price = priceFeed.getPrice();
-        cdpManager.checkTCRAndSetRecoveryMode(price);
-
         address user = _msgSender();
         uint userDeposit = deposits[user];
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
@@ -454,10 +454,7 @@ contract PoolManager is Ownable, IPoolManager {
     /* Transfer the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
     Applies their CLVLoss to the deposit. */
     function withdrawFromSPtoCDP(address _user, address _hint) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
-        uint price = priceFeed.getPrice();  
-   
-        cdpManager.checkTCRAndSetRecoveryMode(price); 
-        uint userDeposit = deposits[_user]; 
+        uint userDeposit = deposit[_user]; 
        
         if (userDeposit == 0) { return false; } 
         

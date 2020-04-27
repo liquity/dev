@@ -3,6 +3,9 @@ import { Web3Provider, AsyncSendable } from "ethers/providers";
 import { Web3ReactProvider } from "@web3-react/core";
 import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 
+import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import { Decimal, Difference, Percent } from "@liquity/lib/dist/utils";
+
 import { LiquityProvider, useLiquity, deployerAddress, useLiquityStore } from "./hooks/Liquity";
 import { WalletConnector } from "./components/WalletConnector";
 import { ToastProvider } from "./hooks/ToastProvider";
@@ -22,23 +25,21 @@ const EthersWeb3ReactProvider: React.FC = ({ children }) => {
       getLibrary={(provider: AsyncSendable) => {
         // Uncomment this to log requests
 
-        // let timeOfLastRequest = new Date().getTime();
         // let numberOfRequests = 0;
 
         // setInterval(() => {
-        //   console.log(`Requests per minute: ${numberOfRequests}`);
+        //   if (numberOfRequests > 10) {
+        //     console.log(`Avg. req/s: ${numberOfRequests / 10}`);
+        //   }
         //   numberOfRequests = 0;
-        // }, 60000);
+        // }, 10000);
 
         // const loggedSend = <A extends any[], R, F extends (...args: A) => R>(realSend: F) => (
         //   ...args: A
         // ): R => {
-        //   const now = new Date().getTime();
-        //   console.log(`Time since last request: ${now - timeOfLastRequest} ms`);
-        //   timeOfLastRequest = now;
         //   ++numberOfRequests;
 
-        //   console.log(args[0]);
+        //   //console.log(args[0]);
         //   return realSend(...args);
         // };
 
@@ -60,7 +61,7 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, provider, liquity, contracts } = useLiquity();
+  const { account, provider, liquity, contracts, contractsVersion, deploymentDate } = useLiquity();
   const storeState = useLiquityStore(provider, account, liquity);
 
   if (!storeState.loaded) {
@@ -68,7 +69,18 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   }
 
   // For console tinkering ;-)
-  Object.assign(window, { contracts, liquity, store: storeState.value });
+  Object.assign(window, {
+    provider,
+    contracts,
+    liquity,
+    store: storeState.value,
+    Liquity,
+    Trove,
+    StabilityDeposit,
+    Decimal,
+    Difference,
+    Percent
+  });
 
   const {
     etherBalance,
@@ -92,13 +104,22 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
             ) : (
               <>
                 <TroveManager {...{ liquity, trove, price, total, quiBalance }} />
-                <StabilityDepositManager {...{ liquity, deposit, trove, price }} />
-                <RedemptionManager {...{ liquity, price }} />
+                <StabilityDepositManager {...{ liquity, deposit, trove, price, quiBalance }} />
+                <RedemptionManager {...{ liquity, price, quiBalance }} />
               </>
             )}
           </Box>
           <Box px={3} width="362px">
-            <SystemStats {...{ numberOfTroves, price, total, quiInStabilityPool }} />
+            <SystemStats
+              {...{
+                numberOfTroves,
+                price,
+                total,
+                quiInStabilityPool,
+                contractsVersion,
+                deploymentDate
+              }}
+            />
             <PriceManager {...{ liquity, price }} />
           </Box>
         </Flex>
