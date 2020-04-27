@@ -921,10 +921,6 @@ contract CDPManager is Ownable, ICDPManager {
         } 
     }
 
-    function truncateDigits(uint num, uint digits) internal returns (uint) {
-        return (num.div(10**digits)).mul(10**digits);
-    }
-
     function closeCDP(address _user) internal returns (bool) {
         CDPs[_user].status = Status.closed;
         CDPs[_user].coll = 0;
