@@ -10,13 +10,17 @@ type SystemStatsProps = {
   price: Decimal;
   total: Trove;
   quiInStabilityPool: Decimal;
+  contractsVersion: string;
+  deploymentDate: number;
 };
 
 export const SystemStats: React.FC<SystemStatsProps> = ({
   numberOfTroves,
   price,
   total,
-  quiInStabilityPool
+  quiInStabilityPool,
+  contractsVersion,
+  deploymentDate
 }) => {
   const quiInStabilityPoolPct =
     total.debtAfterReward.nonZero && new Percent(quiInStabilityPool.div(total.debtAfterReward));
@@ -36,6 +40,15 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
       {total.collateralRatioIsBelowCritical(price) && (
         <Text color="danger">The system is in recovery mode!</Text>
       )}
+      <Text mt={3} fontSize={0} opacity={0.5}>
+        Contracts version:{" "}
+        <a href={`https://github.com/cvalkan/cleverage/commit/${contractsVersion}`}>
+          {contractsVersion.substr(0, 7)}
+        </a>
+      </Text>
+      <Text fontSize={0} opacity={0.5}>
+        Deployed: {new Date(deploymentDate).toLocaleString()}
+      </Text>
     </Card>
   );
 };
