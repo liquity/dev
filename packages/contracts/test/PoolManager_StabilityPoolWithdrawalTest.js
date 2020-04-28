@@ -27,6 +27,7 @@ contract('PoolManager', async accounts => {
     defaulter_2,
     defaulter_3,
     defaulter_4,
+    defaulter_5,
     whale,
     whale_2,
     alice,
@@ -36,6 +37,7 @@ contract('PoolManager', async accounts => {
     erin,
     flyn,
     graham,
+    harriet
   ] = accounts;
 
   let priceFeed
@@ -134,9 +136,9 @@ contract('PoolManager', async accounts => {
       const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
       const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
 
-      // assert.equal((await clvToken.balanceOf(alice)).toString(), '66666666666666666666')
-      // assert.equal((await clvToken.balanceOf(bob)).toString(), '66666666666666666666')
-      // assert.equal((await clvToken.balanceOf(carol)).toString(), '66666666666666666666')
+      assert.equal((await clvToken.balanceOf(alice)).toString(), '66666666666666666666')
+      assert.equal((await clvToken.balanceOf(bob)).toString(), '66666666666666666666')
+      assert.equal((await clvToken.balanceOf(carol)).toString(), '66666666666666666666')
 
       assert.equal(alice_ETHWithdrawn, '333333333333333333')
       assert.equal(bob_ETHWithdrawn, '333333333333333333')
@@ -543,7 +545,7 @@ contract('PoolManager', async accounts => {
 
       // Defaulters open loan with 200% ICR
       await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: moneyVals._1_Ether })
-      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: moneyVals. _1_Ether })
+      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: moneyVals._1_Ether })
       await cdpManager.addColl(defaulter_3, defaulter_3, { from: defaulter_3, value: moneyVals._1_Ether })
       await cdpManager.addColl(defaulter_4, defaulter_4, { from: defaulter_4, value: moneyVals._1_Ether })
       await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
@@ -882,9 +884,9 @@ contract('PoolManager', async accounts => {
 
       // Defaulter 1 liquidated. 200 CLV fully offset with pool.
       await cdpManager.liquidate(defaulter_1, { from: owner });
-      
+
       console.log("P CLV is: " + (await poolManager.P_CLV()).toString())
-      
+
       // Carol, Dennis each deposit 100 CLV
       const depositors_2 = [carol, dennis]
       for (account of depositors_2) {
@@ -925,7 +927,7 @@ contract('PoolManager', async accounts => {
       assert.equal(dennis_ETHWithdrawn, '500000000000000000')
     })
 
-     // A, B deposit 100
+    // A, B deposit 100
     // L1 cancels 200, 2
     // C, D, E deposit 100, 200, 300
     // L2 cancels 100,1 
@@ -1013,7 +1015,7 @@ contract('PoolManager', async accounts => {
 
       // Defaulter 1,2,3 withdraw 'almost' 100 CLV
       await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: moneyVals._1_Ether })
-      await cdpManager.withdrawCLV(moneyVals._100e18 , defaulter_1, { from: defaulter_1 })
+      await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_1, { from: defaulter_1 })
 
       await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: moneyVals._1_Ether })
       await cdpManager.withdrawCLV(moneyVals._100e18, defaulter_2, { from: defaulter_2 })
@@ -1042,7 +1044,7 @@ contract('PoolManager', async accounts => {
       console.log(`$ Alice CLV balance: ${(await clvToken.balanceOf(alice)).toString()}`)
       console.log(`Alice ETH withdrawn: ${alice_ETHWithdrawn}`)
 
-      assert.isAtMost(getDifference((await clvToken.balanceOf(alice)) .toString(), 0), 1000)
+      assert.isAtMost(getDifference((await clvToken.balanceOf(alice)).toString(), 0), 1000)
       assert.isAtMost(getDifference(alice_ETHWithdrawn, moneyVals._1_Ether), 1000)
 
       // console.log(`scale after L1: ${await poolManager.scale()}`)
@@ -1057,6 +1059,119 @@ contract('PoolManager', async accounts => {
       // console.log(`S sum at scale 0, after L2: ${await poolManager.scaleToSum(0)}`)
       // console.log(`S sum at scale 1, after L2: ${await poolManager.scaleToSum(1)}`)
     })
+
+    //--- Serial full offsets ---
+    // A,B deposit 100C
+    // L1 cancels 200C, 2E
+    // B,C deposits 100C
+    // L2 cancels 200C, 2E
+    // E,F deposit 100C
+    // L3 cancels 200C, 2E
+    // G,H deposits 100C
+    // L4 cancels 200C, 2E
+
+    // expect all depositors withdraw 0 CLV and 1 ETH
+
+    it("Compounding: Depositor withdraws correct compounded deposit after liquidation empties the pool", async () => {
+      // Whale opens CDP with 100 ETH
+      await cdpManager.addColl(whale, whale, { from: whale, value: moneyVals._100_Ether })
+
+      // 4 Defaulters open loan with 200% ICR
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: moneyVals._2_Ether })
+      await cdpManager.withdrawCLV(moneyVals._200e18, defaulter_1, { from: defaulter_1 })
+      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: moneyVals._2_Ether })
+      await cdpManager.withdrawCLV(moneyVals._200e18, defaulter_2, { from: defaulter_2 })
+      await cdpManager.addColl(defaulter_3, defaulter_3, { from: defaulter_3, value: moneyVals._2_Ether })
+      await cdpManager.withdrawCLV(moneyVals._200e18, defaulter_3, { from: defaulter_3 })
+      await cdpManager.addColl(defaulter_4, defaulter_4, { from: defaulter_4, value: moneyVals._2_Ether })
+      await cdpManager.withdrawCLV(moneyVals._200e18, defaulter_4, { from: defaulter_4 })
+
+      // price drops by 50%: defaulter ICR falls to 100%
+      await priceFeed.setPrice(moneyVals._100e18);
+
+      // Alice, Bob each deposit 100 CLV
+      const depositors_1 = [alice, bob]
+      for (account of depositors_1) {
+        await cdpManager.openLoan(moneyVals._100e18, account, { from: account, value: moneyVals._100_Ether })
+        await poolManager.provideToSP(moneyVals._100e18, { from: account })
+      }
+
+      // Defaulter 1 liquidated. 200 CLV fully offset with pool.
+      await cdpManager.liquidate(defaulter_1, { from: owner });
+
+      // Carol, Dennis each deposit 100 CLV
+      const depositors_2 = [carol, dennis]
+      for (account of depositors_2) {
+        await cdpManager.openLoan(moneyVals._100e18, account, { from: account, value: moneyVals._100_Ether })
+        await poolManager.provideToSP(moneyVals._100e18, { from: account })
+      }
+
+      // Defaulter 2 liquidated. 100 CLV offset
+      await cdpManager.liquidate(defaulter_2, { from: owner });
+
+      // Erin, Flyn each deposit 100 CLV
+      const depositors_3 = [erin, flyn]
+      for (account of depositors_3) {
+        await cdpManager.openLoan(moneyVals._100e18, account, { from: account, value: moneyVals._100_Ether })
+        await poolManager.provideToSP(moneyVals._100e18, { from: account })
+      }
+
+      // Defaulter 3 liquidated. 100 CLV offset
+      await cdpManager.liquidate(defaulter_3, { from: owner });
+
+      // Graham, Harriet each deposit 100 CLV
+      const depositors_4 = [graham, harriet]
+      for (account of depositors_4) {
+        await cdpManager.openLoan(moneyVals._100e18, account, { from: account, value: moneyVals._100_Ether })
+        await poolManager.provideToSP(moneyVals._100e18, { from: account })
+      }
+
+      // Defaulter 4 liquidated. 100 CLV offset
+      await cdpManager.liquidate(defaulter_4, { from: owner });
+
+      await cdpManager.withdrawCLV(moneyVals._1e18, whale, { from: whale })
+      await poolManager.provideToSP(moneyVals._1e18, { from: whale })
+
+      const txA = await poolManager.withdrawFromSP(moneyVals._100e18, { from: alice })
+      const txB = await poolManager.withdrawFromSP(moneyVals._100e18, { from: bob })
+      const txC = await poolManager.withdrawFromSP(moneyVals._100e18, { from: carol })
+      const txD = await poolManager.withdrawFromSP(moneyVals._100e18, { from: dennis })
+      const txE = await poolManager.withdrawFromSP(moneyVals._100e18, { from: erin })
+      const txF = await poolManager.withdrawFromSP(moneyVals._100e18, { from: flyn })
+      const txG = await poolManager.withdrawFromSP(moneyVals._100e18, { from: graham })
+      const txH = await poolManager.withdrawFromSP(moneyVals._100e18, { from: harriet })
+
+      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const erin_ETHWithdrawn = txE.logs[1].args[1].toString()
+      const flyn_ETHWithdrawn = txF.logs[1].args[1].toString()
+      const graham_ETHWithdrawn = txG.logs[1].args[1].toString()
+      const harriet_ETHWithdrawn = txH.logs[1].args[1].toString()
+
+      // Expect all deposits to be 0 CLV
+      assert.equal((await clvToken.balanceOf(alice)).toString(), '0')
+      assert.equal((await clvToken.balanceOf(bob)).toString(), '0')
+      assert.equal((await clvToken.balanceOf(carol)).toString(), '0')
+      assert.equal((await clvToken.balanceOf(dennis)).toString(), '0')
+      assert.equal((await clvToken.balanceOf(erin)).toString(), '0')
+      assert.equal((await clvToken.balanceOf(flyn)).toString(), '0')
+      assert.equal((await clvToken.balanceOf(graham)).toString(), '0')
+      assert.equal((await clvToken.balanceOf(harriet)).toString(), '0')
+
+      /* Expect all ETH gains to be 1 ETH:  Since each liquidation of empties the pool, depositors
+      should only earn ETH from the single liquidation that cancelled with their deposit */
+      assert.equal(alice_ETHWithdrawn, moneyVals._1_Ether)
+      assert.equal(bob_ETHWithdrawn, moneyVals._1_Ether)
+      assert.equal(carol_ETHWithdrawn, moneyVals._1_Ether)
+      assert.equal(dennis_ETHWithdrawn, moneyVals._1_Ether)
+      assert.equal(erin_ETHWithdrawn, moneyVals._1_Ether)
+      assert.equal(flyn_ETHWithdrawn, moneyVals._1_Ether)
+      assert.equal(graham_ETHWithdrawn, moneyVals._1_Ether)
+      assert.equal(harriet_ETHWithdrawn, moneyVals._1_Ether)
+    })
+
 
     // --- Scale factor tests ---
 
@@ -1322,13 +1437,187 @@ contract('PoolManager', async accounts => {
       // TODO:  check deposit magnitudes are correct
       // assert.equal((await clvToken.balanceOf(bob)).toString(), '1000000000' )
       // assert.equal((await clvToken.balanceOf(carol)).toString(), '2000000000' )
-      assert.equal((await clvToken.balanceOf(dennis)).toString(), '3000000000' )
+      assert.equal((await clvToken.balanceOf(dennis)).toString(), '3000000000')
 
-      assert.equal(bob_ETHWithdrawn, moneyVals._1_Ether )
+      assert.equal(bob_ETHWithdrawn, moneyVals._1_Ether)
       assert.equal(carol_ETHWithdrawn, moneyVals._2_Ether)
       assert.equal(dennis_ETHWithdrawn, moneyVals._3_Ether)
 
       console.log(`bob ETH after: ${await txB.logs[1].args[1].toString()}`)
+    })
+
+    // --- Serial scale changes ---
+
+    /* A make deposit 100 CLV
+    L1 brings P to (~1e-10)*P. L1:  99.999999999000000000 CLV, 1 ETH
+    B makes deposit 100
+    L2 decreases P by(~1e-10)P. L2:  99.999999999000000000 CLV, 1 ETH
+    C makes deposit 100
+    L2 decreases P by(~1e-10)P. L2:  99.999999999000000000 CLV, 1 ETH
+    C makes deposit 100
+    L3 decreases P by(~1e-10)P. L2:  99.999999999000000000 CLV, 1 ETH
+    D makes deposit 100
+    L4 decreases P by(~1e-10)P. L2:  99.999999999000000000 CLV, 1 ETH
+    expect A, B, C, D each withdraw ~1e-10 CLV and ~1 Ether
+    */
+    it("Compounding, Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
+      // Whale opens CDP with 100 ETH
+      await cdpManager.addColl(whale, whale, { from: whale, value: moneyVals._100_Ether })
+
+      // Defaulters 1-4 each withdraw 99.999999999 CLV
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: moneyVals._1_Ether })
+      await cdpManager.withdrawCLV('99999999999000000000', defaulter_1, { from: defaulter_1 })
+
+      await cdpManager.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: moneyVals._1_Ether })
+      await cdpManager.withdrawCLV('99999999999000000000', defaulter_2, { from: defaulter_2 })
+
+      await cdpManager.addColl(defaulter_3, defaulter_3, { from: defaulter_3, value: moneyVals._1_Ether })
+      await cdpManager.withdrawCLV('99999999999000000000', defaulter_3, { from: defaulter_3 })
+
+      await cdpManager.addColl(defaulter_4, defaulter_4, { from: defaulter_4, value: moneyVals._1_Ether })
+      await cdpManager.withdrawCLV('99999999999000000000', defaulter_4, { from: defaulter_4 })
+
+      // price drops by 50%
+      await priceFeed.setPrice(moneyVals._100e18);
+
+      await cdpManager.openLoan(moneyVals._100e18, alice, { from: alice, value: moneyVals._100_Ether })
+      await poolManager.provideToSP(moneyVals._100e18, { from: alice })
+
+      // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
+      const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
+      assert.isTrue(txL1.receipt.status)
+      console.log("P CLV after L1:" + (await poolManager.P_CLV()).toString())
+
+      // B deposits 100CLV
+      await cdpManager.openLoan(moneyVals._100e18, bob, { from: bob, value: moneyVals._100_Ether })
+      await poolManager.provideToSP(moneyVals._100e18, { from: bob })
+
+      // Defaulter 2 liquidated
+      const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
+      assert.isTrue(txL2.receipt.status)
+      console.log("P CLV after L1:" + (await poolManager.P_CLV()).toString())
+
+      await cdpManager.openLoan(moneyVals._100e18, carol, { from: carol, value: moneyVals._100_Ether })
+      await poolManager.provideToSP(moneyVals._100e18, { from: carol })
+
+      // Defaulter 3 liquidated
+      const txL3 = await cdpManager.liquidate(defaulter_3, { from: owner });
+      assert.isTrue(txL3.receipt.status)
+      console.log("P CLV after L1:" + (await poolManager.P_CLV()).toString())
+
+      await cdpManager.openLoan(moneyVals._100e18, dennis, { from: dennis, value: moneyVals._100_Ether })
+      await poolManager.provideToSP(moneyVals._100e18, { from: dennis })
+
+      // Defaulter 4 liquidated
+      const txL4 = await cdpManager.liquidate(defaulter_4, { from: owner });
+      assert.isTrue(txL4.receipt.status)
+      console.log("P CLV after L2:" + (await poolManager.P_CLV()).toString())
+
+      const txA = await poolManager.withdrawFromSP(moneyVals._100e18, { from: alice })
+      const txB = await poolManager.withdrawFromSP(moneyVals._100e18, { from: bob })
+      const txC = await poolManager.withdrawFromSP(moneyVals._100e18, { from: carol })
+      const txD = await poolManager.withdrawFromSP(moneyVals._100e18, { from: dennis })
+
+      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
+      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+
+      // B, C and D should withdraw 1e-10 of initial deposit, 
+      console.log(`bob balance after: ${(await clvToken.balanceOf(bob)).toString()}`)
+
+      // TODO:  check deposit magnitudes are correct
+      assert.equal((await clvToken.balanceOf(alice)).toString(), '0')
+      assert.equal((await clvToken.balanceOf(bob)).toString(), '0')
+      assert.equal((await clvToken.balanceOf(carol)).toString(), '0')
+
+      // Expect Dennis to receive the small round-off error from the past deposits that have been clipped to 0
+      assert.equal((await clvToken.balanceOf(dennis)).toString(), '4000000000')
+
+      assert.equal(alice_ETHWithdrawn, '1000000000100000000')
+      assert.equal(bob_ETHWithdrawn, '1000000000100000000')
+      assert.equal(carol_ETHWithdrawn, '1000000000100000000')
+      assert.equal(dennis_ETHWithdrawn, '999999999970000000')
+    })
+
+    // --- Extreme values, confirm no overflows ---
+
+    it("Compounding: Large liquidated coll/debt, deposits and ETH price", async () => {
+      // Whale opens CDP with 100 ETH
+      await cdpManager.addColl(whale, whale, { from: whale, value: moneyVals._100billion_Ether })
+
+      // ETH:USD price is $2 billion per ETH
+      await priceFeed.setPrice(moneyVals._2e27);
+      const price = await priceFeed.getPrice()
+
+      const depositors = [alice, bob]
+      for (account of depositors) {
+        await cdpManager.openLoan(moneyVals._1e36, account, { from: account, value: moneyVals._1billion_Ether })
+        await poolManager.provideToSP(moneyVals._1e36, { from: account })
+      }
+
+      // Defaulter opens loan with 200% ICR
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: moneyVals._1billion_Ether })
+      await cdpManager.withdrawCLV(moneyVals._1e36, defaulter_1, { from: defaulter_1 })
+
+      // console.log(`${(await cdpManager.getCurrentICR(defaulter_1, price))}`)
+
+      // ETH:USD price drops to $1 billion per ETH
+      await priceFeed.setPrice(moneyVals._1e27);
+
+      // Defaulter liquidated
+      await cdpManager.liquidate(defaulter_1, { from: owner });
+
+      const txA = await poolManager.withdrawFromSP(moneyVals._1e36, { from: alice })
+      const txB = await poolManager.withdrawFromSP(moneyVals._1e36, { from: bob })
+
+      // Grab the ETH gain from the emitted event in the tx log
+      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
+
+      assert.equal((await clvToken.balanceOf(alice)).toString(), moneyVals._5e35)
+      assert.equal((await clvToken.balanceOf(bob)).toString(), moneyVals._5e35)
+
+      assert.equal(alice_ETHWithdrawn, moneyVals._500million_Ether)
+      assert.equal(bob_ETHWithdrawn, moneyVals._500million_Ether)
+    })
+
+    it("Compounding: Tiny liquidated coll/debt, large deposits and ETH price", async () => {
+      // Whale opens CDP with 100 ETH
+      await cdpManager.addColl(whale, whale, { from: whale, value: moneyVals._100billion_Ether })
+
+      // ETH:USD price is $2 billion per ETH
+      await priceFeed.setPrice(moneyVals._2e27);
+      const price = await priceFeed.getPrice()
+
+      const depositors = [alice, bob]
+      for (account of depositors) {
+        await cdpManager.openLoan(moneyVals._1e36, account, { from: account, value: moneyVals._1billion_Ether })
+        await poolManager.provideToSP(moneyVals._1e36, { from: account })
+      }
+
+      // Defaulter opens loan with 20e-9 ETH (with minimum value of $20) and 20 CLV. 200% ICR
+      await cdpManager.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: '20000000000' })
+      await cdpManager.withdrawCLV(moneyVals._20e18, defaulter_1, { from: defaulter_1 })
+
+      // ETH:USD price drops to $1 billion per ETH
+      await priceFeed.setPrice(moneyVals._1e27);
+
+      // Defaulter liquidated
+      await cdpManager.liquidate(defaulter_1, { from: owner });
+
+      const txA = await poolManager.withdrawFromSP(moneyVals._1e36, { from: alice })
+      const txB = await poolManager.withdrawFromSP(moneyVals._1e36, { from: bob })
+
+      console.log(txA)
+      // const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
+      // const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
+
+      // assert.equal((await clvToken.balanceOf(alice)).toString(), '999999999999999990000000000000000000')
+      // assert.equal((await clvToken.balanceOf(bob)).toString(), '999999999999999990000000000000000000')
+
+      //   assert.equal(alice_ETHWithdrawn, 10000000000)
+      //   assert.equal(bob_ETHWithdrawn, 10000000000)
     })
   })
 })

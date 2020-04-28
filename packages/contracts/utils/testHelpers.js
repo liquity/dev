@@ -19,8 +19,10 @@ const MoneyValues = {
   _1million_Ether: web3.utils.toWei('1000000', 'ether'),
   _10million_Ether: web3.utils.toWei('10000000', 'ether'),
   _100million_Ether: web3.utils.toWei('100000000', 'ether'),
+  _500million_Ether: web3.utils.toWei('500000000', 'ether'),
   _1billion_Ether: web3.utils.toWei('1000000000', 'ether'),
   _10billion_Ether: web3.utils.toWei('10000000000', 'ether'),
+  _100billion_Ether: web3.utils.toWei('10000000000', 'ether'),
 
   _1e18: web3.utils.toWei('1', 'ether'),
   _5e18: web3.utils.toWei('5', 'ether'),
@@ -50,7 +52,11 @@ const MoneyValues = {
   _1700e18: web3.utils.toWei('1700', 'ether'),
   _1800e18: web3.utils.toWei('1800', 'ether'),
   _2000e18: web3.utils.toWei('2000', 'ether'),
-  _5000e18: web3.utils.toWei('5000', 'ether')
+  _5000e18: web3.utils.toWei('5000', 'ether'),
+  _1e27: web3.utils.toWei('1000000000', 'ether'),
+  _2e27: web3.utils.toWei('2000000000', 'ether'),
+  _5e35: web3.utils.toWei('500000000000000000', 'ether'),
+  _1e36: web3.utils.toWei('1000000000000000000', 'ether')
 }
 
 // TODO: Make classes for function export

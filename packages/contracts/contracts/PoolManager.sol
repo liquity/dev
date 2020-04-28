@@ -343,7 +343,7 @@ contract PoolManager is Ownable, IPoolManager {
         return true;
     }
 
-   // Transfers _address's entitled CLV (CLVDeposit - CLVLoss) and their ETHGain, to _address.
+   // Transfers _address's compounded deposit and ETH gain, to _address.
     function retrieveToUser(address _address) internal returns(uint[2] memory) {
         uint userDeposit = deposits[_address];
 
@@ -356,6 +356,8 @@ contract PoolManager is Ownable, IPoolManager {
         // Send CLV to user and decrease CLV in Pool
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(compoundedCLVDeposit, stabilityPool.getCLV()));
     
+        console.log("compoundedCLVDeposit is %s", compoundedCLVDeposit);
+        console.log(" stabilityPool.getCLV() %s", stabilityPool.getCLV());
         stabilityPool.decreaseCLV(compoundedCLVDeposit);
         stabilityPool.decreaseTotalCLVDeposits(compoundedCLVDeposit);
     
@@ -367,7 +369,7 @@ contract PoolManager is Ownable, IPoolManager {
         return shares;
     }
 
-    // Transfer _address's entitled CLV (userDeposit - CLVLoss) to _address, and their ETHGain to their CDP.
+    // Transfer _address's compounded deposit to _address, and their ETH gain to their CDP.
     function retrieveToCDP(address _address, address _hint) internal returns(uint[2] memory) {
         uint userDeposit = deposits[_address];  
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
@@ -397,7 +399,7 @@ contract PoolManager is Ownable, IPoolManager {
     // --- External StabilityPool Functions ---
 
     /* Send ETHGain to user's address, and updates their deposit, 
-    setting newDeposit = (oldDeposit - CLVLoss) + amount. */
+    setting newDeposit = compounded deposit + amount. */
     function provideToSP(uint _amount) external returns(bool) {
         address user = _msgSender();
 
@@ -422,9 +424,9 @@ contract PoolManager is Ownable, IPoolManager {
     Stability Pool, and updates the caller’s reduced deposit. 
 
     If  _amount is 0, the user only withdraws their ETHGain, no CLV.
-    If _amount > (userDeposit - CLVLoss), the user withdraws all their ETHGain and all available CLV.
+    If _amount > userDeposit, the user withdraws all their ETH gain, and all of their compounded deposit.
 
-    In all cases, the entire ETHGain is sent to user, and the CLVLoss is applied to their deposit. */
+    In all cases, the entire ETH gain is sent to user. */
     function withdrawFromSP(uint _amount) external returns(bool) {
         address user = _msgSender();
         uint userDeposit = deposits[user];
@@ -443,8 +445,8 @@ contract PoolManager is Ownable, IPoolManager {
         return true;
     }
 
-    /* Transfer the caller’s entire ETHGain from the Stability Pool to the caller’s CDP. 
-    Applies their CLVLoss to the deposit. */
+    /* Transfer the caller’s entire ETH gain from the Stability Pool to the caller’s CDP, and leaves
+    their compounded deposit in the Stability Pool. */
     function withdrawFromSPtoCDP(address _user, address _hint) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
         uint userDeposit = deposits[_user]; 
        
@@ -455,7 +457,6 @@ contract PoolManager is Ownable, IPoolManager {
  
         uint returnedCLV = returnedVals[0];
         
-        // Update deposit, applying CLVLoss
         depositCLV(_user, returnedCLV); 
         return true;
     }
