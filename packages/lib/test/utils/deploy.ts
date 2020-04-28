@@ -23,7 +23,7 @@ export const setSilent = (s: boolean) => {
   silent = s;
 };
 
-const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve(), ms));
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
 const transactionReceipt = async (web3: Web3, transactionHash: string) => {
   silent || console.log(`Waiting for transaction ${transactionHash} ...`);

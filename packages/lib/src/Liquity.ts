@@ -267,7 +267,7 @@ export type LiquityTransactionOverrides = {
 const debouncingDelayMs = 50;
 
 const debounce = (listener: (latestBlock: number) => void) => {
-  let timeoutId: number | undefined = undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
   let latestBlock: number = 0;
 
   return (...args: any[]) => {
