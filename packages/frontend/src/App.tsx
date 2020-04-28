@@ -1,5 +1,5 @@
 import React from "react";
-import { Web3Provider, AsyncSendable } from "@ethersproject/providers";
+import { Web3Provider } from "@ethersproject/providers";
 import { Web3ReactProvider } from "@web3-react/core";
 import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 
@@ -21,36 +21,7 @@ import { RedemptionManager } from "./components/RedemptionManager";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
-    <Web3ReactProvider
-      getLibrary={(provider: AsyncSendable) => {
-        // Uncomment this to log requests
-
-        // let numberOfRequests = 0;
-
-        // setInterval(() => {
-        //   if (numberOfRequests > 10) {
-        //     console.log(`Avg. req/s: ${numberOfRequests / 10}`);
-        //   }
-        //   numberOfRequests = 0;
-        // }, 10000);
-
-        // const loggedSend = <A extends any[], R, F extends (...args: A) => R>(realSend: F) => (
-        //   ...args: A
-        // ): R => {
-        //   ++numberOfRequests;
-
-        //   //console.log(args[0]);
-        //   return realSend(...args);
-        // };
-
-        // return new Web3Provider({
-        //   ...provider,
-        //   send: provider.send && loggedSend(provider.send),
-        //   sendAsync: provider.sendAsync && loggedSend(provider.sendAsync)
-        // });
-        return new Web3Provider(provider);
-      }}
-    >
+    <Web3ReactProvider getLibrary={provider => new Web3Provider(provider)}>
       {children}
     </Web3ReactProvider>
   );
