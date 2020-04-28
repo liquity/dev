@@ -1,5 +1,5 @@
 import React from "react";
-import { Web3Provider, AsyncSendable } from "ethers/providers";
+import { Web3Provider, AsyncSendable } from "@ethersproject/providers";
 import { Web3ReactProvider } from "@web3-react/core";
 import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 

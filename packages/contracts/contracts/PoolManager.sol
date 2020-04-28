@@ -24,9 +24,9 @@ contract PoolManager is Ownable, IPoolManager {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     
-    event UserSnapshotUpdated(int128 _CLV, int128 _ETH);
-    event S_CLVUpdated(int128 _S_CLV);
-    event S_ETHUpdated(int128 _S_ETH);
+    event UserSnapshotUpdated(uint _CLV, uint _ETH);
+    event S_CLVUpdated(uint _S_CLV);
+    event S_ETHUpdated(uint _S_ETH);
     event UserDepositChanged(address indexed _user, uint _amount);
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 

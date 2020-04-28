@@ -1,8 +1,9 @@
 import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
 import { Flex, Text, Box, Tooltip } from "rimble-ui";
-import { ContractTransaction } from "ethers";
-import { Provider } from "ethers/providers";
-import { hexDataSlice, hexDataLength, defaultAbiCoder } from "ethers/utils";
+import { ContractTransaction } from "@ethersproject/contracts";
+import { Provider } from "@ethersproject/abstract-provider";
+import { hexDataSlice, hexDataLength } from "@ethersproject/bytes";
+import { defaultAbiCoder } from "@ethersproject/abi";
 
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";

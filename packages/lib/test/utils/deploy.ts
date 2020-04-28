@@ -1,9 +1,9 @@
 import Web3 from "web3";
 import { TransactionReceipt } from "web3-eth";
-import { Signer, ContractTransaction } from "ethers";
+import { Signer } from "@ethersproject/abstract-signer";
+import { ContractTransaction } from "@ethersproject/contracts";
 
-import { LiquityContractAddresses, LiquityContracts } from "../../src/contracts";
-import { connectToContracts } from "../../src/contractConnector";
+import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "../../src/contracts";
 
 // Bug in web3-eth: getTransactionReceipt is typed wrong. It returns null when the transaction is
 // still pending.
@@ -39,14 +39,10 @@ const transactionReceipt = async (web3: Web3, transactionHash: string) => {
   }
 };
 
-interface GenericContract extends Truffle.Contract<Truffle.ContractInstance> {
-  "new"(meta?: Truffle.TransactionDetails): Promise<Truffle.ContractInstance>;
-}
-
-const deployContract = async (web3: Web3, artifacts: Truffle.Artifacts, contractName: string) => {
+const deployContract = async (web3: Web3, artifacts: any, contractName: string) => {
   silent || console.log(`Deploying ${contractName} ...`);
 
-  const contract = await artifacts.require<GenericContract>(contractName).new();
+  const contract = await artifacts.require(contractName).new();
   const receipt = await transactionReceipt(web3, contract.transactionHash);
 
   if (!silent) {
@@ -61,33 +57,17 @@ const deployContract = async (web3: Web3, artifacts: Truffle.Artifacts, contract
   return contract.address;
 };
 
-const deployContracts = async (
-  web3: Web3,
-  artifacts: Truffle.Artifacts
-): Promise<LiquityContractAddresses> => ({
+const deployContracts = async (web3: Web3, artifacts: any): Promise<LiquityContractAddresses> => ({
   activePool: await deployContract(web3, artifacts, "ActivePool"),
   cdpManager: await deployContract(web3, artifacts, "CDPManager"),
   clvToken: await deployContract(web3, artifacts, "CLVToken"),
   defaultPool: await deployContract(web3, artifacts, "DefaultPool"),
-  nameRegistry: await deployContract(web3, artifacts, "NameRegistry"),
   poolManager: await deployContract(web3, artifacts, "PoolManager"),
   priceFeed: await deployContract(web3, artifacts, "PriceFeed"),
   sortedCDPs: await deployContract(web3, artifacts, "SortedCDPs"),
   stabilityPool: await deployContract(web3, artifacts, "StabilityPool")
 });
-/*
-const nameRegisterContracts = async (contracts: LiquityContracts) => {
-  const nameRegistry = contracts.nameRegistry;
-  await nameRegistry.registerContract("ActivePool", contracts.activePool.address);
-  await nameRegistry.registerContract("CDPManager", contracts.cdpManager.address);
-  await nameRegistry.registerContract("CLVToken", contracts.clvToken.address);
-  await nameRegistry.registerContract("DefaultPool", contracts.defaultPool.address);
-  await nameRegistry.registerContract("PoolManager", contracts.poolManager.address);
-  await nameRegistry.registerContract("PriceFeed", contracts.priceFeed.address);
-  await nameRegistry.registerContract("SortedCDPs", contracts.sortedCDPs.address);
-  await nameRegistry.registerContract("StabilityPool", contracts.stabilityPool.address);
-};
-*/
+
 const connectContracts = async (
   {
     activePool,
@@ -142,7 +122,7 @@ const connectContracts = async (
 
 export const deployAndSetupContracts = async (
   web3: Web3,
-  artifacts: Truffle.Artifacts,
+  artifacts: any,
   deployer: Signer
 ): Promise<LiquityContracts> => {
   silent || (console.log("Deploying contracts..."), console.log());
@@ -150,7 +130,6 @@ export const deployAndSetupContracts = async (
   const contracts = connectToContracts(addresses, deployer);
   silent || console.log("Connecting contracts...");
   await connectContracts(contracts, deployer);
-  //await nameRegisterContracts(contracts);
 
   return contracts;
 };

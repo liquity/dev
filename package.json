@@ -1,9 +1,17 @@
 {
   "name": "liquity",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/@nomiclabs/**",
+      "**/*buidler*",
+      "**/typescript",
+      "**/ts-node"
+    ]
+  },
   "scripts": {
     "compile:contracts": "yarn workspace @liquity/contracts compile",
     "build:lib": "yarn workspace @liquity/lib build",

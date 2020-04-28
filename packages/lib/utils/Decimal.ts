@@ -1,6 +1,6 @@
 import assert from "assert";
-import { BigNumber, bigNumberify } from "ethers/utils";
-import { MaxUint256 } from "ethers/constants";
+import { BigNumber } from "@ethersproject/bignumber";
+import { MaxUint256 } from "@ethersproject/constants";
 
 export type Decimalish = Decimal | number | string;
 
@@ -24,7 +24,7 @@ export class Decimal {
   }
 
   private static getDigits(numDigits: number) {
-    return bigNumberify(10).pow(numDigits);
+    return BigNumber.from(10).pow(numDigits);
   }
 
   private static fromString(representation: string) {
@@ -33,7 +33,7 @@ export class Decimal {
     }
 
     if (representation.indexOf(".") < 0) {
-      return new Decimal(bigNumberify(representation).mul(Decimal.DIGITS));
+      return new Decimal(BigNumber.from(representation).mul(Decimal.DIGITS));
     }
 
     let [characteristic, mantissa] = representation.split(".");
@@ -44,7 +44,7 @@ export class Decimal {
     }
 
     return new Decimal(
-      bigNumberify(characteristic)
+      BigNumber.from(characteristic || 0)
         .mul(Decimal.DIGITS)
         .add(mantissa)
     );
