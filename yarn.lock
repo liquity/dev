@@ -1503,29 +1503,7 @@
   dependencies:
     "@ethersproject/logger" ">=5.0.0-beta.129"
 
-"@ethersproject/providers@>=5.0.0-beta.141":
-  version "5.0.0-beta.163"
-  resolved "https://registry.yarnpkg.com/@ethersproject/providers/-/providers-5.0.0-beta.163.tgz#c2786cb7cd7d943ea87fd398c110e41a3006ea4d"
-  integrity sha512-qoZAHFRqt8TNn27U1fYsA5Mp1DAaqMVVCd5bC7C7uqZk41uBD6Ax6m+ADhtcpsd5MtagXWAch7VGM3gfD3YLzw==
-  dependencies:
-    "@ethersproject/abstract-provider" ">=5.0.0-beta.131"
-    "@ethersproject/abstract-signer" ">=5.0.0-beta.132"
-    "@ethersproject/address" ">=5.0.0-beta.128"
-    "@ethersproject/bignumber" ">=5.0.0-beta.130"
-    "@ethersproject/bytes" ">=5.0.0-beta.129"
-    "@ethersproject/constants" ">=5.0.0-beta.128"
-    "@ethersproject/hash" ">=5.0.0-beta.128"
-    "@ethersproject/logger" ">=5.0.0-beta.129"
-    "@ethersproject/networks" ">=5.0.0-beta.129"
-    "@ethersproject/properties" ">=5.0.0-beta.131"
-    "@ethersproject/random" ">=5.0.0-beta.128"
-    "@ethersproject/rlp" ">=5.0.0-beta.126"
-    "@ethersproject/strings" ">=5.0.0-beta.130"
-    "@ethersproject/transactions" ">=5.0.0-beta.128"
-    "@ethersproject/web" ">=5.0.0-beta.129"
-    ws "7.2.3"
-
-"@ethersproject/providers@https://gitpkg.now.sh/danielattilasimon/ethers.js/packages/providers?bugfix-getlogs-rpc-error":
+"@ethersproject/providers@>=5.0.0-beta.141", "@ethersproject/providers@https://gitpkg.now.sh/danielattilasimon/ethers.js/packages/providers?bugfix-getlogs-rpc-error":
   version "5.0.0-beta.163"
   resolved "https://gitpkg.now.sh/danielattilasimon/ethers.js/packages/providers?bugfix-getlogs-rpc-error#023ceea0ce736716f5c071a828a170debc40a4a8"
   dependencies:
