@@ -9,7 +9,7 @@
     "@ethersproject/bignumber": "^5.0.0-beta.138",
     "@ethersproject/bytes": "^5.0.0-beta.137",
     "@ethersproject/contracts": "^5.0.0-beta.149",
-    "@ethersproject/providers": "https://gitpkg.now.sh/ethers-io/ethers.js/packages/providers?9f8025155cc1b14c98b1bf2b6207dd11139397df",
+    "@ethersproject/providers": "^5.0.0-beta.164",
     "@liquity/lib": "^0.0.1",
     "@testing-library/dom": "^6.12.2",
     "@testing-library/jest-dom": "^5.1.1",
