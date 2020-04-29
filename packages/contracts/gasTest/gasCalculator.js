@@ -2192,7 +2192,7 @@ it("", async () => {
 it("", async () => {
   const message = 'liquidateCDPs() Normal Mode liquidates 30 CDPs, 30 remaining active CDPs, no ETH gain in pool, pure redistribution'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-  await addColl_allAccounts(accounts.slice(31,61), cdpManager, _10_Ether)
+  await addColl_allAccounts(accounts.slice(31,61), cdpManager, _100_Ether)
   await withdrawCLV_allAccounts(accounts.slice(31,61), cdpManager, _180e18)
  
   //30 accts open CDP with 1 ether and withdraw 180 CLV
@@ -2209,11 +2209,52 @@ it("", async () => {
   appendData({gas: gas}, message, data)
 })
 
+it("", async () => {
+  const message = 'liquidateCDPs() Normal Mode liquidates 50 CDPs, 50 remaining active CDPs, no ETH gain in pool, pure redistribution'
+  // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+  await addColl_allAccounts(accounts.slice(51,101), cdpManager, _100_Ether)
+  await withdrawCLV_allAccounts(accounts.slice(51,101), cdpManager, _180e18)
+ 
+  //30 accts open CDP with 1 ether and withdraw 180 CLV
+  await addColl_allAccounts(accounts.slice(1,51), cdpManager, _1_Ether)
+  await withdrawCLV_allAccounts(accounts.slice(1,51), cdpManager, _180e18)
+ 
+  // Price drops, account[1]'s ICR falls below MCR
+  await priceFeed.setPrice(_100e18)
+
+  const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0]})
+  const gas = gasUsed(tx)
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it("", async () => {
+  const message = 'liquidateCDPs() Normal Mode liquidates 100 CDPs, 100 remaining active CDPs, no ETH gain in pool, pure redistribution'
+  // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+  await addColl_allAccounts(accounts.slice(101,201), cdpManager, _100_Ether)
+  await withdrawCLV_allAccounts(accounts.slice(101,201), cdpManager, _180e18)
+ 
+  //30 accts open CDP with 1 ether and withdraw 180 CLV
+  await addColl_allAccounts(accounts.slice(1,101), cdpManager, _1_Ether)
+  await withdrawCLV_allAccounts(accounts.slice(1,101), cdpManager, _180e18)
+ 
+  // Price drops, account[1]'s ICR falls below MCR
+  await priceFeed.setPrice(_100e18)
+
+  const tx = await cdpManager.liquidateCDPs(100, { from: accounts[0]})
+  const gas = gasUsed(tx)
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
 
 // liquidate CDPs - all offset by funds in SP 
 
 it("", async () => {
   const message = 'liquidateCDPs() Normal Mode liquidates 1 CDP, completely offset by SP funds, n = 10, 10 remaining active CDPs, no ETH gain in pool'
+  
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(2,12), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(2,12), cdpManager, _180e18)
@@ -2302,15 +2343,16 @@ it("", async () => {
   appendData({gas: gas}, message, data)
 })
 
+
 it("", async () => {
   const message = 'liquidateCDPs() Normal Mode liquidates 30 CDPs, completely offset by SP funds, 30 remaining active CDPs, No funds in SP, no ETH gain in pool'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-  await addColl_allAccounts(accounts.slice(31,61), cdpManager, _10_Ether)
+  await addColl_allAccounts(accounts.slice(31,61), cdpManager, _100_Ether)
   await withdrawCLV_allAccounts(accounts.slice(31,61), cdpManager, _180e18)
  
   await provideToSP_allAccounts(accounts.slice(31,61), poolManager,_180e18)
 
-  //30 accts open CDP with 1 ether and withdraw 180 CLV
+  //50 accts open CDP with 1 ether and withdraw 180 CLV
   await addColl_allAccounts(accounts.slice(1,31), cdpManager, _1_Ether)
   await withdrawCLV_allAccounts(accounts.slice(1,31), cdpManager, _180e18)
  
@@ -2318,6 +2360,52 @@ it("", async () => {
   await priceFeed.setPrice(_100e18)
 
   const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0]})
+  const gas = gasUsed(tx)
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it("", async () => {
+  const message = 'liquidateCDPs() Normal Mode liquidates 50 CDPs, completely offset by SP funds, 50 remaining active CDPs, No funds in SP, no ETH gain in pool'
+
+  // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+  await addColl_allAccounts(accounts.slice(51,101), cdpManager, _100_Ether)
+  await withdrawCLV_allAccounts(accounts.slice(51,101), cdpManager, _180e18)
+ 
+  await provideToSP_allAccounts(accounts.slice(51,101), poolManager,_180e18)
+
+  //50 accts open CDP with 1 ether and withdraw 180 CLV
+  await addColl_allAccounts(accounts.slice(1,51), cdpManager, _1_Ether)
+  await withdrawCLV_allAccounts(accounts.slice(1,51), cdpManager, _180e18)
+ 
+  // Price drops, account[1]'s ICR falls below MCR
+  await priceFeed.setPrice(_100e18)
+
+  const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0]})
+  const gas = gasUsed(tx)
+  logGas(gas, message)
+
+  appendData({gas: gas}, message, data)
+})
+
+it.only("", async () => {
+  const message = 'liquidateCDPs() Normal Mode liquidates 100 CDPs, completely offset by SP funds, 50 remaining active CDPs, No funds in SP, no ETH gain in pool'
+
+  // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+  await addColl_allAccounts(accounts.slice(101,201), cdpManager, _100_Ether)
+  await withdrawCLV_allAccounts(accounts.slice(101,201), cdpManager, _180e18)
+ 
+  await provideToSP_allAccounts(accounts.slice(101,201), poolManager,_180e18)
+
+  //50 accts open CDP with 1 ether and withdraw 180 CLV
+  await addColl_allAccounts(accounts.slice(1,101), cdpManager, _1_Ether)
+  await withdrawCLV_allAccounts(accounts.slice(1,101), cdpManager, _180e18)
+ 
+  // Price drops, account[1]'s ICR falls below MCR
+  await priceFeed.setPrice(_100e18)
+
+  const tx = await cdpManager.liquidateCDPs(100, { from: accounts[0]})
   const gas = gasUsed(tx)
   logGas(gas, message)
 
