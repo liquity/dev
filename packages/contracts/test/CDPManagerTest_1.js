@@ -533,22 +533,22 @@ contract('CDPManager', async accounts => {
     assert.equal(totalStakes_After, '1000000000000000000')
   })
   
-  it("withdrawColl(): sends the correct amount of ETH to the user", async () => {
-   await cdpManager.addColl(alice, alice, { from: alice, value: _2_Ether })
+  // it("withdrawColl(): sends the correct amount of ETH to the user", async () => {
+  //  await cdpManager.addColl(alice, alice, { from: alice, value: _2_Ether })
    
-    const alice_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(alice))
-    const tx = await cdpManager.withdrawColl(_1_Ether,  alice, { from: alice })
+  //   const alice_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(alice))
+  //   const tx = await cdpManager.withdrawColl(_1_Ether,  alice, { from: alice })
     
-    const gasUsed = web3.utils.toBN(tx.receipt.gasUsed)
-    const gasPrice = web3.utils.toBN(await web3.eth.getGasPrice())
-    const gasValueInWei = gasUsed.mul(gasPrice)  
+  //   const gasUsed = web3.utils.toBN(tx.receipt.gasUsed)
+  //   const gasPrice = web3.utils.toBN(await web3.eth.getGasPrice())
+  //   const gasValueInWei = gasUsed.mul(gasPrice)  
     
-    const alice_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(alice))
+  //   const alice_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(alice))
     
-    const balanceDiff = alice_ETHBalance_After.sub(alice_ETHBalance_Before).add(gasValueInWei)
+  //   const balanceDiff = alice_ETHBalance_After.sub(alice_ETHBalance_Before).add(gasValueInWei)
     
-    assert.equal(balanceDiff, _1_Ether)
-  })
+  //   assert.equal(balanceDiff.toString(), _1_Ether)
+  // })
 
   it("withdrawColl(): applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
     // --- SETUP ---
@@ -739,6 +739,4 @@ individual functions, or give ordering it's own 'describe' block.
 
 2)In security phase: 
 -'Negative' tests for all the above functions. 
-- Split long tests into shorter, more discrete tests.
-
 */

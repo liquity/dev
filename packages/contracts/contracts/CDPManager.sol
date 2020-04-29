@@ -403,13 +403,12 @@ contract CDPManager is Ownable, ICDPManager {
         removeStake(_user); 
     
         // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-        uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
-        uint CLVDebtRemainder = remainder[0];
-        uint ETHRemainder = remainder[1];
-       
+        (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
+
         redistributeCollAndDebt(ETHRemainder, CLVDebtRemainder);
         closeCDP(_user); 
         updateSystemSnapshots();
+        
         emit CDPUpdated(_user, 
                     0, 
                     0,
@@ -441,9 +440,7 @@ contract CDPManager is Ownable, ICDPManager {
             removeStake(_user);
             
             // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-            uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
-            uint CLVDebtRemainder = remainder[0];
-            uint ETHRemainder = remainder[1];
+           (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
 
             redistributeCollAndDebt(ETHRemainder, CLVDebtRemainder);
     
@@ -456,9 +453,7 @@ contract CDPManager is Ownable, ICDPManager {
             removeStake(_user);
 
             // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-            uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
-            uint CLVDebtRemainder = remainder[0];
-            uint ETHRemainder = remainder[1];
+            (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
 
             // Close the CDP and update snapshots if the CDP was completely offset against CLV in Stability Pool
             if (CLVDebtRemainder == 0) {

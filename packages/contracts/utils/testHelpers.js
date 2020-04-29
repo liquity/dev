@@ -11,6 +11,7 @@ const MoneyValues = {
   _15_Ether: web3.utils.toWei('15', 'ether'),
   _20_Ether: web3.utils.toWei('20', 'ether'),
   _22_Ether: web3.utils.toWei('22', 'ether'),
+  _50_Ether: web3.utils.toWei('22', 'ether'),
   _98_Ether: web3.utils.toWei('98', 'ether'),
   _100_Ether: web3.utils.toWei('100', 'ether'),
   _200_Ether: web3.utils.toWei('200', 'ether'),
@@ -66,6 +67,13 @@ const getDifference = (x, y) => {
   y_BN = web3.utils.toBN(y)
 
   return Number(x_BN.sub(y_BN).abs())
+}
+
+const getDifferenceAsBN = (x, y) => {
+  x_BN = web3.utils.toBN(x)
+  y_BN = web3.utils.toBN(y)
+
+  return x_BN.sub(y_BN).abs()
 }
 
 const getGasMetrics = (gasCostList) => {
@@ -364,6 +372,7 @@ module.exports = {
   gasUsed: gasUsed,
   makeWei: makeWei,
   getDifference: getDifference,
+  getDifferenceAsBN:  getDifferenceAsBN,
   openLoan_allAccounts: openLoan_allAccounts,
   openLoan_allAccounts_randomETH: openLoan_allAccounts_randomETH,
   openLoan_allAccounts_randomCLV: openLoan_allAccounts_randomCLV,

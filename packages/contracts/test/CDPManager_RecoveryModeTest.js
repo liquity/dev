@@ -456,12 +456,12 @@ contract('CDPManager', async accounts => {
 
     // Alice deposits to SP
     await poolManager.provideToSP('400000000000000000000', { from: alice })
-    // check SP rewards-per-unit-staked before
-    const S_CLV_Before = (await poolManager.S_CLV()).toString()
-    const S_ETH_Before = (await poolManager.S_CLV()).toString()
+    
+    // check rewards-per-unit-staked before
+    const P_Before = (await poolManager.P()).toString()
+   
+    assert.equal(P_Before, '1000000000000000000')
 
-    assert.equal(S_CLV_Before, '0')
-    assert.equal(S_ETH_Before, '0')
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -477,11 +477,9 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(bob, { from: owner })
 
     // check SP rewards-per-unit-staked after liquidation - should be no increase
-    S_CLV_After = (await poolManager.S_CLV()).toString()
-    S_ETH_After = (await poolManager.S_CLV()).toString()
-
-    assert.equal(S_CLV_After, '0')
-    assert.equal(S_ETH_After, '0')
+    const P_After = (await poolManager.P()).toString()
+   
+    assert.equal(P_After, '1000000000000000000')
   })
 
   // --- liquidate() with 100% < ICR < 110%
@@ -655,12 +653,10 @@ contract('CDPManager', async accounts => {
     const stabilityPoolCLV_Before = (await poolManager.getStabilityPoolCLV()).toString()
     assert.equal(stabilityPoolCLV_Before, '400000000000000000000')
 
-    // check pool rewards before liquidation
-    const S_CLV_Before = await poolManager.S_CLV()
-    const S_ETH_Before = await poolManager.S_ETH()
-
-    assert.equal(S_CLV_Before, 0)
-    assert.equal(S_ETH_Before, 0)
+    // check Pool reward term before liquidation
+    const P_Before = (await poolManager.P()).toString()
+   
+    assert.equal(P_Before, '1000000000000000000')
 
     /* Now, liquidate Bob. Liquidated coll is 21 ether, and liquidated debt is 2000 CLV.
     
@@ -669,24 +665,17 @@ contract('CDPManager', async accounts => {
     Stability Pool rewards for alice should be:
     CLVLoss: 400CLV
     ETHGain: (400 / 2000) * 21 = 4.2 ether
-  
+
     After offsetting 400 CLV and 4.2 ether, the remainders - 1600 CLV and 16.8 ether - should be redistributed to all active CDPs.
    */
-
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
 
+    const aliceExpectedDeposit = await poolManager.getCompoundedCLVDeposit(alice)
+    const aliceExpectedETHGain = await poolManager.getCurrentETHGain(alice)
 
-    /* check Stability Pool rewards after.  As total deposited was 400 CLV, rewards-per-unit-staked for the StabilityPool
-     should be:
-    S_CLV = 400 / 400 = 1 CLV
-    S_ETH = 4.2 / 400 = 0.0105 ether
-    */
-    const S_CLV_After = (await poolManager.S_CLV()).toString()
-    const S_ETH_After = (await poolManager.S_ETH()).toString()
-
-    assert.isAtMost(getDifference(S_CLV_After, '1000000000000000000'), 100)
-    assert.isAtMost(getDifference(S_ETH_After, '10500000000000000'), 100)
+    assert.equal(aliceExpectedDeposit.toString(), 0)
+    assert.equal(aliceExpectedETHGain.toString(), '4200000000000000000')
 
     /* Now, check redistribution to active CDPs. Remainders of 1600 CLV and 16.8 ether are distributed.
     
@@ -738,15 +727,13 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(bob, { from: owner })
 
     // Check that Pool rewards don't change
-    const S_CLV_Before = (await poolManager.S_CLV()).toString()
-    const S_ETH_Before = (await poolManager.S_ETH()).toString()
-
-    assert.equal(S_CLV_Before, '0')
-    assert.equal(S_ETH_Before, '0')
+    const P_Before = (await poolManager.P()).toString()
+  
+    assert.equal(P_Before, '1000000000000000000')
 
     // Check that redistribution rewards don't change
     const L_CLVDebt = (await cdpManager.L_CLVDebt()).toString()
-    const L_ETH = (await poolManager.S_ETH()).toString()
+    const L_ETH = (await cdpManager.L_ETH()).toString()
 
     assert.equal(L_CLVDebt, '0')
     assert.equal(L_ETH, '0')
@@ -802,17 +789,18 @@ contract('CDPManager', async accounts => {
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
 
-    /* Check accrued Stability Pool rewards after. Total Pool deposits was 1500 CLV. 
-    As liquidated debt (250 CLV) was completely offset, rewards-per-unit-staked for the Stability Pool should be:
-    
-    S_CLV = 250 / 1500 = 10 CLV
-    S_ETH =  3 / 1500 = 0.002 ether
-    */
-    const S_CLV = (await poolManager.S_CLV()).toString()
-    const S_ETH = (await poolManager.S_ETH()).toString()
+    /* Check accrued Stability Pool rewards after. Total Pool deposits was 1500 CLV, Alice sole depositor.
+    As liquidated debt (250 CLV) was completely offset
 
-    assert.equal(S_CLV, '166666666666666667')
-    assert.equal(S_ETH, '2000000000000000')
+    Alice's expected compounded deposit: (1500 - 250) = 1250CLV
+    Alice's expected ETH gain:  Bob's liquidated coll, 3 ether
+  
+    */
+    const aliceExpectedDeposit = await poolManager.getCompoundedCLVDeposit(alice)
+    const aliceExpectedETHGain = await poolManager.getCurrentETHGain(alice)
+
+    assert.isAtMost(getDifference(aliceExpectedDeposit.toString(), '1250000000000000000000'), 1000)
+    assert.equal(aliceExpectedETHGain, _3_Ether)
   })
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV > liquidated debt: removes stake and updates totalStakes", async () => {
@@ -1076,7 +1064,7 @@ contract('CDPManager', async accounts => {
     assert.equal(totalCollateralSnapshot_After, '22000000000000000000')
   })
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: updates system shapshots", async () => {
+  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: distributes correct rewards", async () => {
     // --- SETUP ---
     await cdpManager.addColl(alice, alice, { from: alice, value: _20_Ether })
     await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
@@ -1098,24 +1086,26 @@ contract('CDPManager', async accounts => {
     const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
-    // Liquidate Bob
+    // Liquidate Bob. 100 CLV should be offset
     await cdpManager.liquidate(bob, { from: owner })
 
     /* check Stability Pool rewards.  After Bob's liquidation:
     - amount of CLV offset with Stability Pool should be 100 CLV
     - corresponding amount of ETH added to Stability Pool should be 100/250 * 3 = 1.2 ether.
 
-    Thus, with 100 CLV in pool prior to liquidation, rewards-per-unit-staked should be:
+    - Alice's deposit (100 CLV) should fully cancel with the debt, leaving her a withdrawable deposit of 0
+  
+    Her ETH gain from offset should be (3 * 100/250) = 1.2 Ether.
+    */
+ 
+   const aliceExpectedDeposit = await poolManager.getCompoundedCLVDeposit(alice)
+   const aliceExpectedETHGain = await poolManager.getCurrentETHGain(alice)
 
-    S_CLV: 1 CLV
-    S_ETH : 1.2 / 100 = 0.012 ether */
-    const S_CLV_After = (await poolManager.S_CLV()).toString()
-    const S_ETH_After = (await poolManager.S_ETH()).toString()
+    assert.equal(aliceExpectedDeposit.toString(), '0')
 
-    assert.isAtMost(getDifference(S_CLV_After, '1000000000000000000'), 100)
-    assert.isAtMost(getDifference(S_ETH_After, '12000000000000000'), 100)
+    assert.isAtMost(getDifference(aliceExpectedETHGain, '1200000000000000000' ), 100)
 
-    /* For this Recovery Mode test case, there should be no redistribution of remainder to active CDPs. 
+    /* For this Recovery Mode test case with ICR > 110%, there should be no redistribution of remainder to active CDPs. 
     Redistribution rewards-per-unit-staked should be zero. */
 
     const L_CLVDebt_After = (await cdpManager.L_CLVDebt()).toString()

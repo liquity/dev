@@ -24,9 +24,9 @@ contract PoolManager is Ownable, IPoolManager {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     
-    event UserSnapshotUpdated(uint _CLV, uint _ETH);
-    event P_CLVUpdated(uint _P_CLV);
-    event S_ETHUpdated(uint _S_ETH);
+    event UserSnapshotUpdated(uint _P, uint _S);
+    event P_Updated(uint _P);
+    event S_Updated(uint _S);
     event UserDepositChanged(address indexed _user, uint _amount);
     event ETHGainWithdrawn(address indexed _user, uint _ETH);
     event ETHGainWithdrawnToCDP(address indexed _CDPOwner, uint _ETH);
@@ -55,36 +55,37 @@ contract PoolManager is Ownable, IPoolManager {
    
     mapping (address => uint) public deposits;
 
-  
-
     struct Snapshot {
-        uint ETH;
-        uint CLV;
+        uint S;
+        uint P;
         uint scale;
+        uint epoch;
     }
 
-    /* Running product by which to multiply an initial deposit, in order to find the current compounded deposit, given
-    a series of liquidations, each of which cancel some CLV debt with the deposit. 
+    /* P: Running product by which to multiply an initial deposit, in order to find the current compounded deposit, 
+    given a series of liquidations, each of which cancel some CLV debt with the deposit. 
 
-    During its lifetime, a deposit's value evolves from d0 to (d0 * [ P_CLV / P_CLV(0)] ), where P_CLV(0) 
-    is the snapshot of P_CLV taken at the instant the deposit was made.  18 DP decimal.  */
-    uint public P_CLV = 1e18;
+    During its lifetime, a deposit's value evolves from d0 to (d0 * P / P(0) ), where P(0) 
+    is the snapshot of P taken at the instant the deposit was made. 18 DP decimal.  */
+    uint public P = 1e18;
 
-    // Every time the scale of P shifts by 1e18, the scale is incremented by 1
-    uint public scale;
+    uint public currentScale;  // Each time the scale of P shifts by 1e18, the scale is incremented by 1
 
-    /* Sum of accumulated ETH gains per unit staked.  During it's lifetime, each deposit d0 earns:
-    An ETH *gain* of ( d0 * [S_ETH - S_ETH(0)] ), where S_ETH(0) is the snapshot of S_ETH taken at the instant
-    the deposit was made. 18 DP decimal.  */
-    // uint public S_ETH;
+    uint public currentEpoch;  // With each offset that fully empties the Pool, the epoch is incremented by 1
 
-    // record the sum S at different scales
-    mapping (uint => uint) public scaleToSum;
+    /* S: During it's lifetime, each deposit d0 earns an ETH gain of ( d0 * [S - S(0)] )/P(0), where S(0) 
+    is the snapshot of S taken at the instant the deposit was made.
+   
+    The 'S' sums are stored in a nested mapping (epoch => scale => sum):
 
-    // Map users to their individual snapshots of S_CLV and the S_ETH
+    - The inner mapping records the sum S at different scales
+    - The outer mapping records the (scale => sum) mappings, for different epochs. */
+    mapping (uint => mapping(uint => uint)) public epochToScaleToSum;
+
+    // Map users to their individual snapshot structs
     mapping (address => Snapshot) public snapshot;
 
-    // Error trackers for the offset calculation
+    // Error trackers for the error correction in the offset calculation
     uint lastETHError_Offset;
     uint lastCLVLossError_Offset;
 
@@ -262,64 +263,61 @@ contract PoolManager is Ownable, IPoolManager {
         return true;
     }
 
-    /* Return the accumulated ETH Gain for the user, for the duration that this deposit was held.
-
-    Given by the formula:  E = d0 * (S_ETH - S_ETH(0))/P_CLV(0)
-    
-    where S_ETH(0), P_CLV(0) are snapshots of the sum S_ETH and product P_ETH, respectively.
-    */
+    /* Return the ETH gain earned by the deposit. Given by the formula:  E = d0 * (S - S(0))/P(0)
+    where S(0), P(0) are the depositor's snapshots of the sum S and product P, respectively. */
     function getCurrentETHGain(address _user) public view returns(uint) {
         uint userDeposit = deposits[_user];
-        uint snapshot_S_ETH = snapshot[_user].ETH;  
-        uint snapshot_P_CLV = snapshot[_user].CLV;
-        uint snapshot_scale = snapshot[_user].scale;
+        uint snapshot_S = snapshot[_user].S;  
+        uint snapshot_P = snapshot[_user].P;
+        uint scaleSnapshot = snapshot[_user].scale;
+        uint epochSnapshot = snapshot[_user].epoch;
 
         uint ETHGain;
-        uint scaleDiff = scale.sub(snapshot_scale);
 
-        if (scaleDiff == 0) { 
-            ETHGain = userDeposit.mul(scaleToSum[scale].sub(snapshot_S_ETH)).div(snapshot_P_CLV).div(1e18);
-        } else {
-            uint firstPortion = scaleToSum[snapshot_scale].sub(snapshot_S_ETH);
-            uint secondPortion = scaleToSum[snapshot_scale.add(1)].div(1e18);
+        /* Grab the reward sum from the epoch at which the deposit was made. The reward may span up to 
+        one scale change.  
+        If it does, the second portion of the reward is scaled by 1e18. 
+        If the reward spans no scale change, the second portion will be 0. */
+        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(snapshot_S);
+        uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
 
-            ETHGain = userDeposit.mul(firstPortion.add(secondPortion)).div(snapshot_P_CLV).div(1e18);
-        }
-
+        ETHGain = userDeposit.mul(firstPortion.add(secondPortion)).div(snapshot_P).div(1e18);
+        
         return ETHGain;
     }
 
-    /* Return the user's compounded deposit.  
-
-    Given by the formula:  d = d0 * P_CLV/P_CLV(0)
-    
-    where P_CLV(0) is the snapshot of the product P_ETH.
-    */
-    function getCompoundedCLVDeposit(address _user) internal view returns(uint) {
+    /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
+    where P_(0) is the depositor's snapshot of the product P. */
+    function getCompoundedCLVDeposit(address _user) public view returns(uint) {
         uint userDeposit = deposits[_user];
-        uint snapshot_P_CLV = snapshot[_user].CLV; 
-        uint snapshot_scale = snapshot[_user].scale;
+        uint snapshot_P = snapshot[_user].P; 
+        uint scaleSnapshot = snapshot[_user].scale;
+        uint epochSnapshot = snapshot[_user].epoch;
+        
+        // If deposit was made before a pool-emptying event, then it has been fully cancelled with debt -- so, return 0
+        if (epochSnapshot < currentEpoch) { return 0; }
 
         uint compoundedDeposit;
-        uint scaleDiff = scale.sub(snapshot_scale);
+        uint scaleDiff = currentScale.sub(scaleSnapshot);
     
-        /* Return a positive deposit if compounded deposit is greater than
-        a particular tiny fraction of the initial deposit -- i.e. if ( d > d0 * 1e-9 ). Otherwise, return 0. */
-        if ((scaleDiff == 0) && (P_CLV >= snapshot_P_CLV.div(1e9))) { 
-            compoundedDeposit = userDeposit.mul(P_CLV).div(snapshot_P_CLV);
-
-        } else if ((scaleDiff == 1) && (P_CLV >= snapshot_P_CLV.div(1e9))) {
-            compoundedDeposit = userDeposit.mul(P_CLV).div(snapshot_P_CLV).div(1e18);
-       
+        /* Compute the compounded deposit. If a scale change in P was made during the deposit's lifetime, 
+        account for it.  If more than one scale change was made, then the deposit has decreased by a factor of 
+        at least 1e-18 -- so return 0.*/
+        if (scaleDiff == 0) { 
+            compoundedDeposit = userDeposit.mul(P).div(snapshot_P);
+        } else if (scaleDiff == 1) {
+            compoundedDeposit = userDeposit.mul(P).div(snapshot_P).div(1e18);
         } else {
             compoundedDeposit = 0;
         }
-   
+
+        // If compounded deposit is less than a billionth of the initial deposit, return 0
+        if (compoundedDeposit < userDeposit.div(1e9)) { return 0; }
+
         return compoundedDeposit;
     }
 
-
-    // --- Internal StabilityPool functions --- 
+    // --- Internal Stability Pool functions --- 
 
     // Deposit _amount CLV from _address, to the Stability Pool.
     function depositCLV(address _address, uint _amount) internal returns(bool) {
@@ -333,12 +331,13 @@ contract PoolManager is Ownable, IPoolManager {
         // Record the deposit made by user
         deposits[_address] = _amount;
     
-        // Record new individual snapshots of the running product P_CLV and sum S_ETH for the user
-        snapshot[_address].CLV = P_CLV;
-        snapshot[_address].ETH = scaleToSum[scale];
-        snapshot[_address].scale = scale;
+        // Record new individual snapshots of the running product P and sum S for the user
+        snapshot[_address].P = P;
+        snapshot[_address].S = epochToScaleToSum[currentEpoch][currentScale];
+        snapshot[_address].scale = currentScale;
+        snapshot[_address].epoch = currentEpoch;
 
-        emit UserSnapshotUpdated(snapshot[_address].CLV, snapshot[_address].ETH);
+        emit UserSnapshotUpdated(snapshot[_address].P, snapshot[_address].S);
         emit UserDepositChanged(_address, _amount);
         return true;
     }
@@ -356,8 +355,6 @@ contract PoolManager is Ownable, IPoolManager {
         // Send CLV to user and decrease CLV in Pool
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(compoundedCLVDeposit, stabilityPool.getCLV()));
     
-        console.log("compoundedCLVDeposit is %s", compoundedCLVDeposit);
-        console.log(" stabilityPool.getCLV() %s", stabilityPool.getCLV());
         stabilityPool.decreaseCLV(compoundedCLVDeposit);
         stabilityPool.decreaseTotalCLVDeposits(compoundedCLVDeposit);
     
@@ -420,10 +417,10 @@ contract PoolManager is Ownable, IPoolManager {
         return true;
     }
 
-    /* Withdraw _amount of CLV and the caller’s entire ETHGain from the 
+    /* Withdraw _amount of CLV and the caller’s entire ETH gain from the 
     Stability Pool, and updates the caller’s reduced deposit. 
 
-    If  _amount is 0, the user only withdraws their ETHGain, no CLV.
+    If  _amount is 0, the user only withdraws their ETH gain, no CLV.
     If _amount > userDeposit, the user withdraws all their ETH gain, and all of their compounded deposit.
 
     In all cases, the entire ETH gain is sent to user. */
@@ -465,16 +462,19 @@ contract PoolManager is Ownable, IPoolManager {
     and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
     Returns the amount of debt that could not be cancelled, and the corresponding ether.
     Only callable from close() and closeCDPs() functions in CDPManager */
-    function offset(uint _debt, uint _coll) external payable onlyCDPManager returns (uint[2] memory) {    
-        uint[2] memory remainder;
+    function offset(uint _debt, uint _coll) 
+    external 
+    payable 
+    onlyCDPManager 
+    returns (uint debtRemainder, uint collRemainder) {    
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits(); 
         uint CLVinPool = stabilityPool.getCLV(); 
 
         // When Stability Pool has no CLV or no deposits, return all debt and coll
         if (CLVinPool == 0 || totalCLVDeposits == 0 ) {
-            remainder[0] = _debt;
-            remainder[1] = _coll;
-            return remainder;
+            debtRemainder = _debt;
+            collRemainder = _coll;
+            return (debtRemainder, collRemainder);
         }
         
         // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
@@ -483,43 +483,71 @@ contract PoolManager is Ownable, IPoolManager {
         // Collateral to be added in proportion to the debt that is cancelled 
         uint collToAdd = _coll.mul(debtToOffset).div(_debt);
         
+        (uint ETHGainPerUnitStaked,
+         uint CLVLossPerUnitStaked) = computeRewardsPerUnitStaked(collToAdd, debtToOffset, totalCLVDeposits);
+
+        updateRewardSumAndProduct(ETHGainPerUnitStaked, CLVLossPerUnitStaked);
+
+        stabilityPool.decreaseTotalCLVDeposits(debtToOffset);
+      
+        moveOffsetCollAndDebt(collToAdd, debtToOffset);
+
+        // Return the amount of debt & coll that could not be offset against the Stability Pool due to insufficiency
+        debtRemainder = _debt.sub(debtToOffset);
+        collRemainder = _coll.sub(collToAdd);
+
+        return (debtRemainder, collRemainder);
+    }
+
+    // --- Offset helper functions ---
+
+    function computeRewardsPerUnitStaked(uint collToAdd, uint debtToOffset, uint totalCLVDeposits) 
+    internal 
+    returns(uint ETHGainPerUnitStaked, uint CLVLossPerUnitStaked) 
+    {
         uint CLVLossNumerator = debtToOffset.mul(1e18).sub(lastCLVLossError_Offset);
         uint ETHNumerator = collToAdd.mul(1e18).add(lastETHError_Offset);
 
         // Compute the CLV and ETH rewards 
-        uint CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits)).add(1);  
-        uint ETHGainPerUnitStaked = ETHNumerator.div(totalCLVDeposits); // Error in quotient is negative
- 
+        uint CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits)).add(1);  // add 1 to make error in quotient positive
+        uint ETHGainPerUnitStaked = ETHNumerator.div(totalCLVDeposits); 
+    
         // Error corrections
         lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(totalCLVDeposits)).sub(CLVLossNumerator);
-        lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(totalCLVDeposits));  
+        lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(totalCLVDeposits)); 
 
-        // Make product factor 0 if there was a full offset, otherwise productFactor = (1 - (q / D))
-        uint productFactor = CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(CLVLossPerUnitStaked);
-       
-        // TODO: Error correction for P_CLV and marginalETHGain?
-        
-        // Update the sum at the current scale
-        uint marginalETHGain = ETHGainPerUnitStaked.mul(P_CLV);
-        scaleToSum[scale] = scaleToSum[scale].add(marginalETHGain);
-        emit S_ETHUpdated(scaleToSum[scale]); 
+        return (ETHGainPerUnitStaked, CLVLossPerUnitStaked);
+    }
 
-       // If it was a full offset, increment the scale 
-        if (productFactor == 0) {
-            scale = scale.add(1);
-        // If multiplying P by the product factor would round P to zero, increment the scale 
-        } else if (P_CLV.mul(productFactor) < 1e18) {
-            P_CLV = P_CLV.mul(productFactor);
-            scale = scale.add(1);
+    // Update the Stability Pool reward sum S and product P
+    function updateRewardSumAndProduct(uint ETHGainPerUnitStaked, uint CLVLossPerUnitStaked) internal {
+         
+         // Make product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
+        uint newProductFactor = CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(CLVLossPerUnitStaked);
+     
+        // Update the ETH reward sum at the current scale
+        uint marginalETHGain = ETHGainPerUnitStaked.mul(P);
+        epochToScaleToSum[currentEpoch][currentScale] = epochToScaleToSum[currentEpoch][currentScale].add(marginalETHGain);
+        emit S_Updated(epochToScaleToSum[currentEpoch][currentScale]); 
+
+       // If the pool was emptied, increment the epoch and reset the scale and product P
+        if (newProductFactor == 0) {
+            currentEpoch = currentEpoch.add(1);
+            currentScale = 0;
+            P = 1e18;
+    
+        // If multiplying P by a non-zero product factor would round P to zero, increment the scale 
+        } else if (P.mul(newProductFactor) < 1e18) {
+            P = P.mul(newProductFactor);
+            currentScale = currentScale.add(1);
          } else {
-            P_CLV = P_CLV.mul(productFactor).div(1e18); 
+            P = P.mul(newProductFactor).div(1e18); 
         }
 
-        emit P_CLVUpdated(P_CLV); 
+        emit P_Updated(P); 
+    }
 
-        // Decrease totalCLVDeposits
-        stabilityPool.decreaseTotalCLVDeposits(debtToOffset);
-      
+    function moveOffsetCollAndDebt(uint collToAdd, uint debtToOffset) internal {
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLV(debtToOffset);  
         stabilityPool.decreaseCLV(debtToOffset); 
@@ -529,11 +557,6 @@ contract PoolManager is Ownable, IPoolManager {
 
         // Burn the debt that was successfully offset
         CLV.burn(stabilityPoolAddress, debtToOffset); 
-
-        // Return the amount of debt & coll that could not be offset against the Stability Pool due to insufficiency
-        remainder[0] = _debt.sub(debtToOffset);
-        remainder[1] = _coll.sub(collToAdd);
-        return remainder;
     }
 
     function () external payable onlyStabilityPoolorActivePool {}

@@ -58,7 +58,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         ETH = ETH.sub(_amount);
         (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
         require (success == true, 'StabilityPool: transaction reverted');
-        console.log("ETH sent: %s", _amount);
+    
         emit ETHBalanceUpdated(ETH);
         emit EtherSent(_account, _amount);
         return success;

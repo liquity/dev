@@ -15,11 +15,11 @@ interface IPoolManager {
 
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
 
-    event UserSnapshotUpdated(uint _CLV, uint _ETH);
+    event UserSnapshotUpdated(uint _P, uint _S);
 
-    event S_CLVUpdated(uint _P_CLV);
+    event P_Updated(uint _P);
 
-    event S_ETHUpdated(uint _S_ETH);
+    event S_Updated(uint _S);
 
     event UserDepositChanged(address indexed _user, uint _amount);
 
@@ -73,5 +73,5 @@ interface IPoolManager {
 
     function withdrawFromSPtoCDP(address _user, address _hint) external returns(bool);
 
-    function offset(uint _debt, uint _coll) external payable returns(uint[2] memory);
+    function offset(uint _debt, uint _coll) external payable returns(uint, uint);
 }
