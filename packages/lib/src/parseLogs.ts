@@ -1,5 +1,6 @@
-import { Log } from "ethers/providers";
-import { Interface, LogDescription, BigNumber, bigNumberify } from "ethers/utils";
+import { BigNumber } from "@ethersproject/bignumber";
+import { Log } from "@ethersproject/abstract-provider";
+import { LogDescription, Interface } from "@ethersproject/abi";
 
 import { LiquityContracts } from "./contracts";
 import { Decimal } from "../utils";
@@ -33,7 +34,7 @@ export const parseLogs = (
   return [parsedLogs, unparsedLogs];
 };
 
-const VERY_BIG = bigNumberify(10).pow(9);
+const VERY_BIG = BigNumber.from(10).pow(9);
 
 const substituteName = (address: string, names: { [address: string]: [string, Interface?] }) =>
   address in names ? names[address][0] : address;
@@ -42,21 +43,21 @@ export const logDescriptionToString = (
   logDescription: LogDescription,
   names?: { [address: string]: [string, Interface?] }
 ) => {
-  const prettyValues = Array.from(logDescription.values as ArrayLike<unknown>).map(value => {
-    if (BigNumber.isBigNumber(value)) {
-      if (value.gte(VERY_BIG)) {
-        return new Decimal(value).toString() + "e18";
+  const prettyValues = logDescription.args.map(arg => {
+    if (BigNumber.isBigNumber(arg)) {
+      if (arg.gte(VERY_BIG)) {
+        return new Decimal(arg).toString() + "e18";
       } else {
-        return value.toString();
+        return arg.toString();
       }
-    } else if (typeof value === "string") {
-      return value === "0x0000000000000000000000000000000000000000"
+    } else if (typeof arg === "string") {
+      return arg === "0x0000000000000000000000000000000000000000"
         ? "address(0)"
         : names
-        ? substituteName(value, names)
-        : value;
+        ? substituteName(arg, names)
+        : arg;
     } else {
-      return String(value);
+      return String(arg);
     }
   });
 
