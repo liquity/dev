@@ -403,9 +403,7 @@ contract CDPManager is Ownable, ICDPManager {
         removeStake(_user); 
     
         // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-        uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
-        uint CLVDebtRemainder = remainder[0];
-        uint ETHRemainder = remainder[1];
+         (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
        
         redistributeCollAndDebt(ETHRemainder, CLVDebtRemainder);
         closeCDP(_user); 
@@ -439,9 +437,7 @@ contract CDPManager is Ownable, ICDPManager {
             removeStake(_user);
             
             // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-            uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
-            uint CLVDebtRemainder = remainder[0];
-            uint ETHRemainder = remainder[1];
+            (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
 
             redistributeCollAndDebt(ETHRemainder, CLVDebtRemainder);
     
@@ -454,9 +450,7 @@ contract CDPManager is Ownable, ICDPManager {
             removeStake(_user);
 
             // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-            uint[2] memory remainder = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
-            uint CLVDebtRemainder = remainder[0];
-            uint ETHRemainder = remainder[1];
+            (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
 
             // Close the CDP and update snapshots if the CDP was completely offset against CLV in Stability Pool
             if (CLVDebtRemainder == 0) {
@@ -785,24 +779,6 @@ contract CDPManager is Ownable, ICDPManager {
 
         return computeICR(currentETH, newCLVDebt, _price);
     } 
-
-    /*  Deprecrated function - liquidations now do not consider the pending SP gain, and
-    are now conditional only on the raw ICR. */
-
-    // function getNewICRFromPendingSPGain(address _user, uint price) internal returns (uint) {
-    //     // Get rewards from direct distributions
-    //     uint pendingETHReward = computePendingETHReward(_user);
-    //     uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
-
-    //     // Get ETH Gain from StabilityPool deposit
-    //     uint ETHGainFromSP = poolManager.getCurrentETHGain(_user);
-        
-    //     uint newColl = CDPs[_user].coll.add(pendingETHReward).add(ETHGainFromSP);
-    //     uint newCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);
-
-    //     uint newICR = computeICR(newColl, newCLVDebt, price);
-    //     return newICR;
-    // }
 
     function computeICR(uint _coll, uint _debt, uint _price) view internal returns(uint) {
         // Check if the total debt is higher than 0, to avoid division by 0

@@ -75,5 +75,5 @@ interface IPoolManager {
 
     function withdrawPenaltyFromSP(address _address) external returns(bool);
 
-    function offset(uint _debt, uint _coll) external payable returns(uint[2] memory);
+    function offset(uint _debt, uint _coll) external payable returns(uint, uint);
 }

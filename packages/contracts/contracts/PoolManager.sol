@@ -296,12 +296,11 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
    // Transfers _address's entitled CLV (CLVDeposit - CLVLoss) and their ETHGain, to _address.
-    function retrieveToUser(address _address) internal returns(uint[2] memory) {
+    function retrieveToUser(address _address) internal returns(uint CLVShare, uint ETHShare) {
         uint userDeposit = deposit[_address];
 
-        uint ETHShare = getCurrentETHGain(_address);
+        ETHShare = getCurrentETHGain(_address);
         uint CLVLoss = getCurrentCLVLoss(_address);
-        uint CLVShare;
 
         // If user's deposit is an 'overstay', they retrieve 0 CLV
         if (CLVLoss > userDeposit) {
@@ -327,19 +326,16 @@ contract PoolManager is Ownable, IPoolManager {
         // Send ETH to user
         stabilityPool.sendETH(_address, ETHShare);
 
-        uint[2] memory shares = [CLVShare, ETHShare];
-        return shares;
+        return (CLVShare, ETHShare);
     }
 
     // Transfer _address's entitled CLV (userDeposit - CLVLoss) to _address, and their ETHGain to their CDP.
-    function retrieveToCDP(address _address, address _hint) internal returns(uint[2] memory) {
+    function retrieveToCDP(address _address, address _hint) internal returns(uint CLVShare, uint ETHShare) {
         uint userDeposit = deposit[_address];  
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
         
-        uint ETHShare = getCurrentETHGain(_address); 
+        ETHShare = getCurrentETHGain(_address); 
         uint CLVLoss = getCurrentCLVLoss(_address); 
-      
-        uint CLVShare;  
       
         // If user's deposit is an 'overstay', they retrieve 0 CLV
         if (CLVLoss > userDeposit) {
@@ -365,8 +361,7 @@ contract PoolManager is Ownable, IPoolManager {
         stabilityPool.sendETH(address(this), ETHShare); 
         cdpManager.addColl.value(ETHShare)(_address, _hint); 
    
-        uint[2] memory shares = [CLVShare, ETHShare]; 
-        return shares;
+        return (CLVShare, ETHShare); 
     }
 
     // --- External StabilityPool Functions ---
@@ -375,9 +370,8 @@ contract PoolManager is Ownable, IPoolManager {
     setting newDeposit = (oldDeposit - CLVLoss) + amount. */
     function provideToSP(uint _amount) external returns(bool) {
         address user = _msgSender();
-        uint[2] memory returnedVals = retrieveToUser(user);
-
-        uint returnedCLV = returnedVals[0];
+         
+        (uint returnedCLV, ) = retrieveToUser(user);
 
         uint newDeposit = returnedCLV + _amount;
         depositCLV(msg.sender, newDeposit);
@@ -398,9 +392,7 @@ contract PoolManager is Ownable, IPoolManager {
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
 
         // Retrieve all CLV and ETH for the user
-        uint[2] memory returnedVals = retrieveToUser(user);
-
-        uint returnedCLV = returnedVals[0];
+        (uint returnedCLV, ) = retrieveToUser(user);
 
         // If requested withdrawal amount is less than available CLV, re-deposit the difference.
         if (_amount < returnedCLV) {
@@ -418,9 +410,7 @@ contract PoolManager is Ownable, IPoolManager {
         if (userDeposit == 0) { return false; } 
         
         // Retrieve all CLV to user's CLV balance, and ETH to their CDP
-        uint[2] memory returnedVals = retrieveToCDP(_user, _hint); 
- 
-        uint returnedCLV = returnedVals[0];
+        (uint returnedCLV, ) = retrieveToCDP(_user, _hint); 
         
         // Update deposit, applying CLVLoss
         depositCLV(_user, returnedCLV); 
@@ -468,16 +458,19 @@ contract PoolManager is Ownable, IPoolManager {
     and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
     Returns the amount of debt that could not be cancelled, and the corresponding ether.
     Only callable from close() and closeCDPs() functions in CDPManager */
-    function offset(uint _debt, uint _coll) external payable onlyCDPManager returns (uint[2] memory) {    
-        uint[2] memory remainder;
+  function offset(uint _debt, uint _coll) 
+    external 
+    payable 
+    onlyCDPManager 
+    returns (uint debtRemainder, uint collRemainder)  {    
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits(); 
         uint CLVinPool = stabilityPool.getCLV(); 
 
         // When Stability Pool has no CLV or no deposits, return all debt and coll
         if (CLVinPool == 0 || totalCLVDeposits == 0 ) {
-            remainder[0] = _debt;
-            remainder[1] = _coll;
-            return remainder;
+            debtRemainder = _debt;
+            collRemainder = _coll;
+            return (debtRemainder, collRemainder);
         }
         
         // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
@@ -517,9 +510,10 @@ contract PoolManager is Ownable, IPoolManager {
         CLV.burn(stabilityPoolAddress, debtToOffset); 
 
         // Return the amount of debt & coll that could not be offset against the Stability Pool due to insufficiency
-        remainder[0] = _debt.sub(debtToOffset);
-        remainder[1] = _coll.sub(collToAdd);
-        return remainder;
+        debtRemainder = _debt.sub(debtToOffset);
+        collRemainder = _coll.sub(collToAdd);
+
+        return (debtRemainder, collRemainder);
     }
 
     function () external payable onlyStabilityPoolorActivePool {}
