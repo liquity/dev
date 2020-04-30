@@ -24,8 +24,8 @@ const getTupleType = (components: ParamType[], flexible: boolean) => {
   }
 };
 
-const getType = ({ type, components, arrayChildren }: ParamType, flexible: boolean): string => {
-  switch (type) {
+const getType = ({ baseType, components, arrayChildren }: ParamType, flexible: boolean): string => {
+  switch (baseType) {
     case "address":
     case "string":
       return "string";
@@ -40,57 +40,54 @@ const getType = ({ type, components, arrayChildren }: ParamType, flexible: boole
       return getTupleType(components, flexible);
   }
 
-  if (type.startsWith("bytes")) {
-    return flexible ? "string | BytesLike" : "string";
+  if (baseType.startsWith("bytes")) {
+    return flexible ? "BytesLike" : "string";
   }
 
-  const match = type.match(/^(u?int)([0-9]+)$/);
+  const match = baseType.match(/^(u?int)([0-9]+)$/);
   if (match) {
     return flexible ? "BigNumberish" : parseInt(match[2]) >= 53 ? "BigNumber" : "number";
   }
 
-  throw new Error(`unimplemented type ${type}`);
+  throw new Error(`unimplemented type ${baseType}`);
 };
 
-export function generate(contractName: string, iface: Interface): string {
-  const functions = Object.entries(iface.functions).filter(([signature]) => signature.includes("("));
+export function generate(contractName: string, { functions }: Interface): string {
+  return [
+    `export declare class ${contractName} extends Contract {`,
 
-  return `export declare class ${contractName} extends Contract {
-${functions
-  .map(([signature, funktion]) => {
-    const inputs = funktion.inputs.map((input, i) => [
-      input.name || "arg" + i,
-      getType(input, true)
-    ]);
+    ...Object.values(functions).map(func => {
+      const inputs = func.inputs.map((input, i) => [input.name || "arg" + i, getType(input, true)]);
 
-    const overridesType = funktion.constant
-      ? "CallOverrides"
-      : funktion.payable
-      ? "PayableOverrides"
-      : "Overrides";
+      const overridesType = func.constant
+        ? "CallOverrides"
+        : func.payable
+        ? "PayableOverrides"
+        : "Overrides";
 
-    const params = [
-      ...inputs.map(([name, type]) => `${name}: ${type}`),
-      `_overrides?: ${overridesType}`
-    ];
+      const params = [
+        ...inputs.map(([name, type]) => `${name}: ${type}`),
+        `_overrides?: ${overridesType}`
+      ];
 
-    let returnType: string;
-    if (funktion.constant) {
-      if (!funktion.outputs || funktion.outputs.length == 0) {
-        returnType = "void";
-      } else if (funktion.outputs.length === 1) {
-        returnType = getType(funktion.outputs[0], false);
+      let returnType: string;
+      if (func.constant) {
+        if (!func.outputs || func.outputs.length == 0) {
+          returnType = "void";
+        } else if (func.outputs.length === 1) {
+          returnType = getType(func.outputs[0], false);
+        } else {
+          returnType = getTupleType(func.outputs, false);
+        }
       } else {
-        returnType = getTupleType(funktion.outputs, false);
+        returnType = "ContractTransaction";
       }
-    } else {
-      returnType = "ContractTransaction";
-    }
 
-    return `  ${funktion.name}(${params.join(", ")}): Promise<${returnType}>;`;
-  })
-  .join("\n")}
-}`;
+      return `  ${func.name}(${params.join(", ")}): Promise<${returnType}>;`;
+    }),
+
+    "}"
+  ].join("\n");
 }
 
 const contracts = [
@@ -105,6 +102,7 @@ const contracts = [
 ];
 
 export const imports = `import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
+//import { BytesLike } from "@ethersproject/bytes";
 import {
   Contract,
   Overrides,
