@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useCallback } from "react";
+import React, { createContext, useContext, useCallback, useEffect } from "react";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Provider } from "@ethersproject/abstract-provider";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
 import {
+  BatchedWeb3Provider,
   Liquity,
   Trove,
   StabilityDeposit,
@@ -37,6 +38,12 @@ type LiquityProviderProps = {
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, loader }) => {
   const { library: provider, account, chainId } = useWeb3React<JsonRpcProvider>();
+
+  useEffect(() => {
+    if (chainId && provider && provider instanceof BatchedWeb3Provider) {
+      provider.setChainId(chainId);
+    }
+  }, [provider, chainId]);
 
   if (!provider || !account || !chainId) {
     return <>{loader}</>;

@@ -1,9 +1,8 @@
 import React from "react";
-import { Web3Provider } from "@ethersproject/providers";
 import { Web3ReactProvider } from "@web3-react/core";
 import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 
-import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import { Liquity, Trove, StabilityDeposit, BatchedWeb3Provider } from "@liquity/lib";
 import { Decimal, Difference, Percent } from "@liquity/lib/dist/utils";
 
 import { LiquityProvider, useLiquity, deployerAddress, useLiquityStore } from "./hooks/Liquity";
@@ -21,7 +20,7 @@ import { RedemptionManager } from "./components/RedemptionManager";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
-    <Web3ReactProvider getLibrary={provider => new Web3Provider(provider)}>
+    <Web3ReactProvider getLibrary={provider => new BatchedWeb3Provider(provider)}>
       {children}
     </Web3ReactProvider>
   );
