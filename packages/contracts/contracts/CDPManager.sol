@@ -382,21 +382,21 @@ contract CDPManager is Ownable, ICDPManager {
     // TODO: Left public for initial testing. Make internal.
     function liquidate(address _user) public returns (bool) {
         uint price = priceFeed.getPrice();
+        uint ICR = getCurrentICR(_user, price);
         bool recoveryMode = checkRecoveryMode();
 
         require(CDPs[_user].status == Status.active, "CDPManager: CDP does not exist or is already closed");
         
         if (recoveryMode == true) {
-            liquidateRecoveryMode(_user, price);
+            liquidateRecoveryMode(_user, ICR, price);
         } else if (recoveryMode == false) {
-            liquidateNormalMode(_user, price);
+            liquidateNormalMode(_user, ICR);
         }  
     }
    
-    function liquidateNormalMode(address _user, uint price) internal returns (bool) {
+    function liquidateNormalMode(address _user, uint _ICR) internal returns (bool) {
         // If ICR < MCR, don't liquidate 
-        uint ICR = getCurrentICR(_user, price);
-        if (ICR > MCR) { return false; }
+        if (_ICR > MCR) { return false; }
        
         // Apply the CDP's rewards and remove stake
         applyPendingRewards(_user); 
@@ -418,11 +418,9 @@ contract CDPManager is Ownable, ICDPManager {
         return true;
     }
 
-    function liquidateRecoveryMode(address _user, uint price) internal returns (bool) {
-        uint ICR = getCurrentICR(_user, price);
-
+    function liquidateRecoveryMode(address _user, uint _ICR, uint _price) internal returns (bool) {
         // If ICR <= 100%, redistribute the CDP across all active CDPs
-        if (ICR <= 1000000000000000000) {
+        if (_ICR <= 1000000000000000000) {
             applyPendingRewards(_user);
             removeStake(_user);
 
@@ -435,7 +433,7 @@ contract CDPManager is Ownable, ICDPManager {
             updateSystemSnapshots();
 
         // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
-        } else if ((ICR > 1000000000000000000) && (ICR < MCR)) {
+        } else if ((_ICR > 1000000000000000000) && (_ICR < MCR)) {
             applyPendingRewards(_user);
             removeStake(_user);
             
@@ -471,9 +469,9 @@ contract CDPManager is Ownable, ICDPManager {
                 CDPs[_user].debt = CLVDebtRemainder;
                 updateStakeAndTotalStakes(_user);
                
-                uint newICR = getCurrentICR(_user, price);
+                uint newICR = getCurrentICR(_user, _price);
           
-                sortedCDPs.reInsert(_user, newICR, price, _user, _user); 
+                sortedCDPs.reInsert(_user, newICR, _price, _user, _user); 
             }
         } 
         emit CDPUpdated(_user, 
@@ -494,7 +492,13 @@ contract CDPManager is Ownable, ICDPManager {
                 address user = sortedCDPs.getLast();
                 uint collRatio = getCurrentICR(user, price);
                 // attempt to close CDP
-                liquidate(user);
+
+                if (checkRecoveryMode() == true) {
+                    liquidateRecoveryMode(user, collRatio, price);
+                } else if (checkRecoveryMode() == false) {
+                    liquidateNormalMode(user, collRatio);
+                }  
+
                 /* Break loop if the system has left recovery mode and all active CDPs are 
                 above the MCR, or if the loop reaches the first CDP in the sorted list  */
                 if ((checkRecoveryMode() == false && collRatio >= MCR) || (user == sortedCDPs.getFirst())) { break; }
@@ -510,7 +514,7 @@ contract CDPManager is Ownable, ICDPManager {
 
                 // Close CDPs if it is under-collateralized
                 if (collRatio < MCR) {
-                    liquidate(user);
+                    liquidateNormalMode(user, collRatio);
                 } else break;
                 
                 // Break loop if you reach the first CDP in the sorted list 
