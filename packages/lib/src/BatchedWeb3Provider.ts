@@ -9,9 +9,9 @@ const multiCallerAddressOnChain: {
   [chainId: number]: string;
 } = {
   3: "0xdDB3aEa04Ac270880df386479850669C77b59E11",
-  // 4: ,
-  // 5: ,
-  // 42: ,
+  4: "0x32C223BF623816e7AF33cDb5B4937fae948cA7F6",
+  5: "0xB845bF75bc3BC73beEFf5451a7a724CF552BDF7C",
+  42: "0xaEcb9EA73E58814728b42E7C3AA00073F52acC7F",
 
   [DEV_CHAIN_ID]: "0xE59a3bB2079dE83809a5D61bA5609ad83726a251"
 };
@@ -148,7 +148,7 @@ export class BatchedWeb3Provider extends Web3Provider {
     return new Promise<string>((resolve, reject) => this.batched.callbacks.push([resolve, reject]));
   }
 
-  private conflicts(request: ResolvedTransactionRequest, blockTag?: BlockTag) {
+  private alreadyBatchedCallsConflictWith(request: ResolvedTransactionRequest, blockTag?: BlockTag) {
     if (this.batched.calls.length === 0) {
       return false;
     }
@@ -170,7 +170,7 @@ export class BatchedWeb3Provider extends Web3Provider {
     if (
       resolvedRequest.to === this.multiCaller.address ||
       !batchableCall(resolvedRequest) ||
-      this.conflicts(resolvedRequest, blockTag)
+      this.alreadyBatchedCallsConflictWith(resolvedRequest, blockTag)
     ) {
       return super.call(resolvedRequest, blockTag);
     } else {
