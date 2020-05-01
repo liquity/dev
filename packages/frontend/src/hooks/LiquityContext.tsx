@@ -12,8 +12,6 @@ import {
   isBatchedProvider
 } from "@liquity/lib";
 
-export const deployerAddress = "0x70E78E2D8B2a4fDb073B7F61c4653c23aE12DDDF";
-
 type LiquityContext = {
   account: string;
   provider: Provider;
