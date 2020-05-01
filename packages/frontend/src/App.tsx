@@ -5,7 +5,8 @@ import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 import { Liquity, Trove, StabilityDeposit, BatchedWeb3Provider } from "@liquity/lib";
 import { Decimal, Difference, Percent } from "@liquity/lib/dist/utils";
 
-import { LiquityProvider, useLiquity, deployerAddress, useLiquityStore } from "./hooks/Liquity";
+import { LiquityProvider, useLiquity, deployerAddress } from "./hooks/LiquityContext";
+import { useLiquityStore } from "./hooks/EventDrivenLiquityStore";
 import { WalletConnector } from "./components/WalletConnector";
 import { ToastProvider } from "./hooks/ToastProvider";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
