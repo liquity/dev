@@ -4,12 +4,12 @@ import { JsonRpcProvider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
 import {
-  BatchedWeb3Provider,
   Liquity,
   deploymentOnNetwork,
   connectToContracts,
   LiquityContracts,
-  DEV_CHAIN_ID
+  DEV_CHAIN_ID,
+  isBatchedProvider
 } from "@liquity/lib";
 
 export const deployerAddress = "0x70E78E2D8B2a4fDb073B7F61c4653c23aE12DDDF";
@@ -34,8 +34,8 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, load
   const { library: provider, account, chainId } = useWeb3React<JsonRpcProvider>();
 
   useEffect(() => {
-    if (chainId && provider && provider instanceof BatchedWeb3Provider) {
-      provider.setChainId(chainId);
+    if (chainId && provider && isBatchedProvider(provider)) {
+      provider.chainId = chainId;
     }
   }, [provider, chainId]);
 
