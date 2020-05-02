@@ -14,7 +14,7 @@ import {
   logDescriptionToString,
   contractsToInterfaces
 } from "@liquity/lib";
-import { useLiquity } from "../hooks/Liquity";
+import { useLiquity } from "../hooks/LiquityContext";
 
 const circularProgressbarStyle = {
   strokeWidth: 10,

@@ -5,14 +5,14 @@ import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 import { Liquity, Trove, StabilityDeposit, BatchedWeb3Provider } from "@liquity/lib";
 import { Decimal, Difference, Percent } from "@liquity/lib/dist/utils";
 
-import { LiquityProvider, useLiquity, deployerAddress, useLiquityStore } from "./hooks/Liquity";
+import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
+import { useLiquityStore } from "./hooks/EventDrivenLiquityStore";
 import { WalletConnector } from "./components/WalletConnector";
 import { ToastProvider } from "./hooks/ToastProvider";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
 import { TroveManager } from "./components/TroveManager";
 import { UserAccount } from "./components/UserAccount";
 import { SystemStats } from "./components/SystemStats";
-import { DeveloperTools } from "./components/DeveloperTools";
 import { StabilityDepositManager } from "./components/StabilityDepositManager";
 import { RiskiestTroves } from "./components/RiskiestTroves";
 import { PriceManager } from "./components/PriceManager";
@@ -69,15 +69,9 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
       <Box width="862px" mx="auto">
         <Flex flexWrap="wrap" justifyItems="center">
           <Box px={3} width="500px">
-            {account === deployerAddress ? (
-              <DeveloperTools {...{ liquity, price }} />
-            ) : (
-              <>
-                <TroveManager {...{ liquity, trove, price, total, quiBalance }} />
-                <StabilityDepositManager {...{ liquity, deposit, trove, price, quiBalance }} />
-                <RedemptionManager {...{ liquity, price, quiBalance }} />
-              </>
-            )}
+            <TroveManager {...{ liquity, trove, price, total, quiBalance }} />
+            <StabilityDepositManager {...{ liquity, deposit, trove, price, quiBalance }} />
+            <RedemptionManager {...{ liquity, price, quiBalance }} />
           </Box>
           <Box px={3} width="362px">
             <SystemStats
