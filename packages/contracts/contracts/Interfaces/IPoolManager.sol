@@ -62,7 +62,7 @@ interface IPoolManager {
 
     function liquidate(uint _CLV, uint _ETH) external returns(bool);
   
-    function applyPendingRewards(uint _CLV, uint _ETH) external returns(bool);
+    function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) external returns(bool);
 
     function redeemCollateral(address _account, uint _CLV, uint _ETH) external returns(bool);
 

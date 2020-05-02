@@ -41,7 +41,8 @@ const MoneyValues = {
   _1500e18: web3.utils.toWei('1500', 'ether'),
   _1700e18: web3.utils.toWei('1700', 'ether'),
   _1800e18: web3.utils.toWei('1800', 'ether'),
-  _2000e18: web3.utils.toWei('2000', 'ether')
+  _2000e18: web3.utils.toWei('2000', 'ether'),
+  _1e27: web3.utils.toWei('1000000000', 'ether')
 }
 
 // TODO: Make classes for function export

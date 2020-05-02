@@ -10,6 +10,8 @@ import './ABDKMath64x64.sol';
 // Proxy contract - used for calculating gas of read-only functions in gas calculation scripts.  Not part of the application.
 contract FunctionCaller {
 
+    uint number = 1;
+
     ICDPManager cdpManager;
     address cdpManagerAddress;
 
@@ -168,6 +170,21 @@ contract FunctionCaller {
     function abdkMath_toUInt_view(int128 x) public view returns(int128) {
         uint64 z = ABDKMath64x64.toUInt(x);  
         return z;
+    }
+
+    //  ---- Funcs for checking write-to-storage costs ---
+
+    function repeatedlySetVal (uint n) public returns (uint, uint) {
+        for (uint i = 2; i < n + 2; i ++) {
+            number = i;
+        }
+    }
+    
+    function repeatedlySetValThenClearIt (uint n) public returns (uint, uint) {
+        for (uint i = 2; i < n + 2; i ++) {
+            number = i;
+        }
+        number = 0;
     }
 
 }
