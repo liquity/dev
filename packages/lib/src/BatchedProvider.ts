@@ -1,16 +1,11 @@
 import { BigNumberish } from "@ethersproject/bignumber";
-import { Provider } from "@ethersproject/abstract-provider";
-import {
-  BaseProvider,
-  Web3Provider,
-  WebSocketProvider,
-  TransactionRequest,
-  BlockTag
-} from "@ethersproject/providers";
+import { Provider, TransactionRequest, BlockTag } from "@ethersproject/abstract-provider";
+import { BaseProvider } from "@ethersproject/providers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Contract } from "@ethersproject/contracts";
 
 import { DEV_CHAIN_ID } from "./contracts";
+import { WebSocketAugmentedWeb3Provider } from "./WebSocketAugmentedProvider";
 
 const multiCallerAddressOnChain: {
   [chainId: number]: string;
@@ -112,7 +107,7 @@ const batchedProviders: any[] = [];
 export const isBatchedProvider = (provider: Provider): provider is BatchedProvider =>
   batchedProviders.some(batchedProvider => provider instanceof batchedProvider);
 
-const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T) => {
+export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T) => {
   const batchedProvider = class extends Base implements BatchedProvider {
     batchingDelayMs = 10;
 
@@ -207,5 +202,4 @@ const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T) => {
   return batchedProvider;
 };
 
-export const BatchedWeb3Provider = Batched(Web3Provider);
-export const BatchedWebSocketProvider = Batched(WebSocketProvider);
+export const BatchedWebSocketAugmentedWeb3Provider = Batched(WebSocketAugmentedWeb3Provider);

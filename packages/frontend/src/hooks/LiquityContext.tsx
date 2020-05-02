@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
-import { JsonRpcProvider } from "@ethersproject/providers";
+import { getNetwork } from "@ethersproject/networks";
+import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
 import {
@@ -9,7 +10,8 @@ import {
   connectToContracts,
   LiquityContracts,
   DEV_CHAIN_ID,
-  isBatchedProvider
+  isBatchedProvider,
+  isWebSocketAugmentedProvider
 } from "@liquity/lib";
 
 type LiquityContext = {
@@ -28,12 +30,24 @@ type LiquityProviderProps = {
   loader?: React.ReactNode;
 };
 
+const infuraApiKey = "ad9cef41c9c844a7b54d10be24d416e5";
+const wsParams = (network: string) =>
+  [`wss://${network}.infura.io/ws/v3/${infuraApiKey}`, network] as const;
+
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, loader }) => {
-  const { library: provider, account, chainId } = useWeb3React<JsonRpcProvider>();
+  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
 
   useEffect(() => {
-    if (chainId && provider && isBatchedProvider(provider)) {
-      provider.chainId = chainId;
+    if (provider && chainId) {
+      if (isBatchedProvider(provider)) {
+        provider.chainId = chainId;
+      }
+      if (isWebSocketAugmentedProvider(provider)) {
+        const network = getNetwork(chainId);
+        if (network.name && network.name !== "unknown") {
+          provider.openWebSocket(...wsParams(network.name));
+        }
+      }
     }
   }, [provider, chainId]);
 
