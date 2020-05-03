@@ -1,5 +1,6 @@
 import {
   TransactionRequest,
+  TransactionReceipt,
   BlockTag,
   EventType,
   Listener,
@@ -78,7 +79,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
 
     _onBlock(blockNumber: number) {
       this._seenBlock = blockNumber;
-      this._blockListeners.forEach(listener => listener(blockNumber));
+      [...this._blockListeners].forEach(listener => listener(blockNumber));
     }
 
     async _retrySeenBlock<T>(perform: () => Promise<T>, startingBlock: number) {
@@ -196,6 +197,34 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
         }
       }
       return this;
+    }
+
+    getTransactionReceipt(transactionHash: string | Promise<string>) {
+      return this._wsProvider?.ready
+        ? this._wsProvider.getTransactionReceipt(transactionHash)
+        : super.getTransactionReceipt(transactionHash);
+    }
+
+    async waitForTransaction(txHash: string, confirmations?: number, timeout?: number) {
+      if (timeout !== undefined) {
+        // We don't use timeout, don't implement it
+        return super.waitForTransaction(txHash, confirmations, timeout);
+      }
+
+      for (;;) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+
+        const receipt = (await this.getTransactionReceipt(txHash)) as TransactionReceipt | null;
+
+        if (
+          receipt !== null &&
+          (confirmations === undefined || receipt.confirmations >= confirmations)
+        ) {
+          return receipt;
+        }
+
+        await new Promise(resolve => this.once("block", resolve));
+      }
     }
   };
 
