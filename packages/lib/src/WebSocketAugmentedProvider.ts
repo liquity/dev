@@ -24,14 +24,21 @@ export const isWebSocketAugmentedProvider = (
     webSocketAugmentedProvider => provider instanceof webSocketAugmentedProvider
   );
 
+const isHeaderNotFoundError = (error: any) =>
+  typeof error === "object" &&
+  typeof error.message === "string" &&
+  error.message.includes("header not found");
+
 export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvider>(Base: T) => {
   let webSocketAugmentedProvider = class extends Base implements WebSocketAugmentedProvider {
     _wsProvider?: WebSocketProvider;
     _wsParams?: [string, Networkish];
     _reconnectTimerId: any;
 
+    _seenBlock = 0;
+
     readonly _blockListeners = new Set<(blockNumber: number) => void>();
-    readonly _blockListener = this._tellBlockListeners.bind(this);
+    readonly _blockListener = this._onBlock.bind(this);
 
     openWebSocket(url: string, network: Networkish) {
       this._wsProvider = new WebSocketProvider(url, network);
@@ -69,18 +76,60 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
       }
     }
 
-    _tellBlockListeners(blockNumber: number) {
+    _onBlock(blockNumber: number) {
+      this._seenBlock = blockNumber;
       this._blockListeners.forEach(listener => listener(blockNumber));
     }
 
-    call(...args: [TransactionRequest | Promise<TransactionRequest>, BlockTag | Promise<BlockTag>]) {
-      return this._wsProvider?.isReady ? this._wsProvider.call(...args) : super.call(...args);
+    async _retrySeenBlock<T>(perform: () => Promise<T>, startingBlock: number) {
+      for (let retries = 0; ; ++retries) {
+        try {
+          const ret = await perform();
+          if (retries) {
+            console.log(`Glitch resolved after ${retries} ${retries === 1 ? "retry" : "retries"}.`);
+          }
+          return ret;
+        } catch (error) {
+          if (this._seenBlock !== startingBlock || !isHeaderNotFoundError(error)) {
+            throw error;
+          }
+        }
+
+        console.warn(`Load balancing glitch. Retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
 
-    getBalance(...args: [string | Promise<string>, BlockTag | Promise<BlockTag>]) {
-      return this._wsProvider?.isReady
-        ? this._wsProvider.getBalance(...args)
-        : super.getBalance(...args);
+    async call(
+      transaction: TransactionRequest | Promise<TransactionRequest>,
+      blockTag?: BlockTag | Promise<BlockTag>
+    ) {
+      const resolvedBlockTag = await blockTag;
+
+      const perform = () =>
+        this._wsProvider?.isReady
+          ? this._wsProvider.call(transaction, resolvedBlockTag)
+          : super.call(transaction, resolvedBlockTag);
+
+      return resolvedBlockTag === this._seenBlock
+        ? this._retrySeenBlock(perform, this._seenBlock)
+        : perform();
+    }
+
+    async getBalance(
+      addressOrName: string | Promise<string>,
+      blockTag?: BlockTag | Promise<BlockTag>
+    ) {
+      const resolvedBlockTag = await blockTag;
+
+      const perform = () =>
+        this._wsProvider?.isReady
+          ? this._wsProvider.getBalance(addressOrName, resolvedBlockTag)
+          : super.getBalance(addressOrName, resolvedBlockTag);
+
+      return resolvedBlockTag === this._seenBlock
+        ? this._retrySeenBlock(perform, this._seenBlock)
+        : perform();
     }
 
     _startBlockEvents() {
@@ -103,13 +152,13 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
 
     on(eventName: EventType, listener: Listener) {
       if (eventName === "block") {
-        return this._onBlock(listener);
+        return this._addBlockListener(listener);
       } else {
         return super.on(eventName, listener);
       }
     }
 
-    _onBlock(listener: (blockNumber: number) => void) {
+    _addBlockListener(listener: (blockNumber: number) => void) {
       if (!this._blockListeners.has(listener)) {
         this._blockListeners.add(listener);
         if (this._blockListeners.size === 1) {
@@ -123,9 +172,9 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
       if (eventName === "block") {
         const listenOnce = (blockNumber: number) => {
           listener(blockNumber);
-          this._offBlock(listenOnce);
+          this._removeBlockListener(listenOnce);
         };
-        return this._onBlock(listenOnce);
+        return this._addBlockListener(listenOnce);
       } else {
         return super.once(eventName, listener);
       }
@@ -133,13 +182,13 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
 
     off(eventName: EventType, listener: Listener) {
       if (eventName === "block") {
-        return this._offBlock(listener);
+        return this._removeBlockListener(listener);
       } else {
         return super.off(eventName, listener);
       }
     }
 
-    _offBlock(listener: (blockNumber: number) => void) {
+    _removeBlockListener(listener: (blockNumber: number) => void) {
       if (this._blockListeners.has(listener)) {
         this._blockListeners.delete(listener);
         if (this._blockListeners.size === 0) {
