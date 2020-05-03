@@ -1,4 +1,3 @@
-import { Web3Provider } from "ethers/providers";
 import React, { useEffect, useReducer } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { MetaMaskButton, Modal, Text } from "rimble-ui";
@@ -73,7 +72,7 @@ type WalletConnectorProps = {
 };
 
 export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, loader }) => {
-  const web3 = useWeb3React<Web3Provider>();
+  const web3 = useWeb3React<unknown>();
 
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
   const connectors = {

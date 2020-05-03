@@ -1,71 +1,13 @@
-import React, { createContext, useContext, useCallback } from "react";
-import { BigNumber } from "ethers/utils";
-import { Web3Provider } from "ethers/providers";
-import { useWeb3React } from "@web3-react/core";
+import { useCallback } from "react";
+import { BigNumber } from "@ethersproject/bignumber";
+import { Provider } from "@ethersproject/abstract-provider";
 
-import {
-  Liquity,
-  Trove,
-  StabilityDeposit,
-  deploymentOnNetwork,
-  connectToContracts,
-  LiquityContracts,
-  DEV_CHAIN_ID
-} from "@liquity/lib";
+import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue, useAsyncStore } from "./AsyncValue";
 import { useAccountBalance } from "./AccountBalance";
 
-export const deployerAddress = "0x70E78E2D8B2a4fDb073B7F61c4653c23aE12DDDF";
-
-type LiquityContext = {
-  account: string;
-  provider: Web3Provider;
-  contracts: LiquityContracts;
-  liquity: Liquity;
-  devChain: boolean;
-  contractsVersion: string;
-  deploymentDate: number;
-};
-
-const LiquityContext = createContext<LiquityContext | undefined>(undefined);
-
-type LiquityProviderProps = {
-  loader?: React.ReactNode;
-};
-
-export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, loader }) => {
-  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
-
-  if (!provider || !account || !chainId) {
-    return <>{loader}</>;
-  }
-
-  const { addresses, version: contractsVersion, deploymentDate } = deploymentOnNetwork[chainId];
-  const contracts = connectToContracts(addresses, provider.getSigner(account));
-  const liquity = new Liquity(contracts, account);
-  const devChain = chainId === DEV_CHAIN_ID;
-
-  return (
-    <LiquityContext.Provider
-      value={{ account, provider, contracts, liquity, devChain, contractsVersion, deploymentDate }}
-    >
-      {children}
-    </LiquityContext.Provider>
-  );
-};
-
-export const useLiquity = () => {
-  const liquityContext = useContext(LiquityContext);
-
-  if (!liquityContext) {
-    throw new Error("You must provide a LiquityContext via LiquityProvider");
-  }
-
-  return liquityContext;
-};
-
-export const useLiquityStore = (provider: Web3Provider, account: string, liquity: Liquity) => {
+export const useLiquityStore = (provider: Provider, account: string, liquity: Liquity) => {
   const getTotal = useCallback(() => liquity.getTotal(), [liquity]);
   const watchTotal = useCallback(
     (onTotalChanged: (total: Trove) => void) => {

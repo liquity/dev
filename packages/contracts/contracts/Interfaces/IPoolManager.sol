@@ -62,7 +62,7 @@ interface IPoolManager {
 
     function liquidate(uint _CLV, uint _ETH) external returns(bool);
   
-    function applyPendingRewards(uint _CLV, uint _ETH) external returns(bool);
+    function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) external returns(bool);
 
     function redeemCollateral(address _account, uint _CLV, uint _ETH) external returns(bool);
 
@@ -73,5 +73,5 @@ interface IPoolManager {
 
     function withdrawFromSPtoCDP(address _user, address _hint) external returns(bool);
 
-    function offset(uint _debt, uint _coll) external payable returns(uint, uint);
+    function offset(uint _debt, uint _coll, uint CLVInPool) external payable returns(uint, uint);
 }

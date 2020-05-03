@@ -1,11 +1,11 @@
 import { useCallback } from "react";
-import { Web3Provider } from "ethers/providers";
-import { BigNumber } from "ethers/utils";
+import { Provider } from "@ethersproject/abstract-provider";
+import { BigNumber } from "@ethersproject/bignumber";
 
 import { Decimal } from "@liquity/lib/dist/utils/Decimal";
 import { useAsyncValue } from "./AsyncValue";
 
-export const useAccountBalance = (provider: Web3Provider, account: string) => {
+export const useAccountBalance = (provider: Provider, account: string) => {
   const getAccountBalance = useCallback(
     async () => new Decimal(await provider.getBalance(account)),
     [provider, account]

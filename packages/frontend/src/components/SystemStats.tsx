@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Text, Heading } from "rimble-ui";
-import { BigNumber } from "ethers/utils";
+import { BigNumber } from "@ethersproject/bignumber";
 
 import { Trove } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";

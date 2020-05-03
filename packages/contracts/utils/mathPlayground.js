@@ -172,9 +172,60 @@ const ABDKOperations = async () => {
 const basicOperations = async () => {
 }
 
+const checkGasFromSSTORE = async () => {
+    const functionCaller = await FunctionCaller.new();
+
+    const tx1 = await functionCaller.repeatedlySetVal(1)
+    const tx2 = await functionCaller.repeatedlySetVal(2)
+    const tx9 = await functionCaller.repeatedlySetVal(3)
+    const tx3 = await functionCaller.repeatedlySetVal(5)
+    const tx4 = await functionCaller.repeatedlySetVal(10)
+    const tx5 = await functionCaller.repeatedlySetVal(20)
+    const tx6 = await functionCaller.repeatedlySetVal(30)
+    const tx7 = await functionCaller.repeatedlySetVal(40)
+    const tx8 = await functionCaller.repeatedlySetVal(50)
+
+    const gasUsed1 = (tx1.receipt.gasUsed - 21000)
+    const gasUsed2 = (tx2.receipt.gasUsed - 21000)/2
+    const gasUsed9 = (tx9.receipt.gasUsed - 21000)/3
+    const gasUsed3 = (tx3.receipt.gasUsed - 21000)/5
+    const gasUsed4 = (tx4.receipt.gasUsed - 21000)/10
+    const gasUsed5 = (tx5.receipt.gasUsed - 21000)/20
+    const gasUsed6 = (tx6.receipt.gasUsed - 21000)/30
+    const gasUsed7 = (tx7.receipt.gasUsed - 21000)/40
+    const gasUsed8 = (tx8.receipt.gasUsed - 21000)/50
+
+    console.log(`gas used per write, setting val once: ${gasUsed1}`)
+    console.log(`gas used per write, setting val 2 times: ${gasUsed2}`)
+    console.log(`gas used per write, setting val 3 times: ${gasUsed9}`)
+    console.log(`gas used per write, setting val 5 times: ${gasUsed3}`)
+    console.log(`gas used per write, setting val 10 times: ${gasUsed4}`)
+    console.log(`gas used per write, setting val 20 times: ${gasUsed5}`)
+    console.log(`gas used per write, setting val 30 times: ${gasUsed6}`)
+    console.log(`gas used per write, setting val 40 times: ${gasUsed7}`)
+    console.log(`gas used per write, setting val 50 times: ${gasUsed8}`)
+}
+
+const checkGasFromInternalCall = async() => {
+    const functionCaller = await FunctionCaller.new();
+
+    const tx1 = await functionCaller.callInternalStorageCheck();
+    const tx2 = await functionCaller.rawStorageCheck();
+
+    const gasUsed1 = tx1.receipt.gasUsed - 21000
+    const gasUsed2 = tx2.receipt.gasUsed - 21000
+    const diff = gasUsed1 - gasUsed2
+
+    console.log(`Gas cost from internal function call inside public function: ${gasUsed1}`)
+    console.log(`Gas cost from raw code inside public function: ${gasUsed2}`)
+    console.log(`Gas cost difference between an internal call and raw code: ${diff}`)
+}
+
 async function main() {
-    await ABDKOperations()
-    await basicOperations()
+    // await ABDKOperations()
+    // await basicOperations()
+    // await checkGasFromSSTORE()
+    await checkGasFromInternalCall()
 }
 
 main()

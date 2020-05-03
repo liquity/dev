@@ -5,41 +5,29 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "yarn run typechain && tsc --project tsconfig.dist.json",
+    "build": "yarn run generate-types && tsc --project tsconfig.dist.json",
     "buidler": "buidler",
-    "deploy": "buidler deploy",
-    "deploy-warzone": "buidler deploy-warzone",
-    "test": "buidler test",
-    "typechain": "yarn run typechain:ethers && yarn run typechain:truffle",
-    "typechain:ethers": "typechain --target ethers --outDir types/ethers '../contracts/artifacts/*.json'",
-    "typechain:truffle": "typechain --target truffle --outDir types/truffle '../contracts/artifacts/*.json'",
-    "update-pricefeed": "buidler update-pricefeed"
+    "generate-types": "ts-node scripts/generate-types.ts",
+    "test": "buidler test"
   },
   "peerDependencies": {
-    "ethers": "^4.0.45"
+    "ethers": "^5.0.0-beta.183"
   },
   "devDependencies": {
     "@nomiclabs/buidler": "^1.1.2",
-    "@nomiclabs/buidler-ethers": "^1.1.2",
     "@nomiclabs/buidler-truffle5": "^1.1.2",
-    "@nomiclabs/buidler-waffle": "^1.1.2",
     "@nomiclabs/buidler-web3": "^1.1.2",
-    "@openzeppelin/contracts": "^2.5.0",
     "@types/chai": "^4.2.9",
     "@types/chai-as-promised": "^7.1.2",
     "@types/mocha": "^7.0.1",
     "@types/node": "^13.7.1",
     "@types/sinon-chai": "^3.2.3",
+    "buidler-ethers-v5": "^0.2.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "colors": "^1.4.0",
-    "ethereum-waffle": "^2.3.2",
-    "ethers": "^4.0.45",
-    "truffle-typings": "^1.0.8",
-    "ts-node": "^8.6.2",
-    "typechain": "^1.0.5",
-    "typechain-target-ethers": "^1.0.3",
-    "typechain-target-truffle": "^1.0.2",
+    "ethers": "^5.0.0-beta.183",
+    "ts-node": "^8.9.0",
     "typescript": "^3.7.5"
   }
 }

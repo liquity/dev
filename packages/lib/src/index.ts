@@ -1,4 +1,5 @@
 export * from "./Liquity";
 export * from "./contracts";
-export * from "./contractConnector";
 export * from "./parseLogs";
+export * from "./BatchedProvider";
+export * from "./WebSocketAugmentedProvider";

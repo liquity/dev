@@ -1,19 +1,23 @@
 import React from "react";
-import { Web3Provider, AsyncSendable } from "ethers/providers";
 import { Web3ReactProvider } from "@web3-react/core";
 import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 
-import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import {
+  Liquity,
+  Trove,
+  StabilityDeposit,
+  BatchedWebSocketAugmentedWeb3Provider
+} from "@liquity/lib";
 import { Decimal, Difference, Percent } from "@liquity/lib/dist/utils";
 
-import { LiquityProvider, useLiquity, deployerAddress, useLiquityStore } from "./hooks/Liquity";
+import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
+import { useLiquityStore } from "./hooks/BlockPolledLiquityStore";
 import { WalletConnector } from "./components/WalletConnector";
 import { ToastProvider } from "./hooks/ToastProvider";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
 import { TroveManager } from "./components/TroveManager";
 import { UserAccount } from "./components/UserAccount";
 import { SystemStats } from "./components/SystemStats";
-import { DeveloperTools } from "./components/DeveloperTools";
 import { StabilityDepositManager } from "./components/StabilityDepositManager";
 import { RiskiestTroves } from "./components/RiskiestTroves";
 import { PriceManager } from "./components/PriceManager";
@@ -21,36 +25,7 @@ import { RedemptionManager } from "./components/RedemptionManager";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
-    <Web3ReactProvider
-      getLibrary={(provider: AsyncSendable) => {
-        // Uncomment this to log requests
-
-        // let numberOfRequests = 0;
-
-        // setInterval(() => {
-        //   if (numberOfRequests > 10) {
-        //     console.log(`Avg. req/s: ${numberOfRequests / 10}`);
-        //   }
-        //   numberOfRequests = 0;
-        // }, 10000);
-
-        // const loggedSend = <A extends any[], R, F extends (...args: A) => R>(realSend: F) => (
-        //   ...args: A
-        // ): R => {
-        //   ++numberOfRequests;
-
-        //   //console.log(args[0]);
-        //   return realSend(...args);
-        // };
-
-        // return new Web3Provider({
-        //   ...provider,
-        //   send: provider.send && loggedSend(provider.send),
-        //   sendAsync: provider.sendAsync && loggedSend(provider.sendAsync)
-        // });
-        return new Web3Provider(provider);
-      }}
-    >
+    <Web3ReactProvider getLibrary={provider => new BatchedWebSocketAugmentedWeb3Provider(provider)}>
       {children}
     </Web3ReactProvider>
   );
@@ -99,15 +74,9 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
       <Box width="862px" mx="auto">
         <Flex flexWrap="wrap" justifyItems="center">
           <Box px={3} width="500px">
-            {account === deployerAddress ? (
-              <DeveloperTools {...{ liquity, price }} />
-            ) : (
-              <>
-                <TroveManager {...{ liquity, trove, price, total, quiBalance }} />
-                <StabilityDepositManager {...{ liquity, deposit, trove, price, quiBalance }} />
-                <RedemptionManager {...{ liquity, price, quiBalance }} />
-              </>
-            )}
+            <TroveManager {...{ liquity, trove, price, total, quiBalance }} />
+            <StabilityDepositManager {...{ liquity, deposit, trove, price, quiBalance }} />
+            <RedemptionManager {...{ liquity, price, quiBalance }} />
           </Box>
           <Box px={3} width="362px">
             <SystemStats

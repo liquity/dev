@@ -243,8 +243,8 @@ contract PoolManager is Ownable, IPoolManager {
         return true;
     }
 
-    // Update the Active Pool and the Default Pool when a CDP obtains a default share
-    function applyPendingRewards(uint _CLV, uint _ETH) public onlyCDPManager returns (bool) {
+    // Move a CDP's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
+    function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) public onlyCDPManager returns (bool) {
         // Transfer the debt & coll from the Default Pool to the Active Pool
         defaultPool.decreaseCLV(_CLV);  
         activePool.increaseCLV(_CLV); 
@@ -343,11 +343,11 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
    // Transfers _address's compounded deposit and ETH gain, to _address.
-    function retrieveToUser(address _address) internal returns(uint[2] memory) {
+    function retrieveToUser(address _address) internal returns(uint compoundedCLVDeposit, uint ETHGain) {
         uint userDeposit = deposits[_address];
 
-        uint ETHGain = getCurrentETHGain(_address);
-        uint compoundedCLVDeposit = getCompoundedCLVDeposit(_address);
+        ETHGain = getCurrentETHGain(_address);
+        compoundedCLVDeposit = getCompoundedCLVDeposit(_address);
         deposits[_address] = 0;
 
         emit UserDepositChanged(_address, 0);
@@ -362,17 +362,16 @@ contract PoolManager is Ownable, IPoolManager {
         stabilityPool.sendETH(_address, ETHGain);
         emit ETHGainWithdrawn(_address, ETHGain);
 
-        uint[2] memory shares = [compoundedCLVDeposit, ETHGain];
-        return shares;
+        return (compoundedCLVDeposit, ETHGain);
     }
 
     // Transfer _address's compounded deposit to _address, and their ETH gain to their CDP.
-    function retrieveToCDP(address _address, address _hint) internal returns(uint[2] memory) {
+    function retrieveToCDP(address _address, address _hint) internal returns(uint compoundedCLVDeposit, uint ETHGain) {
         uint userDeposit = deposits[_address];  
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
         
-        uint ETHGain = getCurrentETHGain(_address);
-        uint compoundedCLVDeposit = getCompoundedCLVDeposit(_address);
+        ETHGain = getCurrentETHGain(_address);
+        compoundedCLVDeposit = getCompoundedCLVDeposit(_address);
       
         deposits[_address] = 0; 
        
@@ -389,8 +388,7 @@ contract PoolManager is Ownable, IPoolManager {
         cdpManager.addColl.value(ETHGain)(_address, _hint); 
         emit ETHGainWithdrawnToCDP(_address, ETHGain);
    
-        uint[2] memory shares = [compoundedCLVDeposit, ETHGain]; 
-        return shares;
+        return (compoundedCLVDeposit, ETHGain);
     }
 
     // --- External StabilityPool Functions ---
@@ -408,8 +406,7 @@ contract PoolManager is Ownable, IPoolManager {
 
         /* If user already has a deposit, retrieve their ETH gain and current deposit,
          then make a new composite deposit */
-        uint[2] memory returnedVals = retrieveToUser(user);
-        uint returnedCLV = returnedVals[0];
+        (uint returnedCLV, ) = retrieveToUser(user);
 
         uint newDeposit = returnedCLV + _amount;
         depositCLV(user, newDeposit);
@@ -430,9 +427,7 @@ contract PoolManager is Ownable, IPoolManager {
         require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
 
         // Retrieve all CLV and ETH for the user
-        uint[2] memory returnedVals = retrieveToUser(user);
-
-        uint returnedCLV = returnedVals[0];
+        (uint returnedCLV, ) = retrieveToUser(user);
 
         // If requested withdrawal amount is less than available CLV, re-deposit the difference.
         if (_amount < returnedCLV) {
@@ -450,9 +445,7 @@ contract PoolManager is Ownable, IPoolManager {
         if (userDeposit == 0) { return false; } 
         
         // Retrieve all CLV to user's CLV balance, and ETH to their CDP
-        uint[2] memory returnedVals = retrieveToCDP(_user, _hint); 
- 
-        uint returnedCLV = returnedVals[0];
+        (uint returnedCLV, ) = retrieveToCDP(_user, _hint); 
         
         depositCLV(_user, returnedCLV); 
         return true;
@@ -462,24 +455,16 @@ contract PoolManager is Ownable, IPoolManager {
     and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
     Returns the amount of debt that could not be cancelled, and the corresponding ether.
     Only callable from close() and closeCDPs() functions in CDPManager */
-    function offset(uint _debt, uint _coll) 
+  function offset(uint _debt, uint _coll,  uint CLVInPool) 
     external 
     payable 
     onlyCDPManager 
-    returns (uint debtRemainder, uint collRemainder) {    
+    returns (uint debtRemainder, uint collRemainder)  {    
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits(); 
-        uint CLVinPool = stabilityPool.getCLV(); 
-
-        // When Stability Pool has no CLV or no deposits, return all debt and coll
-        if (CLVinPool == 0 || totalCLVDeposits == 0 ) {
-            debtRemainder = _debt;
-            collRemainder = _coll;
-            return (debtRemainder, collRemainder);
-        }
         
         // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
-        uint debtToOffset = DeciMath.getMin(_debt, CLVinPool);  
-
+        uint debtToOffset = DeciMath.getMin(_debt, CLVInPool);  
+  
         // Collateral to be added in proportion to the debt that is cancelled 
         uint collToAdd = _coll.mul(debtToOffset).div(_debt);
         
