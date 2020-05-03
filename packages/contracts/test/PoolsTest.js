@@ -26,13 +26,13 @@ contract('StabilityPool', async accounts => {
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
 
-  it('getETH(): gets the recorded CLV balance', async () => {
+  it('getETH(): gets the recorded ETH balance', async () => {
     const recordedETHBalance = await stabilityPool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
 
   it('getCLV(): gets the recorded CLV balance', async () => {
-    const recordedETHBalance = await stabilityPool.getETH({ from: mockPoolManagerAddress })
+    const recordedETHBalance = await stabilityPool.getCLV({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
   
@@ -98,13 +98,13 @@ contract('ActivePool', async accounts => {
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
 
-  it('getETH(): gets the recorded CLV balance', async () => {
+  it('getETH(): gets the recorded ETH balance', async () => {
     const recordedETHBalance = await activePool.getETH({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
 
   it('getCLV(): gets the recorded CLV balance', async () => {
-    const recordedETHBalance = await activePool.getETH({ from: mockPoolManagerAddress })
+    const recordedETHBalance = await activePool.getCLV({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
  
@@ -176,7 +176,7 @@ contract('DefaultPool', async accounts => {
   })
 
   it('getCLV(): gets the recorded CLV balance', async () => {
-    const recordedETHBalance = await defaultPool.getETH({ from: mockPoolManagerAddress })
+    const recordedETHBalance = await defaultPool.getCLV({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
  

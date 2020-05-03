@@ -187,5 +187,21 @@ contract FunctionCaller {
         number = 0;
     }
 
+   // --- gas costs: Internal vs raw code ---
+
+   function internalStorageCheck () internal returns (bool) {
+       return (number == 42);
+   }
+
+   // Calls internal 
+   function callInternalStorageCheck () public returns (bool) {
+       return internalStorageCheck();
+   }
+
+    // Raw code
+   function rawStorageCheck () public returns (bool) {
+       return number == 42;
+   }
+
 }
 

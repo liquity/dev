@@ -13,6 +13,8 @@ interface ICDPManager {
     
     event DefaultPoolAddressChanged(address _defaultPoolAddress);
 
+    event StabilityPoolAddressChanged(address _stabilityPoolAddress);
+
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
     event CDPCreated(address indexed _user, uint arrayIndex);

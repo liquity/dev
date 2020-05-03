@@ -2,6 +2,7 @@ pragma solidity ^0.5.11;
 
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IPool.sol";
+import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICLVToken.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
@@ -24,6 +25,7 @@ contract CDPManager is Ownable, ICDPManager {
     event PoolManagerAddressChanged(address _newPoolManagerAddress);
     event ActivePoolAddressChanged(address _activePoolAddress);
     event DefaultPoolAddressChanged(address _defaultPoolAddress);
+    event StabilityPoolAddressChanged(address _stabilityPoolAddress);
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
@@ -47,6 +49,9 @@ contract CDPManager is Ownable, ICDPManager {
 
     IPriceFeed priceFeed;
     address public priceFeedAddress;
+
+    IStabilityPool stabilityPool;
+    address public stabilityPoolAddress;
 
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs sortedCDPs;
@@ -120,6 +125,12 @@ contract CDPManager is Ownable, ICDPManager {
         defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(_defaultPoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
+    }
+
+    function setStabilityPool(address _stabilityPoolAddress) public onlyOwner {
+        stabilityPoolAddress = _stabilityPoolAddress;
+        stabilityPool = IStabilityPool(_stabilityPoolAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
     }
 
     function setPriceFeed(address _priceFeedAddress) public onlyOwner {
@@ -403,11 +414,16 @@ contract CDPManager is Ownable, ICDPManager {
         (uint entireCDPDebt, uint entireCDPColl) = getEntireDebtAndColl(_user);
         removeStake(_user); 
 
-        // Offset as much debt & collateral as possible against the Stability Pool and save the returned remainders
-        (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(entireCDPDebt, entireCDPColl);
+        uint CLVInPool = stabilityPool.getCLV();
 
-        redistributeDebtAndColl(CLVDebtRemainder, ETHRemainder);
-     
+        // Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder
+        if (CLVInPool > 0) {
+            (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(entireCDPDebt, entireCDPColl, CLVInPool);
+            redistributeDebtAndColl(CLVDebtRemainder, ETHRemainder);
+        } else {
+            redistributeDebtAndColl(entireCDPDebt, entireCDPColl);
+        }
+
         closeCDP(_user);
         updateSystemSnapshots();
         emit CDPUpdated(_user, 0, 0, 0);
@@ -418,7 +434,6 @@ contract CDPManager is Ownable, ICDPManager {
     function liquidateRecoveryMode(address _user, uint _ICR, uint _price) internal returns (bool) {
         // If ICR <= 100%, purely redistribute the CDP across all active CDPs
         if (_ICR <= 1000000000000000000) {
-            // Get the CDP's entire debt and coll, including pending rewards from distributions
             (uint entireCDPDebt, uint entireCDPColl) = getEntireDebtAndColl(_user);
             removeStake(_user);
             
@@ -429,26 +444,34 @@ contract CDPManager is Ownable, ICDPManager {
 
         // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > 1000000000000000000) && (_ICR < MCR)) {
-            // Get the CDP's entire debt and coll, including pending rewards from distributions
             (uint entireCDPDebt, uint entireCDPColl) = getEntireDebtAndColl(_user);
             removeStake(_user);
             
-            // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-            (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(entireCDPDebt, entireCDPColl);
+            uint CLVInPool = stabilityPool.getCLV();
 
-            redistributeDebtAndColl(CLVDebtRemainder, ETHRemainder);
+            if (CLVInPool > 0) {
+                (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(entireCDPDebt, entireCDPColl, CLVInPool);
+                redistributeDebtAndColl(CLVDebtRemainder, ETHRemainder);
+            } else {
+                redistributeDebtAndColl(entireCDPDebt, entireCDPColl);
+            }
     
             closeCDP(_user);
             updateSystemSnapshots();
 
         // If CDP has the lowest ICR and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution)
-        } else if ((_user == sortedCDPs.getLast()) && (poolManager.getStabilityPoolCLV() != 0)) {
+        } else if (_user == sortedCDPs.getLast()) {
+            
+            uint CLVInPool = stabilityPool.getCLV();
+            if (CLVInPool == 0) { return false; }
+
             applyPendingRewards(_user);
             removeStake(_user);
 
-            // Offset as much debt & collateral as possible against the StabilityPool and save the returned remainders
-            (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(CDPs[_user].debt, CDPs[_user].coll);
-
+            (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(CDPs[_user].debt, 
+                                                                            CDPs[_user].coll, 
+                                                                            CLVInPool);
+          
             // Close the CDP and update snapshots if the CDP was completely offset against CLV in Stability Pool
             if (CLVDebtRemainder == 0) {
                 closeCDP(_user);
@@ -475,6 +498,8 @@ contract CDPManager is Ownable, ICDPManager {
                     CDPs[_user].coll,
                     CDPs[_user].stake
                     );
+
+        return true;
     }
 
     // Closes a maximum number of n multiple under-collateralized CDPs, starting from the one with the lowest collateral ratio
@@ -906,27 +931,26 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     function redistributeDebtAndColl(uint _debt, uint _coll) internal returns (bool) {
-        if (_debt > 0) {
-            if (totalStakes > 0) {
-                /*If debt could not be offset entirely, add the coll and debt rewards-per-unit-staked 
-                to the running totals. */
-              
-                // Division with correction
-                uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
-                uint CLVDebtNumerator = _debt.mul(1e18).add(lastCLVDebtError_Redistribution);
+        if (_debt == 0) { return false; }
+        
+        if (totalStakes > 0) {
+            // Add distributed coll and debt rewards-per-unit-staked to the running totals.
+            
+            // Division with correction
+            uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
+            uint CLVDebtNumerator = _debt.mul(1e18).add(lastCLVDebtError_Redistribution);
 
-                uint ETHRewardPerUnitStaked = ETHNumerator.div(totalStakes);
-                uint CLVDebtRewardPerUnitStaked = CLVDebtNumerator.div(totalStakes);
+            uint ETHRewardPerUnitStaked = ETHNumerator.div(totalStakes);
+            uint CLVDebtRewardPerUnitStaked = CLVDebtNumerator.div(totalStakes);
 
-                lastETHError_Redistribution = ETHNumerator.sub(ETHRewardPerUnitStaked.mul(totalStakes));
-                lastCLVDebtError_Redistribution = CLVDebtNumerator.sub(CLVDebtRewardPerUnitStaked.mul(totalStakes));
+            lastETHError_Redistribution = ETHNumerator.sub(ETHRewardPerUnitStaked.mul(totalStakes));
+            lastCLVDebtError_Redistribution = CLVDebtNumerator.sub(CLVDebtRewardPerUnitStaked.mul(totalStakes));
 
-                L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
-                L_CLVDebt = L_CLVDebt.add(CLVDebtRewardPerUnitStaked);
-            }
-            // Transfer coll and debt from ActivePool to DefaultPool
-            poolManager.liquidate(_debt, _coll);
-        } 
+            L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
+            L_CLVDebt = L_CLVDebt.add(CLVDebtRewardPerUnitStaked);
+        }
+        // Transfer coll and debt from ActivePool to DefaultPool
+        poolManager.liquidate(_debt, _coll);
     }
 
     function closeCDP(address _user) internal returns (bool) {

@@ -131,6 +131,8 @@ contract('Gas cost tests', async accounts => {
     await setNameRegistry(contractAddresses, nameRegistry, { from: owner })
     const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
     await connectContracts(contracts, registeredAddresses)
+
+
   })
 
   // --- Helper functions --- 
@@ -2477,7 +2479,7 @@ it("", async () => {
 // --- liquidate CDPs - all troves offset by Stability Pool - No pending distribution rewards ---
 
 // 1 trove
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. No pending distribution rewards.'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(2,12), cdpManager, _10_Ether)
