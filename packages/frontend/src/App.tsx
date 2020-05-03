@@ -2,11 +2,16 @@ import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
 import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 
-import { Liquity, Trove, StabilityDeposit, BatchedWeb3Provider } from "@liquity/lib";
+import {
+  Liquity,
+  Trove,
+  StabilityDeposit,
+  BatchedWebSocketAugmentedWeb3Provider
+} from "@liquity/lib";
 import { Decimal, Difference, Percent } from "@liquity/lib/dist/utils";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
-import { useLiquityStore } from "./hooks/EventDrivenLiquityStore";
+import { useLiquityStore } from "./hooks/BlockPolledLiquityStore";
 import { WalletConnector } from "./components/WalletConnector";
 import { ToastProvider } from "./hooks/ToastProvider";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
@@ -20,7 +25,7 @@ import { RedemptionManager } from "./components/RedemptionManager";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
-    <Web3ReactProvider getLibrary={provider => new BatchedWeb3Provider(provider)}>
+    <Web3ReactProvider getLibrary={provider => new BatchedWebSocketAugmentedWeb3Provider(provider)}>
       {children}
     </Web3ReactProvider>
   );
