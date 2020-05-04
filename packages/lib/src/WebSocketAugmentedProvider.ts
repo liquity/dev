@@ -37,6 +37,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
     _reconnectTimerId: any;
 
     _seenBlock = 0;
+    _blockListenerScheduled = false;
 
     readonly _blockListeners = new Set<(blockNumber: number) => void>();
     readonly _blockListener = this._onBlock.bind(this);
@@ -79,7 +80,15 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
 
     _onBlock(blockNumber: number) {
       this._seenBlock = blockNumber;
-      [...this._blockListeners].forEach(listener => listener(blockNumber));
+
+      if (!this._blockListenerScheduled) {
+        this._blockListenerScheduled = true;
+
+        setTimeout(() => {
+          this._blockListenerScheduled = false;
+          [...this._blockListeners].forEach(listener => listener(this._seenBlock));
+        }, 50);
+      }
     }
 
     async _retrySeenBlock<T>(perform: () => Promise<T>, startingBlock: number) {
@@ -96,8 +105,8 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
           }
         }
 
-        console.warn(`Load balancing glitch. Retrying...`);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        console.warn("Load balancing glitch. Retrying...");
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
     }
 
@@ -205,16 +214,35 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
         : super.getTransactionReceipt(transactionHash);
     }
 
+    async _getTransactionReceiptFromLatest(txHash: string | Promise<string>, latestBlock?: number) {
+      for (let retries = 0; ; ++retries) {
+        const receipt = (await this.getTransactionReceipt(txHash)) as TransactionReceipt | null;
+
+        if (
+          receipt === null ||
+          latestBlock === undefined ||
+          receipt.blockNumber + receipt.confirmations - 1 >= latestBlock
+        ) {
+          if (retries) {
+            console.log(`Glitch resolved after ${retries} ${retries === 1 ? "retry" : "retries"}.`);
+          }
+          return receipt;
+        }
+
+        console.warn("Load balancing glitch. Retrying...");
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+
     async waitForTransaction(txHash: string, confirmations?: number, timeout?: number) {
       if (timeout !== undefined) {
         // We don't use timeout, don't implement it
         return super.waitForTransaction(txHash, confirmations, timeout);
       }
 
+      let latestBlock: number | undefined = undefined;
       for (;;) {
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        const receipt = (await this.getTransactionReceipt(txHash)) as TransactionReceipt | null;
+        const receipt = await this._getTransactionReceiptFromLatest(txHash, latestBlock);
 
         if (
           receipt !== null &&
@@ -223,7 +251,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
           return receipt;
         }
 
-        await new Promise(resolve => this.once("block", resolve));
+        latestBlock = await new Promise<number>(resolve => this.once("block", resolve));
       }
     }
   };

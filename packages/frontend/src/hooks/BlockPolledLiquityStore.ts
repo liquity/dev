@@ -36,24 +36,9 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
 
   const watch = useCallback(
     (updateValues: (values: Resolved<ReturnType<typeof get>>) => void) => {
-      let fetchedBlock = 0;
-
       const blockListener = async (blockNumber: number) => {
-        // There is currently an Infura issue related to load balancing
-        // (https://github.com/MetaMask/metamask-extension/issues/7234)
-        // where we get a block event with a certain block number, but when we try to run a request
-        // on that block, the block (header) is not found. We have implemented a retry mechanism
-        // for this in WebSocketAugmentedProvider. However, waiting just 10 ms here allows us to
-        // avoid the majority of these glitches from occuring in the first place.
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        const values = await get(blockNumber);
-
-        if (blockNumber > fetchedBlock) {
-          updateValues(values);
-          fetchedBlock = blockNumber;
-          console.log(`Updated store state to block #${blockNumber}`);
-        }
+        await get(blockNumber).then(updateValues);
+        console.log(`Updated store state to block #${blockNumber}`);
       };
 
       provider.on("block", blockListener);
