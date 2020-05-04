@@ -61,10 +61,10 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     <Flex mt={4} justifyContent="center">
       <Transaction
         id={myTransactionId}
-        requires={[[quiBalance.gte(exchangedQui), "You don't have enough QUI"]]}
+        requires={[[quiBalance.gte(exchangedQui), "You don't have enough LQTY"]]}
         {...{ send }}
       >
-        <Button mx={2}>Exchange {exchangedQui.prettify()} QUI</Button>
+        <Button mx={2}>Exchange {exchangedQui.prettify()} LQTY</Button>
       </Transaction>
     </Flex>
   );
@@ -103,7 +103,7 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
             justifyContent="space-between"
             alignItems="center"
           >
-            Redeem Collateral with QUI
+            Redeem Collateral with LQTY
             <Box width="40px" height="40px">
               {edited && !changePending && (
                 <Link
@@ -131,7 +131,7 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
               label="Exchange"
               //hideLabel
               amount={exchangedQui.prettify()}
-              unit="QUI"
+              unit="LQTY"
               {...{ editingState }}
               editedAmount={exchangedQui.toString(2)}
               setEditedAmount={editedQui => setExchangedQui(Decimal.from(editedQui))}

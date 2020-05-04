@@ -102,7 +102,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           amount={editedTrove.debtAfterReward.prettify()}
           pendingAmount={pendingDebtChange.nonZero?.prettify()}
           pendingColor={pendingDebtChange.positive ? "danger" : "success"}
-          unit="QUI"
+          unit="LQTY"
           {...{ editingState }}
           editedAmount={editedTrove.debtAfterReward.toString(2)}
           setEditedAmount={(editedDebt: string) => setEditedTrove(editedTrove.setDebt(editedDebt))}

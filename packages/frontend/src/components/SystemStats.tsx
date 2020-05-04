@@ -32,9 +32,9 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
         System
       </Heading>
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
-      <Text>QUI in circulation: {total.debtAfterReward.shorten()}</Text>
+      <Text>LQTY in circulation: {total.debtAfterReward.shorten()}</Text>
       {quiInStabilityPoolPct && (
-        <Text>Fraction of QUI in Stability Pool: {quiInStabilityPoolPct.toString(1)}</Text>
+        <Text>Fraction of LQTY in Stability Pool: {quiInStabilityPoolPct.toString(1)}</Text>
       )}
       <Text>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Text>
       {total.collateralRatioIsBelowCritical(price) && (

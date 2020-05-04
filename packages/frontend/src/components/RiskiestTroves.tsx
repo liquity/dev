@@ -142,7 +142,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                 <th>
                   Debt
                   <br />
-                  (QUI)
+                  (LQTY)
                 </th>
                 <th>
                   Coll.

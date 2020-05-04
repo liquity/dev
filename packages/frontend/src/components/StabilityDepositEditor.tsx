@@ -71,7 +71,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           amount={editedDeposit.depositAfterLoss.prettify()}
           pendingAmount={pendingDepositChange.nonZero?.prettify()}
           pendingColor={pendingDepositChange.positive ? "success" : "danger"}
-          unit="QUI"
+          unit="LQTY"
           {...{ editingState }}
           editedAmount={editedDeposit.depositAfterLoss.toString(2)}
           setEditedAmount={(editedDeposit: string) =>

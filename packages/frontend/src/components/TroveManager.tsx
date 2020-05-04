@@ -51,7 +51,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
       ? ([
           "Open new Trove",
           liquity.openTrove.bind(liquity, editedTrove, price),
-          [[!total.collateralRatioIsBelowCritical(price), "Can't borrow QUI during recovery mode"]]
+          [[!total.collateralRatioIsBelowCritical(price), "Can't borrow LQTY during recovery mode"]]
         ] as const)
       : ([
           "Open new Trove",
@@ -64,7 +64,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
         liquity.closeTrove.bind(liquity),
         [
           [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
-          [quiBalance.gte(originalTrove.debtAfterReward), "You don't have enough QUI"]
+          [quiBalance.gte(originalTrove.debtAfterReward), "You don't have enough LQTY"]
         ]
       ] as const)
     : (([verb, unit, method, extraRequirements]) =>
@@ -91,18 +91,18 @@ const TroveAction: React.FC<TroveActionProps> = ({
           debt: [
             [
               "Repay",
-              "QUI",
+              "LQTY",
               liquity.repayQui,
-              [[quiBalance.gte(change.difference.absoluteValue!), "You don't have enough QUI"]]
+              [[quiBalance.gte(change.difference.absoluteValue!), "You don't have enough LQTY"]]
             ],
             [
               "Borrow",
-              "QUI",
+              "LQTY",
               liquity.borrowQui,
               [
                 [
                   !total.collateralRatioIsBelowCritical(price),
-                  "Can't borrow QUI during recovery mode"
+                  "Can't borrow LQTY during recovery mode"
                 ],
                 [
                   !total
