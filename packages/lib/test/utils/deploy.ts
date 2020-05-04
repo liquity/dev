@@ -103,6 +103,7 @@ const connectContracts = async (
     nonce => cdpManager.setPriceFeed(priceFeed.address, { nonce }),
     nonce => cdpManager.setActivePool(activePool.address, { nonce }),
     nonce => cdpManager.setDefaultPool(defaultPool.address, { nonce }),
+    nonce => cdpManager.setStabilityPool(stabilityPool.address, { nonce }),
     nonce => stabilityPool.setPoolManagerAddress(poolManager.address, { nonce }),
     nonce => stabilityPool.setActivePoolAddress(activePool.address, { nonce }),
     nonce => stabilityPool.setDefaultPoolAddress(defaultPool.address, { nonce }),
