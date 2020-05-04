@@ -103,6 +103,13 @@ const TroveAction: React.FC<TroveActionProps> = ({
                 [
                   !total.collateralRatioIsBelowCritical(price),
                   "Can't borrow QUI during recovery mode"
+                ],
+                [
+                  !total
+                    .subtract(originalTrove)
+                    .add(editedTrove)
+                    .collateralRatioIsBelowCritical(price),
+                  `Total collateral ratio would fall below ${ccrPercent}`
                 ]
               ]
             ]
@@ -122,19 +129,15 @@ const TroveAction: React.FC<TroveActionProps> = ({
       <Transaction
         id={myTransactionId}
         requires={[
-          ...extraRequirements,
-          [
-            editedTrove.collateral.isZero || editedTrove.collateral.mul(price).gte(20),
-            "Collateral must be worth at least $20"
-          ],
           [
             !editedTrove.collateralRatioIsBelowMinimum(price),
             `Collateral ratio must be at least ${mcrPercent}`
           ],
           [
-            !total.subtract(originalTrove).add(editedTrove).collateralRatioIsBelowCritical(price),
-            `Total collateral ratio would fall below ${ccrPercent}`
-          ]
+            editedTrove.collateral.isZero || editedTrove.collateral.mul(price).gte(20),
+            "Collateral must be worth at least $20"
+          ],
+          ...extraRequirements
         ]}
         {...{ send }}
       >
