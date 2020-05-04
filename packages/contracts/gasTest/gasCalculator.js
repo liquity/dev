@@ -1908,7 +1908,7 @@ it("", async () => {
   await addColl_allAccounts(accounts.slice(100,200), cdpManager, _10_Ether)
   await withdrawCLV_allAccounts(accounts.slice(100,200), cdpManager, _180e18)
  
-  const liquidationAcctRange = accounts.slice(1,20)
+  const liquidationAcctRange = accounts.slice(1,10)
 
   for (account of liquidationAcctRange) {
     await priceFeed.setPrice(_200e18)
@@ -2689,7 +2689,7 @@ it("", async () => {
 // --- liquidate CDPs - all troves offset by Stability Pool - Has pending distribution rewards ---
 
 // 1 trove
-it.only("", async () => {0
+it("", async () => {0
   const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. Has pending distribution rewards.'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(101,111), cdpManager, _10_Ether)
@@ -2721,7 +2721,7 @@ it.only("", async () => {0
   appendData({gas: gas}, message, data)
 })
  // 2 troves
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidateCDPs(). n = 2. All fully offset with Stability Pool. Have pending distribution rewards.'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(101,111), cdpManager, _10_Ether)
@@ -2754,7 +2754,7 @@ it.only("", async () => {
 })
 
 // 3 troves
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidateCDPs(). n = 3. All fully offset with Stability Pool. Has pending distribution rewards.'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(101,111), cdpManager, _10_Ether)
@@ -2787,7 +2787,7 @@ it.only("", async () => {
 })
 
 // 10 troves
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidateCDPs(). n = 10. All fully offset with Stability Pool. Has pending distribution rewards.'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(101,111), cdpManager, _10_Ether)
@@ -2820,7 +2820,7 @@ it.only("", async () => {
 })
 
 // 30 troves
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidateCDPs(). n = 30. All fully offset with Stability Pool. Has pending distribution rewards.'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(101,111), cdpManager, _10_Ether)
@@ -2853,7 +2853,7 @@ it.only("", async () => {
 })
 
 // 50 troves
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidateCDPs(). n = 50. All fully offset with Stability Pool. Has pending distribution rewards.'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(101,111), cdpManager, _10_Ether)
@@ -2886,7 +2886,7 @@ it.only("", async () => {
 })
 
 // 100 troves
-it.only("", async () => {
+it("", async () => {
   const message = 'liquidateCDPs(). n = 100. All fully offset with Stability Pool. Has pending distribution rewards.'
   // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
   await addColl_allAccounts(accounts.slice(101,111), cdpManager, _10_Ether)
