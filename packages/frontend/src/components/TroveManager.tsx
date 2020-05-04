@@ -132,10 +132,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
             `Collateral ratio must be at least ${mcrPercent}`
           ],
           [
-            !total
-              .subtract(originalTrove)
-              .add(editedTrove)
-              .collateralRatioIsBelowCritical(price),
+            !total.subtract(originalTrove).add(editedTrove).collateralRatioIsBelowCritical(price),
             `Total collateral ratio would fall below ${ccrPercent}`
           ]
         ]}
@@ -176,7 +173,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
       setEditedTrove(trove);
       setChangePending(false);
     } else {
-      if (!originalTrove.isEmpty && editedTrove.isEmpty) {
+      if (originalTrove.isEmpty !== editedTrove.isEmpty) {
         return;
       }
 
