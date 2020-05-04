@@ -4,24 +4,33 @@ export type AsyncValueState<T> = { loaded: false } | { loaded: true; value: T };
 
 export function useAsyncValue<T>(
   getValue: () => Promise<T>,
-  watchValue?: (onValueChanged: (value: T) => void) => () => void
+  watchValue?: (onValueChanged: (value: T) => void) => () => void,
+  reduceValues?: (previousValue: T, newValue: T) => T
 ) {
   const [callState, setCallState] = useState<AsyncValueState<T>>({ loaded: false });
 
   useEffect(() => {
+    let previousValue: T | undefined = undefined;
     let mounted = true;
     let unwatch: (() => void) | undefined;
 
     const fetchValue = async () => {
       const value = await getValue();
-      if (mounted) {
+
+      if (mounted && previousValue === undefined) {
         setCallState({ loaded: true, value });
+        previousValue = value;
       }
     };
 
     const onValueChanged = (value: T) => {
       if (mounted) {
+        if (previousValue !== undefined && reduceValues) {
+          value = reduceValues(previousValue, value);
+        }
+
         setCallState({ loaded: true, value });
+        previousValue = value;
       }
     };
 
@@ -38,7 +47,7 @@ export function useAsyncValue<T>(
         unwatch();
       }
     };
-  }, [getValue, watchValue]);
+  }, [getValue, watchValue, reduceValues]);
 
   return callState;
 }

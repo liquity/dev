@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Provider, BlockTag } from "@ethersproject/abstract-provider";
 
-import { Liquity } from "@liquity/lib";
+import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue } from "./AsyncValue";
 
@@ -34,19 +34,46 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
     [provider, account, liquity]
   );
 
+  type Values = Resolved<ReturnType<typeof get>> & {
+    [prop: string]: BigNumber | Decimal | Trove | StabilityDeposit;
+  };
+
   const watch = useCallback(
-    (updateValues: (values: Resolved<ReturnType<typeof get>>) => void) => {
-      const blockListener = async (blockNumber: number) => {
-        await get(blockNumber).then(updateValues);
-        console.log(`Updated store state to block #${blockNumber}`);
+    (updateValues: (values: Values) => void) => {
+      const blockListener = (blockNumber: number) => {
+        console.log(`New block #${blockNumber}`);
+        get(blockNumber).then(updateValues);
       };
 
       provider.on("block", blockListener);
-
-      return () => provider.removeListener("block", blockListener);
+      return () => provider.off("block", blockListener);
     },
     [provider, get]
   );
 
-  return useAsyncValue(get, watch);
+  const reduce = useCallback(
+    (previous: Values, neuu: Values) =>
+      Object.fromEntries(
+        Object.keys(previous).map(key => {
+          const previousValue = previous[key];
+          const newValue = neuu[key];
+
+          const equals =
+            (BigNumber.isBigNumber(previousValue) && previousValue.eq(newValue as BigNumber)) ||
+            (previousValue instanceof Decimal && previousValue.eq(newValue as Decimal)) ||
+            (previousValue instanceof Trove && previousValue.equals(newValue as Trove)) ||
+            (previousValue instanceof StabilityDeposit &&
+              previousValue.equals(newValue as StabilityDeposit));
+
+          if (!equals) {
+            console.log(`Update ${key} to ${newValue}`);
+          }
+
+          return [key, equals ? previousValue : newValue];
+        })
+      ) as Values,
+    []
+  );
+
+  return useAsyncValue(get, watch, reduce);
 };

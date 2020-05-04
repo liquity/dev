@@ -90,10 +90,23 @@ export class Trove {
 
   toString() {
     return (
-      `{ collateral: ${this.collateral},\n` +
+      "{\n" +
+      `  collateral: ${this.collateral},\n` +
       `  debt: ${this.debt},\n` +
       `  pendingCollateralReward: ${this.pendingCollateralReward},\n` +
-      `  pendingDebtReward: ${this.pendingDebtReward} }`
+      `  pendingDebtReward: ${this.pendingDebtReward}\n` +
+      `  _stake: ${this._stake}\n` +
+      "}"
+    );
+  }
+
+  equals(that: Trove) {
+    return (
+      this.collateral.eq(that.collateral) &&
+      this.debt.eq(that.debt) &&
+      this.pendingCollateralReward.eq(that.pendingCollateralReward) &&
+      this.pendingDebtReward.eq(that.pendingDebtReward) &&
+      this._stake.eq(that._stake)
     );
   }
 
@@ -226,9 +239,19 @@ export class StabilityDeposit {
 
   toString() {
     return (
-      `{ deposit: ${this.deposit},\n` +
+      "{\n" +
+      `  deposit: ${this.deposit},\n` +
       `  pendingDepositLoss: ${this.pendingDepositLoss},\n` +
-      `  pendingCollateralGain: ${this.pendingCollateralGain} }`
+      `  pendingCollateralGain: ${this.pendingCollateralGain}\n` +
+      "}"
+    );
+  }
+
+  equals(that: StabilityDeposit) {
+    return (
+      this.deposit.eq(that.deposit) &&
+      this.pendingDepositLoss.eq(that.pendingDepositLoss) &&
+      this.pendingCollateralGain.eq(that.pendingCollateralGain)
     );
   }
 
