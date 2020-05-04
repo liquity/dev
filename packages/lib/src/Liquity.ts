@@ -95,7 +95,6 @@ export class Trove {
       `  debt: ${this.debt},\n` +
       `  pendingCollateralReward: ${this.pendingCollateralReward},\n` +
       `  pendingDebtReward: ${this.pendingDebtReward}\n` +
-      `  _stake: ${this._stake}\n` +
       "}"
     );
   }
