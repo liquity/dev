@@ -20,7 +20,6 @@ const connectContracts = deploymentHelpers.connectContracts
 const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
 
 module.exports = async () => {
-  
   const priceFeed = await PriceFeed.new()
   const clvToken = await CLVToken.new()
   const poolManager = await PoolManager.new()
@@ -42,6 +41,7 @@ module.exports = async () => {
   StabilityPool.setAsDeployed(stabilityPool)
   DefaultPool.setAsDeployed(defaultPool)
   FunctionCaller.setAsDeployed(functionCaller)
+
 
   const contracts = {
     priceFeed,

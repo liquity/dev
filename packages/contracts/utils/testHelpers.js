@@ -3,8 +3,8 @@ const web3 = require('web3')
 const MoneyValues = {
   _1_Ether: web3.utils.toWei('1', 'ether'),
   _2_Ether: web3.utils.toWei('2', 'ether'),
-  _3_Ether: web3.utils.toWei('2', 'ether'),
-  _4_Ether: web3.utils.toWei('2', 'ether'),
+  _3_Ether: web3.utils.toWei('3', 'ether'),
+  _4_Ether: web3.utils.toWei('4', 'ether'),
   _5_Ether: web3.utils.toWei('5', 'ether'),
   _10_Ether: web3.utils.toWei('10', 'ether'),
   _15_Ether: web3.utils.toWei('15', 'ether'),
@@ -20,9 +20,15 @@ const MoneyValues = {
   _1billion_Ether: web3.utils.toWei('1000000000', 'ether'),
   _10billion_Ether: web3.utils.toWei('10000000000', 'ether'),
   
+  _0pt5_Ether:  web3.utils.toWei('500', 'finney'),
+  _1pt5_Ether:  web3.utils.toWei('1500', 'finney'),
+
+  _1e17:  web3.utils.toWei('100', 'finney'),
+  _5e17:  web3.utils.toWei('500', 'finney'),
+
   _1e18: web3.utils.toWei('1', 'ether'),
-  _5e18: web3.utils.toWei('1', 'ether'),
-  _10e18: web3.utils.toWei('1', 'ether'),
+  _5e18: web3.utils.toWei('5', 'ether'),
+  _10e18: web3.utils.toWei('10', 'ether'),
   _13e18: web3.utils.toWei('13', 'ether'),
   _30e18: web3.utils.toWei('30', 'ether'),
   _50e18: web3.utils.toWei('50', 'ether'),
@@ -30,9 +36,10 @@ const MoneyValues = {
   _90e18:  web3.utils.toWei('90', 'ether'),
   _100e18: web3.utils.toWei('100', 'ether'),
   _101e18: web3.utils.toWei('101', 'ether'),
+  _110e18: web3.utils.toWei('110', 'ether'),
   _150e18: web3.utils.toWei('150', 'ether'),
   _180e18: web3.utils.toWei('180', 'ether'),
-  _200e18: web3.utils.toWei('180', 'ether'),
+  _200e18: web3.utils.toWei('200', 'ether'),
   _360e18: web3.utils.toWei('360', 'ether'),
   _450e18: web3.utils.toWei('450', 'ether'),
   _500e18: web3.utils.toWei('500', 'ether'),
@@ -42,7 +49,13 @@ const MoneyValues = {
   _1700e18: web3.utils.toWei('1700', 'ether'),
   _1800e18: web3.utils.toWei('1800', 'ether'),
   _2000e18: web3.utils.toWei('2000', 'ether'),
-  _1e27: web3.utils.toWei('1000000000', 'ether')
+  _1e27: web3.utils.toWei('1000000000', 'ether'),
+
+  negative_5e17:  "-" + web3.utils.toWei('500', 'finney'),
+  negative_10e18:  "-" + web3.utils.toWei('10', 'ether'),
+  negative_50e18:  "-" + web3.utils.toWei('50', 'ether'),
+  negative_100e18:  "-" + web3.utils.toWei('100', 'ether')
+
 }
 
 // TODO: Make classes for function export

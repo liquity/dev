@@ -11,6 +11,7 @@ import "./DeciMath.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@nomiclabs/buidler/console.sol";
+// import "./Library1.sol";
 
 contract CDPManager is Ownable, ICDPManager {
     using SafeMath for uint;
@@ -161,22 +162,20 @@ contract CDPManager is Ownable, ICDPManager {
 
     function openLoan(uint _CLVAmount, address _hint) public payable returns (bool) {
         uint price = priceFeed.getPrice(); 
-        bool recoveryMode = checkRecoveryMode(); 
-        
         address user = _msgSender(); 
        
-        require(CDPs[user].status != Status.active, "CDPManager: Borrower already has an active CDP"); 
-        require(recoveryMode == false || _CLVAmount == 0, "CDPManager: Debt issuance is not permitted during Recovery Mode"); 
+        requireValueIsGreaterThan20Dollars(msg.value, price);
         
-        require(getUSDValue(msg.value, price) >= MIN_COLL_IN_USD, 
-                "CDPManager: Dollar value of collateral deposit must equal or exceed the minimum");  
-       
         uint ICR = computeICR(msg.value, _CLVAmount, price);  
-        require(ICR >= MCR, "CDPManager: ICR of prospective loan must be >= than the MCR"); 
-      
-        uint newTCR = getNewTCR(msg.value, _CLVAmount, price);  
-        require (newTCR >= CCR || _CLVAmount == 0, "CDPManager: opening a loan that would result in a TCR < CCR is not permitted"); 
-       
+
+        if (_CLVAmount > 0) {
+            requireNotInRecoveryMode();
+            requireICRisAboveMCR(ICR);
+
+            uint newTCR = getNewTCR(msg.value, _CLVAmount, price); 
+            requireTCRisAboveCCR(newTCR);
+        }
+        
         // Update loan properties
         CDPs[user].status = Status.active;  
         CDPs[user].coll = msg.value;  
@@ -187,11 +186,11 @@ contract CDPManager is Ownable, ICDPManager {
         
         sortedCDPs.insert(user, ICR, price, _hint, _hint); 
         
-        /* push the owner's address to the CDP owners list, and record 
+        /* Push the owner's address to the CDP owners list, and record 
         the corresponding array index on the CDP struct */
         CDPs[user].arrayIndex = CDPOwners.push(user) - 1; 
         
-        // Move the ether to the activePool, and mint CLV to the borrower
+        // Move the ether to the Active Pool, and mint CLV to the borrower
         poolManager.addColl.value(msg.value)(); 
     
         poolManager.withdrawCLV(user, _CLVAmount); 
@@ -212,8 +211,8 @@ contract CDPManager is Ownable, ICDPManager {
         Status status = CDPs[_user].status;
     
         if (status == Status.nonExistent || status == Status.closed ) {
-            require(getUSDValue(msg.value, price) >= MIN_COLL_IN_USD, 
-                    "CDPManager: Dollar value of collateral deposit must equal or exceed the minimum");
+            requireValueIsGreaterThan20Dollars(msg.value, price);
+
             isFirstCollDeposit = true; 
             CDPs[_user].status = Status.active;
         } 
@@ -252,23 +251,20 @@ contract CDPManager is Ownable, ICDPManager {
     // Withdraw ETH collateral from a CDP
     function withdrawColl(uint _amount, address _hint) public returns (bool) {
         uint price = priceFeed.getPrice();
-        bool recoveryMode = checkRecoveryMode();
-
+        
         address user = _msgSender();
-        require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
+        requireCDPisActive(user);
+        requireNotInRecoveryMode();
        
         applyPendingRewards(user);
+
         uint coll = CDPs[user].coll;
-        require(coll >= _amount, "CDPManager: Insufficient balance for ETH withdrawal");
-        
         uint newColl = coll.sub(_amount);
-        require(getUSDValue(newColl, price) >= MIN_COLL_IN_USD  || newColl == 0, 
-                "CDPManager: Remaining collateral must have $USD value >= 20, or be zero");
+        
+       requireCollAmountIsWithdrawable(coll, newColl, price);
 
         uint newICR = getNewICRfromCollDecrease(user, _amount, price); 
-
-        require(recoveryMode == false, "CDPManager: Collateral withdrawal is not permitted during Recovery Mode");
-        require(newICR >= MCR, "CDPManager: Insufficient collateral ratio for ETH withdrawal");
+        requireICRisAboveMCR(newICR);
         
         // Update the CDP's coll and stake
         CDPs[user].coll = newColl;
@@ -294,21 +290,20 @@ contract CDPManager is Ownable, ICDPManager {
     // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
     function withdrawCLV(uint _amount, address _hint) public returns (bool) {
         uint price = priceFeed.getPrice();
-        bool recoveryMode = checkRecoveryMode();
-
+    
         address user = _msgSender();
         
-        require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
-        require(_amount > 0, "CDPManager: Amount to withdraw must be larger than 0");
+        requireCDPisActive(user);
+        requireNonZeroAmount(_amount); 
+        requireNotInRecoveryMode();
         
         applyPendingRewards(user);
 
-        uint newTCR = getNewTCR(0, _amount, price);
         uint newICR = getNewICRfromDebtIncrease(user, _amount, price);
-        
-        require(recoveryMode == false, "CDPManager: Debt issuance is not permitted during Recovery Mode");
-        require(newTCR >= CCR, "CDPManager: a CLV withdrawal that would result in TCR < CCR is not permitted");
-        require(newICR >= MCR, "CDPManager: Insufficient collateral ratio for CLV withdrawal");
+        uint newTCR = getNewTCR(0, _amount, price);
+
+        requireICRisAboveMCR(newICR);
+        requireTCRisAboveCCR(newTCR);
         
         // Increase the CDP's debt
         uint newDebt = (CDPs[user].debt).add(_amount);
@@ -333,13 +328,12 @@ contract CDPManager is Ownable, ICDPManager {
         uint price = priceFeed.getPrice();
         address user = _msgSender();
         
-        require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
-        require(_amount > 0, "CDPManager: Repaid amount must be larger than 0");
-       
+        requireCDPisActive(user);
+
         applyPendingRewards(user);
 
         uint debt = CDPs[user].debt;
-        require(_amount <= debt, "CDPManager: Repaid amount is larger than current debt");
+        requireCLVRepaymentAllowed(debt, _amount);
         
         // Update the CDP's debt
         uint newDebt = debt.sub(_amount);
@@ -362,20 +356,15 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     function closeLoan() public returns (bool) {
-        uint price = priceFeed.getPrice();
-        bool recoveryMode = checkRecoveryMode();
-        
         address user = _msgSender();
         applyPendingRewards(user);
 
-        require(CDPs[user].status == Status.active, "CDPManager: CDP does not exist or is closed");
-        require(recoveryMode == false, "CDPManager: Closing a loan is not permitted during Recovery Mode");
+        requireCDPisActive(user);
+        requireNotInRecoveryMode();
         
         uint coll = CDPs[user].coll;
         uint debt = CDPs[user].debt;
 
-        uint newTCR = getNewTCRFromDecrease(coll, debt, price);
-        
         removeStake(user);
         closeCDP(user);
     
@@ -386,6 +375,75 @@ contract CDPManager is Ownable, ICDPManager {
         emit CDPUpdated(user, 0, 0, 0);
         return true; 
     }
+
+    /* If ether is sent, the operation is considered as an increase in ether, and the first parameter 
+    _collWithdrawal is ignored  */
+    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) public payable returns (bool) {
+        address user = _msgSender();
+        requireCDPisActive(user);
+        requireNotInRecoveryMode();
+        
+        uint price = priceFeed.getPrice();
+     
+        applyPendingRewards(user);
+
+        // If Ether is sent, grab the amount. Otherwise, grab the specified collateral withdrawal
+        int collChange = (msg.value != 0) ? int(msg.value) : -int(_collWithdrawal);
+
+        uint currentDebt = CDPs[user].debt;
+        uint currentColl = CDPs[user].coll;
+       
+        uint newICR = getNewICRFromTroveAdjustment(user, collChange, _debtChange, price);
+       
+        // --- Checks --- 
+        if (_debtChange > 0) {
+            requireICRisAboveMCR(newICR);
+            uint newTCR = getNewTCRFromTroveAdjustment(collChange, _debtChange, price);
+            requireTCRisAboveCCR(newTCR);
+        } else if (_debtChange < 0)  {
+            requireCLVRepaymentAllowed(currentDebt, intToUint(_debtChange));
+        }
+        if (collChange < 0) {
+            requireICRisAboveMCR(newICR);
+            requireCollAmountIsWithdrawable(currentColl, _collWithdrawal, price);
+        }
+
+        //  --- Effects --- 
+        // Update coll and debt based on whether they increase or decrease
+        CDPs[user].debt = (_debtChange > 0) ? currentDebt.add(intToUint(_debtChange)) :  currentDebt.sub(intToUint(_debtChange));
+        CDPs[user].coll = (msg.value !=0) ? currentColl.add(msg.value) :  currentColl.sub(_collWithdrawal);
+        
+        updateStakeAndTotalStakes(user);
+       
+        // Close a CDP if it is empty, otherwise, re-insert it in the sorted list
+        if (CDPs[user].debt == 0 && CDPs[user].coll == 0)  {
+            closeCDP(user);
+        } else {
+            sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
+        }
+
+        //  --- Interactions ---
+        if (_debtChange > 0){
+            poolManager.withdrawCLV(user, intToUint(_debtChange));
+        } else if (_debtChange < 0) {
+            poolManager.repayCLV(user, intToUint(_debtChange));
+        }
+
+        if (msg.value > 0 ) {
+            poolManager.addColl.value(msg.value)();
+        } else if (msg.value == 0) {
+            poolManager.withdrawColl(user, _collWithdrawal);
+        }
+
+        emit CDPUpdated(user, 
+                        CDPs[user].debt,
+                        CDPs[user].coll, 
+                        CDPs[user].stake
+                        ); 
+    }
+
+ 
+    
 
     // --- CDP Liquidation functions ---
 
@@ -779,32 +837,47 @@ contract CDPManager is Ownable, ICDPManager {
         return ICR;
     }
 
-    /* Compute the new collateral ratio, considering the collateral to be removed. Takes pending coll/debt 
-    rewards into account. */
+    // Compute the new collateral ratio, considering the collateral to be removed. Assumes 0 pending rewards.
     function getNewICRfromCollDecrease(address _user, uint _collDecrease, uint _price) view internal returns(uint) {
-        uint pendingETHReward = computePendingETHReward(_user);
-        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
-
-        uint currentETH = CDPs[_user].coll.add(pendingETHReward);
-        uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);
-
-        uint newColl = currentETH.sub(_collDecrease);
+        uint newColl = CDPs[_user].coll.sub(_collDecrease);
         
-        return computeICR(newColl, currentCLVDebt, _price);
+        return computeICR(newColl, CDPs[_user].debt, _price);
     }
 
-    /* Compute the new collateral ratio, considering the debt to be added.Takes pending coll/debt rewards into account. */
+    // Compute the new collateral ratio, considering the debt to be added. Assumes 0 pending rewards.
     function getNewICRfromDebtIncrease(address _user, uint _debtIncrease, uint _price) view internal returns(uint) {
-        uint pendingETHReward = computePendingETHReward(_user);
-        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
+        uint newCLVDebt = CDPs[_user].debt.add(_debtIncrease);
 
-        uint currentETH = CDPs[_user].coll.add(pendingETHReward);
-        uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward);
-
-        uint newCLVDebt = currentCLVDebt.add(_debtIncrease);
-
-        return computeICR(currentETH, newCLVDebt, _price);
+        return computeICR(CDPs[_user].coll, newCLVDebt, _price);
     } 
+
+    // Compute the new collateral ratio, considering the change in coll and debt.
+    function getNewICRFromTroveAdjustment(address _user, int _collChange, int _debtChange, uint _price) 
+    view
+    internal 
+    returns(uint)
+    {
+        uint newDebt;
+        uint newColl;
+
+        if (_debtChange > 0) {
+            newDebt = CDPs[_user].debt.add(intToUint(_debtChange));
+        } else if (_debtChange < 0) {
+            newDebt = CDPs[_user].debt.sub(intToUint(_debtChange));
+        }
+
+        if (_collChange > 0) {
+            newColl = CDPs[_user].coll.add(intToUint(_collChange));
+        } else if (_collChange < 0) {
+            // console.log("_collChange: %s", _collChange);
+            console.log("intToUint(_collChange): %s", intToUint(_collChange));
+            console.log("CDPs[_user].coll: %s", CDPs[_user].coll);
+
+            newColl = CDPs[_user].coll.sub(intToUint(_collChange));
+        }
+
+        return computeICR(newColl, newDebt, _price);
+    }
 
     function computeICR(uint _coll, uint _debt, uint _price) view internal returns(uint) {
         // Check if the total debt is higher than 0, to avoid division by 0
@@ -1037,6 +1110,29 @@ contract CDPManager is Ownable, ICDPManager {
         return newTCR;
     }
 
+    function getNewTCRFromTroveAdjustment(int _collChange, int _debtChange, uint _price) internal view returns (uint) {
+        uint currentTotalColl = activePool.getETH().add(defaultPool.getETH());
+        uint currentTotalDebt = activePool.getCLV().add(defaultPool.getCLV());
+       
+        uint newTotalDebt;
+        uint newTotalCollateral;
+        
+        if (_debtChange > 0) {
+            newTotalDebt = currentTotalDebt.add(intToUint(_debtChange));
+        } else if (_debtChange < 0) {
+            newTotalDebt = currentTotalDebt.sub(intToUint(_debtChange));
+        }
+
+        if (_collChange > 0) {
+            newTotalCollateral = currentTotalColl.add(intToUint(_collChange));
+        } else if (_collChange < 0) {
+            newTotalCollateral = currentTotalColl.sub(intToUint(_collChange));
+        }
+
+        uint newTCR = computeICR(newTotalCollateral, newTotalDebt, _price);
+        return newTCR;
+    }
+
     function checkRecoveryMode() public view returns (bool){
         uint price = priceFeed.getPrice();
 
@@ -1055,5 +1151,55 @@ contract CDPManager is Ownable, ICDPManager {
         } else {
             return false;
         }
+    }
+
+    /* Converts the magnitude of an int to a uint
+    TODO:  check validity for num in region (num > 2**255) or (num < -2**255) */
+    function intToUint(int num) internal pure returns (uint) {
+        if (num < 0) {
+            return uint(-num);
+        } else {
+            return uint(num);
+        }
+    }
+
+    function requireCDPisActive(address _user) internal view {
+        require(CDPs[_user].status == Status.active, "CDPManager: CDP does not exist or is closed");
+    }
+    function requireNotInRecoveryMode() internal view {
+        require(checkRecoveryMode() == false, "CDPManager: Operation not permitted during Recovery Mode");
+    }
+
+    function requireICRisAboveMCR(uint _newICR)  internal view {
+        require(_newICR >= MCR, "CDPManager: An operation that would result in ICR < MCR is not permitted");
+    }
+
+    function requireTCRisAboveCCR(uint _newTCR) internal view {
+        require(_newTCR >= CCR, "CDPManager: An operation that would result in TCR < CCR is not permitted");
+    }
+
+    function requireCLVRepaymentAllowed(uint _currentDebt, uint _debtDecrease) internal pure {
+        require(_debtDecrease > 0, "CDPManager: Repaid amount must be larger than 0");
+        require(_debtDecrease <= _currentDebt, "CDPManager: Amount repaid must not be larger than the CDP's debt");
+    }
+
+    function requireValueIsGreaterThan20Dollars(uint _amount, uint _price) internal view {
+         require(getUSDValue(_amount, _price) >= MIN_COLL_IN_USD,  
+            "CDPManager: Collateral must have $USD value >= 20");
+    }
+
+    function requireNonZeroAmount(uint _amount) internal pure {
+        require(_amount > 0, "CDPManager: Amount must be larger than 0");
+    }
+
+    function requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal, uint _price) 
+    internal 
+    view 
+    {
+        require(_collWithdrawal <= _currentColl, "CDPManager: Insufficient balance for ETH withdrawal");
+        
+        uint newColl = _currentColl.sub(_collWithdrawal);
+        require(getUSDValue(newColl, _price) >= MIN_COLL_IN_USD || newColl == 0,
+            "CDPManager: Remaining collateral must have $USD value >= 20, or be zero");
     }
 }
