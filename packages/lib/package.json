@@ -16,7 +16,6 @@
   "devDependencies": {
     "@nomiclabs/buidler": "^1.1.2",
     "@nomiclabs/buidler-truffle5": "^1.1.2",
-    "@nomiclabs/buidler-web3": "^1.1.2",
     "@types/chai": "^4.2.9",
     "@types/chai-as-promised": "^7.1.2",
     "@types/mocha": "^7.0.1",

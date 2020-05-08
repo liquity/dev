@@ -1931,7 +1931,7 @@
     ethereumjs-util "^6.1.0"
     fs-extra "^7.0.1"
 
-"@nomiclabs/buidler-web3@^1.1.2", "@nomiclabs/buidler-web3@^1.1.3-rc.0":
+"@nomiclabs/buidler-web3@^1.1.3-rc.0":
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-web3/-/buidler-web3-1.3.2.tgz#365c92cd8ebd900e2a04d3202ae02cdc7a16deb7"
   integrity sha512-8jDl49z+QnJVqfu9OyABYjrJDin6JTY5c+YrgcoFnMwiFbbbXlZUseU+q77I4MLLO+V+21AqgmNnYuAplgAnPA==

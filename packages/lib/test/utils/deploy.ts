@@ -1,21 +1,8 @@
-import Web3 from "web3";
-import { TransactionReceipt } from "web3-eth";
+import { Provider, TransactionReceipt } from "@ethersproject/abstract-provider";
 import { Signer } from "@ethersproject/abstract-signer";
 import { ContractTransaction } from "@ethersproject/contracts";
 
 import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "../../src/contracts";
-
-// Bug in web3-eth: getTransactionReceipt is typed wrong. It returns null when the transaction is
-// still pending.
-// https://web3js.readthedocs.io/en/v1.2.0/web3-eth.html#gettransactionreceipt
-declare module "web3-eth" {
-  interface Eth {
-    getTransactionReceipt(
-      hash: string,
-      callback?: (error: Error, transactionReceipt: TransactionReceipt) => void
-    ): Promise<TransactionReceipt | null>;
-  }
-}
 
 let silent = true;
 
@@ -25,11 +12,13 @@ export const setSilent = (s: boolean) => {
 
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
-const transactionReceipt = async (web3: Web3, transactionHash: string) => {
+const transactionReceipt = async (provider: Provider, transactionHash: string) => {
   silent || console.log(`Waiting for transaction ${transactionHash} ...`);
 
   for (;;) {
-    const receipt = await web3.eth.getTransactionReceipt(transactionHash);
+    const receipt = (await provider.getTransactionReceipt(
+      transactionHash
+    )) as TransactionReceipt | null;
 
     if (receipt) {
       return receipt;
@@ -39,11 +28,11 @@ const transactionReceipt = async (web3: Web3, transactionHash: string) => {
   }
 };
 
-const deployContract = async (web3: Web3, artifacts: any, contractName: string) => {
+const deployContract = async (provider: Provider, artifacts: any, contractName: string) => {
   silent || console.log(`Deploying ${contractName} ...`);
 
   const contract = await artifacts.require(contractName).new();
-  const receipt = await transactionReceipt(web3, contract.transactionHash);
+  const receipt = await transactionReceipt(provider, contract.transactionHash);
 
   if (!silent) {
     console.log({
@@ -57,15 +46,18 @@ const deployContract = async (web3: Web3, artifacts: any, contractName: string) 
   return contract.address;
 };
 
-const deployContracts = async (web3: Web3, artifacts: any): Promise<LiquityContractAddresses> => ({
-  activePool: await deployContract(web3, artifacts, "ActivePool"),
-  cdpManager: await deployContract(web3, artifacts, "CDPManager"),
-  clvToken: await deployContract(web3, artifacts, "CLVToken"),
-  defaultPool: await deployContract(web3, artifacts, "DefaultPool"),
-  poolManager: await deployContract(web3, artifacts, "PoolManager"),
-  priceFeed: await deployContract(web3, artifacts, "PriceFeed"),
-  sortedCDPs: await deployContract(web3, artifacts, "SortedCDPs"),
-  stabilityPool: await deployContract(web3, artifacts, "StabilityPool")
+const deployContracts = async (
+  provider: Provider,
+  artifacts: any
+): Promise<LiquityContractAddresses> => ({
+  activePool: await deployContract(provider, artifacts, "ActivePool"),
+  cdpManager: await deployContract(provider, artifacts, "CDPManager"),
+  clvToken: await deployContract(provider, artifacts, "CLVToken"),
+  defaultPool: await deployContract(provider, artifacts, "DefaultPool"),
+  poolManager: await deployContract(provider, artifacts, "PoolManager"),
+  priceFeed: await deployContract(provider, artifacts, "PriceFeed"),
+  sortedCDPs: await deployContract(provider, artifacts, "SortedCDPs"),
+  stabilityPool: await deployContract(provider, artifacts, "StabilityPool")
 });
 
 const connectContracts = async (
@@ -122,12 +114,15 @@ const connectContracts = async (
 };
 
 export const deployAndSetupContracts = async (
-  web3: Web3,
   artifacts: any,
   deployer: Signer
 ): Promise<LiquityContracts> => {
+  if (!deployer.provider) {
+    throw new Error("Signer must have a provider.");
+  }
+
   silent || (console.log("Deploying contracts..."), console.log());
-  const addresses = await deployContracts(web3, artifacts);
+  const addresses = await deployContracts(deployer.provider, artifacts);
   const contracts = connectToContracts(addresses, deployer);
   silent || console.log("Connecting contracts...");
   await connectContracts(contracts, deployer);

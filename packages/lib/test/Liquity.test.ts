@@ -2,7 +2,7 @@ import { describe, before, it } from "mocha";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { Signer } from "@ethersproject/abstract-signer";
-import { web3, artifacts, ethers } from "@nomiclabs/buidler";
+import { artifacts, ethers } from "@nomiclabs/buidler";
 
 import { deployAndSetupContracts } from "./utils/deploy";
 import { Decimal, Decimalish } from "../utils/Decimal";
@@ -45,7 +45,7 @@ describe("Liquity", () => {
 
   before(async () => {
     [deployer, funder, user, ...otherUsers] = await ethers.getSigners();
-    addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
+    addresses = addressesOf(await deployAndSetupContracts(artifacts, deployer));
   });
 
   // Always setup same initial balance for user
@@ -61,10 +61,7 @@ describe("Liquity", () => {
     if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
       await funder.sendTransaction({
         to: user.getAddress(),
-        value: targetBalance
-          .add(txCost)
-          .sub(balance)
-          .add(1),
+        value: targetBalance.add(txCost).sub(balance).add(1),
         gasLimit
       });
 
@@ -255,7 +252,7 @@ describe("Liquity", () => {
     describe("when people overstay", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
-        addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
+        addresses = addressesOf(await deployAndSetupContracts(artifacts, deployer));
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
@@ -315,7 +312,7 @@ describe("Liquity", () => {
   describe("Redemption", () => {
     before(async () => {
       // Deploy new instances of the contracts, for a clean slate
-      addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
+      addresses = addressesOf(await deployAndSetupContracts(artifacts, deployer));
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
         user,

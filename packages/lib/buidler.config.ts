@@ -13,7 +13,6 @@ import { Liquity, Trove } from "./src/Liquity";
 import { Decimal, Difference, Decimalish, Percent } from "./utils";
 import { addressesOf, deploymentOnNetwork, connectToContracts } from "./src/contracts";
 
-usePlugin("@nomiclabs/buidler-web3");
 usePlugin("@nomiclabs/buidler-truffle5");
 usePlugin("buidler-ethers-v5");
 
@@ -61,16 +60,13 @@ task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) =>
   const [deployer] = await bre.ethers.getSigners();
 
   setSilent(false);
-  const contracts = await deployAndSetupContracts(bre.web3, bre.artifacts, deployer);
+  const contracts = await deployAndSetupContracts(bre.artifacts, deployer);
 
   console.log();
   console.log({
     [bre.network.name]: {
       addresses: addressesOf(contracts),
-      version: fs
-        .readFileSync(path.join(bre.config.paths.artifacts, "version"))
-        .toString()
-        .trim(),
+      version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim(),
       deploymentDate: new Date().getTime()
     }
   });
@@ -104,7 +100,7 @@ task(
   async (_taskArgs, bre) => {
     const [deployer, funder, ...randomUsers] = await bre.ethers.getSigners();
     const { addresses } = deploymentOnNetwork[bre.network.name] || {
-      addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+      addresses: addressesOf(await deployAndSetupContracts(bre.artifacts, deployer))
     };
 
     const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
@@ -246,7 +242,7 @@ task(
     const [deployer, funder, ...randomUsers] = await bre.ethers.getSigners();
 
     const { addresses } = deploymentOnNetwork[bre.network.name] || {
-      addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+      addresses: addressesOf(await deployAndSetupContracts(bre.artifacts, deployer))
     };
 
     const [deployerLiquity, funderLiquity, ...randomLiquities] = await connectUsers([
@@ -407,7 +403,7 @@ task(
     const [deployer, funder] = await bre.ethers.getSigners();
 
     const { addresses } = deploymentOnNetwork[bre.network.name] || {
-      addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+      addresses: addressesOf(await deployAndSetupContracts(bre.artifacts, deployer))
     };
 
     const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder]);
@@ -476,7 +472,7 @@ task("check-sorting", "Check if Troves are sorted by ICR", async (_taskArgs, bre
   const [deployer] = await bre.ethers.getSigners();
 
   const { addresses } = deploymentOnNetwork[bre.network.name] || {
-    addresses: addressesOf(await deployAndSetupContracts(bre.web3, bre.artifacts, deployer))
+    addresses: addressesOf(await deployAndSetupContracts(bre.artifacts, deployer))
   };
 
   const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
