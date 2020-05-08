@@ -2,7 +2,7 @@ import { describe, before, it } from "mocha";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { Signer } from "@ethersproject/abstract-signer";
-import { artifacts, ethers } from "@nomiclabs/buidler";
+import { ethers } from "@nomiclabs/buidler";
 
 import { deployAndSetupContracts } from "./utils/deploy";
 import { Decimal, Decimalish } from "../utils/Decimal";
@@ -45,7 +45,7 @@ describe("Liquity", () => {
 
   before(async () => {
     [deployer, funder, user, ...otherUsers] = await ethers.getSigners();
-    addresses = addressesOf(await deployAndSetupContracts(artifacts, deployer));
+    addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
   });
 
   // Always setup same initial balance for user
@@ -252,7 +252,7 @@ describe("Liquity", () => {
     describe("when people overstay", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
-        addresses = addressesOf(await deployAndSetupContracts(artifacts, deployer));
+        addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
@@ -312,7 +312,7 @@ describe("Liquity", () => {
   describe("Redemption", () => {
     before(async () => {
       // Deploy new instances of the contracts, for a clean slate
-      addresses = addressesOf(await deployAndSetupContracts(artifacts, deployer));
+      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
         user,

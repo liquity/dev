@@ -1,6 +1,5 @@
-import { Provider, TransactionReceipt } from "@ethersproject/abstract-provider";
 import { Signer } from "@ethersproject/abstract-signer";
-import { ContractTransaction } from "@ethersproject/contracts";
+import { ContractTransaction, ContractFactory } from "@ethersproject/contracts";
 
 import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "../../src/contracts";
 
@@ -10,35 +9,24 @@ export const setSilent = (s: boolean) => {
   silent = s;
 };
 
-const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
-
-const transactionReceipt = async (provider: Provider, transactionHash: string) => {
-  silent || console.log(`Waiting for transaction ${transactionHash} ...`);
-
-  for (;;) {
-    const receipt = (await provider.getTransactionReceipt(
-      transactionHash
-    )) as TransactionReceipt | null;
-
-    if (receipt) {
-      return receipt;
-    }
-
-    await sleep(4000);
-  }
-};
-
-const deployContract = async (provider: Provider, artifacts: any, contractName: string) => {
+const deployContract = async (
+  deployer: Signer,
+  getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
+  contractName: string
+) => {
   silent || console.log(`Deploying ${contractName} ...`);
+  const contract = await (await getContractFactory(contractName, deployer)).deploy({
+    // TODO overrides should be put here
+  });
 
-  const contract = await artifacts.require(contractName).new();
-  const receipt = await transactionReceipt(provider, contract.transactionHash);
+  silent || console.log(`Waiting for transaction ${contract.deployTransaction.hash} ...`);
+  const receipt = await contract.deployTransaction.wait();
 
   if (!silent) {
     console.log({
       contractAddress: contract.address,
       blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed
+      gasUsed: receipt.gasUsed.toNumber()
     });
     console.log();
   }
@@ -47,17 +35,17 @@ const deployContract = async (provider: Provider, artifacts: any, contractName: 
 };
 
 const deployContracts = async (
-  provider: Provider,
-  artifacts: any
+  deployer: Signer,
+  getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>
 ): Promise<LiquityContractAddresses> => ({
-  activePool: await deployContract(provider, artifacts, "ActivePool"),
-  cdpManager: await deployContract(provider, artifacts, "CDPManager"),
-  clvToken: await deployContract(provider, artifacts, "CLVToken"),
-  defaultPool: await deployContract(provider, artifacts, "DefaultPool"),
-  poolManager: await deployContract(provider, artifacts, "PoolManager"),
-  priceFeed: await deployContract(provider, artifacts, "PriceFeed"),
-  sortedCDPs: await deployContract(provider, artifacts, "SortedCDPs"),
-  stabilityPool: await deployContract(provider, artifacts, "StabilityPool")
+  activePool: await deployContract(deployer, getContractFactory, "ActivePool"),
+  cdpManager: await deployContract(deployer, getContractFactory, "CDPManager"),
+  clvToken: await deployContract(deployer, getContractFactory, "CLVToken"),
+  defaultPool: await deployContract(deployer, getContractFactory, "DefaultPool"),
+  poolManager: await deployContract(deployer, getContractFactory, "PoolManager"),
+  priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed"),
+  sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs"),
+  stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool")
 });
 
 const connectContracts = async (
@@ -114,15 +102,15 @@ const connectContracts = async (
 };
 
 export const deployAndSetupContracts = async (
-  artifacts: any,
-  deployer: Signer
+  deployer: Signer,
+  getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>
 ): Promise<LiquityContracts> => {
   if (!deployer.provider) {
     throw new Error("Signer must have a provider.");
   }
 
   silent || (console.log("Deploying contracts..."), console.log());
-  const addresses = await deployContracts(deployer.provider, artifacts);
+  const addresses = await deployContracts(deployer, getContractFactory);
   const contracts = connectToContracts(addresses, deployer);
   silent || console.log("Connecting contracts...");
   await connectContracts(contracts, deployer);

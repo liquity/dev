@@ -1920,7 +1920,7 @@
   resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-ethers/-/buidler-ethers-1.3.2.tgz#9d6d2fbacf1c90ec6b1f702bbcc6b38177d45292"
   integrity sha512-ts28lG7eDKtzDYN0ysdB5H2zU2PUV9PX3qdydAOn2t7AMQm9RP35aomuYUn5f4gh0PY/QvTkPYQul6Nl+NKepg==
 
-"@nomiclabs/buidler-truffle5@^1.1.2", "@nomiclabs/buidler-truffle5@^1.1.3-rc.0":
+"@nomiclabs/buidler-truffle5@^1.1.3-rc.0":
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-truffle5/-/buidler-truffle5-1.3.2.tgz#c3a2074831a16c39af4c903fd389e822089b9782"
   integrity sha512-trAlqQoLygQ3Mz+klL3T7HN1Nh4giWtQ4Qo0BdPRla+KcmUeSAyXl/2O42DX2iKa40p3xpmasqpLmIPBEZmR+w==
