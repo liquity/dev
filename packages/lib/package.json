@@ -11,9 +11,10 @@
     "test": "buidler test"
   },
   "peerDependencies": {
-    "ethers": "^5.0.0-beta.183"
+    "ethers": "^5.0.0-beta.184"
   },
   "devDependencies": {
+    "@ethersproject/providers": "5.0.0-beta.164",
     "@nomiclabs/buidler": "^1.1.2",
     "@types/chai": "^4.2.9",
     "@types/chai-as-promised": "^7.1.2",
