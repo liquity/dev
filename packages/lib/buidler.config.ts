@@ -10,7 +10,7 @@ import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config
 import { NetworkConfig } from "@nomiclabs/buidler/types";
 
 import { deployAndSetupContracts, setSilent } from "./test/utils/deploy";
-import { Liquity, Trove } from "./src/Liquity";
+import { Liquity, Trove, TroveWithPendingRewards } from "./src/Liquity";
 import { Decimal, Difference, Decimalish, Percent } from "./utils";
 import { addressesOf, deploymentOnNetwork, connectToContracts } from "./src/contracts";
 
@@ -154,15 +154,18 @@ const sortedByICR = async (liquity: Liquity, listOfTroves: string[], price: Deci
     return true;
   }
 
-  let currentTrove = await liquity.getTrove(listOfTroves[0]);
+  const totalRedistributed = await liquity.getTotalRedistributed();
+  let currentTrove = (await liquity.getTroveWithoutRewards(listOfTroves[0])).applyRewards(
+    totalRedistributed
+  );
 
   for (let i = 1; i < listOfTroves.length; ++i) {
-    const nextTrove = await liquity.getTrove(listOfTroves[i]);
+    const nextTrove = (await liquity.getTroveWithoutRewards(listOfTroves[i])).applyRewards(
+      totalRedistributed
+    );
 
     if (
-      nextTrove
-        .collateralRatioAfterRewards(price)
-        .gt(currentTrove.collateralRatioAfterRewards(price).add(tinyDifference))
+      nextTrove.collateralRatio(price).gt(currentTrove.collateralRatio(price).add(tinyDifference))
     ) {
       return false;
     }
@@ -180,16 +183,24 @@ const listDifference = (listA: string[], listB: string[]) => {
 
 const shortenAddress = (address: string) => address.substr(0, 6) + "..." + address.substr(-4);
 
-const troveToString = (address: string, trove: Trove, price: Decimalish) => {
+const troveToString = (
+  address: string,
+  troveWithPendingRewards: TroveWithPendingRewards,
+  totalRedistributed: Trove,
+  price: Decimalish
+) => {
+  const trove = troveWithPendingRewards.applyRewards(totalRedistributed);
+  const rewards = trove.subtract(troveWithPendingRewards);
+
   return (
     `[${shortenAddress(address)}]: ` +
-    `ICR = ${new Percent(trove.collateralRatioAfterRewards(price)).toString(2)}, ` +
-    `ICR w/o reward = ${new Percent(trove.collateralRatio(price)).toString(2)}, ` +
-    `stake = ${trove._stake?.toString(2)}, ` +
+    `ICR = ${new Percent(trove.collateralRatio(price)).toString(2)}, ` +
+    `ICR w/o reward = ${new Percent(troveWithPendingRewards.collateralRatio(price)).toString(2)}, ` +
+    `stake = ${troveWithPendingRewards.stake.toString(2)}, ` +
     `coll = ${trove.collateral.toString(2)}, ` +
     `debt = ${trove.debt.toString(2)}, ` +
-    `coll reward = ${trove.pendingCollateralReward.toString(2)}, ` +
-    `debt reward = ${trove.pendingDebtReward.toString(2)}`
+    `coll reward = ${rewards.collateral.toString(2)}, ` +
+    `debt reward = ${rewards.debt.toString(2)}`
   );
 };
 
@@ -198,20 +209,22 @@ const dumpTroves = async (liquity: Liquity, listOfTroves: string[], price: Decim
     return;
   }
 
-  let currentTrove = await liquity.getTrove(listOfTroves[0]);
-  console.log(`   ${troveToString(listOfTroves[0], currentTrove, price)}`);
+  const totalRedistributed = await liquity.getTotalRedistributed();
+  let currentTrove = await liquity.getTroveWithoutRewards(listOfTroves[0]);
+  console.log(`   ${troveToString(listOfTroves[0], currentTrove, totalRedistributed, price)}`);
 
   for (let i = 1; i < listOfTroves.length; ++i) {
-    const nextTrove = await liquity.getTrove(listOfTroves[i]);
+    const nextTrove = await liquity.getTroveWithoutRewards(listOfTroves[i]);
 
     if (
       nextTrove
-        .collateralRatioAfterRewards(price)
-        .gt(currentTrove.collateralRatioAfterRewards(price))
+        .applyRewards(totalRedistributed)
+        .collateralRatio(price)
+        .gt(currentTrove.applyRewards(totalRedistributed).collateralRatio(price))
     ) {
-      console.log(`!! ${troveToString(listOfTroves[i], nextTrove, price)}`.red);
+      console.log(`!! ${troveToString(listOfTroves[i], nextTrove, totalRedistributed, price)}`.red);
     } else {
-      console.log(`   ${troveToString(listOfTroves[i], nextTrove, price)}`);
+      console.log(`   ${troveToString(listOfTroves[i], nextTrove, totalRedistributed, price)}`);
     }
 
     currentTrove = nextTrove;
@@ -352,7 +365,7 @@ task(
               total = await liquity.getTotal();
             }
 
-            await funderLiquity.sendQui(liquity.userAddress!, trove.debtAfterReward);
+            await funderLiquity.sendQui(liquity.userAddress!, trove.debt);
 
             console.log(`[${shortenAddress(liquity.userAddress!)}] closeTrove()`);
             await liquity.closeTrove();
@@ -384,11 +397,11 @@ task(
 
     console.log();
     console.log(`Number of Troves: ${numberOfTroves}`);
-    console.log(`Total collateral: ${total.collateralAfterReward}`);
+    console.log(`Total collateral: ${total.collateral}`);
 
     fs.appendFileSync(
       "chaos.csv",
-      `${numberOfTroves},${totalNumberOfLiquidations},${total.collateralAfterReward}\n`
+      `${numberOfTroves},${totalNumberOfLiquidations},${total.collateral}\n`
     );
   }
 );
@@ -413,12 +426,12 @@ task(
     if ((await funderLiquity._getFirstTroveAddress()) !== funderLiquity.userAddress) {
       let funderTrove = await funderLiquity.getTrove();
 
-      if (funderTrove.debtAfterReward.isZero) {
+      if (funderTrove.debt.isZero) {
         await funderLiquity.borrowQui(funderTrove, 1, priceBefore);
         funderTrove = await funderLiquity.getTrove();
       }
 
-      await funderLiquity.repayQui(funderTrove, funderTrove.debtAfterReward, priceBefore);
+      await funderLiquity.repayQui(funderTrove, funderTrove.debt, priceBefore);
     }
 
     if ((await funderLiquity._getFirstTroveAddress()) !== funderLiquity.userAddress) {
@@ -446,11 +459,8 @@ task(
     const funderTrove = await funderLiquity.getTrove();
     const total = await funderLiquity.getTotal();
 
-    const collateralDifference = Difference.between(
-      total.collateralAfterReward,
-      funderTrove.collateralAfterReward
-    );
-    const debtDifference = Difference.between(total.debtAfterReward, funderTrove.debtAfterReward);
+    const collateralDifference = Difference.between(total.collateral, funderTrove.collateral);
+    const debtDifference = Difference.between(total.debt, funderTrove.debt);
 
     console.log();
     console.log("Discrepancies:");
@@ -461,7 +471,7 @@ task(
       "chaos.csv",
       `${numberOfTroves},` +
         `${initialNumberOfTroves.sub(1)},` +
-        `${total.collateralAfterReward},` +
+        `${total.collateral},` +
         `${collateralDifference.absoluteValue?.bigNumber},` +
         `${debtDifference.absoluteValue?.bigNumber}\n`
     );

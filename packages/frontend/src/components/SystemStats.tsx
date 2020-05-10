@@ -23,8 +23,8 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
   deploymentDate
 }) => {
   const quiInStabilityPoolPct =
-    total.debtAfterReward.nonZero && new Percent(quiInStabilityPool.div(total.debtAfterReward));
-  const totalCollateralRatioPct = new Percent(total.collateralRatioAfterRewards(price));
+    total.debt.nonZero && new Percent(quiInStabilityPool.div(total.debt));
+  const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
 
   return (
     <Card mt={4} p={3} bg="lavender">
@@ -32,7 +32,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
         System
       </Heading>
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
-      <Text>LQTY in circulation: {total.debtAfterReward.shorten()}</Text>
+      <Text>LQTY in circulation: {total.debt.shorten()}</Text>
       {quiInStabilityPoolPct && (
         <Text>Fraction of LQTY in Stability Pool: {quiInStabilityPoolPct.toString(1)}</Text>
       )}

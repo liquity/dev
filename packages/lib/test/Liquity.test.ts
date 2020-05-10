@@ -225,10 +225,8 @@ describe("Liquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: 2,
-          debt: 110,
-          pendingCollateralReward: "0.166043589743589744",
-          pendingDebtReward: 29
+          collateral: "2.166043589743589744",
+          debt: 139
         })
       );
     });
@@ -241,8 +239,7 @@ describe("Liquity", () => {
       expect(trove).to.deep.equal(
         new Trove({
           collateral: "2.223299999999999994",
-          debt: 139,
-          _stake: "2.052867274257567554"
+          debt: 139
         })
       );
 

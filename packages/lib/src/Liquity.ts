@@ -21,10 +21,6 @@ import { connectToContractsViaCdpManager } from "./contracts";
 interface Trovish {
   readonly collateral?: Decimalish;
   readonly debt?: Decimalish;
-  readonly pendingCollateralReward?: Decimalish;
-  readonly pendingDebtReward?: Decimalish;
-
-  readonly _stake?: Decimalish;
 }
 
 const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
@@ -36,83 +32,40 @@ type TroveChange = { property: "collateral" | "debt"; difference: Difference };
 export class Trove {
   readonly collateral: Decimal;
   readonly debt: Decimal;
-  readonly pendingCollateralReward: Decimal;
-  readonly pendingDebtReward: Decimal;
 
-  readonly _stake: Decimal;
+  constructor({ collateral = 0, debt = 0 }: Trovish = {}) {
+    this.collateral = Decimal.from(collateral);
+    this.debt = Decimal.from(debt);
+  }
 
   get isEmpty() {
-    return (
-      this.collateral.isZero &&
-      this.debt.isZero &&
-      this.pendingCollateralReward.isZero &&
-      this.pendingDebtReward.isZero
-    );
-  }
-
-  get collateralAfterReward() {
-    return this.collateral.add(this.pendingCollateralReward);
-  }
-
-  get debtAfterReward() {
-    return this.debt.add(this.pendingDebtReward);
+    return this.collateral.isZero && this.debt.isZero;
   }
 
   collateralRatio(price: Decimalish): Decimal {
     return calculateCollateralRatio(this.collateral, this.debt, price);
   }
 
-  collateralRatioAfterRewards(price: Decimalish): Decimal {
-    return calculateCollateralRatio(this.collateralAfterReward, this.debtAfterReward, price);
-  }
-
   collateralRatioIsBelowMinimum(price: Decimalish) {
-    return this.collateralRatioAfterRewards(price).lt(Liquity.MINIMUM_COLLATERAL_RATIO);
+    return this.collateralRatio(price).lt(Liquity.MINIMUM_COLLATERAL_RATIO);
   }
 
   collateralRatioIsBelowCritical(price: Decimalish) {
-    return this.collateralRatioAfterRewards(price).lt(Liquity.CRITICAL_COLLATERAL_RATIO);
-  }
-
-  constructor({
-    collateral = 0,
-    debt = 0,
-    pendingCollateralReward = 0,
-    pendingDebtReward = 0,
-    _stake = collateral
-  }: Trovish = {}) {
-    this.collateral = Decimal.from(collateral);
-    this.debt = Decimal.from(debt);
-    this.pendingCollateralReward = Decimal.from(pendingCollateralReward);
-    this.pendingDebtReward = Decimal.from(pendingDebtReward);
-    this._stake = Decimal.from(_stake);
+    return this.collateralRatio(price).lt(Liquity.CRITICAL_COLLATERAL_RATIO);
   }
 
   toString() {
-    return (
-      "{\n" +
-      `  collateral: ${this.collateral},\n` +
-      `  debt: ${this.debt},\n` +
-      `  pendingCollateralReward: ${this.pendingCollateralReward},\n` +
-      `  pendingDebtReward: ${this.pendingDebtReward}\n` +
-      "}"
-    );
+    return `{ collateral: ${this.collateral}, debt: ${this.debt} }`;
   }
 
   equals(that: Trove) {
-    return (
-      this.collateral.eq(that.collateral) &&
-      this.debt.eq(that.debt) &&
-      this.pendingCollateralReward.eq(that.pendingCollateralReward) &&
-      this.pendingDebtReward.eq(that.pendingDebtReward) &&
-      this._stake.eq(that._stake)
-    );
+    return this.collateral.eq(that.collateral) && this.debt.eq(that.debt);
   }
 
-  add({ collateral = 0, debt = 0, pendingCollateralReward = 0, pendingDebtReward = 0 }: Trovish) {
+  add({ collateral = 0, debt = 0 }: Trovish) {
     return new Trove({
-      collateral: this.collateralAfterReward.add(collateral).add(pendingCollateralReward),
-      debt: this.debtAfterReward.add(debt).add(pendingDebtReward)
+      collateral: this.collateral.add(collateral),
+      debt: this.debt.add(debt)
     });
   }
 
@@ -124,15 +77,10 @@ export class Trove {
     return this.add({ debt });
   }
 
-  subtract({
-    collateral = 0,
-    debt = 0,
-    pendingCollateralReward = 0,
-    pendingDebtReward = 0
-  }: Trovish) {
+  subtract({ collateral = 0, debt = 0 }: Trovish) {
     return new Trove({
-      collateral: this.collateralAfterReward.sub(collateral).sub(pendingCollateralReward),
-      debt: this.debtAfterReward.sub(debt).sub(pendingDebtReward)
+      collateral: this.collateral.sub(collateral),
+      debt: this.debt.sub(debt)
     });
   }
 
@@ -144,31 +92,38 @@ export class Trove {
     return this.subtract({ debt });
   }
 
+  multiply(multiplier: Decimalish) {
+    return new Trove({
+      collateral: this.collateral.mul(multiplier),
+      debt: this.debt.mul(multiplier)
+    });
+  }
+
   setCollateral(collateral: Decimalish) {
     return new Trove({
       collateral,
-      debt: this.debtAfterReward
+      debt: this.debt
     });
   }
 
   setDebt(debt: Decimalish) {
     return new Trove({
-      collateral: this.collateralAfterReward,
+      collateral: this.collateral,
       debt
     });
   }
 
-  whatChanged(that: Trove): TroveChange | undefined {
-    if (!that.collateralAfterReward.eq(this.collateralAfterReward)) {
+  whatChanged({ collateral, debt }: Trove): TroveChange | undefined {
+    if (!collateral.eq(this.collateral)) {
       return {
         property: "collateral",
-        difference: Difference.between(that.collateralAfterReward, this.collateralAfterReward)
+        difference: Difference.between(collateral, this.collateral)
       };
     }
-    if (!that.debtAfterReward.eq(this.debtAfterReward)) {
+    if (!debt.eq(this.debt)) {
       return {
         property: "debt",
-        difference: Difference.between(that.debtAfterReward, this.debtAfterReward)
+        difference: Difference.between(debt, this.debt)
       };
     }
   }
@@ -179,7 +134,7 @@ export class Trove {
         if (difference.positive) {
           return this.addCollateral(difference.absoluteValue!);
         } else if (difference.negative) {
-          if (difference.absoluteValue!.lt(this.collateralAfterReward)) {
+          if (difference.absoluteValue!.lt(this.collateral)) {
             return this.subtractCollateral(difference.absoluteValue!);
           } else {
             return this.setCollateral(0);
@@ -189,13 +144,49 @@ export class Trove {
         if (difference.positive) {
           return this.addDebt(difference.absoluteValue!);
         } else if (difference.negative) {
-          if (difference.absoluteValue!.lt(this.debtAfterReward)) {
+          if (difference.absoluteValue!.lt(this.collateral)) {
             return this.subtractDebt(difference.absoluteValue!);
           } else {
             return this.setDebt(0);
           }
         }
     }
+  }
+}
+
+interface TrovishWithPendingRewards extends Trovish {
+  readonly stake?: Decimalish;
+  readonly snapshotOfTotalRedistributed?: Trovish;
+}
+
+export class TroveWithPendingRewards extends Trove {
+  readonly stake: Decimal;
+  readonly snapshotOfTotalRedistributed: Trove;
+
+  constructor({
+    collateral = 0,
+    debt = 0,
+    stake = 0,
+    snapshotOfTotalRedistributed
+  }: TrovishWithPendingRewards = {}) {
+    super({ collateral, debt });
+
+    this.stake = Decimal.from(stake);
+    this.snapshotOfTotalRedistributed = new Trove(snapshotOfTotalRedistributed);
+  }
+
+  applyRewards(totalRedistributed: Trove) {
+    return this.add(
+      totalRedistributed.subtract(this.snapshotOfTotalRedistributed).multiply(this.stake)
+    );
+  }
+
+  equals(that: TroveWithPendingRewards) {
+    return (
+      super.equals(that) &&
+      this.stake.eq(that.stake) &&
+      this.snapshotOfTotalRedistributed.equals(that.snapshotOfTotalRedistributed)
+    );
   }
 }
 
@@ -316,6 +307,13 @@ const debounce = (listener: (latestBlock: number) => void) => {
 
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 
+const computePendingReward = (snapshotValue: Decimal, currentValue: Decimal, stake: Decimal) => {
+  const rewardPerStake = currentValue.sub(snapshotValue);
+  const reward = rewardPerStake.mul(stake);
+
+  return reward;
+};
+
 export class Liquity {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
@@ -374,76 +372,87 @@ export class Liquity {
     return this.userAddress;
   }
 
-  private static computePendingReward(
-    snapshotValue: Decimal,
-    currentValue: Decimal,
-    stake: Decimal
-  ) {
-    const rewardPerStake = currentValue.sub(snapshotValue);
-    const reward = rewardPerStake.mul(stake);
-
-    return reward;
-  }
-
-  async getTrove(address = this.requireAddress(), overrides?: LiquityCallOverrides): Promise<Trove> {
-    const [cdp, snapshot, L_ETH, L_CLVDebt] = await Promise.all([
-      this.cdpManager.CDPs(address, { ...overrides }),
-      this.cdpManager.rewardSnapshots(address, { ...overrides }),
+  async getTotalRedistributed(overrides?: LiquityCallOverrides) {
+    const [collateral, debt] = await Promise.all([
       this.cdpManager.L_ETH({ ...overrides }).then(decimalify),
       this.cdpManager.L_CLVDebt({ ...overrides }).then(decimalify)
     ]);
 
-    if (cdp.status !== CDPStatus.active) {
-      return new Trove();
-    }
-
-    const snapshotETH = new Decimal(snapshot.ETH);
-    const snapshotCLVDebt = new Decimal(snapshot.CLVDebt);
-
-    const stake = new Decimal(cdp.stake);
-    const pendingCollateralReward = Liquity.computePendingReward(snapshotETH, L_ETH, stake);
-    const pendingDebtReward = Liquity.computePendingReward(snapshotCLVDebt, L_CLVDebt, stake);
-
-    return new Trove({
-      collateral: new Decimal(cdp.coll),
-      debt: new Decimal(cdp.debt),
-      pendingCollateralReward,
-      pendingDebtReward,
-      _stake: new Decimal(cdp.stake)
-    });
+    return new Trove({ collateral, debt });
   }
 
-  watchTrove(onTroveChanged: (trove: Trove) => void, address = this.requireAddress()) {
-    const { CDPCreated, CDPUpdated } = this.cdpManager.filters;
-    const { EtherSent } = this.activePool.filters;
+  watchTotalRedistributed(onTotalRedistributedChanged: (totalRedistributed: Trove) => void) {
+    const etherSent = this.activePool.filters.EtherSent();
 
-    const cdpEventFilters = [CDPCreated(address, null), CDPUpdated(address, null, null, null)];
-    const etherSent = EtherSent(null, null);
-
-    const troveListener = debounce((blockTag: number) => {
-      this.getTrove(address, { blockTag }).then(onTroveChanged);
+    const redistributionListener = debounce((blockTag: number) => {
+      this.getTotalRedistributed({ blockTag }).then(onTotalRedistributedChanged);
     });
 
     const etherSentListener = (toAddress: string, _amount: BigNumber, event: Event) => {
       if (toAddress === this.defaultPool.address) {
-        // Liquidation while Stability Pool is empty
-        // There might be new rewards in the Trove
-        troveListener(event);
+        redistributionListener(event);
       }
     };
 
-    cdpEventFilters.forEach(filter => this.cdpManager.on(filter, troveListener));
     this.activePool.on(etherSent, etherSentListener);
 
     return () => {
-      cdpEventFilters.forEach(filter => this.cdpManager.removeListener(filter, troveListener));
       this.activePool.removeListener(etherSent, etherSentListener);
     };
   }
 
+  async getTroveWithoutRewards(address = this.requireAddress(), overrides?: LiquityCallOverrides) {
+    const [cdp, snapshot] = await Promise.all([
+      this.cdpManager.CDPs(address, { ...overrides }),
+      this.cdpManager.rewardSnapshots(address, { ...overrides })
+    ]);
+
+    if (cdp.status === CDPStatus.active) {
+      return new TroveWithPendingRewards({
+        collateral: new Decimal(cdp.coll),
+        debt: new Decimal(cdp.debt),
+        stake: new Decimal(cdp.stake),
+
+        snapshotOfTotalRedistributed: {
+          collateral: new Decimal(snapshot.ETH),
+          debt: new Decimal(snapshot.CLVDebt)
+        }
+      });
+    } else {
+      return new TroveWithPendingRewards();
+    }
+  }
+
+  watchTroveWithoutRewards(
+    onTroveChanged: (trove: TroveWithPendingRewards) => void,
+    address = this.requireAddress()
+  ) {
+    const { CDPCreated, CDPUpdated } = this.cdpManager.filters;
+    const cdpEventFilters = [CDPCreated(address), CDPUpdated(address)];
+
+    const troveListener = debounce((blockTag: number) => {
+      this.getTroveWithoutRewards(address, { blockTag }).then(onTroveChanged);
+    });
+
+    cdpEventFilters.forEach(filter => this.cdpManager.on(filter, troveListener));
+
+    return () => {
+      cdpEventFilters.forEach(filter => this.cdpManager.removeListener(filter, troveListener));
+    };
+  }
+
+  async getTrove(address = this.requireAddress(), overrides?: LiquityCallOverrides) {
+    const [trove, totalRedistributed] = await Promise.all([
+      this.getTroveWithoutRewards(address, { ...overrides }),
+      this.getTotalRedistributed({ ...overrides })
+    ] as const);
+
+    return trove.applyRewards(totalRedistributed);
+  }
+
   async _findHintForCollateralRatio(collateralRatio: Decimal, price: Decimal, address: string) {
     if (!Liquity.useHint) {
-      return AddressZero;
+      return address;
     }
 
     const numberOfTroves = (await this.getNumberOfTroves()).toNumber();
@@ -470,9 +479,11 @@ export class Liquity {
   }
 
   _findHint(trove: Trove, price: Decimal, address: string) {
-    const collateralRatio = trove.collateralRatioAfterRewards(price);
+    if (trove instanceof TroveWithPendingRewards) {
+      throw new Error("Rewards must be applied to this Trove");
+    }
 
-    return this._findHintForCollateralRatio(collateralRatio, price, address);
+    return this._findHintForCollateralRatio(trove.collateralRatio(price), price, address);
   }
 
   async openTrove(trove: Trove, price: Decimalish, overrides?: LiquityTransactionOverrides) {
@@ -613,10 +624,8 @@ export class Liquity {
     );
 
     return new Trove({
-      collateral: activeCollateral,
-      debt: activeDebt,
-      pendingCollateralReward: liquidatedCollateral,
-      pendingDebtReward: closedDebt
+      collateral: activeCollateral.add(liquidatedCollateral),
+      debt: activeDebt.add(closedDebt)
     });
   }
 
@@ -657,8 +666,8 @@ export class Liquity {
     const snapshotETH = new Decimal(snapshot.ETH);
     const snapshotCLV = new Decimal(snapshot.CLV);
 
-    const pendingCollateralGain = Liquity.computePendingReward(snapshotETH, S_ETH, deposit);
-    const pendingDepositLoss = Liquity.computePendingReward(snapshotCLV, S_CLV, deposit);
+    const pendingCollateralGain = computePendingReward(snapshotETH, S_ETH, deposit);
+    const pendingDepositLoss = computePendingReward(snapshotCLV, S_CLV, deposit);
 
     return new StabilityDeposit({ deposit, pendingCollateralGain, pendingDepositLoss });
   }
@@ -823,13 +832,10 @@ export class Liquity {
       throw new Error("numberOfTroves must be at least 1");
     }
 
-    const troves: Promise<[string, Trove, StabilityDeposit]>[] = [];
-
     const getTroveWithAddress = (address: string) =>
-      Promise.all<Trove, StabilityDeposit>([
-        this.getTrove(address),
-        this.getStabilityDeposit(address)
-      ]).then(([trove, deposit]): [string, Trove, StabilityDeposit] => [address, trove, deposit]);
+      Promise.all([address, this.getTrove(address), this.getStabilityDeposit(address)]);
+
+    const troves: ReturnType<typeof getTroveWithAddress>[] = [];
 
     let i = 0;
     let currentAddress = await this.sortedCDPs.getLast();

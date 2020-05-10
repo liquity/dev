@@ -26,11 +26,15 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
         quiBalance: liquity.getQuiBalance(account, { blockTag }),
         price: liquity.getPrice({ blockTag }),
         numberOfTroves: liquity.getNumberOfTroves({ blockTag }),
-        trove: liquity.getTrove(account, { blockTag }),
+        troveWithoutRewards: liquity.getTroveWithoutRewards(account, { blockTag }),
+        totalRedistributed: liquity.getTotalRedistributed({ blockTag }),
         deposit: liquity.getStabilityDeposit(account, { blockTag }),
         total: liquity.getTotal({ blockTag }),
         quiInStabilityPool: liquity.getQuiInStabilityPool({ blockTag })
-      }),
+      }).then(store => ({
+        trove: store.troveWithoutRewards.applyRewards(store.totalRedistributed),
+        ...store
+      })),
     [provider, account, liquity]
   );
 

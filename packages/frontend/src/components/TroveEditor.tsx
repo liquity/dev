@@ -8,45 +8,36 @@ import { LoadingOverlay } from "./LoadingOverlay";
 
 type TroveEditorProps = {
   title: string;
-  originalTrove: Trove;
-  editedTrove: Trove;
-  setEditedTrove: (trove: Trove) => void;
+  original: Trove;
+  edited: Trove;
+  setEdited: (trove: Trove) => void;
   changePending: boolean;
   price: Decimal;
 };
 
 export const TroveEditor: React.FC<TroveEditorProps> = ({
   title,
-  originalTrove,
-  editedTrove,
-  setEditedTrove,
+  original,
+  edited,
+  setEdited,
   changePending,
   price
 }) => {
   const editingState = useState<string>();
 
-  const pendingCollateralChange = Difference.between(
-    editedTrove.collateralAfterReward,
-    originalTrove.collateralAfterReward.nonZero
-  );
-  const pendingDebtChange = Difference.between(
-    editedTrove.debtAfterReward,
-    originalTrove.debtAfterReward.nonZero
-  );
+  const collateralChange = Difference.between(edited.collateral, original.collateral.nonZero);
+  const debtChange = Difference.between(edited.debt, original.debt.nonZero);
 
-  const collateralRatioAfterRewards =
-    (editedTrove.collateralAfterReward.nonZero || editedTrove.debtAfterReward.nonZero) &&
-    editedTrove.collateralRatioAfterRewards(price);
-  const collateralRatioPctAfterRewards = new Percent(
-    collateralRatioAfterRewards || { toString: () => "N/A" }
+  const collateralRatio =
+    (edited.collateral.nonZero || edited.debt.nonZero) && edited.collateralRatio(price);
+  const collateralRatioPct = new Percent(collateralRatio || { toString: () => "N/A" });
+  const collateralRatioChange = Difference.between(
+    edited.collateralRatio(price),
+    original.collateralRatio(price).finite
   );
-  const pendingCollateralRatioChange = Difference.between(
-    editedTrove.collateralRatioAfterRewards(price),
-    originalTrove.collateralRatioAfterRewards(price).finite
-  );
-  const pendingCollateralRatioChangePct = new Percent(pendingCollateralRatioChange);
+  const collateralRatioChangePct = new Percent(collateralRatioChange);
 
-  const edited = originalTrove.whatChanged(editedTrove) !== undefined;
+  const isChanged = original.whatChanged(edited) !== undefined;
 
   return (
     <Card p={0}>
@@ -62,14 +53,14 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
       >
         {title}
         <Box width="40px" height="40px">
-          {edited && !changePending && (
+          {isChanged && !changePending && (
             <Link
               color="text"
               hoverColor="danger"
               activeColor="danger"
               display="flex"
               alignItems="center"
-              onClick={() => setEditedTrove(originalTrove)}
+              onClick={() => setEdited(original)}
             >
               <Icon name="Replay" size="40px" />
             </Link>
@@ -86,50 +77,50 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
       <Box p={2}>
         <EditableRow
           label="Collateral"
-          amount={editedTrove.collateralAfterReward.prettify(4)}
-          pendingAmount={pendingCollateralChange.nonZero?.prettify()}
-          pendingColor={pendingCollateralChange.positive ? "success" : "danger"}
+          amount={edited.collateral.prettify(4)}
+          pendingAmount={collateralChange.nonZero?.prettify()}
+          pendingColor={collateralChange.positive ? "success" : "danger"}
           unit="ETH"
           {...{ editingState }}
-          editedAmount={editedTrove.collateralAfterReward.toString(4)}
+          editedAmount={edited.collateral.toString(4)}
           setEditedAmount={(editedCollateral: string) =>
-            setEditedTrove(editedTrove.setCollateral(editedCollateral))
+            setEdited(edited.setCollateral(editedCollateral))
           }
         ></EditableRow>
 
         <EditableRow
           label="Debt"
-          amount={editedTrove.debtAfterReward.prettify()}
-          pendingAmount={pendingDebtChange.nonZero?.prettify()}
-          pendingColor={pendingDebtChange.positive ? "danger" : "success"}
+          amount={edited.debt.prettify()}
+          pendingAmount={debtChange.nonZero?.prettify()}
+          pendingColor={debtChange.positive ? "danger" : "success"}
           unit="LQTY"
           {...{ editingState }}
-          editedAmount={editedTrove.debtAfterReward.toString(2)}
-          setEditedAmount={(editedDebt: string) => setEditedTrove(editedTrove.setDebt(editedDebt))}
+          editedAmount={edited.debt.toString(2)}
+          setEditedAmount={(editedDebt: string) => setEdited(edited.setDebt(editedDebt))}
         />
 
         <StaticRow
           label="Collateral ratio"
           amount={
-            collateralRatioAfterRewards?.gt(10)
-              ? "× " + collateralRatioAfterRewards.shorten()
-              : collateralRatioPctAfterRewards.prettify()
+            collateralRatio?.gt(10)
+              ? "× " + collateralRatio.shorten()
+              : collateralRatioPct.prettify()
           }
           color={
-            collateralRatioAfterRewards?.gt(Liquity.CRITICAL_COLLATERAL_RATIO)
+            collateralRatio?.gt(Liquity.CRITICAL_COLLATERAL_RATIO)
               ? "success"
-              : collateralRatioAfterRewards?.gt(Liquity.MINIMUM_COLLATERAL_RATIO)
+              : collateralRatio?.gt(Liquity.MINIMUM_COLLATERAL_RATIO)
               ? "warning"
               : "danger"
           }
           pendingAmount={
-            pendingCollateralRatioChange.positive?.absoluteValue?.gt(10)
+            collateralRatioChange.positive?.absoluteValue?.gt(10)
               ? "++"
-              : pendingCollateralRatioChange.negative?.absoluteValue?.gt(10)
+              : collateralRatioChange.negative?.absoluteValue?.gt(10)
               ? "--"
-              : pendingCollateralRatioChangePct.nonZeroish(2)?.prettify()
+              : collateralRatioChangePct.nonZeroish(2)?.prettify()
           }
-          pendingColor={pendingCollateralRatioChange.positive ? "success" : "danger"}
+          pendingColor={collateralRatioChange.positive ? "success" : "danger"}
         />
       </Box>
     </Card>
