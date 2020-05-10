@@ -1,5 +1,6 @@
 const getAddresses = (contracts) => {
   return {
+    borrowerOperations: contracts.borrowerOperations.address,
     priceFeed: contracts.priceFeed.address,
     clvToken: contracts.clvToken.address,
     poolManager: contracts.poolManager.address,
@@ -23,6 +24,7 @@ const setNameRegistry = async (addresses, nameRegistry) => {
   await nameRegistry.registerContract('ActivePool', addresses.activePool)
   await nameRegistry.registerContract('DefaultPool', addresses.defaultPool)
   await nameRegistry.registerContract('FunctionCaller', addresses.functionCaller)
+  await nameRegistry.registerContract('BorrowerOperations', addresses.borrowerOperations)
 }
 
 const getAddressesFromNameRegistry = async (nameRegistry) => {
@@ -35,14 +37,16 @@ const getAddressesFromNameRegistry = async (nameRegistry) => {
   const ActivePool = await nameRegistry.getAddress('ActivePool')
   const DefaultPool = await nameRegistry.getAddress('DefaultPool')
   const FunctionCaller = await nameRegistry.getAddress('FunctionCaller')
+  const BorrowerOperations = await nameRegistry.getAddress('BorrowerOperations')
 
-  return { PoolManager, CLVToken, PriceFeed, SortedCDPs, CDPManager, StabilityPool, ActivePool, DefaultPool, FunctionCaller }
+  return { PoolManager, CLVToken, PriceFeed, SortedCDPs, CDPManager, StabilityPool, ActivePool, DefaultPool, FunctionCaller, BorrowerOperations }
 }
 
 // Connect contracts to their dependencies
 const connectContracts = async (contracts, registeredAddresses) => {
   await contracts.clvToken.setPoolManagerAddress(registeredAddresses.PoolManager)
  
+  await contracts.poolManager.setBorrowerOperations(registeredAddresses.BorrowerOperations)
   await contracts.poolManager.setCDPManagerAddress(registeredAddresses.CDPManager)
   await contracts.poolManager.setCLVToken(registeredAddresses.CLVToken)
   await contracts.poolManager.setPriceFeed(registeredAddresses.PriceFeed)
@@ -69,6 +73,15 @@ const connectContracts = async (contracts, registeredAddresses) => {
   await contracts.cdpManager.setActivePool(registeredAddresses.ActivePool)
   await contracts.cdpManager.setDefaultPool(registeredAddresses.DefaultPool)
   await contracts.cdpManager.setStabilityPool(registeredAddresses.StabilityPool)
+  await contracts.cdpManager.setBorrowerOperations(registeredAddresses.BorrowerOperations)
+
+  // set contracts in BorrowerOperations 
+  await contracts.borrowerOperations.setSortedCDPs(registeredAddresses.SortedCDPs)
+  await contracts.borrowerOperations.setPoolManager(registeredAddresses.PoolManager)
+  await contracts.borrowerOperations.setPriceFeed(registeredAddresses.PriceFeed)
+  await contracts.borrowerOperations.setActivePool(registeredAddresses.ActivePool)
+  await contracts.borrowerOperations.setDefaultPool(registeredAddresses.DefaultPool)
+  await contracts.borrowerOperations.setCDPManager(registeredAddresses.CDPManager)
 
   // set PoolManager addr in the Pools
   await contracts.stabilityPool.setPoolManagerAddress(registeredAddresses.PoolManager)

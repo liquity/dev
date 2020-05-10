@@ -1,5 +1,6 @@
 pragma solidity ^0.5.11;
 
+import "./Interfaces/IBorrowerOperations.sol";
 import './Interfaces/IPool.sol';
 import './Interfaces/IPoolManager.sol';
 import './Interfaces/ICDPManager.sol';
@@ -17,6 +18,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Events ---
 
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
@@ -31,6 +33,9 @@ contract PoolManager is Ownable, IPoolManager {
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
     // --- Connected contract declarations ---
+
+    IBorrowerOperations borrowerOperations;
+    address public borrowerOperationsAddress;
 
     address public cdpManagerAddress;
     ICDPManager cdpManager = ICDPManager(cdpManagerAddress);
@@ -82,6 +87,11 @@ contract PoolManager is Ownable, IPoolManager {
         _;
     }
 
+     modifier onlyBorrowerOperations() {
+        require(_msgSender() == borrowerOperationsAddress, "PoolManager: Caller is not the BorrowerOperations contract");
+        _;
+    }
+
     modifier onlyCDPManagerOrUserIsSender(address _user) {
         require(_msgSender()  == cdpManagerAddress || _user == _msgSender(),
         "PoolManager: Target CDP must be _msgSender(), otherwise caller must be CDPManager");
@@ -97,6 +107,12 @@ contract PoolManager is Ownable, IPoolManager {
     constructor() public {}
 
     // --- Dependency setters ---
+
+    function setBorrowerOperations(address _borrowerOperationsAddress) public onlyOwner {
+        borrowerOperationsAddress = _borrowerOperationsAddress;
+        borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+    }
 
     function setCDPManagerAddress(address _cdpManagerAddress) public onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
@@ -191,7 +207,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
     
     // Add the received ETH to the total active collateral
-    function addColl() public payable onlyCDPManager returns (bool) {
+    function addColl() public payable onlyBorrowerOperations returns (bool) {
         // Send ETH to Active Pool and increase its recorded ETH balance
        (bool success, ) = activePoolAddress.call.value(msg.value)("");
        require (success == true, 'PoolManager: transaction to activePool reverted');
@@ -199,13 +215,13 @@ contract PoolManager is Ownable, IPoolManager {
     }
     
     // Transfer the specified amount of ETH to _account and updates the total active collateral
-    function withdrawColl(address _account, uint _ETH) public onlyCDPManager returns (bool) {
+    function withdrawColl(address _account, uint _ETH) public onlyBorrowerOperations returns (bool) {
         activePool.sendETH(_account, _ETH);
         return true;
     }
     
     // Issue the specified amount of CLV to _account and increases the total active debt
-    function withdrawCLV(address _account, uint _CLV) public onlyCDPManager returns (bool) {
+    function withdrawCLV(address _account, uint _CLV) public onlyBorrowerOperations returns (bool) {
         activePool.increaseCLV(_CLV);  // 9500
         CLV.mint(_account, _CLV);  // 37500
          
@@ -213,7 +229,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
     
     // Burn the specified amount of CLV from _account and decreases the total active debt
-    function repayCLV(address _account, uint _CLV) public onlyCDPManager returns (bool) {
+    function repayCLV(address _account, uint _CLV) public onlyBorrowerOperations returns (bool) {
         activePool.decreaseCLV(_CLV);
         CLV.burn(_account, _CLV);
         return true;
@@ -359,7 +375,7 @@ contract PoolManager is Ownable, IPoolManager {
        
         // Pull ETHShare from StabilityPool, and send to CDP
         stabilityPool.sendETH(address(this), ETHShare); 
-        cdpManager.addColl.value(ETHShare)(_address, _hint); 
+        borrowerOperations.addColl.value(ETHShare)(_address, _hint); 
    
         return (CLVShare, ETHShare); 
     }

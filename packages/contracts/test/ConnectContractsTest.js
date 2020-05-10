@@ -8,6 +8,7 @@ const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
@@ -27,6 +28,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   let stabilityPool
   let defaultPool
   let functionCaller
+  let borrowerOperations
 
   before(async () => {
     priceFeed = await PriceFeed.new()
@@ -39,6 +41,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     stabilityPool = await StabilityPool.new()
     defaultPool = await DefaultPool.new()
     functionCaller = await FunctionCaller.new()
+    borrowerOperations = await BorrowerOperations.new()
 
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
@@ -50,6 +53,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
     FunctionCaller.setAsDeployed(functionCaller)
+    BorrowerOperations.setAsDeployed(borrowerOperations)
 
     const contracts = {
       priceFeed,
@@ -61,7 +65,8 @@ contract('Deployment script - Sets correct contract addresses dependencies after
       activePool,
       stabilityPool,
       defaultPool,
-      functionCaller
+      functionCaller,
+      borrowerOperations
     }
 
     const contractAddresses = getAddresses(contracts)

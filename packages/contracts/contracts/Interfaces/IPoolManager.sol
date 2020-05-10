@@ -3,6 +3,9 @@ pragma solidity ^0.5.11;
 // Common interface for the ETH/CLV pools.
 interface IPoolManager {
      // --- Events ---
+
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
 
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
@@ -26,6 +29,8 @@ interface IPoolManager {
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
     // --- Functions ---
+    function setBorrowerOperations(address _borrowerOperationsAddress) external;
+
     function setCDPManagerAddress(address _cdpManagerAddress) external;
 
     function setPriceFeed(address _priceFeedAddress) external;

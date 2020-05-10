@@ -8,6 +8,8 @@ const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
+
 
 const testHelpers = require("../utils/testHelpers.js")
 const getDifference = testHelpers.getDifference
@@ -31,6 +33,7 @@ contract('CDPManager', async accounts => {
   let stabilityPool;
   let defaultPool;
   let functionCaller;
+  let borrowerOperations;
 
   let numAccounts;
   let price;
@@ -54,11 +57,11 @@ contract('CDPManager', async accounts => {
  const openCDP = async (account, index) => {
    const amountFinney = 2000 + index * 10
    const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-   await cdpManager.addColl(account, account, { from: account, value: coll })
+   await borrowerOperations.addColl(account, account, { from: account, value: coll })
  }
 
  const withdrawCLVfromCDP = async (account) => {
-  await cdpManager.withdrawCLV('200000000000000000000', account, { from: account })
+  await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
  }
 
  // Sequentially add coll and withdraw CLV, 1 account at a time
@@ -71,8 +74,8 @@ contract('CDPManager', async accounts => {
     console.time('makeCDPsInSequence')
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-      await cdpManager.addColl(account, account, { from: account, value: coll })
-      await cdpManager.withdrawCLV('200000000000000000000', account, { from: account })
+      await borrowerOperations.addColl(account, account, { from: account, value: coll })
+      await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
   
       amountFinney += 10
     }
@@ -90,6 +93,7 @@ contract('CDPManager', async accounts => {
     stabilityPool = await StabilityPool.new()
     defaultPool = await DefaultPool.new()
     functionCaller = await FunctionCaller.new()
+    borrowerOperations = await BorrowerOperations.new()
 
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
@@ -101,6 +105,7 @@ contract('CDPManager', async accounts => {
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
     FunctionCaller.setAsDeployed(functionCaller)
+    BorrowerOperations.setAsDeployed(borrowerOperations)
 
     const contracts = {
       priceFeed,
@@ -112,7 +117,8 @@ contract('CDPManager', async accounts => {
       activePool,
       stabilityPool,
       defaultPool,
-      functionCaller
+      functionCaller,
+      borrowerOperations
     }
 
     const contractAddresses = getAddresses(contracts)

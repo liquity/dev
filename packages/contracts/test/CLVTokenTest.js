@@ -8,6 +8,8 @@ const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
+
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const getAddresses = deploymentHelpers.getAddresses
@@ -33,6 +35,7 @@ contract('CLVToken', async accounts => {
   let stabilityPool
   let defaultPool
   let functionCaller
+  let borrowerOperations
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
@@ -46,6 +49,7 @@ contract('CLVToken', async accounts => {
       stabilityPool = await StabilityPool.new()
       defaultPool = await DefaultPool.new()
       functionCaller = await FunctionCaller.new()
+      borrowerOperations = await BorrowerOperations.new()
   
       DefaultPool.setAsDeployed(defaultPool)
       PriceFeed.setAsDeployed(priceFeed)
@@ -57,6 +61,7 @@ contract('CLVToken', async accounts => {
       ActivePool.setAsDeployed(activePool)
       StabilityPool.setAsDeployed(stabilityPool)
       FunctionCaller.setAsDeployed(functionCaller)
+      BorrowerOperations.setAsDeployed(borrowerOperations)
 
       const contracts = { 
                     priceFeed, 
@@ -68,7 +73,8 @@ contract('CLVToken', async accounts => {
                     activePool, 
                     stabilityPool, 
                     defaultPool,
-                    functionCaller 
+                    functionCaller, 
+                    borrowerOperations
                   }
       
       const contractAddresses = getAddresses(contracts)
@@ -78,14 +84,14 @@ contract('CLVToken', async accounts => {
       await connectContracts(contracts, registeredAddresses)
       
       // add CDPs for three test users
-      await cdpManager.addColl(alice, alice, { from: alice, value: _1_Ether })
-      await cdpManager.addColl(bob, bob, { from: bob, value: _1_Ether })
-      await cdpManager.addColl(carol, carol, { from: carol, value: _1_Ether })
+      await borrowerOperations.addColl(alice, alice, { from: alice, value: _1_Ether })
+      await borrowerOperations.addColl(bob, bob, { from: bob, value: _1_Ether })
+      await borrowerOperations.addColl(carol, carol, { from: carol, value: _1_Ether })
 
       // Three test users withdraw CLV
-      await cdpManager.withdrawCLV(150, alice, { from: alice }) 
-      await cdpManager.withdrawCLV(100, alice, { from: bob })
-      await cdpManager.withdrawCLV(50, alice, { from: carol })
+      await borrowerOperations.withdrawCLV(150, alice, { from: alice }) 
+      await borrowerOperations.withdrawCLV(100, alice, { from: bob })
+      await borrowerOperations.withdrawCLV(50, alice, { from: carol })
     })
 
     it('balanceOf: gets the balance of the account', async () => {

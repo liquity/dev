@@ -8,6 +8,7 @@ const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
 const testHelpers = require("../utils/testHelpers.js")
 const getDifference = testHelpers.getDifference
@@ -50,6 +51,7 @@ contract('CDPManager', async accounts => {
   let stabilityPool
   let defaultPool
   let functionCaller
+  let borrowerOperations
 
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()
@@ -62,6 +64,7 @@ contract('CDPManager', async accounts => {
     stabilityPool = await StabilityPool.new()
     defaultPool = await DefaultPool.new()
     functionCaller = await FunctionCaller.new()
+    borrowerOperations = await BorrowerOperations.new()
 
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
@@ -73,6 +76,7 @@ contract('CDPManager', async accounts => {
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
     FunctionCaller.setAsDeployed(functionCaller)
+    BorrowerOperations.setAsDeployed(borrowerOperations)
 
     const contracts = {
       priceFeed,
@@ -84,7 +88,8 @@ contract('CDPManager', async accounts => {
       activePool,
       stabilityPool,
       defaultPool,
-      functionCaller
+      functionCaller,
+      borrowerOperations
     }
 
     const contractAddresses = getAddresses(contracts)
@@ -95,12 +100,12 @@ contract('CDPManager', async accounts => {
 
   it("withdrawCLV(): reverts if withdrawal would pull TCR below CCR", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is 150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // console.log("TCR is" + TCR)
@@ -110,22 +115,21 @@ contract('CDPManager', async accounts => {
 
     // Alice attempts to withdraw 10 CLV, which would reducing TCR below 150%
     try {
-      const txData = await cdpManager.withdrawCLV('10000000000000000000', alice, { from: alice })
+      const txData = await borrowerOperations.withdrawCLV('10000000000000000000', alice, { from: alice })
       assert.fail(txData)
     } catch (err) {
       assert.include(err.message, 'revert')
-      assert.include(err.message, 'a CLV withdrawal that would result in TCR < CCR is not permitted')
     }
   })
 
   it("withdrawCLV(): reverts if system is in recovery mode", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // const TCR = (await poolManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
@@ -136,7 +140,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('150000000000000000000');
 
     try {
-      const txData = await cdpManager.withdrawCLV('200', alice, { from: alice })
+      const txData = await borrowerOperations.withdrawCLV('200', alice, { from: alice })
       assert.fail(txData)
     } catch (err) {
       assert.include(err.message, 'revert')
@@ -147,12 +151,12 @@ contract('CDPManager', async accounts => {
 
   it("openLoan(): reverts if withdrawal would pull TCR below CCR", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -161,22 +165,21 @@ contract('CDPManager', async accounts => {
 
     // Carol attempts to open a loan, which would reduce TCR to below 150%
     try {
-      const txData = await cdpManager.openLoan('180000000000000000000', carol, { from: carol, value: _1_Ether })
+      const txData = await borrowerOperations.openLoan('180000000000000000000', carol, { from: carol, value: _1_Ether })
       assert.fail(txData)
     } catch (err) {
       assert.include(err.message, 'revert')
-      assert.include(err.message, 'opening a loan that would result in a TCR < CCR is not permitted')
     }
   })
 
   it("openLoan(): reverts if system is in recovery mode", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -187,22 +190,21 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice('150000000000000000000');
 
     try {
-      const txData = await cdpManager.openLoan('50000000000000000000', carol, { from: carol, value: _1_Ether })
+      const txData = await borrowerOperations.openLoan('50000000000000000000', carol, { from: carol, value: _1_Ether })
       assert.fail(txData)
     } catch (err) {
       assert.include(err.message, 'revert')
-      assert.include(err.message, 'Debt issuance is not permitted during Recovery Mode')
     }
   })
 
   it("withdrawColl(): reverts if system is in recovery mode", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -214,22 +216,21 @@ contract('CDPManager', async accounts => {
 
     //Alice tries to withdraw collateral during Recovery Mode
     try {
-      const txData = await cdpManager.withdrawColl('1', alice, { from: alice })
+      const txData = await borrowerOperations.withdrawColl('1', alice, { from: alice })
       assert.fail(txData)
     } catch (err) {
       assert.include(err.message, 'revert')
-      assert.include(err.message, 'Collateral withdrawal is not permitted during Recovery Mode')
     }
   })
 
   it("checkRecoveryMode(): Returns true if TCR falls below CCR", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -251,12 +252,12 @@ contract('CDPManager', async accounts => {
 
   it("checkRecoveryMode(): Returns true if TCR stays less than CCR", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     // Alice and Bob withdraw such that the TCR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -269,7 +270,7 @@ contract('CDPManager', async accounts => {
     const recoveryMode_Before = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_Before)
 
-    await cdpManager.addColl(alice, alice, { from: alice, value: '1' })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: '1' })
 
     const recoveryMode_After = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_After)
@@ -277,17 +278,17 @@ contract('CDPManager', async accounts => {
 
   it("checkRecoveryMode(): returns false if TCR stays above CCR", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _10_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
     
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     // --- TEST ---
     const recoveryMode_Before = await cdpManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_Before)
 
-    await cdpManager.withdrawColl(_1_Ether, alice, { from: alice })
+    await borrowerOperations.withdrawColl(_1_Ether, alice, { from: alice })
 
     const recoveryMode_After = await cdpManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_After)
@@ -295,12 +296,12 @@ contract('CDPManager', async accounts => {
 
   it("checkRecoveryMode(): returns false if TCR rises above CCR", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
      //  Alice and Bob withdraw such that the TCR is ~150%
-     await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-     await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -312,7 +313,7 @@ contract('CDPManager', async accounts => {
     const recoveryMode_Before = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_Before)
 
-    await cdpManager.addColl(alice, alice, { from: alice, value: _10_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _10_Ether })
 
     const recoveryMode_After = await cdpManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_After)
@@ -322,12 +323,12 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR < 100%: removes stake and updates totalStakes", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
    //  Alice and Bob withdraw such that the TCR is ~150%
-   await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-   await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+   await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+   await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -363,14 +364,14 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR < 100%: updates system snapshots correctly", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
-    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -404,12 +405,12 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR < 100%: closes the CDP and removes it from the CDP array", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
     const TCR = (await poolManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -445,14 +446,14 @@ contract('CDPManager', async accounts => {
   it("liquidate(), with ICR < 100%: only redistributes to active CDPs - no offset to Stability Pool", async () => {
 
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is 150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', bob, { from: bob })
-    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     // Alice deposits to SP
     await poolManager.provideToSP('400000000000000000000', { from: alice })
@@ -488,11 +489,11 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with 100 < ICR < 110%: removes stake and updates totalStakes", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _21_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _21_Ether })
 
     //  Bob withdraws 2000 CLV, bringing his ICR to 210%
-    await cdpManager.withdrawCLV('2000000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('2000000000000000000000', bob, { from: bob })
 
     // Total TCR = 24*200/2000 = 240%
     const TCR = (await poolManager.getTCR()).toString()
@@ -528,16 +529,16 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with 100% < ICR < 110%: updates system snapshots correctly", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _21_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _21_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Dennis withdraw such that their ICR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     //  Bob withdraws 2000 CLV, bringing his ICR to 210%
-    await cdpManager.withdrawCLV('2000000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('2000000000000000000000', bob, { from: bob })
 
     const totalStakesSnaphot_1 = (await cdpManager.totalStakesSnapshot()).toString()
     const totalCollateralSnapshot_1 = (await cdpManager.totalCollateralSnapshot()).toString()
@@ -588,11 +589,11 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with 100% < ICR < 110%: closes the CDP and removes it from the CDP array", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _21_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _21_Ether })
 
     //  Bob withdraws 2000 CLV, bringing his ICR to 210%
-    await cdpManager.withdrawCLV('2000000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('2000000000000000000000', bob, { from: bob })
 
     const bob_CDPStatus_Before = (await cdpManager.CDPs(bob))[3]
     const bob_CDP_isInSortedList_Before = await sortedCDPs.contains(bob)
@@ -625,19 +626,19 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with 100% < ICR < 110%: offsets as much debt as possible with the Stability Pool, then redistributes the remainder coll and debt", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _3_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _21_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _21_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
 
      //  Alice and Dennis withdraw such that the TCR is ~150%
-    await cdpManager.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('400000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
     // Alice deposits 400CLV to the Stability Pool
     await poolManager.provideToSP('400000000000000000000', { from: alice })
 
     // Bob withdraws 2000 CLV, bringing his ICR to 210%
-    await cdpManager.withdrawCLV('2000000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('2000000000000000000000', bob, { from: bob })
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
@@ -708,15 +709,15 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool is empty: does nothing", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _2_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _2_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     //  Alice and Dennis withdraw 150 CLV, resulting in ICRs of 266%. 
-    await cdpManager.withdrawCLV('150000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('150000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     //Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
@@ -770,15 +771,15 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV > liquidated debt: offsets the loan entirely with the pool", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _20_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
 
     // Alice deposits all 1500 CLV in the Stability Pool
     await poolManager.provideToSP('1500000000000000000000', { from: alice })
@@ -817,15 +818,15 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV > liquidated debt: removes stake and updates totalStakes", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _20_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
 
     // Alice deposits all 1500 CLV in the Stability Pool
     await poolManager.provideToSP('1500000000000000000000', { from: alice })
@@ -857,15 +858,15 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV > liquidated debt: updates system snapshots", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _20_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
 
     // Alice deposits all 1500 CLV in the Stability Pool
     await poolManager.provideToSP('1500000000000000000000', { from: alice })
@@ -898,15 +899,15 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV > liquidated debt: closes the CDP", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _20_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
 
     // Alice deposits all 1500 CLV in the Stability Pool
     await poolManager.provideToSP('1500000000000000000000', { from: alice })
@@ -940,15 +941,15 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: CDP remains active", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _20_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP('100000000000000000000', { from: alice })
@@ -982,15 +983,15 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: updates loan coll, debt and stake, and system totalStakes", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _20_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP('100000000000000000000', { from: alice })
@@ -1035,15 +1036,15 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: updates system shapshots", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _20_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP('100000000000000000000', { from: alice })
@@ -1078,15 +1079,15 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: updates system shapshots", async () => {
     // --- SETUP ---
-    await cdpManager.addColl(alice, alice, { from: alice, value: _20_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await cdpManager.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await cdpManager.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
     // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP('100000000000000000000', { from: alice })
@@ -1129,24 +1130,24 @@ contract('CDPManager', async accounts => {
     // make 8 CDPs accordingly
     // --- SETUP ---
 
-    await cdpManager.addColl(alice, alice, { from: alice, value: _25_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3pt5_Ether })
-    await cdpManager.addColl(carol, carol, { from: carol, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
-    await cdpManager.addColl(elisa, elisa, { from: elisa, value: _3_Ether })
-    await cdpManager.addColl(freddy, freddy, { from: freddy, value: _3_Ether })
-    await cdpManager.addColl(greta, greta, { from: greta, value: _1_Ether })
-    await cdpManager.addColl(harry, harry, { from: harry, value: _1_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _25_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3pt5_Ether })
+    await borrowerOperations.addColl(carol, carol, { from: carol, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
+    await borrowerOperations.addColl(elisa, elisa, { from: elisa, value: _3_Ether })
+    await borrowerOperations.addColl(freddy, freddy, { from: freddy, value: _3_Ether })
+    await borrowerOperations.addColl(greta, greta, { from: greta, value: _1_Ether })
+    await borrowerOperations.addColl(harry, harry, { from: harry, value: _1_Ether })
 
     // Everyone withdraws some CLV from their CDP, resulting in different ICRs
-    await cdpManager.withdrawCLV('1400000000000000000000', alice, { from: alice })  // 1400 CLV -> ICR = 400%
-    await cdpManager.withdrawCLV('200000000000000000000', bob, { from: bob }) //  200 CLV -> ICR = 350%
-    await cdpManager.withdrawCLV('210000000000000000000', carol, { from: carol }) // 210 CLV -> ICR = 286%
-    await cdpManager.withdrawCLV('220000000000000000000', dennis, { from: dennis }) // 220 CLV -> ICR = 273%
-    await cdpManager.withdrawCLV('230000000000000000000', elisa, { from: elisa }) // 230 CLV -> ICR = 261%
-    await cdpManager.withdrawCLV('240000000000000000000', freddy, { from: freddy }) // 240 CLV -> ICR = 250%
-    await cdpManager.withdrawCLV('85000000000000000000', greta, { from: greta }) // 85 CLV -> ICR = 235%
-    await cdpManager.withdrawCLV('90000000000000000000', harry, { from: harry }) // 90 CLV ->  ICR = 222%
+    await borrowerOperations.withdrawCLV('1400000000000000000000', alice, { from: alice })  // 1400 CLV -> ICR = 400%
+    await borrowerOperations.withdrawCLV('200000000000000000000', bob, { from: bob }) //  200 CLV -> ICR = 350%
+    await borrowerOperations.withdrawCLV('210000000000000000000', carol, { from: carol }) // 210 CLV -> ICR = 286%
+    await borrowerOperations.withdrawCLV('220000000000000000000', dennis, { from: dennis }) // 220 CLV -> ICR = 273%
+    await borrowerOperations.withdrawCLV('230000000000000000000', elisa, { from: elisa }) // 230 CLV -> ICR = 261%
+    await borrowerOperations.withdrawCLV('240000000000000000000', freddy, { from: freddy }) // 240 CLV -> ICR = 250%
+    await borrowerOperations.withdrawCLV('85000000000000000000', greta, { from: greta }) // 85 CLV -> ICR = 235%
+    await borrowerOperations.withdrawCLV('90000000000000000000', harry, { from: harry }) // 90 CLV ->  ICR = 222%
 
     // Alice deposits 1400 CLV to Stability Pool
     await poolManager.provideToSP('1400000000000000000000', { from: alice })
@@ -1264,20 +1265,20 @@ contract('CDPManager', async accounts => {
     // make 6 CDPs accordingly
     // --- SETUP ---
 
-    await cdpManager.addColl(alice, alice, { from: alice, value: _30_Ether })
-    await cdpManager.addColl(bob, bob, { from: bob, value: _3_Ether })
-    await cdpManager.addColl(carol, carol, { from: carol, value: _3_Ether })
-    await cdpManager.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
-    await cdpManager.addColl(elisa, elisa, { from: elisa, value: _3_Ether })
-    await cdpManager.addColl(freddy, freddy, { from: freddy, value: _3_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _30_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.addColl(carol, carol, { from: carol, value: _3_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _3_Ether })
+    await borrowerOperations.addColl(elisa, elisa, { from: elisa, value: _3_Ether })
+    await borrowerOperations.addColl(freddy, freddy, { from: freddy, value: _3_Ether })
 
     // Alice withdraws 1400 CLV, the others each withdraw 250 CLV 
-    await cdpManager.withdrawCLV('1400000000000000000000', alice, { from: alice })  // 1400 CLV -> ICR = 429%
-    await cdpManager.withdrawCLV('250000000000000000000', bob, { from: bob }) //  250 CLV -> ICR = 240%
-    await cdpManager.withdrawCLV('250000000000000000000', carol, { from: carol }) // 250 CLV -> ICR = 240%
-    await cdpManager.withdrawCLV('250000000000000000000', dennis, { from: dennis }) // 250 CLV -> ICR = 240%
-    await cdpManager.withdrawCLV('250000000000000000000', elisa, { from: elisa }) // 250 CLV -> ICR = 240%
-    await cdpManager.withdrawCLV('250000000000000000000', freddy, { from: freddy }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('1400000000000000000000', alice, { from: alice })  // 1400 CLV -> ICR = 429%
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob }) //  250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('250000000000000000000', carol, { from: carol }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('250000000000000000000', dennis, { from: dennis }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('250000000000000000000', elisa, { from: elisa }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('250000000000000000000', freddy, { from: freddy }) // 250 CLV -> ICR = 240%
 
     // Alice deposits 1400 CLV to Stability Pool
     await poolManager.provideToSP('1400000000000000000000', { from: alice })
