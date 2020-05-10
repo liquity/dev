@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { theme } from "rimble-ui";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
 
-import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import { Liquity } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -29,13 +29,7 @@ const Table = styled.table<SpaceProps & LayoutProps>`
     text-align: left;
   }
 
-  & tr td:nth-child(3),
-  & tr td:nth-child(4),
-  & tr td:nth-child(5) {
-    width: 18%;
-  }
-
-  & tr td:nth-child(7) {
+  & tr td:nth-child(6) {
     width: 0;
   }
 `;
@@ -48,13 +42,15 @@ type RiskiestTrovesProps = {
   price: Decimal;
 };
 
+type Resolved<T> = T extends Promise<infer U> ? U : T;
+
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   liquity,
   numberOfTroves,
   price
 }) => {
   const [loading, setLoading] = useState(true);
-  const [troves, setTroves] = useState<[string, Trove, StabilityDeposit][]>();
+  const [troves, setTroves] = useState<Resolved<ReturnType<typeof liquity.getLastTroves>>>();
   const myTransactionState = useMyTransactionState(/^liquidate-/);
 
   const [reload, setReload] = useState({});
@@ -135,11 +131,6 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                   (ETH)
                 </th>
                 <th>
-                  Stab. Gain
-                  <br />
-                  (ETH)
-                </th>
-                <th>
                   Debt
                   <br />
                   (LQTY)
@@ -154,7 +145,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
             </thead>
             <tbody>
               {troves.map(
-                ([owner, trove, deposit]) =>
+                ([owner, trove]) =>
                   !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
                     <tr key={owner}>
                       <td>
@@ -170,11 +161,6 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                         </CopyToClipboard>
                       </td>
                       <td>{trove.collateral.prettify(4)}</td>
-                      <td>
-                        <Text color={deposit.pendingCollateralGain.gt(0) ? "success" : "text"}>
-                          {deposit.pendingCollateralGain.prettify(4)}
-                        </Text>
-                      </td>
                       <td>{trove.debt.prettify()}</td>
                       <td>
                         {(collateralRatio => (
