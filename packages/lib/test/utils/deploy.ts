@@ -1,21 +1,7 @@
-import Web3 from "web3";
-import { TransactionReceipt } from "web3-eth";
 import { Signer } from "@ethersproject/abstract-signer";
-import { ContractTransaction } from "@ethersproject/contracts";
+import { ContractTransaction, ContractFactory } from "@ethersproject/contracts";
 
 import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "../../src/contracts";
-
-// Bug in web3-eth: getTransactionReceipt is typed wrong. It returns null when the transaction is
-// still pending.
-// https://web3js.readthedocs.io/en/v1.2.0/web3-eth.html#gettransactionreceipt
-declare module "web3-eth" {
-  interface Eth {
-    getTransactionReceipt(
-      hash: string,
-      callback?: (error: Error, transactionReceipt: TransactionReceipt) => void
-    ): Promise<TransactionReceipt | null>;
-  }
-}
 
 let silent = true;
 
@@ -23,33 +9,24 @@ export const setSilent = (s: boolean) => {
   silent = s;
 };
 
-const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
-
-const transactionReceipt = async (web3: Web3, transactionHash: string) => {
-  silent || console.log(`Waiting for transaction ${transactionHash} ...`);
-
-  for (;;) {
-    const receipt = await web3.eth.getTransactionReceipt(transactionHash);
-
-    if (receipt) {
-      return receipt;
-    }
-
-    await sleep(4000);
-  }
-};
-
-const deployContract = async (web3: Web3, artifacts: any, contractName: string) => {
+const deployContract = async (
+  deployer: Signer,
+  getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
+  contractName: string
+) => {
   silent || console.log(`Deploying ${contractName} ...`);
+  const contract = await (await getContractFactory(contractName, deployer)).deploy({
+    // TODO overrides should be put here
+  });
 
-  const contract = await artifacts.require(contractName).new();
-  const receipt = await transactionReceipt(web3, contract.transactionHash);
+  silent || console.log(`Waiting for transaction ${contract.deployTransaction.hash} ...`);
+  const receipt = await contract.deployTransaction.wait();
 
   if (!silent) {
     console.log({
       contractAddress: contract.address,
       blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed
+      gasUsed: receipt.gasUsed.toNumber()
     });
     console.log();
   }
@@ -57,15 +34,18 @@ const deployContract = async (web3: Web3, artifacts: any, contractName: string) 
   return contract.address;
 };
 
-const deployContracts = async (web3: Web3, artifacts: any): Promise<LiquityContractAddresses> => ({
-  activePool: await deployContract(web3, artifacts, "ActivePool"),
-  cdpManager: await deployContract(web3, artifacts, "CDPManager"),
-  clvToken: await deployContract(web3, artifacts, "CLVToken"),
-  defaultPool: await deployContract(web3, artifacts, "DefaultPool"),
-  poolManager: await deployContract(web3, artifacts, "PoolManager"),
-  priceFeed: await deployContract(web3, artifacts, "PriceFeed"),
-  sortedCDPs: await deployContract(web3, artifacts, "SortedCDPs"),
-  stabilityPool: await deployContract(web3, artifacts, "StabilityPool")
+const deployContracts = async (
+  deployer: Signer,
+  getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>
+): Promise<LiquityContractAddresses> => ({
+  activePool: await deployContract(deployer, getContractFactory, "ActivePool"),
+  cdpManager: await deployContract(deployer, getContractFactory, "CDPManager"),
+  clvToken: await deployContract(deployer, getContractFactory, "CLVToken"),
+  defaultPool: await deployContract(deployer, getContractFactory, "DefaultPool"),
+  poolManager: await deployContract(deployer, getContractFactory, "PoolManager"),
+  priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed"),
+  sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs"),
+  stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool")
 });
 
 const connectContracts = async (
@@ -103,6 +83,7 @@ const connectContracts = async (
     nonce => cdpManager.setPriceFeed(priceFeed.address, { nonce }),
     nonce => cdpManager.setActivePool(activePool.address, { nonce }),
     nonce => cdpManager.setDefaultPool(defaultPool.address, { nonce }),
+    nonce => cdpManager.setStabilityPool(stabilityPool.address, { nonce }),
     nonce => stabilityPool.setPoolManagerAddress(poolManager.address, { nonce }),
     nonce => stabilityPool.setActivePoolAddress(activePool.address, { nonce }),
     nonce => stabilityPool.setDefaultPoolAddress(defaultPool.address, { nonce }),
@@ -121,12 +102,15 @@ const connectContracts = async (
 };
 
 export const deployAndSetupContracts = async (
-  web3: Web3,
-  artifacts: any,
-  deployer: Signer
+  deployer: Signer,
+  getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>
 ): Promise<LiquityContracts> => {
+  if (!deployer.provider) {
+    throw new Error("Signer must have a provider.");
+  }
+
   silent || (console.log("Deploying contracts..."), console.log());
-  const addresses = await deployContracts(web3, artifacts);
+  const addresses = await deployContracts(deployer, getContractFactory);
   const contracts = connectToContracts(addresses, deployer);
   silent || console.log("Connecting contracts...");
   await connectContracts(contracts, deployer);

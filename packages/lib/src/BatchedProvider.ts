@@ -111,12 +111,16 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
   const batchedProvider = class extends Base implements BatchedProvider {
     batchingDelayMs = 10;
 
-    _multiCaller: MultiCaller | undefined;
-    _timeoutId: any = undefined;
+    _multiCaller?: MultiCaller;
+    _timeoutId: any;
     _batched: BatchedCalls = emptyBatch();
 
+    _numberOfBatchedCalls = 0;
+    _numberOfActualCalls = 0;
+    _timeOfLastRatioCheck?: number;
+
     set chainId(chainId: number) {
-      if (this._multiCaller !== undefined) {
+      if (this._multiCaller) {
         throw new Error("can only set chainId once");
       }
 
@@ -134,10 +138,6 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
       this._batched = emptyBatch();
 
       try {
-        if (calls.length > 1) {
-          console.log(`Batching ${calls.length} calls`);
-        }
-
         const results =
           calls.length > 1
             ? await this._multiCaller!.performMultiple(calls, { from, blockTag })
@@ -176,6 +176,26 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
     ) {
       if (!this._multiCaller) {
         return super.call(request, blockTag);
+      } else {
+        const now = new Date().getTime();
+
+        if (this._timeOfLastRatioCheck === undefined) {
+          this._timeOfLastRatioCheck = now;
+        } else {
+          const timeSinceLastRatioCheck = now - this._timeOfLastRatioCheck;
+
+          if (timeSinceLastRatioCheck >= 10000 && this._numberOfActualCalls) {
+            console.log(
+              `Call batching ratio: ${
+                Math.round((10 * this._numberOfBatchedCalls) / this._numberOfActualCalls) / 10
+              }X`
+            );
+
+            this._numberOfBatchedCalls = 0;
+            this._numberOfActualCalls = 0;
+            this._timeOfLastRatioCheck = now;
+          }
+        }
       }
 
       [request, blockTag] = await Promise.all([request, blockTag]);
@@ -186,12 +206,17 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
         !batchableCall(resolvedRequest) ||
         this._alreadyBatchedCallsConflictWith(resolvedRequest, blockTag)
       ) {
+        this._numberOfActualCalls++;
+
         return super.call(resolvedRequest, blockTag);
       } else {
+        this._numberOfBatchedCalls++;
+
         if (this._batched.calls.length === 0) {
           this._batched.from = resolvedRequest.from;
           this._batched.blockTag = blockTag;
         }
+
         return this._enqueueCall({ to: resolvedRequest.to!, data: resolvedRequest.data! });
       }
     }

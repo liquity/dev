@@ -62,6 +62,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
     quiBalance,
     numberOfTroves,
     price,
+    troveWithoutRewards,
     trove,
     total,
     deposit,
@@ -71,13 +72,15 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   return (
     <>
       <UserAccount {...{ account, etherBalance, quiBalance }} />
+
       <Box width="862px" mx="auto">
         <Flex flexWrap="wrap" justifyItems="center">
           <Box px={3} width="500px">
-            <TroveManager {...{ liquity, trove, price, total, quiBalance }} />
+            <TroveManager {...{ liquity, troveWithoutRewards, trove, price, total, quiBalance }} />
             <StabilityDepositManager {...{ liquity, deposit, trove, price, quiBalance }} />
             <RedemptionManager {...{ liquity, price, quiBalance }} />
           </Box>
+
           <Box px={3} width="362px">
             <SystemStats
               {...{
@@ -92,8 +95,16 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
             <PriceManager {...{ liquity, price }} />
           </Box>
         </Flex>
+
         <RiskiestTroves numberOfTroves={10} {...{ liquity, price }} />
       </Box>
+      {
+        // Some empty space to ensure content can always be scrolled up from under the
+        // TransactionMonitor bar.
+      }
+      <Box height="72px" />
+
+      <TransactionMonitor />
     </>
   );
 };
@@ -120,7 +131,6 @@ const App = () => {
             <LiquityProvider {...{ loader }}>
               <TransactionProvider>
                 <LiquityFrontend {...{ loader }} />
-                <TransactionMonitor />
               </TransactionProvider>
             </LiquityProvider>
           </WalletConnector>

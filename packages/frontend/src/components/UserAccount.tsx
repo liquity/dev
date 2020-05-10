@@ -40,7 +40,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({ account, etherBalance,
           <Text.span mr={3} fontSize={1}>
             {etherBalance.prettify()} ETH
           </Text.span>
-          <Text.span fontSize={1}>{quiBalance.prettify()} QUI</Text.span>
+          <Text.span fontSize={1}>{quiBalance.prettify()} LQTY</Text.span>
         </Box>
       </Flex>
     </Flex>

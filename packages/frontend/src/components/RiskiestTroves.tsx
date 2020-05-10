@@ -142,7 +142,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                 <th>
                   Debt
                   <br />
-                  (QUI)
+                  (LQTY)
                 </th>
                 <th>
                   Coll.
@@ -169,13 +169,13 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                           </Button.Text>
                         </CopyToClipboard>
                       </td>
-                      <td>{trove.collateralAfterReward.prettify(4)}</td>
+                      <td>{trove.collateral.prettify(4)}</td>
                       <td>
                         <Text color={deposit.pendingCollateralGain.gt(0) ? "success" : "text"}>
                           {deposit.pendingCollateralGain.prettify(4)}
                         </Text>
                       </td>
-                      <td>{trove.debtAfterReward.prettify()}</td>
+                      <td>{trove.debt.prettify()}</td>
                       <td>
                         {(collateralRatio => (
                           <Text
@@ -189,7 +189,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                           >
                             {new Percent(collateralRatio).prettify()}
                           </Text>
-                        ))(trove.collateralRatioAfterRewards(price))}
+                        ))(trove.collateralRatio(price))}
                       </td>
                       <td>
                         <Transaction

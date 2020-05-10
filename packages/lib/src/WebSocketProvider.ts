@@ -1,7 +1,9 @@
+import { BigNumber } from "@ethersproject/bignumber";
 import {
   WebSocketProvider as EthersWebSocketProvider,
   TransactionReceipt
 } from "@ethersproject/providers";
+import { Event as BaseProviderEvent } from "@ethersproject/providers/lib/base-provider";
 
 const isUnknownError = (error: any) =>
   typeof error === "object" &&
@@ -32,6 +34,16 @@ export class WebSocketProvider extends EthersWebSocketProvider {
       } else {
         throw error;
       }
+    }
+  }
+
+  _startEvent(event: BaseProviderEvent): void {
+    if (event.type === "block") {
+      this._subscribe("block", ["newHeads"], (result: any) => {
+        this.emit("block", BigNumber.from(result.number).toNumber());
+      });
+    } else {
+      super._startEvent(event);
     }
   }
 }

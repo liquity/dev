@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Provider, BlockTag } from "@ethersproject/abstract-provider";
 
-import { Liquity } from "@liquity/lib";
+import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
 import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue } from "./AsyncValue";
 
@@ -26,42 +26,58 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
         quiBalance: liquity.getQuiBalance(account, { blockTag }),
         price: liquity.getPrice({ blockTag }),
         numberOfTroves: liquity.getNumberOfTroves({ blockTag }),
-        trove: liquity.getTrove(account, { blockTag }),
+        troveWithoutRewards: liquity.getTroveWithoutRewards(account, { blockTag }),
+        totalRedistributed: liquity.getTotalRedistributed({ blockTag }),
         deposit: liquity.getStabilityDeposit(account, { blockTag }),
         total: liquity.getTotal({ blockTag }),
         quiInStabilityPool: liquity.getQuiInStabilityPool({ blockTag })
-      }),
+      }).then(store => ({
+        trove: store.troveWithoutRewards.applyRewards(store.totalRedistributed),
+        ...store
+      })),
     [provider, account, liquity]
   );
 
+  type Values = Resolved<ReturnType<typeof get>> & {
+    [prop: string]: BigNumber | Decimal | Trove | StabilityDeposit;
+  };
+
   const watch = useCallback(
-    (updateValues: (values: Resolved<ReturnType<typeof get>>) => void) => {
-      let fetchedBlock = 0;
-
-      const blockListener = async (blockNumber: number) => {
-        // There is currently an Infura issue related to load balancing
-        // (https://github.com/MetaMask/metamask-extension/issues/7234)
-        // where we get a block event with a certain block number, but when we try to run a request
-        // on that block, the block (header) is not found. We have implemented a retry mechanism
-        // for this in WebSocketAugmentedProvider. However, waiting just 10 ms here allows us to
-        // avoid the majority of these glitches from occuring in the first place.
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        const values = await get(blockNumber);
-
-        if (blockNumber > fetchedBlock) {
-          updateValues(values);
-          fetchedBlock = blockNumber;
-          console.log(`Updated store state to block #${blockNumber}`);
-        }
+    (updateValues: (values: Values) => void) => {
+      const blockListener = (blockNumber: number) => {
+        console.log(`New block #${blockNumber}`);
+        get(blockNumber).then(updateValues);
       };
 
       provider.on("block", blockListener);
-
-      return () => provider.removeListener("block", blockListener);
+      return () => provider.off("block", blockListener);
     },
     [provider, get]
   );
 
-  return useAsyncValue(get, watch);
+  const reduce = useCallback(
+    (previous: Values, neuu: Values) =>
+      Object.fromEntries(
+        Object.keys(previous).map(key => {
+          const previousValue = previous[key];
+          const newValue = neuu[key];
+
+          const equals =
+            (BigNumber.isBigNumber(previousValue) && previousValue.eq(newValue as BigNumber)) ||
+            (previousValue instanceof Decimal && previousValue.eq(newValue as Decimal)) ||
+            (previousValue instanceof Trove && previousValue.equals(newValue as Trove)) ||
+            (previousValue instanceof StabilityDeposit &&
+              previousValue.equals(newValue as StabilityDeposit));
+
+          if (!equals) {
+            console.log(`Update ${key} to ${newValue}`);
+          }
+
+          return [key, equals ? previousValue : newValue];
+        })
+      ) as Values,
+    []
+  );
+
+  return useAsyncValue(get, watch, reduce);
 };
