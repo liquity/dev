@@ -1,51 +1,76 @@
+const PoolManager = artifacts.require("./PoolManager.sol")
+const SortedCDPs = artifacts.require("./SortedCDPs.sol")
+const CDPManager = artifacts.require("./CDPManager.sol")
+const PriceFeed = artifacts.require("./PriceFeed.sol")
+const CLVToken = artifacts.require("./CLVToken.sol")
+const NameRegistry = artifacts.require("./NameRegistry.sol")
+const ActivePool = artifacts.require("./ActivePool.sol");
+const DefaultPool = artifacts.require("./DefaultPool.sol");
+const StabilityPool = artifacts.require("./StabilityPool.sol")
+const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
+
+const deployLiquity = async () => {
+  const priceFeed = await PriceFeed.new()
+  const clvToken = await CLVToken.new()
+  const poolManager = await PoolManager.new()
+  const sortedCDPs = await SortedCDPs.new()
+  const cdpManager = await CDPManager.new()
+  const nameRegistry = await NameRegistry.new()
+  const activePool = await ActivePool.new()
+  const stabilityPool = await StabilityPool.new()
+  const defaultPool = await DefaultPool.new()
+  const functionCaller = await FunctionCaller.new()
+  const borrowerOperations = await BorrowerOperations.new()
+
+  DefaultPool.setAsDeployed(defaultPool)
+  PriceFeed.setAsDeployed(priceFeed)
+  CLVToken.setAsDeployed(clvToken)
+  PoolManager.setAsDeployed(poolManager)
+  SortedCDPs.setAsDeployed(sortedCDPs)
+  CDPManager.setAsDeployed(cdpManager)
+  NameRegistry.setAsDeployed(nameRegistry)
+  ActivePool.setAsDeployed(activePool)
+  StabilityPool.setAsDeployed(stabilityPool)
+  FunctionCaller.setAsDeployed(functionCaller)
+  BorrowerOperations.setAsDeployed(borrowerOperations)
+
+  const contracts = {
+    priceFeed,
+    clvToken,
+    poolManager,
+    sortedCDPs,
+    cdpManager,
+    nameRegistry,
+    activePool,
+    stabilityPool,
+    defaultPool,
+    functionCaller,
+    borrowerOperations
+  }
+  return contracts
+}
+
 const getAddresses = (contracts) => {
   return {
-    borrowerOperations: contracts.borrowerOperations.address,
-    priceFeed: contracts.priceFeed.address,
-    clvToken: contracts.clvToken.address,
-    poolManager: contracts.poolManager.address,
-    sortedCDPs: contracts.sortedCDPs.address,
-    cdpManager: contracts.cdpManager.address,
-    nameRegistry: contracts.nameRegistry.address,
-    stabilityPool: contracts.stabilityPool.address,
-    activePool: contracts.activePool.address,
-    defaultPool: contracts.defaultPool.address,
-    functionCaller: contracts.functionCaller.address
+    BorrowerOperations: contracts.borrowerOperations.address,
+    PriceFeed: contracts.priceFeed.address,
+    CLVToken: contracts.clvToken.address,
+    PoolManager: contracts.poolManager.address,
+    SortedCDPs: contracts.sortedCDPs.address,
+    CDPManager: contracts.cdpManager.address,
+    NameRegistry: contracts.nameRegistry.address,
+    StabilityPool: contracts.stabilityPool.address,
+    ActivePool: contracts.activePool.address,
+    DefaultPool: contracts.defaultPool.address,
+    FunctionCaller: contracts.functionCaller.address
   }
-}
-
-const setNameRegistry = async (addresses, nameRegistry) => {
-  await nameRegistry.registerContract('PoolManager', addresses.poolManager)
-  await nameRegistry.registerContract('PriceFeed', addresses.priceFeed)
-  await nameRegistry.registerContract('CLVToken', addresses.clvToken)
-  await nameRegistry.registerContract('SortedCDPs', addresses.sortedCDPs)
-  await nameRegistry.registerContract('CDPManager', addresses.cdpManager)
-  await nameRegistry.registerContract('StabilityPool', addresses.stabilityPool)
-  await nameRegistry.registerContract('ActivePool', addresses.activePool)
-  await nameRegistry.registerContract('DefaultPool', addresses.defaultPool)
-  await nameRegistry.registerContract('FunctionCaller', addresses.functionCaller)
-  await nameRegistry.registerContract('BorrowerOperations', addresses.borrowerOperations)
-}
-
-const getAddressesFromNameRegistry = async (nameRegistry) => {
-  const PoolManager = await nameRegistry.getAddress('PoolManager')
-  const CLVToken = await nameRegistry.getAddress('CLVToken')
-  const PriceFeed = await nameRegistry.getAddress('PriceFeed')
-  const SortedCDPs = await nameRegistry.getAddress('SortedCDPs')
-  const CDPManager = await nameRegistry.getAddress('CDPManager')
-  const StabilityPool = await nameRegistry.getAddress('StabilityPool')
-  const ActivePool = await nameRegistry.getAddress('ActivePool')
-  const DefaultPool = await nameRegistry.getAddress('DefaultPool')
-  const FunctionCaller = await nameRegistry.getAddress('FunctionCaller')
-  const BorrowerOperations = await nameRegistry.getAddress('BorrowerOperations')
-
-  return { PoolManager, CLVToken, PriceFeed, SortedCDPs, CDPManager, StabilityPool, ActivePool, DefaultPool, FunctionCaller, BorrowerOperations }
 }
 
 // Connect contracts to their dependencies
 const connectContracts = async (contracts, registeredAddresses) => {
   await contracts.clvToken.setPoolManagerAddress(registeredAddresses.PoolManager)
- 
+
   await contracts.poolManager.setBorrowerOperations(registeredAddresses.BorrowerOperations)
   await contracts.poolManager.setCDPManagerAddress(registeredAddresses.CDPManager)
   await contracts.poolManager.setCLVToken(registeredAddresses.CLVToken)
@@ -58,12 +83,12 @@ const connectContracts = async (contracts, registeredAddresses) => {
   // set CDPManager addr in SortedCDPs
   await contracts.sortedCDPs.setCDPManager(registeredAddresses.CDPManager)
 
-   // set contract addresses in the FunctionCaller 
-   await contracts.functionCaller.setCDPManagerAddress(registeredAddresses.CDPManager)
-   await contracts.functionCaller.setSortedCDPsAddress(registeredAddresses.SortedCDPs)
+  // set contract addresses in the FunctionCaller 
+  await contracts.functionCaller.setCDPManagerAddress(registeredAddresses.CDPManager)
+  await contracts.functionCaller.setSortedCDPsAddress(registeredAddresses.SortedCDPs)
 
-   // set CDPManager addr in PriceFeed
-   await contracts.priceFeed.setCDPManagerAddress(registeredAddresses.CDPManager)
+  // set CDPManager addr in PriceFeed
+  await contracts.priceFeed.setCDPManagerAddress(registeredAddresses.CDPManager)
 
   // set contracts in the CDP Manager
   await contracts.cdpManager.setCLVToken(registeredAddresses.CLVToken)
@@ -99,8 +124,7 @@ const connectContracts = async (contracts, registeredAddresses) => {
 
 module.exports = {
   getAddresses: getAddresses,
-  getAddressesFromNameRegistry: getAddressesFromNameRegistry,
-  setNameRegistry: setNameRegistry,
+  deployLiquity: deployLiquity,
   connectContracts: connectContracts
 }
 

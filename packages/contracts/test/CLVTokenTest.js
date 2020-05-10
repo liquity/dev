@@ -1,21 +1,12 @@
-const PoolManager = artifacts.require("./PoolManager.sol")
-const CDPManager = artifacts.require("./CDPManager.sol")
-const SortedCDPs = artifacts.require("./SortedCDPs.sol")
-const PriceFeed = artifacts.require("./PriceFeed.sol")
-const CLVToken = artifacts.require("./CLVToken.sol")
-const NameRegistry = artifacts.require("./NameRegistry.sol")
-const ActivePool = artifacts.require("./ActivePool.sol");
-const DefaultPool = artifacts.require("./DefaultPool.sol");
-const StabilityPool = artifacts.require("./StabilityPool.sol")
-const FunctionCaller = artifacts.require("./FunctionCaller.sol")
-const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
-
-
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const testHelpers = require("../utils/testHelpers.js")
+
+const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
-const setNameRegistry = deploymentHelpers.setNameRegistry
 const connectContracts = deploymentHelpers.connectContracts
-const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
+
+const getDifference = testHelpers.getDifference
+const moneyVals = testHelpers.MoneyValues
 
 contract('CLVToken', async accounts => {
   /* mockPool is an EOA, temporarily used to call PoolManager functions.
@@ -39,49 +30,22 @@ contract('CLVToken', async accounts => {
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
-      priceFeed = await PriceFeed.new()
-      clvToken = await CLVToken.new()
-      poolManager = await PoolManager.new()
-      sortedCDPs = await SortedCDPs.new()
-      cdpManager = await CDPManager.new()
-      nameRegistry = await NameRegistry.new()
-      activePool = await ActivePool.new()
-      stabilityPool = await StabilityPool.new()
-      defaultPool = await DefaultPool.new()
-      functionCaller = await FunctionCaller.new()
-      borrowerOperations = await BorrowerOperations.new()
+      const contracts = await deployLiquity()
+
+      priceFeed = contracts.priceFeed
+      clvToken = contracts.clvToken
+      poolManager = contracts.poolManager
+      sortedCDPs = contracts.sortedCDPs
+      cdpManager = contracts.cdpManager
+      nameRegistry = contracts.nameRegistry
+      activePool = contracts.activePool
+      stabilityPool = contracts.stabilityPool
+      defaultPool = contracts.defaultPool
+      functionCaller = contracts.functionCaller
+      borrowerOperations = contracts.borrowerOperations
   
-      DefaultPool.setAsDeployed(defaultPool)
-      PriceFeed.setAsDeployed(priceFeed)
-      CLVToken.setAsDeployed(clvToken)
-      PoolManager.setAsDeployed(poolManager)
-      SortedCDPs.setAsDeployed(sortedCDPs)
-      CDPManager.setAsDeployed(cdpManager)
-      NameRegistry.setAsDeployed(nameRegistry)
-      ActivePool.setAsDeployed(activePool)
-      StabilityPool.setAsDeployed(stabilityPool)
-      FunctionCaller.setAsDeployed(functionCaller)
-      BorrowerOperations.setAsDeployed(borrowerOperations)
-
-      const contracts = { 
-                    priceFeed, 
-                    clvToken, 
-                    poolManager, 
-                    sortedCDPs,
-                    cdpManager, 
-                    nameRegistry, 
-                    activePool, 
-                    stabilityPool, 
-                    defaultPool,
-                    functionCaller, 
-                    borrowerOperations
-                  }
-      
       const contractAddresses = getAddresses(contracts)
-      await setNameRegistry(contractAddresses, nameRegistry, { from: owner })
-      const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
-
-      await connectContracts(contracts, registeredAddresses)
+      await connectContracts(contracts, contractAddresses)
       
       // add CDPs for three test users
       await borrowerOperations.addColl(alice, alice, { from: alice, value: _1_Ether })
