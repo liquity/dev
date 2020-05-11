@@ -832,7 +832,8 @@ export class Liquity {
       throw new Error("numberOfTroves must be at least 1");
     }
 
-    const getTroveWithAddress = (address: string) => Promise.all([address, this.getTrove(address)]);
+    const getTroveWithAddress = (address: string) =>
+      Promise.all([address, this.getTroveWithoutRewards(address)]);
 
     const troves: ReturnType<typeof getTroveWithAddress>[] = [];
 

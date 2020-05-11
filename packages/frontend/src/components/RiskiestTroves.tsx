@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { theme } from "rimble-ui";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
 
-import { Liquity } from "@liquity/lib";
+import { Liquity, Trove } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -40,6 +40,7 @@ type RiskiestTrovesProps = {
   liquity: Liquity;
   numberOfTroves: number;
   price: Decimal;
+  totalRedistributed: Trove;
 };
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
@@ -47,10 +48,13 @@ type Resolved<T> = T extends Promise<infer U> ? U : T;
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   liquity,
   numberOfTroves,
-  price
+  price,
+  totalRedistributed
 }) => {
+  type Troves = Resolved<ReturnType<typeof liquity.getLastTroves>>;
+
   const [loading, setLoading] = useState(true);
-  const [troves, setTroves] = useState<Resolved<ReturnType<typeof liquity.getLastTroves>>>();
+  const [trovesWithoutRewards, setTrovesWithoutRewards] = useState<Troves>();
   const myTransactionState = useMyTransactionState(/^liquidate-/);
 
   const [reload, setReload] = useState({});
@@ -63,7 +67,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
 
     liquity.getLastTroves(numberOfTroves).then(troves => {
       if (mounted) {
-        setTroves(troves);
+        setTrovesWithoutRewards(troves);
         setLoading(false);
       }
     });
@@ -78,6 +82,10 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
       forceReload();
     }
   }, [myTransactionState.type, forceReload]);
+
+  const troves = trovesWithoutRewards?.map(
+    ([owner, trove]) => [owner, trove.applyRewards(totalRedistributed)] as const
+  );
 
   return (
     <Box mt={3} p={3}>
@@ -147,6 +155,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
               {troves.map(
                 ([owner, trove]) =>
                   !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
+                    // (TODO: remove check after we can fetch multiple Troves in one call)
                     <tr key={owner}>
                       <td>
                         <Tooltip message={owner} placement="top">
