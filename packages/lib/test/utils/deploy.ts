@@ -12,12 +12,11 @@ export const setSilent = (s: boolean) => {
 const deployContract = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
-  contractName: string
+  contractName: string,
+  ...args: any[]
 ) => {
   silent || console.log(`Deploying ${contractName} ...`);
-  const contract = await (await getContractFactory(contractName, deployer)).deploy({
-    // TODO overrides should be put here
-  });
+  const contract = await (await getContractFactory(contractName, deployer)).deploy(...args);
 
   silent || console.log(`Waiting for transaction ${contract.deployTransaction.hash} ...`);
   const receipt = await contract.deployTransaction.wait();
@@ -37,17 +36,31 @@ const deployContract = async (
 const deployContracts = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>
-): Promise<LiquityContractAddresses> => ({
-  activePool: await deployContract(deployer, getContractFactory, "ActivePool"),
-  borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations"),
-  cdpManager: await deployContract(deployer, getContractFactory, "CDPManager"),
-  clvToken: await deployContract(deployer, getContractFactory, "CLVToken"),
-  defaultPool: await deployContract(deployer, getContractFactory, "DefaultPool"),
-  poolManager: await deployContract(deployer, getContractFactory, "PoolManager"),
-  priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed"),
-  sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs"),
-  stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool")
-});
+): Promise<LiquityContractAddresses> => {
+  const addresses = {
+    activePool: await deployContract(deployer, getContractFactory, "ActivePool"),
+    borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations"),
+    cdpManager: await deployContract(deployer, getContractFactory, "CDPManager"),
+    clvToken: await deployContract(deployer, getContractFactory, "CLVToken"),
+    defaultPool: await deployContract(deployer, getContractFactory, "DefaultPool"),
+    poolManager: await deployContract(deployer, getContractFactory, "PoolManager"),
+    priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed"),
+    sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs"),
+    stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool")
+  };
+
+  return {
+    ...addresses,
+
+    multiCDPgetter: await deployContract(
+      deployer,
+      getContractFactory,
+      "MultiCDPGetter",
+      addresses.cdpManager,
+      addresses.sortedCDPs
+    )
+  };
+};
 
 const connectContracts = async (
   {

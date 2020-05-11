@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { theme } from "rimble-ui";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
 
-import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import { Liquity, Trove } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -29,13 +29,7 @@ const Table = styled.table<SpaceProps & LayoutProps>`
     text-align: left;
   }
 
-  & tr td:nth-child(3),
-  & tr td:nth-child(4),
-  & tr td:nth-child(5) {
-    width: 18%;
-  }
-
-  & tr td:nth-child(7) {
+  & tr td:nth-child(6) {
     width: 0;
   }
 `;
@@ -46,15 +40,21 @@ type RiskiestTrovesProps = {
   liquity: Liquity;
   numberOfTroves: number;
   price: Decimal;
+  totalRedistributed: Trove;
 };
+
+type Resolved<T> = T extends Promise<infer U> ? U : T;
 
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   liquity,
   numberOfTroves,
-  price
+  price,
+  totalRedistributed
 }) => {
+  type Troves = Resolved<ReturnType<typeof liquity.getLastTroves>>;
+
   const [loading, setLoading] = useState(true);
-  const [troves, setTroves] = useState<[string, Trove, StabilityDeposit][]>();
+  const [trovesWithoutRewards, setTrovesWithoutRewards] = useState<Troves>();
   const myTransactionState = useMyTransactionState(/^liquidate-/);
 
   const [reload, setReload] = useState({});
@@ -67,7 +67,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
 
     liquity.getLastTroves(numberOfTroves).then(troves => {
       if (mounted) {
-        setTroves(troves);
+        setTrovesWithoutRewards(troves);
         setLoading(false);
       }
     });
@@ -82,6 +82,10 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
       forceReload();
     }
   }, [myTransactionState.type, forceReload]);
+
+  const troves = trovesWithoutRewards?.map(
+    ([owner, trove]) => [owner, trove.applyRewards(totalRedistributed)] as const
+  );
 
   return (
     <Box mt={3} p={3}>
@@ -135,11 +139,6 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                   (ETH)
                 </th>
                 <th>
-                  Stab. Gain
-                  <br />
-                  (ETH)
-                </th>
-                <th>
                   Debt
                   <br />
                   (LQTY)
@@ -154,8 +153,9 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
             </thead>
             <tbody>
               {troves.map(
-                ([owner, trove, deposit]) =>
+                ([owner, trove]) =>
                   !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
+                    // (TODO: remove check after we can fetch multiple Troves in one call)
                     <tr key={owner}>
                       <td>
                         <Tooltip message={owner} placement="top">
@@ -170,11 +170,6 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                         </CopyToClipboard>
                       </td>
                       <td>{trove.collateral.prettify(4)}</td>
-                      <td>
-                        <Text color={deposit.pendingCollateralGain.gt(0) ? "success" : "text"}>
-                          {deposit.pendingCollateralGain.prettify(4)}
-                        </Text>
-                      </td>
                       <td>{trove.debt.prettify()}</td>
                       <td>
                         {(collateralRatio => (

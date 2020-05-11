@@ -103,7 +103,7 @@ task(
       addresses: addressesOf(await deployAndSetupContracts(deployer, bre.ethers.getContractFactory))
     };
 
-    const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
+    const deployerLiquity = await Liquity.connect(addresses, deployer);
 
     const price = await deployerLiquity.getPrice();
     const priceAsNumber = parseFloat(price.toString(4));
@@ -114,7 +114,7 @@ task(
       const collateral = 999 * Math.random() + 1;
       const debt = (priceAsNumber * collateral) / (3 * Math.random() + 1.11);
 
-      const liquity = await Liquity.connect(addresses.cdpManager, user);
+      const liquity = await Liquity.connect(addresses, user);
 
       await funder.sendTransaction({
         to: userAddress,
@@ -250,7 +250,7 @@ task(
     };
 
     const connectUsers = (users: Signer[]) =>
-      Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
+      Promise.all(users.map(user => Liquity.connect(addresses, user)));
 
     const [deployer, funder, ...randomUsers] = await bre.ethers.getSigners();
 
@@ -411,7 +411,7 @@ task(
   "End chaos and restore order by liquidating every Trove except the Funder's",
   async (_taskArgs, bre) => {
     const connectUsers = (users: Signer[]) =>
-      Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
+      Promise.all(users.map(user => Liquity.connect(addresses, user)));
 
     const [deployer, funder] = await bre.ethers.getSigners();
 
@@ -485,7 +485,7 @@ task("check-sorting", "Check if Troves are sorted by ICR", async (_taskArgs, bre
     addresses: addressesOf(await deployAndSetupContracts(deployer, bre.ethers.getContractFactory))
   };
 
-  const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
+  const deployerLiquity = await Liquity.connect(addresses, deployer);
 
   const price = await deployerLiquity.getPrice();
 
