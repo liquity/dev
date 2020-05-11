@@ -6,6 +6,7 @@ import activePoolJson from "../types/ActivePool.json";
 import cdpManagerJson from "../types/CDPManager.json";
 import clvTokenJson from "../types/CLVToken.json";
 import defaultPoolJson from "../types/DefaultPool.json";
+import multiCDPgetterJson from "../types/MultiCDPGetter.json";
 import poolManagerJson from "../types/PoolManager.json";
 import priceFeedJson from "../types/PriceFeed.json";
 import sortedCDPsJson from "../types/SortedCDPs.json";
@@ -16,6 +17,7 @@ import type {
   CDPManager,
   CLVToken,
   DefaultPool,
+  MultiCDPGetter,
   PoolManager,
   PriceFeed,
   SortedCDPs,
@@ -27,6 +29,7 @@ export interface LiquityContractAddresses {
   cdpManager: string;
   clvToken: string;
   defaultPool: string;
+  multiCDPgetter: string;
   poolManager: string;
   priceFeed: string;
   sortedCDPs: string;
@@ -40,6 +43,7 @@ export interface LiquityContracts {
   cdpManager: CDPManager;
   clvToken: CLVToken;
   defaultPool: DefaultPool;
+  multiCDPgetter: MultiCDPGetter;
   poolManager: PoolManager;
   priceFeed: PriceFeed;
   sortedCDPs: SortedCDPs;
@@ -51,6 +55,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   cdpManager: contracts.cdpManager.address,
   clvToken: contracts.clvToken.address,
   defaultPool: contracts.defaultPool.address,
+  multiCDPgetter: contracts.multiCDPgetter.address,
   poolManager: contracts.poolManager.address,
   priceFeed: contracts.priceFeed.address,
   sortedCDPs: contracts.sortedCDPs.address,
@@ -69,6 +74,11 @@ export const connectToContracts = (
     defaultPoolJson.abi,
     signerOrProvider
   ) as DefaultPool,
+  multiCDPgetter: new Contract(
+    addresses.multiCDPgetter,
+    multiCDPgetterJson.abi,
+    signerOrProvider
+  ) as MultiCDPGetter,
   poolManager: new Contract(
     addresses.poolManager,
     poolManagerJson.abi,
@@ -83,80 +93,21 @@ export const connectToContracts = (
   ) as StabilityPool
 });
 
-export const connectToContractsViaCdpManager = async (
-  cdpManagerAddress: string,
-  signerOrProvider: Signer | Provider
-): Promise<LiquityContracts> => {
-  const cdpManager = new Contract(
-    cdpManagerAddress,
-    cdpManagerJson.abi,
-    signerOrProvider
-  ) as CDPManager;
-
-  const [
-    priceFeed,
-    sortedCDPs,
-    clvToken,
-    [poolManager, activePool, defaultPool, stabilityPool]
-  ] = await Promise.all([
-    cdpManager.priceFeedAddress().then(address => {
-      return new Contract(address, priceFeedJson.abi, signerOrProvider) as PriceFeed;
-    }),
-    cdpManager.sortedCDPsAddress().then(address => {
-      return new Contract(address, sortedCDPsJson.abi, signerOrProvider) as SortedCDPs;
-    }),
-    cdpManager.clvTokenAddress().then(address => {
-      return new Contract(address, clvTokenJson.abi, signerOrProvider) as CLVToken;
-    }),
-    cdpManager.poolManagerAddress().then(address => {
-      const poolManager = new Contract(
-        address,
-        poolManagerJson.abi,
-        signerOrProvider
-      ) as PoolManager;
-
-      return Promise.all([
-        Promise.resolve(poolManager),
-
-        poolManager.activePoolAddress().then(address => {
-          return new Contract(address, activePoolJson.abi, signerOrProvider) as ActivePool;
-        }),
-        poolManager.defaultPoolAddress().then(address => {
-          return new Contract(address, defaultPoolJson.abi, signerOrProvider) as DefaultPool;
-        }),
-        poolManager.stabilityPoolAddress().then(address => {
-          return new Contract(address, stabilityPoolJson.abi, signerOrProvider) as StabilityPool;
-        })
-      ]);
-    })
-  ]);
-
-  return {
-    activePool,
-    cdpManager,
-    clvToken,
-    defaultPool,
-    poolManager,
-    priceFeed,
-    sortedCDPs,
-    stabilityPool
-  };
-};
-
 const deployments: { [network: string]: LiquityDeployment } = {
   dev: {
     addresses: {
-      activePool: "0xfE04B3684B06573Ad578E718b7eC2c64328B8023",
-      cdpManager: "0xafE6516b90181EAb998B1B0E1d203bB141d64ae1",
-      clvToken: "0xB8C1D0B0BAC038399E4D34F8374A6654D4A5e2E7",
-      defaultPool: "0xA724F8B936f0E9BC2745f8Cd84c3856214251B56",
-      poolManager: "0x58AF93Ac88C4D94D84283ED4403C030C3D81adCF",
-      priceFeed: "0xC5A8A9E1d421736D70b6D9A80E6F2757f9CE770d",
-      sortedCDPs: "0x4C90161Fe1103578f9c8a26a3EC7E54a1dd22Fd0",
-      stabilityPool: "0xc6464962C7f11a435aDf0B2fC4e46F83c70BaaB8"
+      activePool: "0x659197BC427c30C03BFBaA973764E6a0898d2f51",
+      cdpManager: "0x4E5C17428413ce6B1665924a5Fcb006B711cEEd8",
+      clvToken: "0xEEBd34bd6Fc9e0BfC64C8Dd8807B7d33cedD02D0",
+      defaultPool: "0x8E197068755d60f7EFF622dF858BDaac758194D9",
+      multiCDPgetter: "0xa58ed521303750F7D2EEb2F323CA71E72B818948",
+      poolManager: "0x577AA9d8a8F913DedC8db5C6244b6D56EBF49160",
+      priceFeed: "0x31D047B55B6FB823986fe3955F44f44Cc2b9D76A",
+      sortedCDPs: "0x3AA124435c2389df5EbF3BC3EAB2674e528Af65E",
+      stabilityPool: "0xb4788fcA9E2faB8b90c63c714B7b7e0065CFa23e"
     },
-    version: "a9ceffc8568a3824c01808046349fa9939f49e58",
-    deploymentDate: 1587964446457
+    version: "b0b4c6379d52acf8409a9915f4730f17aeacf11a",
+    deploymentDate: 1589178776725
   },
   ropsten: {
     addresses: {
@@ -164,6 +115,7 @@ const deployments: { [network: string]: LiquityDeployment } = {
       cdpManager: "0x7960558Dd5Df2038EDd9eaE671422035cd2A8a5A",
       clvToken: "0xee922B9c59BDa3E47305395A1e9e7bBE0Ca30be0",
       defaultPool: "0xae9C2aeE199FCF608458f68a317201f0CCf49801",
+      multiCDPgetter: "",
       poolManager: "0x25C1E9c3D9026AC2B2e73c60C25E8f7A551FEfB1",
       priceFeed: "0xEF23fa01A1cFf44058495ea20daC9D64f285ffc4",
       sortedCDPs: "0xa2c61f8DF37B64fCe3401c468d48A92f6f42E958",
@@ -178,6 +130,7 @@ const deployments: { [network: string]: LiquityDeployment } = {
       cdpManager: "0x46e5d5d619aF5D7E83976ad3013af84ED2D72337",
       clvToken: "0xd04b22d4651A4f4b5Ba8C57ED50c0c22A043320f",
       defaultPool: "0xE27B7479c7deaB917237a50D5c16c35D3817701d",
+      multiCDPgetter: "",
       poolManager: "0xC41969b187957A9ab69cAAB91a7C9b16E84Cb108",
       priceFeed: "0x9475FA1DA5c01fD7D7E90BFFE29DA67B5d68e5B6",
       sortedCDPs: "0xBb0bB1E44E062e8a9C40d02e08d8d75D0CF90938",
@@ -192,6 +145,7 @@ const deployments: { [network: string]: LiquityDeployment } = {
       cdpManager: "0xff16410Ef5c54b986c4d6d9942822CcA4c9745e4",
       clvToken: "0x5e32CA7Bc1602899d15945ee750688d0365984E9",
       defaultPool: "0xE734F83F1E86F344E85836d3A4281525A0375e20",
+      multiCDPgetter: "",
       poolManager: "0xCDc026441d2d2852E73101f7Cd03dD0aEd1528D0",
       priceFeed: "0x3C6C7621D6A42b37c251e556304Dc7D091BE4Aca",
       sortedCDPs: "0xe3e9bb741c660e24bE35440a962Ca4487b8f95C0",
@@ -206,6 +160,7 @@ const deployments: { [network: string]: LiquityDeployment } = {
       cdpManager: "0xb2Fd7aA687e914272DB0d9892166637C80cBeA97",
       clvToken: "0x1462E077F7311164Cd9801cB8c56d8A844C6D8ad",
       defaultPool: "0x2aBa139ca57c9CE216E5823F3365f069f5C5F289",
+      multiCDPgetter: "",
       poolManager: "0xD18387eA5031d2C45311D94Bdc462A4b1523f9d3",
       priceFeed: "0xA9F3BC1B553A1182D140D693AD333Ca40BD6190A",
       sortedCDPs: "0x70bfE91398CF800FC56c8bfe6D6C70394399765a",

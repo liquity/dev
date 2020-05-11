@@ -7,6 +7,7 @@ import ActivePool from "../../contracts/artifacts/ActivePool.json";
 import CDPManager from "../../contracts/artifacts/CDPManager.json";
 import CLVToken from "../../contracts/artifacts/CLVToken.json";
 import DefaultPool from "../../contracts/artifacts/DefaultPool.json";
+import MultiCDPGetter from "../../contracts/artifacts/MultiCDPGetter.json";
 import PoolManager from "../../contracts/artifacts/PoolManager.json";
 import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
 import SortedCDPs from "../../contracts/artifacts/SortedCDPs.json";
@@ -95,6 +96,7 @@ const contracts = [
   CDPManager,
   CLVToken,
   DefaultPool,
+  MultiCDPGetter,
   PoolManager,
   PriceFeed,
   SortedCDPs,

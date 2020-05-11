@@ -14,9 +14,10 @@ import {
   ActivePool,
   DefaultPool,
   StabilityPool,
-  CLVToken
+  CLVToken,
+  MultiCDPGetter
 } from "../types";
-import { connectToContractsViaCdpManager } from "./contracts";
+import { LiquityContracts, LiquityContractAddresses, connectToContracts } from "./contracts";
 
 interface Trovish {
   readonly collateral?: Decimalish;
@@ -330,20 +331,9 @@ export class Liquity {
   private readonly activePool: ActivePool;
   private readonly defaultPool: DefaultPool;
   private readonly stabilityPool: StabilityPool;
+  private readonly multiCDPgetter: MultiCDPGetter;
 
-  constructor(
-    contracts: {
-      cdpManager: CDPManager;
-      priceFeed: PriceFeed;
-      sortedCDPs: SortedCDPs;
-      clvToken: CLVToken;
-      poolManager: PoolManager;
-      activePool: ActivePool;
-      defaultPool: DefaultPool;
-      stabilityPool: StabilityPool;
-    },
-    userAddress?: string
-  ) {
+  constructor(contracts: LiquityContracts, userAddress?: string) {
     this.cdpManager = contracts.cdpManager;
     this.priceFeed = contracts.priceFeed;
     this.sortedCDPs = contracts.sortedCDPs;
@@ -352,15 +342,16 @@ export class Liquity {
     this.activePool = contracts.activePool;
     this.defaultPool = contracts.defaultPool;
     this.stabilityPool = contracts.stabilityPool;
+    this.multiCDPgetter = contracts.multiCDPgetter;
     this.userAddress = userAddress;
   }
 
-  static async connect(cdpManagerAddress: string, signerOrProvider: Signer | Provider) {
+  static async connect(addresses: LiquityContractAddresses, signerOrProvider: Signer | Provider) {
     const userAddress = Signer.isSigner(signerOrProvider)
       ? await signerOrProvider.getAddress()
       : undefined;
 
-    const contracts = await connectToContractsViaCdpManager(cdpManagerAddress, signerOrProvider);
+    const contracts = connectToContracts(addresses, signerOrProvider);
 
     return new Liquity(contracts, userAddress);
   }
@@ -827,30 +818,28 @@ export class Liquity {
     );
   }
 
-  async getLastTroves(numberOfTroves: number) {
-    if (numberOfTroves < 1) {
-      throw new Error("numberOfTroves must be at least 1");
-    }
+  async getLastTroves(numberOfTroves: number, overrides?: LiquityCallOverrides) {
+    const cdps = await this.multiCDPgetter.getMultipleSortedCDPs(-1, numberOfTroves, {
+      ...overrides
+    });
 
-    const getTroveWithAddress = (address: string) =>
-      Promise.all([address, this.getTroveWithoutRewards(address)]);
+    return cdps.map(
+      ({ owner, coll, debt, stake, snapshotCLVDebt, snapshotETH }) =>
+        [
+          owner,
 
-    const troves: ReturnType<typeof getTroveWithAddress>[] = [];
+          new TroveWithPendingRewards({
+            collateral: new Decimal(coll),
+            debt: new Decimal(debt),
+            stake: new Decimal(stake),
 
-    let i = 0;
-    let currentAddress = await this.sortedCDPs.getLast();
-
-    while (currentAddress !== AddressZero) {
-      troves.push(getTroveWithAddress(currentAddress));
-
-      if (++i === numberOfTroves) {
-        break;
-      }
-
-      currentAddress = await this.sortedCDPs.getPrev(currentAddress);
-    }
-
-    return Promise.all(troves);
+            snapshotOfTotalRedistributed: {
+              collateral: new Decimal(snapshotETH),
+              debt: new Decimal(snapshotCLVDebt)
+            }
+          })
+        ] as const
+    );
   }
 
   async _getFirstTroveAddress() {

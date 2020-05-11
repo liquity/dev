@@ -89,8 +89,8 @@ describe("Liquity", () => {
     expect(`${await provider.getBalance(user.getAddress())}`).to.equal(`${targetBalance}`);
   });
 
-  it("should connect to contracts by CDPManager address", async () => {
-    liquity = await Liquity.connect(addresses.cdpManager, user);
+  it("should connect to contracts their addresses", async () => {
+    liquity = await Liquity.connect(addresses, user);
   });
 
   it("should get the price", async () => {
@@ -168,7 +168,7 @@ describe("Liquity", () => {
   });
 
   const connectUsers = (users: Signer[]) =>
-    Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
+    Promise.all(users.map(user => Liquity.connect(addresses, user)));
 
   describe("StabilityPool", () => {
     before(async () => {
