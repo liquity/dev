@@ -244,7 +244,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         cdpManager.applyPendingRewards(user);
 
         uint debt = cdpManager.getCDPDebt(user);
-        requireCLVRepaymentAllowed(debt, _amount);
+        requireCLVRepaymentAllowed(debt, -int(_amount));
         
         // Update the CDP's debt
         uint newDebt = cdpManager.decreaseCDPDebt(user, _amount);
@@ -306,7 +306,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         // --- Checks --- 
         requireICRisAboveMCR(newICR);
         requireNewTCRisAboveCCR(collChange, _debtChange, price);
-        requireCLVRepaymentAllowed(debt, intToUint(_debtChange));
+        requireCLVRepaymentAllowed(debt, _debtChange);
         requireCollAmountIsWithdrawable(coll, _collWithdrawal, price);
 
         //  --- Effects --- 
@@ -389,8 +389,10 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         require(newTCR >= CCR, "CDPManager: An operation that would result in TCR < CCR is not permitted");
     }
 
-    function requireCLVRepaymentAllowed(uint _currentDebt, uint _debtDecrease) internal pure {
-        require(_debtDecrease <= _currentDebt, "CDPManager: Amount repaid must not be larger than the CDP's debt");
+    function requireCLVRepaymentAllowed(uint _currentDebt, int _debtChange) internal pure {
+        if (_debtChange < 0) {
+            require(intToUint(_debtChange) <= _currentDebt, "CDPManager: Amount repaid must not be larger than the CDP's debt");
+        }
     }
 
     function requireValueIsGreaterThan20Dollars(uint _amount, uint _price) internal view {

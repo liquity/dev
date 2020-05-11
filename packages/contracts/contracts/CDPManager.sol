@@ -738,7 +738,7 @@ contract CDPManager is Ownable, ICDPManager {
         
         rewardSnapshots[_user].ETH = 0;
         rewardSnapshots[_user].CLVDebt = 0;
-        
+ 
         sortedCDPs.remove(_user);
         removeCDPOwner(_user);
        
