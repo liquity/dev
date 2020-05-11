@@ -184,7 +184,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         
         requireCollAmountIsWithdrawable(coll, _amount, price);
 
-        uint newICR = getNewICRFromTroveChange(coll, debt, int(_amount), 0, price); 
+        uint newICR = getNewICRFromTroveChange(coll, debt, -int(_amount), 0, price);
         requireICRisAboveMCR(newICR);
         
         // Update the CDP's coll and stake
