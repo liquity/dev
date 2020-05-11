@@ -85,9 +85,7 @@ async function main() {
       }
 
     const contractAddresses = getAddresses(contracts)
-    await setNameRegistry(contractAddresses, nameRegistry)
-    const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
-    await connectContracts(contracts, registeredAddresses)
+    await connectContracts(contracts, contractAddresses)
 
     console.log(`Gas costs for deployments: `)
     for (contractName of Object.keys(contracts)) {

@@ -695,7 +695,7 @@ contract('Gas cost tests', async accounts => {
     appendData(gasResults, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'adjustLoan(). 10 accounts, each account adjusts up by a random amount'
     const tx = await borrowerOperations.addColl(accounts[999], accounts[999], {from: accounts[999], value: _100_Ether})
     
