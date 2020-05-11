@@ -16,7 +16,7 @@ export const LoadingOverlay = styled.div<SpaceProps>`
   background-color: rgba(255, 255, 255, 0.5);
 
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   align-items: start;
 `;
 
