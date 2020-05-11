@@ -3,6 +3,7 @@ import { Text, Flex, Box, Heading, Icon } from "rimble-ui";
 
 import { Decimal } from "@liquity/lib/dist/utils";
 import { shortenAddress } from "../utils/shortenAddress";
+import { LiquityLogo } from "./LiquityLogo";
 
 type UserAccountProps = {
   account: string;
@@ -14,18 +15,14 @@ export const UserAccount: React.FC<UserAccountProps> = ({ account, etherBalance,
   return (
     <Flex
       px={5}
-      pt={1}
-      pb={2}
+      py={2}
       justifyContent="space-between"
       bg="near-white"
       borderBottom="1px solid lightgrey"
     >
-      <Flex alignItems="center">
-        <Text mr={3} fontSize={5}>
-          ℚ
-        </Text>
-        <Heading>Liquity</Heading>
-        <Box mx={3} mt={1} width="0px" height="100%" borderLeft="1px solid lightgrey" />
+      <Flex alignItems="center" height="48px">
+        <LiquityLogo height="32px" />
+        <Box mx={3} width="0px" height="100%" borderLeft="1px solid lightgrey" />
         <Heading fontWeight={2}>Developer Interface (Beta)</Heading>
       </Flex>
       <Flex alignItems="center">
