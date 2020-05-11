@@ -8,6 +8,7 @@ import { Decimal, Decimalish, Difference } from "../utils/Decimal";
 
 import {
   CDPManager,
+  BorrowerOperations,
   SortedCDPs,
   PriceFeed,
   PoolManager,
@@ -323,6 +324,7 @@ export class Liquity {
   public readonly userAddress?: string;
 
   private readonly cdpManager: CDPManager;
+  private readonly borrowerOperations: BorrowerOperations;
   private readonly priceFeed: PriceFeed;
   private readonly sortedCDPs: SortedCDPs;
   private readonly clvToken: CLVToken;
@@ -334,6 +336,7 @@ export class Liquity {
   constructor(
     contracts: {
       cdpManager: CDPManager;
+      borrowerOperations: BorrowerOperations;
       priceFeed: PriceFeed;
       sortedCDPs: SortedCDPs;
       clvToken: CLVToken;
@@ -345,6 +348,7 @@ export class Liquity {
     userAddress?: string
   ) {
     this.cdpManager = contracts.cdpManager;
+    this.borrowerOperations = contracts.borrowerOperations;
     this.priceFeed = contracts.priceFeed;
     this.sortedCDPs = contracts.sortedCDPs;
     this.clvToken = contracts.clvToken;
@@ -489,7 +493,7 @@ export class Liquity {
   async openTrove(trove: Trove, price: Decimalish, overrides?: LiquityTransactionOverrides) {
     const address = this.requireAddress();
 
-    return this.cdpManager.openLoan(
+    return this.borrowerOperations.openLoan(
       trove.debt.bigNumber,
       await this._findHint(trove, Decimal.from(price), address),
       { value: trove.collateral.bigNumber, ...overrides }
@@ -497,7 +501,7 @@ export class Liquity {
   }
 
   async closeTrove(overrides?: LiquityTransactionOverrides) {
-    return this.cdpManager.closeLoan({ ...overrides });
+    return this.borrowerOperations.closeLoan({ ...overrides });
   }
 
   async depositEther(
@@ -509,7 +513,7 @@ export class Liquity {
   ) {
     const finalTrove = initialTrove.addCollateral(depositedEther);
 
-    return this.cdpManager.addColl(
+    return this.borrowerOperations.addColl(
       address,
       await this._findHint(finalTrove, Decimal.from(price), address),
       {
@@ -528,7 +532,7 @@ export class Liquity {
     const address = this.requireAddress();
     const finalTrove = initialTrove.subtractCollateral(withdrawnEther);
 
-    return this.cdpManager.withdrawColl(
+    return this.borrowerOperations.withdrawColl(
       Decimal.from(withdrawnEther).bigNumber,
       await this._findHint(finalTrove, Decimal.from(price), address),
       { ...overrides }
@@ -544,7 +548,7 @@ export class Liquity {
     const address = this.requireAddress();
     const finalTrove = initialTrove.addDebt(borrowedQui);
 
-    return this.cdpManager.withdrawCLV(
+    return this.borrowerOperations.withdrawCLV(
       Decimal.from(borrowedQui).bigNumber,
       await this._findHint(finalTrove, Decimal.from(price), address),
       { ...overrides }
@@ -560,7 +564,7 @@ export class Liquity {
     const address = this.requireAddress();
     const finalTrove = initialTrove.subtractDebt(repaidQui);
 
-    return this.cdpManager.repayCLV(
+    return this.borrowerOperations.repayCLV(
       Decimal.from(repaidQui).bigNumber,
       await this._findHint(finalTrove, Decimal.from(price), address),
       { ...overrides }

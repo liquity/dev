@@ -39,6 +39,7 @@ const deployContracts = async (
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>
 ): Promise<LiquityContractAddresses> => ({
   activePool: await deployContract(deployer, getContractFactory, "ActivePool"),
+  borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations"),
   cdpManager: await deployContract(deployer, getContractFactory, "CDPManager"),
   clvToken: await deployContract(deployer, getContractFactory, "CLVToken"),
   defaultPool: await deployContract(deployer, getContractFactory, "DefaultPool"),
@@ -51,6 +52,7 @@ const deployContracts = async (
 const connectContracts = async (
   {
     activePool,
+    borrowerOperations,
     cdpManager,
     clvToken,
     defaultPool,
@@ -69,6 +71,7 @@ const connectContracts = async (
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce => clvToken.setPoolManagerAddress(poolManager.address, { nonce }),
+    nonce => poolManager.setBorrowerOperations(borrowerOperations.address, { nonce }),
     nonce => poolManager.setCDPManagerAddress(cdpManager.address, { nonce }),
     nonce => poolManager.setCLVToken(clvToken.address, { nonce }),
     nonce => poolManager.setPriceFeed(priceFeed.address, { nonce }),
@@ -84,6 +87,13 @@ const connectContracts = async (
     nonce => cdpManager.setActivePool(activePool.address, { nonce }),
     nonce => cdpManager.setDefaultPool(defaultPool.address, { nonce }),
     nonce => cdpManager.setStabilityPool(stabilityPool.address, { nonce }),
+    nonce => cdpManager.setBorrowerOperations(borrowerOperations.address, { nonce }),
+    nonce => borrowerOperations.setSortedCDPs(sortedCDPs.address, { nonce }),
+    nonce => borrowerOperations.setPoolManager(poolManager.address, { nonce }),
+    nonce => borrowerOperations.setPriceFeed(priceFeed.address, { nonce }),
+    nonce => borrowerOperations.setActivePool(activePool.address, { nonce }),
+    nonce => borrowerOperations.setDefaultPool(defaultPool.address, { nonce }),
+    nonce => borrowerOperations.setCDPManager(cdpManager.address, { nonce }),
     nonce => stabilityPool.setPoolManagerAddress(poolManager.address, { nonce }),
     nonce => stabilityPool.setActivePoolAddress(activePool.address, { nonce }),
     nonce => stabilityPool.setDefaultPoolAddress(defaultPool.address, { nonce }),
