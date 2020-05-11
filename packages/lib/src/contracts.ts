@@ -106,19 +106,19 @@ export const connectToContracts = (
 const deployments: { [network: string]: LiquityDeployment } = {
   dev: {
     addresses: {
-      activePool: "0x4a098710a7886B00fff1134Ac17494634920063b",
-      borrowerOperations: "0x08887Ca99166Fe6116a8687A59EeCbDFddad102f",
-      cdpManager: "0x87c665917BA552568A20b4C76b0aDc4dC78d7836",
-      clvToken: "0x17Ed9f2fa077a86B3649dcFcfC10059AA609d49E",
-      defaultPool: "0xf15F5DA09617Da3C09966B36e336268732c2cbDD",
-      multiCDPgetter: "",
-      poolManager: "0x742722077C7C0612c07DFfd6644B695c7afeb027",
-      priceFeed: "0x04D62C52eDCabbB2514d4D363b1F540c619cA5DF",
-      sortedCDPs: "0x6828c049844A5f118F04d0D458F9add219213D6A",
-      stabilityPool: "0x1E87e58EB8AA7d32D2D466de049466dd313d911C"
+      activePool: "0xA9F32e6Cb0A295697705D37F905369a78179A49D",
+      borrowerOperations: "0x5Ec34379eb9fA0C93bf7A4d6805Cb142C6b40e15",
+      cdpManager: "0xdD77CD5cc42d4b336125B34E17488c88a9c05c7d",
+      clvToken: "0x6a01AD9B7fdd8DAD6e9E2d859feD4821283315F4",
+      defaultPool: "0x258c6845dEA747b7990E95f0040E93A56228586d",
+      multiCDPgetter: "0x56333B40c26373EcC85190F3FA16cabAbB84B842",
+      poolManager: "0xCF68BF11ed16Da53a38237616ff403995251a804",
+      priceFeed: "0x49D98d09Ef21381Fe4981f041b5361D5F6350701",
+      sortedCDPs: "0xfF3FE203cE97858cDb10c3D2A0d4C67bDa71F5d1",
+      stabilityPool: "0x031262BEDb56aBD15E5Df024b3A6d9B6cfDB4b90"
     },
-    version: "6453bb83044ee83e077335ab2e144aa7102d048f",
-    deploymentDate: 1589182486500
+    version: "cadc6a73abb5627f1f03bdb1fd13606cdc5e820d",
+    deploymentDate: 1589195337459
   },
   ropsten: {
     addresses: {
