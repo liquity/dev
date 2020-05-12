@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Card, Button, Text, Box, Heading, Loader, Icon, Link, Tooltip } from "rimble-ui";
+import { Card, Button, Text, Box, Heading, Loader, Icon, Link, Tooltip, Flex } from "rimble-ui";
 import styled from "styled-components";
 import { theme } from "rimble-ui";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
@@ -37,6 +37,7 @@ const Table = styled.table<SpaceProps & LayoutProps>`
 Table.defaultProps = { theme, width: "100%" };
 
 type RiskiestTrovesProps = {
+  pageSize: number;
   liquity: Liquity;
   numberOfTroves: number;
   price: Decimal;
@@ -46,6 +47,7 @@ type RiskiestTrovesProps = {
 type Resolved<T> = T extends Promise<infer U> ? U : T;
 
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
+  pageSize,
   liquity,
   numberOfTroves,
   price,
@@ -60,12 +62,34 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   const [reload, setReload] = useState({});
   const forceReload = useCallback(() => setReload({}), []);
 
+  const [page, setPage] = useState(0);
+  const numberOfPages = Math.ceil(numberOfTroves / pageSize) || 1;
+  const clampedPage = Math.min(page, numberOfPages - 1);
+
+  const nextPage = () => {
+    if (clampedPage < numberOfPages - 1) {
+      setPage(clampedPage + 1);
+    }
+  };
+
+  const previousPage = () => {
+    if (clampedPage > 0) {
+      setPage(clampedPage - 1);
+    }
+  };
+
+  useEffect(() => {
+    if (page !== clampedPage) {
+      setPage(clampedPage);
+    }
+  }, [page, clampedPage]);
+
   useEffect(() => {
     let mounted = true;
 
     setLoading(true);
 
-    liquity.getLastTroves(numberOfTroves).then(troves => {
+    liquity.getLastTroves(clampedPage * pageSize, pageSize).then(troves => {
       if (mounted) {
         setTrovesWithoutRewards(troves);
         setLoading(false);
@@ -75,7 +99,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
     return () => {
       mounted = false;
     };
-  }, [liquity, numberOfTroves, reload]);
+  }, [liquity, clampedPage, pageSize, reload]);
 
   useEffect(() => {
     if (myTransactionState.type === "confirmed") {
@@ -101,17 +125,48 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
           bg="lightgrey"
         >
           Riskiest Troves
-          <Link
-            color="text"
-            hoverColor="success"
-            activeColor="success"
-            display="flex"
-            alignItems="center"
-            onClick={forceReload}
-            opacity={loading ? 0 : 1}
-          >
-            <Icon name="Refresh" size="40px" />
-          </Link>
+          <Flex alignItems="center">
+            {numberOfTroves !== 0 && (
+              <>
+                <Text mr={3}>
+                  {clampedPage * pageSize + 1}-
+                  {Math.min((clampedPage + 1) * pageSize, numberOfTroves)} of {numberOfTroves}
+                </Text>
+                <Link
+                  color="text"
+                  hoverColor="success"
+                  activeColor="success"
+                  display="flex"
+                  alignItems="center"
+                  onClick={previousPage}
+                >
+                  <Icon name="KeyboardArrowLeft" size="40px" />
+                </Link>
+                <Link
+                  color="text"
+                  hoverColor="success"
+                  activeColor="success"
+                  display="flex"
+                  alignItems="center"
+                  onClick={nextPage}
+                >
+                  <Icon name="KeyboardArrowRight" size="40px" />
+                </Link>
+              </>
+            )}
+            <Link
+              ml={3}
+              color="text"
+              hoverColor="success"
+              activeColor="success"
+              display="flex"
+              alignItems="center"
+              onClick={forceReload}
+              opacity={loading ? 0 : 1}
+            >
+              <Icon name="Refresh" size="40px" />
+            </Link>
+          </Flex>
         </Heading>
 
         {loading && (

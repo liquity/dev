@@ -14,9 +14,9 @@ export const LiquityLogo = (props: { height?: number | string; width?: number | 
     />
     <path
       fill="#745DDF"
-      fill-rule="evenodd"
+      fillRule="evenodd"
       d="M37.024 24.875c-2.706 6.936-9.361 11.896-17.203 12.117.185.005.37.008.556.008h23.654s-.006-8.507-7.007-12.125z"
-      clip-rule="evenodd"
+      clipRule="evenodd"
     />
   </svg>
 );

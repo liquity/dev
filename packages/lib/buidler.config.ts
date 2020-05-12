@@ -4,7 +4,6 @@ import "colors";
 
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
-import { BigNumber } from "@ethersproject/bignumber";
 
 import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config";
 import { NetworkConfig } from "@nomiclabs/buidler/types";
@@ -443,9 +442,9 @@ task(
 
     const initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
 
-    let numberOfTroves: BigNumber;
-    while ((numberOfTroves = await funderLiquity.getNumberOfTroves()).gt(1)) {
-      const numberOfTrovesToLiquidate = numberOfTroves.gt(10) ? 10 : numberOfTroves.sub(1);
+    let numberOfTroves: number;
+    while ((numberOfTroves = await funderLiquity.getNumberOfTroves()) > 1) {
+      const numberOfTrovesToLiquidate = numberOfTroves > 10 ? 10 : numberOfTroves - 1;
 
       console.log(`${numberOfTroves} Troves left.`);
       await funderLiquity.liquidateUpTo(numberOfTrovesToLiquidate);
@@ -453,7 +452,7 @@ task(
 
     await deployerLiquity.setPrice(priceBefore);
 
-    if (!(await funderLiquity.getNumberOfTroves()).eq(1)) {
+    if ((await funderLiquity.getNumberOfTroves()) !== 1) {
       throw new Error("didn't manage to liquidate every Trove");
     }
 
@@ -471,7 +470,7 @@ task(
     fs.appendFileSync(
       "chaos.csv",
       `${numberOfTroves},` +
-        `${initialNumberOfTroves.sub(1)},` +
+        `${initialNumberOfTroves - 1},` +
         `${total.collateral},` +
         `${collateralDifference.absoluteValue?.bigNumber},` +
         `${debtDifference.absoluteValue?.bigNumber}\n`

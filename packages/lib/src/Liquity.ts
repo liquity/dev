@@ -308,6 +308,7 @@ const debounce = (listener: (latestBlock: number) => void) => {
 };
 
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
+const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
 
 const computePendingReward = (snapshotValue: Decimal, currentValue: Decimal, stake: Decimal) => {
   const rewardPerStake = currentValue.sub(snapshotValue);
@@ -449,7 +450,7 @@ export class Liquity {
       return address;
     }
 
-    const numberOfTroves = (await this.getNumberOfTroves()).toNumber();
+    const numberOfTroves = await this.getNumberOfTroves();
 
     if (!numberOfTroves || collateralRatio.infinite) {
       return AddressZero;
@@ -562,10 +563,10 @@ export class Liquity {
   }
 
   getNumberOfTroves(overrides?: LiquityCallOverrides) {
-    return this.cdpManager.getCDPOwnersCount({ ...overrides });
+    return this.cdpManager.getCDPOwnersCount({ ...overrides }).then(numberify);
   }
 
-  watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: BigNumber) => void) {
+  watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void) {
     const { CDPUpdated } = this.cdpManager.filters;
     const cdpUpdated = CDPUpdated(null, null, null, null);
 
@@ -821,8 +822,8 @@ export class Liquity {
     );
   }
 
-  async getLastTroves(numberOfTroves: number, overrides?: LiquityCallOverrides) {
-    const cdps = await this.multiCDPgetter.getMultipleSortedCDPs(-1, numberOfTroves, {
+  async getLastTroves(startIdx: number, numberOfTroves: number, overrides?: LiquityCallOverrides) {
+    const cdps = await this.multiCDPgetter.getMultipleSortedCDPs(-(startIdx + 1), numberOfTroves, {
       ...overrides
     });
 

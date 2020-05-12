@@ -97,7 +97,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
           </Box>
         </Flex>
 
-        <RiskiestTroves numberOfTroves={10} {...{ liquity, price, totalRedistributed }} />
+        <RiskiestTroves pageSize={10} {...{ liquity, price, totalRedistributed, numberOfTroves }} />
       </Box>
       {
         // Some empty space to ensure content can always be scrolled up from under the
