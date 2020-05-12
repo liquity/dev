@@ -42,7 +42,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
       )}
       <Text mt={3} fontSize={0} opacity={0.5}>
         Contracts version:{" "}
-        <a href={`https://github.com/cvalkan/cleverage/commit/${contractsVersion}`}>
+        <a href={`https://github.com/liquity/cleverage/commit/${contractsVersion}`}>
           {contractsVersion.substr(0, 7)}
         </a>
       </Text>
