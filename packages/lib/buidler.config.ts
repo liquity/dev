@@ -81,13 +81,14 @@ task("set-pricefeed", "Set the address of the PriceFeed in the deployed contract
     const [deployer] = await bre.ethers.getSigners();
     const { addresses } = deploymentOnNetwork[bre.network.name];
 
-    const { cdpManager, poolManager, priceFeed } = connectToContracts(
+    const { cdpManager, borrowerOperations, poolManager, priceFeed } = connectToContracts(
       { ...addresses, priceFeed: priceFeedAddress },
       deployer
     );
 
     // await priceFeed.setCDPManagerAddress(cdpManager.address);
     await cdpManager.setPriceFeed(priceFeedAddress);
+    await borrowerOperations.setPriceFeed(priceFeedAddress);
     await poolManager.setPriceFeed(priceFeedAddress);
   });
 
