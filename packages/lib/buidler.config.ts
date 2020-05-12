@@ -341,7 +341,7 @@ task(
               // Would fail to open the Trove due to TCR
               newTrove = new Trove({
                 collateral: newTrove.collateral.mul(2),
-                debt: newTrove.debt
+                debt: 0
               });
             }
 
