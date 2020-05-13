@@ -1,5 +1,5 @@
 import assert from "assert";
-import { BigNumber } from "@ethersproject/bignumber";
+import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { MaxUint256 } from "@ethersproject/constants";
 
 export type Decimalish = Decimal | number | string;
@@ -119,8 +119,8 @@ export class Decimal {
     return mantissa !== undefined ? prettyCharacteristic + "." + mantissa : prettyCharacteristic;
   }
 
-  static prettify(bigNumber: BigNumber) {
-    return new Decimal(bigNumber.mul(Decimal.DIGITS)).prettify(0);
+  static prettify(bigNumberish: BigNumberish) {
+    return new Decimal(BigNumber.from(bigNumberish).mul(Decimal.DIGITS)).prettify(0);
   }
 
   shorten() {

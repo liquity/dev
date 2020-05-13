@@ -1,12 +1,11 @@
 import React from "react";
 import { Card, Text, Heading } from "rimble-ui";
-import { BigNumber } from "@ethersproject/bignumber";
 
 import { Trove } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";
 
 type SystemStatsProps = {
-  numberOfTroves: BigNumber;
+  numberOfTroves: number;
   price: Decimal;
   total: Trove;
   quiInStabilityPool: Decimal;
@@ -42,7 +41,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
       )}
       <Text mt={3} fontSize={0} opacity={0.5}>
         Contracts version:{" "}
-        <a href={`https://github.com/cvalkan/cleverage/commit/${contractsVersion}`}>
+        <a href={`https://github.com/liquity/cleverage/commit/${contractsVersion}`}>
           {contractsVersion.substr(0, 7)}
         </a>
       </Text>

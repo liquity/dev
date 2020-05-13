@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Card, Button, Text, Box, Heading, Loader, Icon, Link, Tooltip } from "rimble-ui";
+import { Card, Button, Text, Box, Heading, Loader, Icon, Link, Tooltip, Flex } from "rimble-ui";
 import styled from "styled-components";
 import { theme } from "rimble-ui";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
 
-import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import { Liquity, Trove } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -29,13 +29,7 @@ const Table = styled.table<SpaceProps & LayoutProps>`
     text-align: left;
   }
 
-  & tr td:nth-child(3),
-  & tr td:nth-child(4),
-  & tr td:nth-child(5) {
-    width: 18%;
-  }
-
-  & tr td:nth-child(7) {
+  & tr td:nth-child(6) {
     width: 0;
   }
 `;
@@ -43,31 +37,61 @@ const Table = styled.table<SpaceProps & LayoutProps>`
 Table.defaultProps = { theme, width: "100%" };
 
 type RiskiestTrovesProps = {
+  pageSize: number;
   liquity: Liquity;
   numberOfTroves: number;
   price: Decimal;
+  totalRedistributed: Trove;
 };
 
+type Resolved<T> = T extends Promise<infer U> ? U : T;
+
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
+  pageSize,
   liquity,
   numberOfTroves,
-  price
+  price,
+  totalRedistributed
 }) => {
+  type Troves = Resolved<ReturnType<typeof liquity.getLastTroves>>;
+
   const [loading, setLoading] = useState(true);
-  const [troves, setTroves] = useState<[string, Trove, StabilityDeposit][]>();
+  const [trovesWithoutRewards, setTrovesWithoutRewards] = useState<Troves>();
   const myTransactionState = useMyTransactionState(/^liquidate-/);
 
   const [reload, setReload] = useState({});
   const forceReload = useCallback(() => setReload({}), []);
+
+  const [page, setPage] = useState(0);
+  const numberOfPages = Math.ceil(numberOfTroves / pageSize) || 1;
+  const clampedPage = Math.min(page, numberOfPages - 1);
+
+  const nextPage = () => {
+    if (clampedPage < numberOfPages - 1) {
+      setPage(clampedPage + 1);
+    }
+  };
+
+  const previousPage = () => {
+    if (clampedPage > 0) {
+      setPage(clampedPage - 1);
+    }
+  };
+
+  useEffect(() => {
+    if (page !== clampedPage) {
+      setPage(clampedPage);
+    }
+  }, [page, clampedPage]);
 
   useEffect(() => {
     let mounted = true;
 
     setLoading(true);
 
-    liquity.getLastTroves(numberOfTroves).then(troves => {
+    liquity.getLastTroves(clampedPage * pageSize, pageSize).then(troves => {
       if (mounted) {
-        setTroves(troves);
+        setTrovesWithoutRewards(troves);
         setLoading(false);
       }
     });
@@ -75,13 +99,17 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
     return () => {
       mounted = false;
     };
-  }, [liquity, numberOfTroves, reload]);
+  }, [liquity, clampedPage, pageSize, reload]);
 
   useEffect(() => {
     if (myTransactionState.type === "confirmed") {
       forceReload();
     }
   }, [myTransactionState.type, forceReload]);
+
+  const troves = trovesWithoutRewards?.map(
+    ([owner, trove]) => [owner, trove.applyRewards(totalRedistributed)] as const
+  );
 
   return (
     <Box mt={3} p={3}>
@@ -97,17 +125,48 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
           bg="lightgrey"
         >
           Riskiest Troves
-          <Link
-            color="text"
-            hoverColor="success"
-            activeColor="success"
-            display="flex"
-            alignItems="center"
-            onClick={forceReload}
-            opacity={loading ? 0 : 1}
-          >
-            <Icon name="Refresh" size="40px" />
-          </Link>
+          <Flex alignItems="center">
+            {numberOfTroves !== 0 && (
+              <>
+                <Text mr={3}>
+                  {clampedPage * pageSize + 1}-
+                  {Math.min((clampedPage + 1) * pageSize, numberOfTroves)} of {numberOfTroves}
+                </Text>
+                <Link
+                  color="text"
+                  hoverColor="success"
+                  activeColor="success"
+                  display="flex"
+                  alignItems="center"
+                  onClick={previousPage}
+                >
+                  <Icon name="KeyboardArrowLeft" size="40px" />
+                </Link>
+                <Link
+                  color="text"
+                  hoverColor="success"
+                  activeColor="success"
+                  display="flex"
+                  alignItems="center"
+                  onClick={nextPage}
+                >
+                  <Icon name="KeyboardArrowRight" size="40px" />
+                </Link>
+              </>
+            )}
+            <Link
+              ml={3}
+              color="text"
+              hoverColor="success"
+              activeColor="success"
+              display="flex"
+              alignItems="center"
+              onClick={forceReload}
+              opacity={loading ? 0 : 1}
+            >
+              <Icon name="Refresh" size="40px" />
+            </Link>
+          </Flex>
         </Heading>
 
         {loading && (
@@ -135,11 +194,6 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                   (ETH)
                 </th>
                 <th>
-                  Stab. Gain
-                  <br />
-                  (ETH)
-                </th>
-                <th>
                   Debt
                   <br />
                   (LQTY)
@@ -154,8 +208,9 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
             </thead>
             <tbody>
               {troves.map(
-                ([owner, trove, deposit]) =>
+                ([owner, trove]) =>
                   !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
+                    // (TODO: remove check after we can fetch multiple Troves in one call)
                     <tr key={owner}>
                       <td>
                         <Tooltip message={owner} placement="top">
@@ -170,11 +225,6 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                         </CopyToClipboard>
                       </td>
                       <td>{trove.collateral.prettify(4)}</td>
-                      <td>
-                        <Text color={deposit.pendingCollateralGain.gt(0) ? "success" : "text"}>
-                          {deposit.pendingCollateralGain.prettify(4)}
-                        </Text>
-                      </td>
                       <td>{trove.debt.prettify()}</td>
                       <td>
                         {(collateralRatio => (

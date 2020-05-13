@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import { BigNumber } from "@ethersproject/bignumber";
 import { Provider } from "@ethersproject/abstract-provider";
 
 import { Liquity, Trove, StabilityDeposit, TroveWithPendingRewards } from "@liquity/lib";
@@ -22,8 +21,8 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
 
   const getNumberOfTroves = useCallback(() => liquity.getNumberOfTroves(), [liquity]);
   const watchNumberOfTroves = useCallback(
-    (onNumberOfTrovesChanged: (numberOfTroves: BigNumber) => void) => {
-      const logged = (numberOfTroves: BigNumber) => {
+    (onNumberOfTrovesChanged: (numberOfTroves: number) => void) => {
+      const logged = (numberOfTroves: number) => {
         console.log(`Update numberOfTroves to ${numberOfTroves}`);
         onNumberOfTrovesChanged(numberOfTroves);
       };

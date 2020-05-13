@@ -39,7 +39,7 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
   );
 
   type Values = Resolved<ReturnType<typeof get>> & {
-    [prop: string]: BigNumber | Decimal | Trove | StabilityDeposit;
+    [prop: string]: number | Decimal | Trove | StabilityDeposit;
   };
 
   const watch = useCallback(
@@ -63,7 +63,7 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
           const newValue = neuu[key];
 
           const equals =
-            (BigNumber.isBigNumber(previousValue) && previousValue.eq(newValue as BigNumber)) ||
+            (typeof previousValue === "number" && previousValue === newValue) ||
             (previousValue instanceof Decimal && previousValue.eq(newValue as Decimal)) ||
             (previousValue instanceof Trove && previousValue.equals(newValue as Trove)) ||
             (previousValue instanceof StabilityDeposit &&

@@ -4,7 +4,6 @@ import "colors";
 
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
-import { BigNumber } from "@ethersproject/bignumber";
 
 import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config";
 import { NetworkConfig } from "@nomiclabs/buidler/types";
@@ -81,13 +80,14 @@ task("set-pricefeed", "Set the address of the PriceFeed in the deployed contract
     const [deployer] = await bre.ethers.getSigners();
     const { addresses } = deploymentOnNetwork[bre.network.name];
 
-    const { cdpManager, poolManager, priceFeed } = connectToContracts(
+    const { cdpManager, borrowerOperations, poolManager, priceFeed } = connectToContracts(
       { ...addresses, priceFeed: priceFeedAddress },
       deployer
     );
 
     // await priceFeed.setCDPManagerAddress(cdpManager.address);
     await cdpManager.setPriceFeed(priceFeedAddress);
+    await borrowerOperations.setPriceFeed(priceFeedAddress);
     await poolManager.setPriceFeed(priceFeedAddress);
   });
 
@@ -103,7 +103,7 @@ task(
       addresses: addressesOf(await deployAndSetupContracts(deployer, bre.ethers.getContractFactory))
     };
 
-    const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
+    const deployerLiquity = await Liquity.connect(addresses, deployer);
 
     const price = await deployerLiquity.getPrice();
     const priceAsNumber = parseFloat(price.toString(4));
@@ -114,7 +114,7 @@ task(
       const collateral = 999 * Math.random() + 1;
       const debt = (priceAsNumber * collateral) / (3 * Math.random() + 1.11);
 
-      const liquity = await Liquity.connect(addresses.cdpManager, user);
+      const liquity = await Liquity.connect(addresses, user);
 
       await funder.sendTransaction({
         to: userAddress,
@@ -250,7 +250,7 @@ task(
     };
 
     const connectUsers = (users: Signer[]) =>
-      Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
+      Promise.all(users.map(user => Liquity.connect(addresses, user)));
 
     const [deployer, funder, ...randomUsers] = await bre.ethers.getSigners();
 
@@ -340,7 +340,7 @@ task(
               // Would fail to open the Trove due to TCR
               newTrove = new Trove({
                 collateral: newTrove.collateral.mul(2),
-                debt: newTrove.debt
+                debt: 0
               });
             }
 
@@ -411,7 +411,7 @@ task(
   "End chaos and restore order by liquidating every Trove except the Funder's",
   async (_taskArgs, bre) => {
     const connectUsers = (users: Signer[]) =>
-      Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
+      Promise.all(users.map(user => Liquity.connect(addresses, user)));
 
     const [deployer, funder] = await bre.ethers.getSigners();
 
@@ -442,9 +442,9 @@ task(
 
     const initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
 
-    let numberOfTroves: BigNumber;
-    while ((numberOfTroves = await funderLiquity.getNumberOfTroves()).gt(1)) {
-      const numberOfTrovesToLiquidate = numberOfTroves.gt(10) ? 10 : numberOfTroves.sub(1);
+    let numberOfTroves: number;
+    while ((numberOfTroves = await funderLiquity.getNumberOfTroves()) > 1) {
+      const numberOfTrovesToLiquidate = numberOfTroves > 10 ? 10 : numberOfTroves - 1;
 
       console.log(`${numberOfTroves} Troves left.`);
       await funderLiquity.liquidateUpTo(numberOfTrovesToLiquidate);
@@ -452,7 +452,7 @@ task(
 
     await deployerLiquity.setPrice(priceBefore);
 
-    if (!(await funderLiquity.getNumberOfTroves()).eq(1)) {
+    if ((await funderLiquity.getNumberOfTroves()) !== 1) {
       throw new Error("didn't manage to liquidate every Trove");
     }
 
@@ -470,7 +470,7 @@ task(
     fs.appendFileSync(
       "chaos.csv",
       `${numberOfTroves},` +
-        `${initialNumberOfTroves.sub(1)},` +
+        `${initialNumberOfTroves - 1},` +
         `${total.collateral},` +
         `${collateralDifference.absoluteValue?.bigNumber},` +
         `${debtDifference.absoluteValue?.bigNumber}\n`
@@ -485,7 +485,7 @@ task("check-sorting", "Check if Troves are sorted by ICR", async (_taskArgs, bre
     addresses: addressesOf(await deployAndSetupContracts(deployer, bre.ethers.getContractFactory))
   };
 
-  const deployerLiquity = await Liquity.connect(addresses.cdpManager, deployer);
+  const deployerLiquity = await Liquity.connect(addresses, deployer);
 
   const price = await deployerLiquity.getPrice();
 
