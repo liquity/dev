@@ -6,4 +6,5 @@ rm -rf output
 mkdir output
 cd output
 git init
-# TODO set up a remote
+
+git remote add origin git@github.com:liquity/liquity.git
