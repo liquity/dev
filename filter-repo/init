@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+rm -rf output
+mkdir output
+cd output
+git init
+# TODO set up a remote

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+[ -d output ] || ./init
+git filter-repo --paths-from-file included-paths --target output

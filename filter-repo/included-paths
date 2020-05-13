@@ -1,0 +1,11 @@
+certs
+registry
+packages/frontend/
+.dockerignore
+.env==>.env.sample
+.gitignore
+Dockerfile
+docker-compose.yml
+nginx.conf.tpl
+package.json
+README.public.md==>README.md
