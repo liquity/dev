@@ -3,7 +3,7 @@ version: "3"
 services:
   frontend:
     build: "."
-    image: "${LIQUITY_REGISTRY_NAME}:${LIQUITY_REGISTRY_PORT}/frontend"
+    image: "liquity/dev-frontend"
     ports:
       - "${LIQUITY_FRONTEND_HTTPS_PORT}:443"
     volumes:
