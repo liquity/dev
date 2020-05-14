@@ -13,6 +13,13 @@ type SystemStatsProps = {
   deploymentDate: number;
 };
 
+const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
+  children?.match(/[0-9a-f]{40}/) ? (
+    <a href={`https://github.com/liquity/cleverage/commit/${children}`}>{children.substr(0, 7)}</a>
+  ) : (
+    <>unknown</>
+  );
+
 export const SystemStats: React.FC<SystemStatsProps> = ({
   numberOfTroves,
   price,
@@ -30,6 +37,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
       <Heading as="h3" mb={2}>
         System
       </Heading>
+
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
       <Text>LQTY in circulation: {total.debt.shorten()}</Text>
       {quiInStabilityPoolPct && (
@@ -39,14 +47,15 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
       {total.collateralRatioIsBelowCritical(price) && (
         <Text color="danger">The system is in recovery mode!</Text>
       )}
+
       <Text mt={3} fontSize={0} opacity={0.5}>
-        Contracts version:{" "}
-        <a href={`https://github.com/liquity/cleverage/commit/${contractsVersion}`}>
-          {contractsVersion.substr(0, 7)}
-        </a>
+        Contracts version: <GitHubCommit>{contractsVersion}</GitHubCommit>
       </Text>
       <Text fontSize={0} opacity={0.5}>
         Deployed: {new Date(deploymentDate).toLocaleString()}
+      </Text>
+      <Text fontSize={0} opacity={0.5}>
+        Frontend version: <GitHubCommit>{process.env.REACT_APP_VERSION}</GitHubCommit>
       </Text>
     </Card>
   );
