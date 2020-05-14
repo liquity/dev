@@ -1,5 +1,7 @@
 # Liquity: Decentralized Borrowing Protocol
 
+[![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32)
+
 Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against
 their collateral without paying interest. After locking up ETH as collateral in a smart contract and
 creating an individual position called a "trove", the user can get instant liquidity by minting LQTY,
