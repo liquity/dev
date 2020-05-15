@@ -12,9 +12,9 @@
   "scripts": {
     "compile:contracts": "yarn workspace @liquity/contracts compile",
     "build:lib": "yarn workspace @liquity/lib build",
-    "build:frontend": "yarn workspace @liquity/frontend build",
+    "build:dev-frontend": "yarn workspace @liquity/dev-frontend build",
     "bootstrap": "yarn install --frozen-lockfile && yarn compile:contracts && yarn build:lib",
-    "build": "yarn bootstrap && yarn build:frontend",
+    "build": "yarn bootstrap && yarn build:dev-frontend",
     "test:contracts": "yarn workspace @liquity/contracts test",
     "test:lib": "yarn workspace @liquity/lib test",
     "test": "yarn test:contracts && yarn test:lib"

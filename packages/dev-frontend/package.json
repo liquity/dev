@@ -1,5 +1,5 @@
 {
-  "name": "@liquity/frontend",
+  "name": "@liquity/dev-frontend",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

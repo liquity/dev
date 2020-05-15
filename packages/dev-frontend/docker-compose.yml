@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  frontend:
+  dev-frontend:
     build: "."
     image: "liquity/dev-frontend"
     ports:

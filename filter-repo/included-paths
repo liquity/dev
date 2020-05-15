@@ -1,6 +1,7 @@
 certs
 registry
 packages/frontend/
+packages/dev-frontend/
 .dockerignore
 .gitignore
 Dockerfile

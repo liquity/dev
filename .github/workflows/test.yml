@@ -36,9 +36,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-      - name: Build frontend Docker image
+      - name: Build dev-frontend Docker image
         if: ${{ github.event_name == 'push' }}
         run: |
           docker-compose build
           docker-compose push
-        working-directory: ./packages/frontend
+        working-directory: ./packages/dev-frontend

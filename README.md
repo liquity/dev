@@ -48,7 +48,8 @@ Liquity follows the default Truffle project structure. The project runs on Truff
 
 ### Directories
 
-- `packages/frontend/` - Contains the front-end React app for the user-facing web interface
+- `packages/dev-frontend/` - Liquity Developer Interface: a bare-bones but functional React app used for interfacing with the smart contracts during development
+- `packages/frontend/` - The front-end React app for the user-facing web interface
 - `packages/lib/` - A layer between the front-end and smart contracts that handles the intermediate logic and low-level transactions
 - `packages/contracts/` The backend development folder, contains the Truffle/Buidler project, contracts and tests
 - `packages/contracts/contracts/` -The core back end smart contracts written in Solidity
