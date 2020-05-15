@@ -15,6 +15,7 @@
     "build:dev-frontend": "yarn workspace @liquity/dev-frontend build",
     "bootstrap": "yarn install --frozen-lockfile && yarn compile:contracts && yarn build:lib",
     "build": "yarn bootstrap && yarn build:dev-frontend",
+    "start:dev-frontend": "yarn workspace @liquity/dev-frontend start",
     "test:contracts": "yarn workspace @liquity/contracts test",
     "test:lib": "yarn workspace @liquity/lib test",
     "test": "yarn test:contracts && yarn test:lib"
