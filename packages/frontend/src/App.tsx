@@ -22,6 +22,7 @@ import { StabilityDepositManager } from "./components/StabilityDepositManager";
 import { RiskiestTroves } from "./components/RiskiestTroves";
 import { PriceManager } from "./components/PriceManager";
 import { RedemptionManager } from "./components/RedemptionManager";
+import { LiquidationManager } from "./components/LiquidationManager";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
@@ -94,6 +95,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
               }}
             />
             <PriceManager {...{ liquity, price }} />
+            <LiquidationManager {...{ liquity }} />
           </Box>
         </Flex>
 
