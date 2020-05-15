@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, Box, Heading, Flex, Icon, Button } from "rimble-ui";
 import { Transaction } from "./Transaction";
 
 import { Liquity } from "@liquity/lib";
-import { Decimal } from "@liquity/lib/dist/utils";
-import { Label, StaticCell, EditableCell } from "./EditorCell";
+import { Label, EditableCell } from "./EditorCell";
 
 type LiquidationManagerProps = {
   liquity: Liquity;

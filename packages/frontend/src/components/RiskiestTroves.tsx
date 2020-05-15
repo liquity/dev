@@ -9,7 +9,7 @@ import { Liquity, Trove } from "@liquity/lib";
 import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LoadingOverlay } from "./LoadingOverlay";
-import { Transaction, useMyTransactionState } from "./Transaction";
+import { Transaction } from "./Transaction";
 
 const Table = styled.table<SpaceProps & LayoutProps>`
   ${space}
@@ -57,7 +57,6 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
 
   const [loading, setLoading] = useState(true);
   const [trovesWithoutRewards, setTrovesWithoutRewards] = useState<Troves>();
-  const myTransactionState = useMyTransactionState(/^liquidate-/);
 
   const [reload, setReload] = useState({});
   const forceReload = useCallback(() => setReload({}), []);
