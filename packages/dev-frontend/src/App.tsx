@@ -13,7 +13,6 @@ import { Decimal, Difference, Percent } from "@liquity/lib/dist/utils";
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
 import { useLiquityStore } from "./hooks/BlockPolledLiquityStore";
 import { WalletConnector } from "./components/WalletConnector";
-import { ToastProvider } from "./hooks/ToastProvider";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
 import { TroveManager } from "./components/TroveManager";
 import { UserAccount } from "./components/UserAccount";
@@ -129,15 +128,13 @@ const App = () => {
   return (
     <EthersWeb3ReactProvider>
       <BaseStyles>
-        <ToastProvider>
-          <WalletConnector {...{ loader }}>
-            <LiquityProvider {...{ loader }}>
-              <TransactionProvider>
-                <LiquityFrontend {...{ loader }} />
-              </TransactionProvider>
-            </LiquityProvider>
-          </WalletConnector>
-        </ToastProvider>
+        <WalletConnector {...{ loader }}>
+          <LiquityProvider {...{ loader }}>
+            <TransactionProvider>
+              <LiquityFrontend {...{ loader }} />
+            </TransactionProvider>
+          </LiquityProvider>
+        </WalletConnector>
       </BaseStyles>
     </EthersWeb3ReactProvider>
   );
