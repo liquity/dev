@@ -644,7 +644,7 @@ export class Liquity {
   }
 
   async liquidateUpTo(
-    maximumNumberOfTrovesToLiquidate: BigNumberish,
+    maximumNumberOfTrovesToLiquidate: number,
     overrides?: LiquityTransactionOverrides
   ) {
     return this.cdpManager.liquidateCDPs(maximumNumberOfTrovesToLiquidate, { ...overrides });
