@@ -102,10 +102,8 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   }, [liquity, clampedPage, pageSize, reload]);
 
   useEffect(() => {
-    if (myTransactionState.type === "confirmed") {
-      forceReload();
-    }
-  }, [myTransactionState.type, forceReload]);
+    forceReload();
+  }, [forceReload, numberOfTroves]);
 
   const troves = trovesWithoutRewards?.map(
     ([owner, trove]) => [owner, trove.applyRewards(totalRedistributed)] as const
