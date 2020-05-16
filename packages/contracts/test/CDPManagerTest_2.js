@@ -464,20 +464,13 @@ contract('CDPManager', async accounts => {
 
   it("closeLoan(): sends the correct amount of ETH to the user", async () => {
     await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: _10_Ether })
-
     await borrowerOperations.addColl(alice, alice, { from: alice, value: _1_Ether })
 
     const alice_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(alice))
-
-    const tx = await borrowerOperations.closeLoan({ from: alice })
-
-    const gasUsed = web3.utils.toBN(tx.receipt.gasUsed)
-    const gasPrice = web3.utils.toBN(await web3.eth.getGasPrice())
-    const gasValueInWei = gasUsed.mul(gasPrice)
+    await borrowerOperations.closeLoan({ from: alice, gasPrice: 0 })
 
     const alice_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(alice))
-
-    const balanceDiff = alice_ETHBalance_After.sub(alice_ETHBalance_Before).add(gasValueInWei)
+    const balanceDiff = alice_ETHBalance_After.sub(alice_ETHBalance_Before)
 
     assert.equal(balanceDiff, _1_Ether)
   })

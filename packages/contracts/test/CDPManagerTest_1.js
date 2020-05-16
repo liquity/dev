@@ -503,15 +503,10 @@ contract('CDPManager', async accounts => {
    await borrowerOperations.addColl(alice, alice, { from: alice, value: _2_Ether })
    
     const alice_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(alice))
-    const tx = await borrowerOperations.withdrawColl(_1_Ether,  alice, { from: alice })
-    
-    const gasUsed = web3.utils.toBN(tx.receipt.gasUsed)
-    const gasPrice = web3.utils.toBN(await web3.eth.getGasPrice())
-    const gasValueInWei = gasUsed.mul(gasPrice)  
-    
+    await borrowerOperations.withdrawColl(_1_Ether,  alice, { from: alice, gasPrice: 0 })
+
     const alice_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(alice))
-    
-    const balanceDiff = alice_ETHBalance_After.sub(alice_ETHBalance_Before).add(gasValueInWei)
+    const balanceDiff = alice_ETHBalance_After.sub(alice_ETHBalance_Before)
     
     assert.equal(balanceDiff, _1_Ether)
   })
