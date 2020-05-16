@@ -12,3 +12,10 @@
 /test/gas/gasTestOutput.txt
 
 /secrets.js
+
+# solidity-coverage
+/.coverage_artifacts
+/.coverage_cache
+/.coverage_contracts
+/coverage.json
+/coverage
