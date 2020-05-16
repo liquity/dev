@@ -8,7 +8,7 @@
   },
   "scripts": {
     "compile": "buidler compile && (git rev-parse HEAD 2> /dev/null || echo unknown) > artifacts/version",
-    "test": "buidler test test/*.js",
+    "test": "buidler test",
     "buidler": "buidler"
   },
   "keywords": [],
