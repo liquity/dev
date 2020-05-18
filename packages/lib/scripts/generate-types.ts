@@ -123,13 +123,9 @@ const output =
   contracts.map(({ contractName, abi }) => generate(contractName, new Interface(abi))).join("\n\n");
 
 fs.mkdirSync("types", { recursive: true });
-fs.writeFileSync("types/index.ts", output);
+fs.writeFileSync(path.join("types", "index.ts"), output);
 
-contracts
-  .map(({ contractName }) => `${contractName}.json`)
-  .forEach(contractJson =>
-    fs.copyFileSync(
-      path.join("..", "contracts", "artifacts", contractJson),
-      path.join("types", contractJson)
-    )
-  );
+fs.mkdirSync("abi", { recursive: true });
+contracts.forEach(({ contractName, abi }) =>
+  fs.writeFileSync(path.join("abi", `${contractName}.json`), JSON.stringify(abi, undefined, 2))
+);

@@ -2,16 +2,16 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { Provider } from "@ethersproject/abstract-provider";
 import { Contract } from "@ethersproject/contracts";
 
-import activePoolJson from "../types/ActivePool.json";
-import borrowerOperationsJson from "../types/BorrowerOperations.json";
-import cdpManagerJson from "../types/CDPManager.json";
-import clvTokenJson from "../types/CLVToken.json";
-import defaultPoolJson from "../types/DefaultPool.json";
-import multiCDPgetterJson from "../types/MultiCDPGetter.json";
-import poolManagerJson from "../types/PoolManager.json";
-import priceFeedJson from "../types/PriceFeed.json";
-import sortedCDPsJson from "../types/SortedCDPs.json";
-import stabilityPoolJson from "../types/StabilityPool.json";
+import activePoolAbi from "../abi/ActivePool.json";
+import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
+import cdpManagerAbi from "../abi/CDPManager.json";
+import clvTokenAbi from "../abi/CLVToken.json";
+import defaultPoolAbi from "../abi/DefaultPool.json";
+import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
+import poolManagerAbi from "../abi/PoolManager.json";
+import priceFeedAbi from "../abi/PriceFeed.json";
+import sortedCDPsAbi from "../abi/SortedCDPs.json";
+import stabilityPoolAbi from "../abi/StabilityPool.json";
 
 import type {
   ActivePool,
@@ -71,34 +71,26 @@ export const connectToContracts = (
   addresses: LiquityContractAddresses,
   signerOrProvider: Signer | Provider
 ): LiquityContracts => ({
-  activePool: new Contract(addresses.activePool, activePoolJson.abi, signerOrProvider) as ActivePool,
+  activePool: new Contract(addresses.activePool, activePoolAbi, signerOrProvider) as ActivePool,
   borrowerOperations: new Contract(
     addresses.borrowerOperations,
-    borrowerOperationsJson.abi,
+    borrowerOperationsAbi,
     signerOrProvider
   ) as BorrowerOperations,
-  cdpManager: new Contract(addresses.cdpManager, cdpManagerJson.abi, signerOrProvider) as CDPManager,
-  clvToken: new Contract(addresses.clvToken, clvTokenJson.abi, signerOrProvider) as CLVToken,
-  defaultPool: new Contract(
-    addresses.defaultPool,
-    defaultPoolJson.abi,
-    signerOrProvider
-  ) as DefaultPool,
+  cdpManager: new Contract(addresses.cdpManager, cdpManagerAbi, signerOrProvider) as CDPManager,
+  clvToken: new Contract(addresses.clvToken, clvTokenAbi, signerOrProvider) as CLVToken,
+  defaultPool: new Contract(addresses.defaultPool, defaultPoolAbi, signerOrProvider) as DefaultPool,
   multiCDPgetter: new Contract(
     addresses.multiCDPgetter,
-    multiCDPgetterJson.abi,
+    multiCDPgetterAbi,
     signerOrProvider
   ) as MultiCDPGetter,
-  poolManager: new Contract(
-    addresses.poolManager,
-    poolManagerJson.abi,
-    signerOrProvider
-  ) as PoolManager,
-  priceFeed: new Contract(addresses.priceFeed, priceFeedJson.abi, signerOrProvider) as PriceFeed,
-  sortedCDPs: new Contract(addresses.sortedCDPs, sortedCDPsJson.abi, signerOrProvider) as SortedCDPs,
+  poolManager: new Contract(addresses.poolManager, poolManagerAbi, signerOrProvider) as PoolManager,
+  priceFeed: new Contract(addresses.priceFeed, priceFeedAbi, signerOrProvider) as PriceFeed,
+  sortedCDPs: new Contract(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider) as SortedCDPs,
   stabilityPool: new Contract(
     addresses.stabilityPool,
-    stabilityPoolJson.abi,
+    stabilityPoolAbi,
     signerOrProvider
   ) as StabilityPool
 });
