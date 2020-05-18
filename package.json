@@ -6,18 +6,23 @@
       "packages/*"
     ],
     "nohoist": [
-      "**"
+      "**/mocha",
+      "**/@nomiclabs/*",
+      "**/*buidler*",
+      "**/solidity-coverage"
     ]
   },
   "scripts": {
     "compile:contracts": "yarn workspace @liquity/contracts compile",
+    "build:decimal": "yarn workspace @liquity/decimal build",
     "build:lib": "yarn workspace @liquity/lib build",
     "build:dev-frontend": "yarn workspace @liquity/dev-frontend build",
-    "bootstrap": "yarn install --frozen-lockfile && yarn compile:contracts && yarn build:lib",
+    "bootstrap": "yarn install --frozen-lockfile && yarn compile:contracts && yarn build:decimal && yarn build:lib",
     "build": "yarn bootstrap && yarn build:dev-frontend",
     "start:dev-frontend": "yarn workspace @liquity/dev-frontend start",
     "test:contracts": "yarn workspace @liquity/contracts test",
+    "test:decimal": "yarn workspace @liquity/decimal test",
     "test:lib": "yarn workspace @liquity/lib test",
-    "test": "yarn test:contracts && yarn test:lib"
+    "test": "yarn test:contracts && yarn test:decimal && yarn test:lib"
   }
 }

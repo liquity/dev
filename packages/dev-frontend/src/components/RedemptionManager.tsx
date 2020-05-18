@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Loader, Card, Heading, Link, Icon } from "rimble-ui";
 
+import { Decimal } from "@liquity/decimal";
 import { Liquity } from "@liquity/lib";
-import { Decimal } from "@liquity/lib/dist/utils";
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { EditableRow } from "./Editor";

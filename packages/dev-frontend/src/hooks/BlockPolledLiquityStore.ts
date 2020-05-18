@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Provider, BlockTag } from "@ethersproject/abstract-provider";
 
+import { Decimal } from "@liquity/decimal";
 import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
-import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue } from "./AsyncValue";
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;

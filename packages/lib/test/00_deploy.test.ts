@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { Signer } from "@ethersproject/abstract-signer";
 import { ethers } from "@nomiclabs/buidler";
 
-import { deployAndSetupContracts } from "./utils/deploy";
+import { deployAndSetupContracts } from "../utils/deploy";
 
 describe("utils/deploy", () => {
   let deployer: Signer;

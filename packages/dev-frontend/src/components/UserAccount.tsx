@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, Flex, Box, Heading, Icon } from "rimble-ui";
 
-import { Decimal } from "@liquity/lib/dist/utils";
+import { Decimal } from "@liquity/decimal";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LiquityLogo } from "./LiquityLogo";
 

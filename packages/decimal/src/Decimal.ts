@@ -1,6 +1,8 @@
-import assert from "assert";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
-import { MaxUint256 } from "@ethersproject/constants";
+
+const MaxUint256 = BigNumber.from(
+  "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+);
 
 export type Decimalish = Decimal | number | string;
 
@@ -79,7 +81,6 @@ export class Decimal {
   }
 
   private roundUp(precision: number) {
-    assert(precision < Decimal.PRECISION);
     const halfDigit = Decimal.getDigits(Decimal.PRECISION - 1 - precision).mul(5);
     return this.bigNumber.add(halfDigit);
   }

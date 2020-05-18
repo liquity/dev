@@ -1,7 +1,7 @@
 import { Signer } from "@ethersproject/abstract-signer";
 import { ContractTransaction, ContractFactory } from "@ethersproject/contracts";
 
-import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "../../src/contracts";
+import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "../src/contracts";
 
 let silent = true;
 

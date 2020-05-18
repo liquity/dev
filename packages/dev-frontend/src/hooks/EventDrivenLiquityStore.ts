@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
 
+import { Decimal } from "@liquity/decimal";
 import { Liquity, Trove, StabilityDeposit, TroveWithPendingRewards } from "@liquity/lib";
-import { Decimal } from "@liquity/lib/dist/utils";
 import { useAsyncValue, useAsyncStore } from "./AsyncValue";
 import { useAccountBalance } from "./AccountBalance";
 

@@ -1,8 +1,8 @@
 import React from "react";
 import { Card, Text, Heading } from "rimble-ui";
 
+import { Decimal, Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib";
-import { Decimal, Percent } from "@liquity/lib/dist/utils";
 
 type SystemStatsProps = {
   numberOfTroves: number;

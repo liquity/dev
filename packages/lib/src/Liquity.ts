@@ -4,7 +4,7 @@ import { BigNumberish, BigNumber } from "@ethersproject/bignumber";
 import { Provider, BlockTag } from "@ethersproject/abstract-provider";
 import { AddressZero } from "@ethersproject/constants";
 
-import { Decimal, Decimalish, Difference } from "../utils/Decimal";
+import { Decimal, Decimalish, Difference } from "@liquity/decimal";
 
 import {
   CDPManager,

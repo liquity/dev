@@ -1,5 +1,6 @@
 certs
 registry
+packages/decimal/
 packages/frontend/
 packages/dev-frontend/
 .dockerignore
@@ -10,3 +11,4 @@ nginx.conf.tpl
 package.json
 README.public.md==>README.md
 README.public.md
+tsconfig.base.json

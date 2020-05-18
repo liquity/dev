@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Loader, Link, Icon } from "rimble-ui";
 
+import { Decimal, Percent, Difference } from "@liquity/decimal";
 import { Trove, Liquity } from "@liquity/lib";
-import { Decimal, Percent, Difference } from "@liquity/lib/dist/utils";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 

@@ -2,8 +2,8 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Log } from "@ethersproject/abstract-provider";
 import { LogDescription, Interface } from "@ethersproject/abi";
 
+import { Decimal } from "@liquity/decimal";
 import { LiquityContracts } from "./contracts";
-import { Decimal } from "../utils";
 
 export const contractsToInterfaces = (contracts: LiquityContracts) => {
   return Object.entries(contracts).reduce<{ [address: string]: [string, Interface] }>(

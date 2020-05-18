@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, Box, Flex, Loader } from "rimble-ui";
 
+import { Decimal, Percent } from "@liquity/decimal";
 import { Trove, Liquity } from "@liquity/lib";
-import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { TroveEditor } from "./TroveEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
 

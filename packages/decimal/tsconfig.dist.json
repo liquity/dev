@@ -4,6 +4,10 @@
     "declaration": true,
     "outDir": "dist"
   },
-  "include": ["src", "types"],
-  "files": ["./index.ts"]
+  "include": [
+    "src"
+  ],
+  "files": [
+    "./index.ts"
+  ]
 }

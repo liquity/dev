@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Loader } from "rimble-ui";
 
+import { Decimal } from "@liquity/decimal";
 import { Liquity, StabilityDeposit, Trove } from "@liquity/lib";
-import { Decimal } from "@liquity/lib/dist/utils";
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
 

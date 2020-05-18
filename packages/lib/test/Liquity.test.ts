@@ -4,10 +4,9 @@ import chaiAsPromised from "chai-as-promised";
 import { Signer } from "@ethersproject/abstract-signer";
 import { ethers } from "@nomiclabs/buidler";
 
-import { deployAndSetupContracts } from "./utils/deploy";
-import { Decimal, Decimalish } from "../utils/Decimal";
-import { LiquityContractAddresses, addressesOf } from "../src/contracts";
-import { Liquity, Trove, StabilityDeposit } from "../src/Liquity";
+import { Decimal, Decimalish } from "@liquity/decimal";
+import { deployAndSetupContracts } from "../utils/deploy";
+import { Liquity, Trove, StabilityDeposit, LiquityContractAddresses, addressesOf } from "..";
 
 const provider = ethers.provider;
 

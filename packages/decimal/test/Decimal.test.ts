@@ -2,7 +2,7 @@ import { describe, it } from "mocha";
 import { expect } from "chai";
 import { BigNumber } from "@ethersproject/bignumber";
 
-import { Decimal } from "../utils";
+import { Decimal } from "..";
 
 describe("Decimal", () => {
   describe(".from()", () => {
@@ -141,31 +141,19 @@ describe("Decimal", () => {
 
   describe(".mul()", () => {
     it("should multiply", () => {
-      expect(
-        Decimal.from(2)
-          .mul(3)
-          .toString()
-      ).to.equal("6");
+      expect(Decimal.from(2).mul(3).toString()).to.equal("6");
     });
   });
 
   describe(".div()", () => {
     it("should divide", () => {
-      expect(
-        Decimal.from(3)
-          .div(2)
-          .toString()
-      ).to.equal("1.5");
+      expect(Decimal.from(3).div(2).toString()).to.equal("1.5");
     });
   });
 
   describe(".mulDiv()", () => {
     it("should multiply then divide", () => {
-      expect(
-        Decimal.from(2)
-          .mulDiv(3, 2)
-          .toString()
-      ).to.equal("3");
+      expect(Decimal.from(2).mulDiv(3, 2).toString()).to.equal("3");
     });
   });
 

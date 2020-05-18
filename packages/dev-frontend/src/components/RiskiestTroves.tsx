@@ -5,8 +5,8 @@ import styled from "styled-components";
 import { theme } from "rimble-ui";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
 
+import { Decimal, Percent } from "@liquity/decimal";
 import { Liquity, Trove } from "@liquity/lib";
-import { Decimal, Percent } from "@liquity/lib/dist/utils";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";

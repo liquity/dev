@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Link, Icon, Loader } from "rimble-ui";
 
+import { Difference } from "@liquity/decimal";
 import { StabilityDeposit } from "@liquity/lib";
-import { Difference } from "@liquity/lib/dist/utils";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 

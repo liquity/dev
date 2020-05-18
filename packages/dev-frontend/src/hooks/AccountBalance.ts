@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
 import { BigNumber } from "@ethersproject/bignumber";
 
-import { Decimal } from "@liquity/lib/dist/utils/Decimal";
+import { Decimal } from "@liquity/decimal";
 import { useAsyncValue } from "./AsyncValue";
 
 export const useAccountBalance = (provider: Provider, account: string) => {

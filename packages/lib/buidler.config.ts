@@ -8,10 +8,16 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config";
 import { NetworkConfig } from "@nomiclabs/buidler/types";
 
-import { deployAndSetupContracts, setSilent } from "./test/utils/deploy";
-import { Liquity, Trove, TroveWithPendingRewards } from "./src/Liquity";
-import { Decimal, Difference, Decimalish, Percent } from "./utils";
-import { addressesOf, deploymentOnNetwork, connectToContracts } from "./src/contracts";
+import { Decimal, Difference, Decimalish, Percent } from "@liquity/decimal";
+import { deployAndSetupContracts, setSilent } from "./utils/deploy";
+import {
+  Liquity,
+  Trove,
+  TroveWithPendingRewards,
+  addressesOf,
+  deploymentOnNetwork,
+  connectToContracts
+} from ".";
 
 usePlugin("buidler-ethers-v5");
 
