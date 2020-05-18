@@ -9,7 +9,10 @@
       "**/mocha",
       "**/@nomiclabs/*",
       "**/*buidler*",
-      "**/solidity-coverage"
+      "**/solidity-coverage",
+      "**/ts-node",
+      "**/typescript",
+      "@liquity/dev-frontend/**"
     ]
   },
   "scripts": {
