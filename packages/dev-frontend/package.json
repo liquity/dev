@@ -5,6 +5,7 @@
   "dependencies": {
     "@liquity/decimal": "^0.0.1",
     "@liquity/lib": "^0.0.1",
+    "@liquity/providers": "^0.0.1",
     "@testing-library/dom": "^6.12.2",
     "@testing-library/jest-dom": "^5.1.1",
     "@testing-library/react": "^9.4.0",
