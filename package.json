@@ -12,7 +12,8 @@
       "**/solidity-coverage",
       "**/ts-node",
       "**/typescript",
-      "@liquity/dev-frontend/**"
+      "**/eslint*",
+      "**/@typescript-eslint/*"
     ]
   },
   "scripts": {
