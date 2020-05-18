@@ -4,14 +4,13 @@ import { getNetwork } from "@ethersproject/networks";
 import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
+import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import {
   Liquity,
   deploymentOnNetwork,
   connectToContracts,
   LiquityContracts,
-  DEV_CHAIN_ID,
-  isBatchedProvider,
-  isWebSocketAugmentedProvider
+  DEV_CHAIN_ID
 } from "@liquity/lib";
 
 type LiquityContext = {

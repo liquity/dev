@@ -3,12 +3,8 @@ import { Web3ReactProvider } from "@web3-react/core";
 import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
 
 import { Decimal, Difference, Percent } from "@liquity/decimal";
-import {
-  Liquity,
-  Trove,
-  StabilityDeposit,
-  BatchedWebSocketAugmentedWeb3Provider
-} from "@liquity/lib";
+import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
+import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
 import { useLiquityStore } from "./hooks/BlockPolledLiquityStore";

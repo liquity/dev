@@ -4,8 +4,9 @@ import { BaseProvider } from "@ethersproject/providers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Contract } from "@ethersproject/contracts";
 
-import { DEV_CHAIN_ID } from "./contracts";
 import { WebSocketAugmentedWeb3Provider } from "./WebSocketAugmentedProvider";
+
+const DEV_CHAIN_ID = 17;
 
 const multiCallerAddressOnChain: {
   [chainId: number]: string;

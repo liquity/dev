@@ -3,6 +3,7 @@ registry
 packages/decimal/
 packages/frontend/
 packages/dev-frontend/
+packages/providers/
 .dockerignore
 .gitignore
 Dockerfile
