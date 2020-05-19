@@ -37,7 +37,7 @@ These are the Liquity components that have been made visible in this repo. They 
 
 ## Running the dev-frontend
 
-The dev-frontend has some dependencies that are not yet published in this repo, therefore it cannot be built from these sources yet. In the meantime, [images are available](<(https://hub.docker.com/r/liquity/dev-frontend)>) on Docker Hub.
+The dev-frontend has some dependencies that are not yet published in this repo, therefore it cannot be built from these sources yet. In the meantime, [images are available](https://hub.docker.com/r/liquity/dev-frontend) on Docker Hub.
 
 ### Prerequisites
 
