@@ -33,12 +33,12 @@
     "react-copy-to-clipboard": "^5.0.2",
     "react-dom": "^16.12.0",
     "react-is": "^16.12.0",
-    "react-scripts": "3.4.0",
+    "react-scripts": "^3.4.0",
     "rimble-ui": "^0.11.1",
     "source-map-explorer": "^2.4.2",
     "styled-components": "^5.0.1",
     "styled-system": "^5.1.5",
-    "typescript": "~3.8.2"
+    "typescript": "^3.8.2"
   },
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",
