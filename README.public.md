@@ -1,6 +1,6 @@
 # Liquity: Decentralized Borrowing Protocol
 
-[![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32)
+[![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32) [![Docker Pulls](https://img.shields.io/docker/pulls/liquity/dev-frontend?label=dev-frontend%20pulls&logo=docker&logoColor=white)](https://hub.docker.com/r/liquity/dev-frontend)
 
 Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against
 their collateral without paying interest. After locking up ETH as collateral in a smart contract and
@@ -23,4 +23,43 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
 
 ## About this repo
 
-TODO
+This repository hosts an early preview of the Liquity codebase until we get ready to open it up completely. Development continues to take place in a private repository, from which this repository is derived using [git filter-repo](https://github.com/newren/git-filter-repo).
+
+### Packages
+
+These are the Liquity components that have been made visible in this repo. They can be found under the `packages` directory.
+
+| Package               | Description                                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------------ |
+| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                    |
+| @liquity/dev-frontend | A bare-bones but functional React app used for interfacing with the smart contracts during development |
+| @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                    |
+
+## Running the dev-frontend
+
+The dev-frontend has some dependencies that are not yet published in this repo, therefore it cannot be built from these sources yet. In the meantime, [images are available](<(https://hub.docker.com/r/liquity/dev-frontend)>) on Docker Hub.
+
+### Prerequisites
+
+You will need to have [Docker](https://docs.docker.com/get-docker/) installed.
+
+### Run using `docker`
+
+`docker run --name liquity -d --rm -p 3000:80 liquity/dev-frontend`
+
+This will start serving the Liquity Developer Interface using HTTP on port 3000. If everything went well, you should be able to open http://localhost:3000/ in your browser. To use a different port, just replace 3000 with your desired port number.
+
+To stop the container:
+
+`docker kill liquity`
+
+### Run using docker-compose
+
+After cloning the repo, change to the `packages/dev-frontend` subdirectory. Inside there, run:
+
+```
+docker-compose pull
+docker-compose up -d
+```
+
+This will start the service on port 80. This can be overridden by using the `LIQUITY_FRONTEND_HTTP_PORT` environment variable.
