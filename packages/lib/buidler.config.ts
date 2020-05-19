@@ -11,13 +11,12 @@ import { NetworkConfig } from "@nomiclabs/buidler/types";
 import { Decimal, Difference, Decimalish, Percent } from "@liquity/decimal";
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
 import {
-  Liquity,
-  Trove,
-  TroveWithPendingRewards,
   addressesOf,
   deploymentOnNetwork,
-  connectToContracts
-} from ".";
+  connectToContracts,
+  LiquityDeployment
+} from "./src/contracts";
+import { Liquity, Trove, TroveWithPendingRewards } from "./src/Liquity";
 
 usePlugin("buidler-ethers-v5");
 
@@ -67,14 +66,19 @@ task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) =>
   setSilent(false);
   const contracts = await deployAndSetupContracts(deployer, bre.ethers.getContractFactory);
 
+  const deployment: LiquityDeployment = {
+    addresses: addressesOf(contracts),
+    version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim(),
+    deploymentDate: new Date().getTime()
+  };
+
+  fs.writeFileSync(
+    path.join("deployments", `${bre.network.name}.json`),
+    JSON.stringify(deployment, undefined, 2)
+  );
+
   console.log();
-  console.log({
-    [bre.network.name]: {
-      addresses: addressesOf(contracts),
-      version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim(),
-      deploymentDate: new Date().getTime()
-    }
-  });
+  console.log({ [bre.network.name]: deployment });
   console.log();
 });
 

@@ -1,0 +1,16 @@
+{
+  "addresses": {
+    "activePool": "0x85fd08eFd6Eb53b223D72977458B6eA3f511da9d",
+    "borrowerOperations": "0x1370D8f67354332561FF8E93Bbb2B97333A4c96c",
+    "cdpManager": "0xE5559E564a26AE1e45D5838318A7BB849Da98a31",
+    "clvToken": "0xcce4511541158dE5Ca64e7f66c0deAca7bC63BED",
+    "defaultPool": "0x07ADEC6FE9D1d7f8c1Aa027cB47e48323bF23C57",
+    "multiCDPgetter": "0x218Db6a1eA30a6a9231b74d165A8B6bE190Da2DB",
+    "poolManager": "0x00946BE81da943C301226e3FDA5645C1B7345c85",
+    "priceFeed": "0xDE82edAe1BE3A1a5c77c12F4DBFe69A11Ce13209",
+    "sortedCDPs": "0xCd19bb04FB7F83D2bc785614F4C8F1312c9aA32a",
+    "stabilityPool": "0x59E36625b9bd7D112bd0A9B285ef12eE92809714"
+  },
+  "version": "4e9a65d4bb2eb26fe28d423f73c4318d5a138db4",
+  "deploymentDate": 1589261784000
+}
