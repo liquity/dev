@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import "colors";
+import dotenv from "dotenv";
 
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
@@ -18,6 +19,8 @@ import {
 } from "./src/contracts";
 import { Liquity, Trove, TroveWithPendingRewards } from "./src/Liquity";
 
+dotenv.config();
+
 usePlugin("buidler-ethers-v5");
 
 const generateRandomAccounts = (numberOfAccounts: number) => {
@@ -30,7 +33,7 @@ const generateRandomAccounts = (numberOfAccounts: number) => {
   return accounts;
 };
 
-const deployerAccount = "0x543ab4105a87fa14619bad9b85b6e989412b2f30380a3f36f49b9327b5967fb1";
+const deployerAccount = process.env.DEPLOYER_PRIVATE_KEY || Wallet.createRandom().privateKey;
 const devChainRichAccount = "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7";
 
 const infuraApiKey = "ad9cef41c9c844a7b54d10be24d416e5";
