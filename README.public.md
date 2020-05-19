@@ -45,15 +45,19 @@ You will need to have [Docker](https://docs.docker.com/get-docker/) installed.
 
 ### Run using `docker`
 
-`docker run --name liquity -d --rm -p 3000:80 liquity/dev-frontend`
+```
+docker run --name liquity -d --rm -p 3000:80 liquity/dev-frontend
+```
 
 This will start serving the Liquity Developer Interface using HTTP on port 3000. If everything went well, you should be able to open http://localhost:3000/ in your browser. To use a different port, just replace 3000 with your desired port number.
 
-To stop the container:
+To stop the service:
 
-`docker kill liquity`
+```
+docker kill liquity
+```
 
-### Run using docker-compose
+### Run using `docker-compose`
 
 After cloning the repo, change to the `packages/dev-frontend` subdirectory. Inside there, run:
 
@@ -63,3 +67,9 @@ docker-compose up -d
 ```
 
 This will start the service on port 80. This can be overridden by using the `LIQUITY_FRONTEND_HTTP_PORT` environment variable.
+
+To stop the service, execute in the same directory:
+
+```
+docker-compose down
+```
