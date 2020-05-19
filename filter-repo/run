@@ -3,11 +3,12 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 [ -d output ] || ./init
-git filter-repo --paths-from-file included-paths --target output
+git filter-repo --paths-from-file 1-included-paths --target output
 
 cd output
-git branch -u origin/master
+git filter-repo --paths-from-file ../2-excluded-paths --invert-paths
 
-# git filter-repo updates origin/master too
-# Fetching sets it back to the actual remote ref, which is handy when checking what we'll push
+# Set up origin and tracking information for pushing to the public repo
+git remote add origin git@github.com:liquity/liquity.git
 git fetch
+git branch -u origin/master
