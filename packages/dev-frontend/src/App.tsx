@@ -18,6 +18,7 @@ import { RiskiestTroves } from "./components/RiskiestTroves";
 import { PriceManager } from "./components/PriceManager";
 import { RedemptionManager } from "./components/RedemptionManager";
 import { LiquidationManager } from "./components/LiquidationManager";
+import { Header } from "./components/Header";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
@@ -68,7 +69,9 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
   return (
     <>
-      <UserAccount {...{ account, etherBalance, quiBalance }} />
+      <Header>
+        <UserAccount {...{ account, etherBalance, quiBalance }} />
+      </Header>
 
       <Box width="862px" mx="auto">
         <Flex flexWrap="wrap" justifyItems="center">
