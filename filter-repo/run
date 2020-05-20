@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+[ -d output ] || ./init
+git filter-repo --paths-from-file included-paths --target output
+
+cd output
+git branch -u origin/master
+
+# git filter-repo updates origin/master too
+# Fetching sets it back to the actual remote ref, which is handy when checking what we'll push
+git fetch

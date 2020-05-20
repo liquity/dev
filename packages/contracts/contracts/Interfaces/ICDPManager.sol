@@ -3,6 +3,9 @@ pragma solidity ^0.5.11;
 // Common interface for the CDP Manager.
 interface ICDPManager {
     // --- Events ---
+
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+
     event PoolManagerAddressChanged(address _newPoolManagerAddress);
 
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
@@ -41,15 +44,15 @@ interface ICDPManager {
 
     function getApproxHint(uint CR, uint numTrials) external view returns(address);
 
-    function openLoan(uint _CLVAmount, address _hint) external payable returns (bool);
+    // function openLoan(uint _CLVAmount, address _hint) external payable returns (bool);
 
-    function addColl(address _user, address _hint) external payable returns(bool);
+    // function addColl(address _user, address _hint) external payable returns(bool);
 
-    function withdrawColl(uint _amount, address _hint) external returns(bool);
+    // function withdrawColl(uint _amount, address _hint) external returns(bool);
 
-    function withdrawCLV(uint _amount, address _hint) external returns(bool);
+    // function withdrawCLV(uint _amount, address _hint) external returns(bool);
 
-    function repayCLV(uint _amount, address _hint) external returns(bool);
+    // function repayCLV(uint _amount, address _hint) external returns(bool);
 
     function liquidate(address _user) external returns(bool);
 
@@ -64,5 +67,42 @@ interface ICDPManager {
         address _firstRedemptionHint,
         address _partialRedemptionHint,
         uint _partialRedemptionHintICR
-    ) external returns (bool);
+    ) external returns (bool); 
+
+    function updateStakeAndTotalStakes(address _user) external returns (uint);
+
+    function updateRewardSnapshots(address _user) external returns(bool);
+
+    function addCDPOwnerToArray(address _user) external returns (uint index);
+
+    function applyPendingRewards(address _user) external returns(bool);
+
+    function closeCDP(address _user) external returns (bool);
+
+    function removeStake(address _user) external returns (bool);
+
+    function getCDPStatus(address _user) external view returns (uint);
+    
+    function getCDPStake(address _user) external view returns (uint);
+
+    function getCDPDebt(address _user) external view returns (uint);
+
+    function getCDPColl(address _user) external view returns (uint);
+
+    function setCDPStatus(address _user, uint num) external;
+
+    function increaseCDPColl(address _user, uint _collIncrease) external returns (uint);
+
+    function decreaseCDPColl(address _user, uint _collDecrease) external returns (uint); 
+
+    function increaseCDPDebt(address _user, uint _debtIncrease) external returns (uint); 
+
+    function decreaseCDPDebt(address _user, uint _collDecrease) external returns (uint); 
+
+    // function getCDPProperties(address _user) external view returns (uint, uint, uint);
+
+    // function getCDPStake(address _user) external view returns (uint); 
+    // }
+
+    // function getCDPColl(address _user) external view returns (uint); 
 }

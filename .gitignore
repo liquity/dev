@@ -1,7 +1,10 @@
 # Editor temp files
 *~
 
+# macOS Finder attribute files
+.DS_Store
+
 node_modules
 
-client/src/contracts
-
+# output of TypeScript transpilation
+/packages/*/dist

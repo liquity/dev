@@ -1,0 +1,15 @@
+certs
+registry
+packages/decimal/
+packages/frontend/
+packages/dev-frontend/
+packages/providers/
+.dockerignore
+.gitignore
+Dockerfile
+docker-compose.yml
+nginx.conf.tpl
+package.json
+README.public.md==>README.md
+README.public.md
+tsconfig.base.json

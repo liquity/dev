@@ -1,6 +1,6 @@
 # Liquity System Summary
 
-![Tests](https://github.com/cvalkan/cleverage/workflows/Tests/badge.svg)
+![Tests](https://github.com/cvalkan/cleverage/workflows/CI/badge.svg) [![Frontend status](https://img.shields.io/uptimerobot/status/m784948796-056b56fd51c67d682c11bb24?label=Frontend&logo=nginx&logoColor=white)](http://94.130.72.96:6789/) ![uptime](https://img.shields.io/uptimerobot/ratio/7/m784948796-056b56fd51c67d682c11bb24) [![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32)
 
 Liquity is a collateralized stablecoin platform. Users can lock up ether, and issue stablecoin tokens (CLV) to their own Ethereum address, and subsequently transfer those tokens to any other Ethereum address.
 
@@ -48,7 +48,8 @@ Liquity follows the default Truffle project structure. The project runs on Truff
 
 ### Directories
 
-- `packages/frontend/` - Contains the front-end React app for the user-facing web interface
+- `packages/dev-frontend/` - Liquity Developer Interface: a bare-bones but functional React app used for interfacing with the smart contracts during development
+- `packages/frontend/` - The front-end React app for the user-facing web interface
 - `packages/lib/` - A layer between the front-end and smart contracts that handles the intermediate logic and low-level transactions
 - `packages/contracts/` The backend development folder, contains the Truffle/Buidler project, contracts and tests
 - `packages/contracts/contracts/` -The core back end smart contracts written in Solidity

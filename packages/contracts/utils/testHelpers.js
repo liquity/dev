@@ -11,7 +11,7 @@ const MoneyValues = {
   _15_Ether: web3.utils.toWei('15', 'ether'),
   _20_Ether: web3.utils.toWei('20', 'ether'),
   _22_Ether: web3.utils.toWei('22', 'ether'),
-  _50_Ether: web3.utils.toWei('22', 'ether'),
+  _50_Ether: web3.utils.toWei('50', 'ether'),
   _98_Ether: web3.utils.toWei('98', 'ether'),
   _100_Ether: web3.utils.toWei('100', 'ether'),
   _200_Ether: web3.utils.toWei('200', 'ether'),
@@ -24,6 +24,12 @@ const MoneyValues = {
   _1billion_Ether: web3.utils.toWei('1000000000', 'ether'),
   _10billion_Ether: web3.utils.toWei('10000000000', 'ether'),
   _100billion_Ether: web3.utils.toWei('10000000000', 'ether'),
+  
+  _0pt5_Ether:  web3.utils.toWei('500', 'finney'),
+  _1pt5_Ether:  web3.utils.toWei('1500', 'finney'),
+
+  _1e17:  web3.utils.toWei('100', 'finney'),
+  _5e17:  web3.utils.toWei('500', 'finney'),
 
   _1e18: web3.utils.toWei('1', 'ether'),
   _5e18: web3.utils.toWei('5', 'ether'),
@@ -35,8 +41,9 @@ const MoneyValues = {
   _80e18: web3.utils.toWei('80', 'ether'),
   _90e18: web3.utils.toWei('90', 'ether'),
   _100e18: web3.utils.toWei('100', 'ether'),
+  _101e18: web3.utils.toWei('101', 'ether'),
+  _110e18: web3.utils.toWei('110', 'ether'),
   _125e18: web3.utils.toWei('125', 'ether'),
-  _150e18: web3.utils.toWei('150', 'ether'),
   _150e18: web3.utils.toWei('150', 'ether'),
   _180e18: web3.utils.toWei('180', 'ether'),
   _200e18: web3.utils.toWei('200', 'ether'),
@@ -57,7 +64,15 @@ const MoneyValues = {
   _1e27: web3.utils.toWei('1000000000', 'ether'),
   _2e27: web3.utils.toWei('2000000000', 'ether'),
   _5e35: web3.utils.toWei('500000000000000000', 'ether'),
-  _1e36: web3.utils.toWei('1000000000000000000', 'ether')
+  _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
+
+_1e27: web3.utils.toWei('1000000000', 'ether'),
+
+  negative_5e17:  "-" + web3.utils.toWei('500', 'finney'),
+  negative_10e18:  "-" + web3.utils.toWei('10', 'ether'),
+  negative_50e18:  "-" + web3.utils.toWei('50', 'ether'),
+  negative_100e18:  "-" + web3.utils.toWei('100', 'ether')
+
 }
 
 // TODO: Make classes for function export

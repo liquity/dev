@@ -4,9 +4,11 @@ import path from "path";
 import { Interface, ParamType } from "@ethersproject/abi";
 
 import ActivePool from "../../contracts/artifacts/ActivePool.json";
+import BorrowerOperations from "../../contracts/artifacts/BorrowerOperations.json";
 import CDPManager from "../../contracts/artifacts/CDPManager.json";
 import CLVToken from "../../contracts/artifacts/CLVToken.json";
 import DefaultPool from "../../contracts/artifacts/DefaultPool.json";
+import MultiCDPGetter from "../../contracts/artifacts/MultiCDPGetter.json";
 import PoolManager from "../../contracts/artifacts/PoolManager.json";
 import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
 import SortedCDPs from "../../contracts/artifacts/SortedCDPs.json";
@@ -55,6 +57,7 @@ const getType = ({ baseType, components, arrayChildren }: ParamType, flexible: b
 export function generate(contractName: string, { functions }: Interface): string {
   return [
     `export declare class ${contractName} extends Contract {`,
+    "  readonly [name: string]: unknown;",
 
     ...Object.values(functions).map(func => {
       const inputs = func.inputs.map((input, i) => [input.name || "arg" + i, getType(input, true)]);
@@ -92,9 +95,11 @@ export function generate(contractName: string, { functions }: Interface): string
 
 const contracts = [
   ActivePool,
+  BorrowerOperations,
   CDPManager,
   CLVToken,
   DefaultPool,
+  MultiCDPGetter,
   PoolManager,
   PriceFeed,
   SortedCDPs,

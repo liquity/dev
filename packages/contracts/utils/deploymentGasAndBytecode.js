@@ -11,6 +11,7 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const DeciMath = artifacts.require("DeciMath")
 const ABDKMath64x64 = artifacts.require("ABDKMath64x64")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const deploymentHelpers = require("./deploymentHelpers.js")
 
 const getAddresses = deploymentHelpers.getAddresses
@@ -20,6 +21,7 @@ const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegis
 
 
 contractABIs = [
+    BorrowerOperations,
     PriceFeed,
     CLVToken, 
     PoolManager,
@@ -56,6 +58,7 @@ async function main() {
     DeciMath.setAsDeployed(deciMath)
     ABDKMath64x64.setAsDeployed(abdkMath)
 
+    const borrowerOperations = await BorrowerOperations.new()
     const priceFeed = await PriceFeed.new()
     const clvToken = await CLVToken.new()
     const poolManager = await PoolManager.new()
@@ -68,6 +71,7 @@ async function main() {
     const functionCaller = await FunctionCaller.new()
 
     contracts = {
+        borrowerOperations: borrowerOperations,
         priceFeed: priceFeed,
         clvToken: clvToken, 
         poolManager: poolManager,
@@ -81,9 +85,7 @@ async function main() {
       }
 
     const contractAddresses = getAddresses(contracts)
-    await setNameRegistry(contractAddresses, nameRegistry)
-    const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
-    await connectContracts(contracts, registeredAddresses)
+    await connectContracts(contracts, contractAddresses)
 
     console.log(`Gas costs for deployments: `)
     for (contractName of Object.keys(contracts)) {

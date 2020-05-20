@@ -1,7 +1,0 @@
-.git
-**/node_modules
-packages/contracts/artifacts
-packages/contracts/cache
-packages/frontend/build
-packages/lib/dist
-packages/lib/types

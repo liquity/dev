@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+rm -rf output
+mkdir output
+cd output
+git init
+
+git remote add origin git@github.com:liquity/liquity.git

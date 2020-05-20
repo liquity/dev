@@ -1,23 +1,12 @@
-const PoolManager = artifacts.require("./PoolManager.sol")
-const SortedCDPs = artifacts.require("./SortedCDPs.sol")
-const CDPManager = artifacts.require("./CDPManager.sol")
-const PriceFeed = artifacts.require("./PriceFeed.sol")
-const CLVToken = artifacts.require("./CLVToken.sol")
-const NameRegistry = artifacts.require("./NameRegistry.sol")
-const ActivePool = artifacts.require("./ActivePool.sol");
-const DefaultPool = artifacts.require("./DefaultPool.sol");
-const StabilityPool = artifacts.require("./StabilityPool.sol")
-const FunctionCaller = artifacts.require("./FunctionCaller.sol")
-
-const testHelpers = require("../utils/testHelpers.js")
-const getDifference = testHelpers.getDifference
-
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
-const getAddresses = deploymentHelpers.getAddresses
-const setNameRegistry = deploymentHelpers.setNameRegistry
-const connectContracts = deploymentHelpers.connectContracts
-const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
+const testHelpers = require("../utils/testHelpers.js")
 
+const deployLiquity = deploymentHelpers.deployLiquity
+const getAddresses = deploymentHelpers.getAddresses
+const connectContracts = deploymentHelpers.connectContracts
+
+const getDifference = testHelpers.getDifference
+const moneyVals = testHelpers.MoneyValues
 contract('CDPManager', async accounts => {
  
   const [owner] = accounts;
@@ -31,6 +20,7 @@ contract('CDPManager', async accounts => {
   let stabilityPool;
   let defaultPool;
   let functionCaller;
+  let borrowerOperations;
 
   let numAccounts;
   let price;
@@ -54,11 +44,11 @@ contract('CDPManager', async accounts => {
  const openCDP = async (account, index) => {
    const amountFinney = 2000 + index * 10
    const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-   await cdpManager.addColl(account, account, { from: account, value: coll })
+   await borrowerOperations.addColl(account, account, { from: account, value: coll })
  }
 
  const withdrawCLVfromCDP = async (account) => {
-  await cdpManager.withdrawCLV('200000000000000000000', account, { from: account })
+  await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
  }
 
  // Sequentially add coll and withdraw CLV, 1 account at a time
@@ -71,8 +61,8 @@ contract('CDPManager', async accounts => {
     console.time('makeCDPsInSequence')
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-      await cdpManager.addColl(account, account, { from: account, value: coll })
-      await cdpManager.withdrawCLV('200000000000000000000', account, { from: account })
+      await borrowerOperations.addColl(account, account, { from: account, value: coll })
+      await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
   
       amountFinney += 10
     }
@@ -80,45 +70,22 @@ contract('CDPManager', async accounts => {
   }
 
   before(async () => {
-    priceFeed = await PriceFeed.new()
-    clvToken = await CLVToken.new()
-    poolManager = await PoolManager.new()
-    sortedCDPs = await SortedCDPs.new()
-    cdpManager = await CDPManager.new()
-    nameRegistry = await NameRegistry.new()
-    activePool = await ActivePool.new()
-    stabilityPool = await StabilityPool.new()
-    defaultPool = await DefaultPool.new()
-    functionCaller = await FunctionCaller.new()
+    const contracts = await deployLiquity()
 
-    DefaultPool.setAsDeployed(defaultPool)
-    PriceFeed.setAsDeployed(priceFeed)
-    CLVToken.setAsDeployed(clvToken)
-    PoolManager.setAsDeployed(poolManager)
-    SortedCDPs.setAsDeployed(sortedCDPs)
-    CDPManager.setAsDeployed(cdpManager)
-    NameRegistry.setAsDeployed(nameRegistry)
-    ActivePool.setAsDeployed(activePool)
-    StabilityPool.setAsDeployed(stabilityPool)
-    FunctionCaller.setAsDeployed(functionCaller)
-
-    const contracts = {
-      priceFeed,
-      clvToken,
-      poolManager,
-      sortedCDPs,
-      cdpManager,
-      nameRegistry,
-      activePool,
-      stabilityPool,
-      defaultPool,
-      functionCaller
-    }
+    priceFeed = contracts.priceFeed
+    clvToken = contracts.clvToken
+    poolManager = contracts.poolManager
+    sortedCDPs = contracts.sortedCDPs
+    cdpManager = contracts.cdpManager
+    nameRegistry = contracts.nameRegistry
+    activePool = contracts.activePool
+    stabilityPool = contracts.stabilityPool
+    defaultPool = contracts.defaultPool
+    functionCaller = contracts.functionCaller
+    borrowerOperations = contracts.borrowerOperations
 
     const contractAddresses = getAddresses(contracts)
-    await setNameRegistry(contractAddresses, nameRegistry, { from: owner })
-    const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
-    await connectContracts(contracts, registeredAddresses)
+    await connectContracts(contracts, contractAddresses)
 
     numAccounts = 10
     price = await priceFeed.getPrice()

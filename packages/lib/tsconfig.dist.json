@@ -1,15 +1,9 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "declaration": true,
     "outDir": "dist"
   },
-  "include": [
-    "src",
-    "types",
-    "utils"
-  ],
-  "files": [
-    "./index.ts"
-  ]
+  "include": ["src", "types"],
+  "files": ["./index.ts"]
 }

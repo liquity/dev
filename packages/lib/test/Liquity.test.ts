@@ -2,12 +2,11 @@ import { describe, before, it } from "mocha";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { Signer } from "@ethersproject/abstract-signer";
-import { web3, artifacts, ethers } from "@nomiclabs/buidler";
+import { ethers } from "@nomiclabs/buidler";
 
-import { deployAndSetupContracts } from "./utils/deploy";
-import { Decimal, Decimalish } from "../utils/Decimal";
-import { LiquityContractAddresses, addressesOf } from "../src/contracts";
-import { Liquity, Trove, StabilityDeposit } from "../src/Liquity";
+import { Decimal, Decimalish } from "@liquity/decimal";
+import { deployAndSetupContracts } from "../utils/deploy";
+import { Liquity, Trove, StabilityDeposit, LiquityContractAddresses, addressesOf } from "..";
 
 const provider = ethers.provider;
 
@@ -45,7 +44,7 @@ describe("Liquity", () => {
 
   before(async () => {
     [deployer, funder, user, ...otherUsers] = await ethers.getSigners();
-    addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
+    addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
   });
 
   // Always setup same initial balance for user
@@ -61,10 +60,7 @@ describe("Liquity", () => {
     if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
       await funder.sendTransaction({
         to: user.getAddress(),
-        value: targetBalance
-          .add(txCost)
-          .sub(balance)
-          .add(1),
+        value: targetBalance.add(txCost).sub(balance).add(1),
         gasLimit
       });
 
@@ -92,8 +88,8 @@ describe("Liquity", () => {
     expect(`${await provider.getBalance(user.getAddress())}`).to.equal(`${targetBalance}`);
   });
 
-  it("should connect to contracts by CDPManager address", async () => {
-    liquity = await Liquity.connect(addresses.cdpManager, user);
+  it("should connect to contracts their addresses", async () => {
+    liquity = await Liquity.connect(addresses, user);
   });
 
   it("should get the price", async () => {
@@ -171,7 +167,7 @@ describe("Liquity", () => {
   });
 
   const connectUsers = (users: Signer[]) =>
-    Promise.all(users.map(user => Liquity.connect(addresses.cdpManager, user)));
+    Promise.all(users.map(user => Liquity.connect(addresses, user)));
 
   describe("StabilityPool", () => {
     before(async () => {
@@ -228,10 +224,8 @@ describe("Liquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: 2,
-          debt: 110,
-          pendingCollateralReward: "0.166043589743589744",
-          pendingDebtReward: 29
+          collateral: "2.166043589743589744",
+          debt: 139
         })
       );
     });
@@ -244,8 +238,7 @@ describe("Liquity", () => {
       expect(trove).to.deep.equal(
         new Trove({
           collateral: "2.223299999999999994",
-          debt: 139,
-          _stake: "2.052867274257567554"
+          debt: 139
         })
       );
 
@@ -255,7 +248,7 @@ describe("Liquity", () => {
     describe("when people overstay", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
-        addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
+        addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
@@ -315,7 +308,7 @@ describe("Liquity", () => {
   describe("Redemption", () => {
     before(async () => {
       // Deploy new instances of the contracts, for a clean slate
-      addresses = addressesOf(await deployAndSetupContracts(web3, artifacts, deployer));
+      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
         user,

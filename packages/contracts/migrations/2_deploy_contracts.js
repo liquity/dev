@@ -11,6 +11,7 @@ const CLVToken = artifacts.require("./CLVToken.sol")
 const NameRegistry = artifacts.require("./NameRegistry.sol")
 const DeciMath = artifacts.require("./DeciMath.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 
@@ -20,7 +21,7 @@ const connectContracts = deploymentHelpers.connectContracts
 const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
 
 module.exports = async () => {
-  
+  const borrowerOperations = await BorrowerOperations.new()
   const priceFeed = await PriceFeed.new()
   const clvToken = await CLVToken.new()
   const poolManager = await PoolManager.new()
@@ -32,6 +33,7 @@ module.exports = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
 
+  BorrowerOperations.setAsDeployed(borrowerOperations)
   PriceFeed.setAsDeployed(priceFeed)
   CLVToken.setAsDeployed(clvToken)
   PoolManager.setAsDeployed(poolManager)
@@ -43,7 +45,9 @@ module.exports = async () => {
   DefaultPool.setAsDeployed(defaultPool)
   FunctionCaller.setAsDeployed(functionCaller)
 
+
   const contracts = {
+    borrowerOperations,
     priceFeed,
     clvToken,
     poolManager,
