@@ -97,7 +97,7 @@ These contracts hold ether and/or tokens for their respective parts of the syste
 
 `ICDPManager.sol`, `IPool.sol` etc. These provide specification for a contract’s functions, without implementation. They are similar to interfaces in Java or C#.
 
-## Expected User Behaviours
+## Expected User Behaviors
 
 Generally, borrowers call functions that trigger CDP operations on their own CDP. Stability Pool users (who may or may not also be borrowers) call functions that trigger Stability Pool operations, such as depositing or withdrawing tokens to/from the Stability Pool.
 
@@ -161,7 +161,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `repayCLV(uint _amount, uint _hint)`: repay `_amount` of CLV to the caller’s CDP.
 
-`adjustLoan(uint _collWithdrawal, int _debtChange, address _hint`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
+`adjustLoan(uint _collWithdrawal, int _debtChange, address _hint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
 
 `closeLoan()`: allows a borrower to repay all debt, withdraw all their collateral, and close their loan.
 
