@@ -44,20 +44,20 @@ Recovery Mode is designed to incentivise collateral top-ups, and also itself act
 
 ## Project Structure
 
-Liquity follows the default Truffle project structure. The project runs on Truffle v5.1.5.
-
 ### Directories
 
-- `packages/dev-frontend/` - Liquity Developer Interface: a bare-bones but functional React app used for interfacing with the smart contracts during development
+- `packages/dev-frontend/` - Liquity Developer Interface: a fully functional React app used for interfacing with the smart contracts during development
 - `packages/frontend/` - The front-end React app for the user-facing web interface
 - `packages/lib/` - A layer between the front-end and smart contracts that handles the intermediate logic and low-level transactions
-- `packages/contracts/` The backend development folder, contains the Truffle/Buidler project, contracts and tests
+- `packages/contracts/` The backend development folder, contains the Buidler project, contracts and tests
 - `packages/contracts/contracts/` -The core back end smart contracts written in Solidity
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
-- `packages/contracts/migrations/` - contains for deploying the smart contracts to the blockchain
-- `packages/contracts/utils/` - external truffle scripts - deployment helpers, gas calculators, etc
+- `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Liquity operations under various scenarios
+- `packages/contracts/migrations/` - contains Buidler script for deploying the smart contracts to the blockchain
+- `packages/contracts/utils/` - external Buidler and node scripts - deployment helpers, gas calculators, etc
+- `packages/contracts/mathProofs/` - core mathematical proofs of Liquity properties, and a derivation of the scalable Stability Pool staking formula
 
-Backend development is done in the Buidler framework, which is compatible with Truffle projects, and allows Liquity to be deployed on the Buidler EVM network for faster compilation and test execution.
+Backend development is done in the Buidler framework, and allows Liquity to be deployed on the Buidler EVM network for fast compilation and test execution.
 
 ## System Architecture
 
@@ -65,11 +65,13 @@ The core Liquity system consists of several smart contracts, which are deployabl
 
 All application logic and data is contained in these contracts - there is no need for a separate database or back end logic running on a web server. In effect, the Ethereum network is itself the Liquity back end. As such, all balances and contract data are public.
 
-The two main contracts - `CDPManager.sol` and `PoolManager.sol` - hold the user-facing public functions, and contain most of the internal logic. They control movements of ether and tokens around the system.
+The three main contracts - `BorrowerOperations.sol`, `CDPManager.sol` and `PoolManager.sol` - hold the user-facing public functions, and contain most of the internal logic. They control movements of ether and tokens around the system.
 
 ### Core Smart Contracts
 
-`CDPManager.sol` - contains functionality for borrower CDP operations: CDP loan creation, CDP loan ETH top-up / withdrawal, stablecoin issuance and repayment. Also contains functionality for liquidating CDPs that have fallen below the minimum collateral ratio.
+`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their CDP: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment.
+
+`CDPManager.sol` - contains functionality for liquidations and redemptions, and contains the state of each CDP, but does not hold value (i.e. ether / tokens).
 
 `PoolManager.sol` - contains functionality for Stability Pool operations: depositing and withdrawing tokens. Also directs transfers of ether and tokens between pools.
 
@@ -91,14 +93,6 @@ These contracts hold ether and/or tokens for their respective parts of the syste
 
 `DefaultPool.sol` holds the ether and stablecoin debts of the liquidated loans.
 
-### Helper Contracts
-
-`NameRegistry.sol` - stores the names and addresses of deployed contracts.
-
-`DeciMath.sol` - contains functions for decimal mathematics on Solidity.
-
-`FunctionCaller.sol` - proxy contract, not part of the core system. Used only for testing gas usage of functions.
-
 ### Contract Interfaces
 
 `ICDPManager.sol`, `IPool.sol` etc. These provide specification for a contract’s functions, without implementation. They are similar to interfaces in Java or C#.
@@ -119,24 +113,15 @@ Several public and external functions have modifiers such as `onlyCDPManager`, `
 
 ## Deployment to a Development Blockchain
 
-As a Truffle project, Liquity can be deployed to the Ganache framework:
+The Buidler migrations script and deployment helpers deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
 
-```
-truffle compile
-truffle migrate --reset
-```
-
-The migration script deploys all contracts, registers them in in the NameRegistry, and connects all contracts to their dependency contracts, by setting the necessary deployed addresses.
-
-The project will eventually be deployed on the Ropsten testnet.
+The project is deployed on the Ropsten testnet.
 
 ## Running Tests
 
-Run all tests with `truffle test`, or run a specific test with `truffle test ./test/contractTest.js`
+Run all tests with `npx buidler test`, or run a specific test with `npx buidler test ./test/contractTest.js`
 
-It is recommended to first launch an instance of Ganache with plenty of ether (e.g. 10k) for each account, e.g:
-
-`ganache-cli -I 4447 -p 7545 --gasLimit=9900000 -e 10000`
+Tests are run against the Buidler EVM.
 
 ## Units for Quantities
 
@@ -162,7 +147,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ## Public User-Facing Functions
 
-### Borrower CDP Operations - _CDPManager.sol_
+### Borrower CDP Operations - _BorrowerOperations.sol_
 
 `openLoan(uint _CLVAmount)`: payable function that creates a CDP for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional - the collateral must exceed \$20 in value, and the resulting collateral ratio must exceed the minimum (110% in normal circumstances).
 
@@ -175,6 +160,10 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 `withdrawCLV(uint _amount, address_hint)`: issues `_amount` of CLV from the caller’s CDP to the caller. Executes only if the resultant collateral ratio would remain above the minimum.
 
 `repayCLV(uint _amount, uint _hint)`: repay `_amount` of CLV to the caller’s CDP.
+
+`adjustLoan(uint _collWithdrawal, int _debtChange, address _hint`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
+
+`closeLoan()`: allows a borrower to repay all debt, withdraw all their collateral, and close their loan.
 
 ### CDPManager Liquidation Functions - _CDPManager.sol_
 
@@ -201,10 +190,6 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 ### Individual Pool Functions - _StabilityPool.sol_, _ActivePool.sol_, _DefaultPool.sol_
 
 `getRawEtherBalance()`: returns the actual raw ether balance of the contract. Distinct from the ETH public variable, which returns the total recorded ETH deposits.
-
-### Name Registry
-
-`getAddress(string memory name)`: returns the given contract's deployed address on the blockchain. The `name` argument must be passed as title case, e.g. “PoolManager”
 
 ## Supplying Hints to CDP operations
 
@@ -238,3 +223,14 @@ Gas cost will be worst case O(n), where n is the size of the `SortedCDPs` list.
 Gas cost of steps 2-4 will be free, and step 5 will be O(1).
 
 Hints allow cheaper CDP operations for the user, at the expense of a slightly longer time to completion, due to the need to await the result of the two read calls in steps 1 and 2 - which may be sent as JSON-RPC requests to Infura, unless the front end operator is running a full Ethereum node.
+
+## Math Proofs
+
+The Liquity implementation relies on some important system properties and mathematical derivations. 
+
+In particular, we have:
+
+- Proofs that CDP ordering is maintained throughout a series of liquidations and new loan issuances
+- A derivation of a formula and implementation for a highly scalable (O(1) complexity) reward distribution in the Stability Pool, involving compounding and decreasing stakes.
+
+PDFs of these can be found in `/mathProofs`. 
