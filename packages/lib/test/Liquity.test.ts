@@ -6,7 +6,8 @@ import { ethers } from "@nomiclabs/buidler";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 import { deployAndSetupContracts } from "../utils/deploy";
-import { Liquity, Trove, StabilityDeposit, LiquityContractAddresses, addressesOf } from "..";
+import { LiquityContractAddresses, addressesOf } from "../src/contracts";
+import { Liquity, Trove, StabilityDeposit } from "../src/Liquity";
 
 const provider = ethers.provider;
 

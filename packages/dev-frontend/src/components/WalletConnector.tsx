@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from "react";
 import { useWeb3React } from "@web3-react/core";
-import { MetaMaskButton, Modal, Text } from "rimble-ui";
+import { MetaMaskButton, Modal, Text, Flex, Link, Icon } from "rimble-ui";
 
 import { useInjectedConnector } from "../hooks/connectors/InjectedConnector";
 import { RetryDialog } from "./RetryDialog";
@@ -24,7 +24,7 @@ type ConnectionAction =
 const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (state, action) => {
   switch (action.type) {
     case "activate":
-      if (state.type === "inactive") {
+      if (state.type === "inactive" || state.type === "failed") {
         action.connector.activate();
         return {
           type: "activating",
@@ -95,9 +95,35 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
 
   return (
     <>
-      <MetaMaskButton onClick={() => dispatch({ type: "activate", connector: connectors.injected })}>
-        Connect to MetaMask
-      </MetaMaskButton>
+      <Flex height="100vh" justifyContent="center" alignItems="center">
+        <MetaMaskButton
+          onClick={() => dispatch({ type: "activate", connector: connectors.injected })}
+        >
+          Connect to MetaMask
+        </MetaMaskButton>
+      </Flex>
+
+      <Modal isOpen={connectionState.type === "failed"}>
+        <RetryDialog
+          title="Failed to connect to MetaMask"
+          onRetry={() => dispatch({ type: "retry" })}
+          onCancel={() => dispatch({ type: "cancel" })}
+        >
+          <Text textAlign="center">
+            Make sure you're using a supported browser and MetaMask is installed.
+          </Text>
+          <Link
+            mt={2}
+            href="https://metamask.io/download.html"
+            target="_blank"
+            display="flex"
+            alignItems="center"
+          >
+            Learn more
+            <Icon ml={1} size="16px" name="OpenInNew" />
+          </Link>
+        </RetryDialog>
+      </Modal>
 
       <Modal isOpen={connectionState.type === "activating"}>
         <ConnectionConfirmationDialog

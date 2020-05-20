@@ -1,0 +1,25 @@
+import React from "react";
+import { Flex, Box, Heading, Link } from "rimble-ui";
+
+import { LiquityLogo } from "./LiquityLogo";
+
+export const Header: React.FC = ({ children }) => {
+  return (
+    <Flex
+      px={5}
+      py={2}
+      justifyContent="space-between"
+      bg="near-white"
+      borderBottom="1px solid lightgrey"
+    >
+      <Flex alignItems="center" height="48px">
+        <Link href="https://www.liquity.org">
+          <LiquityLogo height="32px" />
+        </Link>
+        <Box mx={3} width="0px" height="100%" borderLeft="1px solid lightgrey" />
+        <Heading fontWeight={2}>Developer Interface (Beta)</Heading>
+      </Flex>
+      {children}
+    </Flex>
+  );
+};

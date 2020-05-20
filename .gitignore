@@ -8,3 +8,5 @@ node_modules
 
 # output of TypeScript transpilation
 /packages/*/dist
+
+.env

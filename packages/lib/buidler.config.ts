@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import "colors";
+import dotenv from "dotenv";
 
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
@@ -11,13 +12,14 @@ import { NetworkConfig } from "@nomiclabs/buidler/types";
 import { Decimal, Difference, Decimalish, Percent } from "@liquity/decimal";
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
 import {
-  Liquity,
-  Trove,
-  TroveWithPendingRewards,
   addressesOf,
   deploymentOnNetwork,
-  connectToContracts
-} from ".";
+  connectToContracts,
+  LiquityDeployment
+} from "./src/contracts";
+import { Liquity, Trove, TroveWithPendingRewards } from "./src/Liquity";
+
+dotenv.config();
 
 usePlugin("buidler-ethers-v5");
 
@@ -31,8 +33,10 @@ const generateRandomAccounts = (numberOfAccounts: number) => {
   return accounts;
 };
 
-const deployerAccount = "0x543ab4105a87fa14619bad9b85b6e989412b2f30380a3f36f49b9327b5967fb1";
+const deployerAccount = process.env.DEPLOYER_PRIVATE_KEY || Wallet.createRandom().privateKey;
 const devChainRichAccount = "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7";
+
+const ropstenAggregator = "0x8468b2bDCE073A157E560AA4D9CcF6dB1DB98507";
 
 const infuraApiKey = "ad9cef41c9c844a7b54d10be24d416e5";
 
@@ -61,22 +65,45 @@ const config: BuidlerConfig = {
   }
 };
 
-task("deploy", "Deploys the contracts to the network", async (_taskArgs, bre) => {
-  const [deployer] = await bre.ethers.getSigners();
+type DeployParams = { gasPrice?: number };
 
-  setSilent(false);
-  const contracts = await deployAndSetupContracts(deployer, bre.ethers.getContractFactory);
+task("deploy", "Deploys the contracts to the network")
+  .addOptionalParam("gasPrice", "Price to pay for 1 gas [Gwei]", undefined, types.float)
+  .setAction(async ({ gasPrice }: DeployParams, bre) => {
+    const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).bigNumber };
+    const [deployer] = await bre.ethers.getSigners();
 
-  console.log();
-  console.log({
-    [bre.network.name]: {
+    setSilent(false);
+
+    const contracts = await deployAndSetupContracts(
+      deployer,
+      bre.ethers.getContractFactory,
+      overrides
+    );
+
+    const deployment: LiquityDeployment = {
       addresses: addressesOf(contracts),
       version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim(),
       deploymentDate: new Date().getTime()
+    };
+
+    fs.writeFileSync(
+      path.join("deployments", `${bre.network.name}.json`),
+      JSON.stringify(deployment, undefined, 2)
+    );
+
+    console.log();
+    console.log({ [bre.network.name]: deployment });
+    console.log();
+
+    if (bre.network.name === "ropsten") {
+      const { priceFeed } = connectToContracts(deployment.addresses, deployer);
+
+      console.log("Hooking up PriceFeed with price aggregator...");
+      const tx = await priceFeed.setAggregator_Testnet(ropstenAggregator, overrides);
+      await tx.wait();
     }
   });
-  console.log();
-});
 
 type SetPriceFeedParams = { priceFeedAddress: string };
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { BaseStyles, Flex, Loader, Heading, Box } from "rimble-ui";
+import { BaseStyles, Flex, Loader, Heading, Box, Text } from "rimble-ui";
 
 import { Decimal, Difference, Percent } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
@@ -18,6 +18,7 @@ import { RiskiestTroves } from "./components/RiskiestTroves";
 import { PriceManager } from "./components/PriceManager";
 import { RedemptionManager } from "./components/RedemptionManager";
 import { LiquidationManager } from "./components/LiquidationManager";
+import { Header } from "./components/Header";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
@@ -68,7 +69,9 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
   return (
     <>
-      <UserAccount {...{ account, etherBalance, quiBalance }} />
+      <Header>
+        <UserAccount {...{ account, etherBalance, quiBalance }} />
+      </Header>
 
       <Box width="862px" mx="auto">
         <Flex flexWrap="wrap" justifyItems="center">
@@ -109,15 +112,16 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
 const App = () => {
   const loader = (
-    <Flex
-      flexDirection="row"
-      alignItems="center"
-      justifyContent="center"
-      width={1}
-      minHeight="100vh"
-    >
+    <Flex alignItems="center" justifyContent="center" height="100vh">
       <Loader m={2} size="32px" color="text" />
       <Heading>Loading...</Heading>
+    </Flex>
+  );
+
+  const unsupportedNetworkFallback = (chainId: number) => (
+    <Flex flexDirection="column" alignItems="center" justifyContent="center" height="100vh">
+      <Heading>Liquity is not yet deployed to {chainId === 1 ? "mainnet" : "this network"}.</Heading>
+      <Text mt={3}>Please switch to Ropsten, Rinkeby, Kovan or Görli.</Text>
     </Flex>
   );
 
@@ -125,7 +129,7 @@ const App = () => {
     <EthersWeb3ReactProvider>
       <BaseStyles>
         <WalletConnector {...{ loader }}>
-          <LiquityProvider {...{ loader }}>
+          <LiquityProvider {...{ loader, unsupportedNetworkFallback }}>
             <TransactionProvider>
               <LiquityFrontend {...{ loader }} />
             </TransactionProvider>

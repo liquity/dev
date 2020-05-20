@@ -15,7 +15,7 @@ type SystemStatsProps = {
 
 const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
   children?.match(/[0-9a-f]{40}/) ? (
-    <a href={`https://github.com/liquity/cleverage/commit/${children}`}>{children.substr(0, 7)}</a>
+    <a href={`https://github.com/liquity/dev/commit/${children}`}>{children.substr(0, 7)}</a>
   ) : (
     <>unknown</>
   );

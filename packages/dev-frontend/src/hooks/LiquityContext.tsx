@@ -27,13 +27,18 @@ const LiquityContext = createContext<LiquityContext | undefined>(undefined);
 
 type LiquityProviderProps = {
   loader?: React.ReactNode;
+  unsupportedNetworkFallback?: (chainId: number) => React.ReactNode;
 };
 
 const infuraApiKey = "ad9cef41c9c844a7b54d10be24d416e5";
 const wsParams = (network: string) =>
   [`wss://${network}.infura.io/ws/v3/${infuraApiKey}`, network] as const;
 
-export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, loader }) => {
+export const LiquityProvider: React.FC<LiquityProviderProps> = ({
+  children,
+  loader,
+  unsupportedNetworkFallback
+}) => {
   const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
 
   useEffect(() => {
@@ -56,7 +61,13 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({ children, load
     return <>{loader}</>;
   }
 
-  const { addresses, version: contractsVersion, deploymentDate } = deploymentOnNetwork[chainId];
+  const deployment = deploymentOnNetwork[chainId];
+
+  if (deployment === undefined) {
+    return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
+  }
+
+  const { addresses, version: contractsVersion, deploymentDate } = deployment;
   const contracts = connectToContracts(addresses, provider.getSigner(account));
   const liquity = new Liquity(contracts, account);
   const devChain = chainId === DEV_CHAIN_ID;
