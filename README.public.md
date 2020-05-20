@@ -73,3 +73,15 @@ To stop the service, execute in the same directory:
 ```
 docker-compose down
 ```
+
+### Using your own HTTP server
+
+Maybe you want to use a different server than nginx, or you need to use a different configuration, etc. Luckily, it is very easy to host the dev-frontend yourself — you just need to statically serve some files. To extract them from the Docker image, execute these commands:
+
+```
+docker create --name liquity liquity/dev-frontend
+docker cp liquity:/usr/share/nginx/html /path/to/extract/files/to
+docker rm liquity
+```
+
+Replace `/path/to/extract/files/to` with the location where you want to extract the files to.
