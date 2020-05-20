@@ -245,19 +245,4 @@ contract('CDPManager', async accounts => {
   })
 })
 
-// Gas usage of getApproxHint():
-// numTrials = sqrt(length) * k
-// k = 10 ()
-// (including +21k tx fee)
-
-// 10 CDPs:  600k
-// 100 CDPs: 1.6mil
-// alternative implementation of getApproxHint() may be cheaper gas-wise. 
-
-// Execution time (in Buidler):
-
-// 100 CDPs: 17s
-// 500 CDPs: 81s
-// 1000 CDPs: 172s
-// 5000 CDPs: 842s
-
+// Gas usage:  See gas costs spreadsheet. Cost per trial = 10k-ish.
