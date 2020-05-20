@@ -233,4 +233,4 @@ In particular, we have:
 - Proofs that CDP ordering is maintained throughout a series of liquidations and new loan issuances
 - A derivation of a formula and implementation for a highly scalable (O(1) complexity) reward distribution in the Stability Pool, involving compounding and decreasing stakes.
 
-PDFs of these can be found in `/mathProofs`. 
+PDFs of these can be found in https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs 
