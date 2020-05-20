@@ -224,8 +224,9 @@ contract('PoolManager', async accounts => {
       const alice_compoundedDeposit_1 = await poolManager.getCompoundedCLVDeposit(alice)
     
       // Alice makes deposit #2:  100CLV
-      await borrowerOperations.withdrawCLV('100000000000000000000', alice, { from: alice })
-      await poolManager.provideToSP('100000000000000000000', { from: alice })
+      const alice_topUp_1 = web3.utils.toBN('100000000000000000000')
+      await borrowerOperations.withdrawCLV(alice_topUp_1, alice, { from: alice })
+      await poolManager.provideToSP(alice_topUp_1, { from: alice })
 
       const alice_newDeposit_1 = (await poolManager.deposits(alice)).toString()
       console.log(typeof alice_compoundedDeposit_1)
@@ -302,9 +303,9 @@ contract('PoolManager', async accounts => {
       oldDeposit - CLVLoss - withdrawalAmount, i.e:
       150 - 27 - 90 = 33 CLV  */
 
-      // check Alice's deposit has been updated to 60 CLV */
+      // check Alice's deposit has been updated to 33 CLV */
       const newDeposit = (await poolManager.deposits(alice)).toString()
-      assert.isAtMost(getDifference(newDeposit, '60000000000000000000'), 1000)
+      assert.isAtMost(getDifference(newDeposit, '33000000000000000000'), 1000)
 
       // Expect Alice has withdrawn all ETH gain
       const alice_pendingETHGain = await poolManager.getCurrentETHGain(alice)
