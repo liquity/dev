@@ -214,8 +214,8 @@ describe("Liquity", () => {
       expect(deposit).to.deep.equal(
         new StabilityDeposit({
           deposit: 10,
-          pendingCollateralGain: "0.05725641025641025",
-          pendingDepositLoss: 10
+          depositAfterLoss: 0,
+          pendingCollateralGain: "0.05725641025641025"
         })
       );
     });
