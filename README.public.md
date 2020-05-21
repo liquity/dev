@@ -5,7 +5,7 @@
 Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against
 their collateral without paying interest. After locking up ETH as collateral in a smart contract and
 creating an individual position called a "trove", the user can get instant liquidity by minting LQTY,
-a USD-pegged stablecoin. Each trove is required to be collat- eralized at a minimum of 110%. Any
+a USD-pegged stablecoin. Each trove is required to be collateralized at a minimum of 110%. Any
 owner of LQTY can redeem their stablecoins for the underlying collateral at any time. The redemption
 mechanism along with algorithmically adjusted fees guarantee a minimum stablecoin value of USD 1.
 
