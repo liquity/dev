@@ -283,6 +283,9 @@ contract PoolManager is Ownable, IPoolManager {
     where S(0), P(0) are the depositor's snapshots of the sum S and product P, respectively. */
     function getCurrentETHGain(address _user) public view returns(uint) {
         uint userDeposit = deposits[_user];
+
+        if (userDeposit == 0) { return 0; }
+
         uint snapshot_S = snapshot[_user].S;  
         uint snapshot_P = snapshot[_user].P;
         uint scaleSnapshot = snapshot[_user].scale;
@@ -306,6 +309,9 @@ contract PoolManager is Ownable, IPoolManager {
     where P_(0) is the depositor's snapshot of the product P. */
     function getCompoundedCLVDeposit(address _user) public view returns(uint) {
         uint userDeposit = deposits[_user];
+
+        if (userDeposit == 0) { return 0; }
+
         uint snapshot_P = snapshot[_user].P; 
         uint scaleSnapshot = snapshot[_user].scale;
         uint epochSnapshot = snapshot[_user].epoch;
