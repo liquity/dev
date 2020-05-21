@@ -13,7 +13,7 @@ export const Header: React.FC = ({ children }) => {
       borderBottom="1px solid lightgrey"
     >
       <Flex alignItems="center" height="48px">
-        <Link href="https://www.liquity.org">
+        <Link lineHeight="0" href="https://www.liquity.org">
           <LiquityLogo height="32px" />
         </Link>
         <Box mx={3} width="0px" height="100%" borderLeft="1px solid lightgrey" />
