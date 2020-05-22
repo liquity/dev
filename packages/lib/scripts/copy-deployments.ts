@@ -6,8 +6,11 @@ const inputDir = (channel: string) => path.join("deployments", channel);
 
 const defaultChannel = "default";
 
-const copyDeploymentsFrom = (channel: string) => {
-  const deploymentsDir = inputDir(channel);
+const exists = (dir: string) => {
+  return fs.existsSync(dir) && fs.lstatSync(dir).isDirectory();
+};
+
+const copyDeploymentsFrom = (deploymentsDir: string) => {
   const deployments = fs.readdirSync(deploymentsDir);
 
   for (const deployment of deployments) {
@@ -15,8 +18,12 @@ const copyDeploymentsFrom = (channel: string) => {
   }
 };
 
-copyDeploymentsFrom(defaultChannel);
+copyDeploymentsFrom(inputDir(defaultChannel));
 
 if (process.env.CHANNEL && process.env.CHANNEL !== defaultChannel) {
-  copyDeploymentsFrom(process.env.CHANNEL);
+  const channelDir = inputDir(process.env.CHANNEL);
+
+  if (exists(channelDir)) {
+    copyDeploymentsFrom(channelDir);
+  }
 }

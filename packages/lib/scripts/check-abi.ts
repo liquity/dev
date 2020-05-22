@@ -9,7 +9,7 @@ const currentAbiHash = sha1(abi);
 const abisUpToDate = () => {
   const deployments = fs
     .readdirSync("deployments", { withFileTypes: true })
-    .filter(dirent => dirent.isFile && dirent.name.match(/\.json$/))
+    .filter(dirent => dirent.isFile() && dirent.name.match(/\.json$/))
     .map(dirent => dirent.name);
 
   for (const deploymentJson of deployments) {
