@@ -32,6 +32,9 @@ jobs:
         env:
           CI: true
 
+      - name: Check if contract ABIs are compatible
+        run: yarn check-abi
+
       - uses: azure/docker-login@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}

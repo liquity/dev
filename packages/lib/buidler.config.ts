@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import "colors";
 import dotenv from "dotenv";
+import { sha1 } from "object-hash";
 
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
@@ -12,6 +13,7 @@ import { NetworkConfig } from "@nomiclabs/buidler/types";
 import { Decimal, Difference, Decimalish, Percent } from "@liquity/decimal";
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
 import {
+  abi,
   addressesOf,
   deploymentOnNetwork,
   connectToContracts,
@@ -84,7 +86,8 @@ task("deploy", "Deploys the contracts to the network")
     const deployment: LiquityDeployment = {
       addresses: addressesOf(contracts),
       version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim(),
-      deploymentDate: new Date().getTime()
+      deploymentDate: new Date().getTime(),
+      abiHash: sha1(abi)
     };
 
     fs.writeFileSync(

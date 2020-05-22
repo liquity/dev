@@ -12,5 +12,6 @@
     "stabilityPool": "0x59E36625b9bd7D112bd0A9B285ef12eE92809714"
   },
   "version": "4e9a65d4bb2eb26fe28d423f73c4318d5a138db4",
-  "deploymentDate": 1589261784000
+  "deploymentDate": 1589261784000,
+  "abiHash": "66194f4252247929a010463cdbb4e96dc7e339c5"
 }

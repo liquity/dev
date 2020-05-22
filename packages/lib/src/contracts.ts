@@ -1,3 +1,4 @@
+import { JsonFragment } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
 import { Provider } from "@ethersproject/abstract-provider";
 import { Contract } from "@ethersproject/contracts";
@@ -31,6 +32,19 @@ import type {
   SortedCDPs,
   StabilityPool
 } from "../types";
+
+export const abi: { [name: string]: JsonFragment[] } = {
+  activePool: activePoolAbi,
+  borrowerOperations: borrowerOperationsAbi,
+  cdpManager: cdpManagerAbi,
+  clvToken: clvTokenAbi,
+  defaultPool: defaultPoolAbi,
+  multiCDPgetter: multiCDPgetterAbi,
+  poolManager: poolManagerAbi,
+  priceFeed: priceFeedAbi,
+  sortedCDPs: sortedCDPsAbi,
+  stabilityPool: stabilityPoolAbi
+};
 
 export interface LiquityContractAddresses {
   activePool: string;
@@ -107,6 +121,7 @@ export type LiquityDeployment = {
   addresses: LiquityContractAddresses;
   version: string;
   deploymentDate: number;
+  abiHash: string;
 };
 
 export const deploymentOnNetwork: {

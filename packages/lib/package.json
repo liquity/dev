@@ -4,6 +4,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "check-abi": "ts-node scripts/check-abi.ts",
     "build": "yarn run generate-types && tsc --project tsconfig.dist.json",
     "buidler": "buidler",
     "generate-types": "ts-node scripts/generate-types.ts",
@@ -20,6 +21,7 @@
     "@types/chai-as-promised": "^7.1.2",
     "@types/mocha": "^7.0.1",
     "@types/node": "^13.7.1",
+    "@types/object-hash": "^1.3.3",
     "@types/sinon-chai": "^3.2.3",
     "buidler-ethers-v5": "^0.2.0",
     "chai": "^4.2.0",
@@ -27,6 +29,7 @@
     "colors": "^1.4.0",
     "dotenv": "^8.2.0",
     "ethers": "^5.0.0-beta.187",
+    "object-hash": "^2.0.3",
     "ts-node": "^8.9.0",
     "typescript": "^3.7.5"
   }
