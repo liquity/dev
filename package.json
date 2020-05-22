@@ -17,6 +17,7 @@
     ]
   },
   "scripts": {
+    "check-abi": "yarn workspace @liquity/lib check-abi",
     "compile:contracts": "yarn workspace @liquity/contracts compile",
     "build:decimal": "yarn workspace @liquity/decimal build",
     "build:lib": "yarn workspace @liquity/lib build",
