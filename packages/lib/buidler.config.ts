@@ -67,11 +67,17 @@ const config: BuidlerConfig = {
   }
 };
 
-type DeployParams = { gasPrice?: number };
+type DeployParams = {
+  channel: string;
+  gasPrice?: number;
+};
+
+const defaultChannel = process.env.CHANNEL || "default";
 
 task("deploy", "Deploys the contracts to the network")
+  .addOptionalParam("channel", "Deployment channel to deploy into", defaultChannel, types.string)
   .addOptionalParam("gasPrice", "Price to pay for 1 gas [Gwei]", undefined, types.float)
-  .setAction(async ({ gasPrice }: DeployParams, bre) => {
+  .setAction(async ({ channel, gasPrice }: DeployParams, bre) => {
     const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).bigNumber };
     const [deployer] = await bre.ethers.getSigners();
 
@@ -90,8 +96,10 @@ task("deploy", "Deploys the contracts to the network")
       abiHash: sha1(abi)
     };
 
+    fs.mkdirSync(path.join("deployments", channel), { recursive: true });
+
     fs.writeFileSync(
-      path.join("deployments", `${bre.network.name}.json`),
+      path.join("deployments", channel, `${bre.network.name}.json`),
       JSON.stringify(deployment, undefined, 2)
     );
 
