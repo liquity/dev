@@ -9,6 +9,7 @@
     "build": "yarn run copy-deployments && yarn run generate-types && tsc --project tsconfig.dist.json",
     "buidler": "buidler",
     "generate-types": "ts-node scripts/generate-types.ts",
+    "scrape-eth-usd": "ts-node scripts/scrape-eth-usd.ts",
     "test": "buidler test"
   },
   "peerDependencies": {
