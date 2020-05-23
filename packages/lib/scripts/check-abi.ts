@@ -7,7 +7,10 @@ import { abi, LiquityDeployment } from "../src/contracts";
 const currentAbiHash = sha1(abi);
 
 const abisUpToDate = () => {
-  const deployments = fs.readdirSync("deployments");
+  const deployments = fs
+    .readdirSync("deployments", { withFileTypes: true })
+    .filter(dirent => dirent.isFile() && dirent.name.match(/\.json$/))
+    .map(dirent => dirent.name);
 
   for (const deploymentJson of deployments) {
     const deployment = JSON.parse(

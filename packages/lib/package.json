@@ -5,7 +5,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "check-abi": "ts-node scripts/check-abi.ts",
-    "build": "yarn run generate-types && tsc --project tsconfig.dist.json",
+    "copy-deployments": "ts-node scripts/copy-deployments.ts",
+    "build": "yarn run copy-deployments && yarn run generate-types && tsc --project tsconfig.dist.json",
     "buidler": "buidler",
     "generate-types": "ts-node scripts/generate-types.ts",
     "test": "buidler test"
