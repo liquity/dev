@@ -19,6 +19,7 @@ import { PriceManager } from "./components/PriceManager";
 import { RedemptionManager } from "./components/RedemptionManager";
 import { LiquidationManager } from "./components/LiquidationManager";
 import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
@@ -99,11 +100,10 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
         <RiskiestTroves pageSize={10} {...{ liquity, price, totalRedistributed, numberOfTroves }} />
       </Box>
-      {
-        // Some empty space to ensure content can always be scrolled up from under the
-        // TransactionMonitor bar.
-      }
-      <Box height="72px" />
+
+      <Footer>
+        <Text>* Please note that the final user-facing application will look different.</Text>
+      </Footer>
 
       <TransactionMonitor />
     </>

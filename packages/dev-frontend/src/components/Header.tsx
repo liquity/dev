@@ -18,7 +18,12 @@ export const Header: React.FC = ({ children }) => (
 
       <Box mx={3} width="0px" height="100%" borderLeft="1px solid lightgrey" />
 
-      <Heading fontWeight={2}>Developer Interface (Beta)</Heading>
+      <Heading fontWeight={2}>
+        Developer Interface (Beta)
+        <a href="#footnote" style={{ textDecoration: "none", color: "#1542CD" }}>
+          *
+        </a>
+      </Heading>
     </Flex>
     {children}
   </Flex>
