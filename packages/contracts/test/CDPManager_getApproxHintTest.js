@@ -5,7 +5,7 @@ const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
-const getDifference = testHelpers.getDifference
+const th = testHelpers.TestHelper
 const moneyVals = testHelpers.MoneyValues
 contract('CDPManager', async accounts => {
  
@@ -107,16 +107,16 @@ contract('CDPManager', async accounts => {
     const ICR_8 = await cdpManager.getCurrentICR(accounts[8], price)
     const ICR_9 = await cdpManager.getCurrentICR(accounts[9], price)
 
-    assert.isAtMost(getDifference(ICR_0, '2000000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_1, '2010000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_2, '2020000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_3, '2030000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_4, '2040000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_5, '2050000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_6, '2060000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_7, '2070000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_8, '2080000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_9, '2090000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_0, '2000000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_1, '2010000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_2, '2020000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_3, '2030000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_4, '2040000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_5, '2050000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_6, '2060000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_7, '2070000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_8, '2080000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_9, '2090000000000000000'), 100)
   })
 
   it("getApproxHint(): returns the address of a CDP within sqrt(length) positions of the correct insert position", async () => {

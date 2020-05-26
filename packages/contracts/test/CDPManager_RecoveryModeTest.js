@@ -5,7 +5,7 @@ const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
-const getDifference = testHelpers.getDifference
+const th = testHelpers.TestHelper
 const moneyVals = testHelpers.MoneyValues
 
 contract('CDPManager', async accounts => {
@@ -644,8 +644,8 @@ contract('CDPManager', async accounts => {
     const S_CLV_After = (await poolManager.S_CLV()).toString()
     const S_ETH_After = (await poolManager.S_ETH()).toString()
 
-    assert.isAtMost(getDifference(S_CLV_After, '1000000000000000000'), 100)
-    assert.isAtMost(getDifference(S_ETH_After, '10500000000000000'), 100)
+    assert.isAtMost(th.getDifference(S_CLV_After, '1000000000000000000'), 100)
+    assert.isAtMost(th.getDifference(S_ETH_After, '10500000000000000'), 100)
 
     /* Now, check redistribution to active CDPs. Remainders of 1600 CLV and 16.8 ether are distributed.
     
@@ -659,8 +659,8 @@ contract('CDPManager', async accounts => {
     const L_CLVDebt = (await cdpManager.L_CLVDebt()).toString()
     const L_ETH = (await cdpManager.L_ETH()).toString()
 
-    assert.isAtMost(getDifference(L_CLVDebt, '266666666666666666667'), 100)
-    assert.isAtMost(getDifference(L_ETH, '2800000000000000000'), 100)
+    assert.isAtMost(th.getDifference(L_CLVDebt, '266666666666666666667'), 100)
+    assert.isAtMost(th.getDifference(L_ETH, '2800000000000000000'), 100)
   })
 
   // --- liquidate(), applied to loan with ICR > 110% that has the lowest ICR 
@@ -1071,8 +1071,8 @@ contract('CDPManager', async accounts => {
     const S_CLV_After = (await poolManager.S_CLV()).toString()
     const S_ETH_After = (await poolManager.S_ETH()).toString()
 
-    assert.isAtMost(getDifference(S_CLV_After, '1000000000000000000'), 100)
-    assert.isAtMost(getDifference(S_ETH_After, '12000000000000000'), 100)
+    assert.isAtMost(th.getDifference(S_CLV_After, '1000000000000000000'), 100)
+    assert.isAtMost(th.getDifference(S_ETH_After, '12000000000000000'), 100)
 
     /* For this Recovery Mode test case, there should be no redistribution of remainder to active CDPs. 
     Redistribution rewards-per-unit-staked should be zero. */

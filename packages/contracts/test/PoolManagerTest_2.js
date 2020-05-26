@@ -5,7 +5,7 @@ const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
-const getDifference = testHelpers.getDifference
+const th = testHelpers.TestHelper
 const moneyVals = testHelpers.MoneyValues
 
 contract('PoolManager', async accounts => {
@@ -159,8 +159,8 @@ contract('PoolManager', async accounts => {
       // --- TEST ---
       const S_CLV = (await poolManager.S_CLV())  // expected: 0.18 CLV
       const S_ETH = (await poolManager.S_ETH())  // expected: 0.001 Ether
-      assert.isAtMost(getDifference(S_CLV, '180000000000000000'), 100)  // 0.18 CLV
-      assert.isAtMost(getDifference(S_ETH, '1000000000000000'), 100) // 0.001 Ether
+      assert.isAtMost(th.getDifference(S_CLV, '180000000000000000'), 100)  // 0.18 CLV
+      assert.isAtMost(th.getDifference(S_ETH, '1000000000000000'), 100) // 0.001 Ether
 
       // check 'Before' snapshots
       const alice_snapshot_Before = await poolManager.snapshot(alice)
@@ -177,8 +177,8 @@ contract('PoolManager', async accounts => {
       const alice_snapshotETH_After = alice_snapshot_After[0]
       const alice_snapshotCLV_After = alice_snapshot_After[1]
 
-      assert.isAtMost(getDifference(alice_snapshotETH_After, '1000000000000000'), 100)
-      assert.isAtMost(getDifference(alice_snapshotCLV_After, '180000000000000000'), 100)
+      assert.isAtMost(th.getDifference(alice_snapshotETH_After, '1000000000000000'), 100)
+      assert.isAtMost(th.getDifference(alice_snapshotCLV_After, '180000000000000000'), 100)
     })
 
     it("provideToSP(), multiple deposits: updates user's deposit and snapshots", async () => {
@@ -221,8 +221,8 @@ contract('PoolManager', async accounts => {
       const S_CLV_1 = (await poolManager.S_CLV()).toString()   // expected: 0.18 CLV
       const S_ETH_1 = (await poolManager.S_ETH()).toString()  // expected: 0.001 Ether
 
-      assert.isAtMost(getDifference(S_CLV_1, '180000000000000000'), 1000) 
-      assert.isAtMost(getDifference(S_ETH_1, '1000000000000000'), 1000)  // 0.001 Ether
+      assert.isAtMost(th.getDifference(S_CLV_1, '180000000000000000'), 1000) 
+      assert.isAtMost(th.getDifference(S_ETH_1, '1000000000000000'), 1000)  // 0.001 Ether
 
       // Alice makes deposit #2:  100CLV
       await borrowerOperations.withdrawCLV('100000000000000000000', alice, { from: alice })
@@ -233,14 +233,14 @@ contract('PoolManager', async accounts => {
       --> check newDeposit = (150 - 27 ) + 100 = 223 CLV */
       const newDeposit_alice = (await poolManager.deposit(alice)).toString()
       console.log("new deposit alice:" + newDeposit_alice)
-      assert.isAtMost(getDifference(newDeposit_alice, '223000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference(newDeposit_alice, '223000000000000000000'), 1000)
 
       // check Alice's new snapshot is correct
       const alice_Snapshot_1 = await poolManager.snapshot(alice)
       const alice_Snapshot_1_ETH = (alice_Snapshot_1[0]).toString()
       const alice_Snapshot_1_CLV = (alice_Snapshot_1[1]).toString()
-      assert.isAtMost(getDifference(alice_Snapshot_1_ETH, S_ETH_1), 1000)
-      assert.isAtMost(getDifference(alice_Snapshot_1_CLV, S_CLV_1), 1000)
+      assert.isAtMost(th.getDifference(alice_Snapshot_1_ETH, S_ETH_1), 1000)
+      assert.isAtMost(th.getDifference(alice_Snapshot_1_CLV, S_CLV_1), 1000)
 
       // Bob withdraws CLV and deposits to StabilityPool, bringing total deposits to: (1850 + 223 + 427) = 2500 CLV
       await borrowerOperations.addColl(bob, bob, { from: bob, value: _50_Ether })
@@ -248,7 +248,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP('427000000000000000000', { from: bob })
 
       const totalCLVDeposits = (await stabilityPool.getTotalCLVDeposits()).toString()
-      assert.isAtMost(getDifference(totalCLVDeposits, '2500000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference(totalCLVDeposits, '2500000000000000000000'), 1000)
 
       // Defaulter 3 CDP is closed
       await cdpManager.liquidate(defaulter_3, { from: owner })
@@ -260,8 +260,8 @@ contract('PoolManager', async accounts => {
       const S_CLV_2 = (await poolManager.S_CLV()).toString()   // expected: 0.252 CLV
       const S_ETH_2 = (await poolManager.S_ETH()).toString()  // expected: 0.0014 ETH
 
-      assert.isAtMost(getDifference(S_CLV_2, '252000000000000000') , 1000) // 00.252 CLV
-      assert.isAtMost(getDifference(S_ETH_2, '1400000000000000') , 1000) // 0.0014 ETH
+      assert.isAtMost(th.getDifference(S_CLV_2, '252000000000000000') , 1000) // 00.252 CLV
+      assert.isAtMost(th.getDifference(S_ETH_2, '1400000000000000') , 1000) // 0.0014 ETH
 
       // Alice makes deposit #3:  100CLV
       await borrowerOperations.withdrawCLV('100000000000000000000', alice, { from: alice })
@@ -271,8 +271,8 @@ contract('PoolManager', async accounts => {
       const alice_Snapshot_2 = await poolManager.snapshot(alice)
       const alice_Snapshot_2_ETH = alice_Snapshot_2[0].toString()
       const alice_Snapshot_2_CLV = alice_Snapshot_2[1].toString()
-      assert.isAtMost(getDifference(alice_Snapshot_2_ETH, S_ETH_2), 1000)
-      assert.isAtMost(getDifference(alice_Snapshot_2_CLV, S_CLV_2), 1000)
+      assert.isAtMost(th.getDifference(alice_Snapshot_2_ETH, S_ETH_2), 1000)
+      assert.isAtMost(th.getDifference(alice_Snapshot_2_CLV, S_CLV_2), 1000)
     })
 
     it("withdrawFromSP(): it retrieves the correct CLV amount and the entire ETH Gain, and updates deposit", async () => {
@@ -306,8 +306,8 @@ contract('PoolManager', async accounts => {
       const S_CLV_1 = (await poolManager.S_CLV())  // expected: 0.18 CLV
       const S_ETH_1 = (await poolManager.S_ETH())  // expected: 0.001 Ether
 
-      assert.isAtMost(getDifference(S_CLV_1, '180000000000000000'), 100)  // 0.18 CLV
-      assert.isAtMost(getDifference(S_ETH_1, '1000000000000000'), 100)  // 0.001 Ether
+      assert.isAtMost(th.getDifference(S_CLV_1, '180000000000000000'), 100)  // 0.18 CLV
+      assert.isAtMost(th.getDifference(S_ETH_1, '1000000000000000'), 100)  // 0.001 Ether
 
       // Alice retrieves part of her entitled CLV: 90 CLV
       await poolManager.withdrawFromSP('90000000000000000000', { from: alice })
@@ -318,11 +318,11 @@ contract('PoolManager', async accounts => {
 
       // check StabilityPool totalCLVDeposits decreased by 117 CLV to 1883 CLV
       const totalCLVDeposits = (await stabilityPool.getTotalCLVDeposits())
-      assert.isAtMost(getDifference(totalCLVDeposits, '1883000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference(totalCLVDeposits, '1883000000000000000000'), 1000)
 
       // check Alice's deposit has been updated to 33 CLV */
       const newDeposit = (await poolManager.deposit(alice)).toString()
-      assert.isAtMost(getDifference(newDeposit, '33000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference(newDeposit, '33000000000000000000'), 1000)
     })
 
     it("withdrawFromSP(): it correctly updates the user's CLV and ETH snapshots of entitled reward per unit staked", async () => {
@@ -367,8 +367,8 @@ contract('PoolManager', async accounts => {
       const alice_snapshot_After = await poolManager.snapshot(alice)
       const alice_snapshotETH_After = alice_snapshot_After[0]
       const alice_snapshotCLV_After = alice_snapshot_After[1]
-      assert.isAtMost(getDifference(alice_snapshotETH_After, '1000000000000000'), 100)
-      assert.isAtMost(getDifference(alice_snapshotCLV_After, '180000000000000000'), 100)
+      assert.isAtMost(th.getDifference(alice_snapshotETH_After, '1000000000000000'), 100)
+      assert.isAtMost(th.getDifference(alice_snapshotCLV_After, '180000000000000000'), 100)
     })
 
     it("withdrawFromSP(): decreases StabilityPool ETH", async () => {
@@ -414,7 +414,7 @@ contract('PoolManager', async accounts => {
       const stability_ETH_Difference = (stability_ETH_After.sub(stability_ETH_Before))
 
       assert.equal(active_ETH_Difference, '0')
-      assert.isAtMost(getDifference(stability_ETH_Difference, '-75000000000000000'), 100)
+      assert.isAtMost(th.getDifference(stability_ETH_Difference, '-75000000000000000'), 100)
     })
 
     // --- Tests that check any rounding error in accumulated CLVLoss in the SP "favors the Pool" ---
@@ -542,7 +542,7 @@ contract('PoolManager', async accounts => {
 
       // check Alice's CLVLoss has been applied to her deposit - expect (150 - 13.5) = 136.5 CLV
       alice_deposit_afterDefault = (await poolManager.deposit(alice))
-      assert.isAtMost(getDifference(alice_deposit_afterDefault, '136500000000000000000'), 1000)
+      assert.isAtMost(th.getDifference(alice_deposit_afterDefault, '136500000000000000000'), 1000)
 
       // check alice's CDP recorded ETH has increased by the expected reward amount
       const aliceCDP_After = await cdpManager.CDPs(alice)
@@ -596,8 +596,8 @@ contract('PoolManager', async accounts => {
       const stability_ETH_Difference = (stability_ETH_After.sub(stability_ETH_Before))
 
       // check Pool ETH values change by Alice's ETHGain, i.e 0.075 ETH
-      assert.isAtMost(getDifference(active_ETH_Difference, '75000000000000000'), 100)
-      assert.isAtMost(getDifference(stability_ETH_Difference, '-75000000000000000'), 100)
+      assert.isAtMost(th.getDifference(active_ETH_Difference, '75000000000000000'), 100)
+      assert.isAtMost(th.getDifference(stability_ETH_Difference, '-75000000000000000'), 100)
     })
 
     it("withdrawFromSPtoCDP(): All depositors are able to withdraw their ETH gain from the SP to their CDP", async () => {
@@ -659,27 +659,27 @@ contract('PoolManager', async accounts => {
   
         await poolManager.withdrawFromSPtoCDP(alice, alice, {from: alice})
         aliceColl = (await cdpManager.CDPs(alice))[1]
-        assert.isAtMost(getDifference(aliceColl, expectedNewCollateral), 100)
+        assert.isAtMost(th.getDifference(aliceColl, expectedNewCollateral), 100)
      
         await poolManager.withdrawFromSPtoCDP(bob, bob, {from: bob})
         bobColl = (await cdpManager.CDPs(bob))[1]
-        assert.isAtMost(getDifference(bobColl, expectedNewCollateral), 100)
+        assert.isAtMost(th.getDifference(bobColl, expectedNewCollateral), 100)
       
         await poolManager.withdrawFromSPtoCDP(carol, carol, {from: carol})
         carolColl = (await cdpManager.CDPs(carol))[1]
-        assert.isAtMost(getDifference(carolColl, expectedNewCollateral), 100)
+        assert.isAtMost(th.getDifference(carolColl, expectedNewCollateral), 100)
         
         await poolManager.withdrawFromSPtoCDP(dennis, dennis, {from: dennis})
         dennisColl = (await cdpManager.CDPs(dennis))[1]
-        assert.isAtMost(getDifference(dennisColl, expectedNewCollateral), 100)
+        assert.isAtMost(th.getDifference(dennisColl, expectedNewCollateral), 100)
        
         await poolManager.withdrawFromSPtoCDP(erin, erin, {from: erin})
         erinColl = (await cdpManager.CDPs(erin))[1]
-        assert.isAtMost(getDifference(erinColl, expectedNewCollateral), 100)
+        assert.isAtMost(th.getDifference(erinColl, expectedNewCollateral), 100)
    
         await poolManager.withdrawFromSPtoCDP(flyn, flyn, {from: flyn})
         flynColl = (await cdpManager.CDPs(flyn))[1]
-        assert.isAtMost(getDifference(flynColl, expectedNewCollateral), 100)
+        assert.isAtMost(th.getDifference(flynColl, expectedNewCollateral), 100)
       
     })
 
@@ -721,8 +721,8 @@ contract('PoolManager', async accounts => {
       const S_CLV_After = (await poolManager.S_CLV())   // expected: 0.18 CLV
       const S_ETH_After = (await poolManager.S_ETH())  // expected: 0.001 Ether
 
-      assert.isAtMost(getDifference(S_CLV_After, '180000000000000000'), 100)  // 0.18 CLV
-      assert.isAtMost(getDifference(S_ETH_After, '1000000000000000'), 100)  // 0.001 Ether
+      assert.isAtMost(th.getDifference(S_CLV_After, '180000000000000000'), 100)  // 0.18 CLV
+      assert.isAtMost(th.getDifference(S_ETH_After, '1000000000000000'), 100)  // 0.001 Ether
     })
 
     it('withdrawPenaltyFromSP(): Penalises the overstayer, allows a claimant to get the penalty, and sends remainder to overstayer', async () => {
@@ -762,8 +762,8 @@ contract('PoolManager', async accounts => {
       const S_CLV_After = (await poolManager.S_CLV())   // expected: 1.125 CLV
       const S_ETH_After = (await poolManager.S_ETH())  // expected: 0.01 ETH
 
-      assert.isAtMost(getDifference(S_CLV_After, '1125000000000000000'), 100) // 1.125 CLV
-      assert.isAtMost(getDifference(S_ETH_After, '7500000000000000'), 100)  // 0.0075 Ether
+      assert.isAtMost(th.getDifference(S_CLV_After, '1125000000000000000'), 100) // 1.125 CLV
+      assert.isAtMost(th.getDifference(S_ETH_After, '7500000000000000'), 100)  // 0.0075 Ether
 
       /* Alice's CLVLoss: (500 * 1.125) = 562.5 CLV
       Alice's ETHGain: (500 * 0.0075) = 3.75 Ether
@@ -784,8 +784,8 @@ contract('PoolManager', async accounts => {
       const bob_Reward = (penaltyTx.logs[2].args[1])
       const alice_Remainder = (penaltyTx.logs[2].args[3])
 
-      assert.isAtMost(getDifference(alice_Remainder, '3333333333333333333'), 100)
-      assert.isAtMost(getDifference(bob_Reward, '416666666666666667'), 100)
+      assert.isAtMost(th.getDifference(alice_Remainder, '3333333333333333333'), 100)
+      assert.isAtMost(th.getDifference(bob_Reward, '416666666666666667'), 100)
     })
 
     // --- SP overstay scenario tests ---
