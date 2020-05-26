@@ -34,6 +34,8 @@ interface ICDPManager {
 
     function setSortedCDPs(address _sortedCDPsAddress) external;
 
+    function setList2(address _list2Address) external;
+
     function setActivePool(address _activePoolAddress) external; 
 
     function setDefaultPool(address _defaultPoolAddress) external;
@@ -74,6 +76,8 @@ interface ICDPManager {
     function updateRewardSnapshots(address _user) external returns(bool);
 
     function addCDPOwnerToArray(address _user) external returns (uint index);
+
+    function addCDPOwnerToList2(address _user) external returns (uint index);
 
     function applyPendingRewards(address _user) external returns(bool);
 

@@ -22,6 +22,7 @@ const deployLiquity = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
+  const list2 = await SortedCDPs.new()
 
   DefaultPool.setAsDeployed(defaultPool)
   PriceFeed.setAsDeployed(priceFeed)
@@ -34,6 +35,7 @@ const deployLiquity = async () => {
   StabilityPool.setAsDeployed(stabilityPool)
   FunctionCaller.setAsDeployed(functionCaller)
   BorrowerOperations.setAsDeployed(borrowerOperations)
+  SortedCDPs.setAsDeployed(list2)
 
   const contracts = {
     priceFeed,
@@ -46,7 +48,8 @@ const deployLiquity = async () => {
     stabilityPool,
     defaultPool,
     functionCaller,
-    borrowerOperations
+    borrowerOperations,
+    list2
   }
   return contracts
 }
@@ -63,7 +66,8 @@ const getAddresses = (contracts) => {
     StabilityPool: contracts.stabilityPool.address,
     ActivePool: contracts.activePool.address,
     DefaultPool: contracts.defaultPool.address,
-    FunctionCaller: contracts.functionCaller.address
+    FunctionCaller: contracts.functionCaller.address,
+    List2: contracts.list2.address
   }
 }
 
@@ -83,6 +87,9 @@ const connectContracts = async (contracts, registeredAddresses) => {
   // set CDPManager addr in SortedCDPs
   await contracts.sortedCDPs.setCDPManager(registeredAddresses.CDPManager)
 
+  // set CDPManager addr in List2
+  await contracts.list2.setCDPManager(registeredAddresses.CDPManager)
+
   // set contract addresses in the FunctionCaller 
   await contracts.functionCaller.setCDPManagerAddress(registeredAddresses.CDPManager)
   await contracts.functionCaller.setSortedCDPsAddress(registeredAddresses.SortedCDPs)
@@ -99,6 +106,7 @@ const connectContracts = async (contracts, registeredAddresses) => {
   await contracts.cdpManager.setDefaultPool(registeredAddresses.DefaultPool)
   await contracts.cdpManager.setStabilityPool(registeredAddresses.StabilityPool)
   await contracts.cdpManager.setBorrowerOperations(registeredAddresses.BorrowerOperations)
+  await contracts.cdpManager.setList2(registeredAddresses.List2)
 
   // set contracts in BorrowerOperations 
   await contracts.borrowerOperations.setSortedCDPs(registeredAddresses.SortedCDPs)
@@ -107,6 +115,7 @@ const connectContracts = async (contracts, registeredAddresses) => {
   await contracts.borrowerOperations.setActivePool(registeredAddresses.ActivePool)
   await contracts.borrowerOperations.setDefaultPool(registeredAddresses.DefaultPool)
   await contracts.borrowerOperations.setCDPManager(registeredAddresses.CDPManager)
+  await contracts.borrowerOperations.setList2(registeredAddresses.List2)
 
   // set PoolManager addr in the Pools
   await contracts.stabilityPool.setPoolManagerAddress(registeredAddresses.PoolManager)

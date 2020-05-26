@@ -51,6 +51,9 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     ISortedCDPs sortedCDPs;
     address public sortedCDPsAddress;
 
+    ISortedCDPs list2;
+    address public list2Address;
+
     // --- Dependency setters --- 
 
     function setCDPManager(address _cdpManagerAddress) public onlyOwner {
@@ -89,6 +92,11 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
     }
 
+     function setList2(address _list2Address) public onlyOwner {
+        list2Address = _list2Address;
+        list2 = ISortedCDPs(_list2Address);
+    }
+
     // --- Borrower Trove Operations ---
 
     function openLoan(uint _CLVAmount, address _hint) public payable returns (bool) {
@@ -116,6 +124,10 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         
         sortedCDPs.insert(user, ICR, price, _hint, _hint); 
         uint arrayIndex = cdpManager.addCDPOwnerToArray(user);
+
+        list2.insert(user, ICR, price, _hint, _hint);
+        uint list2Index = cdpManager.addCDPOwnerToList2(user);
+
         emit CDPCreated(user, arrayIndex);
         
         // Tell PM to move the ether to the Active Pool, and mint CLV to the borrower
@@ -150,10 +162,13 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
    
         if (isFirstCollDeposit) { 
             sortedCDPs.insert(_user, newICR, price, _hint, _hint);
+            list2.insert(_user, newICR, price, _hint, _hint);
             uint arrayIndex = cdpManager.addCDPOwnerToArray(_user);
+            uint list2Index = cdpManager.addCDPOwnerToList2(_user);
             emit CDPCreated(_user, arrayIndex);
         } else {
             sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);  
+            list2.reInsert(_user, newICR, price, _hint, _hint);  
         }
 
         // Tell PM to move the ether to the Active Pool
@@ -225,6 +240,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
        
         // Update CDP's position in sortedCDPs
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
+        list2.reInsert(user, newICR, price, _hint, _hint);
 
         // Mint the given amount of CLV to the owner's address and add them to the ActivePool
         poolManager.withdrawCLV(user, _amount);

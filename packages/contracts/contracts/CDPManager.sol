@@ -62,6 +62,9 @@ contract CDPManager is Ownable, ICDPManager {
     ISortedCDPs sortedCDPs;
     address public sortedCDPsAddress;
 
+    ISortedCDPs list2;
+    address public list2Address;
+
     // --- Data structures ---
 
     // Store the necessary data for a Collateralized Debt Position (CDP)
@@ -71,6 +74,7 @@ contract CDPManager is Ownable, ICDPManager {
         uint stake;
         Status status;
         uint arrayIndex;
+        uint list2Index;
     }
 
     mapping (address => CDP) public CDPs;
@@ -100,6 +104,8 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Array of all active CDP addresses - used to compute “approx hint” for list insertion
     address[] CDPOwners;
+
+    address[] list2Array;
 
     // Error trackers for the trove redistribution calculation
     uint lastETHError_Redistribution;
@@ -162,13 +168,17 @@ contract CDPManager is Ownable, ICDPManager {
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
     }
 
+    function setList2(address _list2Address) public onlyOwner {
+        list2Address = _list2Address;
+        list2 = ISortedCDPs(_list2Address);
+    }
+
     // --- Getters ---
     
     function getCDPOwnersCount() public view returns(uint) {
         return CDPOwners.length;
     }
     
- 
     // --- CDP Liquidation functions ---
 
     // Closes the CDP of the specified user if its individual collateral ratio is lower than the minimum collateral ratio.
@@ -740,6 +750,8 @@ contract CDPManager is Ownable, ICDPManager {
         rewardSnapshots[_user].CLVDebt = 0;
  
         sortedCDPs.remove(_user);
+        list2.remove(_user);
+
         removeCDPOwner(_user);
        
         return true;
@@ -777,6 +789,13 @@ contract CDPManager is Ownable, ICDPManager {
         return index;
     }
 
+      function addCDPOwnerToList2(address _user) external returns (uint index) {
+        index = list2Array.push(_user) - 1;
+        CDPs[_user].list2Index = index;
+
+        return index;
+    }
+
      /* Remove a CDP owner from the CDPOwners array, preserving array length but not order. Deleting owner 'B' does the following: 
     [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. */
     function removeCDPOwner(address _user) internal returns(bool) {
@@ -788,6 +807,19 @@ contract CDPManager is Ownable, ICDPManager {
         CDPOwners[index] = addressToMove;   
         CDPs[addressToMove].arrayIndex = index;   
         CDPOwners.length--;  
+
+        removeCDPOwnerList2(_user);
+    }
+
+    function removeCDPOwnerList2(address _user) internal returns(bool) {
+        require(CDPs[_user].status == Status.closed, "CDPManager: CDP is still active");
+
+        uint index = CDPs[_user].list2Index;   
+        address addressToMove = list2Array[list2Array.length - 1];
+       
+        list2Array[index] = addressToMove;   
+        CDPs[addressToMove].list2Index = index;   
+        list2Array.length--;  
     }
   
     function checkRecoveryMode() public view returns (bool){

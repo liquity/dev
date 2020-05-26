@@ -32,6 +32,7 @@ module.exports = async () => {
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
+  const list2 = await SortedCDPs.new()
 
   BorrowerOperations.setAsDeployed(borrowerOperations)
   PriceFeed.setAsDeployed(priceFeed)
@@ -44,6 +45,7 @@ module.exports = async () => {
   StabilityPool.setAsDeployed(stabilityPool)
   DefaultPool.setAsDeployed(defaultPool)
   FunctionCaller.setAsDeployed(functionCaller)
+  SortedCDPs.setAsDeployed(list2)
 
 
   const contracts = {
@@ -57,7 +59,8 @@ module.exports = async () => {
     activePool,
     stabilityPool,
     defaultPool,
-    functionCaller
+    functionCaller,
+    list2
   }
 
   // Grab contract addresses
