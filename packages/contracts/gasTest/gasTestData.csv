@@ -8,57 +8,27 @@ openLoan(), single account, 0 existing CDPs in system. Adds 10 ether and issues 
 ,gasCostList,345483,293118,293118,293118,293118,293118,293118,293118,293118,293118
 ,minGas,293118
 ,maxGas,345483
-,meanGas,298354.5
+,meanGas,NaN
 ,medianGas,293118
 ,openLoan(), 10 accounts, each account adds 10 ether and issues less CLV than the previous one
 ,gasCostList,456814,374158,374158,374158,374158,374158,374158,374158,374146,374158
 ,minGas,374146
 ,maxGas,456814
-,meanGas,382422.4
+,meanGas,NaN
 ,medianGas,374158
 ,openLoan(), 10 accounts, each account adds 20 ether and issues less CLV than the previous one
 ,gasCostList,456814,374158,374158,374158,374158,374158,374158,374158,374146,374158
 ,minGas,374146
 ,maxGas,456814
-,meanGas,382422.4
+,meanGas,NaN
 ,medianGas,374158
-,adjustLoan(). ETH/CLV Increase/Increase. 10 accounts, each account adjusts up -  1 ether and 100 CLV
-,gasCostList,421918,264479,264479,264479,264479,264479,264479,264479,264479,264479
-,minGas,264479
-,maxGas,421918
-,meanGas,280222.9
-,medianGas,264479
-,adjustLoan(). ETH/CLV Decrease/Decrease. 10 accounts, each account adjusts down by 0.1 ether and 10 CLV
-,gasCostList,263348,255434,255434,255434,255434,255434,255434,255434,255434,255434
-,minGas,255434
-,maxGas,263348
-,meanGas,256225.4
-,medianGas,255434
-,adjustLoan(). ETH/CLV Increase/Decrease. 10 accounts, each account adjusts down by 0.1 ether and 10 CLV
-,gasCostList,265235,257321,257321,257321,257321,257321,257321,257321,257321,257321
-,minGas,257321
-,maxGas,265235
-,meanGas,258112.4
-,medianGas,257321
-,adjustLoan(). ETH/CLV Decrease/Increase. 10 accounts, each account adjusts down by 0.1 ether and 10 CLV
-,gasCostList,420152,262713,262713,262713,262713,262713,262713,262713,262713,262713
-,minGas,262713
-,maxGas,420152
-,meanGas,278456.9
-,medianGas,262713
-,adjustLoan(). 10 accounts, each account adjusts up by a random amount
-,gasCostList,279339,279339,271429,279339,271429,279339,271429,271429,271429,271417
-,minGas,271417
-,maxGas,279339
-,meanGas,274591.8
-,medianGas,279339
 ,closeLoan(), 10 accounts, 1 account closes its loan
 ,gas,111245
 ,closeLoan(), 20 accounts, each account adds 10 ether and issues less CLV than the previous one. First 10 accounts close their loan. 
 ,gasCostList,106866,108732,108732,108732,108732,108732,108732,108732,108732,108732
 ,minGas,106866
 ,maxGas,108732
-,meanGas,108545.4
+,meanGas,NaN
 ,medianGas,108732
 ,addColl(), first deposit, 0 CDPs in system. Adds 10 ether
 ,gas,334092
@@ -72,330 +42,190 @@ openLoan(), single account, 0 existing CDPs in system. Adds 10 ether and issues 
 ,gasCostList,334092,281727,281727,281727,281727,281727,281727,281727,281727,281727
 ,minGas,281727
 ,maxGas,334092
-,meanGas,286963.5
+,meanGas,NaN
 ,medianGas,281727
 ,addColl(), second deposit, 10 accounts, each account adds 10 ether
 ,gasCostList,168715,168715,168715,168715,168715,168715,168715,168715,168715,168715
 ,minGas,168715
 ,maxGas,168715
-,meanGas,168715
-,medianGas,168715
-,addColl(), first deposit, 10 accounts, each account adds random amount
-,gasCostList,334092,281727,281727,281727,281727,281727,281727,281727,281727,281727
-,minGas,281727
-,maxGas,334092
-,meanGas,286963.5
-,medianGas,281727
-,addColl(), second deposit, 10 accounts, each account adds random amount
-,gasCostList,168715,168715,168715,168715,168715,168715,168715,168715,168715,168715
-,minGas,168715
-,maxGas,168715
-,meanGas,168715
+,meanGas,NaN
 ,medianGas,168715
 ,withdrawColl(), first withdrawal. 10 accounts in system. 1 account withdraws 5 ether
-,gas,153722
+,gas,153741
 ,withdrawColl(), first withdrawal, 10 accounts, each account withdraws 5 ether
-,gasCostList,179776,179776,179776,179776,179776,179776,179776,179776,179776,179776
-,minGas,179776
-,maxGas,179776
-,meanGas,179776
-,medianGas,179776
+,gasCostList,179795,179795,179795,179795,179795,179795,179795,179795,179795,179795
+,minGas,179795
+,maxGas,179795
+,meanGas,NaN
+,medianGas,179795
 ,withdrawColl(), second withdrawal, 10 accounts, each account withdraws 5 ether
-,gasCostList,179776,179776,179776,179776,179776,179776,179776,179776,179776,179776
-,minGas,179776
-,maxGas,179776
-,meanGas,179776
-,medianGas,179776
-,withdrawColl(), first withdrawal, 10 accounts, each account withdraws random amount
-,gasCostList,179800,179800,179800,179800,179800,179800,179800,179800,179800,179800
-,minGas,179800
-,maxGas,179800
-,meanGas,179800
-,medianGas,179800
-,withdrawColl(), second withdrawal, 10 accounts, each account withdraws random amount
-,gasCostList,179800,179800,179800,179800,179800,179800,179800,179788,179800,179800
-,minGas,179788
-,maxGas,179800
-,meanGas,179798.8
-,medianGas,179800
+,gasCostList,179795,179795,179795,179795,179795,179795,179795,179795,179795,179795
+,minGas,179795
+,maxGas,179795
+,meanGas,NaN
+,medianGas,179795
 ,withdrawColl(), first withdrawal, 10 accounts, each account withdraws 10 ether, leaving CDP empty
-,gasCostList,96841,111841,111841,111841,111841,103441,103441,103441,103441,85764
-,minGas,85764
-,maxGas,111841
-,meanGas,104373.3
-,medianGas,103441
+,gasCostList,96860,111860,111860,111860,111860,103460,103460,103460,103460,85774
+,minGas,85774
+,maxGas,111860
+,meanGas,NaN
+,medianGas,103460
 ,withdrawColl(), first withdrawal. 10 accounts in system. 1 account withdraws 10 ether, leaving CDP empty
-,gas,98387
+,gas,98406
 ,withdrawColl(), second withdrawal, 10 accounts, each account withdraws 5 ether, leaving CDP empty
-,gasCostList,96841,111841,111841,111841,111841,103441,103441,103441,103441,85764
-,minGas,85764
-,maxGas,111841
-,meanGas,104373.3
-,medianGas,103441
+,gasCostList,96860,111860,111860,111860,111860,103460,103460,103460,103460,85774
+,minGas,85774
+,maxGas,111860
+,meanGas,NaN
+,medianGas,103460
 ,withdrawCLV(), first withdrawal, 10 accounts, each account withdraws 100 CLV
 ,gasCostList,406190,367605,346696,325787,304878,283969,263060,242151,221242,197786
 ,minGas,197786
 ,maxGas,406190
-,meanGas,295936.4
+,meanGas,NaN
 ,medianGas,283969
 ,withdrawCLV(), second withdrawal, 10 accounts, each account withdraws 100 CLV
 ,gasCostList,352650,343045,321456,299867,278278,256689,235100,213511,191922,167786
 ,minGas,167786
 ,maxGas,352650
-,meanGas,266030.4
+,meanGas,NaN
 ,medianGas,256689
-,withdrawCLV(), first withdrawal, 10 accounts, each account withdraws a random CLV amount
-,gasCostList,406214,404935,346708,394189,373280,352371,374640,332142,409707,286957
-,minGas,286957
-,maxGas,409707
-,meanGas,368114.3
-,medianGas,352371
-,withdrawCLV(), second withdrawal, 10 accounts, each account withdraws a random CLV amount
-,gasCostList,352674,343045,321468,380387,346680,325079,380387,303502,368269,235368
-,minGas,235368
-,maxGas,380387
-,meanGas,335685.9
-,medianGas,325079
 ,repayCLV(), partial repayment, 10 accounts, repay 30 CLV (of 100 CLV)
-,gasCostList,169488,169488,169488,169488,169488,169488,169488,169488,169488,169488
-,minGas,169488
-,maxGas,169488
-,meanGas,169488
-,medianGas,169488
+,gasCostList,169585,169585,169585,169585,169585,169585,169585,169585,169585,169585
+,minGas,169585
+,maxGas,169585
+,meanGas,NaN
+,medianGas,169585
 ,repayCLV(), second partial repayment, 10 accounts, repay 30 CLV (of 70 CLV)
-,gasCostList,169488,169488,169488,169488,169488,169488,169488,169488,169488,169488
-,minGas,169488
-,maxGas,169488
-,meanGas,169488
-,medianGas,169488
-,repayCLV(), partial repayment, 10 accounts, repay random amount of CLV (of 100 CLV)
-,gasCostList,169500,169512,190281,233447,190281,233459,169500,319803,211870,211870
-,minGas,169500
-,maxGas,319803
-,meanGas,209952.3
-,medianGas,233459
+,gasCostList,169585,169585,169585,169585,169585,169585,169585,169585,169585,169585
+,minGas,169585
+,maxGas,169585
+,meanGas,NaN
+,medianGas,169585
 ,repayCLV(), first repayment, 10 accounts, repay in full (100 of 100 CLV)
-,gasCostList,139148,138808,138808,138808,138808,138808,138808,138808,138808,108808
-,minGas,108808
-,maxGas,139148
-,meanGas,135842
-,medianGas,138808
+,gasCostList,139245,138905,138905,138905,138905,138905,138905,138905,138905,108905
+,minGas,108905
+,maxGas,139245
+,meanGas,NaN
+,medianGas,138905
 ,repayCLV(), first repayment, 10 accounts, repay in full (50 of 50 CLV)
-,gasCostList,139148,138808,138808,138808,138808,138808,138808,138808,138808,108808
-,minGas,108808
-,maxGas,139148
-,meanGas,135842
-,medianGas,138808
-,getCurrentICR(), new CDPs with 10 ether and no withdrawals
-,gasCostList,9967,9967,9967,9967,9967,9967,9967,9967,9967,9967
-,minGas,9967
-,maxGas,9967
-,meanGas,9967
-,medianGas,9967
-,getCurrentICR(), CDPs with 10 ether and 100 CLV withdrawn
-,gasCostList,10307,10307,10307,10307,10307,10307,10307,10307,10307,10307
-,minGas,10307
-,maxGas,10307
-,meanGas,10307
-,medianGas,10307
-,getCurrentICR(), CDPs with 10 ether and random CLV amount withdrawn
-,gasCostList,10307,10307,10307,10307,10307,10307,10307,10307,10307,10307
-,minGas,10307
-,maxGas,10307
-,meanGas,10307
-,medianGas,10307
-,getCurrentICR(), empty CDPs with no ether and no withdrawals
-,gasCostList,9967,9967,9967,9967,9967,9967,9967,9967,9967,9967
-,minGas,9967
-,maxGas,9967
-,meanGas,9967
-,medianGas,9967
+,gasCostList,139245,138905,138905,138905,138905,138905,138905,138905,138905,108905
+,minGas,108905
+,maxGas,139245
+,meanGas,NaN
+,medianGas,138905
 ,single getCurrentICR() call, WITH pending rewards
 ,gas,12751
-,getCurrentICR(), new CDPs with 10 ether and no withdrawals,  WITH pending rewards
-,gasCostList,12751,12751,12751,12751,12751,12751,12751,12751,12751,12751
-,minGas,12751
-,maxGas,12751
-,meanGas,12751
-,medianGas,12751
-,getCurrentICR(), CDPs with 10 ether and 100 CLV withdrawn, WITH pending rewards
-,gasCostList,12751,12751,12751,12751,12751,12751,12751,12751,12751,12751
-,minGas,12751
-,maxGas,12751
-,meanGas,12751
-,medianGas,12751
-,getCurrentICR(), CDPs with 10 ether and random CLV amount withdrawn, WITH pending rewards
-,gasCostList,12751,12751,12751,12751,12751,12751,12751,12751,12751,12751
-,minGas,12751
-,maxGas,12751
-,meanGas,12751
-,medianGas,12751
-,redeemCollateral(), redeems 50 CLV, redemption hits 1 CDP. One account in system, partial redemption
-,gas,154371
-,redeemCollateral(), redeems 50 CLV, redemption hits 1 CDP. No pending rewards. 3 accounts in system, partial redemption
-,gas,197059
-,redeemCollateral(), redeemed 101 CLV, redemption hits 2 CDPs, last redemption is partial
-,gas,340954
-,redeemCollateral(), redeemed 500 CLV, redemption hits 5 CDPs, all full redemptions
-,gas,562333
-,redeemCollateral(), redeemed 450 CLV, redemption hits 5 CDPs,  last redemption is partial (50 of 100 CLV)
-,gas,626365
-,redeemCollateral(), redeemed 1000 CLV, redemption hits 10 CDPs
-,gas,1231600
-,redeemCollateral(), redeemed 1500 CLV, redemption hits 15 CDPs
-,gas,1513807
-,redeemCollateral(), redeemed 2000 CLV, redemption hits 20 CDPs
-,gas,1989558
-,redeemCollateral(), redeems 50 CLV, redemption hits 1 CDP, WITH pending rewards. One account in system
-,gas,223958
-,redeemCollateral(), redeems 50 CLV, redemption hits 1 CDP. WITH pending rewards. 3 accounts in system.
-,gas,299090
-,redeemCollateral(), redeemed 500 CLV, WITH pending rewards, redemption hits 5 CDPs, WITH pending rewards
-,gas,1128619
-,redeemCollateral(), redeemed 1000 CLV, WITH pending rewards, redemption hits 10 CDPs, WITH pending rewards
-,gas,2117267
-,redeemCollateral(), redeemed 1500 CLV, WITH pending rewards, redemption hits 15 CDPs, WITH pending rewards
-,gas,3176597
-,redeemCollateral(), redeemed 2000 CLV, WITH pending rewards, redemption hits 20 CDPs, WITH pending rewards
-,gas,4200651
-,getApproxHint(), numTrials = 10, 10 calls, each with random CR
-,gasCostList,104736,104736,104736,104736,104736,104736,104736,104736,104736,104736
-,minGas,104736
-,maxGas,104736
-,meanGas,104736
-,medianGas,104736
-,getApproxHint(), numTrials = 10:  i.e. k = 1, list size = 1
-,gas,105004
-,getApproxHint(), numTrials = 32:  i.e. k = 10, list size = 10
-,gas,316865
-,getApproxHint(), numTrials = 100: i.e. k = 10, list size = 100
-,gas,972316
 ,provideToSP(), No pending rewards, part of issued CLV: all accounts withdraw 180 CLV, all make first deposit, provide 100 CLV
 ,gasCostList,197357,152357,152357,152357,152357,152357,152357,152357,152357,152357
 ,minGas,152357
 ,maxGas,197357
-,meanGas,156857
+,meanGas,NaN
 ,medianGas,152357
 ,provideToSP(), No pending rewards, all issued CLV: all accounts withdraw 180 CLV, all make first deposit, 180 CLV
 ,gasCostList,182345,137345,137345,137345,137345,137345,137345,137345,137345,137345
 ,minGas,137345
 ,maxGas,182345
-,meanGas,141845
+,meanGas,NaN
 ,medianGas,137345
-,provideToSP(), No pending rewards, all accounts withdraw 180 CLV, all make first deposit, random CLV amount
-,gasCostList,197381,152381,152369,152381,152381,152381,152369,152369,152381,152381
-,minGas,152369
-,maxGas,197381
-,meanGas,156877.4
-,medianGas,152381
 ,provideToSP(), No pending rewards, deposit part of issued CLV: all accounts withdraw 180 CLV, all make second deposit, provide 50 CLV
 ,gasCostList,137357,137357,137357,137357,137357,137357,137357,137357,137357,137357
 ,minGas,137357
 ,maxGas,137357
-,meanGas,137357
+,meanGas,NaN
 ,medianGas,137357
 ,provideToSP(), No pending rewards, deposit all issued CLV: all accounts withdraw 180 CLV, make second deposit, provide 90 CLV
 ,gasCostList,122345,122345,122345,122345,122345,122345,122345,122345,122345,122345
 ,minGas,122345
 ,maxGas,122345
-,meanGas,122345
+,meanGas,NaN
 ,medianGas,122345
-,provideToSP(), No pending rewards, all accounts withdraw 180 CLV, make second deposit, random CLV amount
-,gasCostList,137381,137381,137381,137381,137381,137381,137369,137381,137381,137381
-,minGas,137369
-,maxGas,137381
-,meanGas,137379.8
-,medianGas,137381
 ,provideToSP(), with pending rewards in system. deposit part of issued CLV: all accounts make second deposit, provide 50 CLV
 ,gasCostList,189079,189079,189079,189079,189079,189079,189079,189079,189079
 ,minGas,189079
 ,maxGas,189079
-,meanGas,189079
+,meanGas,NaN
 ,medianGas,189079
 ,provideToSP(), with pending rewards in system. deposit all issued CLV: all accounts make second deposit, provide 90 CLV
 ,gasCostList,174067,174067,174067,174067,174067
 ,minGas,174067
 ,maxGas,174067
-,meanGas,174067
+,meanGas,NaN
 ,medianGas,174067
-,provideToSP(), with pending rewards in system. deposit part of issued CLV: all make second deposit, provide random CLV amount
-,gasCostList,189103,189091,189091,189091,189103
-,minGas,189091
-,maxGas,189103
-,meanGas,189095.8
-,medianGas,189091
 ,withdrawFromSP(), no pending rewards. Stability Pool depositors make partial withdrawal - 90 CLV of 180 CLV deposit
 ,gasCostList,153454,153454,153454,153454,153454,153454,153454,153454,153454,153454
 ,minGas,153454
 ,maxGas,153454
-,meanGas,153454
+,meanGas,NaN
 ,medianGas,153454
 ,withdrawFromSP(), no pending rewards. Stability Pool depositors make full withdrawal - 180 CLV of 180 CLV deposit
 ,gasCostList,100553,100553,100553,100553,100553,100553,100553,100553,100553,57777
 ,minGas,57777
 ,maxGas,100553
-,meanGas,96275.4
+,meanGas,NaN
 ,medianGas,100553
-,withdrawFromSP(), no pending rewards. Stability Pool depositors make partial withdrawal - random CLV amount, less than 180 CLV deposit
-,gasCostList,153490,153490,153490,153490,153490,153490,153490,153490,153478,153490
-,minGas,153478
-,maxGas,153490
-,meanGas,153488.8
-,medianGas,153490
 ,withdrawFromSP(), pending rewards in system. Stability Pool depositors make partial withdrawal - 90 CLV of 180 CLV deposit
 ,gasCostList,205176,205176,205176,205176,205176
 ,minGas,205176
 ,maxGas,205176
-,meanGas,205176
+,meanGas,NaN
 ,medianGas,205176
 ,withdrawFromSP(), pending rewards in system. Stability Pool depositors make full withdrawal - 180 CLV of 180 CLV deposit
 ,gasCostList,152275,152275,152275,152275,152275
 ,minGas,152275
 ,maxGas,152275
-,meanGas,152275
+,meanGas,NaN
 ,medianGas,152275
-,withdrawFromSP(), pending rewards in system. Stability Pool depositors make partial withdrawal - random amount of CLV
-,gasCostList,205212,205212,205200,205212,205212
-,minGas,205200
-,maxGas,205212
-,meanGas,205209.6
-,medianGas,205200
-,withdrawFromSPtoCDP(), no pending rewards. All accounts withdraw 180 CLV, provide a random amount, then withdraw all to SP
-,gasCostList,242062,242062,242062,242062,242062
-,minGas,242062
-,maxGas,242062
-,meanGas,242062
-,medianGas,242062
-,withdrawFromSPtoCDP(), no pending rewards. All accounts withdraw 180 CLV, provide 180 CLV, then withdraw all to SP
-,gasCostList,242062,242062,242062,242062,242062
-,minGas,242062
-,maxGas,242062
-,meanGas,242062
-,medianGas,242062
-,withdrawFromSPtoCDP(), pending rewards in system. Accounts withdraw 180 CLV, provide 180 CLV, then withdraw all to SP after a liquidation
-,gasCostList,341015,341015,341015,340991,341015
-,minGas,340991
-,maxGas,341015
-,meanGas,341010.2
-,medianGas,341015
-,withdrawFromSPtoCDP(), pending rewards in system. Accounts withdraw 180 CLV, provide a random amount, then withdraw all to SP after a liquidation
-,gasCostList,341015,341015,383373,361760,341015
-,minGas,341015
-,maxGas,383373
-,meanGas,353635.6
-,medianGas,383373
 ,Single liquidate() call. Liquidee has pending rewards. Pure redistribution
 ,gas,200317
 ,Single liquidate() call. Liquidee has NO pending rewards. Pure redistribution
 ,gas,119438
-,Single liquidate() call. Liquidee has NO pending rewards. Pure offset with SP
-,gas,159010
-,Single liquidate() call. Liquidee has pending rewards. Pure offset with SP
-,gas,229651
 ,Single liquidate() call. Liquidee has pending rewards. Partial offset + redistribution
 ,gas,262576
 ,Single liquidate() call. Liquidee has NO pending rewards. Partial offset + redistribution
 ,gas,185335
+,liquidateCDPs(). n = 1. Pure redistribution
+,gas,240616
+,liquidateCDPs(). n = 2. Pure redistribution
+,gas,352966
+,liquidateCDPs(). n = 3. Pure redistribution
+,gas,448652
+,liquidateCDPs(). n = 10. Pure redistribution
+,gas,1165466
+,liquidateCDPs(). n = 30. Pure redistribution
+,gas,3079645
+,liquidateCDPs(). n = 50. Pure redistribution
+,gas,4964954
+,liquidateCDPs(). n = 100. Pure redistribution
+,gas,9938016
+,liquidateCDPs(). n = 1. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,269950
+,liquidateCDPs(). n = 2. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,343521
+,liquidateCDPs(). n = 3. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,412892
+,liquidateCDPs(). n = 10. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,915295
+,liquidateCDPs(). n = 30. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,2522401
+,liquidateCDPs(). n = 50. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,4137204
+,liquidateCDPs(). n = 100. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,8174431
+,liquidateCDPs(). n = 1. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,318991
+,liquidateCDPs(). n = 2. All fully offset with Stability Pool. Have pending distribution rewards.
+,gas,431404
+,liquidateCDPs(). n = 3. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,543819
+,liquidateCDPs(). n = 10. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,1347566
+,liquidateCDPs(). n = 30. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,3638406
+,liquidateCDPs(). n = 50. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,5929872
+,liquidateCDPs(). n = 100. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,11642070
 ,findInsertPosition(), 10 CDPs with ICRs 200-209%, ICR > head ICR, no hint, 0 traversals
 ,gas,15467
 ,findInsertPosition(), 50 CDPs with ICRs 200-209%, ICR > head ICR, no hint, 0 traversals
@@ -415,15 +245,15 @@ openLoan(), single account, 0 existing CDPs in system. Adds 10 ether and issues 
 ,DeciMath public div_toDuint() with random args
 ,gas,1974
 ,DeciMath public mul_uintByDuint() with random args
-,gas,1875
+,gas,1887
 ,ABDKMath mul() with random args
-,gas,1101
+,gas,1113
 ,ABDKMath div() with random args
-,gas,1100
+,gas,1112
 ,ABDKMath mulu() with random args
-,gas,1098
+,gas,1086
 ,ABDKMath divu() with random args
-,gas,1207
+,gas,1219
 ,ABDKMath fromUInt() with random args
 ,gas,693
 ,ABDKMath toUInt() with random args

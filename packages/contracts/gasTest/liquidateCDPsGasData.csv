@@ -1,0 +1,42 @@
+liquidateCDPs(). n = 1. Pure redistribution
+,gas,240616
+,liquidateCDPs(). n = 2. Pure redistribution
+,gas,352966
+,liquidateCDPs(). n = 3. Pure redistribution
+,gas,448652
+,liquidateCDPs(). n = 10. Pure redistribution
+,gas,1165466
+,liquidateCDPs(). n = 30. Pure redistribution
+,gas,3079645
+,liquidateCDPs(). n = 50. Pure redistribution
+,gas,4964954
+,liquidateCDPs(). n = 100. Pure redistribution
+,gas,9938016
+,liquidateCDPs(). n = 1. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,269950
+,liquidateCDPs(). n = 2. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,343521
+,liquidateCDPs(). n = 3. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,412892
+,liquidateCDPs(). n = 10. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,915295
+,liquidateCDPs(). n = 30. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,2522401
+,liquidateCDPs(). n = 50. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,4137204
+,liquidateCDPs(). n = 100. All fully offset with Stability Pool. No pending distribution rewards.
+,gas,8174431
+,liquidateCDPs(). n = 1. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,318991
+,liquidateCDPs(). n = 2. All fully offset with Stability Pool. Have pending distribution rewards.
+,gas,431404
+,liquidateCDPs(). n = 3. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,543819
+,liquidateCDPs(). n = 10. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,1347566
+,liquidateCDPs(). n = 30. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,3638406
+,liquidateCDPs(). n = 50. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,5929872
+,liquidateCDPs(). n = 100. All fully offset with Stability Pool. Has pending distribution rewards.
+,gas,11642070
