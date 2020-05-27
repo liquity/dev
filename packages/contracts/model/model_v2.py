@@ -7,11 +7,11 @@ class ModelParams:
         self.D = 0.7 # base fee decay factor
         
         self.T = 1 # weighting for token price in loan issuance
-        self.F = 10 # weighting for momentum in loan issuance
+        self.F = 1 # weighting for momentum in loan issuance
 
         self.lookback = 5 # Lookback parameter for ETH price momentum
 
-        self.max_redemption_fraction = 0.1 # Maximum fraction of supply that can be redeemed in a timestep
+        self.max_redemption_fraction = 1 # Maximum fraction of supply that can be redeemed in a timestep
 
 # time series data 
 class Data:
@@ -59,8 +59,11 @@ def get_new_redeemed_amount(data, params):
 
     if redeemed < 0:
         return 0
+    elif redeemed < max_redeemable:
+        return redeemed
     else:
-        return max(redeemed, max_redeemable)
+        return max_redeemable
+       
 
 # Decay base fee correctly
 def get_new_base_fee(data, redeemed_amount):
@@ -165,16 +168,16 @@ params = ModelParams()
 data = Data()
 
 # Run the model
-for i in range(1, 500):
+for i in range(1, 250):
     last_ETH_price =  data.ETH_price[-1]
 
     # update exogenous ETH price
 
     # ETH_price = last_ETH_price
-    # ETH_price = randomwalk_ETH_price(last_ETH_price)
-    # ETH_price = oscillating_ETH_price(500, 50, i)
+    ETH_price = randomwalk_ETH_price(last_ETH_price)
+    # ETH_price = oscillating_ETH_price(500, 10, i)
     # ETH_price = quadratic_ETH_price(500, 10, i)
-    ETH_price = linear_increasing_ETH_price(last_ETH_price, 0.3)
+    # ETH_price = linear_increasing_ETH_price(last_ETH_price, 10)
     # ETH_price = linear_decreasing_ETH_price(last_ETH_price, 1)
     # ETH_price = sublinear_ETH_price(last_ETH_price, 10, i)
     
@@ -245,5 +248,8 @@ plt.plot(data.base_fee)
 
 # plt.plot(data.momentum)
 # plt.plot(data.token_demand)
+
+params_string = f'Parameters:  D={params.D}  T={params.T}  F={params.F}  L={params.lookback}  r_max={params.max_redemption_fraction}'
+plt.figtext(0.5, 0.05, params_string, ha="center", fontsize=10)
 
 plt.show()
