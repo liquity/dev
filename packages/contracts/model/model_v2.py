@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 # model parameters
 class ModelParams:
     def __init__(self):
-        self.D = 0.7 # base fee decay factor
-        
+        self.D = 0.5 # base fee decay factor
+
         self.T = 1 # weighting for token price in loan issuance
-        self.F = 1 # weighting for momentum in loan issuance
+        self.F = 0.5 # weighting for momentum in loan issuance
 
         self.lookback = 5 # Lookback parameter for ETH price momentum
 
@@ -59,10 +59,8 @@ def get_new_redeemed_amount(data, params):
 
     if redeemed < 0:
         return 0
-    elif redeemed < max_redeemable:
-        return redeemed
     else:
-        return max_redeemable
+        return min(redeemed, max_redeemable)
        
 
 # Decay base fee correctly
@@ -152,8 +150,14 @@ def linear_increasing_ETH_price(last_price, gradient):
 def oscillating_ETH_price(min, magnitude, i):
     return min + magnitude + magnitude*np.sin(i)
 
-def linear_decreasing_ETH_price(last_price, gradient):
-    return last_price - gradient
+def linear_decreasing_ETH_price(start, gradient, i):
+    val = (start - (gradient*i))
+    if val <= 0:
+        return 0
+    return val
+
+def one_over_i_ETH_price(scale, i):
+    return scale/i
 
 def quadratic_ETH_price(min, scale, i):
     return min + scale*(i**2)
@@ -175,10 +179,11 @@ for i in range(1, 250):
 
     # ETH_price = last_ETH_price
     ETH_price = randomwalk_ETH_price(last_ETH_price)
-    # ETH_price = oscillating_ETH_price(500, 10, i)
+    # ETH_price = oscillating_ETH_price(500, 100, i)
     # ETH_price = quadratic_ETH_price(500, 10, i)
-    # ETH_price = linear_increasing_ETH_price(last_ETH_price, 10)
-    # ETH_price = linear_decreasing_ETH_price(last_ETH_price, 1)
+    # ETH_price = linear_increasing_ETH_price(last_ETH_price, 3)
+    # ETH_price = linear_decreasing_ETH_price(800, 1, i)
+    # ETH_price = one_over_i_ETH_price(1000, i)
     # ETH_price = sublinear_ETH_price(last_ETH_price, 10, i)
     
     momentum = get_new_momentum(data, params, ETH_price)
