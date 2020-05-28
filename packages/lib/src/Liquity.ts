@@ -568,7 +568,7 @@ export class Liquity {
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void) {
     const { CDPUpdated } = this.cdpManager.filters;
-    const cdpUpdated = CDPUpdated(null, null, null, null);
+    const cdpUpdated = CDPUpdated();
 
     const cdpUpdatedListener = debounce((blockTag: number) => {
       this.getNumberOfTroves({ blockTag }).then(onNumberOfTrovesChanged);
@@ -587,7 +587,7 @@ export class Liquity {
 
   watchPrice(onPriceChanged: (price: Decimal) => void) {
     const { PriceUpdated } = this.priceFeed.filters;
-    const priceUpdated = PriceUpdated(null);
+    const priceUpdated = PriceUpdated();
 
     const priceUpdatedListener = debounce((blockTag: number) => {
       this.getPrice({ blockTag }).then(onPriceChanged);
@@ -626,7 +626,7 @@ export class Liquity {
 
   watchTotal(onTotalChanged: (total: Trove) => void) {
     const { CDPUpdated } = this.cdpManager.filters;
-    const cdpUpdated = CDPUpdated(null, null, null, null);
+    const cdpUpdated = CDPUpdated();
 
     const totalListener = debounce((blockTag: number) => {
       this.getTotal({ blockTag }).then(onTotalChanged);
@@ -674,8 +674,8 @@ export class Liquity {
     const { UserDepositChanged } = this.poolManager.filters;
     const { EtherSent } = this.activePool.filters;
 
-    const userDepositChanged = UserDepositChanged(address, null);
-    const etherSent = EtherSent(null, null);
+    const userDepositChanged = UserDepositChanged(address);
+    const etherSent = EtherSent();
 
     const depositListener = debounce((blockTag: number) => {
       this.getStabilityDeposit(address, { blockTag }).then(onStabilityDepositChanged);
@@ -729,8 +729,8 @@ export class Liquity {
   watchQuiInStabilityPool(onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) {
     const { Transfer } = this.clvToken.filters;
 
-    const transferQuiFromStabilityPool = Transfer(this.stabilityPool.address, null, null);
-    const transferQuiToStabilityPool = Transfer(null, this.stabilityPool.address, null);
+    const transferQuiFromStabilityPool = Transfer(this.stabilityPool.address);
+    const transferQuiToStabilityPool = Transfer(null, this.stabilityPool.address);
 
     const stabilityPoolQuiFilters = [transferQuiFromStabilityPool, transferQuiToStabilityPool];
 
@@ -752,8 +752,8 @@ export class Liquity {
 
   watchQuiBalance(onQuiBalanceChanged: (balance: Decimal) => void, address = this.requireAddress()) {
     const { Transfer } = this.clvToken.filters;
-    const transferQuiFromUser = Transfer(address, null, null);
-    const transferQuiToUser = Transfer(null, address, null);
+    const transferQuiFromUser = Transfer(address);
+    const transferQuiToUser = Transfer(null, address);
 
     const quiTransferFilters = [transferQuiFromUser, transferQuiToUser];
 
