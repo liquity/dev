@@ -29,7 +29,10 @@ const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Dec
   return collateral.mulDiv(price, debt);
 };
 
-type TroveChange = { property: "collateral" | "debt"; difference: Difference };
+type TroveChange = {
+  collateralDifference?: Difference;
+  debtDifference?: Difference;
+};
 
 export class Trove {
   readonly collateral: Decimal;
@@ -115,44 +118,50 @@ export class Trove {
     });
   }
 
-  whatChanged({ collateral, debt }: Trove): TroveChange | undefined {
+  whatChanged({ collateral, debt }: Trove) {
+    const change: TroveChange = {};
+
     if (!collateral.eq(this.collateral)) {
-      return {
-        property: "collateral",
-        difference: Difference.between(collateral, this.collateral)
-      };
+      change.collateralDifference = Difference.between(collateral, this.collateral);
     }
+
     if (!debt.eq(this.debt)) {
-      return {
-        property: "debt",
-        difference: Difference.between(debt, this.debt)
-      };
+      change.debtDifference = Difference.between(debt, this.debt);
+    }
+
+    return change;
+  }
+
+  applyCollateralDifference(collateralDifference?: Difference) {
+    if (collateralDifference?.positive) {
+      return this.addCollateral(collateralDifference.absoluteValue!);
+    } else if (collateralDifference?.negative) {
+      if (collateralDifference.absoluteValue!.lt(this.collateral)) {
+        return this.subtractCollateral(collateralDifference.absoluteValue!);
+      } else {
+        return this.setCollateral(0);
+      }
+    } else {
+      return this;
     }
   }
 
-  apply({ property, difference }: TroveChange) {
-    switch (property) {
-      case "collateral":
-        if (difference.positive) {
-          return this.addCollateral(difference.absoluteValue!);
-        } else if (difference.negative) {
-          if (difference.absoluteValue!.lt(this.collateral)) {
-            return this.subtractCollateral(difference.absoluteValue!);
-          } else {
-            return this.setCollateral(0);
-          }
-        }
-      case "debt":
-        if (difference.positive) {
-          return this.addDebt(difference.absoluteValue!);
-        } else if (difference.negative) {
-          if (difference.absoluteValue!.lt(this.collateral)) {
-            return this.subtractDebt(difference.absoluteValue!);
-          } else {
-            return this.setDebt(0);
-          }
-        }
+  applyDebtDifference(debtDifference?: Difference) {
+    if (debtDifference?.positive) {
+      return this.addDebt(debtDifference.absoluteValue!);
+    } else if (debtDifference?.negative) {
+      if (debtDifference.absoluteValue!.lt(this.collateral)) {
+        return this.subtractDebt(debtDifference.absoluteValue!);
+      } else {
+        return this.setDebt(0);
+      }
+    } else {
+      return this;
     }
+  }
+
+  apply({ collateralDifference, debtDifference }: TroveChange) {
+    return this.applyCollateralDifference(collateralDifference).applyDebtDifference(debtDifference);
   }
 }
 
@@ -262,6 +271,8 @@ export class StabilityDeposit {
           ? this.depositAfterLoss.sub(difference.absoluteValue!)
           : 0
       });
+    } else {
+      return this;
     }
   }
 }
@@ -559,6 +570,26 @@ export class Liquity {
       Decimal.from(repaidQui).bigNumber,
       await this._findHint(finalTrove, Decimal.from(price), address),
       { ...overrides }
+    );
+  }
+
+  async changeTrove(
+    initialTrove: Trove,
+    change: TroveChange,
+    price: Decimalish,
+    overrides?: LiquityTransactionOverrides
+  ) {
+    const address = this.requireAddress();
+    const finalTrove = initialTrove.apply(change);
+
+    return this.borrowerOperations.adjustLoan(
+      change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
+      change.debtDifference?.bigNumber || 0,
+      await this._findHint(finalTrove, Decimal.from(price), address),
+      {
+        ...overrides,
+        value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
+      }
     );
   }
 

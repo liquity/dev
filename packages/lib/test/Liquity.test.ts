@@ -13,6 +13,8 @@ const provider = ethers.provider;
 
 chai.use(chaiAsPromised);
 
+// TODO make the testcases isolated
+
 describe("Liquity", () => {
   let deployer: Signer;
   let funder: Signer;
@@ -164,6 +166,28 @@ describe("Liquity", () => {
       trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(new Trove({ collateral: 2, debt: 110 }));
+    });
+
+    it("should repay some debt and withdraw some collateral at the same time", async () => {
+      const finalTrove = new Trove({ collateral: 1.5, debt: 50 });
+
+      await liquity.changeTrove(trove, trove.whatChanged(finalTrove), price, { gasPrice: 0 });
+      trove = await liquity.getTrove();
+      const ethBalance = new Decimal(await user.getBalance());
+
+      expect(trove).to.deep.equal(finalTrove);
+      expect(`${ethBalance}`).to.equal("100.5");
+    });
+
+    it("should borrow more and deposit some collateral at the same time", async () => {
+      const finalTrove = new Trove({ collateral: 2, debt: 110 });
+
+      await liquity.changeTrove(trove, trove.whatChanged(finalTrove), price, { gasPrice: 0 });
+      trove = await liquity.getTrove();
+      const ethBalance = new Decimal(await user.getBalance());
+
+      expect(trove).to.deep.equal(finalTrove);
+      expect(`${ethBalance}`).to.equal("99.5");
     });
   });
 
