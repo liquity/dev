@@ -262,10 +262,10 @@ export class StabilityDeposit {
     }
   }
 
-  apply(difference: Difference) {
-    if (difference.positive) {
+  apply(difference?: Difference) {
+    if (difference?.positive) {
       return new StabilityDeposit({ deposit: this.depositAfterLoss.add(difference.absoluteValue!) });
-    } else if (difference.negative) {
+    } else if (difference?.negative) {
       return new StabilityDeposit({
         deposit: difference.absoluteValue!.lt(this.depositAfterLoss)
           ? this.depositAfterLoss.sub(difference.absoluteValue!)

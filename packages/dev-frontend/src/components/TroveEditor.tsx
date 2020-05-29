@@ -25,8 +25,11 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 }) => {
   const editingState = useState<string>();
 
-  const collateralChange = Difference.between(edited.collateral, original.collateral.nonZero);
-  const debtChange = Difference.between(edited.debt, original.debt.nonZero);
+  const { collateralDifference, debtDifference } = original.whatChanged(edited);
+  const isChanged = collateralDifference !== undefined || debtDifference !== undefined;
+
+  const pendingCollateral = original.collateral.nonZero && collateralDifference;
+  const pendingDebt = original.debt.nonZero && debtDifference;
 
   const collateralRatio =
     (edited.collateral.nonZero || edited.debt.nonZero) && edited.collateralRatio(price);
@@ -36,8 +39,6 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
     original.collateralRatio(price).finite
   );
   const collateralRatioChangePct = new Percent(collateralRatioChange);
-
-  const isChanged = original.whatChanged(edited) !== undefined;
 
   return (
     <Card p={0}>
@@ -78,8 +79,8 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
         <EditableRow
           label="Collateral"
           amount={edited.collateral.prettify(4)}
-          pendingAmount={collateralChange.nonZero?.prettify()}
-          pendingColor={collateralChange.positive ? "success" : "danger"}
+          pendingAmount={pendingCollateral?.prettify()}
+          pendingColor={pendingCollateral?.positive ? "success" : "danger"}
           unit="ETH"
           {...{ editingState }}
           editedAmount={edited.collateral.toString(4)}
@@ -91,8 +92,8 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
         <EditableRow
           label="Debt"
           amount={edited.debt.prettify()}
-          pendingAmount={debtChange.nonZero?.prettify()}
-          pendingColor={debtChange.positive ? "danger" : "success"}
+          pendingAmount={pendingDebt?.prettify()}
+          pendingColor={pendingDebt?.positive ? "danger" : "success"}
           unit="LQTY"
           {...{ editingState }}
           editedAmount={edited.debt.toString(2)}
