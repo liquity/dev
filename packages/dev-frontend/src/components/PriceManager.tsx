@@ -4,6 +4,7 @@ import { Transaction } from "./Transaction";
 
 import { Decimal } from "@liquity/decimal";
 import { Liquity } from "@liquity/lib";
+import { useLiquity } from "../hooks/LiquityContext";
 import { Label, StaticCell, EditableCell } from "./EditorCell";
 
 type PriceManagerProps = {
@@ -12,6 +13,7 @@ type PriceManagerProps = {
 };
 
 export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) => {
+  const { oracleAvailable } = useLiquity();
   const [editedPrice, setEditedPrice] = useState(price.toString(2));
 
   useEffect(() => {
@@ -63,6 +65,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
               id="update-price"
               tooltip="Update from Oracle"
               tooltipPlacement="bottom"
+              requires={[[oracleAvailable, "Only available on Ropsten"]]}
               send={liquity.updatePrice.bind(liquity)}
               numberOfConfirmationsToWait={1}
             >

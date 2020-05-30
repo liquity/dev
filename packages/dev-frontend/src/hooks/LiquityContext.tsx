@@ -19,6 +19,7 @@ type LiquityContext = {
   contracts: LiquityContracts;
   liquity: Liquity;
   devChain: boolean;
+  oracleAvailable: boolean;
   contractsVersion: string;
   deploymentDate: number;
 };
@@ -77,10 +78,20 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   const contracts = connectToContracts(addresses, provider.getSigner(account));
   const liquity = new Liquity(contracts, account);
   const devChain = chainId === DEV_CHAIN_ID;
+  const oracleAvailable = chainId === 3;
 
   return (
     <LiquityContext.Provider
-      value={{ account, provider, contracts, liquity, devChain, contractsVersion, deploymentDate }}
+      value={{
+        account,
+        provider,
+        contracts,
+        liquity,
+        devChain,
+        oracleAvailable,
+        contractsVersion,
+        deploymentDate
+      }}
     >
       {children}
     </LiquityContext.Provider>
