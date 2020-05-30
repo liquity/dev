@@ -56,6 +56,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   });
 
   const {
+    blockTag,
     etherBalance,
     quiBalance,
     numberOfTroves,
@@ -98,7 +99,10 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
           </Box>
         </Flex>
 
-        <RiskiestTroves pageSize={10} {...{ liquity, price, totalRedistributed, numberOfTroves }} />
+        <RiskiestTroves
+          pageSize={10}
+          {...{ liquity, price, totalRedistributed, numberOfTroves, blockTag }}
+        />
       </Box>
 
       <Footer>

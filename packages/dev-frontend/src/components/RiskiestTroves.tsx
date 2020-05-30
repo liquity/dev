@@ -42,6 +42,7 @@ type RiskiestTrovesProps = {
   numberOfTroves: number;
   price: Decimal;
   totalRedistributed: Trove;
+  blockTag?: number;
 };
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
@@ -51,7 +52,8 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   liquity,
   numberOfTroves,
   price,
-  totalRedistributed
+  totalRedistributed,
+  blockTag
 }) => {
   type Troves = Resolved<ReturnType<typeof liquity.getLastTroves>>;
 
@@ -88,7 +90,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
 
     setLoading(true);
 
-    liquity.getLastTroves(clampedPage * pageSize, pageSize).then(troves => {
+    liquity.getLastTroves(clampedPage * pageSize, pageSize, { blockTag }).then(troves => {
       if (mounted) {
         setTrovesWithoutRewards(troves);
         setLoading(false);
@@ -98,6 +100,8 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
     return () => {
       mounted = false;
     };
+    // Omit blockTag from deps on purpose
+    // eslint-disable-next-line
   }, [liquity, clampedPage, pageSize, reload]);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { BigNumber } from "@ethersproject/bignumber";
-import { Provider, BlockTag } from "@ethersproject/abstract-provider";
+import { Provider } from "@ethersproject/abstract-provider";
 
 import { Decimal } from "@liquity/decimal";
 import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
@@ -20,8 +20,8 @@ const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 
 export const useLiquityStore = (provider: Provider, account: string, liquity: Liquity) => {
   const get = useCallback(
-    (blockTag?: BlockTag) =>
-      promiseAllValues({
+    async (blockTag?: number) => {
+      const store = await promiseAllValues({
         etherBalance: provider.getBalance(account, blockTag).then(decimalify),
         quiBalance: liquity.getQuiBalance(account, { blockTag }),
         price: liquity.getPrice({ blockTag }),
@@ -31,21 +31,24 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
         deposit: liquity.getStabilityDeposit(account, { blockTag }),
         total: liquity.getTotal({ blockTag }),
         quiInStabilityPool: liquity.getQuiInStabilityPool({ blockTag })
-      }).then(store => ({
-        trove: store.troveWithoutRewards.applyRewards(store.totalRedistributed),
-        ...store
-      })),
+      });
+
+      return {
+        blockTag,
+        ...store,
+        trove: store.troveWithoutRewards.applyRewards(store.totalRedistributed)
+      };
+    },
     [provider, account, liquity]
   );
 
   type Values = Resolved<ReturnType<typeof get>> & {
-    [prop: string]: number | Decimal | Trove | StabilityDeposit;
+    [prop: string]: number | Decimal | Trove | StabilityDeposit | undefined;
   };
 
   const watch = useCallback(
     (updateValues: (values: Values) => void) => {
       const blockListener = (blockNumber: number) => {
-        console.log(`New block #${blockNumber}`);
         get(blockNumber).then(updateValues);
       };
 
@@ -63,7 +66,7 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
           const newValue = neuu[key];
 
           const equals =
-            (typeof previousValue === "number" && previousValue === newValue) ||
+            previousValue === newValue ||
             (previousValue instanceof Decimal && previousValue.eq(newValue as Decimal)) ||
             (previousValue instanceof Trove && previousValue.equals(newValue as Trove)) ||
             (previousValue instanceof StabilityDeposit &&
