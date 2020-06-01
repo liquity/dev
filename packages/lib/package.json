@@ -6,9 +6,9 @@
   "scripts": {
     "check-abi": "ts-node scripts/check-abi.ts",
     "copy-deployments": "ts-node scripts/copy-deployments.ts",
-    "build": "yarn run copy-deployments && yarn run generate-types && tsc --project tsconfig.dist.json",
     "buidler": "buidler",
     "generate-types": "ts-node scripts/generate-types.ts",
+    "prepare": "yarn run copy-deployments && yarn run generate-types && tsc --project tsconfig.dist.json",
     "scrape-eth-usd": "ts-node scripts/scrape-eth-usd.ts",
     "test": "buidler test"
   },

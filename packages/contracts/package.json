@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "compile": "buidler compile && (git rev-parse HEAD 2> /dev/null || echo unknown) > artifacts/version",
+    "prepare": "buidler compile && (git rev-parse HEAD 2> /dev/null || echo unknown) > artifacts/version",
     "test": "buidler test",
     "buidler": "buidler"
   },

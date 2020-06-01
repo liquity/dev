@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc --project tsconfig.dist.json",
+    "prepare": "tsc --project tsconfig.dist.json",
     "test": "mocha --require ts-node/register"
   },
   "devDependencies": {
