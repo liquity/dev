@@ -29,11 +29,11 @@ This repository hosts an early preview of the Liquity codebase until we get read
 
 These are the Liquity components that have been made visible in this repo. They can be found under the `packages` directory.
 
-| Package               | Description                                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------------------------ |
-| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                    |
-| @liquity/dev-frontend | A bare-bones but functional React app used for interfacing with the smart contracts during development |
-| @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                    |
+| Package               | Description                                                                                                                                                      |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                                                                              |
+| @liquity/dev-frontend | [Liquity Developer Interface](http://94.130.72.96:3000/): a bare-bones but functional React app used for interfacing with the smart contracts during development |
+| @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                                                                              |
 
 ## Running the dev-frontend
 
