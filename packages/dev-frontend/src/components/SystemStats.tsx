@@ -55,7 +55,12 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
         Deployed: {new Date(deploymentDate).toLocaleString()}
       </Text>
       <Text fontSize={0} opacity={0.5}>
-        Frontend version: <GitHubCommit>{process.env.REACT_APP_VERSION}</GitHubCommit>
+        Frontend version:{" "}
+        {process.env.NODE_ENV === "development" ? (
+          "development"
+        ) : (
+          <GitHubCommit>{process.env.REACT_APP_VERSION}</GitHubCommit>
+        )}
       </Text>
     </Card>
   );

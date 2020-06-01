@@ -27,6 +27,7 @@
     "@web3-react/injected-connector": "^6.0.7",
     "@web3-react/types": "^6.0.7",
     "ethers": "^5.0.0-beta.187",
+    "npm-run-all": "^4.1.5",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
     "react-circular-progressbar": "^2.0.3",
@@ -43,9 +44,11 @@
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "start": "react-scripts start",
-    "build": "REACT_APP_VERSION=$(git rev-parse HEAD 2> /dev/null || echo unknown) react-scripts build",
+    "build": "run-s set-version build:react",
+    "build:react": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "set-version": "node scripts/set-version.js"
   },
   "eslintConfig": {
     "extends": "react-app"

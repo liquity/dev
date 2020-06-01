@@ -4,11 +4,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "check-abi": "ts-node scripts/check-abi.ts",
-    "copy-deployments": "ts-node scripts/copy-deployments.ts",
     "buidler": "buidler",
+    "check-abi": "ts-node scripts/check-abi.ts",
+    "compile": "tsc --project tsconfig.dist.json",
+    "copy-deployments": "ts-node scripts/copy-deployments.ts",
     "generate-types": "ts-node scripts/generate-types.ts",
-    "prepare": "yarn run copy-deployments && yarn run generate-types && tsc --project tsconfig.dist.json",
+    "prepare": "run-s copy-deployments generate-types compile",
     "scrape-eth-usd": "ts-node scripts/scrape-eth-usd.ts",
     "test": "buidler test"
   },
@@ -31,6 +32,7 @@
     "colors": "^1.4.0",
     "dotenv": "^8.2.0",
     "ethers": "^5.0.0-beta.187",
+    "npm-run-all": "^4.1.5",
     "object-hash": "^2.0.3",
     "ts-node": "^8.9.0",
     "typescript": "^3.7.5"
