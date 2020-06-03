@@ -30,22 +30,28 @@ export class DisposableWalletProvider {
     return wallet;
   }
 
+  private async fund() {
+    return this.send("eth_sendTransaction", [
+      {
+        from: this.funderWallet.address,
+        to: this.wallet.address,
+        value: this.ethAmount.bigNumber,
+        gas: 21000
+      }
+    ]);
+
+    // TODO maybe wait for tx to be mined (not a problem on devchains though)
+  }
+
   async send(method: string, params: any[]): Promise<any> {
+    if (!this.haveFunded) {
+      this.haveFunded = true;
+      await this.fund();
+    }
+
     switch (method) {
       case "eth_accounts":
       case "eth_requestAccounts":
-        if (!this.haveFunded) {
-          await this.send("eth_sendTransaction", [
-            {
-              from: this.funderWallet.address,
-              to: this.wallet.address,
-              value: this.ethAmount.bigNumber,
-              gas: 21000
-            }
-          ]);
-          this.haveFunded = true;
-        }
-
         return [this.wallet.address];
 
       case "eth_sendTransaction":
