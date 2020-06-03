@@ -2,6 +2,9 @@ import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 import App from "./App";
 
+/*
+ * Just a quick and dirty testcase to prove that the approach can work in our CI pipeline.
+ */
 test("there's no smoke", async () => {
   const { getByText, getByTestId, findByText, queryByText } = render(<App />);
 
@@ -14,4 +17,5 @@ test("there's no smoke", async () => {
 
   expect(queryByText(/open new trove/i)).not.toBeInTheDocument();
   expect(await findByText(/your liquity trove/i)).toBeInTheDocument();
+  expect(await findByText(/1\-1 of 1/i)).toBeInTheDocument();
 });
