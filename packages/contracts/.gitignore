@@ -1,5 +1,8 @@
-# Buidler Contract JSONs
+# Buidler contract JSONs
 /artifacts
+
+# Truffle contract JSONs
+/build/contracts
 
 # Buidler compilation cache
 /cache

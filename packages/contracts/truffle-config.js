@@ -28,7 +28,7 @@ module.exports = {
   // use native binaries rather than solc.js 
   compilers: {
     solc: {
-      version: "0.5.11"
+      version: "0.5.15"
     }
   },
   // plugins: [

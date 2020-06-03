@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.15;
 
 import './Interfaces/IPool.sol';
 import '@openzeppelin/contracts/ownership/Ownable.sol';

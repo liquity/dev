@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.15;
 
 import "./Interfaces/ICLVToken.sol";
 import "@openzeppelin/contracts/GSN/Context.sol";

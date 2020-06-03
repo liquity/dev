@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.15;
 
 // Stores the CLV user data: token balances and spending allowances.
 // Functions are setters, addition and subtraction. Actual token logic resides in CLVToken.sol

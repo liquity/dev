@@ -1,5 +1,4 @@
-pragma solidity ^0.5.11;
-
+pragma solidity ^0.5.15;
 import './Interfaces/ICDPManager.sol';
 import './Interfaces/ISortedCDPs.sol';
 import './Interfaces/IPriceFeed.sol';
