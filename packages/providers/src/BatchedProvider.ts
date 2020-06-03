@@ -3,6 +3,7 @@ import { Provider, TransactionRequest, BlockTag } from "@ethersproject/abstract-
 import { BaseProvider } from "@ethersproject/providers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Contract } from "@ethersproject/contracts";
+import { Deferrable, resolveProperties } from "@ethersproject/properties";
 
 import { WebSocketAugmentedWeb3Provider } from "./WebSocketAugmentedProvider";
 
@@ -65,19 +66,6 @@ type ResolvedTransactionRequest = {
   data?: BytesLike;
   value?: BigNumberish;
   chainId?: number;
-};
-
-const resolveRequest = async (request: TransactionRequest): Promise<ResolvedTransactionRequest> => {
-  const values = Object.values(request);
-
-  if (values.every(value => !(value instanceof Promise))) {
-    return request as ResolvedTransactionRequest;
-  }
-
-  const keys = Object.keys(request);
-  const resolvedValues = await Promise.all(values);
-
-  return Object.fromEntries(resolvedValues.map((value, i) => [keys[i], value]));
 };
 
 type CallRequest = {
@@ -172,9 +160,9 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
     }
 
     async call(
-      request: TransactionRequest | Promise<TransactionRequest>,
+      request: Deferrable<TransactionRequest>,
       blockTag?: BlockTag | Promise<BlockTag>
-    ) {
+    ): Promise<string> {
       if (!this._multiCaller) {
         return super.call(request, blockTag);
       } else {
@@ -199,23 +187,25 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
         }
       }
 
-      [request, blockTag] = await Promise.all([request, blockTag]);
-      const resolvedRequest = await resolveRequest(request);
+      const [resolvedRequest, resolvedBlockTag] = await Promise.all([
+        resolveProperties(request),
+        blockTag
+      ]);
 
       if (
         resolvedRequest.to === this._multiCaller.address ||
         !batchableCall(resolvedRequest) ||
-        this._alreadyBatchedCallsConflictWith(resolvedRequest, blockTag)
+        this._alreadyBatchedCallsConflictWith(resolvedRequest, resolvedBlockTag)
       ) {
         this._numberOfActualCalls++;
 
-        return super.call(resolvedRequest, blockTag);
+        return super.call(resolvedRequest, resolvedBlockTag);
       } else {
         this._numberOfBatchedCalls++;
 
         if (this._batched.calls.length === 0) {
           this._batched.from = resolvedRequest.from;
-          this._batched.blockTag = blockTag;
+          this._batched.blockTag = resolvedBlockTag;
         }
 
         return this._enqueueCall({ to: resolvedRequest.to!, data: resolvedRequest.data! });
