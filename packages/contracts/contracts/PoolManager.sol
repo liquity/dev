@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.16;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import './Interfaces/IPool.sol';
@@ -8,9 +8,12 @@ import './Interfaces/IStabilityPool.sol';
 import './Interfaces/IPriceFeed.sol';
 import './Interfaces/ICLVToken.sol';
 import './DeciMath.sol';
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '@openzeppelin/contracts/ownership/Ownable.sol';
-import '@nomiclabs/buidler/console.sol';
+// import '@openzeppelin/contracts/math/SafeMath.sol';
+// import '@openzeppelin/contracts/ownership/Ownable.sol';
+// import '@nomiclabs/buidler/console.sol';
+import "./SafeMath.sol";
+import "./Ownable.sol";
+import "./console.sol";
 
 // PoolManager maintains all pools 
 contract PoolManager is Ownable, IPoolManager {

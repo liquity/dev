@@ -7,7 +7,7 @@ class ModelParams:
         self.D = 0.5 # base fee decay factor
 
         self.T = 1 # weighting for token price in loan issuance
-        self.F = 0.5 # weighting for momentum in loan issuance
+        self.F = 0.3 # weighting for momentum in loan issuance
 
         self.lookback = 5 # Lookback parameter for ETH price momentum
 
@@ -55,7 +55,7 @@ def get_new_redeemed_amount(data, params):
     if max_redeemable == 0:
         return 0
 
-    redeemed = (1 - data.token_price[-1] - data.base_fee[-1]) * data.token_supply[-1] / 2
+    redeemed = (1 - data.token_price[-1] - data.base_fee[-1]) * data.token_supply[-1] 
 
     if redeemed < 0:
         return 0
@@ -238,7 +238,7 @@ plt.plot(data.token_price)
 
 ax2 = fig.add_subplot(222)
 ax2.set_title('Redeemed amount')
-plt.ylim(0.0, 50)
+plt.ylim(0.0, 10)
 plt.plot(data.redeemed_amount)
 
 ax3 = fig.add_subplot(223)
@@ -247,8 +247,8 @@ plt.ylim(0, 1000)
 plt.plot(data.ETH_price)
 
 ax4 = fig.add_subplot(224)
-ax4.set_title('Base Fee')
-plt.ylim(0.0, 1.5)
+ax4.set_title('Base fee')
+plt.ylim(0.0, 0.05)
 plt.plot(data.base_fee)
 
 # plt.plot(data.momentum)

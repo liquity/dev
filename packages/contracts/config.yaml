@@ -1,0 +1,4 @@
+initialize: ./export.json
+prefix: "echidna_"
+# checkAsserts: true
+multi-abi: true

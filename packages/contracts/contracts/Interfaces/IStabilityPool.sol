@@ -1,3 +1,5 @@
+pragma solidity ^0.5.15;
+
 interface IStabilityPool {
     // --- Events ---
     event ETHBalanceUpdated(uint _newBalance);

@@ -23,7 +23,7 @@ const randomChar = (chars) => {
   return chars[idx]
 }
 
-const makeAccountsList = (n) => {
+const makeBuidlerAccountsList = (n) => {
   accountsDict = {}
   accounts = []
  
@@ -31,6 +31,7 @@ const makeAccountsList = (n) => {
   let account;
 
   while (i < n) {
+    console.log(i)
     account = makeAccount()
     // console.log("account is" + account)
     if (Object.keys(accountsDict).includes(account)) {
@@ -52,7 +53,7 @@ const makeAccountsList = (n) => {
 }
 
 // Construct accounts array data
-const arrayList = makeAccountsList(5000)
+const arrayList = makeBuidlerAccountsList(80000)
 
 // console.log(arrayList)
   fs.appendFile('../accountsList.js', arrayList, (err) => { if (err) console.log(err) })
