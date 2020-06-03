@@ -1,5 +1,9 @@
 name: CI
 
+env:
+  CI: true
+  FORCE_COLOR: true
+
 on:
   push:
     branches: [master]
@@ -30,8 +34,6 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn build
       - run: yarn test
-        env:
-          CI: true
 
       - uses: azure/docker-login@v1
         with:
