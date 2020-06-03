@@ -4,6 +4,7 @@ import path from "path";
 const outputDir = "deployments";
 const inputDir = (channel: string) => path.join("deployments", channel);
 
+const backfillChannel = "backfill";
 const defaultChannel = "default";
 
 const exists = (dir: string) => {
@@ -18,6 +19,7 @@ const copyDeploymentsFrom = (deploymentsDir: string) => {
   }
 };
 
+copyDeploymentsFrom(inputDir(backfillChannel));
 copyDeploymentsFrom(inputDir(defaultChannel));
 
 if (process.env.CHANNEL && process.env.CHANNEL !== defaultChannel) {
