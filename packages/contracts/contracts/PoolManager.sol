@@ -397,7 +397,7 @@ contract PoolManager is Ownable, IPoolManager {
         CLV.returnFromPool(stabilityPoolAddress, _address, DeciMath.getMin(compoundedCLVDeposit, stabilityPool.getCLV()));
         
         stabilityPool.decreaseCLV(compoundedCLVDeposit);
-        stabilityPool.decreaseTotalCLVDeposits(userDeposit); 
+        stabilityPool.decreaseTotalCLVDeposits(compoundedCLVDeposit); 
        
         // Pull ETHShare from StabilityPool, and send to CDP
         stabilityPool.sendETH(address(this), ETHGain); 
