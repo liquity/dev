@@ -9,7 +9,19 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
-const deployLiquity = async () => {
+const deployLiquity = async ()=> {
+  const cmdLineArgs = process.argv
+  const frameworkPath = cmdLineArgs[1]
+  console.log(`Framework used:  ${frameworkPath}`)
+
+  if (frameworkPath.includes("buidler")) {
+    return deployLiquityBuidler()
+  } else if (frameworkPath.includes("truffle") || frameworkPath.includes("vertigo")) {
+    return deployLiquityTruffle()
+  }
+} 
+
+const deployLiquityBuidler = async () => {
   const priceFeed = await PriceFeed.new()
   const clvToken = await CLVToken.new()
   const poolManager = await PoolManager.new()
@@ -44,6 +56,34 @@ const deployLiquity = async () => {
     functionCaller,
     borrowerOperations
   }
+  return contracts
+}
+
+const deployLiquityTruffle = async () => {
+  const priceFeed = await PriceFeed.new()
+  const clvToken = await CLVToken.new()
+  const poolManager = await PoolManager.new()
+  const sortedCDPs = await SortedCDPs.new()
+  const cdpManager = await CDPManager.new()
+  const activePool = await ActivePool.new()
+  const stabilityPool = await StabilityPool.new()
+  const defaultPool = await DefaultPool.new()
+  const functionCaller = await FunctionCaller.new()
+  const borrowerOperations = await BorrowerOperations.new()
+
+  const contracts = {
+    priceFeed,
+    clvToken,
+    poolManager,
+    sortedCDPs,
+    cdpManager,
+    activePool,
+    stabilityPool,
+    defaultPool,
+    functionCaller,
+    borrowerOperations
+  }
+
   return contracts
 }
 
@@ -127,7 +167,10 @@ const connectEchidnaProxy = async (echidnaProxy, addresses) => {
 module.exports = {
 
   connectEchidnaProxy: connectEchidnaProxy,
+
   getAddresses: getAddresses,
+  deployLiquityBuidler: deployLiquityBuidler,
+  deployLiquityTruffle: deployLiquityTruffle,
   deployLiquity: deployLiquity,
   connectContracts: connectContracts
 }

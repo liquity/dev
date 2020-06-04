@@ -17,6 +17,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^2.4.0",
     "chainlink": "^0.8.2",
+    "eth-mutants": "^0.1.1",
     "ethers": "^4.0.45",
     "ganache-core": "^2.8.0",
     "solc": "^0.5.11",

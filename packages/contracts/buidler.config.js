@@ -1,6 +1,6 @@
 usePlugin("@nomiclabs/buidler-truffle5");
 usePlugin("@nomiclabs/buidler-ethers");
-usePlugin("solidity-coverage");
+// usePlugin("solidity-coverage");
 
 const accounts = require("./buidlerAccountsList2k.js");
 
