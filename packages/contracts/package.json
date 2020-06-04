@@ -8,9 +8,9 @@
   },
   "scripts": {
     "buidler": "buidler",
-    "compile": "buidler compile",
-    "prepare": "run-s compile set-version",
-    "set-version": "node scripts/set-version.js",
+    "prepare": "run-s prepare:*",
+    "prepare:set-version": "node scripts/set-version.js",
+    "prepare:compile": "buidler compile",
     "test": "buidler test"
   },
   "keywords": [],
