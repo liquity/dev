@@ -6,10 +6,10 @@
   "scripts": {
     "buidler": "buidler",
     "check-abi": "ts-node scripts/check-abi.ts",
-    "compile": "tsc --project tsconfig.dist.json",
-    "copy-deployments": "ts-node scripts/copy-deployments.ts",
-    "generate-types": "ts-node scripts/generate-types.ts",
-    "prepare": "run-s copy-deployments generate-types compile",
+    "prepare": "run-s prepare:*",
+    "prepare:deployments": "ts-node scripts/copy-deployments.ts",
+    "prepare:types": "ts-node scripts/generate-types.ts",
+    "prepare:tsc": "tsc --project tsconfig.dist.json",
     "scrape-eth-usd": "ts-node scripts/scrape-eth-usd.ts",
     "test": "buidler test"
   },
