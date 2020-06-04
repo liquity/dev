@@ -8,6 +8,7 @@ import {
 } from "@ethersproject/abstract-provider";
 import { BaseProvider, Web3Provider } from "@ethersproject/providers";
 import { Networkish } from "@ethersproject/networks";
+import { Deferrable } from "@ethersproject/properties";
 
 import { WebSocketProvider } from "./WebSocketProvider";
 
@@ -111,7 +112,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
     }
 
     async call(
-      transaction: TransactionRequest | Promise<TransactionRequest>,
+      transaction: Deferrable<TransactionRequest>,
       blockTag?: BlockTag | Promise<BlockTag>
     ) {
       const resolvedBlockTag = await blockTag;

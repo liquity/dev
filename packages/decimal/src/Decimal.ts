@@ -278,6 +278,12 @@ export class Difference {
     );
   }
 
+  get bigNumber() {
+    return this.number?.sign === "-"
+      ? this.number.absoluteValue.bigNumber.mul(-1)
+      : this.number?.absoluteValue.bigNumber;
+  }
+
   get nonZero() {
     return this.number?.absoluteValue.nonZero && this;
   }

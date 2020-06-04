@@ -115,8 +115,6 @@ export const connectToContracts = (
   ) as StabilityPool
 });
 
-export const DEV_CHAIN_ID = 17;
-
 export type LiquityDeployment = {
   addresses: LiquityContractAddresses;
   version: string;
@@ -124,11 +122,25 @@ export type LiquityDeployment = {
   abiHash: string;
 };
 
+export const DEV_CHAIN_ID = 17;
+
+type DevDeployment = {
+  dev: LiquityDeployment;
+  [DEV_CHAIN_ID]: LiquityDeployment;
+};
+
+const devDeployment: DevDeployment | {} =
+  dev !== null
+    ? {
+        dev,
+        [DEV_CHAIN_ID]: dev
+      }
+    : {};
+
 export const deploymentOnNetwork: {
   [network: string]: LiquityDeployment;
   [chainId: number]: LiquityDeployment;
 } = {
-  dev,
   goerli,
   kovan,
   rinkeby,
@@ -139,5 +151,5 @@ export const deploymentOnNetwork: {
   5: goerli,
   42: kovan,
 
-  [DEV_CHAIN_ID]: dev
+  ...devDeployment
 };
