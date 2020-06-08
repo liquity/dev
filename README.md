@@ -314,6 +314,8 @@ This will start dev-frontend in development mode on http://localhost:3000. The a
 
 If you make changes to a different package under `packages`, it is recommended to rebuild the entire project with `yarn prepare` in the root directory of the repo. This makes sure that a change in one package doesn't break another.
 
+To stop the dev-frontend running in this mode, bring up the terminal in which you've started the command and press Ctrl+C.
+
 #### Start dev-frontend in demo mode
 
 This will automatically start the local blockchain, so you need to make sure that's not already running before you run the following command.
@@ -323,3 +325,9 @@ yarn start-demo
 ```
 
 This spawns a modified version of dev-frontend that ignores MetaMask, and directly uses the local blockchain node. Every time the page is reloaded (at http://localhost:3000), a new random account is created with a balance of 100 ETH. Additionally, transactions are automatically signed, so you no longer need to accept wallet confirmations. This lets you play around with Liquity more freely.
+
+When you no longer need the demo mode, press Ctrl+C in the terminal then run:
+
+```
+yarn stop-demo
+```
