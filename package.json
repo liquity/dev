@@ -31,6 +31,7 @@
     "start-dev-chain:deploy": "yarn deploy --network dev",
     "start-dev-chain:prepare-lib": "yarn prepare:lib",
     "stop-dev-chain": "docker kill openethereum",
+    "start-dev-frontend": "yarn workspace @liquity/dev-frontend start",
     "start-demo": "run-s start-demo:*",
     "start-demo:dev-chain": "yarn start-dev-chain",
     "start-demo:dev-frontend": "yarn workspace @liquity/dev-frontend start-demo",
