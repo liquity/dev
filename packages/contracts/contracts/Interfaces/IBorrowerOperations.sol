@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5.15;
 
 // Common interface for the CDP Manager.
 interface IBorrowerOperations {

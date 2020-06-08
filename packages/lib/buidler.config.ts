@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import "colors";
 import dotenv from "dotenv";
+import { sha1 } from "object-hash";
 
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
@@ -12,6 +13,7 @@ import { NetworkConfig } from "@nomiclabs/buidler/types";
 import { Decimal, Difference, Decimalish, Percent } from "@liquity/decimal";
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
 import {
+  abi,
   addressesOf,
   deploymentOnNetwork,
   connectToContracts,
@@ -65,11 +67,17 @@ const config: BuidlerConfig = {
   }
 };
 
-type DeployParams = { gasPrice?: number };
+type DeployParams = {
+  channel: string;
+  gasPrice?: number;
+};
+
+const defaultChannel = process.env.CHANNEL || "default";
 
 task("deploy", "Deploys the contracts to the network")
+  .addOptionalParam("channel", "Deployment channel to deploy into", defaultChannel, types.string)
   .addOptionalParam("gasPrice", "Price to pay for 1 gas [Gwei]", undefined, types.float)
-  .setAction(async ({ gasPrice }: DeployParams, bre) => {
+  .setAction(async ({ channel, gasPrice }: DeployParams, bre) => {
     const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).bigNumber };
     const [deployer] = await bre.ethers.getSigners();
 
@@ -84,11 +92,14 @@ task("deploy", "Deploys the contracts to the network")
     const deployment: LiquityDeployment = {
       addresses: addressesOf(contracts),
       version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim(),
-      deploymentDate: new Date().getTime()
+      deploymentDate: new Date().getTime(),
+      abiHash: sha1(abi)
     };
 
+    fs.mkdirSync(path.join("deployments", channel), { recursive: true });
+
     fs.writeFileSync(
-      path.join("deployments", `${bre.network.name}.json`),
+      path.join("deployments", channel, `${bre.network.name}.json`),
       JSON.stringify(deployment, undefined, 2)
     );
 

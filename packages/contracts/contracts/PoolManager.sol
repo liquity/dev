@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.5.16;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import './Interfaces/IPool.sol';
@@ -8,9 +8,12 @@ import './Interfaces/IStabilityPool.sol';
 import './Interfaces/IPriceFeed.sol';
 import './Interfaces/ICLVToken.sol';
 import './DeciMath.sol';
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '@openzeppelin/contracts/ownership/Ownable.sol';
-import '@nomiclabs/buidler/console.sol';
+// import '@openzeppelin/contracts/math/SafeMath.sol';
+// import '@openzeppelin/contracts/ownership/Ownable.sol';
+// import '@nomiclabs/buidler/console.sol';
+import "./Dependencies/SafeMath.sol";
+import "./Dependencies/Ownable.sol";
+import "./Dependencies/console.sol";
 
 // PoolManager maintains all pools 
 contract PoolManager is Ownable, IPoolManager {
@@ -440,9 +443,8 @@ contract PoolManager is Ownable, IPoolManager {
     function withdrawFromSP(uint _amount) external returns(bool) {
         address user = _msgSender();
         uint userDeposit = deposits[user];
-        require(userDeposit > 0, 'PoolManager: User must have a non-zero deposit');
 
-        // Retrieve all CLV and ETH for the user
+        // Retrieve CLV and ETH for the user
         (uint returnedCLV, ) = retrieveToUser(user);
 
         // If requested withdrawal amount is less than available CLV, re-deposit the difference.

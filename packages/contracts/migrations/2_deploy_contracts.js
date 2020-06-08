@@ -1,4 +1,4 @@
-// Buidler-Truffle fixture for deployment to Buidler EVM
+// Truffle migration script for deployment to Ganache
 
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const PoolManager = artifacts.require("./PoolManager.sol")
@@ -8,52 +8,55 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
-const NameRegistry = artifacts.require("./NameRegistry.sol")
 const DeciMath = artifacts.require("./DeciMath.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
+const EchidnaProxy = artifacts.require("./EchidnaProxy.sol")
 
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelpers = require("../utils/truffleDeploymentHelpers.js")
 
 const getAddresses = deploymentHelpers.getAddresses
-const setNameRegistry = deploymentHelpers.setNameRegistry
 const connectContracts = deploymentHelpers.connectContracts
-const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
+const connectEchidnaProxy = deploymentHelpers.connectEchidnaProxy
 
-module.exports = async () => {
-  const borrowerOperations = await BorrowerOperations.new()
-  const priceFeed = await PriceFeed.new()
-  const clvToken = await CLVToken.new()
-  const poolManager = await PoolManager.new()
-  const sortedCDPs = await SortedCDPs.new()
-  const cdpManager = await CDPManager.new()
-  const nameRegistry = await NameRegistry.new()
-  const activePool = await ActivePool.new()
-  const stabilityPool = await StabilityPool.new()
-  const defaultPool = await DefaultPool.new()
-  const functionCaller = await FunctionCaller.new()
-
-  BorrowerOperations.setAsDeployed(borrowerOperations)
-  PriceFeed.setAsDeployed(priceFeed)
-  CLVToken.setAsDeployed(clvToken)
-  PoolManager.setAsDeployed(poolManager)
-  SortedCDPs.setAsDeployed(sortedCDPs)
-  CDPManager.setAsDeployed(cdpManager)
-  NameRegistry.setAsDeployed(nameRegistry)
-  ActivePool.setAsDeployed(activePool)
-  StabilityPool.setAsDeployed(stabilityPool)
-  DefaultPool.setAsDeployed(defaultPool)
-  FunctionCaller.setAsDeployed(functionCaller)
+module.exports = function(deployer) {
+  deployer.deploy(DeciMath)
+  deployer.deploy(BorrowerOperations)
+  deployer.deploy(PriceFeed)
+  deployer.deploy(CLVToken)
+  deployer.deploy(PoolManager)
+  deployer.deploy(SortedCDPs)
+  deployer.deploy(CDPManager)
+  deployer.link(DeciMath, CDPManager)
+  deployer.link(DeciMath, PoolManager)
+  deployer.deploy(ActivePool)
+  deployer.deploy(StabilityPool)
+  deployer.deploy(DefaultPool)
+  deployer.deploy(FunctionCaller)
+  deployer.deploy(EchidnaProxy)
 
 
-  const contracts = {
+  deployer.then(async () => {
+
+  const borrowerOperations = await BorrowerOperations.deployed()
+  const priceFeed = await PriceFeed.deployed()
+  const clvToken = await CLVToken.deployed()
+  const poolManager = await PoolManager.deployed()
+  const sortedCDPs = await SortedCDPs.deployed()
+  const cdpManager = await CDPManager.deployed()
+  const activePool = await ActivePool.deployed()
+  const stabilityPool = await StabilityPool.deployed()
+  const defaultPool = await DefaultPool.deployed()
+  const functionCaller = await FunctionCaller.deployed()
+  const echidnaProxy = await EchidnaProxy.deployed()
+
+  const liquityContracts = {
     borrowerOperations,
     priceFeed,
     clvToken,
     poolManager,
     sortedCDPs,
     cdpManager,
-    nameRegistry,
     activePool,
     stabilityPool,
     defaultPool,
@@ -61,17 +64,13 @@ module.exports = async () => {
   }
 
   // Grab contract addresses
-  const addresses = getAddresses(contracts)
-
-  // Register contracts in the nameRegistry
-  await setNameRegistry(addresses, nameRegistry);
-
-  // Get addresses from NameRegistry 
-  const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
-  console.log('deploy_contracts.js - Contract addresses stored in NameRegistry: \n')
-  console.log(registeredAddresses)
+  const liquityAddresses = getAddresses(liquityContracts)
+  console.log('deploy_contracts.js - Deployed contract addresses: \n')
+  console.log(liquityAddresses)
   console.log('\n')
 
-  // Connect contracts to each other via the NameRegistry records
-  await connectContracts(contracts, registeredAddresses)
+  // Connect contracts to each other
+  await connectContracts(liquityContracts, liquityAddresses)
+  await connectEchidnaProxy(echidnaProxy, liquityAddresses)
+})
 }

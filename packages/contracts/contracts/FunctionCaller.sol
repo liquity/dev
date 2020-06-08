@@ -1,10 +1,10 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.5.16;
+
 import './Interfaces/ICDPManager.sol';
 import './Interfaces/ISortedCDPs.sol';
 import './Interfaces/IPriceFeed.sol';
-import '@nomiclabs/buidler/console.sol';
+// import '@nomiclabs/buidler/console.sol';
 import './DeciMath.sol';
-import './ABDKMath64x64.sol';
 
 // Proxy contract - used for calculating gas of read-only functions in gas calculation scripts.  Not part of the application.
 contract FunctionCaller {
@@ -89,88 +89,7 @@ contract FunctionCaller {
         //  console.log("1. gas left: %s", gasleft());
         return z;
     }
-
-    // --- ABDK Math Functions ---
-
-    // mul
-    function abdkMath_mul(int128 x, int128 y) public returns(int128) {
-        // console.log("00. gas left: %s", gasleft());
-        int128 z =  ABDKMath64x64.mul(x,y); // 147 gas
-        // console.log("01. gas left: %s", gasleft());
-        return z;
-    }
-    // div
-    function abdkMath_div(int128 x, int128 y) public returns(int128) {
-        // console.log("00. gas left: %s", gasleft());
-        int128 z = ABDKMath64x64.div(x,y); // 202 gas
-        // console.log("01. gas left: %s", gasleft());
-        return z;
-    }
-
-    // mul dec by uint --> uint
-    function abdkMath_mulu(int128 x, uint256 y) public returns(uint256) {
-        // console.log("00. gas left: %s", gasleft());
-        uint z = ABDKMath64x64.mulu(x,y);  // 243 gas
-        // console.log("01. gas left: %s", gasleft());
-        return z;
-    }
     
-    // div uint by uint --> dec
-    function abdkMath_divu(uint256 x, uint256 y) public returns(int128) {
-        // console.log("0. gas left: %s", gasleft());
-        int128 z = ABDKMath64x64.divu(x,y);  // 303 gas
-        // console.log("1. gas left: %s", gasleft());
-        return z;
-    }
-
-     function abdkMath_fromUInt(uint256 x) public returns(int128) {
-        // console.log("00. gas left: %s", gasleft());
-        int128 z = ABDKMath64x64.fromUInt(x);  // 93 gas
-        // console.log("01. gas left: %s", gasleft());
-        return z;    
-    }
-
-     function abdkMath_toUInt(int128 x) public returns(int128) {
-        // console.log("00. gas left: %s", gasleft());
-        uint64 z = ABDKMath64x64.toUInt(x);  // 82 gas
-        // console.log("01. gas left: %s", gasleft());
-        return z;
-    }
-
-  // --- 'View' ABDKMath functions - return the computed result --- 
-
-      // mul 64.64dec by 64.64dec
-    function abdkMath_mul_view(int128 x, int128 y) public view returns(int128) {
-        return ABDKMath64x64.mul(x,y);
-    }
-    // div 64.64dec by 64.64dec
-    function abdkMath_div_view(int128 x, int128 y) public view returns(int128) {
-        return ABDKMath64x64.div(x,y);
-    }
-
-    // mul 64.64dec by uint --> uint, rounded down
-    function abdkMath_mulu_view(int128 x, uint256 y) public view returns(uint256) {
-        uint z = ABDKMath64x64.mulu(x,y);  // 243 gas
-        return z;
-    }
-    
-    // div uint by uint --> 64.64dec
-    function abdkMath_divu_view(uint256 x, uint256 y) public view returns(int128) {
-        int128 z = ABDKMath64x64.divu(x,y);  // 303 gas
-        return z;
-    }
-
-     // convert uint -> 64.64dec
-     function abdkMath_fromUInt_view(uint256 x) public view returns(int128) {
-        int128 z = ABDKMath64x64.fromUInt(x);  // 93 gas
-        return z;
-    }
-
-    function abdkMath_toUInt_view(int128 x) public view returns(int128) {
-        uint64 z = ABDKMath64x64.toUInt(x);  
-        return z;
-    }
-
     //  ---- Funcs for checking write-to-storage costs ---
 
     function repeatedlySetVal (uint n) public returns (uint, uint) {

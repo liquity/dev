@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.5.16;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -7,9 +7,13 @@ import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPoolManager.sol";
 import "./DeciMath.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/ownership/Ownable.sol";
-import "@nomiclabs/buidler/console.sol";
+// import "@openzeppelin/contracts/math/SafeMath.sol";
+// import "@openzeppelin/contracts/ownership/Ownable.sol";
+// import "@nomiclabs/buidler/console.sol";
+
+import "./Dependencies/SafeMath.sol";
+import "./Dependencies/Ownable.sol";
+import "./Dependencies/console.sol";
 
 contract BorrowerOperations is Ownable, IBorrowerOperations {
     using SafeMath for uint;
@@ -381,7 +385,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     }
 
     function requireICRisAboveMCR(uint _newICR)  internal view {
-        require(_newICR >= MCR, "CDPManager: An operation that would result in ICR < MCR is not permitted");
+        require(_newICR > MCR, "CDPManager: An operation that would result in ICR < MCR is not permitted");
     }
 
     function requireNewTCRisAboveCCR(int _collChange, int _debtChange, uint _price) internal view {

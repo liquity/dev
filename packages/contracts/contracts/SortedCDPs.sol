@@ -1,10 +1,13 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.5.16;
 
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ICDPManager.sol";
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import "@openzeppelin/contracts/ownership/Ownable.sol";
-import "@nomiclabs/buidler/console.sol";
+// import '@openzeppelin/contracts/math/SafeMath.sol';
+// import "@openzeppelin/contracts/ownership/Ownable.sol";
+// import "@nomiclabs/buidler/console.sol";
+import "./Dependencies/SafeMath.sol";
+import "./Dependencies/Ownable.sol";
+import "./Dependencies/console.sol";
 
 /* 
 A sorted doubly linked list with nodes sorted in descending order, based on current ICRs of active CDPs. 

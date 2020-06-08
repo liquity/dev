@@ -54,39 +54,44 @@ const getType = ({ baseType, components, arrayChildren }: ParamType, flexible: b
   throw new Error(`unimplemented type ${baseType}`);
 };
 
-export function generate(contractName: string, { functions }: Interface): string {
+export function generate(contractName: string, { functions, events }: Interface): string {
   return [
     `export declare class ${contractName} extends Contract {`,
     "  readonly [name: string]: unknown;",
 
-    ...Object.values(functions).map(func => {
-      const inputs = func.inputs.map((input, i) => [input.name || "arg" + i, getType(input, true)]);
+    "  readonly filters: {",
+    ...Object.values(events).map(({ name, inputs }) => {
+      const params = inputs.map(
+        (input, i) =>
+          `${input.name || "arg" + i}?: ${input.indexed ? `${getType(input, true)} | null` : "null"}`
+      );
 
-      const overridesType = func.constant
-        ? "CallOverrides"
-        : func.payable
-        ? "PayableOverrides"
-        : "Overrides";
+      return `    ${name}(${params.join(", ")}): EventFilter;`;
+    }),
+    "  };",
+
+    ...Object.values(functions).map(({ name, constant, payable, inputs, outputs }) => {
+      const overridesType = constant ? "CallOverrides" : payable ? "PayableOverrides" : "Overrides";
 
       const params = [
-        ...inputs.map(([name, type]) => `${name}: ${type}`),
+        ...inputs.map((input, i) => `${input.name || "arg" + i}: ${getType(input, true)}`),
         `_overrides?: ${overridesType}`
       ];
 
       let returnType: string;
-      if (func.constant) {
-        if (!func.outputs || func.outputs.length == 0) {
+      if (constant) {
+        if (!outputs || outputs.length == 0) {
           returnType = "void";
-        } else if (func.outputs.length === 1) {
-          returnType = getType(func.outputs[0], false);
+        } else if (outputs.length === 1) {
+          returnType = getType(outputs[0], false);
         } else {
-          returnType = getTupleType(func.outputs, false);
+          returnType = getTupleType(outputs, false);
         }
       } else {
         returnType = "ContractTransaction";
       }
 
-      return `  ${func.name}(${params.join(", ")}): Promise<${returnType}>;`;
+      return `  ${name}(${params.join(", ")}): Promise<${returnType}>;`;
     }),
 
     "}"
@@ -113,7 +118,8 @@ import {
   Overrides,
   CallOverrides,
   PayableOverrides,
-  ContractTransaction
+  ContractTransaction,
+  EventFilter
 } from "@ethersproject/contracts";
 
 `;

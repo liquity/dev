@@ -1,8 +1,8 @@
 usePlugin("@nomiclabs/buidler-truffle5");
 usePlugin("@nomiclabs/buidler-ethers");
-usePlugin("solidity-coverage");
+// usePlugin("solidity-coverage");
 
-const accounts = require("./accountsList.js");
+const accounts = require("./buidlerAccountsList2k.js");
 
 const accountsList = accounts.accountsList
 
@@ -12,6 +12,7 @@ module.exports = {
         // artifacts: "./artifacts"
     },
     solc: {
+        version: "0.5.16",
         optimizer: {
             enabled: true,
             runs: 100

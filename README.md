@@ -1,6 +1,6 @@
 # Liquity System Summary
 
-![Tests](https://github.com/cvalkan/cleverage/workflows/CI/badge.svg) [![Frontend status](https://img.shields.io/uptimerobot/status/m784948796-056b56fd51c67d682c11bb24?label=Frontend&logo=nginx&logoColor=white)](http://94.130.72.96:6789/) ![uptime](https://img.shields.io/uptimerobot/ratio/7/m784948796-056b56fd51c67d682c11bb24) [![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32) [![Docker Pulls](https://img.shields.io/docker/pulls/liquity/dev-frontend?label=dev-frontend%20pulls&logo=docker&logoColor=white)](https://hub.docker.com/r/liquity/dev-frontend)
+![Tests](https://github.com/cvalkan/cleverage/workflows/CI/badge.svg) [![Frontend status](https://img.shields.io/uptimerobot/status/m785036778-7edf816c69dafd2d19c45491?label=Frontend&logo=nginx&logoColor=white)](http://94.130.72.96:6789/) ![uptime](https://img.shields.io/uptimerobot/ratio/7/m785036778-7edf816c69dafd2d19c45491) [![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32) [![Docker Pulls](https://img.shields.io/docker/pulls/liquity/dev-frontend?label=dev-frontend%20pulls&logo=docker&logoColor=white)](https://hub.docker.com/r/liquity/dev-frontend)
 
 Liquity is a collateralized stablecoin platform. Users can lock up ether, and issue stablecoin tokens (CLV) to their own Ethereum address, and subsequently transfer those tokens to any other Ethereum address.
 
@@ -226,11 +226,11 @@ Hints allow cheaper CDP operations for the user, at the expense of a slightly lo
 
 ## Math Proofs
 
-The Liquity implementation relies on some important system properties and mathematical derivations. 
+The Liquity implementation relies on some important system properties and mathematical derivations.
 
 In particular, we have:
 
 - Proofs that CDP ordering is maintained throughout a series of liquidations and new loan issuances
 - A derivation of a formula and implementation for a highly scalable (O(1) complexity) reward distribution in the Stability Pool, involving compounding and decreasing stakes.
 
-PDFs of these can be found in https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs 
+PDFs of these can be found in https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs

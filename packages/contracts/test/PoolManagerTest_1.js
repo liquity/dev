@@ -2,10 +2,10 @@ const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
 const deployLiquity = deploymentHelpers.deployLiquity
+const truffleDeployLiquity = deploymentHelpers.truffleDeployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
-const getDifference = testHelpers.getDifference
 const moneyVals = testHelpers.MoneyValues
 
 contract('PoolManager', async accounts => {
@@ -29,7 +29,7 @@ contract('PoolManager', async accounts => {
 
   beforeEach(async () => {
     const contracts = await deployLiquity()
-
+   
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManager = contracts.poolManager

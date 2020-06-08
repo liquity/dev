@@ -1,3 +1,4 @@
+import { JsonFragment } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
 import { Provider } from "@ethersproject/abstract-provider";
 import { Contract } from "@ethersproject/contracts";
@@ -31,6 +32,19 @@ import type {
   SortedCDPs,
   StabilityPool
 } from "../types";
+
+export const abi: { [name: string]: JsonFragment[] } = {
+  activePool: activePoolAbi,
+  borrowerOperations: borrowerOperationsAbi,
+  cdpManager: cdpManagerAbi,
+  clvToken: clvTokenAbi,
+  defaultPool: defaultPoolAbi,
+  multiCDPgetter: multiCDPgetterAbi,
+  poolManager: poolManagerAbi,
+  priceFeed: priceFeedAbi,
+  sortedCDPs: sortedCDPsAbi,
+  stabilityPool: stabilityPoolAbi
+};
 
 export interface LiquityContractAddresses {
   activePool: string;
@@ -101,19 +115,32 @@ export const connectToContracts = (
   ) as StabilityPool
 });
 
-export const DEV_CHAIN_ID = 17;
-
 export type LiquityDeployment = {
   addresses: LiquityContractAddresses;
   version: string;
   deploymentDate: number;
+  abiHash: string;
 };
+
+export const DEV_CHAIN_ID = 17;
+
+type DevDeployment = {
+  dev: LiquityDeployment;
+  [DEV_CHAIN_ID]: LiquityDeployment;
+};
+
+const devDeployment: DevDeployment | {} =
+  dev !== null
+    ? {
+        dev,
+        [DEV_CHAIN_ID]: dev
+      }
+    : {};
 
 export const deploymentOnNetwork: {
   [network: string]: LiquityDeployment;
   [chainId: number]: LiquityDeployment;
 } = {
-  dev,
   goerli,
   kovan,
   rinkeby,
@@ -124,5 +151,5 @@ export const deploymentOnNetwork: {
   5: goerli,
   42: kovan,
 
-  [DEV_CHAIN_ID]: dev
+  ...devDeployment
 };

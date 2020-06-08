@@ -29,7 +29,10 @@ const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Dec
   return collateral.mulDiv(price, debt);
 };
 
-type TroveChange = { property: "collateral" | "debt"; difference: Difference };
+type TroveChange = {
+  collateralDifference?: Difference;
+  debtDifference?: Difference;
+};
 
 export class Trove {
   readonly collateral: Decimal;
@@ -115,44 +118,50 @@ export class Trove {
     });
   }
 
-  whatChanged({ collateral, debt }: Trove): TroveChange | undefined {
+  whatChanged({ collateral, debt }: Trove) {
+    const change: TroveChange = {};
+
     if (!collateral.eq(this.collateral)) {
-      return {
-        property: "collateral",
-        difference: Difference.between(collateral, this.collateral)
-      };
+      change.collateralDifference = Difference.between(collateral, this.collateral);
     }
+
     if (!debt.eq(this.debt)) {
-      return {
-        property: "debt",
-        difference: Difference.between(debt, this.debt)
-      };
+      change.debtDifference = Difference.between(debt, this.debt);
+    }
+
+    return change;
+  }
+
+  applyCollateralDifference(collateralDifference?: Difference) {
+    if (collateralDifference?.positive) {
+      return this.addCollateral(collateralDifference.absoluteValue!);
+    } else if (collateralDifference?.negative) {
+      if (collateralDifference.absoluteValue!.lt(this.collateral)) {
+        return this.subtractCollateral(collateralDifference.absoluteValue!);
+      } else {
+        return this.setCollateral(0);
+      }
+    } else {
+      return this;
     }
   }
 
-  apply({ property, difference }: TroveChange) {
-    switch (property) {
-      case "collateral":
-        if (difference.positive) {
-          return this.addCollateral(difference.absoluteValue!);
-        } else if (difference.negative) {
-          if (difference.absoluteValue!.lt(this.collateral)) {
-            return this.subtractCollateral(difference.absoluteValue!);
-          } else {
-            return this.setCollateral(0);
-          }
-        }
-      case "debt":
-        if (difference.positive) {
-          return this.addDebt(difference.absoluteValue!);
-        } else if (difference.negative) {
-          if (difference.absoluteValue!.lt(this.collateral)) {
-            return this.subtractDebt(difference.absoluteValue!);
-          } else {
-            return this.setDebt(0);
-          }
-        }
+  applyDebtDifference(debtDifference?: Difference) {
+    if (debtDifference?.positive) {
+      return this.addDebt(debtDifference.absoluteValue!);
+    } else if (debtDifference?.negative) {
+      if (debtDifference.absoluteValue!.lt(this.collateral)) {
+        return this.subtractDebt(debtDifference.absoluteValue!);
+      } else {
+        return this.setDebt(0);
+      }
+    } else {
+      return this;
     }
+  }
+
+  apply({ collateralDifference, debtDifference }: TroveChange) {
+    return this.applyCollateralDifference(collateralDifference).applyDebtDifference(debtDifference);
   }
 }
 
@@ -253,15 +262,17 @@ export class StabilityDeposit {
     }
   }
 
-  apply(difference: Difference) {
-    if (difference.positive) {
+  apply(difference?: Difference) {
+    if (difference?.positive) {
       return new StabilityDeposit({ deposit: this.depositAfterLoss.add(difference.absoluteValue!) });
-    } else if (difference.negative) {
+    } else if (difference?.negative) {
       return new StabilityDeposit({
         deposit: difference.absoluteValue!.lt(this.depositAfterLoss)
           ? this.depositAfterLoss.sub(difference.absoluteValue!)
           : 0
       });
+    } else {
+      return this;
     }
   }
 }
@@ -562,13 +573,33 @@ export class Liquity {
     );
   }
 
+  async changeTrove(
+    initialTrove: Trove,
+    change: TroveChange,
+    price: Decimalish,
+    overrides?: LiquityTransactionOverrides
+  ) {
+    const address = this.requireAddress();
+    const finalTrove = initialTrove.apply(change);
+
+    return this.borrowerOperations.adjustLoan(
+      change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
+      change.debtDifference?.bigNumber || 0,
+      await this._findHint(finalTrove, Decimal.from(price), address),
+      {
+        ...overrides,
+        value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
+      }
+    );
+  }
+
   getNumberOfTroves(overrides?: LiquityCallOverrides) {
     return this.cdpManager.getCDPOwnersCount({ ...overrides }).then(numberify);
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void) {
     const { CDPUpdated } = this.cdpManager.filters;
-    const cdpUpdated = CDPUpdated(null, null, null, null);
+    const cdpUpdated = CDPUpdated();
 
     const cdpUpdatedListener = debounce((blockTag: number) => {
       this.getNumberOfTroves({ blockTag }).then(onNumberOfTrovesChanged);
@@ -587,7 +618,7 @@ export class Liquity {
 
   watchPrice(onPriceChanged: (price: Decimal) => void) {
     const { PriceUpdated } = this.priceFeed.filters;
-    const priceUpdated = PriceUpdated(null);
+    const priceUpdated = PriceUpdated();
 
     const priceUpdatedListener = debounce((blockTag: number) => {
       this.getPrice({ blockTag }).then(onPriceChanged);
@@ -626,7 +657,7 @@ export class Liquity {
 
   watchTotal(onTotalChanged: (total: Trove) => void) {
     const { CDPUpdated } = this.cdpManager.filters;
-    const cdpUpdated = CDPUpdated(null, null, null, null);
+    const cdpUpdated = CDPUpdated();
 
     const totalListener = debounce((blockTag: number) => {
       this.getTotal({ blockTag }).then(onTotalChanged);
@@ -674,8 +705,8 @@ export class Liquity {
     const { UserDepositChanged } = this.poolManager.filters;
     const { EtherSent } = this.activePool.filters;
 
-    const userDepositChanged = UserDepositChanged(address, null);
-    const etherSent = EtherSent(null, null);
+    const userDepositChanged = UserDepositChanged(address);
+    const etherSent = EtherSent();
 
     const depositListener = debounce((blockTag: number) => {
       this.getStabilityDeposit(address, { blockTag }).then(onStabilityDepositChanged);
@@ -729,8 +760,8 @@ export class Liquity {
   watchQuiInStabilityPool(onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) {
     const { Transfer } = this.clvToken.filters;
 
-    const transferQuiFromStabilityPool = Transfer(this.stabilityPool.address, null, null);
-    const transferQuiToStabilityPool = Transfer(null, this.stabilityPool.address, null);
+    const transferQuiFromStabilityPool = Transfer(this.stabilityPool.address);
+    const transferQuiToStabilityPool = Transfer(null, this.stabilityPool.address);
 
     const stabilityPoolQuiFilters = [transferQuiFromStabilityPool, transferQuiToStabilityPool];
 
@@ -752,8 +783,8 @@ export class Liquity {
 
   watchQuiBalance(onQuiBalanceChanged: (balance: Decimal) => void, address = this.requireAddress()) {
     const { Transfer } = this.clvToken.filters;
-    const transferQuiFromUser = Transfer(address, null, null);
-    const transferQuiToUser = Transfer(null, address, null);
+    const transferQuiFromUser = Transfer(address);
+    const transferQuiToUser = Transfer(null, address);
 
     const quiTransferFilters = [transferQuiFromUser, transferQuiToUser];
 

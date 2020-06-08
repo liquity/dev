@@ -1,8 +1,10 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.5.16;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@nomiclabs/buidler/console.sol";
-
+// import "@openzeppelin/contracts/math/SafeMath.sol";
+// import "@nomiclabs/buidler/console.sol";
+import "./Dependencies/SafeMath.sol";
+import "./Dependencies/Ownable.sol";
+import "./Dependencies/console.sol";
 library DeciMath {
     /* 
     DeciMath functions use the concept of a 'duint':

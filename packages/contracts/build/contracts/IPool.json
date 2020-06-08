@@ -1,0 +1,1713 @@
+{
+  "contractName": "IPool",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_newActivePoolAddress",
+          "type": "address"
+        }
+      ],
+      "name": "ActivePoolAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_newBalance",
+          "type": "uint256"
+        }
+      ],
+      "name": "CLVBalanceUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_newDefaultPoolAddress",
+          "type": "address"
+        }
+      ],
+      "name": "DefaultPoolAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_newBalance",
+          "type": "uint256"
+        }
+      ],
+      "name": "ETHBalanceUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "EtherSent",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "PoolManagerAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_newStabilityPoolAddress",
+          "type": "address"
+        }
+      ],
+      "name": "StabilityPoolAddressChanged",
+      "type": "event"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getETH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getCLV",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_account",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "sendETH",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "increaseCLV",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "decreaseCLV",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getRawETHBalance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.5.16+commit.9c3226ce\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newActivePoolAddress\",\"type\":\"address\"}],\"name\":\"ActivePoolAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_newBalance\",\"type\":\"uint256\"}],\"name\":\"CLVBalanceUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newDefaultPoolAddress\",\"type\":\"address\"}],\"name\":\"DefaultPoolAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_newBalance\",\"type\":\"uint256\"}],\"name\":\"ETHBalanceUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"EtherSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newAddress\",\"type\":\"address\"}],\"name\":\"PoolManagerAddressChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newStabilityPoolAddress\",\"type\":\"address\"}],\"name\":\"StabilityPoolAddressChanged\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"decreaseCLV\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getCLV\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getETH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getRawETHBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"increaseCLV\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"_account\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"sendETH\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/home/training/contracts/Interfaces/IPool.sol\":\"IPool\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":1000},\"remappings\":[]},\"sources\":{\"/home/training/contracts/Interfaces/IPool.sol\":{\"keccak256\":\"0xb47b57d6e62fcbd7fb346d569e6ff5fb07170b63eeb5b28760ad006373633780\",\"urls\":[\"bzz-raw://74d130097d6151b023d360e6f177970785a65e7365b93a39eb656adb3c2c2eeb\",\"dweb:/ipfs/QmZB9eQGKpRzhMXP8vy7AnVQoX1D6rTK8NNbji7XuNigBT\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "pragma solidity ^0.5.15;\r\n\r\n// Common interface for the Pools.\r\ninterface IPool {\r\n    // --- Events ---\r\n    event ETHBalanceUpdated(uint _newBalance);\r\n\r\n    event CLVBalanceUpdated(uint _newBalance);\r\n\r\n    event PoolManagerAddressChanged(address _newAddress);\r\n\r\n    event ActivePoolAddressChanged(address _newActivePoolAddress);\r\n\r\n    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);\r\n\r\n    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);\r\n\r\n    event EtherSent(address _to, uint _amount);\r\n\r\n    // --- Functions ---\r\n    function getETH() external view returns(uint);\r\n    \r\n    function getCLV() external view returns(uint);\r\n    \r\n    function sendETH(address _account, uint _amount) external returns(bool);\r\n\r\n    function increaseCLV(uint _amount) external;\r\n\r\n    function decreaseCLV(uint _amount) external;\r\n\r\n    function getRawETHBalance() external view returns(uint);\r\n}",
+  "sourcePath": "/home/training/contracts/Interfaces/IPool.sol",
+  "ast": {
+    "absolutePath": "/home/training/contracts/Interfaces/IPool.sol",
+    "exportedSymbols": {
+      "IPool": [
+        7277
+      ]
+    },
+    "id": 7278,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 7212,
+        "literals": [
+          "solidity",
+          "^",
+          "0.5",
+          ".15"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:17"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 7277,
+        "linearizedBaseContracts": [
+          7277
+        ],
+        "name": "IPool",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7216,
+            "name": "ETHBalanceUpdated",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7215,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7214,
+                  "indexed": false,
+                  "name": "_newBalance",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7216,
+                  "src": "134:16:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7213,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "134:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "133:18:17"
+            },
+            "src": "110:42:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7220,
+            "name": "CLVBalanceUpdated",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7219,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7218,
+                  "indexed": false,
+                  "name": "_newBalance",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7220,
+                  "src": "184:16:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7217,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "184:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "183:18:17"
+            },
+            "src": "160:42:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7224,
+            "name": "PoolManagerAddressChanged",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7223,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7222,
+                  "indexed": false,
+                  "name": "_newAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7224,
+                  "src": "242:19:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7221,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "242:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "241:21:17"
+            },
+            "src": "210:53:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7228,
+            "name": "ActivePoolAddressChanged",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7227,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7226,
+                  "indexed": false,
+                  "name": "_newActivePoolAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7228,
+                  "src": "302:29:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7225,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "302:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "301:31:17"
+            },
+            "src": "271:62:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7232,
+            "name": "DefaultPoolAddressChanged",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7231,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7230,
+                  "indexed": false,
+                  "name": "_newDefaultPoolAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7232,
+                  "src": "373:30:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7229,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "373:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "372:32:17"
+            },
+            "src": "341:64:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7236,
+            "name": "StabilityPoolAddressChanged",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7235,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7234,
+                  "indexed": false,
+                  "name": "_newStabilityPoolAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7236,
+                  "src": "447:32:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7233,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "447:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "446:34:17"
+            },
+            "src": "413:68:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7242,
+            "name": "EtherSent",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7241,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7238,
+                  "indexed": false,
+                  "name": "_to",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7242,
+                  "src": "505:11:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7237,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "505:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 7240,
+                  "indexed": false,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7242,
+                  "src": "518:12:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7239,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "518:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "504:27:17"
+            },
+            "src": "489:43:17"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7247,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getETH",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7243,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "581:2:17"
+            },
+            "returnParameters": {
+              "id": 7246,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7245,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7247,
+                  "src": "606:4:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7244,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "606:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "605:6:17"
+            },
+            "scope": 7277,
+            "src": "566:46:17",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7252,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getCLV",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7248,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "639:2:17"
+            },
+            "returnParameters": {
+              "id": 7251,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7250,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7252,
+                  "src": "664:4:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7249,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "664:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "663:6:17"
+            },
+            "scope": 7277,
+            "src": "624:46:17",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7261,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "sendETH",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7257,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7254,
+                  "name": "_account",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7261,
+                  "src": "699:16:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7253,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "699:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 7256,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7261,
+                  "src": "717:12:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7255,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "717:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "698:32:17"
+            },
+            "returnParameters": {
+              "id": 7260,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7259,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7261,
+                  "src": "748:4:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 7258,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "748:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "747:6:17"
+            },
+            "scope": 7277,
+            "src": "682:72:17",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7266,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "increaseCLV",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7264,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7263,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7266,
+                  "src": "783:12:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7262,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "783:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "782:14:17"
+            },
+            "returnParameters": {
+              "id": 7265,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "805:0:17"
+            },
+            "scope": 7277,
+            "src": "762:44:17",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7271,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "decreaseCLV",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7269,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7268,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7271,
+                  "src": "835:12:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7267,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "835:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "834:14:17"
+            },
+            "returnParameters": {
+              "id": 7270,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "857:0:17"
+            },
+            "scope": 7277,
+            "src": "814:44:17",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7276,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getRawETHBalance",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7272,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "891:2:17"
+            },
+            "returnParameters": {
+              "id": 7275,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7274,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7276,
+                  "src": "916:4:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7273,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "916:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "915:6:17"
+            },
+            "scope": 7277,
+            "src": "866:56:17",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "external"
+          }
+        ],
+        "scope": 7278,
+        "src": "64:861:17"
+      }
+    ],
+    "src": "0:925:17"
+  },
+  "legacyAST": {
+    "absolutePath": "/home/training/contracts/Interfaces/IPool.sol",
+    "exportedSymbols": {
+      "IPool": [
+        7277
+      ]
+    },
+    "id": 7278,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 7212,
+        "literals": [
+          "solidity",
+          "^",
+          "0.5",
+          ".15"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:17"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": null,
+        "fullyImplemented": false,
+        "id": 7277,
+        "linearizedBaseContracts": [
+          7277
+        ],
+        "name": "IPool",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7216,
+            "name": "ETHBalanceUpdated",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7215,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7214,
+                  "indexed": false,
+                  "name": "_newBalance",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7216,
+                  "src": "134:16:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7213,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "134:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "133:18:17"
+            },
+            "src": "110:42:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7220,
+            "name": "CLVBalanceUpdated",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7219,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7218,
+                  "indexed": false,
+                  "name": "_newBalance",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7220,
+                  "src": "184:16:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7217,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "184:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "183:18:17"
+            },
+            "src": "160:42:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7224,
+            "name": "PoolManagerAddressChanged",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7223,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7222,
+                  "indexed": false,
+                  "name": "_newAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7224,
+                  "src": "242:19:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7221,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "242:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "241:21:17"
+            },
+            "src": "210:53:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7228,
+            "name": "ActivePoolAddressChanged",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7227,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7226,
+                  "indexed": false,
+                  "name": "_newActivePoolAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7228,
+                  "src": "302:29:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7225,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "302:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "301:31:17"
+            },
+            "src": "271:62:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7232,
+            "name": "DefaultPoolAddressChanged",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7231,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7230,
+                  "indexed": false,
+                  "name": "_newDefaultPoolAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7232,
+                  "src": "373:30:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7229,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "373:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "372:32:17"
+            },
+            "src": "341:64:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7236,
+            "name": "StabilityPoolAddressChanged",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7235,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7234,
+                  "indexed": false,
+                  "name": "_newStabilityPoolAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7236,
+                  "src": "447:32:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7233,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "447:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "446:34:17"
+            },
+            "src": "413:68:17"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 7242,
+            "name": "EtherSent",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 7241,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7238,
+                  "indexed": false,
+                  "name": "_to",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7242,
+                  "src": "505:11:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7237,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "505:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 7240,
+                  "indexed": false,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7242,
+                  "src": "518:12:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7239,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "518:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "504:27:17"
+            },
+            "src": "489:43:17"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7247,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getETH",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7243,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "581:2:17"
+            },
+            "returnParameters": {
+              "id": 7246,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7245,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7247,
+                  "src": "606:4:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7244,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "606:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "605:6:17"
+            },
+            "scope": 7277,
+            "src": "566:46:17",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7252,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getCLV",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7248,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "639:2:17"
+            },
+            "returnParameters": {
+              "id": 7251,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7250,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7252,
+                  "src": "664:4:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7249,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "664:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "663:6:17"
+            },
+            "scope": 7277,
+            "src": "624:46:17",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7261,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "sendETH",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7257,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7254,
+                  "name": "_account",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7261,
+                  "src": "699:16:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7253,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "699:7:17",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 7256,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7261,
+                  "src": "717:12:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7255,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "717:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "698:32:17"
+            },
+            "returnParameters": {
+              "id": 7260,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7259,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7261,
+                  "src": "748:4:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 7258,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "748:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "747:6:17"
+            },
+            "scope": 7277,
+            "src": "682:72:17",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7266,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "increaseCLV",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7264,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7263,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7266,
+                  "src": "783:12:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7262,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "783:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "782:14:17"
+            },
+            "returnParameters": {
+              "id": 7265,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "805:0:17"
+            },
+            "scope": 7277,
+            "src": "762:44:17",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7271,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "decreaseCLV",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7269,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7268,
+                  "name": "_amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7271,
+                  "src": "835:12:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7267,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "835:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "834:14:17"
+            },
+            "returnParameters": {
+              "id": 7270,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "857:0:17"
+            },
+            "scope": 7277,
+            "src": "814:44:17",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          {
+            "body": null,
+            "documentation": null,
+            "id": 7276,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getRawETHBalance",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 7272,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "891:2:17"
+            },
+            "returnParameters": {
+              "id": 7275,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 7274,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 7276,
+                  "src": "916:4:17",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 7273,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "916:4:17",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "915:6:17"
+            },
+            "scope": 7277,
+            "src": "866:56:17",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "external"
+          }
+        ],
+        "scope": 7278,
+        "src": "64:861:17"
+      }
+    ],
+    "src": "0:925:17"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.5.16+commit.9c3226ce.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.1.0",
+  "updatedAt": "2020-06-03T00:09:10.352Z",
+  "devdoc": {
+    "methods": {}
+  },
+  "userdoc": {
+    "methods": {}
+  }
+}

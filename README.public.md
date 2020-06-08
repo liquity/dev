@@ -1,6 +1,6 @@
 # Liquity: Decentralized Borrowing Protocol
 
-[![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32) [![Docker Pulls](https://img.shields.io/docker/pulls/liquity/dev-frontend?label=dev-frontend%20pulls&logo=docker&logoColor=white)](https://hub.docker.com/r/liquity/dev-frontend)
+[![Frontend status](https://img.shields.io/uptimerobot/status/m784948796-056b56fd51c67d682c11bb24?label=Frontend&logo=nginx&logoColor=white)](http://94.130.72.96:3000/) ![uptime](https://img.shields.io/uptimerobot/ratio/7/m784948796-056b56fd51c67d682c11bb24) [![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32) [![Docker Pulls](https://img.shields.io/docker/pulls/liquity/dev-frontend?label=dev-frontend%20pulls&logo=docker&logoColor=white)](https://hub.docker.com/r/liquity/dev-frontend)
 
 Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against
 their collateral without paying interest. After locking up ETH as collateral in a smart contract and
@@ -29,11 +29,11 @@ This repository hosts an early preview of the Liquity codebase until we get read
 
 These are the Liquity components that have been made visible in this repo. They can be found under the `packages` directory.
 
-| Package               | Description                                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------------------------ |
-| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                    |
-| @liquity/dev-frontend | A bare-bones but functional React app used for interfacing with the smart contracts during development |
-| @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                    |
+| Package               | Description                                                                                                                                                      |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                                                                              |
+| @liquity/dev-frontend | [Liquity Developer Interface](http://94.130.72.96:3000/): a bare-bones but functional React app used for interfacing with the smart contracts during development |
+| @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                                                                              |
 
 ## Running the dev-frontend
 

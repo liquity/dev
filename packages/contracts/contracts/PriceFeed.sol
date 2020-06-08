@@ -1,12 +1,16 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.5.16;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/ownership/Ownable.sol";
+
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/IDeployedAggregator.sol";
 import "./Interfaces/AggregatorInterface.sol";
-import "@nomiclabs/buidler/console.sol";
+// import "@openzeppelin/contracts/math/SafeMath.sol";
+// import "@openzeppelin/contracts/ownership/Ownable.sol";
+// import "@nomiclabs/buidler/console.sol";
+import "./Dependencies/SafeMath.sol";
+import "./Dependencies/Ownable.sol";
+import "./Dependencies/console.sol";
 
 contract PriceFeed is Ownable, IPriceFeed {
     using SafeMath for uint256;

@@ -5,7 +5,7 @@ const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
-const getDifference = testHelpers.getDifference
+const th = testHelpers.TestHelper
 const moneyVals = testHelpers.MoneyValues
 contract('CDPManager', async accounts => {
  
@@ -107,16 +107,16 @@ contract('CDPManager', async accounts => {
     const ICR_8 = await cdpManager.getCurrentICR(accounts[8], price)
     const ICR_9 = await cdpManager.getCurrentICR(accounts[9], price)
 
-    assert.isAtMost(getDifference(ICR_0, '2000000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_1, '2010000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_2, '2020000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_3, '2030000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_4, '2040000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_5, '2050000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_6, '2060000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_7, '2070000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_8, '2080000000000000000'), 100)
-    assert.isAtMost(getDifference(ICR_9, '2090000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_0, '2000000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_1, '2010000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_2, '2020000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_3, '2030000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_4, '2040000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_5, '2050000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_6, '2060000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_7, '2070000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_8, '2080000000000000000'), 100)
+    assert.isAtMost(th.getDifference(ICR_9, '2090000000000000000'), 100)
   })
 
   it("getApproxHint(): returns the address of a CDP within sqrt(length) positions of the correct insert position", async () => {
@@ -181,27 +181,27 @@ contract('CDPManager', async accounts => {
 
   /* Pass 100 random collateral ratios to getApproxHint(). For each, check whether the returned hint address is within 
   sqrt(length) positions of where a CDP with that CR should be inserted. */
-  it("getApproxHint(): for 100 random CRs, returns the address of a CDP within sqrt(length) positions of the correct insert position", async () => {
-    const sqrtLength = Math.ceil(Math.sqrt(numAccounts))
+  // it("getApproxHint(): for 100 random CRs, returns the address of a CDP within sqrt(length) positions of the correct insert position", async () => {
+  //   const sqrtLength = Math.ceil(Math.sqrt(numAccounts))
 
-    for (i = 0; i < 100; i++) {
-      // get random ICR between 200% and (200 + numAccounts)%
-      const min = 200
-      const max = 200 + numAccounts
-      const ICR_Percent = (Math.floor(Math.random() * (max - min) + min)) 
+  //   for (i = 0; i < 100; i++) {
+  //     // get random ICR between 200% and (200 + numAccounts)%
+  //     const min = 200
+  //     const max = 200 + numAccounts
+  //     const ICR_Percent = (Math.floor(Math.random() * (max - min) + min)) 
 
-      // Convert ICR to a duint
-      const ICR = web3.utils.toWei((ICR_Percent * 10).toString(), 'finney') 
+  //     // Convert ICR to a duint
+  //     const ICR = web3.utils.toWei((ICR_Percent * 10).toString(), 'finney') 
   
-      const hintAddress = await cdpManager.getApproxHint(ICR, sqrtLength * 10)
-      const ICR_hintAddress = await cdpManager.getCurrentICR(hintAddress, price)
-      const ICRPercent_hintAddress = Number(web3.utils.fromWei(ICR_hintAddress, 'ether')) * 100
+  //     const hintAddress = await cdpManager.getApproxHint(ICR, sqrtLength * 10)
+  //     const ICR_hintAddress = await cdpManager.getCurrentICR(hintAddress, price)
+  //     const ICRPercent_hintAddress = Number(web3.utils.fromWei(ICR_hintAddress, 'ether')) * 100
       
-      // check the hint position is at most sqrtLength positions away from the correct position
-      ICR_Difference = (ICRPercent_hintAddress - ICR_Percent)
-      assert.isBelow(ICR_Difference, sqrtLength)
-    }
-  })
+  //     // check the hint position is at most sqrtLength positions away from the correct position
+  //     ICR_Difference = (ICRPercent_hintAddress - ICR_Percent)
+  //     assert.isBelow(ICR_Difference, sqrtLength)
+  //   }
+  // })
 
   it("getApproxHint(): returns the head of the list if the CR is the max uint256 value", async () => {
     const sqrtLength = Math.ceil(Math.sqrt(numAccounts))

@@ -19,6 +19,16 @@ import { PriceManager } from "./components/PriceManager";
 import { RedemptionManager } from "./components/RedemptionManager";
 import { LiquidationManager } from "./components/LiquidationManager";
 import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
+
+// import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
+
+// const ethereum = new DisposableWalletProvider(
+//   "http://localhost:8545",
+//   "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7"
+// );
+
+// Object.assign(window, { ethereum });
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
@@ -55,6 +65,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   });
 
   const {
+    blockTag,
     etherBalance,
     quiBalance,
     numberOfTroves,
@@ -97,13 +108,15 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
           </Box>
         </Flex>
 
-        <RiskiestTroves pageSize={10} {...{ liquity, price, totalRedistributed, numberOfTroves }} />
+        <RiskiestTroves
+          pageSize={10}
+          {...{ liquity, price, totalRedistributed, numberOfTroves, blockTag }}
+        />
       </Box>
-      {
-        // Some empty space to ensure content can always be scrolled up from under the
-        // TransactionMonitor bar.
-      }
-      <Box height="72px" />
+
+      <Footer>
+        <Text>* Please note that the final user-facing application will look different.</Text>
+      </Footer>
 
       <TransactionMonitor />
     </>

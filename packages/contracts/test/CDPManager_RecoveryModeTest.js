@@ -5,7 +5,7 @@ const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
-const getDifference = testHelpers.getDifference
+const th = testHelpers.TestHelper
 const moneyVals = testHelpers.MoneyValues
 
 contract('CDPManager', async accounts => {
@@ -648,8 +648,8 @@ contract('CDPManager', async accounts => {
     const L_CLVDebt = (await cdpManager.L_CLVDebt()).toString()
     const L_ETH = (await cdpManager.L_ETH()).toString()
 
-    assert.isAtMost(getDifference(L_CLVDebt, '266666666666666666667'), 100)
-    assert.isAtMost(getDifference(L_ETH, '2800000000000000000'), 100)
+    assert.isAtMost(th.getDifference(L_CLVDebt, '266666666666666666667'), 100)
+    assert.isAtMost(th.getDifference(L_ETH, '2800000000000000000'), 100)
   })
 
   // --- liquidate(), applied to loan with ICR > 110% that has the lowest ICR 
@@ -758,7 +758,7 @@ contract('CDPManager', async accounts => {
     const aliceExpectedDeposit = await poolManager.getCompoundedCLVDeposit(alice)
     const aliceExpectedETHGain = await poolManager.getCurrentETHGain(alice)
 
-    assert.isAtMost(getDifference(aliceExpectedDeposit.toString(), '1250000000000000000000'), 1000)
+    assert.isAtMost(th.getDifference(aliceExpectedDeposit.toString(), '1250000000000000000000'), 1000)
     assert.equal(aliceExpectedETHGain, _3_Ether)
   })
 
@@ -1062,7 +1062,7 @@ contract('CDPManager', async accounts => {
 
     assert.equal(aliceExpectedDeposit.toString(), '0')
 
-    assert.isAtMost(getDifference(aliceExpectedETHGain, '1200000000000000000' ), 100)
+    assert.isAtMost(th.getDifference(aliceExpectedETHGain, '1200000000000000000' ), 100)
 
     /* For this Recovery Mode test case with ICR > 110%, there should be no redistribution of remainder to active CDPs. 
     Redistribution rewards-per-unit-staked should be zero. */

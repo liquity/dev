@@ -12,8 +12,18 @@ module.exports = {
     // test: {
     //   port: 7545,
     //   gas: 9000000,
-    //   network_id: 5777
+    //   network_id: 4447
     // },
+    vertigo_test_network_1: {
+      host: "127.0.0.1",
+      port: 8545,
+      network_id: "*"
+    },
+    vertigo_test_network_2: {
+      host: "127.0.0.1",
+      port: 8546,
+      network_id: "*"
+    }
     // test: {
     //   gas: 9000000,
     //   network_id: 4447
@@ -28,7 +38,7 @@ module.exports = {
   // use native binaries rather than solc.js 
   compilers: {
     solc: {
-      version: "0.5.15"
+      version: "0.5.16"
     }
   },
   // plugins: [

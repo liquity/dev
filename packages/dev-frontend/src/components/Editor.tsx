@@ -24,6 +24,7 @@ const Row: React.FC<RowProps> = ({ label, hideLabel, unit, children }) => {
 };
 
 type StaticAmountsProps = {
+  label?: string;
   amount: string;
   color?: string;
   pendingAmount?: string;
@@ -33,6 +34,7 @@ type StaticAmountsProps = {
 };
 
 const StaticAmounts: React.FC<StaticAmountsProps> = ({
+  label,
   amount,
   color,
   pendingAmount,
@@ -41,7 +43,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
   invalid
 }) => {
   return (
-    <StaticCell {...{ onClick, invalid }}>
+    <StaticCell data-testid={label} {...{ onClick, invalid }}>
       <Flex justifyContent="space-between" alignItems="center">
         <Text fontSize={StaticCell.defaultProps?.fontSize} {...{ color }}>
           {amount}
@@ -109,6 +111,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
     <Row {...{ label, hideLabel, unit }}>
       {editing === label ? (
         <EditableCell
+          data-testid={label}
           ref={inputRef}
           type="number"
           step="any"
@@ -125,7 +128,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
         />
       ) : (
         <StaticAmounts
-          {...{ amount, color, pendingAmount, pendingColor, invalid }}
+          {...{ label, amount, color, pendingAmount, pendingColor, invalid }}
           onClick={() => setEditing(label)}
         />
       )}

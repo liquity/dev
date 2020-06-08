@@ -108,12 +108,7 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
       }
 
       const difference = originalDeposit.calculateDifference(editedDeposit);
-
-      if (difference) {
-        setEditedDeposit(deposit.apply(difference)!);
-      } else {
-        setEditedDeposit(deposit);
-      }
+      setEditedDeposit(deposit.apply(difference));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deposit]);

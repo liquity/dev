@@ -16,9 +16,18 @@
 
 /secrets.js
 
+
+
 # solidity-coverage
 /.coverage_artifacts
 /.coverage_cache
 /.coverage_contracts
 /coverage.json
 /coverage
+
+# eth-mutants
+/.eth-mutants
+/mutantOutput.txt
+ 
+# gas test data
+/gasTest/outputs

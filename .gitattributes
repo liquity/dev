@@ -1,0 +1,2 @@
+# Enable syntax highlighting for Solidity
+*.sol linguist-language=Solidity
