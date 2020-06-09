@@ -26,6 +26,7 @@
     "prepare:decimal": "yarn workspace @liquity/decimal prepare",
     "prepare:lib": "yarn workspace @liquity/lib prepare",
     "prepare:providers": "yarn workspace @liquity/providers prepare",
+    "rebuild": "run-s prepare build",
     "start-dev-chain": "run-s start-dev-chain:*",
     "start-dev-chain:openethereum": "docker run --name openethereum --rm -d -p 127.0.0.1:8545:8545/tcp -p 127.0.0.1:8546:8546/tcp liquity/openethereum --config dev-insecure --jsonrpc-cors all --ws-interface all --ws-hosts all --ws-origins all",
     "start-dev-chain:deploy": "yarn deploy --network dev",
