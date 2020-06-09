@@ -51,7 +51,7 @@ jobs:
         working-directory: ./packages/dev-frontend
 
       - name: Build dev-frontend for internal use
-        run: yarn build
+        run: yarn rebuild
         env:
           CHANNEL: internal
 

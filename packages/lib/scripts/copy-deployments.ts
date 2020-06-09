@@ -19,6 +19,8 @@ const copyDeploymentsFrom = (deploymentsDir: string) => {
   }
 };
 
+console.log(`Deployment channel: ${process.env.CHANNEL ?? "default"}`);
+
 copyDeploymentsFrom(inputDir(backfillChannel));
 copyDeploymentsFrom(inputDir(defaultChannel));
 
