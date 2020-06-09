@@ -234,3 +234,100 @@ In particular, we have:
 - A derivation of a formula and implementation for a highly scalable (O(1) complexity) reward distribution in the Stability Pool, involving compounding and decreasing stakes.
 
 PDFs of these can be found in https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs
+
+## Development
+
+The Liquity monorepo is based on Yarn's [workspaces](https://classic.yarnpkg.com/en/docs/workspaces/) feature. You might be able to install some of the packages individually with npm, but to make all interdependent packages see each other, you'll need to use Yarn.
+
+In addition, some package scripts require Docker to be installed (Docker Desktop on Windows and Mac, Docker Engine on Linux).
+
+### Prerequisites
+
+You'll need to install the following:
+
+- [Git](https://help.github.com/en/github/getting-started-with-github/set-up-git) (of course)
+- [Node v10.x](https://nodejs.org/dist/latest-v10.x/)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Yarn](https://classic.yarnpkg.com/en/docs/install)
+
+#### Making node-gyp work
+
+Liquity indirectly depends on some packages with native addons. To make sure these can be built, you'll have to take some additional steps. Refer to the subsection of [Installation](https://github.com/nodejs/node-gyp#installation) in node-gyp's README that corresponds to your operating system.
+
+Note: you can skip the manual installation of node-gyp itself (`npm install -g node-gyp`), but you will need to install its prerequisites to make sure Liquity can be installed.
+
+### Clone & Install
+
+```
+git clone https://github.com/liquity/dev.git liquity
+cd liquity
+yarn
+```
+
+### Top-level scripts
+
+There are a number of scripts in the top-level package.json file to ease development, which you can run with yarn.
+
+#### Run all tests
+
+```
+yarn test
+```
+
+#### Deploy contracts to a testnet
+
+E.g.:
+
+```
+yarn deploy --network ropsten
+```
+
+Supported networks are currently: ropsten, kovan, rinkeby, goerli.
+
+After a successful deployment, the addresses of the newly deployed contracts will be written to a version-controlled JSON file under `packages/lib/deployments/default`.
+
+To publish a new deployment, you'll have to commit and push the updated JSON file. The repo's GitHub workflow will build a new Docker image of the frontend interfacing with the new addresses.
+
+#### Start a local blockchain and deploy the contracts
+
+```
+yarn start-dev-chain
+```
+
+Starts an openethereum node in a Docker container, running the [private development chain](https://openethereum.github.io/wiki/Private-development-chain), then deploys the contracts to this chain.
+
+You may want to use this before starting the dev-frontend in development mode. To use the newly deployed contracts, switch MetaMask to the built-in "Localhost 8545" network.
+
+Once you no longer need the local node, stop it with:
+
+```
+yarn stop-dev-chain
+```
+
+#### Start dev-frontend in development mode
+
+```
+yarn start-dev-frontend
+```
+
+This will start dev-frontend in development mode on http://localhost:3000. The app will automatically be reloaded if you change a source file under `packages/dev-frontend`.
+
+If you make changes to a different package under `packages`, it is recommended to rebuild the entire project with `yarn prepare` in the root directory of the repo. This makes sure that a change in one package doesn't break another.
+
+To stop the dev-frontend running in this mode, bring up the terminal in which you've started the command and press Ctrl+C.
+
+#### Start dev-frontend in demo mode
+
+This will automatically start the local blockchain, so you need to make sure that's not already running before you run the following command.
+
+```
+yarn start-demo
+```
+
+This spawns a modified version of dev-frontend that ignores MetaMask, and directly uses the local blockchain node. Every time the page is reloaded (at http://localhost:3000), a new random account is created with a balance of 100 ETH. Additionally, transactions are automatically signed, so you no longer need to accept wallet confirmations. This lets you play around with Liquity more freely.
+
+When you no longer need the demo mode, press Ctrl+C in the terminal then run:
+
+```
+yarn stop-demo
+```

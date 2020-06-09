@@ -26,6 +26,7 @@
     "@web3-react/core": "^6.0.7",
     "@web3-react/injected-connector": "^6.0.7",
     "@web3-react/types": "^6.0.7",
+    "cross-env": "^7.0.2",
     "ethers": "^5.0.0-beta.187",
     "npm-run-all": "^4.1.5",
     "prop-types": "^15.7.2",
@@ -44,11 +45,12 @@
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "start": "react-scripts start",
-    "build": "run-s set-version build:react",
+    "start-demo": "cross-env REACT_APP_DEMO_MODE=true run-s start",
+    "build": "run-s build:*",
+    "build:set-version": "node scripts/set-version.js",
     "build:react": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "set-version": "node scripts/set-version.js"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"
