@@ -204,45 +204,34 @@ export class TroveWithPendingRewards extends Trove {
 // yeah, sounds stupid...
 interface StabilityDepositish {
   readonly deposit?: Decimalish;
+  readonly depositAfterLoss?: Decimalish;
   readonly pendingCollateralGain?: Decimalish;
-  readonly pendingDepositLoss?: Decimalish;
 }
 
 export class StabilityDeposit {
   readonly deposit: Decimal;
+  readonly depositAfterLoss: Decimal;
   readonly pendingCollateralGain: Decimal;
-  readonly pendingDepositLoss: Decimal;
 
   get isEmpty() {
-    return (
-      this.deposit.isZero && this.pendingCollateralGain.isZero && this.pendingDepositLoss.isZero
-    );
-  }
-
-  get depositAfterLoss() {
-    return this.deposit.sub(this.pendingDepositLoss);
+    return this.deposit.isZero && this.depositAfterLoss.isZero && this.pendingCollateralGain.isZero;
   }
 
   constructor({
     deposit = 0,
-    pendingCollateralGain = 0,
-    pendingDepositLoss = 0
+    depositAfterLoss = deposit,
+    pendingCollateralGain = 0
   }: StabilityDepositish) {
     this.deposit = Decimal.from(deposit);
+    this.depositAfterLoss = Decimal.from(depositAfterLoss);
     this.pendingCollateralGain = Decimal.from(pendingCollateralGain);
-
-    if (this.deposit.gt(pendingDepositLoss)) {
-      this.pendingDepositLoss = Decimal.from(pendingDepositLoss);
-    } else {
-      this.pendingDepositLoss = this.deposit;
-    }
   }
 
   toString() {
     return (
       "{\n" +
       `  deposit: ${this.deposit},\n` +
-      `  pendingDepositLoss: ${this.pendingDepositLoss},\n` +
+      `  depositAfterLoss: ${this.depositAfterLoss},\n` +
       `  pendingCollateralGain: ${this.pendingCollateralGain}\n` +
       "}"
     );
@@ -251,7 +240,7 @@ export class StabilityDeposit {
   equals(that: StabilityDeposit) {
     return (
       this.deposit.eq(that.deposit) &&
-      this.pendingDepositLoss.eq(that.pendingDepositLoss) &&
+      this.depositAfterLoss.eq(that.depositAfterLoss) &&
       this.pendingCollateralGain.eq(that.pendingCollateralGain)
     );
   }
@@ -320,13 +309,6 @@ const debounce = (listener: (latestBlock: number) => void) => {
 
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
-
-const computePendingReward = (snapshotValue: Decimal, currentValue: Decimal, stake: Decimal) => {
-  const rewardPerStake = currentValue.sub(snapshotValue);
-  const reward = rewardPerStake.mul(stake);
-
-  return reward;
-};
 
 export class Liquity {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
@@ -682,20 +664,13 @@ export class Liquity {
   }
 
   async getStabilityDeposit(address = this.requireAddress(), overrides?: LiquityCallOverrides) {
-    const [deposit, snapshot, S_ETH, S_CLV] = await Promise.all([
-      this.poolManager.deposit(address, { ...overrides }).then(decimalify),
-      this.poolManager.snapshot(address, { ...overrides }),
-      this.poolManager.S_ETH({ ...overrides }).then(decimalify),
-      this.poolManager.S_CLV({ ...overrides }).then(decimalify)
+    const [deposit, depositAfterLoss, pendingCollateralGain] = await Promise.all([
+      this.poolManager.deposits(address, { ...overrides }).then(decimalify),
+      this.poolManager.getCompoundedCLVDeposit(address, { ...overrides }).then(decimalify),
+      this.poolManager.getCurrentETHGain(address, { ...overrides }).then(decimalify)
     ]);
 
-    const snapshotETH = new Decimal(snapshot.ETH);
-    const snapshotCLV = new Decimal(snapshot.CLV);
-
-    const pendingCollateralGain = computePendingReward(snapshotETH, S_ETH, deposit);
-    const pendingDepositLoss = computePendingReward(snapshotCLV, S_CLV, deposit);
-
-    return new StabilityDeposit({ deposit, pendingCollateralGain, pendingDepositLoss });
+    return new StabilityDeposit({ deposit, depositAfterLoss, pendingCollateralGain });
   }
 
   watchStabilityDeposit(
