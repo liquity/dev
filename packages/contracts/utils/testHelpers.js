@@ -8,6 +8,7 @@ const MoneyValues = {
   _5_Ether: web3.utils.toWei('5', 'ether'),
   _6_Ether: web3.utils.toWei('6', 'ether'),
   _10_Ether: web3.utils.toWei('10', 'ether'),
+  _11_Ether: web3.utils.toWei('11', 'ether'),
   _15_Ether: web3.utils.toWei('15', 'ether'),
   _20_Ether: web3.utils.toWei('20', 'ether'),
   _22_Ether: web3.utils.toWei('22', 'ether'),

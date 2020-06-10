@@ -1,4 +1,4 @@
-const { accountsList: accounts } = require("./accountsList.js");
+const { accountsList: accounts } = require("./buidlerAccountsList2k.js");
 
 module.exports = {
   providerOptions: {

@@ -192,8 +192,8 @@ contract CDPManager is Ownable, ICDPManager {
     }
    
     function liquidateNormalMode(address _user, uint _ICR) internal returns (bool) {
-        // If ICR > MCR, don't liquidate 
-        if (_ICR > MCR) { return false; }
+        // If ICR > MCR, or is last trove, don't liquidate 
+        if (_ICR > MCR || CDPOwners.length <= 1) { return false; }
        
         // Get the CDP's entire debt and coll, including pending rewards from distributions
         (uint entireCDPDebt, uint entireCDPColl) = getEntireDebtAndColl(_user);
@@ -217,6 +217,9 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     function liquidateRecoveryMode(address _user, uint _ICR, uint _price) internal returns (bool) {
+        // If is last trove, don't liquidate
+        if (CDPOwners.length <= 1) { return false; }
+
         // If ICR <= 100%, purely redistribute the CDP across all active CDPs
         if (_ICR <= 1000000000000000000) {
             (uint entireCDPDebt, uint entireCDPColl) = getEntireDebtAndColl(_user);
@@ -863,10 +866,5 @@ contract CDPManager is Ownable, ICDPManager {
         uint newDebt = CDPs[_user].debt.sub(_debtDecrease);
         CDPs[_user].debt = newDebt;
         return newDebt;
-    }
-
-    // dummy echidna property
-    function echidna_alwayTrue() public view returns(bool){
-        return (true); 
     }
 }

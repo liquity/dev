@@ -8,7 +8,7 @@ const connectContracts = deploymentHelpers.connectContracts
 const th = testHelpers.TestHelper
 const moneyVals = testHelpers.MoneyValues
 
-contract('CDPManager', async accounts => {
+contract('CDPManager - in Recovery Mode', async accounts => {
   const _1_Ether = web3.utils.toWei('1', 'ether')
   const _2_Ether = web3.utils.toWei('2', 'ether')
   const _3_Ether = web3.utils.toWei('3', 'ether')
