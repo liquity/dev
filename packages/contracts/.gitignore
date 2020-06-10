@@ -11,10 +11,10 @@
 /accountsList.js 
 
 # Exported function gas costs and test outputs
-/test/gas/gasTestData.csv
-/test/gas/gasTestOutput.txt
+/gasTest/outputs
 
 /secrets.js
+
 
 # solidity-coverage
 /.coverage_artifacts
@@ -25,7 +25,4 @@
 
 # eth-mutants
 /.eth-mutants
-/mutantOutput.txt
- 
-# gas test data
-/gasTest/outputs
+mutantOutput.txt
