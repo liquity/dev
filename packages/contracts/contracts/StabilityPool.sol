@@ -1,9 +1,6 @@
 pragma solidity ^0.5.16;
 
 import './Interfaces/IStabilityPool.sol';
-// import '@openzeppelin/contracts/ownership/Ownable.sol';
-// import '@openzeppelin/contracts/math/SafeMath.sol';
-// import "@nomiclabs/buidler/console.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -15,11 +12,8 @@ contract StabilityPool is Ownable, IStabilityPool {
     address public defaultPoolAddress;
     address public activePoolAddress;
     uint256 public ETH;  // deposited ether tracker
+    
     // Total CLV held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.
-    uint256 public CLV;  
-
-    // Total user CLV deposits. Used in proportional reward calculation in PoolManager. 
-    //  Only changes when users deposit/withdraw.
     uint256 public totalCLVDeposits; 
 
     constructor() public {}
@@ -48,10 +42,6 @@ contract StabilityPool is Ownable, IStabilityPool {
     }
 
     function getCLV() public view returns(uint) {
-        return CLV;
-    }
-
-    function getTotalCLVDeposits() public view returns(uint) {
         return totalCLVDeposits;
     }
 
@@ -68,22 +58,18 @@ contract StabilityPool is Ownable, IStabilityPool {
     }
 
     function increaseCLV(uint _amount) public onlyPoolManager () {
-        CLV  = CLV.add(_amount);
-        emit CLVBalanceUpdated(CLV);
+        totalCLVDeposits  = totalCLVDeposits.add(_amount);
+        emit CLVBalanceUpdated(totalCLVDeposits);
     }
 
     function decreaseCLV(uint _amount) public onlyPoolManager () {
-        CLV = CLV.sub(_amount);
-        emit CLVBalanceUpdated(CLV);
+        totalCLVDeposits = totalCLVDeposits.sub(_amount);
+        emit CLVBalanceUpdated(totalCLVDeposits);
     }
 
     function increaseTotalCLVDeposits(uint _amount) public onlyPoolManager () {
         totalCLVDeposits = totalCLVDeposits.add(_amount);
 
-    }
-
-    function decreaseTotalCLVDeposits(uint _amount) public onlyPoolManager () {
-        totalCLVDeposits = totalCLVDeposits.sub(_amount);
     }
 
     /* Returns the raw ether balance at StabilityPool address.  

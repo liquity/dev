@@ -96,14 +96,14 @@ contract('PoolManager', async accounts => {
 
       // --- TEST ---
       // check user's deposit record before
-      const alice_depositRecord_Before = await poolManager.deposits(alice)
+      const alice_depositRecord_Before = await poolManager.initialDeposits(alice)
       assert.equal(alice_depositRecord_Before, 0)
 
       // provideToSP()
       await poolManager.provideToSP(200, { from: alice })
 
       // check user's deposit record after
-      const alice_depositRecord_After = await poolManager.deposits(alice)
+      const alice_depositRecord_After = await poolManager.initialDeposits(alice)
       assert.equal(alice_depositRecord_After, 200)
     })
 
@@ -133,7 +133,7 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV('2000000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('2000000000000000000000', { from: whale })
 
-      const totalCLVDeposits = await stabilityPool.getTotalCLVDeposits()
+      const totalCLVDeposits = await stabilityPool.getCLV()
       assert.equal(totalCLVDeposits, '2000000000000000000000')
     })
 
@@ -228,7 +228,7 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV(alice_topUp_1, alice, { from: alice })
       await poolManager.provideToSP(alice_topUp_1, { from: alice })
 
-      const alice_newDeposit_1 = (await poolManager.deposits(alice)).toString()
+      const alice_newDeposit_1 = (await poolManager.initialDeposits(alice)).toString()
       console.log(typeof alice_compoundedDeposit_1)
       assert.equal(alice_compoundedDeposit_1.add(alice_topUp_1), alice_newDeposit_1)
 
@@ -304,7 +304,7 @@ contract('PoolManager', async accounts => {
       150 - 27 - 90 = 33 CLV  */
 
       // check Alice's deposit has been updated to 33 CLV */
-      const newDeposit = (await poolManager.deposits(alice)).toString()
+      const newDeposit = (await poolManager.initialDeposits(alice)).toString()
       assert.isAtMost(th.getDifference(newDeposit, '33000000000000000000'), 1000)
 
       // Expect Alice has withdrawn all ETH gain
@@ -427,17 +427,17 @@ contract('PoolManager', async accounts => {
 
       // All depositors attempt to withdraw
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: alice })
-      assert.equal((await poolManager.deposits(alice)).toString(), '0')
+      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: bob })
-      assert.equal((await poolManager.deposits(alice)).toString(), '0')
+      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: carol })
-      assert.equal((await poolManager.deposits(alice)).toString(), '0')
+      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: dennis })
-      assert.equal((await poolManager.deposits(alice)).toString(), '0')
+      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: erin })
-      assert.equal((await poolManager.deposits(alice)).toString(), '0')
+      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
       await poolManager.withdrawFromSP(moneyVals._100e18, { from: flyn })
-      assert.equal((await poolManager.deposits(alice)).toString(), '0')
+      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
 
       const totalDeposits = (await stabilityPool.totalCLVDeposits()).toString()
 
@@ -530,7 +530,7 @@ contract('PoolManager', async accounts => {
       await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
 
       // check Alice's CLVLoss has been applied to her deposit - expect (150 - 13.5) = 136.5 CLV
-      alice_deposit_afterDefault = (await poolManager.deposits(alice))
+      alice_deposit_afterDefault = (await poolManager.initialDeposits(alice))
       assert.isAtMost(th.getDifference(alice_deposit_afterDefault, '136500000000000000000'), 1000)
 
       // check alice's CDP recorded ETH has increased by the expected reward amount
@@ -688,7 +688,7 @@ contract('PoolManager', async accounts => {
 
       const P_Before = await poolManager.P()
       const S_Before = await poolManager.epochToScaleToSum(0,0)
-      const totalCLVDeposits = await stabilityPool.getTotalCLVDeposits()
+      const totalCLVDeposits = await stabilityPool.getCLV()
 
       assert.equal(P_Before, '1000000000000000000')
       assert.equal(S_Before, 0)
@@ -729,7 +729,7 @@ contract('PoolManager', async accounts => {
       console.log("P after L2:" + P_After.toString())  
       console.log("S after L2:" + S_After.toString()) 
 
-      console.log("total SP deposits after L2: " + (await stabilityPool.getTotalCLVDeposits()).toString())
+      console.log("total SP deposits after L2: " + (await stabilityPool.getCLV()).toString())
       // console.log(`${P_After}`)
       // console.log(`${S_After}`)
 

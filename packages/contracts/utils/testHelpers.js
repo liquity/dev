@@ -71,6 +71,7 @@ const MoneyValues = {
   _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
 
   _1e27: web3.utils.toWei('1000000000', 'ether'),
+  _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
 
   negative_5e17:  "-" + web3.utils.toWei('500', 'finney'),
   negative_10e18:  "-" + web3.utils.toWei('10', 'ether'),
@@ -221,16 +222,23 @@ static async openLoan_allAccounts_randomETH_ProportionalCLV(minETH, maxETH, acco
  return this.getGasMetrics(gasCostList)
 }
 
-static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, cdpManager, minCLVProportion, maxCLVProportion) {
+static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, cdpManager, minCLVProportion, maxCLVProportion, logging) {
   const gasCostList = []
   const _1e18 = web3.utils.toBN('1000000000000000000')
 
+  let i = 0
   for (const account of accounts) {
+    
     const randCollAmount = this.randAmountInWei(minETH, maxETH)
     const randCLVProportion = this.randAmountInWei(minCLVProportion, maxCLVProportion)
     const proportionalCLV = (web3.utils.toBN(randCLVProportion)).mul(web3.utils.toBN(randCollAmount).div(_1e18))
 
     const tx = await cdpManager.openLoan(proportionalCLV, account, { from: account, value: randCollAmount })
+    
+    if (logging === true && tx.receipt.status) {
+      i++
+      console.log(`${i}. Loan opened. addr: ${this.squeezeAddr(account)} coll: ${randCollAmount} debt: ${proportionalCLV}`)
+    }
     const gas = this.gasUsed(tx)
     gasCostList.push(gas)
   }

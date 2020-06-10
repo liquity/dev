@@ -37,9 +37,9 @@ contract("PoolManager", async accounts => {
     const ICR = (await cdpManager.getCurrentICR(randomDefaulter, price)).toString()
     const ICRPercent = ICR.slice(0, ICR.length-16)
   
-    const CLVinPoolBefore = await stabilityPool.getTotalCLVDeposits()
+    const CLVinPoolBefore = await stabilityPool.getCLV()
     const liquidatedTx = await cdpManager.liquidate(randomDefaulter, { from: accounts[0] })
-    const CLVinPoolAfter = await stabilityPool.getTotalCLVDeposits()
+    const CLVinPoolAfter = await stabilityPool.getCLV()
 
     assert.isTrue(liquidatedTx.receipt.status)
 
@@ -96,14 +96,15 @@ contract("PoolManager", async accounts => {
     console.log(`Depositors count: ${currentDepositors.length}`)
 
     for (depositor of currentDepositors) {
-      const initialDeposit = await poolManager.deposits(depositor)
+      const initialDeposit = await poolManager.initialDeposits(depositor)
       const finalDeposit = await poolManager.getCompoundedCLVDeposit(depositor)
       const ETHGain = await poolManager.getCurrentETHGain(depositor)
       const ETHinSP = (await stabilityPool.getETH()).toString()
       const CLVinSP = (await stabilityPool.getCLV()).toString()
-      const totalCLVDeposits = (await stabilityPool.getTotalCLVDeposits()).toString()
-      const withdrawalTx = await poolManager.withdrawFromSP(mv._1e27, { from: depositor })
-      const depositorCount = currentDepositors.length
+
+      // Attempt to withdraw
+      const withdrawalTx = await poolManager.withdrawFromSP(mv._1e36, { from: depositor })
+      
       const ETHinSPAfter = (await stabilityPool.getETH()).toString()
       const CLVinSPAfter = (await stabilityPool.getCLV()).toString()
 
@@ -114,7 +115,6 @@ contract("PoolManager", async accounts => {
                      ETH in SP: ${ETHinSP}
                      compounded deposit: ${finalDeposit} 
                      CLV in SP: ${CLVinSP}
-                     total CLV deposits: ${totalCLVDeposits}
                     --After withdrawal--
                      withdrawal tx success: ${withdrawalTx.receipt.status} 
                      ETH in SP: ${ETHinSPAfter}
@@ -192,7 +192,8 @@ contract("PoolManager", async accounts => {
         defaulterAccounts,
         borrowerOperations,
         defaulterCLVProportionMin,
-        defaulterCLVProportionMax)
+        defaulterCLVProportionMax,
+        true)
 
       // account set S all add coll and withdraw CLV
       await th.openLoan_allAccounts_randomETH_randomCLV(depositorCollMin,
@@ -200,7 +201,8 @@ contract("PoolManager", async accounts => {
         depositorAccounts,
         borrowerOperations,
         depositorCLVProportionMin,
-        depositorCLVProportionMax)
+        depositorCLVProportionMax,
+        true)
 
       // price drops, all L liquidateable
       await priceFeed.setPrice(mv._100e18);
@@ -232,7 +234,7 @@ contract("PoolManager", async accounts => {
       console.log(`remaining defaulters length: ${remainingDefaulters.length}`)
     })
 
-    it.only("Defaulters' Collateral in range [1, 10]. SP Deposits in range [1e8, 1e10]. ETH:USD = 100", async () => {
+    it("Defaulters' Collateral in range [1, 10]. SP Deposits in range [1e8, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
       await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: mv._500billion_Ether })
@@ -374,7 +376,7 @@ contract("PoolManager", async accounts => {
       console.log(`remaining defaulters length: ${remainingDefaulters.length}`)
     })
 
-    it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [1e8 1e10]. ETH:USD = 100", async () => {
+    it.only("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [1e8 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
       await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: mv._500billion_Ether })
