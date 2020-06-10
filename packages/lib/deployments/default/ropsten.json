@@ -1,17 +1,17 @@
 {
   "addresses": {
-    "activePool": "0xE7d135D2B43EF53D5f644F4A4F39F639174dfFb5",
-    "borrowerOperations": "0x98695e9bf7DEb6113a6e5d5920d032bD721Fee6E",
-    "cdpManager": "0x6645E03DA2a711f780af7cCE1019Cb9a9135C898",
-    "clvToken": "0x69E686BBF16f6C04aC2fb49AA0d2f78Ff9f37596",
-    "defaultPool": "0x86F51bB9F0A3Ee1d5CfDD2df6e6282170a02Bb59",
-    "multiCDPgetter": "0x92167BE3A0D4c95055342a2fe0bC910f76dE34aC",
-    "poolManager": "0x480cB1864e570221ABcADd3316D947864D3F264B",
-    "priceFeed": "0x00248273044d46E690e3234cDdd480C5290b325c",
-    "sortedCDPs": "0xc27b50C919B36C1b4C7fA0a74AA65E28C92d87Fc",
-    "stabilityPool": "0xb21a1c4F84A772397FEfb43CAa5a91947F786E1f"
+    "activePool": "0x073d99C2329f2Ae888D6338326069f3064e1a06d",
+    "borrowerOperations": "0xdC0E3fcDE202e3F9EA15866C48F4c7b8A7b63bD1",
+    "cdpManager": "0xB7d0c52730f25edB6E055C8763705A085722f6C4",
+    "clvToken": "0x410e38818D7e1821B8A298575dB829bE8c85F640",
+    "defaultPool": "0xFf17a74A685AB2FA8426AA16Bc0B0dd946eBC635",
+    "multiCDPgetter": "0xF541Df85aBE2a931ef1cb8c3b406736D28BC4a9A",
+    "poolManager": "0x854bE5Cf76eb3Fa18BD378DCFa4A7aA8DcfdF4b2",
+    "priceFeed": "0x7B4F866031783EfF5A5eDa4Ac7aa2494FbD18ee1",
+    "sortedCDPs": "0xE8Bd7aa52F5A2415DC0fAAeF37cD0254285c75cC",
+    "stabilityPool": "0x118F50B2C4C1214EFD90574F9fDef812088637Fb"
   },
-  "version": "b9ad353b04b55eb9c7699baa0eab0dfbf8eba4f9",
-  "deploymentDate": 1589953549880,
-  "abiHash": "66194f4252247929a010463cdbb4e96dc7e339c5"
+  "version": "dc24b6b4e7bef19b4dd749e4308f2f731b16ed85",
+  "deploymentDate": 1591680978547,
+  "abiHash": "aa99c84fc4a437065597397496b7e820e573b0c4"
 }
