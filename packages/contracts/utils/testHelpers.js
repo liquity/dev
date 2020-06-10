@@ -24,6 +24,7 @@ const MoneyValues = {
   _1billion_Ether: web3.utils.toWei('1000000000', 'ether'),
   _10billion_Ether: web3.utils.toWei('10000000000', 'ether'),
   _100billion_Ether: web3.utils.toWei('100000000000', 'ether'),
+  _500billion_Ether: web3.utils.toWei('500000000000', 'ether'),
   
   _0pt5_Ether:  web3.utils.toWei('500', 'finney'),
   _1pt5_Ether:  web3.utils.toWei('1500', 'finney'),
@@ -61,6 +62,7 @@ const MoneyValues = {
   _1800e18: web3.utils.toWei('1800', 'ether'),
   _2000e18: web3.utils.toWei('2000', 'ether'),
   _5000e18: web3.utils.toWei('5000', 'ether'),
+  _1e22: web3.utils.toWei('10000', 'ether'),
   _1e24: web3.utils.toWei('1000000', 'ether'),
   _2e24: web3.utils.toWei('2000000', 'ether'),
   _1e27: web3.utils.toWei('1000000000', 'ether'),
@@ -68,18 +70,26 @@ const MoneyValues = {
   _5e35: web3.utils.toWei('500000000000000000', 'ether'),
   _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
 
-_1e27: web3.utils.toWei('1000000000', 'ether'),
+  _1e27: web3.utils.toWei('1000000000', 'ether'),
 
   negative_5e17:  "-" + web3.utils.toWei('500', 'finney'),
   negative_10e18:  "-" + web3.utils.toWei('10', 'ether'),
   negative_50e18:  "-" + web3.utils.toWei('50', 'ether'),
-  negative_100e18:  "-" + web3.utils.toWei('100', 'ether')
+  negative_100e18:  "-" + web3.utils.toWei('100', 'ether'),
+
+  _1e18BN: web3.utils.toBN('1000000000000000000'),
+  _100BN: web3.utils.toBN('100')
 
 }
 
 // TODO: Make classes for function export
 
 class TestHelper {
+
+  static squeezeAddr(address) {
+    const len = address.length
+    return address.slice(0,6).concat("...").concat(address.slice(len-5, len-1))
+  }
   static getDifference(x, y){
     const x_BN = web3.utils.toBN(x)
     const y_BN = web3.utils.toBN(y)

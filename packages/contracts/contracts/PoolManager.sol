@@ -285,9 +285,9 @@ contract PoolManager is Ownable, IPoolManager {
     /* Return the ETH gain earned by the deposit. Given by the formula:  E = d0 * (S - S(0))/P(0)
     where S(0), P(0) are the depositor's snapshots of the sum S and product P, respectively. */
     function getCurrentETHGain(address _user) public view returns(uint) {
-        uint userDeposit = deposits[_user];
+        uint initialDeposit = deposits[_user];
 
-        if (userDeposit == 0) { return 0; }
+        if (initialDeposit == 0) { return 0; }
 
         uint snapshot_S = snapshot[_user].S;  
         uint snapshot_P = snapshot[_user].P;
@@ -303,7 +303,7 @@ contract PoolManager is Ownable, IPoolManager {
         uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(snapshot_S);
         uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
 
-        ETHGain = userDeposit.mul(firstPortion.add(secondPortion)).div(snapshot_P).div(1e18);
+        ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(snapshot_P).div(1e18);
         
         return ETHGain;
     }
@@ -487,6 +487,8 @@ contract PoolManager is Ownable, IPoolManager {
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits(); 
         
         // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
+        // console.log("PM:Offset: _debt %s", _debt);
+        // console.log("PM:Offset: CLVInPool %s", CLVInPool);
         uint debtToOffset = DeciMath.getMin(_debt, CLVInPool);  
   
         // Collateral to be added in proportion to the debt that is cancelled 
@@ -514,15 +516,24 @@ contract PoolManager is Ownable, IPoolManager {
     internal 
     returns(uint ETHGainPerUnitStaked, uint CLVLossPerUnitStaked) 
     {
+        // console.log("debtToOffset: %s", debtToOffset);
+        // console.log("totalCLVDeposits: %s", totalCLVDeposits);
         uint CLVLossNumerator = debtToOffset.mul(1e18).sub(lastCLVLossError_Offset);
         uint ETHNumerator = collToAdd.mul(1e18).add(lastETHError_Offset);
 
-        // Compute the CLV and ETH rewards 
-        uint CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits)).add(1);  // add 1 to make error in quotient positive
+        // Compute the CLV and ETH rewards, and error corrections
+
+        uint CLVLossPerUnitStaked;
+
+        if (debtToOffset >= totalCLVDeposits) {
+            CLVLossPerUnitStaked = 1e18;
+            lastCLVLossError_Offset = 0;
+        } else {
+            CLVLossPerUnitStaked = (CLVLossNumerator.div(totalCLVDeposits)).add(1); // add 1 to make error in quotient positive
+             lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(totalCLVDeposits)).sub(CLVLossNumerator);
+        } 
+
         uint ETHGainPerUnitStaked = ETHNumerator.div(totalCLVDeposits); 
-    
-        // Error corrections
-        lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(totalCLVDeposits)).sub(CLVLossNumerator);
         lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(totalCLVDeposits)); 
 
         return (ETHGainPerUnitStaked, CLVLossPerUnitStaked);
@@ -530,10 +541,11 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Update the Stability Pool reward sum S and product P
     function updateRewardSumAndProduct(uint ETHGainPerUnitStaked, uint CLVLossPerUnitStaked) internal {
-         
+        //  console.log("CLVLossPerUnitStaked: %s", CLVLossPerUnitStaked);
          // Make product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
         uint newProductFactor = CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(CLVLossPerUnitStaked);
      
+        //  console.log("newProductFactor: %s", newProductFactor);
         // Update the ETH reward sum at the current scale
         uint marginalETHGain = ETHGainPerUnitStaked.mul(P);
         epochToScaleToSum[currentEpoch][currentScale] = epochToScaleToSum[currentEpoch][currentScale].add(marginalETHGain);
