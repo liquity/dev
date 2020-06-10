@@ -665,7 +665,7 @@ export class Liquity {
 
   async getStabilityDeposit(address = this.requireAddress(), overrides?: LiquityCallOverrides) {
     const [deposit, depositAfterLoss, pendingCollateralGain] = await Promise.all([
-      this.poolManager.deposits(address, { ...overrides }).then(decimalify),
+      this.poolManager.initialDeposits(address, { ...overrides }).then(decimalify),
       this.poolManager.getCompoundedCLVDeposit(address, { ...overrides }).then(decimalify),
       this.poolManager.getCurrentETHGain(address, { ...overrides }).then(decimalify)
     ]);
