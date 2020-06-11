@@ -97,7 +97,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
         try {
           const ret = await perform();
           if (retries) {
-            console.log(`Glitch resolved after ${retries} ${retries === 1 ? "retry" : "retries"}.`);
+            // console.log(`Glitch resolved after ${retries} ${retries === 1 ? "retry" : "retries"}.`);
           }
           return ret;
         } catch (error) {
@@ -106,7 +106,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
           }
         }
 
-        console.warn("Load balancing glitch. Retrying...");
+        // console.warn("Load balancing glitch. Retrying...");
         await new Promise(resolve => setTimeout(resolve, 200));
       }
     }
@@ -225,12 +225,12 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
           receipt.blockNumber + receipt.confirmations - 1 >= latestBlock
         ) {
           if (retries) {
-            console.log(`Glitch resolved after ${retries} ${retries === 1 ? "retry" : "retries"}.`);
+            // console.log(`Glitch resolved after ${retries} ${retries === 1 ? "retry" : "retries"}.`);
           }
           return receipt;
         }
 
-        console.warn("Load balancing glitch. Retrying...");
+        // console.warn("Load balancing glitch. Retrying...");
         await new Promise(resolve => setTimeout(resolve, 200));
       }
     }

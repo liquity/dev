@@ -174,11 +174,11 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
           const timeSinceLastRatioCheck = now - this._timeOfLastRatioCheck;
 
           if (timeSinceLastRatioCheck >= 10000 && this._numberOfActualCalls) {
-            console.log(
-              `Call batching ratio: ${
-                Math.round((10 * this._numberOfBatchedCalls) / this._numberOfActualCalls) / 10
-              }X`
-            );
+            // console.log(
+            //   `Call batching ratio: ${
+            //     Math.round((10 * this._numberOfBatchedCalls) / this._numberOfActualCalls) / 10
+            //   }X`
+            // );
 
             this._numberOfBatchedCalls = 0;
             this._numberOfActualCalls = 0;
