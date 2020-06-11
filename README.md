@@ -298,9 +298,9 @@ Starts an openethereum node in a Docker container, running the [private developm
 
 You may want to use this before starting the dev-frontend in development mode. To use the newly deployed contracts, switch MetaMask to the built-in "Localhost 8545" network.
 
-> Q: How can I get Ether on the local blockchain?
-> A: Import this private key into MetaMask:
-> `0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7`
+> Q: How can I get Ether on the local blockchain?  
+> A: Import this private key into MetaMask:  
+> `0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7`  
 > This account has all the Ether you'll ever need.
 
 Once you no longer need the local node, stop it with:
