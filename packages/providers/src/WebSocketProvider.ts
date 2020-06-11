@@ -12,4 +12,8 @@ export class WebSocketProvider extends EthersWebSocketProvider {
   close(code?: number) {
     (this._websocket as WebSocket).close(code);
   }
+
+  async detectNetwork() {
+    return this.network;
+  }
 }
