@@ -4,7 +4,8 @@ import {
   BlockTag,
   EventType,
   Listener,
-  Provider
+  Provider,
+  Block
 } from "@ethersproject/abstract-provider";
 import { BaseProvider, Web3Provider } from "@ethersproject/providers";
 import { Networkish } from "@ethersproject/networks";
@@ -30,6 +31,9 @@ const isHeaderNotFoundError = (error: any) =>
   typeof error === "object" &&
   typeof error.message === "string" &&
   error.message.includes("header not found");
+
+const loadBalancingGlitchRetryIntervalMs = 200;
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvider>(Base: T) => {
   let webSocketAugmentedProvider = class extends Base implements WebSocketAugmentedProvider {
@@ -107,7 +111,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
         }
 
         // console.warn("Load balancing glitch. Retrying...");
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await delay(loadBalancingGlitchRetryIntervalMs);
       }
     }
 
@@ -215,14 +219,26 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
         : super.getTransactionReceipt(transactionHash);
     }
 
+    async _blockContainsTx(blockNumber: number, txHash: string) {
+      let block: Block | null;
+
+      for (block = null; !block; block = await this.getBlock(blockNumber)) {
+        await delay(loadBalancingGlitchRetryIntervalMs);
+      }
+
+      return block.transactions.some(txHashInBlock => txHashInBlock === txHash);
+    }
+
     async _getTransactionReceiptFromLatest(txHash: string | Promise<string>, latestBlock?: number) {
+      txHash = await txHash;
+
       for (let retries = 0; ; ++retries) {
         const receipt = (await this.getTransactionReceipt(txHash)) as TransactionReceipt | null;
 
         if (
-          receipt === null ||
           latestBlock === undefined ||
-          receipt.blockNumber + receipt.confirmations - 1 >= latestBlock
+          (receipt === null && !(await this._blockContainsTx(latestBlock, txHash))) ||
+          (receipt !== null && receipt.blockNumber + receipt.confirmations - 1 >= latestBlock)
         ) {
           if (retries) {
             // console.log(`Glitch resolved after ${retries} ${retries === 1 ? "retry" : "retries"}.`);
@@ -231,7 +247,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
         }
 
         // console.warn("Load balancing glitch. Retrying...");
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await delay(loadBalancingGlitchRetryIntervalMs);
       }
     }
 
