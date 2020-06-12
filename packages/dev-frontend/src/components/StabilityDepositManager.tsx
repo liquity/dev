@@ -48,14 +48,22 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
       ? difference.positive
         ? ([
             [
-              `Deposit ${difference.absoluteValue!.prettify()} LQTY`,
+              `Deposit ${difference.absoluteValue!.prettify()} LQTY${
+                originalDeposit.pendingCollateralGain.nonZero
+                  ? ` & withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
+                  : ""
+              }`,
               liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!),
               [[quiBalance.gte(difference.absoluteValue!), "You don't have enough LQTY"]]
             ]
           ] as const)
         : ([
             [
-              `Withdraw ${difference.absoluteValue!.prettify()} LQTY`,
+              `Withdraw ${difference.absoluteValue!.prettify()} LQTY${
+                originalDeposit.pendingCollateralGain.nonZero
+                  ? ` & ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
+                  : ""
+              }`,
               liquity.withdrawQuiFromStabilityPool.bind(liquity, difference.absoluteValue!),
               []
             ]
