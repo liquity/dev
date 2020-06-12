@@ -72,7 +72,7 @@ export const useLiquityStore = (provider: Provider, account: string, liquity: Li
             (previousValue instanceof StabilityDeposit &&
               previousValue.equals(newValue as StabilityDeposit));
 
-          if (!equals) {
+          if (!equals && key !== "blockTag") {
             console.log(`Update ${key} to ${newValue}`);
           }
 
