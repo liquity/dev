@@ -31,7 +31,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     event CDPManagerAddressChanged(address _newCDPlManagerAddress);
 
     ICDPManager cdpManager;
-    address CDPManagerAddress;
+    address public CDPManagerAddress;
 
     // Information for a node in the list
     struct Node {

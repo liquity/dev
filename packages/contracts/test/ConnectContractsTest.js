@@ -15,7 +15,6 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   let poolManager
   let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
@@ -73,6 +72,42 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(poolManagerAddress, recordedPoolManagerAddress)
   })
 
+  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+    const borrowerOperationsAddress = borrowerOperations.address
+
+    const recordedBorrowerOperationsAddress = await cdpManager.borrowerOperationsAddress()
+
+    assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
+  })
+
+  // ActivePool in CDPM
+  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+    const activePoolAddress = activePool.address
+
+    const recordedActivePoolAddresss = await cdpManager.activePoolAddress()
+
+    assert.equal(activePoolAddress, recordedActivePoolAddresss)
+  })
+
+  // DefaultPool in CDPM
+  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+    const defaultPoolAddress = defaultPool.address
+
+    const recordedDefaultPoolAddresss = await cdpManager.defaultPoolAddress()
+
+    assert.equal(defaultPoolAddress, recordedDefaultPoolAddresss)
+  })
+
+  // StabilityPool in CDPM
+  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+    const stabilityPoolAddress = stabilityPool.address
+
+    const recordedStabilityPoolAddresss = await cdpManager.stabilityPoolAddress()
+
+    assert.equal(stabilityPoolAddress, recordedStabilityPoolAddresss)
+  })
+
+
   it('sets the correct PriceFeed address  in PoolManager', async () => {
     const priceFeedAddress = priceFeed.address
 
@@ -87,6 +122,14 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     const recordedCDPManagerAddress = await poolManager.cdpManagerAddress()
 
     assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+  })
+
+  it('sets the correct BorrowerOperations address in PoolManager', async () => {
+    const borrowerOperationsAddress = borrowerOperations.address
+
+    const recordedBorrowerOperationsAddress = await poolManager.borrowerOperationsAddress()
+
+    assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
   it('sets the correct CLVToken address in PoolManager', async () => {
@@ -194,6 +237,64 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     const recordedStabilityPoolAddress = await defaultPool.stabilityPoolAddress()
     assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
   })
+
+  it('sets the correct CDPManager address in SortedCDPs', async () => {
+    const cdpManagerAddress = cdpManager.address
+
+    const recordedCDPManagerAddress = await sortedCDPs.CDPManagerAddress()
+    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+  })
+
+  //--- BorrowerOperations ---
+
+  // CDPManager in BO
+  it('sets the correct CDPManager address in BorrowerOperations', async () => {
+    const cdpManagerAddress = cdpManager.address
+
+    const recordedCDPManagerAddress = await borrowerOperations.cdpManagerAddress()
+    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+  })
+  // setPoolManager in BO
+  it('sets the correct PoolManager address in BorrowerOperations', async () => {
+    const poolManagerAddress = poolManager.address
+
+    const recordedPoolManagerAddress = await borrowerOperations.poolManagerAddress()
+    assert.equal(poolManagerAddress, recordedPoolManagerAddress)
+  })
+
+  // setPriceFeed in BO
+  it('sets the correct PriceFeed address in BorrowerOperations', async () => {
+    const priceFeedAddress = priceFeed.address
+
+    const recordedPriceFeedAddress = await borrowerOperations.priceFeedAddress()
+    assert.equal(priceFeedAddress, recordedPriceFeedAddress)
+  })
+
+  // setSortedCDPs in BO
+  it('sets the correct SortedCDPs address in BorrowerOperations', async () => {
+    const sortedCDPsAddress = sortedCDPs.address
+
+    const recordedSortedCDPsAddress = await borrowerOperations.sortedCDPsAddress()
+    assert.equal(sortedCDPsAddress, recordedSortedCDPsAddress)
+  })
+
+  // setActivePool in BO
+  it('sets the correct ActivePool address in BorrowerOperations', async () => {
+    const activePoolAddress = activePool.address
+
+    const recordedActivePoolAddress = await borrowerOperations.activePoolAddress()
+    assert.equal(activePoolAddress, recordedActivePoolAddress)
+  })
+
+  // setDefaultPool in BO
+  it('sets the correct DefaultPool address in BorrowerOperations', async () => {
+    const defaultPoolAddress = defaultPool.address
+
+    const recordedDefaultPoolAddress = await borrowerOperations.defaultPoolAddress()
+    assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
+  })
+
+
 })
 
 contract('Reset chain state', async accounts => { })

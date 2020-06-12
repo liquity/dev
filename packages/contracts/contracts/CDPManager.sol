@@ -105,13 +105,6 @@ contract CDPManager is Ownable, ICDPManager {
     uint lastETHError_Redistribution;
     uint lastCLVDebtError_Redistribution;
 
-    // --- Modifiers ---
-
-    modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "CDPManager: Only the poolManager is authorized");
-        _;
-    }
-
     // --- Dependency setters --- 
 
     function setBorrowerOperations(address _borrowerOperationsAddress) public onlyOwner {
