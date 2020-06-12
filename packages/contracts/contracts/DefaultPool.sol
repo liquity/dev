@@ -48,7 +48,7 @@ contract DefaultPool is Ownable, IPool {
     function sendETH(address _account, uint _amount) public onlyPoolManager returns(bool) {
         ETH = ETH.sub(_amount); 
         (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
-        require (success == true, 'DefaultPool: transaction reverted');  
+        assert(success == true);   
      
         emit EtherSent(_account, _amount);  
         return success;

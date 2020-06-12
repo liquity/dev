@@ -224,7 +224,7 @@ contract PoolManager is Ownable, IPoolManager {
     function addColl() public payable onlyBorrowerOperations returns (bool) {
         // Send ETH to Active Pool and increase its recorded ETH balance
        (bool success, ) = activePoolAddress.call.value(msg.value)("");
-       require (success == true, 'PoolManager: transaction to activePool reverted');
+       assert(success == true);
        return success;
     }
     
