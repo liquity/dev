@@ -28,7 +28,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   quiBalance
 }) => {
   const myTransactionId = "stability-deposit";
-  const myTransactionState = useMyTransactionState(myTransactionId);
+  const myTransactionState = useMyTransactionState(/^stability-deposit-/);
   const difference = originalDeposit.calculateDifference(editedDeposit);
 
   useEffect(() => {
@@ -39,40 +39,69 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     }
   }, [myTransactionState.type, setChangePending]);
 
-  if (!difference && (originalDeposit.pendingCollateralGain.isZero || trove.isEmpty)) {
+  if (!difference && originalDeposit.pendingCollateralGain.isZero) {
     return null;
   }
 
-  const [actionName, send, requires] = difference
-    ? difference.positive
-      ? ([
-          `Deposit ${difference.absoluteValue!.prettify()} LQTY`,
-          liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!),
-          [[quiBalance.gte(difference.absoluteValue!), "You don't have enough LQTY"]]
-        ] as const)
+  const actions = [
+    ...(difference
+      ? difference.positive
+        ? ([
+            [
+              `Deposit ${difference.absoluteValue!.prettify()} LQTY`,
+              liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!),
+              [[quiBalance.gte(difference.absoluteValue!), "You don't have enough LQTY"]]
+            ]
+          ] as const)
+        : ([
+            [
+              `Withdraw ${difference.absoluteValue!.prettify()} LQTY`,
+              liquity.withdrawQuiFromStabilityPool.bind(liquity, difference.absoluteValue!),
+              []
+            ]
+          ] as const)
       : ([
-          `Withdraw ${difference.absoluteValue!.prettify()} LQTY`,
-          liquity.withdrawQuiFromStabilityPool.bind(liquity, difference.absoluteValue!),
-          []
-        ] as const)
-    : ([
-        `Transfer ${originalDeposit.pendingCollateralGain.prettify(4)} ETH to Trove`,
-        liquity.transferCollateralGainToTrove.bind(liquity, originalDeposit, trove, price),
-        []
-      ] as const);
+          [
+            `Withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`,
+            liquity.withdrawQuiFromStabilityPool.bind(liquity, 0),
+            []
+          ],
+          ...(!trove.isEmpty
+            ? ([
+                [
+                  `Transfer ${originalDeposit.pendingCollateralGain.prettify(4)} ETH to Trove`,
+                  liquity.transferCollateralGainToTrove.bind(liquity, originalDeposit, trove, price),
+                  []
+                ]
+              ] as const)
+            : [])
+        ] as const))
+  ];
 
   return myTransactionState.type === "waitingForApproval" ? (
-    <Flex mt={4} justifyContent="center">
-      <Button disabled mx={2}>
-        <Loader mr={2} color="white" />
-        Waiting for your approval
-      </Button>
+    <Flex mt={3} flexWrap="wrap" justifyContent="center">
+      {actions.map(([actionName], i) => (
+        <Button disabled mt={3} mx={2}>
+          {myTransactionState.id === `${myTransactionId}-${i}` ? (
+            <>
+              <Loader mr={2} color="white" />
+              Waiting for your approval
+            </>
+          ) : (
+            actionName
+          )}
+        </Button>
+      ))}
     </Flex>
   ) : changePending ? null : (
-    <Flex mt={4} justifyContent="center">
-      <Transaction id={myTransactionId} {...{ send, requires }}>
-        <Button mx={2}>{actionName}</Button>
-      </Transaction>
+    <Flex mt={3} flexWrap="wrap" justifyContent="center">
+      {actions.map(([actionName, send, requires], i) => (
+        <Transaction id={`${myTransactionId}-${i}`} {...{ send, requires }}>
+          <Button mt={3} mx={2}>
+            {actionName}
+          </Button>
+        </Transaction>
+      ))}
     </Flex>
   );
 };
