@@ -272,7 +272,7 @@ contract('CDPManager', async accounts => {
   })
 
 
-  it("liquidateCDPs(): Doesn't liquidate undercollateralized trove if it is the only trove in the system", async () => {
+  it("liquidate(): Doesn't liquidate undercollateralized trove if it is the only trove in the system", async () => {
     // Alice creates a single trove with 0.5 ETH and a debt of 50 LQTY,  and provides 10 CLV to SP
     await borrowerOperations.openLoan(mv._50e18, alice, { from: alice, value: mv._5e17 })
     await poolManager.provideToSP(mv._10e18, { from: alice })
@@ -303,7 +303,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(alice_isInSortedList)
   })
 
-  it("liquidateCDPs(): Liquidates undercollateralized trove if there are two troves in the system", async () => {
+  it("liquidate(): Liquidates undercollateralized trove if there are two troves in the system", async () => {
     await borrowerOperations.openLoan(mv._50e18, bob, { from: bob, value: mv._5e17 })
 
     // Alice creates a single trove with 0.5 ETH and a debt of 50 LQTY,  and provides 10 CLV to SP

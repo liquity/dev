@@ -9,9 +9,6 @@ import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPoolManager.sol";
 import "./DeciMath.sol";
-// import "@openzeppelin/contracts/math/SafeMath.sol";
-// import "@openzeppelin/contracts/ownership/Ownable.sol";
-// import "@nomiclabs/buidler/console.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -192,8 +189,8 @@ contract CDPManager is Ownable, ICDPManager {
     }
    
     function liquidateNormalMode(address _user, uint _ICR) internal returns (bool) {
-        // If ICR > MCR, or is last trove, don't liquidate 
-        if (_ICR > MCR || CDPOwners.length <= 1) { return false; }
+        // If ICR >= MCR, or is last trove, don't liquidate 
+        if (_ICR >= MCR || CDPOwners.length <= 1) { return false; }
        
         // Get the CDP's entire debt and coll, including pending rewards from distributions
         (uint entireCDPDebt, uint entireCDPColl) = getEntireDebtAndColl(_user);
@@ -542,7 +539,7 @@ contract CDPManager is Ownable, ICDPManager {
 }
 
     function getAbsoluteDifference(uint a, uint b) internal view returns(uint) {
-        if (a >= b) {
+        if (a > b) {
             return a.sub(b);
         } else if (a < b) {
             return b.sub(a);
@@ -783,13 +780,19 @@ contract CDPManager is Ownable, ICDPManager {
         return index;
     }
 
-     /* Remove a CDP owner from the CDPOwners array, preserving array length but not order. Deleting owner 'B' does the following: 
+     /* Remove a CDP owner from the CDPOwners array, not preserving order. Removing owner 'B' does the following: 
     [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. */
     function removeCDPOwner(address _user) internal returns(bool) {
         require(CDPs[_user].status == Status.closed, "CDPManager: CDP is still active");
 
         uint index = CDPs[_user].arrayIndex;   
-        address addressToMove = CDPOwners[CDPOwners.length - 1];
+        uint length = CDPOwners.length;
+        uint idxLast = length.sub(1);
+
+        assert(length >= 1);  // Encapsulating function should only be reachable when there are >0 troves in the system
+        assert(index <= idxLast); 
+
+        address addressToMove = CDPOwners[idxLast];
        
         CDPOwners[index] = addressToMove;   
         CDPs[addressToMove].arrayIndex = index;   

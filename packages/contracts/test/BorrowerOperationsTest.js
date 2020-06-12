@@ -253,9 +253,9 @@ contract('BorrowerOperations', async accounts => {
     const bob_Coll_After = bob_CDP_After[1]
 
     // check coll and debt are within 1e-16 of expected values
-    assert.isAtMost(th.getDifference(alice_CLVDebt_After,'235000000000000000000'), 100)
+    assert.isAtMost(th.getDifference(alice_CLVDebt_After, '235000000000000000000'), 100)
     assert.isAtMost(th.getDifference(alice_Coll_After, '20750000000000000000'), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebt_After,'145000000000000000000'), 100)
+    assert.isAtMost(th.getDifference(bob_CLVDebt_After, '145000000000000000000'), 100)
     assert.isAtMost(th.getDifference(bob_Coll_After, '6250000000000000000'), 100)
 
     /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be:
@@ -384,6 +384,96 @@ contract('BorrowerOperations', async accounts => {
     } catch (err) {
       assert.include(err.message, "revert")
       assert.include(err.message, "Remaining collateral must have $USD value >= 20, or be zero")
+    }
+  })
+
+  // reverts when calling address does not have active trove  
+  it("withdrawColl(): reverts when calling address does not have active trove", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+
+    // Bob successfully withdraws
+    const txBob = await borrowerOperations.withdrawColl(mv._1_Ether, bob, { from: bob })
+    assert.isTrue(txBob.receipt.status)
+
+    // Carol with no active trove attempts to withdraw
+    try {
+      const txCarol = await borrowerOperations.withdrawColl(mv._1_Ether, carol, { from: carol })
+      assert.fail(txCarol)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("withdrawColl(): reverts when system is in Recovery Mode", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.withdrawCLV(mv._100e18, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(mv._100e18, bob, { from: bob })
+
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Withdrawal possible when recoveryMode == false
+    const txAlice = await borrowerOperations.withdrawColl(1000, alice, { from: alice })
+    assert.isTrue(txAlice.receipt.status)
+
+    await priceFeed.setPrice('105000000000000000000')
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    //Check withdrawal impossible when recoveryMode == true
+    try {
+      const txBob = await borrowerOperations.withdrawColl(1000, bob, { from: bob })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+
+  it("withdrawColl(): reverts when requested ETH withdrawal is > the trove's collateral", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.addColl(carol, carol, { from: carol, value: mv._1_Ether })
+
+    const txCarol = await borrowerOperations.withdrawColl('1000000000000000000', carol, { from: carol })
+    assert.isTrue(txCarol.receipt.status)
+
+    try {
+      const txBob = await borrowerOperations.withdrawColl('1000000000000000001', bob, { from: bob })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("withdrawColl(): reverts when withdrawal would bring the user's ICR < MCR", async () => {
+    await priceFeed.setPrice(mv._100e18)
+    const price = await priceFeed.getPrice()
+
+    await borrowerOperations.addColl(whale, whale, { from: whale, value: mv._10_Ether })
+
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+
+    await borrowerOperations.withdrawCLV(mv._50e18, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(mv._50e18, bob, { from: bob })
+
+    const aliceICR = await cdpManager.getCurrentICR(alice, price)
+    console.log(`Alice ICR: ${aliceICR}`)
+    // Alice withdraws 0.45 ether, leaving 0.55 remaining. Her ICR = (0.55*100)/50 = 110%.
+    const txAlice = await borrowerOperations.withdrawColl('450000000000000000', alice, { from: alice })
+    assert.isTrue(txAlice.receipt.status)
+
+    const aliceICRAfter = await cdpManager.getCurrentICR(alice, price)
+    console.log(`Alice ICR after: ${aliceICRAfter}`)
+
+    // Bob attempts to withdraws 0.46 ether, Which would leave him with 0.54 coll and ICR = (0.54*100)/50 = 108%.
+    try {
+      const txBob = await borrowerOperations.withdrawColl('460000000000000000', bob, { from: bob })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
     }
   })
 
@@ -595,6 +685,122 @@ contract('BorrowerOperations', async accounts => {
     assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot_After, '9000000000000000000'), 100)
   })
 
+
+  // --- withdrawCLV() ---
+
+  it("withdrawCLV(): reverts when calling address does not have active trove", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+
+    // Bob successfully withdraws CLV
+    const txBob = await borrowerOperations.withdrawCLV(mv._100e18, bob, { from: bob })
+    assert.isTrue(txBob.receipt.status)
+
+    // Carol with no active trove attempts to withdraw CLV
+    try {
+      const txCarol = await borrowerOperations.withdrawCLV(mv._100e18, carol, { from: carol })
+      assert.fail(txCarol)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("withdrawCLV(): reverts when requested withdrawal amount is zero CLV", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+
+    // Bob successfully withdraws 1e-18 CLV
+    const txBob = await borrowerOperations.withdrawCLV(1, bob, { from: bob })
+    assert.isTrue(txBob.receipt.status)
+
+    // Alice attempts to withdraw 0 CLV
+    try {
+      const txAlice = await borrowerOperations.withdrawCLV(0, alice, { from: alice })
+      assert.fail(txAlice)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("withdrawCLV(): reverts when system is in Recovery Mode", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Withdrawal possible when recoveryMode == false
+    const txAlice = await borrowerOperations.withdrawCLV(mv._100e18, alice, { from: alice })
+    assert.isTrue(txAlice.receipt.status)
+
+    await priceFeed.setPrice('50000000000000000000')
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    //Check CLV withdrawal impossible when recoveryMode == true
+    try {
+      const txBob = await borrowerOperations.withdrawCLV(1, bob, { from: bob })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+
+  it("withdrawCLV(): reverts when withdrawal would bring the loan's ICR < MCR", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+
+    const txAlice = await borrowerOperations.withdrawCLV("181000000000000000000", alice, { from: alice })
+    assert.isTrue(txAlice.receipt.status)
+
+    const price = await priceFeed.getPrice()
+    const aliceICR = await cdpManager.getCurrentICR(alice, price)
+
+    // Check Alice ICR > MCR
+    assert.isTrue(aliceICR.gte(web3.utils.toBN("1100000000000000000")))
+
+    // Bob tries to withdraw CLV that would bring his ICR < MCR
+    try {
+      const txBob = await borrowerOperations.withdrawCLV("182000000000000000000", bob, { from: bob })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("withdrawCLV(): reverts when the withdrawal would cause the TCR of the system to fall below the CCR", async () => {
+    await priceFeed.setPrice(mv._100e18)
+    const price = await priceFeed.getPrice()
+
+    // Alice and Bob creates troves with 3 ETH / 200 CLV, and 150% ICR.  System TCR = 150%.
+    const txAlice = await borrowerOperations.openLoan(mv._200e18, alice, { from: alice, value: mv._3_Ether })
+    const aliceICR = await cdpManager.getCurrentICR(alice, price)
+
+    const txBob = await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._3_Ether })
+    const bobICR = await cdpManager.getCurrentICR(bob, price)
+
+    assert.isTrue(txAlice.receipt.status)
+    assert.isTrue(txBob.receipt.status)
+    assert.isTrue(aliceICR.eq(web3.utils.toBN('1500000000000000000')))
+    assert.isTrue(bobICR.eq(web3.utils.toBN('1500000000000000000')))
+
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+
+    // Bob attempts to withdraw 1 CLV.
+    // System TCR would be: ((3+3) * 100 ) / (200+201) = 600/401 = 149.62%, i.e. below CCR of 150%.
+    try {
+      const txBob = await borrowerOperations.withdrawCLV(mv._1e18, bob, { from: bob })
+      assert.isFalse(txBob.receipt.status)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+
+
+
+
   it("withdrawCLV(): increases the CDP's CLV debt by the correct amount", async () => {
     await borrowerOperations.addColl(alice, alice, { from: alice, value: _1_Ether })
 
@@ -640,6 +846,48 @@ contract('BorrowerOperations', async accounts => {
     const alice_CLVTokenBalance_After = await clvToken.balanceOf(alice)
     assert.equal(alice_CLVTokenBalance_After, 100)
   })
+
+  // --- repayCLV() ---
+
+  it("repayCLV(): reverts when calling address does not have active trove", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.withdrawCLV(mv._100e18, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(mv._100e18, bob, { from: bob })
+
+    // Bob successfully repays some CLV
+    const txBob = await borrowerOperations.repayCLV(mv._10e18, bob, { from: bob })
+    assert.isTrue(txBob.receipt.status)
+
+    // Carol with no active trove attempts to repayCLV
+    try {
+      const txCarol = await borrowerOperations.repayCLV(mv._10e18, carol, { from: carol })
+      assert.fail(txCarol)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("repayCLV(): reverts when attempted repayment is > the debt of the trove", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.withdrawCLV(mv._100e18, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(mv._100e18, bob, { from: bob })
+
+    // Bob successfully repays some CLV
+    const txBob = await borrowerOperations.repayCLV(mv._10e18, bob, { from: bob })
+    assert.isTrue(txBob.receipt.status)
+
+    // Alice attempts to repay more than her debt
+    try {
+      const txAlice = await borrowerOperations.repayCLV('101000000000000000000', alice, { from: alice })
+      assert.fail(txAlice)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+
 
   //repayCLV: reduces CLV debt in CDP
   it("repayCLV(): reduces the CDP's CLV debt by the correct amount", async () => {
@@ -689,9 +937,147 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(alice_CLVTokenBalance_After, 0)
   })
 
-   // --- adjustLoan() ---
+  // --- adjustLoan() ---
 
-   it("adjustLoan(): updates borrower's debt and coll with an increase in both", async () => {
+  it("adjustLoan(): reverts when calling address has no active trove", async () => {
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+    // Alice coll and debt increase(+1 ETH, +50CLV)
+    await borrowerOperations.adjustLoan(0, mv._50e18, alice, { from: alice, value: mv._1_Ether })
+
+    try {
+      const txCarol = await borrowerOperations.adjustLoan(0, mv._50e18, carol, { from: carol, value: mv._1_Ether })
+      assert.fail(txCarol)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("adjustLoan(): reverts when system is in Recovery Mode", async () => {
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    const txAlice = await borrowerOperations.adjustLoan(0, mv._50e18, alice, { from: alice, value: mv._1_Ether })
+    assert.isTrue(txAlice.receipt.status)
+
+    await priceFeed.setPrice(mv._100e18)
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    // Check operation impossible when system is in Recovery Mode
+    try {
+      const txBob = await borrowerOperations.adjustLoan(0, mv._50e18, bob, { from: bob, value: mv._1_Ether })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("adjustLoan(): reverts when change would cause the TCR of the system to fall below the CCR", async () => {
+    await priceFeed.setPrice(mv._100e18)
+
+    await borrowerOperations.openLoan(mv._200e18, alice, { from: alice, value: mv._3_Ether })
+    await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._3_Ether })
+
+    // Check TCR and Recovery Mode
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Bob attempts an operation that would bring the TCR below the CCR
+    try {
+      const txBob = await borrowerOperations.adjustLoan(0, mv._1e18, bob, { from: bob })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("adjustLoan(): reverts when CLV repaid is > debt of the trove", async () => {
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+
+    // Check Bob can make an adjustment that fully repays his debt
+    const txBob = await borrowerOperations.adjustLoan(0, mv.negative_100e18, bob, { from: bob, value: mv._1_Ether })
+    assert.isTrue(txBob.receipt.status)
+
+    // Carol attempts an adjustment that would repay more than her debt
+    try {
+      const txCarol = await borrowerOperations.adjustLoan(0, mv.negative_101e18, carol, { from: carol })
+      assert.fail(txCarol)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("adjustLoan(): reverts when attempted ETH withdrawal is > the trove's collateral", async () => {
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, carol, { from: carol, value: mv._1_Ether })
+
+    // Check Bob can make an adjustment that fully withdraws his ETH
+    const txBob = await borrowerOperations.adjustLoan(mv._1_Ether, 0, bob, { from: bob })
+    assert.isTrue(txBob.receipt.status)
+
+    // Carol attempts an adjustment that would withdraw more than her ETH
+    try {
+      const txCarol = await borrowerOperations.adjustLoan('1000000000000000001', 0, carol, { from: carol })
+      assert.fail(txCarol)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("adjustLoan(): reverts when ETH is withdrawn and the remaining collateral in the loan is non-zero but value < $20 USD", async () => {
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, carol, { from: carol, value: mv._1_Ether })
+
+    // Check Bob can make an adjustment that leaves $20 USD worth of ETH in his trove.
+    // 1ETH = 200 USD.  Bob withdraws 0.9 ETH, leaving (0.1 * 200) = 20 USD worth of ETH.
+    const txBob = await borrowerOperations.adjustLoan('900000000000000000', mv._1e18, bob, { from: bob })
+    assert.isTrue(txBob.receipt.status)
+
+    // Carol attempts an adjustment that leaves < $20 USD worth of ETH in her trove.
+    // 1ETH = 200 USD. Carol tries to withdraw 0.91 ETH, leaving (0.09 * 200) = 18 USD worth of ETH.
+    try {
+      const txCarol = await borrowerOperations.adjustLoan('910000000000000000', mv._1e18, carol, { from: carol })
+      assert.fail(txCarol)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+
+  it("adjustLoan(): reverts when change would cause the ICR of the loan to fall below the MCR", async () => {
+    await borrowerOperations.addColl(whale, whale, { from: whale, value: mv._100_Ether })
+
+    await priceFeed.setPrice(mv._100e18)
+
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._2_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._2_Ether })
+
+    // Alice decreases coll by 1 ETH and increass debt by 100 CLV. 
+    // New ICR would be: ((2+1) * 100) / (100 + 100) = 300/200 = 150%, 
+    const txAlice = await borrowerOperations.adjustLoan(0, mv._100e18, alice, { from: alice, value: mv._1_Ether })
+    assert.isTrue(txAlice.receipt.status)
+
+
+    // Bob attempts to decrease coll  by 1 ETH and increase debt by 200 CLV. 
+    // New ICR would be: ((2+1) * 100) / (100 + 200) = 300/300 = 100%, below the MCR.
+    try {
+      const txBob = await borrowerOperations.adjustLoan(0, mv._200e18, bob, { from: bob, value: mv._1_Ether })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("adjustLoan(): updates borrower's debt and coll with an increase in both", async () => {
     await borrowerOperations.addColl(whale, whale, { from: whale, value: mv._100_Ether })
 
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
@@ -702,7 +1088,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debtBefore, mv._100e18)
     assert.equal(collBefore, mv._1_Ether)
 
-    // Alice adjusts loan. Coll and debt increase(+0.5 ETH, +50CLV)
+    // Alice adjusts loan. Coll and debt increase(+1 ETH, +50CLV)
     await borrowerOperations.adjustLoan(0, mv._50e18, alice, { from: alice, value: mv._1_Ether })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
@@ -712,7 +1098,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(collAfter, mv._2_Ether)
   })
 
- 
+
   it("adjustLoan(): updates borrower's debt and coll with a decrease in both", async () => {
     await borrowerOperations.addColl(whale, whale, { from: whale, value: mv._100_Ether })
 
@@ -745,7 +1131,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debtBefore, mv._100e18)
     assert.equal(collBefore, mv._1_Ether)
 
-    // Alice adjusts loan - coll increase and debt decrease (+0.5 ETH, +50CLV)
+    // Alice adjusts loan - coll increase and debt decrease (+0.5 ETH, -50CLV)
     await borrowerOperations.adjustLoan(0, mv.negative_50e18, alice, { from: alice, value: mv._0pt5_Ether })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
@@ -848,7 +1234,7 @@ contract('BorrowerOperations', async accounts => {
 
     // check after
     const alice_CLVTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
-    assert.equal(alice_CLVTokenBalance_After,mv._200e18)
+    assert.equal(alice_CLVTokenBalance_After, mv._200e18)
   })
 
   it("adjustLoan(): Changes the activePool ETH and raw ether balance by the requested decrease", async () => {
@@ -891,7 +1277,7 @@ contract('BorrowerOperations', async accounts => {
 
   it("adjustLoan(): Changes the CLV debt in ActivePool by requested decrease", async () => {
     await borrowerOperations.addColl(whale, whale, { from: whale, value: mv._100_Ether })
-    
+
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: _1_Ether })
 
     const activePool_CLVDebt_Before = (await activePool.getCLV()).toString()
@@ -916,7 +1302,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.adjustLoan(0, mv._100e18, alice, { from: alice, value: mv._1_Ether })
 
     const activePool_CLVDebt_After = (await activePool.getCLV()).toString()
-    assert.equal(activePool_CLVDebt_After,mv._200e18)
+    assert.equal(activePool_CLVDebt_After, mv._200e18)
   })
 
   it("adjustLoan(): Closes the CDP if  new coll = 0 and new debt = 0", async () => {
@@ -925,7 +1311,7 @@ contract('BorrowerOperations', async accounts => {
 
     const status_Before = (await cdpManager.CDPs(alice))[3]
     const isInSortedList_Before = await sortedCDPs.contains(alice)
- 
+
     assert.equal(status_Before, 1)  // 1: Active
     assert.isTrue(isInSortedList_Before)
 
@@ -953,6 +1339,49 @@ contract('BorrowerOperations', async accounts => {
   })
 
   // --- closeLoan() ---
+
+  it("closeLoan(): reverts when calling address does not have active trove", async () => {
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+
+    // Bob successfully closes his loan
+    const txBob = await borrowerOperations.closeLoan({ from: bob })
+    assert.isTrue(txBob.receipt.status)
+
+    // Carol with no active trove attempts to close her loan
+    try {
+      const txCarol = await borrowerOperations.closeLoan({ from: carol })
+      assert.fail(txCarol)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("closeLoan(): reverts when system is in Recovery Mode", async () => {
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: _1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: _1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: _1_Ether })
+
+    // check recovery mode 
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Bob successfully closes his loan
+    const txBob = await borrowerOperations.closeLoan({ from: bob })
+    assert.isTrue(txBob.receipt.status)
+
+    await priceFeed.setPrice(mv._100e18)
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    // Carol attempts to close her loan during Recovery Mode
+    try {
+      const txCarol = await borrowerOperations.closeLoan({ from: carol })
+      assert.fail(txCarol)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
 
   it("closeLoan(): reduces a CDP's collateral to zero", async () => {
     await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: mv._10_Ether })
@@ -1119,7 +1548,7 @@ contract('BorrowerOperations', async accounts => {
     // close loan
     await borrowerOperations.closeLoan({ from: alice })
 
-  //   // check alive CLV balance after
+    //   // check alive CLV balance after
 
     const alice_CLVBalance_After = await clvToken.balanceOf(alice)
     assert.equal(alice_CLVBalance_After, 0)
@@ -1148,7 +1577,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Dennis opens a new CDP with 10 Ether, withdraws CLV and sends 135 CLV to Alice, and 45 CLV to Bob.
 
-    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value:mv. _100_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: mv._100_Ether })
     await borrowerOperations.withdrawCLV(mv._200e18, dennis, { from: dennis })
     await clvToken.transfer(alice, '135000000000000000000', { from: dennis })
     await clvToken.transfer(bob, '45000000000000000000', { from: dennis })
@@ -1212,6 +1641,65 @@ contract('BorrowerOperations', async accounts => {
   })
 
   // --- openLoan() ---
+
+  it("openLoan(): reverts when system is in Recovery Mode", async () => {
+
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // price drops, and recovery mode kicks in
+    await priceFeed.setPrice(mv._100e18)
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    // Bob tries to open a loan with same coll and debt, during Recovery Mode
+    try {
+      const txBob = await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("openLoan(): reverts when loan ICR < MCR", async () => {
+    const txAlice = await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+    const price = await priceFeed.getPrice()
+    const aliceICR = await cdpManager.getCurrentICR(alice, price)
+
+    assert.isTrue(txAlice.receipt.status)
+    assert.isTrue(aliceICR.gte(web3.utils.toBN('110000000000000000')))
+
+    // Bob attempts to open a loan with coll = 1 ETH, debt = 182 CLV. At ETH:USD price = 200, his ICR = 1 * 200 / 182 =   109.8%.
+    try {
+      const txBob = await borrowerOperations.openLoan('182000000000000000000', bob, { from: bob, value: mv._1_Ether })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("openLoan(): reverts when opening the loan causes the TCR of the system to fall below the CCR", async () => {
+    await priceFeed.setPrice(mv._100e18)
+
+    // Alice creates trove with 3 ETH / 200 CLV, and 150% ICR.  System TCR = 150%.
+    const txAlice = await borrowerOperations.openLoan(mv._200e18, alice, { from: alice, value: mv._3_Ether })
+    const price = await priceFeed.getPrice()
+    const aliceICR = await cdpManager.getCurrentICR(alice, price)
+
+    assert.isTrue(txAlice.receipt.status)
+    assert.isTrue(aliceICR.eq(web3.utils.toBN('1500000000000000000')))
+
+    // Bob attempts to open a loan with coll = 1 ETH, debt = 201 CLV. At ETH:USD price = 1, his ICR = 300 / 201 =   149.25%`
+
+    // System TCR would be: ((3+3) * 100 ) / (200+201) = 600/401 = 149.62%, i.e. below CCR of 150%.
+    try {
+      const txBob = await borrowerOperations.openLoan('201000000000000000000', bob, { from: bob, value: mv._3_Ether })
+      assert.fail(txBob)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
 
   it("openLoan(): creates a new CDP and assigns the correct collateral and debt amount", async () => {
     const alice_CDP_Before = await cdpManager.CDPs(alice)

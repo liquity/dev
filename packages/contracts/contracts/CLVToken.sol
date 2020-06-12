@@ -2,14 +2,6 @@ pragma solidity ^0.5.16;
 
 import "./Interfaces/ICLVToken.sol";
 import "./CLVTokenData.sol";
-// import "@openzeppelin/contracts/GSN/Context.sol";
-// import "@openzeppelin/contracts/math/SafeMath.sol";
-// import "@openzeppelin/contracts/ownership/Ownable.sol";
-// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import "@nomiclabs/buidler/console.sol";
-// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Dependencies/ERC20.sol";
 import "./Dependencies/IERC20.sol";
 import "./Dependencies/SafeMath.sol";

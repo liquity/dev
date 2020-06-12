@@ -385,7 +385,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     }
 
     function requireICRisAboveMCR(uint _newICR)  internal view {
-        require(_newICR > MCR, "CDPManager: An operation that would result in ICR < MCR is not permitted");
+        require(_newICR >= MCR, "CDPManager: An operation that would result in ICR < MCR is not permitted");
     }
 
     function requireNewTCRisAboveCCR(int _collChange, int _debtChange, uint _price) internal view {

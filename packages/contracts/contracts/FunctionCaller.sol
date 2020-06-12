@@ -3,7 +3,6 @@ pragma solidity ^0.5.16;
 import './Interfaces/ICDPManager.sol';
 import './Interfaces/ISortedCDPs.sol';
 import './Interfaces/IPriceFeed.sol';
-// import '@nomiclabs/buidler/console.sol';
 import './DeciMath.sol';
 
 // Proxy contract - used for calculating gas of read-only functions in gas calculation scripts.  Not part of the application.

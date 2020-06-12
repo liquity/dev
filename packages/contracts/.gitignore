@@ -26,3 +26,5 @@
 # eth-mutants
 /.eth-mutants
 mutantOutput.txt
+mutantPreflight_CDPManager.txt
+mutantTest_CDPManager.txt

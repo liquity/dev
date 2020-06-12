@@ -128,6 +128,27 @@ contract('Gas cost tests', async accounts => {
     th.appendData({gas: gas}, message, data)
   })
 
+   // 5 troves
+   it("", async () => {
+    const message = 'liquidateCDPs(). n = 5. Pure redistribution'
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
+    await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
+
+    //5 accts open CDP with 1 ether and withdraw 180 CLV
+    await th.addColl_allAccounts(accounts.slice(1,6), borrowerOperations,mv._1_Ether)
+    await th.withdrawCLV_allAccounts(accounts.slice(1,6), borrowerOperations, mv._180e18)
+
+    // Price drops, account[1]'s ICR falls below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0]})
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({gas: gas}, message, data)
+  })
+
   // 10 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 10. Pure redistribution'
@@ -254,7 +275,7 @@ contract('Gas cost tests', async accounts => {
   // 1 trove
   it("", async () => {
     const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(2,12), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(2,12), borrowerOperations, mv._180e18)
 
@@ -279,7 +300,7 @@ contract('Gas cost tests', async accounts => {
   // 2 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 2. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(3,13), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(3,13), borrowerOperations, mv._180e18)
 
@@ -306,7 +327,7 @@ contract('Gas cost tests', async accounts => {
   // 3 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 3. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(4,14), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(4,14), borrowerOperations, mv._180e18)
 
@@ -328,10 +349,35 @@ contract('Gas cost tests', async accounts => {
     th.appendData({gas: gas}, message, data)
   })
 
+  // 5 troves
+  it("", async () => {
+    const message = 'liquidateCDPs(). n = 5. All fully offset with Stability Pool. No pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
+    await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
+    await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
+
+    // Whale opens loan and fills SP with 1 billion CLV
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], {from:accounts[999], value: mv._1billion_Ether })
+    await poolManager.provideToSP( mv._1e27, {from:accounts[999]})
+
+    //3 accts open CDP with 1 ether and withdraw 180 CLV
+    await th.addColl_allAccounts(accounts.slice(1,6), borrowerOperations,mv._1_Ether)
+    await th.withdrawCLV_allAccounts(accounts.slice(1,6), borrowerOperations, mv._180e18)
+
+    // Price drops, account[1]'s ICR falls below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0]})
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({gas: gas}, message, data)
+  })
+
   // 10 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 10. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(11,21), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(11,21), borrowerOperations, mv._180e18)
 
@@ -356,7 +402,7 @@ contract('Gas cost tests', async accounts => {
   // 30 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 30. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(31,61), borrowerOperations, mv._100_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(31,61), borrowerOperations, mv._180e18)
 
@@ -392,7 +438,7 @@ contract('Gas cost tests', async accounts => {
   it("", async () => {
     const message = 'liquidateCDPs(). n = 50. All fully offset with Stability Pool. No pending distribution rewards.'
 
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(51,101), borrowerOperations, mv._100_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(51,101), borrowerOperations, mv._180e18)
 
@@ -427,7 +473,7 @@ contract('Gas cost tests', async accounts => {
   it("", async () => {
     const message = 'liquidateCDPs(). n = 100. All fully offset with Stability Pool. No pending distribution rewards.'
 
-    // 100 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 100 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(101,201), borrowerOperations, mv._100_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(101,201), borrowerOperations, mv._180e18)
 
@@ -464,7 +510,7 @@ contract('Gas cost tests', async accounts => {
   // 1 trove
   it("", async () => {0
     const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
 
@@ -496,7 +542,7 @@ contract('Gas cost tests', async accounts => {
    // 2 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 2. All fully offset with Stability Pool. Have pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
 
@@ -529,7 +575,7 @@ contract('Gas cost tests', async accounts => {
   // 3 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 3. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
 
@@ -559,10 +605,43 @@ contract('Gas cost tests', async accounts => {
     th.appendData({gas: gas}, message, data)
   })
 
+   // 5 troves
+   it("", async () => {
+    const message = 'liquidateCDPs(). n = 5. All fully offset with Stability Pool. Has pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
+    await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
+    await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
+
+    // Account 500 opens with 1 ether and withdraws 180 CLV
+    await borrowerOperations.openLoan(mv._180e18, accounts[500], {from:accounts[500], value: mv._1_Ether })
+
+     // --- 5 Accounts to be liquidated in the test tx --
+    await th.addColl_allAccounts(accounts.slice(1,6), borrowerOperations,mv._1_Ether)
+    await th.withdrawCLV_allAccounts(accounts.slice(1,6), borrowerOperations, mv._180e18)
+
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await priceFeed.setPrice(mv._100e18)
+    await cdpManager.liquidate(accounts[500],{ from: accounts[0]})
+    await priceFeed.setPrice(mv._200e18)
+
+    // Whale opens loan and fills SP with 1 billion CLV
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], {from:accounts[999], value: mv._1billion_Ether })
+    await poolManager.provideToSP( mv._1e27, {from:accounts[999]})
+
+    // Price drops, defaulters' ICR falls below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0]})
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({gas: gas}, message, data)
+  })
+
   // 10 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 10. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
 
@@ -595,7 +674,7 @@ contract('Gas cost tests', async accounts => {
   // 30 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 30. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
 
@@ -628,7 +707,7 @@ contract('Gas cost tests', async accounts => {
   // 50 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 50. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
 
@@ -661,7 +740,7 @@ contract('Gas cost tests', async accounts => {
   // 100 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 100. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
+    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
     await th.addColl_allAccounts(accounts.slice(101,111), borrowerOperations, mv._10_Ether)
     await th.withdrawCLV_allAccounts(accounts.slice(101,111), borrowerOperations, mv._180e18)
 
