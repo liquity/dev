@@ -401,8 +401,8 @@ task(
 
             await liquity.openTrove(newTrove, price);
           } else {
-            while (total.subtract(trove).collateralRatioIsBelowCritical(price)) {
-              // Would fail to close Trove due to TCR
+            while (total.collateralRatioIsBelowCritical(price)) {
+              // Cannot close Trove during recovery mode
               const funderTrove = await funderLiquity.getTrove();
               await funderLiquity.depositEther(funderTrove, benford(50000), price);
 
