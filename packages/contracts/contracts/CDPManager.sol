@@ -62,6 +62,13 @@ contract CDPManager is Ownable, ICDPManager {
     ISortedCDPs sortedCDPs;
     address public sortedCDPsAddress;
 
+    // --- Modifiers ---
+
+     modifier onlyBorrowerOperations() {
+        require(_msgSender() == borrowerOperationsAddress, "PoolManager: Caller is not the BorrowerOperations contract");
+        _;
+    }
+
     // --- Data structures ---
 
     // Store the necessary data for a Collateralized Debt Position (CDP)
@@ -723,7 +730,7 @@ contract CDPManager is Ownable, ICDPManager {
         poolManager.liquidate(_debt, _coll);
     }
 
-    function closeCDP(address _user) external returns (bool) {
+    function closeCDP(address _user) external onlyBorrowerOperations returns (bool) {
         return _closeCDP(_user);
     }
 
