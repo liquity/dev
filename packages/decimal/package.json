@@ -8,13 +8,13 @@
     "test": "mocha --require ts-node/register"
   },
   "devDependencies": {
-    "@ethersproject/bignumber": "^5.0.0-beta.139",
+    "@ethersproject/bignumber": "^5.0.1",
     "@types/chai": "^4.2.9",
     "@types/mocha": "^7.0.1",
     "chai": "^4.2.0",
-    "mocha": "^7.2.0",
+    "mocha": "^8.0.1",
     "ts-node": "^8.9.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.9.5"
   },
   "peerDependencies": {
     "@ethersproject/bignumber": "^5.0.0-beta.139"

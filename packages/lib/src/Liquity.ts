@@ -663,6 +663,15 @@ export class Liquity {
     return this.cdpManager.liquidateCDPs(maximumNumberOfTrovesToLiquidate, { ...overrides });
   }
 
+  async _estimateLiquidateUpTo(
+    maximumNumberOfTrovesToLiquidate: number,
+    overrides?: LiquityTransactionOverrides
+  ) {
+    return this.cdpManager.estimateGas.liquidateCDPs(maximumNumberOfTrovesToLiquidate, {
+      ...overrides
+    });
+  }
+
   async getStabilityDeposit(address = this.requireAddress(), overrides?: LiquityCallOverrides) {
     const [deposit, depositAfterLoss, pendingCollateralGain] = await Promise.all([
       this.poolManager.initialDeposits(address, { ...overrides }).then(decimalify),

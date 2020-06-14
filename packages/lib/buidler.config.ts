@@ -174,7 +174,55 @@ task(
         console.log(`Created ${i} Troves.`);
       }
 
-      await new Promise(resolve => setTimeout(resolve, 4000));
+      //await new Promise(resolve => setTimeout(resolve, 4000));
+    }
+  }
+);
+
+task(
+  "liquidation-gas",
+  "Show estimated and real gas usage of liquidation for an increasing number of Troves",
+  async (_taskArgs, bre) => {
+    const collateral = Decimal.from(1);
+
+    const [deployer, funder, ...randomUsers] = await bre.ethers.getSigners();
+    const addresses = addressesOf(
+      await deployAndSetupContracts(deployer, bre.ethers.getContractFactory)
+    );
+
+    const deployerLiquity = await Liquity.connect(addresses, deployer);
+    const funderLiquity = await Liquity.connect(addresses, funder);
+
+    const price = await deployerLiquity.getPrice();
+
+    // Create a whale Trove that will keep the system in normal mode
+    await funderLiquity.openTrove(new Trove({ collateral: collateral.mul(1000) }), price);
+
+    for (let i = 1; i < randomUsers.length; ++i) {
+      for (const user of randomUsers.slice(0, i)) {
+        const liquity = await Liquity.connect(addresses, user);
+
+        await funder.sendTransaction({
+          to: liquity.userAddress,
+          value: collateral.bigNumber
+        });
+
+        await liquity.openTrove(
+          new Trove({ collateral, debt: collateral.mul(price).div(1.11) }),
+          price,
+          { gasPrice: 0 }
+        );
+      }
+
+      await deployerLiquity.setPrice(price.mul(0.95));
+
+      const estimate = await deployerLiquity._estimateLiquidateUpTo(randomUsers.length);
+      const tx = await deployerLiquity.liquidateUpTo(randomUsers.length, { gasLimit: 8000000 });
+      const receipt = await tx.wait();
+
+      console.log(`${i},${estimate},${receipt.gasUsed}`);
+
+      await deployerLiquity.setPrice(price);
     }
   }
 );
@@ -401,8 +449,8 @@ task(
 
             await liquity.openTrove(newTrove, price);
           } else {
-            while (total.subtract(trove).collateralRatioIsBelowCritical(price)) {
-              // Would fail to close Trove due to TCR
+            while (total.collateralRatioIsBelowCritical(price)) {
+              // Cannot close Trove during recovery mode
               const funderTrove = await funderLiquity.getTrove();
               await funderLiquity.depositEther(funderTrove, benford(50000), price);
 

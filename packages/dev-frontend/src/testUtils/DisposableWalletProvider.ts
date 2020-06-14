@@ -1,3 +1,4 @@
+import { hexlify } from "@ethersproject/bytes";
 import { Wallet } from "@ethersproject/wallet";
 import { Decimal, Decimalish } from "@liquity/decimal";
 
@@ -35,8 +36,8 @@ export class DisposableWalletProvider {
       {
         from: this.funderWallet.address,
         to: this.wallet.address,
-        value: this.ethAmount.bigNumber,
-        gas: 21000
+        value: hexlify(this.ethAmount.bigNumber),
+        gas: hexlify(21000)
       }
     ]);
 
