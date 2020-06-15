@@ -1,6 +1,6 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { BaseStyles, Flex, Loader, Heading, Box, Text } from "rimble-ui";
+import { Flex, Spinner, Heading, Box, Text, ThemeProvider } from "theme-ui";
 
 import { Decimal, Difference, Percent } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
@@ -20,6 +20,7 @@ import { RedemptionManager } from "./components/RedemptionManager";
 import { LiquidationManager } from "./components/LiquidationManager";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
+import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
 
@@ -86,15 +87,15 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
         <UserAccount {...{ account, etherBalance, quiBalance }} />
       </Header>
 
-      <Box width="862px" mx="auto">
-        <Flex flexWrap="wrap" justifyItems="center">
-          <Box px={3} width="500px">
+      <Box sx={{ width: "862px", mx: "auto" }}>
+        <Flex sx={{ flexWrap: "wrap", justifyItems: "center" }}>
+          <Box sx={{ px: 3, width: "500px" }}>
             <TroveManager {...{ liquity, troveWithoutRewards, trove, price, total, quiBalance }} />
             <StabilityDepositManager {...{ liquity, deposit, trove, price, quiBalance }} />
             <RedemptionManager {...{ liquity, price, quiBalance }} />
           </Box>
 
-          <Box px={3} width="362px">
+          <Box sx={{ px: 3, width: "362px" }}>
             <SystemStats
               {...{
                 numberOfTroves,
@@ -127,14 +128,21 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
 const App = () => {
   const loader = (
-    <Flex alignItems="center" justifyContent="center" height="100vh">
-      <Loader m={2} size="32px" color="text" />
+    <Flex sx={{ alignItems: "center", justifyContent: "center", height: "100vh" }}>
+      <Spinner sx={{ m: 2 }} size="32px" color="text" />
       <Heading>Loading...</Heading>
     </Flex>
   );
 
   const unsupportedNetworkFallback = (chainId: number) => (
-    <Flex flexDirection="column" alignItems="center" justifyContent="center" height="100vh">
+    <Flex
+      sx={{
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh"
+      }}
+    >
       <Heading>Liquity is not yet deployed to {chainId === 1 ? "mainnet" : "this network"}.</Heading>
       <Text mt={3}>Please switch to Ropsten, Rinkeby, Kovan or Görli.</Text>
     </Flex>
@@ -142,7 +150,7 @@ const App = () => {
 
   return (
     <EthersWeb3ReactProvider>
-      <BaseStyles>
+      <ThemeProvider theme={theme}>
         <WalletConnector {...{ loader }}>
           <LiquityProvider {...{ loader, unsupportedNetworkFallback }}>
             <TransactionProvider>
@@ -150,7 +158,7 @@ const App = () => {
             </TransactionProvider>
           </LiquityProvider>
         </WalletConnector>
-      </BaseStyles>
+      </ThemeProvider>
     </EthersWeb3ReactProvider>
   );
 };

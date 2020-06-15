@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Text, Heading } from "rimble-ui";
+import { Card, Text, Heading } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib";
@@ -48,13 +48,13 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
         <Text color="danger">The system is in recovery mode!</Text>
       )}
 
-      <Text mt={3} fontSize={0} opacity={0.5}>
+      <Text sx={{ mt: 3, fontSize: 0, opacity: 0.5 }}>
         Contracts version: <GitHubCommit>{contractsVersion}</GitHubCommit>
       </Text>
-      <Text fontSize={0} opacity={0.5}>
+      <Text sx={{ fontSize: 0, opacity: 0.5 }}>
         Deployed: {new Date(deploymentDate).toLocaleString()}
       </Text>
-      <Text fontSize={0} opacity={0.5}>
+      <Text sx={{ fontSize: 0, opacity: 0.5 }}>
         Frontend version:{" "}
         {process.env.NODE_ENV === "development" ? (
           "development"

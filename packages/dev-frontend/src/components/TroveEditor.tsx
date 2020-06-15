@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Heading, Box, Card, Loader, Link, Icon } from "rimble-ui";
+import { Heading, Box, Card, Spinner, Link } from "theme-ui";
 
 import { Decimal, Percent, Difference } from "@liquity/decimal";
 import { Trove, Liquity } from "@liquity/lib";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
+import { Icon } from "./Icon";
 
 type TroveEditorProps = {
   title: string;
@@ -44,26 +45,30 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
     <Card p={0}>
       <Heading
         as="h3"
-        bg="lightgrey"
-        pl={3}
-        py={2}
-        pr={2}
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
+        sx={{
+          bg: "lightgrey",
+          pl: 3,
+          py: 2,
+          pr: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}
       >
         {title}
-        <Box width="40px" height="40px">
+        <Box sx={{ width: "40px", height: "40px" }}>
           {isChanged && !changePending && (
             <Link
-              color="text"
-              hoverColor="danger"
-              activeColor="danger"
-              display="flex"
-              alignItems="center"
+              sx={{
+                color: "text",
+                "&:hover": { color: "danger" },
+                "&:active": { color: "danger" },
+                display: "flex",
+                alignItems: "center"
+              }}
               onClick={() => setEdited(original)}
             >
-              <Icon name="Replay" size="40px" />
+              <Icon name="history" size="lg" />
             </Link>
           )}
         </Box>
@@ -71,7 +76,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
       {changePending && (
         <LoadingOverlay>
-          <Loader size="24px" color="text" />
+          <Spinner size="24px" color="text" />
         </LoadingOverlay>
       )}
 

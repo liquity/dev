@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
-import { Flex, Text, Box, Tooltip } from "rimble-ui";
+import { Flex, Text, Box } from "theme-ui";
 import { ContractTransaction } from "@ethersproject/contracts";
 import { Provider } from "@ethersproject/abstract-provider";
 import { hexDataSlice, hexDataLength } from "@ethersproject/bytes";
@@ -15,6 +15,7 @@ import {
   contractsToInterfaces
 } from "@liquity/lib";
 import { useLiquity } from "../hooks/LiquityContext";
+import { Tooltip } from "./Tooltip";
 
 const circularProgressbarStyle = {
   strokeWidth: 10,
@@ -116,7 +117,7 @@ export type TransactionFunction = (
 type TransactionProps<C> = {
   id: string;
   tooltip?: string;
-  tooltipPlacement?: string;
+  tooltipPlacement?: "top" | "bottom" | "left" | "right";
   requires?: readonly (readonly [boolean, string])[];
   send: TransactionFunction;
   numberOfConfirmationsToWait?: number;
@@ -202,9 +203,11 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
   }
 
   return tooltip ? (
-    <Tooltip message={tooltip} variant="light" placement={tooltipPlacement || "right"}>
-      <Box opacity={showFailure ? 0.5 : 1}>{clonedTrigger}</Box>
-    </Tooltip>
+    <>
+      <Tooltip message={tooltip} placement={tooltipPlacement || "right"}>
+        <Box opacity={showFailure ? 0.5 : 1}>{clonedTrigger}</Box>
+      </Tooltip>
+    </>
   ) : (
     clonedTrigger
   );
@@ -374,38 +377,39 @@ export const TransactionMonitor: React.FC = () => {
 
   return (
     <Flex
-      alignItems="center"
-      bg={
-        transactionState.type === "confirmed"
-          ? "success"
-          : transactionState.type === "cancelled"
-          ? "warning"
-          : transactionState.type === "failed"
-          ? "danger"
-          : "primary"
-      }
-      p={3}
-      pl={4}
-      position="fixed"
-      width="100vw"
-      bottom={0}
-      overflow="hidden"
-      zIndex={2}
+      sx={{
+        alignItems: "center",
+        bg:
+          transactionState.type === "confirmed"
+            ? "success"
+            : transactionState.type === "cancelled"
+            ? "warning"
+            : transactionState.type === "failed"
+            ? "danger"
+            : "primary",
+        p: 3,
+        pl: 4,
+        position: "fixed",
+        width: "100vw",
+        bottom: 0,
+        overflow: "hidden",
+        zIndex: 2
+      }}
     >
-      <Box width="40px" height="40px" mr={3}>
+      <Box sx={{ width: "40px", height: "40px", mr: 3 }}>
         <CircularProgressbarWithChildren
           value={confirmations || 0}
           maxValue={numberOfConfirmationsToWait || 1}
           {...circularProgressbarStyle}
         >
-          <Text fontSize={1} fontWeight={3} color="white">
+          <Text sx={{ fontSize: 1, fontWeight: 3, color: "white" }}>
             {transactionState.type === "failed" || transactionState.type === "cancelled"
               ? "✖"
               : `${confirmations}/${numberOfConfirmationsToWait}`}
           </Text>
         </CircularProgressbarWithChildren>
       </Box>
-      <Text fontSize={3} color="white">
+      <Text sx={{ fontSize: 3, color: "white" }}>
         {transactionState.type === "waitingForConfirmations"
           ? "Waiting for confirmation"
           : transactionState.type === "cancelled"

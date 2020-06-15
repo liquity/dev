@@ -1,6 +1,4 @@
-//import React from "react";
 import styled, { css } from "styled-components";
-import { theme } from "rimble-ui";
 import {
   compose,
   color,
@@ -20,6 +18,8 @@ import {
   shadow,
   ShadowProps
 } from "styled-system";
+
+import theme from "../theme";
 
 const styleProps = compose(color, space, layout, position, flexbox, border, typography, shadow);
 

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Card, Box, Heading, Flex, Icon, Button } from "rimble-ui";
+import { Card, Box, Heading, Flex, Button } from "theme-ui";
 import { Transaction } from "./Transaction";
 
 import { Decimal } from "@liquity/decimal";
 import { Liquity } from "@liquity/lib";
 import { useLiquity } from "../hooks/LiquityContext";
 import { Label, StaticCell, EditableCell } from "./EditorCell";
+import { Icon } from "./Icon";
 
 type PriceManagerProps = {
   liquity: Liquity;
@@ -27,7 +28,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
       </Heading>
 
       <Box p={2}>
-        <Flex alignItems="center">
+        <Flex sx={{ alignItems: "center" }}>
           <Label>ETH</Label>
 
           <StaticCell bg="#eee" textAlign="center">
@@ -43,7 +44,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedPrice(e.target.value)}
           />
 
-          <Flex height="32px">
+          <Flex sx={{ height: "32px" }}>
             <Transaction
               id="set-price"
               tooltip="Set"
@@ -56,9 +57,9 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
               }}
               numberOfConfirmationsToWait={1}
             >
-              <Button.Text ml={2} size="small" icononly>
-                <Icon name="Timeline" size="32px" />
-              </Button.Text>
+              <Button ml={2}>
+                <Icon name="chart-line" size="sm" />
+              </Button>
             </Transaction>
 
             <Transaction
@@ -69,9 +70,9 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
               send={liquity.updatePrice.bind(liquity)}
               numberOfConfirmationsToWait={1}
             >
-              <Button.Text ml={2} size="small" icononly>
-                <Icon name="Refresh" size="32px" />
-              </Button.Text>
+              <Button ml={2}>
+                <Icon name="redo" size="sm" />
+              </Button>
             </Transaction>
           </Flex>
         </Flex>

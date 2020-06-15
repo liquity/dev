@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Card, Box, Heading, Flex, Icon, Button } from "rimble-ui";
+import { Card, Box, Heading, Flex, Button } from "theme-ui";
 import { Transaction } from "./Transaction";
 
 import { Liquity } from "@liquity/lib";
 import { Label, EditableCell } from "./EditorCell";
+import { Icon } from "./Icon";
 
 type LiquidationManagerProps = {
   liquity: Liquity;
@@ -19,7 +20,7 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
       </Heading>
 
       <Box p={2}>
-        <Flex alignItems="center">
+        <Flex sx={{ alignItems: "center" }}>
           <Label>Up to</Label>
 
           <EditableCell
@@ -36,7 +37,7 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
 
           <Label>Troves</Label>
 
-          <Box height="32px">
+          <Box sx={{ height: "32px" }}>
             <Transaction
               id="batch-liquidate"
               tooltip="Liquidate"
@@ -49,9 +50,9 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
               }}
               numberOfConfirmationsToWait={1}
             >
-              <Button.Text ml={2} variant="danger" size="small" icononly>
-                <Icon name="DeleteForever" size="32px" />
-              </Button.Text>
+              <Button sx={{ ml: 2 }} variant="danger">
+                <Icon name="trash" size="sm" />
+              </Button>
             </Transaction>
           </Box>
         </Flex>

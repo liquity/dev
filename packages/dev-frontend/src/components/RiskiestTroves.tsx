@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Card, Button, Text, Box, Heading, Loader, Icon, Link, Tooltip, Flex } from "rimble-ui";
+import { Card, Button, Text, Box, Heading, Spinner, Link, Flex } from "theme-ui";
 import styled from "styled-components";
-import { theme } from "rimble-ui";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
 
 import { Decimal, Percent } from "@liquity/decimal";
@@ -10,6 +9,9 @@ import { Liquity, Trove } from "@liquity/lib";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
+import { Icon } from "./Icon";
+import { Tooltip } from "./Tooltip";
+import theme from "../theme";
 
 const Table = styled.table<SpaceProps & LayoutProps>`
   ${space}
@@ -117,16 +119,18 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
       <Card p={0}>
         <Heading
           as="h3"
-          pl={3}
-          py={2}
-          pr={2}
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          bg="lightgrey"
+          sx={{
+            pl: 3,
+            py: 2,
+            pr: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            bg: "lightgrey"
+          }}
         >
           Riskiest Troves
-          <Flex alignItems="center">
+          <Flex sx={{ alignItems: "center" }}>
             {numberOfTroves !== 0 && (
               <>
                 <Text mr={3}>
@@ -134,56 +138,58 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                   {Math.min((clampedPage + 1) * pageSize, numberOfTroves)} of {numberOfTroves}
                 </Text>
                 <Link
-                  color="text"
-                  hoverColor="success"
-                  activeColor="success"
-                  display="flex"
-                  alignItems="center"
+                  sx={{
+                    color: "text",
+                    "&:hover": { color: "success" },
+                    "&:active": { color: "success" },
+                    display: "flex",
+                    alignItems: "center"
+                  }}
                   onClick={previousPage}
                 >
-                  <Icon name="KeyboardArrowLeft" size="40px" />
+                  <Icon name="chevron-left" size="lg" />
                 </Link>
                 <Link
-                  color="text"
-                  hoverColor="success"
-                  activeColor="success"
-                  display="flex"
-                  alignItems="center"
+                  sx={{
+                    color: "text",
+                    "&:hover": { color: "success" },
+                    "&:active": { color: "success" },
+                    display: "flex",
+                    alignItems: "center"
+                  }}
                   onClick={nextPage}
                 >
-                  <Icon name="KeyboardArrowRight" size="40px" />
+                  <Icon name="chevron-right" size="lg" />
                 </Link>
               </>
             )}
             <Link
-              ml={3}
-              color="text"
-              hoverColor="success"
-              activeColor="success"
-              display="flex"
-              alignItems="center"
+              sx={{
+                ml: 3,
+                color: "text",
+                "&:hover": { color: "success" },
+                "&:active": { color: "success" },
+                display: "flex",
+                alignItems: "center",
+                opacity: loading ? 0 : 1
+              }}
               onClick={forceReload}
-              opacity={loading ? 0 : 1}
             >
-              <Icon name="Refresh" size="40px" />
+              <Icon name="redo" size="lg" />
             </Link>
           </Flex>
         </Heading>
 
         {loading && (
           <LoadingOverlay>
-            <Loader size="24px" color="text" />
+            <Spinner size="24px" color="text" />
           </LoadingOverlay>
         )}
 
         {!troves ? (
-          <Text p={4} fontSize={3} textAlign="center">
-            Loading...
-          </Text>
+          <Text sx={{ p: 4, fontSize: 3, textAlign: "center" }}>Loading...</Text>
         ) : troves.length === 0 ? (
-          <Text p={4} fontSize={3} textAlign="center">
-            There are no Troves yet
-          </Text>
+          <Text sx={{ p: 4, fontSize: 3, textAlign: "center" }}>There are no Troves yet</Text>
         ) : (
           <Table mt={3} mb={1}>
             <thead>
@@ -220,9 +226,9 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                       </td>
                       <td>
                         <CopyToClipboard text={owner}>
-                          <Button.Text mainColor="text" size="small" icononly>
-                            <Icon name="ContentCopy" size="16px" />
-                          </Button.Text>
+                          <Button>
+                            <Icon name="clipboard" size="xs" />
+                          </Button>
                         </CopyToClipboard>
                       </td>
                       <td>{trove.collateral.prettify(4)}</td>
@@ -255,7 +261,9 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                           send={liquity.liquidate.bind(liquity, owner)}
                           numberOfConfirmationsToWait={1}
                         >
-                          <Button.Text variant="danger" icon="DeleteForever" icononly />
+                          <Button variant="danger">
+                            <Icon name="trash" />
+                          </Button>
                         </Transaction>
                       </td>
                     </tr>

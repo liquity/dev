@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Box, Flex, Loader } from "rimble-ui";
+import { Button, Box, Flex, Spinner } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
 import { Liquity, StabilityDeposit, Trove } from "@liquity/lib";
@@ -87,12 +87,12 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   ];
 
   return myTransactionState.type === "waitingForApproval" ? (
-    <Flex mt={3} flexWrap="wrap" justifyContent="center">
+    <Flex sx={{ mt: 3, flexWrap: "wrap", justifyContent: "center" }}>
       {actions.map(([actionName], i) => (
         <Button disabled mt={3} mx={2}>
           {myTransactionState.id === `${myTransactionId}-${i}` ? (
             <>
-              <Loader mr={2} color="white" />
+              <Spinner mr={2} color="white" />
               Waiting for your approval
             </>
           ) : (
@@ -102,7 +102,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
       ))}
     </Flex>
   ) : changePending ? null : (
-    <Flex mt={3} flexWrap="wrap" justifyContent="center">
+    <Flex sx={{ mt: 3, flexWrap: "wrap", justifyContent: "center" }}>
       {actions.map(([actionName, send, requires], i) => (
         <Transaction id={`${myTransactionId}-${i}`} {...{ send, requires }}>
           <Button mt={3} mx={2}>

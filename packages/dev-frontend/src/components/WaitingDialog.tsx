@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Flex, Loader } from "rimble-ui";
+import { Box, Flex, Spinner } from "theme-ui";
 
 import { Dialog } from "./Dialog";
 
@@ -23,13 +23,15 @@ export const WaitingDialog: React.FC<WaitingDialogProps> = ({
     {children}
     <Box px={[3, 4]} pb={[3, 4]}>
       <Flex
-        flexDirection={["column", "row"]}
-        bg={"primary-2x-light"}
-        p={[3, 4]}
-        alignItems={["center", "auto"]}
+        sx={{
+          flexDirection: ["column", "row"],
+          bg: "primary-2x-light",
+          p: [3, 4],
+          alignItems: ["center", "auto"]
+        }}
       >
-        <Loader size={"3em"} mr={[0, 3]} mb={[2, 0]} />
-        <Flex flexDirection="column" alignItems={["center", "flex-start"]}>
+        <Spinner size="3em" mr={[0, 3]} mb={[2, 0]} />
+        <Flex sx={{ flexDirection: "column", alignItems: ["center", "flex-start"] }}>
           {waitReason}
         </Flex>
       </Flex>

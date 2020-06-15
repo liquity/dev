@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Heading, Box, Card, Link, Icon, Loader } from "rimble-ui";
+import { Heading, Box, Card, Link, Spinner } from "theme-ui";
 
 import { Difference } from "@liquity/decimal";
 import { StabilityDeposit } from "@liquity/lib";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
+import { Icon } from "./Icon";
 
 type StabilityDepositEditorProps = {
   title: string;
@@ -34,26 +35,30 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
     <Card p={0}>
       <Heading
         as="h3"
-        bg="lightgrey"
-        pl={3}
-        py={2}
-        pr={2}
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
+        sx={{
+          bg: "lightgrey",
+          pl: 3,
+          py: 2,
+          pr: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}
       >
         {title}
-        <Box width="40px" height="40px">
+        <Box sx={{ width: "40px", height: "40px" }}>
           {edited && !changePending && (
             <Link
-              color="text"
-              hoverColor="danger"
-              activeColor="danger"
-              display="flex"
-              alignItems="center"
+              sx={{
+                color: "text",
+                "&:hover": { color: "danger" },
+                "&:active": { color: "danger" },
+                display: "flex",
+                alignItems: "center"
+              }}
               onClick={() => setEditedDeposit(originalDeposit)}
             >
-              <Icon name="Replay" size="40px" />
+              <Icon name="history" size="lg" />
             </Link>
           )}
         </Box>
@@ -61,7 +66,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
 
       {changePending && (
         <LoadingOverlay>
-          <Loader size="24px" color="text" />
+          <Spinner size="24px" color="text" />
         </LoadingOverlay>
       )}
 

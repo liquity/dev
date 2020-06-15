@@ -1,8 +1,9 @@
 import React from "react";
-import { Text, Flex, Box, Heading, Icon } from "rimble-ui";
+import { Text, Flex, Box, Heading } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
 import { shortenAddress } from "../utils/shortenAddress";
+import { Icon } from "./Icon";
 
 type UserAccountProps = {
   account: string;
@@ -11,20 +12,22 @@ type UserAccountProps = {
 };
 
 export const UserAccount: React.FC<UserAccountProps> = ({ account, etherBalance, quiBalance }) => (
-  <Flex alignItems="center">
-    <Icon name="AccountCircle" size="28px" />
+  <Flex sx={{ alignItems: "center" }}>
+    <Icon name="user-circle" size="lg" />
     <Box ml={3} mr={4}>
-      <Heading fontSize={1}>Connected as</Heading>
-      <Text fontSize={1}>{shortenAddress(account)}</Text>
+      <Heading sx={{ fontSize: 1 }}>Connected as</Heading>
+      <Text sx={{ fontSize: 1 }}>{shortenAddress(account)}</Text>
     </Box>
 
-    <Icon name="AccountBalanceWallet" size="28px" />
+    <Icon name="wallet" size="lg" />
     <Box ml={3}>
-      <Heading fontSize={1}>Balance</Heading>
-      <Text.span mr={3} fontSize={1}>
+      <Heading sx={{ fontSize: 1 }}>Balance</Heading>
+      <Text as="span" sx={{ mr: 3, fontSize: 1 }}>
         {etherBalance.prettify()} ETH
-      </Text.span>
-      <Text.span fontSize={1}>{quiBalance.prettify()} LQTY</Text.span>
+      </Text>
+      <Text as="span" sx={{ fontSize: 1 }}>
+        {quiBalance.prettify()} LQTY
+      </Text>
     </Box>
   </Flex>
 );

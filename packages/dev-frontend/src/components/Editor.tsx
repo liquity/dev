@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Text, Flex, Box } from "rimble-ui";
+import { Text, Flex, Box } from "theme-ui";
 
 import { Label, StaticCell, EditableCell } from "./EditorCell";
 
@@ -11,14 +11,14 @@ type RowProps = {
 
 const Row: React.FC<RowProps> = ({ label, hideLabel, unit, children }) => {
   return (
-    <Flex width="450px" alignItems="stretch">
+    <Flex sx={{ width: "450px", alignItems: "stretch" }}>
       {!hideLabel && <Label width={unit ? 0.25 : 0.4}>{label}</Label>}
       {unit && (
         <StaticCell bg="#eee" width={0.15} textAlign="center">
           {unit}
         </StaticCell>
       )}
-      <Box width={!hideLabel ? 0.6 : 0.85}>{children}</Box>
+      <Box sx={{ width: !hideLabel ? 0.6 : 0.85 }}>{children}</Box>
     </Flex>
   );
 };
@@ -44,12 +44,12 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
 }) => {
   return (
     <StaticCell data-testid={label} {...{ onClick, invalid }}>
-      <Flex justifyContent="space-between" alignItems="center">
-        <Text fontSize={StaticCell.defaultProps?.fontSize} {...{ color }}>
+      <Flex sx={{ justifyContent: "space-between", alignItems: "center" }}>
+        <Text sx={{ fontSize: 3 }} {...{ color }}>
           {amount}
         </Text>
 
-        <Text fontSize={2} color={pendingColor}>
+        <Text sx={{ fontSize: 2 }} color={pendingColor}>
           {pendingAmount &&
             `${pendingAmount
               .replace("++", "▲▲")

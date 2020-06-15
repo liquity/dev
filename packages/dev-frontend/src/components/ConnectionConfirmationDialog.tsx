@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, Box } from "rimble-ui";
+import { Text, Box } from "theme-ui";
 
 import { WaitingDialog } from "./WaitingDialog";
 
@@ -20,8 +20,8 @@ export const ConnectionConfirmationDialog: React.FC<ConnectionConfirmationDialog
     icon={icon}
     waitReason={
       <>
-        <Text fontWeight={4}>Waiting for connection confirmation...</Text>
-        <Text fontWeight={2}>This won’t cost you any Ether</Text>
+        <Text sx={{ fontWeight: 4 }}>Waiting for connection confirmation...</Text>
+        <Text sx={{ fontWeight: 2 }}>This won’t cost you any Ether</Text>
       </>
     }
     cancelLabel="Cancel connection"
