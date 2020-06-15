@@ -27,7 +27,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     }    
 
      modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "CLVToken: Only the pool is authorized");
+        require(_msgSender() == poolManagerAddress, "CLVToken: Only the PoolManager is authorized");
         _;
     }
 

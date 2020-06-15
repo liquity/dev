@@ -2,15 +2,22 @@ pragma solidity ^0.5.15;
 
 // Common interface for the CDP Manager.
 interface IBorrowerOperations {
-//     // --- Events ---
-//     event CDPManagerAddressChanged(address _newCDPManagerAddress);
-//     event PoolManagerAddressChanged(address _newPoolManagerAddress);
-//     event ActivePoolAddressChanged(address _activePoolAddress);
-//     event DefaultPoolAddressChanged(address _defaultPoolAddress);
-//     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
-    // event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
-//     // --- Functions ---
+    // --- Events ---
+
+    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+
+    event PoolManagerAddressChanged(address _newPoolManagerAddress);
+
+    event ActivePoolAddressChanged(address _activePoolAddress);
+
+    event DefaultPoolAddressChanged(address _defaultPoolAddress);
+
+    event PriceFeedAddressChanged(address  _newPriceFeedAddress);
+    
+    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
+
+    // --- Functions ---
 
     function setCDPManager(address _CDPManagerAddress) external;
 

@@ -73,7 +73,7 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     // --- DEVELOPMENT FUNCTIONALITY  ---
 
-    /* Manual price setter for owner. 
+    /* Manual public price setter. 
     TODO: remove before mainnet deployment. */
     function setPrice(uint256 _price) public returns (bool) {
         price = _price;

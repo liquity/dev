@@ -4,9 +4,12 @@ pragma solidity ^0.5.15;
 interface ISortedCDPs {
 // --- Events ---
 event SortedCDPsAddressChanged(address _sortedDoublyLLAddress);
+event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
 
 // --- Functions ---
     function setCDPManager(address _CDPManagerAddress) external;
+
+    function setBorrowerOperations(address _borrowerOperationsAddress) external;
 
     function setMaxSize(uint256 _size) external;
 

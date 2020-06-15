@@ -67,11 +67,6 @@ contract StabilityPool is Ownable, IStabilityPool {
         emit CLVBalanceUpdated(totalCLVDeposits);
     }
 
-    function increaseTotalCLVDeposits(uint _amount) public onlyPoolManager () {
-        totalCLVDeposits = totalCLVDeposits.add(_amount);
-
-    }
-
     /* Returns the raw ether balance at StabilityPool address.  
     Not necessarily equal to the ETH state variable - ether can be forcibly sent to contracts. */
     function getRawETHBalance() public view returns(uint) {

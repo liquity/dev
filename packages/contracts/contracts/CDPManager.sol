@@ -64,7 +64,7 @@ contract CDPManager is Ownable, ICDPManager {
 
     // --- Modifiers ---
 
-     modifier onlyBorrowerOperations() {
+    modifier onlyBorrowerOperations() {
         require(_msgSender() == borrowerOperationsAddress, "PoolManager: Caller is not the BorrowerOperations contract");
         _;
     }

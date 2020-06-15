@@ -239,6 +239,13 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   it('sets the correct CDPManager address in SortedCDPs', async () => {
+    const borrowerOperationsAddress = borrowerOperations.address
+
+    const recordedBorrowerOperationsAddress = await sortedCDPs.borrowerOperationsAddress()
+    assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
+  })
+
+  it('sets the correct BorrowerOperations address in SortedCDPs', async () => {
     const cdpManagerAddress = cdpManager.address
 
     const recordedCDPManagerAddress = await sortedCDPs.CDPManagerAddress()
