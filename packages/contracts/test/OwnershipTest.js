@@ -492,7 +492,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
       const txOwner1 = await stabilityPool.setActivePoolAddress(bob, { from: owner })
       const txOwner2 = await stabilityPool.setActivePoolAddress(activePool.address, { from: owner })
     })
-   
+
     // setDefaultPoolAddress
     it("setDefaultPoolAddress(): reverts when called by non-owner", async () => {
       // Attempt call from alice
@@ -554,6 +554,64 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
       // Owner can successfully set a max size
       const txOwner1 = await sortedCDPs.setMaxSize(10000001, { from: owner })
+    })
+  })
+
+  describe('PriceFeed', async accounts => {
+    // setCDPManagerAddress
+    it("setCDPManagerAddress(): reverts when called by non-owner", async () => {
+      try {
+        txAlice = await priceFeed.setCDPManagerAddress(bob, { from: alice })
+        assert.fail(txAlice)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Owner can successfully set any address
+      const txOwner1 = await priceFeed.setCDPManagerAddress(bob, { from: owner })
+      const txOwner2 = await priceFeed.setCDPManagerAddress(cdpManager.address, { from: owner })
+    })
+
+    // setPoolManagerAddress
+    it("setPoolManagerAddress(): reverts when called by non-owner", async () => {
+      try {
+        txAlice = await priceFeed.setPoolManagerAddress(bob, { from: alice })
+        assert.fail(txAlice)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Owner can successfully set any address
+      const txOwner1 = await priceFeed.setPoolManagerAddress(bob, { from: owner })
+      const txOwner2 = await priceFeed.setPoolManagerAddress(poolManager.address, { from: owner })
+    })
+
+    // setAggregator
+    it("setAggregator(): reverts when called by non-owner", async () => {
+      try {
+        txAlice = await priceFeed.setAggregator(bob, { from: alice })
+        assert.fail(txAlice)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Owner can successfully set any address
+      const txOwner1 = await priceFeed.setAggregator(bob, { from: owner })
+      const txOwner2 = await priceFeed.setAggregator("0x79fEbF6B9F76853EDBcBc913e6aAE8232cFB9De9", { from: owner })
+    })
+
+    // setAggregator_Testnet 
+    it("setAggregator_Testnet(): reverts when called by non-owner", async () => {
+      try {
+        txAlice = await priceFeed.setAggregator_Testnet(bob, { from: alice })
+        assert.fail(txAlice)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Owner can successfully set any address
+      const txOwner1 = await priceFeed.setAggregator_Testnet(bob, { from: owner })
+      const txOwner2 = await priceFeed.setAggregator_Testnet("0x8468b2bDCE073A157E560AA4D9CcF6dB1DB98507", { from: owner })
     })
   })
 })

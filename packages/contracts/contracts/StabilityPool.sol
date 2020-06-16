@@ -74,7 +74,7 @@ contract StabilityPool is Ownable, IStabilityPool {
     }
 
     modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "StabilityPool: Only the poolManager is authorized");
+        require(_msgSender() == poolManagerAddress, "StabilityPool:  Caller is not the PoolManager");
         _;
     }
 
@@ -83,7 +83,7 @@ contract StabilityPool is Ownable, IStabilityPool {
             _msgSender() == poolManagerAddress || 
             _msgSender() == activePoolAddress || 
             _msgSender() == defaultPoolAddress, 
-            "StabilityPool: only receive ETH from Pool or PoolManager");
+            "StabilityPool: Caller is neither the PoolManager nor a Pool");
         _;
     }
 

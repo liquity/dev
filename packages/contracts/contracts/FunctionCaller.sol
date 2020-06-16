@@ -110,15 +110,13 @@ contract FunctionCaller {
        return (number == 42);
    }
 
-   // Calls internal 
+   // Check storage by way of an internal functional call
    function callInternalStorageCheck () public returns (bool) {
        return internalStorageCheck();
    }
 
-    // Raw code
+    // Check storage directly
    function rawStorageCheck () public returns (bool) {
-       return number == 42;
+       return (number == 42);
    }
-
 }
-

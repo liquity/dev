@@ -73,7 +73,7 @@ contract ActivePool is Ownable, IPool {
 
     // --- Modifiers ---
     modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "ActivePool: Only the poolManager is authorized");
+        require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
         _;
     }
 
@@ -82,7 +82,7 @@ contract ActivePool is Ownable, IPool {
             _msgSender() == poolManagerAddress || 
             _msgSender() == stabilityPoolAddress || 
             _msgSender() == defaultPoolAddress, 
-            "ActivePool: only receive ETH from Pool or PoolManager");
+            "ActivePool:  Caller is neither the PoolManager nor a Pool");
         _;
     }
 
