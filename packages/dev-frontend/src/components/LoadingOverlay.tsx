@@ -1,7 +1,9 @@
+import React from "react";
 import styled from "styled-components";
 import { space, SpaceProps } from "styled-system";
+import { Spinner } from "theme-ui";
 
-export const LoadingOverlay = styled.div<SpaceProps>`
+const LoadingVeil = styled.div<SpaceProps>`
   ${space}
 
   position: absolute;
@@ -20,4 +22,8 @@ export const LoadingOverlay = styled.div<SpaceProps>`
   align-items: start;
 `;
 
-LoadingOverlay.defaultProps = { p: 3 };
+export const LoadingOverlay: React.FC = () => (
+  <LoadingVeil p="14px">
+    <Spinner size="28px" color="text" />
+  </LoadingVeil>
+);

@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from "react";
 import { useWeb3React } from "@web3-react/core";
-import { Button, Text, Flex, Link } from "theme-ui";
+import { Button, Text, Flex, Link, Box } from "theme-ui";
 
 import { useInjectedConnector } from "../hooks/connectors/InjectedConnector";
 import { RetryDialog } from "./RetryDialog";
@@ -100,7 +100,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
       <Flex sx={{ height: "100vh", justifyContent: "center", alignItems: "center" }}>
         <Button onClick={() => dispatch({ type: "activate", connector: connectors.injected })}>
           <MetaMaskIcon />
-          Connect to MetaMask
+          <Box ml={2}>Connect to MetaMask</Box>
         </Button>
       </Flex>
 

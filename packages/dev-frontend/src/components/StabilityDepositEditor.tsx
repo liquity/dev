@@ -38,7 +38,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         {edited && !changePending && (
           <Button
             variant="titleIcon"
-            sx={{ "&:hover": { color: "danger" } }}
+            sx={{ "&:enabled:hover": { color: "danger" } }}
             onClick={() => setEditedDeposit(originalDeposit)}
           >
             <Icon name="history" size="lg" />
@@ -46,11 +46,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         )}
       </Heading>
 
-      {changePending && (
-        <LoadingOverlay>
-          <Spinner size="24px" color="text" />
-        </LoadingOverlay>
-      )}
+      {changePending && <LoadingOverlay />}
 
       <Box p={2}>
         <EditableRow

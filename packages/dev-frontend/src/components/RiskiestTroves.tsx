@@ -17,6 +17,10 @@ const Table = styled.table<SpaceProps & LayoutProps>`
   ${space}
   ${layout}
 
+  & tr th {
+    line-height: 1.15;
+  }
+
   & tr td {
     text-align: center;
   }
@@ -122,7 +126,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
           <Flex sx={{ alignItems: "center" }}>
             {numberOfTroves !== 0 && (
               <>
-                <Text mr={3}>
+                <Text sx={{ mr: 3, fontWeight: "body", fontSize: 2 }}>
                   {clampedPage * pageSize + 1}-
                   {Math.min((clampedPage + 1) * pageSize, numberOfTroves)} of {numberOfTroves}
                 </Text>
@@ -144,11 +148,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
           </Flex>
         </Heading>
 
-        {loading && (
-          <LoadingOverlay>
-            <Spinner size="24px" color="text" />
-          </LoadingOverlay>
-        )}
+        {loading && <LoadingOverlay />}
 
         {!troves ? (
           <Text sx={{ p: 4, fontSize: 3, textAlign: "center" }}>Loading...</Text>

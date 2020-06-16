@@ -1,24 +1,23 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Text, Flex, Box } from "theme-ui";
+import { Text, Flex } from "theme-ui";
 
 import { Label, StaticCell, EditableCell } from "./EditorCell";
 
 type RowProps = {
   label: string;
-  hideLabel?: boolean;
   unit?: string;
 };
 
-const Row: React.FC<RowProps> = ({ label, hideLabel, unit, children }) => {
+const Row: React.FC<RowProps> = ({ label, unit, children }) => {
   return (
     <Flex sx={{ width: "450px", alignItems: "stretch" }}>
-      {!hideLabel && <Label width={unit ? 0.25 : 0.4}>{label}</Label>}
+      <Label width={unit ? 0.25 : 0.4}>{label}</Label>
       {unit && (
         <StaticCell bg="muted" width={0.15} textAlign="center">
           {unit}
         </StaticCell>
       )}
-      <Box sx={{ width: !hideLabel ? 0.6 : 0.85 }}>{children}</Box>
+      {children}
     </Flex>
   );
 };
@@ -43,7 +42,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
   invalid
 }) => {
   return (
-    <StaticCell data-testid={label} {...{ onClick, invalid }}>
+    <StaticCell flexGrow={1} data-testid={label} {...{ onClick, invalid }}>
       <Flex sx={{ justifyContent: "space-between", alignItems: "center" }}>
         <Text sx={{ fontSize: 3 }} {...{ color }}>
           {amount}
@@ -83,7 +82,6 @@ type EditableRowProps = Omit<
 
 export const EditableRow: React.FC<EditableRowProps> = ({
   label,
-  hideLabel,
   unit,
   amount,
   color,
@@ -108,7 +106,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   }, [editedAmount]);
 
   return (
-    <Row {...{ label, hideLabel, unit }}>
+    <Row {...{ label, unit }}>
       {editing === label ? (
         <EditableCell
           data-testid={label}

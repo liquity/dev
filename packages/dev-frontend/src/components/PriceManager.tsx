@@ -26,7 +26,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
       <Heading variant="editorTitle">Price</Heading>
 
       <Box p={2}>
-        <Flex sx={{ alignItems: "center" }}>
+        <Flex sx={{ alignItems: "stretch" }}>
           <Label>ETH</Label>
 
           <StaticCell bg="muted" textAlign="center">
@@ -42,7 +42,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedPrice(e.target.value)}
           />
 
-          <Flex sx={{ height: "32px" }}>
+          <Flex sx={{ ml: 2, alignItems: "center" }}>
             <Transaction
               id="set-price"
               tooltip="Set"
@@ -55,7 +55,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
               }}
               numberOfConfirmationsToWait={1}
             >
-              <Button variant="icon" ml={2}>
+              <Button variant="icon">
                 <Icon name="chart-line" size="lg" />
               </Button>
             </Transaction>
@@ -68,7 +68,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
               send={liquity.updatePrice.bind(liquity)}
               numberOfConfirmationsToWait={1}
             >
-              <Button variant="icon" ml={2}>
+              <Button variant="icon">
                 <Icon name="redo" size="lg" />
               </Button>
             </Transaction>

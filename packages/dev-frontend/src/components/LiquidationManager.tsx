@@ -18,7 +18,7 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
       <Heading variant="editorTitle">Liquidate</Heading>
 
       <Box p={2}>
-        <Flex sx={{ alignItems: "center" }}>
+        <Flex sx={{ alignItems: "stretch" }}>
           <Label>Up to</Label>
 
           <EditableCell
@@ -35,7 +35,7 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
 
           <Label>Troves</Label>
 
-          <Box sx={{ height: "32px" }}>
+          <Flex sx={{ ml: 2, alignItems: "center" }}>
             <Transaction
               id="batch-liquidate"
               tooltip="Liquidate"
@@ -48,11 +48,11 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
               }}
               numberOfConfirmationsToWait={1}
             >
-              <Button sx={{ ml: 2 }} variant="dangerIcon">
+              <Button variant="dangerIcon">
                 <Icon name="trash" size="lg" />
               </Button>
             </Transaction>
-          </Box>
+          </Flex>
         </Flex>
       </Box>
     </Card>

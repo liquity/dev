@@ -99,7 +99,7 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
             {edited && !changePending && (
               <Button
                 variant="titleIcon"
-                sx={{ "&:hover": { color: "danger" } }}
+                sx={{ "&:enabled:hover": { color: "danger" } }}
                 onClick={() => setExchangedQui(zero)}
               >
                 <Icon name="history" size="lg" />
@@ -107,11 +107,7 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
             )}
           </Heading>
 
-          {changePending && (
-            <LoadingOverlay>
-              <Spinner size="24px" color="text" />
-            </LoadingOverlay>
-          )}
+          {changePending && <LoadingOverlay />}
 
           <Box p={2}>
             <EditableRow

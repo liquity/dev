@@ -7,43 +7,53 @@ const colors = {
   green: "#28c081",
   yellow: "#fd9d28",
   red: "#dc2c10",
-  lightRed: "#f48371"
+  lightRed: "#ff755f"
 };
 
-const button = {
+const buttonBase = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+
+  "&:enabled": { cursor: "pointer" }
+} as const;
+
+const button = {
+  ...buttonBase,
 
   px: "32px",
   py: "12px",
 
   color: "white",
 
-  fontWeight: "bold"
-};
+  fontWeight: "bold",
+
+  "&:disabled": {
+    opacity: 0.5
+  }
+} as const;
 
 const iconButton = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
+  ...buttonBase,
 
   padding: 0,
   width: "40px",
   height: "40px",
 
-  background: "none"
-};
+  background: "none",
+
+  "&:disabled": {
+    color: "text",
+    opacity: 0.33
+  }
+} as const;
 
 const card = {
+  position: "relative",
   padding: 2,
-
-  boxShadow: 2,
-
-  borderColor: "light-gray",
-  borderStyle: "solid",
-  borderWidth: "1px"
-};
+  border: 1,
+  boxShadow: 2
+} as const;
 
 const theme: Theme = {
   breakpoints: ["40em", "52em", "64em"],
@@ -74,7 +84,7 @@ const theme: Theme = {
 
   lineHeights: {
     body: 1.5,
-    heading: 1.125
+    heading: 1.25
   },
 
   colors: {
@@ -95,6 +105,8 @@ const theme: Theme = {
     "moon-gray": "#ccc",
     "light-gray": "#d7d8d9"
   },
+
+  borders: [0, "1px solid"],
 
   shadows: ["0", "0px 2px 4px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
 
@@ -120,7 +132,7 @@ const theme: Theme = {
     primary: {
       ...button,
       backgroundColor: "primary",
-      "&:hover": { backgroundColor: "secondary" }
+      "&:enabled:hover": { backgroundColor: "secondary" }
     },
 
     success: {
@@ -136,28 +148,30 @@ const theme: Theme = {
     icon: {
       ...iconButton,
       color: "primary",
-      "&:hover": { color: "accent" }
+      "&:enabled:hover": { color: "accent" }
     },
 
     dangerIcon: {
       ...iconButton,
       color: "danger",
-      "&:hover": { color: "dangerHover" }
+      "&:enabled:hover": { color: "dangerHover" }
     },
 
     titleIcon: {
       ...iconButton,
       color: "text",
-      "&:hover": { color: "success" }
+      "&:enabled:hover": { color: "success" }
     }
   },
 
   cards: {
-    primary: card,
+    primary: {
+      ...card,
+      borderColor: "light-gray"
+    },
 
     info: {
       ...card,
-
       borderColor: "rgba(122,199,240,0.4)",
       background: "linear-gradient(200deg, rgba(147,161,248,0.4) 0%, rgba(122,199,240,0.4) 100%);"
     }

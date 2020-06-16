@@ -55,8 +55,8 @@ export const StaticCell = styled.div<EditorCellProps & { invalid?: boolean }>`
 export const EditableCell = styled.input<EditorCellProps & { invalid?: boolean }>`
   box-sizing: border-box;
   ${styleProps}
-  ${props =>
-    props.invalid &&
+  ${({ invalid }) =>
+    invalid &&
     css`
       background-color: pink;
     `}
@@ -69,7 +69,7 @@ export const EditableCell = styled.input<EditorCellProps & { invalid?: boolean }
   const lineHeight = "copy";
   const bg = "white";
   const border = 1;
-  const borderColor = "light-gray";
+  const borderColor = "muted";
   const boxShadow = 2;
 
   Label.defaultProps = {
@@ -92,9 +92,7 @@ export const EditableCell = styled.input<EditorCellProps & { invalid?: boolean }
     bg,
     border,
     borderColor,
-    boxShadow,
-
-    height: "100%"
+    boxShadow
   };
 
   EditableCell.defaultProps = {
@@ -108,8 +106,6 @@ export const EditableCell = styled.input<EditorCellProps & { invalid?: boolean }
     bg,
     border,
     borderColor,
-    boxShadow,
-
-    width: "100%"
+    boxShadow
   };
 })();

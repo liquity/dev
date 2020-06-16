@@ -107,6 +107,7 @@ const hasMessage = (error: unknown): error is { message: string } =>
 
 type ButtonlikeProps = {
   disabled?: boolean;
+  variant?: string;
   onClick?: () => void;
 };
 
@@ -190,12 +191,12 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
           trigger,
           {
             disabled: true,
-            onClick: undefined
+            variant: "danger"
           },
           failureReasons[0]
         )
       : showFailure === "asTooltip"
-      ? React.cloneElement(trigger, { disabled: true, onClick: undefined })
+      ? React.cloneElement(trigger, { disabled: true })
       : React.cloneElement(trigger, { onClick: sendTransaction });
 
   if (showFailure === "asTooltip") {
@@ -205,7 +206,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
   return tooltip ? (
     <>
       <Tooltip message={tooltip} placement={tooltipPlacement || "right"}>
-        <Box opacity={showFailure ? 0.5 : 1}>{clonedTrigger}</Box>
+        <Box>{clonedTrigger}</Box>
       </Tooltip>
     </>
   ) : (

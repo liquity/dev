@@ -48,7 +48,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
         {isChanged && !changePending && (
           <Button
             variant="titleIcon"
-            sx={{ "&:hover": { color: "danger" } }}
+            sx={{ "&:enabled:hover": { color: "danger" } }}
             onClick={() => setEdited(original)}
           >
             <Icon name="history" size="lg" />
@@ -56,11 +56,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
         )}
       </Heading>
 
-      {changePending && (
-        <LoadingOverlay>
-          <Spinner size="24px" color="text" />
-        </LoadingOverlay>
-      )}
+      {changePending && <LoadingOverlay />}
 
       <Box p={2}>
         <EditableRow
