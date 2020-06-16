@@ -14,7 +14,8 @@ import {
   faChevronRight,
   faUserCircle,
   faWallet,
-  faExternalLinkAlt
+  faExternalLinkAlt,
+  faClipboardCheck
 } from "@fortawesome/free-solid-svg-icons";
 import { faClipboard } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
@@ -32,6 +33,7 @@ library.add(
   faChevronLeft,
   faChevronRight,
   faClipboard,
+  faClipboardCheck,
   faUserCircle,
   faWallet,
   faExternalLinkAlt

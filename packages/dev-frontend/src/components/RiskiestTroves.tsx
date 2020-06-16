@@ -114,6 +114,24 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
     forceReload();
   }, [forceReload, numberOfTroves]);
 
+  const [copied, setCopied] = useState<string>();
+
+  useEffect(() => {
+    if (copied !== undefined) {
+      let cancelled = false;
+
+      setTimeout(() => {
+        if (!cancelled) {
+          setCopied(undefined);
+        }
+      }, 2000);
+
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [copied]);
+
   const troves = trovesWithoutRewards?.map(
     ([owner, trove]) => [owner, trove.applyRewards(totalRedistributed)] as const
   );
@@ -189,9 +207,12 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                         </Tooltip>
                       </td>
                       <td>
-                        <CopyToClipboard text={owner}>
+                        <CopyToClipboard text={owner} onCopy={() => setCopied(owner)}>
                           <Button variant="icon" sx={{ width: "24px", height: "24px" }}>
-                            <Icon name={["far", "clipboard"]} size="sm" />
+                            <Icon
+                              name={copied === owner ? "clipboard-check" : ["far", "clipboard"]}
+                              size="sm"
+                            />
                           </Button>
                         </CopyToClipboard>
                       </td>
