@@ -403,7 +403,7 @@ export const TransactionMonitor: React.FC = () => {
           maxValue={numberOfConfirmationsToWait || 1}
           {...circularProgressbarStyle}
         >
-          <Text sx={{ fontSize: 1, fontWeight: 3, color: "white" }}>
+          <Text sx={{ fontSize: 1, fontWeight: "bold", color: "white" }}>
             {transactionState.type === "failed" || transactionState.type === "cancelled"
               ? "✖"
               : `${confirmations}/${numberOfConfirmationsToWait}`}
