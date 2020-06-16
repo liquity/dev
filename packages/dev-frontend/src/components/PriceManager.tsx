@@ -31,7 +31,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
         <Flex sx={{ alignItems: "center" }}>
           <Label>ETH</Label>
 
-          <StaticCell bg="#eee" textAlign="center">
+          <StaticCell bg="muted" textAlign="center">
             $
           </StaticCell>
 

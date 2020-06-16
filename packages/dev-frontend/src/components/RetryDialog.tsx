@@ -24,7 +24,7 @@ export const RetryDialog: React.FC<RetryDialogProps> = ({
       sx={{
         p: [3, 4],
         borderTop: 1,
-        borderColor: "near-white",
+        borderColor: "muted",
         justifyContent: "flex-end",
         flexDirection: ["column", "row"],
         alignItems: "center"

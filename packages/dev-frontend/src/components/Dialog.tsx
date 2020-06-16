@@ -42,7 +42,7 @@ export const Dialog: React.FC<DialogProps> = ({
         justifyContent: "space-between",
         alignItems: "center",
         borderBottom: 1,
-        borderColor: "near-white",
+        borderColor: "muted",
         p: [3, 4],
         pb: 3
       }}

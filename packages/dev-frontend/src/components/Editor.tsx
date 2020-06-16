@@ -14,7 +14,7 @@ const Row: React.FC<RowProps> = ({ label, hideLabel, unit, children }) => {
     <Flex sx={{ width: "450px", alignItems: "stretch" }}>
       {!hideLabel && <Label width={unit ? 0.25 : 0.4}>{label}</Label>}
       {unit && (
-        <StaticCell bg="#eee" width={0.15} textAlign="center">
+        <StaticCell bg="muted" width={0.15} textAlign="center">
           {unit}
         </StaticCell>
       )}

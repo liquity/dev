@@ -1,139 +1,180 @@
-import { tint, shade, readableColor } from "polished";
 import { Theme } from "theme-ui";
 
-const baseColors = {
-  black: "#000",
-  white: "#FFF",
-  blue: "#36ADF1",
-  green: "#28C081",
-  yellow: "#FD9D28",
-  red: "#DC2C10",
-  blurple: "#4E3FCE",
-  consensysblue: "#3259D6"
+const colors = {
+  blue: "#1542cd",
+  purple: "#745ddf",
+  cyan: "#2eb6ea",
+  green: "#28c081",
+  yellow: "#fd9d28",
+  red: "#dc2c10"
 };
 
-const colors = {
-  blurple: {
-    base: baseColors.blurple,
-    text: readableColor(baseColors.blurple),
-    light: tint(0.2, baseColors.blurple),
-    dark: shade(0.2, baseColors.blurple)
-  },
-  blue: {
-    base: baseColors.blue,
-    text: readableColor(baseColors.blue),
-    light: tint(0.9, baseColors.blue),
-    dark: shade(0.4, baseColors.blue)
-  },
-  green: {
-    base: baseColors.green,
-    text: baseColors.white,
-    light: tint(0.9, baseColors.green),
-    dark: shade(0.4, baseColors.green)
-  },
-  yellow: {
-    base: baseColors.yellow,
-    text: readableColor(baseColors.yellow),
-    light: tint(0.9, baseColors.yellow),
-    dark: shade(0.4, baseColors.yellow)
-  },
-  red: {
-    base: baseColors.red,
-    text: readableColor(baseColors.red),
-    light: tint(0.9, baseColors.red),
-    dark: shade(0.4, baseColors.red)
-  }
+const heading = {
+  color: "text",
+  fontFamily: "heading",
+  lineHeight: "heading",
+  fontWeight: "heading"
+};
+
+const button = {
+  px: "32px",
+  py: "12px",
+
+  fontWeight: "bold",
+  color: "white"
+};
+
+const card = {
+  padding: 2,
+
+  boxShadow: 2,
+
+  borderColor: "light-gray",
+  borderStyle: "solid",
+  borderWidth: "1px"
 };
 
 const theme: Theme = {
-  fontSizes: [12, 14, 16, 20, 24, 32, 48, 64],
-  fontWeights: [0, 300, 400, 600, 700],
-  letterSpacings: [0, 1, 2, 4, 8],
   breakpoints: ["40em", "52em", "64em"],
-  lineHeights: {
-    solid: 1,
-    title: 1.25,
-    copy: 1.5
-  },
+
+  space: [0, 4, 8, 16, 32, 64, 128, 256, 512],
+
   fonts: {
-    serif: "athelas, georgia, times, serif",
-    sansSerif: '"Source Sans Pro", -apple-system, sans-serif'
+    body: [
+      "system-ui",
+      "-apple-system",
+      "BlinkMacSystemFont",
+      '"Segoe UI"',
+      "Roboto",
+      '"Helvetica Neue"',
+      "sans-serif"
+    ].join(", "),
+    heading: "inherit",
+    monospace: "Menlo, monospace"
   },
-  space: [0, 4, 8, 16, 32, 64, 128, 256],
-  radii: ["0", "4px", "8px", "16px"],
-  borders: [0, "1px solid transparent"],
-  borderWidths: ["0", "1px", "2px", "4px"],
-  shadows: [
-    "0",
-    "0px 2px 4px rgba(0, 0, 0, 0.1)",
-    "0px 8px 16px rgba(0, 0, 0, 0.1)",
-    "0 7px 14px rgba(50,50,93,.1)"
-  ],
+
+  fontSizes: [12, 14, 16, 20, 24, 32, 48, 64, 96],
+
+  fontWeights: {
+    body: 400,
+    heading: 600,
+    bold: 600
+  },
+
+  lineHeights: {
+    body: 1.5,
+    heading: 1.125
+  },
+
   colors: {
-    text: "#3F3D4B",
-    background: "#fff",
-    primary: colors.blurple.base,
-    "primary-light": colors.blurple.light,
-    "primary-dark": colors.blurple.dark,
-    blue: baseColors.consensysblue,
-    black: "#000",
-    "near-black": "#111",
-    "dark-gray": "#333",
-    "mid-gray": "#555",
-    grey: "#CCC",
-    silver: "#999",
-    "light-silver": "#aaa",
+    primary: colors.blue,
+    secondary: colors.purple,
+    accent: colors.cyan,
+
+    success: colors.green,
+    warning: colors.yellow,
+    danger: colors.red,
+    info: colors.blue,
+
+    text: "#333",
+    background: "white",
+    muted: "#f0f1f2",
+
     "moon-gray": "#ccc",
-    "light-gray": "#eee",
-    "near-white": "#f4f4f4",
-    white: "#fff",
-    transparent: "transparent",
-    blacks: [
-      "rgba(0,0,0,.0125)",
-      "rgba(0,0,0,.025)",
-      "rgba(0,0,0,.05)",
-      "rgba(0,0,0,.1)",
-      "rgba(0,0,0,.2)",
-      "rgba(0,0,0,.3)",
-      "rgba(0,0,0,.4)",
-      "rgba(0,0,0,.5)",
-      "rgba(0,0,0,.6)",
-      "rgba(0,0,0,.7)",
-      "rgba(0,0,0,.8)",
-      "rgba(0,0,0,.9)"
-    ],
-    whites: [
-      "rgba(255,255,255,.0125)",
-      "rgba(255,255,255,.025)",
-      "rgba(255,255,255,.05)",
-      "rgba(255,255,255,.1)",
-      "rgba(255,255,255,.2)",
-      "rgba(255,255,255,.3)",
-      "rgba(255,255,255,.4)",
-      "rgba(255,255,255,.5)",
-      "rgba(255,255,255,.6)",
-      "rgba(255,255,255,.7)",
-      "rgba(255,255,255,.8)",
-      "rgba(255,255,255,.9)"
-    ],
-    success: colors.green.base,
-    warning: colors.yellow.base,
-    danger: colors.red.base,
-    info: colors.blue.base
+    "light-gray": "#eee"
   },
-  zIndices: [0, 9, 99, 999, 9999],
+
+  shadows: ["0", "0px 2px 4px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
+
   buttons: {
     primary: {
-      color: colors.blurple.text,
-      backgroundColor: colors.blurple.base
+      ...button,
+      backgroundColor: "primary"
     },
+
     success: {
-      color: colors.green.text,
-      backgroundColor: colors.green.base
+      ...button,
+      backgroundColor: "success"
     },
+
     danger: {
-      color: colors.red.text,
-      backgroundColor: colors.red.base
+      ...button,
+      backgroundColor: "danger"
+    }
+  },
+
+  cards: {
+    primary: card,
+
+    info: {
+      ...card,
+      background: "linear-gradient(200deg, rgba(147,161,248,0.4) 0%, rgba(122,199,240,0.4) 100%);"
+    }
+  },
+
+  styles: {
+    root: {
+      fontFamily: "body",
+      lineHeight: "body",
+      fontWeight: "body"
+    },
+
+    h1: {
+      ...heading,
+      fontSize: 5
+    },
+
+    h2: {
+      ...heading,
+      fontSize: 4
+    },
+
+    h3: {
+      ...heading,
+      fontSize: 3
+    },
+
+    h4: {
+      ...heading,
+      fontSize: 2
+    },
+
+    h5: {
+      ...heading,
+      fontSize: 1
+    },
+
+    h6: {
+      ...heading,
+      fontSize: 0
+    },
+
+    p: {
+      color: "text",
+      fontFamily: "body",
+      fontWeight: "body",
+      lineHeight: "body"
+    },
+
+    a: {
+      color: "primary",
+      ":hover": { color: "red" }
+    },
+
+    table: {
+      width: "100%",
+      borderCollapse: "separate",
+      borderSpacing: 0
+    },
+
+    th: {
+      textAlign: "left",
+      borderBottomStyle: "solid"
+    },
+
+    td: {
+      textAlign: "left",
+      borderBottomStyle: "solid"
     }
   }
 };

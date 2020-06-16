@@ -9,7 +9,7 @@ export const Header: React.FC = ({ children }) => (
       px: 5,
       py: 2,
       justifyContent: "space-between",
-      bg: "near-white",
+      bg: "muted",
       borderBottom: "1px solid lightgrey"
     }}
   >
@@ -20,9 +20,9 @@ export const Header: React.FC = ({ children }) => (
 
       <Box sx={{ mx: 3, width: "0px", height: "100%", borderLeft: "1px solid lightgrey" }} />
 
-      <Heading sx={{ fontWeight: 2 }}>
+      <Heading sx={{ fontWeight: "body" }}>
         Developer Interface (Beta)
-        <a href="#footnote" style={{ textDecoration: "none", color: "#1542CD" }}>
+        <a href="#footnote" style={{ textDecoration: "none" }}>
           *
         </a>
       </Heading>
