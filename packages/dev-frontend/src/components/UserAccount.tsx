@@ -12,11 +12,13 @@ type UserAccountProps = {
 };
 
 export const UserAccount: React.FC<UserAccountProps> = ({ account, etherBalance, quiBalance }) => (
-  <Flex sx={{ alignItems: "center" }}>
+  <Flex sx={{ alignItems: "center", lineHeight: 1.25 }}>
     <Icon name="user-circle" size="lg" />
     <Box ml={3} mr={4}>
       <Heading sx={{ fontSize: 1 }}>Connected as</Heading>
-      <Text sx={{ fontSize: 1 }}>{shortenAddress(account)}</Text>
+      <Text as="span" sx={{ fontSize: 1 }}>
+        {shortenAddress(account)}
+      </Text>
     </Box>
 
     <Icon name="wallet" size="lg" />
