@@ -106,7 +106,7 @@ const hasMessage = (error: unknown): error is { message: string } =>
   typeof (error as { message: unknown }).message === "string";
 
 type ButtonlikeProps = {
-  variant?: "danger";
+  disabled?: boolean;
   onClick?: () => void;
 };
 
@@ -189,13 +189,13 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
       ? React.cloneElement(
           trigger,
           {
-            variant: "danger",
+            disabled: true,
             onClick: undefined
           },
           failureReasons[0]
         )
       : showFailure === "asTooltip"
-      ? React.cloneElement(trigger, { variant: "danger", onClick: undefined })
+      ? React.cloneElement(trigger, { disabled: true, onClick: undefined })
       : React.cloneElement(trigger, { onClick: sendTransaction });
 
   if (showFailure === "asTooltip") {

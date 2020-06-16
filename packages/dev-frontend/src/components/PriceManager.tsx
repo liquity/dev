@@ -23,9 +23,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
 
   return (
     <Card mt={4} p={0}>
-      <Heading as="h3" bg="lightgrey" p={3}>
-        Price
-      </Heading>
+      <Heading variant="editorTitle">Price</Heading>
 
       <Box p={2}>
         <Flex sx={{ alignItems: "center" }}>
@@ -57,8 +55,8 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
               }}
               numberOfConfirmationsToWait={1}
             >
-              <Button ml={2}>
-                <Icon name="chart-line" size="sm" />
+              <Button variant="icon" ml={2}>
+                <Icon name="chart-line" size="lg" />
               </Button>
             </Transaction>
 
@@ -70,8 +68,8 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
               send={liquity.updatePrice.bind(liquity)}
               numberOfConfirmationsToWait={1}
             >
-              <Button ml={2}>
-                <Icon name="redo" size="sm" />
+              <Button variant="icon" ml={2}>
+                <Icon name="redo" size="lg" />
               </Button>
             </Transaction>
           </Flex>

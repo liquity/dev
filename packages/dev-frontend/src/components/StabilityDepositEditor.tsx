@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Heading, Box, Card, Link, Spinner } from "theme-ui";
+import { Heading, Box, Card, Button, Spinner } from "theme-ui";
 
 import { Difference } from "@liquity/decimal";
 import { StabilityDeposit } from "@liquity/lib";
@@ -33,35 +33,17 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
 
   return (
     <Card p={0}>
-      <Heading
-        as="h3"
-        sx={{
-          bg: "lightgrey",
-          pl: 3,
-          py: 2,
-          pr: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
-        }}
-      >
+      <Heading variant="editorTitle">
         {title}
-        <Box sx={{ width: "40px", height: "40px" }}>
-          {edited && !changePending && (
-            <Link
-              sx={{
-                color: "text",
-                "&:hover": { color: "danger" },
-                "&:active": { color: "danger" },
-                display: "flex",
-                alignItems: "center"
-              }}
-              onClick={() => setEditedDeposit(originalDeposit)}
-            >
-              <Icon name="history" size="lg" />
-            </Link>
-          )}
-        </Box>
+        {edited && !changePending && (
+          <Button
+            variant="titleIcon"
+            sx={{ "&:hover": { color: "danger" } }}
+            onClick={() => setEditedDeposit(originalDeposit)}
+          >
+            <Icon name="history" size="lg" />
+          </Button>
+        )}
       </Heading>
 
       {changePending && (

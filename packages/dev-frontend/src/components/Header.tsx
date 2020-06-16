@@ -22,9 +22,9 @@ export const Header: React.FC = ({ children }) => (
 
       <Heading sx={{ fontWeight: "body" }}>
         Developer Interface (Beta)
-        <a href="#footnote" style={{ textDecoration: "none" }}>
+        <Link href="#footnote" style={{ textDecoration: "none" }}>
           *
-        </a>
+        </Link>
       </Heading>
     </Flex>
     {children}

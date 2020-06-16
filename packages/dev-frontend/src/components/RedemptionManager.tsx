@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Box, Flex, Spinner, Card, Heading, Link } from "theme-ui";
+import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
 import { Liquity } from "@liquity/lib";
@@ -94,35 +94,17 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
     <>
       <Box mt={4}>
         <Card p={0}>
-          <Heading
-            as="h3"
-            sx={{
-              bg: "lightgrey",
-              pl: 3,
-              py: 2,
-              pr: 2,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center"
-            }}
-          >
+          <Heading variant="editorTitle">
             Redeem Collateral with LQTY
-            <Box sx={{ width: "40px", height: "40px" }}>
-              {edited && !changePending && (
-                <Link
-                  sx={{
-                    color: "text",
-                    "&:hover": { color: "danger" },
-                    "&:active": { color: "danger" },
-                    display: "flex",
-                    alignItems: "center"
-                  }}
-                  onClick={() => setExchangedQui(zero)}
-                >
-                  <Icon name="history" size="lg" />
-                </Link>
-              )}
-            </Box>
+            {edited && !changePending && (
+              <Button
+                variant="titleIcon"
+                sx={{ "&:hover": { color: "danger" } }}
+                onClick={() => setExchangedQui(zero)}
+              >
+                <Icon name="history" size="lg" />
+              </Button>
+            )}
           </Heading>
 
           {changePending && (

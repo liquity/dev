@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Heading, Box, Card, Spinner, Link } from "theme-ui";
+import { Heading, Box, Card, Spinner, Button } from "theme-ui";
 
 import { Decimal, Percent, Difference } from "@liquity/decimal";
 import { Trove, Liquity } from "@liquity/lib";
@@ -43,35 +43,17 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
   return (
     <Card p={0}>
-      <Heading
-        as="h3"
-        sx={{
-          bg: "lightgrey",
-          pl: 3,
-          py: 2,
-          pr: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
-        }}
-      >
+      <Heading variant="editorTitle">
         {title}
-        <Box sx={{ width: "40px", height: "40px" }}>
-          {isChanged && !changePending && (
-            <Link
-              sx={{
-                color: "text",
-                "&:hover": { color: "danger" },
-                "&:active": { color: "danger" },
-                display: "flex",
-                alignItems: "center"
-              }}
-              onClick={() => setEdited(original)}
-            >
-              <Icon name="history" size="lg" />
-            </Link>
-          )}
-        </Box>
+        {isChanged && !changePending && (
+          <Button
+            variant="titleIcon"
+            sx={{ "&:hover": { color: "danger" } }}
+            onClick={() => setEdited(original)}
+          >
+            <Icon name="history" size="lg" />
+          </Button>
+        )}
       </Heading>
 
       {changePending && (

@@ -15,9 +15,7 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
 
   return (
     <Card mt={4} p={0}>
-      <Heading as="h3" bg="lightgrey" p={3}>
-        Liquidate
-      </Heading>
+      <Heading variant="editorTitle">Liquidate</Heading>
 
       <Box p={2}>
         <Flex sx={{ alignItems: "center" }}>
@@ -50,8 +48,8 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
               }}
               numberOfConfirmationsToWait={1}
             >
-              <Button sx={{ ml: 2 }} variant="danger">
-                <Icon name="trash" size="sm" />
+              <Button sx={{ ml: 2 }} variant="dangerIcon">
+                <Icon name="trash" size="lg" />
               </Button>
             </Transaction>
           </Box>

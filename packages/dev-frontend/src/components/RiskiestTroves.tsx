@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Card, Button, Text, Box, Heading, Spinner, Link, Flex } from "theme-ui";
+import { Card, Button, Text, Box, Heading, Spinner, Flex } from "theme-ui";
 import styled from "styled-components";
 import { space, SpaceProps, layout, LayoutProps } from "styled-system";
 
@@ -117,18 +117,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   return (
     <Box mt={3} p={3}>
       <Card p={0}>
-        <Heading
-          as="h3"
-          sx={{
-            pl: 3,
-            py: 2,
-            pr: 2,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            bg: "lightgrey"
-          }}
-        >
+        <Heading variant="editorTitle">
           Riskiest Troves
           <Flex sx={{ alignItems: "center" }}>
             {numberOfTroves !== 0 && (
@@ -137,46 +126,21 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                   {clampedPage * pageSize + 1}-
                   {Math.min((clampedPage + 1) * pageSize, numberOfTroves)} of {numberOfTroves}
                 </Text>
-                <Link
-                  sx={{
-                    color: "text",
-                    "&:hover": { color: "success" },
-                    "&:active": { color: "success" },
-                    display: "flex",
-                    alignItems: "center"
-                  }}
-                  onClick={previousPage}
-                >
+                <Button variant="titleIcon" onClick={previousPage}>
                   <Icon name="chevron-left" size="lg" />
-                </Link>
-                <Link
-                  sx={{
-                    color: "text",
-                    "&:hover": { color: "success" },
-                    "&:active": { color: "success" },
-                    display: "flex",
-                    alignItems: "center"
-                  }}
-                  onClick={nextPage}
-                >
+                </Button>
+                <Button variant="titleIcon" onClick={nextPage}>
                   <Icon name="chevron-right" size="lg" />
-                </Link>
+                </Button>
               </>
             )}
-            <Link
-              sx={{
-                ml: 3,
-                color: "text",
-                "&:hover": { color: "success" },
-                "&:active": { color: "success" },
-                display: "flex",
-                alignItems: "center",
-                opacity: loading ? 0 : 1
-              }}
+            <Button
+              variant="titleIcon"
+              sx={{ opacity: loading ? 0 : 1, ml: 3 }}
               onClick={forceReload}
             >
               <Icon name="redo" size="lg" />
-            </Link>
+            </Button>
           </Flex>
         </Heading>
 
@@ -226,8 +190,8 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                       </td>
                       <td>
                         <CopyToClipboard text={owner}>
-                          <Button>
-                            <Icon name="clipboard" size="xs" />
+                          <Button variant="icon" sx={{ width: "24px", height: "24px" }}>
+                            <Icon name={["far", "clipboard"]} size="sm" />
                           </Button>
                         </CopyToClipboard>
                       </td>
@@ -261,7 +225,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                           send={liquity.liquidate.bind(liquity, owner)}
                           numberOfConfirmationsToWait={1}
                         >
-                          <Button variant="danger">
+                          <Button variant="dangerIcon">
                             <Icon name="trash" />
                           </Button>
                         </Transaction>

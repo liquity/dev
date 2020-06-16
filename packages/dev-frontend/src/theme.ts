@@ -6,15 +6,33 @@ const colors = {
   cyan: "#2eb6ea",
   green: "#28c081",
   yellow: "#fd9d28",
-  red: "#dc2c10"
+  red: "#dc2c10",
+  lightRed: "#f48371"
 };
 
 const button = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+
   px: "32px",
   py: "12px",
 
-  fontWeight: "bold",
-  color: "white"
+  color: "white",
+
+  fontWeight: "bold"
+};
+
+const iconButton = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+
+  padding: 0,
+  width: "40px",
+  height: "40px",
+
+  background: "none"
 };
 
 const card = {
@@ -67,6 +85,7 @@ const theme: Theme = {
     success: colors.green,
     warning: colors.yellow,
     danger: colors.red,
+    dangerHover: colors.lightRed,
     info: colors.blue,
 
     text: "#333",
@@ -74,15 +93,34 @@ const theme: Theme = {
     muted: "#f0f1f2",
 
     "moon-gray": "#ccc",
-    "light-gray": "#eee"
+    "light-gray": "#d7d8d9"
   },
 
   shadows: ["0", "0px 2px 4px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
 
+  text: {
+    editorTitle: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+
+      height: "56px",
+
+      pl: 3,
+      py: 2,
+      pr: 2,
+
+      bg: "light-gray",
+
+      fontSize: "18.7167px"
+    }
+  },
+
   buttons: {
     primary: {
       ...button,
-      backgroundColor: "primary"
+      backgroundColor: "primary",
+      "&:hover": { backgroundColor: "secondary" }
     },
 
     success: {
@@ -93,6 +131,24 @@ const theme: Theme = {
     danger: {
       ...button,
       backgroundColor: "danger"
+    },
+
+    icon: {
+      ...iconButton,
+      color: "primary",
+      "&:hover": { color: "accent" }
+    },
+
+    dangerIcon: {
+      ...iconButton,
+      color: "danger",
+      "&:hover": { color: "dangerHover" }
+    },
+
+    titleIcon: {
+      ...iconButton,
+      color: "text",
+      "&:hover": { color: "success" }
     }
   },
 
@@ -101,6 +157,8 @@ const theme: Theme = {
 
     info: {
       ...card,
+
+      borderColor: "rgba(122,199,240,0.4)",
       background: "linear-gradient(200deg, rgba(147,161,248,0.4) 0%, rgba(122,199,240,0.4) 100%);"
     }
   },
@@ -110,6 +168,13 @@ const theme: Theme = {
       fontFamily: "body",
       lineHeight: "body",
       fontWeight: "body"
+    },
+
+    a: {
+      color: "primary",
+      "&:hover": { color: "accent" },
+      textDecoration: "none",
+      fontWeight: "bold"
     }
   }
 };
