@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Heading, Box, Card, Button, Spinner } from "theme-ui";
+import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Difference } from "@liquity/decimal";
 import { StabilityDeposit } from "@liquity/lib";

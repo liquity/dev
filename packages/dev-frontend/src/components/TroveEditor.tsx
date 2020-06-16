@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Heading, Box, Card, Spinner, Button } from "theme-ui";
+import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Decimal, Percent, Difference } from "@liquity/decimal";
 import { Trove, Liquity } from "@liquity/lib";
