@@ -21,9 +21,8 @@ module.exports = {
     networks: {
         buidlerevm: {
             accounts: accountsList,
-            // expanded gas limits for testing
-            gas: 9000000000,  // tx gas limit
-            blockGasLimit: 9000000000, 
+            gas: 10000000,  // tx gas limit
+            blockGasLimit: 10000000, 
             gasPrice: 20000000000
         }
     },

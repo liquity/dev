@@ -106,11 +106,6 @@ contract PoolManager is Ownable, IPoolManager {
         _;
     }
 
-    modifier onlyCDPManagerOrUserIsSender(address _user) {
-        require(_msgSender()  == cdpManagerAddress || _user == _msgSender(),
-        "PoolManager: Target CDP must be _msgSender(), otherwise caller must be CDPManager");
-        _;
-    }
     modifier onlyStabilityPoolorActivePool {
         require(
             _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, 
@@ -172,7 +167,7 @@ contract PoolManager is Ownable, IPoolManager {
     } 
     
     // Return the total collateral ratio (TCR) of the system, based on the most recent ETH:USD price
-    function getTCR() view public returns (uint) {
+    function getTCR() public view returns (uint) {
         uint price = priceFeed.getPrice();
 
         uint activeColl = activePool.getETH();
@@ -456,7 +451,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Transfer the caller’s entire ETH gain from the Stability Pool to the caller’s CDP, and leaves
     their compounded deposit in the Stability Pool. */
-    function withdrawFromSPtoCDP(address _user, address _hint) external onlyCDPManagerOrUserIsSender(_user) returns(bool) {
+    function withdrawFromSPtoCDP(address _user, address _hint) external returns(bool) {
         uint userDeposit = initialDeposits[_user]; 
        
         if (userDeposit == 0) { return false; } 

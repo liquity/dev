@@ -118,6 +118,7 @@ const connectContracts = async (contracts, addresses) => {
 
   // set CDPManager addr in SortedCDPs
   await contracts.sortedCDPs.setCDPManager(addresses.CDPManager)
+  await contracts.sortedCDPs.setBorrowerOperations(addresses.BorrowerOperations)
 
   // set contract addresses in the FunctionCaller 
   await contracts.functionCaller.setCDPManagerAddress(addresses.CDPManager)

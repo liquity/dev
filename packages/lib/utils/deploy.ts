@@ -99,6 +99,7 @@ const connectContracts = async (
     nonce => poolManager.setActivePool(activePool.address, { ...overrides, nonce }),
     nonce => poolManager.setDefaultPool(defaultPool.address, { ...overrides, nonce }),
     nonce => sortedCDPs.setCDPManager(cdpManager.address, { ...overrides, nonce }),
+    nonce => sortedCDPs.setBorrowerOperations(borrowerOperations.address, { ...overrides, nonce }),
     nonce => priceFeed.setCDPManagerAddress(cdpManager.address, { ...overrides, nonce }),
     nonce => cdpManager.setCLVToken(clvToken.address, { ...overrides, nonce }),
     nonce => cdpManager.setSortedCDPs(sortedCDPs.address, { ...overrides, nonce }),

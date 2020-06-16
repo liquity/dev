@@ -62,6 +62,13 @@ contract CDPManager is Ownable, ICDPManager {
     ISortedCDPs sortedCDPs;
     address public sortedCDPsAddress;
 
+    // --- Modifiers ---
+
+    modifier onlyBorrowerOperations() {
+        require(_msgSender() == borrowerOperationsAddress, "PoolManager: Caller is not the BorrowerOperations contract");
+        _;
+    }
+
     // --- Data structures ---
 
     // Store the necessary data for a Collateralized Debt Position (CDP)
@@ -573,7 +580,7 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     
-    function applyPendingRewards(address _user) external returns(bool) {
+    function applyPendingRewards(address _user) external onlyBorrowerOperations returns(bool) {
         return _applyPendingRewards(_user);
     }
 
@@ -600,7 +607,7 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Update user's snapshots of L_ETH and L_CLVDebt to reflect the current values
 
-    function updateRewardSnapshots(address _user) external returns(bool) {
+    function updateRewardSnapshots(address _user) external onlyBorrowerOperations returns(bool) {
        return  _updateRewardSnapshots(_user);
     }
 
@@ -665,7 +672,7 @@ contract CDPManager is Ownable, ICDPManager {
         return (debt, coll);
     }
 
-    function removeStake(address _user) external returns (bool) {
+    function removeStake(address _user) external onlyBorrowerOperations returns (bool) {
         return _removeStake(_user);
     }
 
@@ -676,7 +683,7 @@ contract CDPManager is Ownable, ICDPManager {
         CDPs[_user].stake = 0;
     }
 
-    function updateStakeAndTotalStakes(address _user) external returns (uint) {
+    function updateStakeAndTotalStakes(address _user) external onlyBorrowerOperations returns (uint) {
         return _updateStakeAndTotalStakes(_user);
     }
 
@@ -723,7 +730,7 @@ contract CDPManager is Ownable, ICDPManager {
         poolManager.liquidate(_debt, _coll);
     }
 
-    function closeCDP(address _user) external returns (bool) {
+    function closeCDP(address _user) external onlyBorrowerOperations returns (bool) {
         return _closeCDP(_user);
     }
 
@@ -766,8 +773,8 @@ contract CDPManager is Ownable, ICDPManager {
     }
   
     // Push the owner's address to the CDP owners list, and record the corresponding array index on the CDP struct
-    function addCDPOwnerToArray(address _user) external returns (uint index) {
-        index = CDPOwners.push(_user) - 1;
+    function addCDPOwnerToArray(address _user) external onlyBorrowerOperations returns (uint index) {
+        index = CDPOwners.push(_user).sub(1);
         CDPs[_user].arrayIndex = index;
 
         return index;
@@ -836,29 +843,29 @@ contract CDPManager is Ownable, ICDPManager {
 
     // --- Trove property setters --- 
 
-    function setCDPStatus(address _user, uint num) external {
+    function setCDPStatus(address _user, uint num) external onlyBorrowerOperations {
         CDPs[_user].status = Status(num);
     }
 
-    function increaseCDPColl(address _user, uint _collIncrease) external returns (uint) {
+    function increaseCDPColl(address _user, uint _collIncrease) external onlyBorrowerOperations returns (uint) {
         uint newColl = CDPs[_user].coll.add(_collIncrease);
         CDPs[_user].coll = newColl;
         return newColl;
     }
 
-    function decreaseCDPColl(address _user, uint _collDecrease) external returns (uint) {
+    function decreaseCDPColl(address _user, uint _collDecrease) external onlyBorrowerOperations returns (uint) {
         uint newColl = CDPs[_user].coll.sub(_collDecrease);
         CDPs[_user].coll = newColl;
         return newColl;
     }
 
-    function increaseCDPDebt(address _user, uint _debtIncrease) external returns (uint) {
+    function increaseCDPDebt(address _user, uint _debtIncrease) external onlyBorrowerOperations returns (uint) {
         uint newDebt = CDPs[_user].debt.add(_debtIncrease);
         CDPs[_user].debt = newDebt;
         return newDebt;
     }
 
-    function decreaseCDPDebt(address _user, uint _debtDecrease) external returns (uint) {
+    function decreaseCDPDebt(address _user, uint _debtDecrease) external onlyBorrowerOperations returns (uint) {
         uint newDebt = CDPs[_user].debt.sub(_debtDecrease);
         CDPs[_user].debt = newDebt;
         return newDebt;

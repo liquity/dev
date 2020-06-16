@@ -2,6 +2,7 @@ pragma solidity ^0.5.16;
 
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/IBorrowerOperations.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -29,6 +30,10 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     using SafeMath for uint256;
 
     event CDPManagerAddressChanged(address _newCDPlManagerAddress);
+    event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
+
+    IBorrowerOperations borrowerOperations;
+    address public borrowerOperationsAddress;
 
     ICDPManager cdpManager;
     address public CDPManagerAddress;
@@ -51,10 +56,37 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
     Data data;
 
+    // --- Modifiers ---
+
+    modifier onlyBorrowerOperations() {
+        require(_msgSender() == borrowerOperationsAddress, "SortedCDPs: Caller is not the BorrowerOperations contract");
+        _;
+    }
+
+    modifier onlyCDPManager() {
+        require(_msgSender() == CDPManagerAddress, "SortedCDPs: Caller is not the CDPManager");
+        _;
+    }
+
+     modifier onlyBMorCDPM() {
+        address sender = _msgSender();
+        require(sender == CDPManagerAddress || sender == borrowerOperationsAddress, 
+                "SortedCDPs: Caller is neither BM nor CDPM");
+        _;
+    }
+
+    // --- Dependency setters --- 
+
     function setCDPManager(address _CDPManagerAddress) public onlyOwner {
         CDPManagerAddress = _CDPManagerAddress;
         cdpManager = ICDPManager(_CDPManagerAddress);
         emit CDPManagerAddressChanged(_CDPManagerAddress);
+    }
+
+    function setBorrowerOperations(address _borrowerOperationsAddress) public onlyOwner {
+        borrowerOperationsAddress = _borrowerOperationsAddress;
+        borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
     }
 
     constructor() public {
@@ -80,7 +112,11 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _nextId Id of next node for the insert position
      */
 
-    function insert(address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) public {
+    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) public onlyBorrowerOperations {
+        _insert (_id, _ICR, _price, _prevId, _nextId);
+    }
+    
+    function _insert(address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) internal {
         // console.log("SortedCDPS.insert called");
         // console.log("00. gas left: %s", gasleft());
         // List must not be full
@@ -156,11 +192,15 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         // console.log("SortedCDPs.insert func end");
     }
 
+    function remove(address _id) public onlyCDPManager {
+        _remove(_id);
+    }
+
     /*
      * @dev Remove a node from the list
      * @param _id Node's id
      */
-    function remove(address _id) public {
+    function _remove(address _id) internal {
         // List must contain the node
         // console.log("00. gas left: %s", gasleft());
         require(contains(_id)); // 940 gas
@@ -220,16 +260,16 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the new insert position
      * @param _nextId Id of next node for the new insert position
      */
-    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) public {
+    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) public onlyBMorCDPM {
         // List must contain the node
         require(contains(_id));
 
         // Remove node from the list
-        remove(_id);
+        _remove(_id);
 
         if (_newICR > 0) {
             // Insert node if it has a non-zero ICR
-            insert(_id, _newICR, _price, _prevId, _nextId);
+            _insert(_id, _newICR, _price, _prevId, _nextId);
         }
     }
 

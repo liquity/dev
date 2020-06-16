@@ -7,10 +7,6 @@ import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPoolManager.sol";
 import "./DeciMath.sol";
-// import "@openzeppelin/contracts/math/SafeMath.sol";
-// import "@openzeppelin/contracts/ownership/Ownable.sol";
-// import "@nomiclabs/buidler/console.sol";
-
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -500,7 +496,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
         else {
-            return 2**256 - 1; 
+            return (2**256) - 1; 
         }
     }
 }
