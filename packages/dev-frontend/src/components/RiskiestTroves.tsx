@@ -36,7 +36,7 @@ const Table = styled.table<SpaceProps & LayoutProps>`
   }
 
   & tr td:nth-child(6) {
-    width: 0;
+    width: 40px;
   }
 `;
 
