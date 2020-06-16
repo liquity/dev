@@ -9,13 +9,6 @@ const colors = {
   red: "#dc2c10"
 };
 
-const heading = {
-  color: "text",
-  fontFamily: "heading",
-  lineHeight: "heading",
-  fontWeight: "heading"
-};
-
 const button = {
   px: "32px",
   py: "12px",
@@ -117,64 +110,6 @@ const theme: Theme = {
       fontFamily: "body",
       lineHeight: "body",
       fontWeight: "body"
-    },
-
-    h1: {
-      ...heading,
-      fontSize: 5
-    },
-
-    h2: {
-      ...heading,
-      fontSize: 4
-    },
-
-    h3: {
-      ...heading,
-      fontSize: 3
-    },
-
-    h4: {
-      ...heading,
-      fontSize: 2
-    },
-
-    h5: {
-      ...heading,
-      fontSize: 1
-    },
-
-    h6: {
-      ...heading,
-      fontSize: 0
-    },
-
-    p: {
-      color: "text",
-      fontFamily: "body",
-      fontWeight: "body",
-      lineHeight: "body"
-    },
-
-    a: {
-      color: "primary",
-      ":hover": { color: "red" }
-    },
-
-    table: {
-      width: "100%",
-      borderCollapse: "separate",
-      borderSpacing: 0
-    },
-
-    th: {
-      textAlign: "left",
-      borderBottomStyle: "solid"
-    },
-
-    td: {
-      textAlign: "left",
-      borderBottomStyle: "solid"
     }
   }
 };
