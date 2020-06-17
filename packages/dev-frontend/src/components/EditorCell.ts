@@ -63,10 +63,8 @@ export const EditableCell = styled.input<EditorCellProps & { invalid?: boolean }
 `;
 
 (() => {
-  const position = "relative";
   const p = 2;
   const fontSize = 3;
-  const lineHeight = "copy";
   const bg = "white";
   const border = 1;
   const borderColor = "muted";
@@ -76,18 +74,14 @@ export const EditableCell = styled.input<EditorCellProps & { invalid?: boolean }
     theme,
 
     p,
-    position,
-    fontSize,
-    lineHeight
+    fontSize
   };
 
   StaticCell.defaultProps = {
     theme,
 
     p,
-    position,
     fontSize,
-    lineHeight,
 
     bg,
     border,
@@ -99,9 +93,7 @@ export const EditableCell = styled.input<EditorCellProps & { invalid?: boolean }
     theme,
 
     p,
-    position,
     fontSize,
-    lineHeight,
 
     bg,
     border,

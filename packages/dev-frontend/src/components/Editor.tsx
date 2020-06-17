@@ -109,6 +109,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
     <Row {...{ label, unit }}>
       {editing === label ? (
         <EditableCell
+          flexGrow={1}
           data-testid={label}
           ref={inputRef}
           type="number"
