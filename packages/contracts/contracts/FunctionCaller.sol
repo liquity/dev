@@ -63,42 +63,42 @@ contract FunctionCaller {
     //     return DeciMath.accurateMulDiv(x ,y, z);
     // }
 
-    function getMin(uint a, uint b) public view returns(uint) {
-        return DeciMath.getMin(a, b);
+    function getMin(uint _a, uint _b) public view returns(uint) {
+        return DeciMath.getMin(_a, _b);
     }
 
-    function decimath_decMul(uint x, uint y) public returns (uint prod) {
-        return DeciMath.decMul(x, y);
+    function decimath_decMul(uint _x, uint _y) public returns (uint prod) {
+        return DeciMath.decMul(_x, _y);
     }
    
-    function decimath_decDiv(uint x, uint y) public returns (uint quotient) {
-        return DeciMath.decDiv(x, y);
+    function decimath_decDiv(uint _x, uint _y) public returns (uint quotient) {
+        return DeciMath.decDiv(_x, _y);
     }
 
-    function decimath_div_toDuint(uint x, uint y) public returns (uint quotient) {
+    function decimath_div_toDuint(uint _x, uint _y) public returns (uint quotient) {
         // console.log("0. gas left: %s", gasleft());
-        uint quotient = DeciMath.div_toDuint(x, y); // 1097 gas
+        uint quotient = DeciMath.div_toDuint(_x, _y); // 1097 gas
         // console.log("1. gas left: %s", gasleft());
         return quotient;
     }
 
-    function decimath_mul_uintByDuint( uint x, uint y_duint)public returns (uint prod) {
+    function decimath_mul_uintByDuint( uint _x, uint _y_duint)public returns (uint prod) {
         //  console.log("0. gas left: %s", gasleft());
-        uint z = DeciMath.mul_uintByDuint(x, y_duint);  // 967 gas
+        uint z = DeciMath.mul_uintByDuint(_x, _y_duint);  // 967 gas
         //  console.log("1. gas left: %s", gasleft());
         return z;
     }
     
     //  ---- Funcs for checking write-to-storage costs ---
 
-    function repeatedlySetVal (uint n) public returns (uint, uint) {
-        for (uint i = 2; i < n + 2; i ++) {
+    function repeatedlySetVal (uint _n) public returns (uint, uint) {
+        for (uint i = 2; i < _n + 2; i ++) {
             number = i;
         }
     }
     
-    function repeatedlySetValThenClearIt (uint n) public returns (uint, uint) {
-        for (uint i = 2; i < n + 2; i ++) {
+    function repeatedlySetValThenClearIt (uint _n) public returns (uint, uint) {
+        for (uint i = 2; i < _n + 2; i ++) {
             number = i;
         }
         number = 0;

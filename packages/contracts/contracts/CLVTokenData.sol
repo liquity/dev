@@ -30,29 +30,29 @@ contract CLVTokenData is Ownable {
 
     // --- Balance functions --- 
 
-    function getBalance(address account) external view returns(uint) { 
-        return balances[account];
+    function getBalance(address _account) external view returns(uint) { 
+        return balances[_account];
     }
 
-    function setBalance(address account, uint256 newBalance) external  onlyCLVTokenAddress {
-        balances[account] = newBalance;
+    function setBalance(address _account, uint256 _newBalance) external onlyCLVTokenAddress {
+        balances[_account] = _newBalance;
     }
 
-    function addToBalance(address account, uint256 value) external onlyCLVTokenAddress {
-        balances[account] = balances[account].add(value);
+    function addToBalance(address _account, uint256 _value) external onlyCLVTokenAddress {
+        balances[_account] = balances[_account].add(_value);
     }
 
-    function subFromBalance(address account, uint256 value) external onlyCLVTokenAddress {
-        balances[account] = balances[account].sub(value, 'ERC20: subtracted amount exceeds balance'); 
+    function subFromBalance(address _account, uint256 _value) external onlyCLVTokenAddress {
+        balances[_account] = balances[_account].sub(_value, 'ERC20: subtracted amount exceeds balance'); 
     }
 
     // --- Allowance functions ---
     
-    function getAllowance(address owner, address spender) external view returns(uint) {
-        return allowances[owner][spender];
+    function getAllowance(address _owner, address _spender) external view returns(uint) {
+        return allowances[_owner][_spender];
     }
 
-    function setAllowance(address owner, address spender, uint256 allowance) external onlyCLVTokenAddress {
-        allowances[owner][spender] = allowance;
+    function setAllowance(address _owner, address _spender, uint256 _allowance) external onlyCLVTokenAddress {
+        allowances[_owner][_spender] = _allowance;
     }
 }

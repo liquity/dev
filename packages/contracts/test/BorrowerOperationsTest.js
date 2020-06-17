@@ -1840,7 +1840,7 @@ contract('BorrowerOperations', async accounts => {
       assert.fail(txData)
     } catch (err) {
       assert.include(err.message, "revert")
-      assert.include(err.message, "CDPManager: Collateral must have $USD value >= 20")
+      assert.include(err.message, "BorrowerOps: Collateral must have $USD value >= 20")
     }
   })
 

@@ -4,7 +4,6 @@ const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
-const NameRegistry = artifacts.require("./NameRegistry.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
@@ -15,9 +14,7 @@ const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const deploymentHelpers = require("./deploymentHelpers.js")
 
 const getAddresses = deploymentHelpers.getAddresses
-const setNameRegistry = deploymentHelpers.setNameRegistry
 const connectContracts = deploymentHelpers.connectContracts
-const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
 
 
 contractABIs = [
@@ -27,7 +24,6 @@ contractABIs = [
     PoolManager,
     SortedCDPs,
     CDPManager, 
-    NameRegistry, 
     ActivePool,
     StabilityPool, 
     DefaultPool,
@@ -44,7 +40,6 @@ contractABIs = [
       }
     
     const getBytecodeSize = (contractABI) => {
-            
             const bytecodeLength = (contractABI.bytecode.length / 2) - 1 
             const deployedBytecodeLength = (contractABI.deployedBytecode.length / 2) - 1 
             console.log(`${contractABI.contractName}: ${bytecodeLength}`)
@@ -64,7 +59,6 @@ async function main() {
     const poolManager = await PoolManager.new()
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
-    const nameRegistry = await NameRegistry.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
     const defaultPool = await DefaultPool.new()
@@ -77,7 +71,6 @@ async function main() {
         poolManager: poolManager,
         sortedCDPs: sortedCDPs,
         cdpManager: cdpManager,
-        nameRegistry: nameRegistry,
         activePool: activePool,
         stabilityPool: stabilityPool,
         defaultPool: defaultPool,

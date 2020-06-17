@@ -24,7 +24,7 @@ contract MultiCDPGetter {
         sortedCDPs = _sortedCDPs;
     }
 
-    function min(uint a, uint b) internal pure returns (uint) {
+    function _min(uint a, uint b) internal pure returns (uint) {
         return a < b ? a : b;
     }
 
@@ -54,14 +54,14 @@ contract MultiCDPGetter {
             }
 
             if (descend) {
-                _cdps = getMultipleSortedCDPsFromHead(startIdx, _count);
+                _cdps = _getMultipleSortedCDPsFromHead(startIdx, _count);
             } else {
-                _cdps = getMultipleSortedCDPsFromTail(startIdx, _count);
+                _cdps = _getMultipleSortedCDPsFromTail(startIdx, _count);
             }
         }
     }
 
-    function getMultipleSortedCDPsFromHead(uint _startIdx, uint _count)
+    function _getMultipleSortedCDPsFromHead(uint _startIdx, uint _count)
         internal view returns (CombinedCDPData[] memory _cdps)
     {
         address currentCDPowner = sortedCDPs.getFirst();
@@ -90,7 +90,7 @@ contract MultiCDPGetter {
         }
     }
 
-    function getMultipleSortedCDPsFromTail(uint _startIdx, uint _count)
+    function _getMultipleSortedCDPsFromTail(uint _startIdx, uint _count)
         internal view returns (CombinedCDPData[] memory _cdps)
     {
         address currentCDPowner = sortedCDPs.getLast();

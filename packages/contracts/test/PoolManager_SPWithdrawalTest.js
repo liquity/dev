@@ -1447,7 +1447,7 @@ contract('PoolManager', async accounts => {
       const txD = await poolManager.withdrawFromSP(mv._300e18, { from: dennis })
       const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
 
-      // B, C and D should withdraw 1e-10 of initial deposit, 
+      // B, C and D should have a compounded deposit of 1e-10 of initial deposit, which the system rounds down to 0
      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0' ), 1000)
      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '0' ), 1000)
      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '0'), 1000)

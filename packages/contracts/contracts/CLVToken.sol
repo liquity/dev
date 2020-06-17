@@ -52,13 +52,13 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         return true;
     }
     
-    function sendToPool(address _sender,  address poolAddress, uint256 _amount) public onlyPoolManager returns (bool) {
-        _transfer(_sender, poolAddress, _amount);
+    function sendToPool(address _sender,  address _poolAddress, uint256 _amount) public onlyPoolManager returns (bool) {
+        _transfer(_sender, _poolAddress, _amount);
         return true;
     }
     
-    function returnFromPool(address poolAddress, address user, uint256 _amount ) public onlyPoolManager returns (bool) {
-        _transfer(poolAddress, user, _amount);
+    function returnFromPool(address _poolAddress, address _receiver, uint256 _amount ) public onlyPoolManager returns (bool) {
+        _transfer(_poolAddress, _receiver, _amount);
         return true;
     }
 

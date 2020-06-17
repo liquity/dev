@@ -117,79 +117,49 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     }
     
     function _insert(address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) internal {
-        // console.log("SortedCDPS.insert called");
-        // console.log("00. gas left: %s", gasleft());
         // List must not be full
-        require(!isFull());  // 1650 gas
-        // console.log("01. gas left: %s", gasleft());
+        require(!isFull());  
         // List must not already contain node
-        require(!contains(_id));  // 900 gas
-        // console.log("02. gas left: %s", gasleft());
+        require(!contains(_id));  
         // Node id must not be null
-        require(_id != address(0));  // 26 gas
-        // console.log("03. gas left: %s", gasleft());
+        require(_id != address(0));  
         // ICR must be non-zero
-        require(_ICR > 0); // 16 gas
-        // console.log("04. gas left: %s", gasleft());
+        require(_ICR > 0); 
 
-        address prevId = _prevId; // 2 gas
-        // console.log("05. gas left: %s", gasleft());
-        address nextId = _nextId; // 3 gas
-        // console.log("06. gas left: %s", gasleft());
+        address prevId = _prevId; 
+        address nextId = _nextId; 
 
         if (!validInsertPosition(_ICR, _price, prevId, nextId)) {
             // Sender's hint was not a valid insert position
             // Use sender's hint to find a valid insert position
-            (prevId, nextId) = findInsertPosition(_ICR, _price, prevId, nextId);  // 14500k gas with 1 traversals  
+            (prevId, nextId) = findInsertPosition(_ICR, _price, prevId, nextId);   
         }
-        // console.log("07. gas left: %s", gasleft());
         
-         data.nodes[_id].exists = true;  // *** 21000 gas for false --> true
-        
-        // console.log("08. gas left: %s", gasleft());
-
+         data.nodes[_id].exists = true;  
+    
         if (prevId == address(0) && nextId == address(0)) {
-            // console.log("9a. gas left: %s", gasleft());
             // Insert as head and tail
-            data.head = _id; // 21000 gas
-            // console.log("9b. gas left: %s", gasleft());
-            data.tail = _id; // 21000 gas
-            // console.log("9bb. gas left: %s", gasleft());
-        } else if (prevId == address(0)) { // 117 gas
-            // console.log("9c. gas left: %s", gasleft());
+            data.head = _id; 
+            data.tail = _id; 
+        } else if (prevId == address(0)) { 
             // Insert before `prevId` as the head
-            data.nodes[_id].nextId = data.head; // 2600 gas
-            // console.log("9d. gas left: %s", gasleft());
-            data.nodes[data.head].prevId = _id;  // 21800 gas
-            // console.log("9e. gas left: %s", gasleft());
-            data.head = _id; // 5800 gas
-            // console.log("9ee. gas left: %s", gasleft());
+            data.nodes[_id].nextId = data.head; 
+            data.nodes[data.head].prevId = _id;  
+            data.head = _id; 
         } else if (nextId == address(0)) {
-            // console.log("9f. gas left: %s", gasleft());
             // Insert after `nextId` as the tail
             data.nodes[_id].prevId = data.tail;
-            // console.log("9g. gas left: %s", gasleft());
             data.nodes[data.tail].nextId = _id;
-            // console.log("9h. gas left: %s", gasleft());
             data.tail = _id;
-            // console.log("9i. gas left: %s", gasleft());
-        } else { // 127 gas
-            // console.log("9j. gas left: %s", gasleft());
+        } else { 
             // Insert at insert position between `prevId` and `nextId`
-            data.nodes[_id].nextId = nextId; // 1800 gas
-            // console.log("9k. gas left: %s", gasleft());
-            data.nodes[_id].prevId = prevId; // 21000 gas
-            // console.log("9l. gas left: %s", gasleft());
-            data.nodes[prevId].nextId = _id; // 6000 gas
-            // console.log("9m. gas left: %s", gasleft());
-            data.nodes[nextId].prevId = _id; // 6000 gas
-            // console.log("9n. gas left: %s", gasleft());
+            data.nodes[_id].nextId = nextId; 
+            data.nodes[_id].prevId = prevId; 
+            data.nodes[prevId].nextId = _id; 
+            data.nodes[nextId].prevId = _id; 
         }
 
-        data.size = data.size.add(1); // 5900 gas
-        // ;  
-        // console.log("10. gas left: %s", gasleft());
-        // console.log("SortedCDPs.insert func end");
+        data.size = data.size.add(1); 
     }
 
     function remove(address _id) public onlyCDPManager {
@@ -202,55 +172,38 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      */
     function _remove(address _id) internal {
         // List must contain the node
-        // console.log("00. gas left: %s", gasleft());
-        require(contains(_id)); // 940 gas
-        // console.log("01. gas left: %s", gasleft());
+        require(contains(_id)); 
 
-        if (data.size > 1) { // 800 gas
-            // console.log("02. gas left: %s", gasleft());
+        if (data.size > 1) { 
             // List contains more than a single node
-            if (_id == data.head) { // 800 gas
-                // console.log("03. gas left: %s", gasleft());
+            if (_id == data.head) { 
                 // The removed node is the head
                 // Set head to next node
-                data.head = data.nodes[_id].nextId; // 6800 gas
-                // console.log("04. gas left: %s", gasleft());
+                data.head = data.nodes[_id].nextId; 
                 // Set prev pointer of new head to null
-                data.nodes[data.head].prevId = address(0); // 6700 gas
-                // console.log("05. gas left: %s", gasleft());
+                data.nodes[data.head].prevId = address(0); 
             } else if (_id == data.tail) {
-                // console.log("06. gas left: %s", gasleft());
                 // The removed node is the tail
                 // Set tail to previous node
                 data.tail = data.nodes[_id].prevId;
-                // console.log("07. gas left: %s", gasleft());
                 // Set next pointer of new tail to null
                 data.nodes[data.tail].nextId = address(0);
-                // console.log("08. gas left: %s", gasleft());
             } else {
                 // The removed node is neither the head nor the tail
                 // Set next pointer of previous node to the next node
-                // console.log("09. gas left: %s", gasleft());
-                data.nodes[data.nodes[_id].prevId].nextId = data.nodes[_id].nextId; // 7600 gas
-                //  console.log("10. gas left: %s", gasleft());
+                data.nodes[data.nodes[_id].prevId].nextId = data.nodes[_id].nextId;
                 // Set prev pointer of next node to the previous node
-                data.nodes[data.nodes[_id].nextId].prevId = data.nodes[_id].prevId; // 7600 gas
-                //  console.log("11. gas left: %s", gasleft());
+                data.nodes[data.nodes[_id].nextId].prevId = data.nodes[_id].prevId;
             }
         } else {
             // List contains a single node
             // Set the head and tail to null
-            //  console.log("12. gas left: %s", gasleft());
             data.head = address(0);
-            //  console.log("13. gas left: %s", gasleft());
             data.tail = address(0);
-            //  console.log("14. gas left: %s", gasleft());
         }
 
-        delete data.nodes[_id]; // ** 11100 gas
-        // console.log("15. gas left: %s", gasleft());
-        data.size = data.size.sub(1); // ** 5900 gas
-        // console.log("16. gas left: %s", gasleft());
+        delete data.nodes[_id]; 
+        data.size = data.size.sub(1); 
     }
 
     /*
