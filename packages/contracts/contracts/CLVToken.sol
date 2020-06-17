@@ -11,9 +11,6 @@ import "./Dependencies/console.sol";
 contract CLVToken is IERC20, ICLVToken, Ownable {
     using SafeMath for uint256;
     
-    event PoolManagerAddressChanged( address _newPoolManagerAddress);
-    event CLVTokenBalanceUpdated(address _user, uint _amount);
-
     address public poolManagerAddress;
 
     uint256 public _totalSupply;
@@ -26,10 +23,19 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         tokenDataAddress = address(clvTokenData);
     }    
 
-     modifier onlyPoolManager {
+    // --- Events ---
+
+    event PoolManagerAddressChanged( address _newPoolManagerAddress);
+    event CLVTokenBalanceUpdated(address _user, uint _amount);
+
+    // --- Modifiers ---
+    
+    modifier onlyPoolManager {
         require(_msgSender() == poolManagerAddress, "CLVToken: Caller is not the PoolManager");
         _;
     }
+
+    // --- Functions ---
 
     function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
         poolManagerAddress =  _poolManagerAddress;

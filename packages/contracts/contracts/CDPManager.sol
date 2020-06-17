@@ -19,22 +19,7 @@ contract CDPManager is Ownable, ICDPManager {
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
-    enum Status { nonExistent, active, closed }
     
-    // --- Events --- 
-
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event PoolManagerAddressChanged(address _newPoolManagerAddress);
-    event ActivePoolAddressChanged(address _activePoolAddress);
-    event DefaultPoolAddressChanged(address _defaultPoolAddress);
-    event StabilityPoolAddressChanged(address _stabilityPoolAddress);
-    event PriceFeedAddressChanged(address  _newPriceFeedAddress);
-    event CLVTokenAddressChanged(address _newCLVTokenAddress);
-    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
-
-    event CDPCreated(address indexed _user, uint arrayIndex);
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
-   
     // --- Connected contract declarations ---
 
     IBorrowerOperations borrowerOperations;
@@ -62,14 +47,9 @@ contract CDPManager is Ownable, ICDPManager {
     ISortedCDPs sortedCDPs;
     address public sortedCDPsAddress;
 
-    // --- Modifiers ---
-
-    modifier onlyBorrowerOperations() {
-        require(_msgSender() == borrowerOperationsAddress, "CDPManager: Caller is not the BorrowerOperations contract");
-        _;
-    }
-
     // --- Data structures ---
+
+    enum Status { nonExistent, active, closed }
 
     // Store the necessary data for a Collateralized Debt Position (CDP)
     struct CDP {
@@ -106,11 +86,31 @@ contract CDPManager is Ownable, ICDPManager {
     struct RewardSnapshot { uint ETH; uint CLVDebt;}   
 
     // Array of all active CDP addresses - used to compute “approx hint” for list insertion
-    address[] CDPOwners;
+    address[] public CDPOwners;
 
     // Error trackers for the trove redistribution calculation
     uint lastETHError_Redistribution;
     uint lastCLVDebtError_Redistribution;
+
+     // --- Events --- 
+
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+    event PoolManagerAddressChanged(address _newPoolManagerAddress);
+    event ActivePoolAddressChanged(address _activePoolAddress);
+    event DefaultPoolAddressChanged(address _defaultPoolAddress);
+    event StabilityPoolAddressChanged(address _stabilityPoolAddress);
+    event PriceFeedAddressChanged(address  _newPriceFeedAddress);
+    event CLVTokenAddressChanged(address _newCLVTokenAddress);
+    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
+    event CDPCreated(address indexed _user, uint arrayIndex);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
+
+    // --- Modifiers ---
+
+    modifier onlyBorrowerOperations() {
+        require(_msgSender() == borrowerOperationsAddress, "CDPManager: Caller is not the BorrowerOperations contract");
+        _;
+    }
 
     // --- Dependency setters --- 
 
@@ -480,10 +480,10 @@ contract CDPManager is Ownable, ICDPManager {
         firstRedemptionHint = currentCDPuser;
 
         while (currentCDPuser != address(0) && remainingCLV > 0) {
-            uint CLVDebt = CDPs[currentCDPuser].debt.add(computePendingCLVDebtReward(currentCDPuser));
+            uint CLVDebt = CDPs[currentCDPuser].debt.add(_computePendingCLVDebtReward(currentCDPuser));
 
             if (CLVDebt > remainingCLV) {
-                uint ETH = CDPs[currentCDPuser].coll.add(computePendingETHReward(currentCDPuser));
+                uint ETH = CDPs[currentCDPuser].coll.add(_computePendingETHReward(currentCDPuser));
                 uint newDebt = CLVDebt.sub(remainingCLV);
 
                 uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
@@ -539,7 +539,7 @@ contract CDPManager is Ownable, ICDPManager {
 }
 
     function getAbsoluteDifference(uint a, uint b) internal view returns(uint) {
-        if (a > b) {
+        if (a >= b) {
             return a.sub(b);
         } else if (a < b) {
             return b.sub(a);
@@ -554,8 +554,8 @@ contract CDPManager is Ownable, ICDPManager {
 
     // Return the current collateral ratio (ICR) of a given CDP. Takes pending coll/debt rewards into account.
     function getCurrentICR(address _user, uint _price) public view returns(uint) {
-        uint pendingETHReward = computePendingETHReward(_user); 
-        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user); 
+        uint pendingETHReward = _computePendingETHReward(_user); 
+        uint pendingCLVDebtReward = _computePendingCLVDebtReward(_user); 
         
         uint currentETH = CDPs[_user].coll.add(pendingETHReward); 
         uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward); 
@@ -574,7 +574,7 @@ contract CDPManager is Ownable, ICDPManager {
             return newCollRatio;
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
-        else {
+        else if (_debt == 0) {
             return 2**256 - 1; 
         }
     }
@@ -591,8 +591,8 @@ contract CDPManager is Ownable, ICDPManager {
         requireCDPisActive(_user);
 
         // Compute pending rewards
-        uint pendingETHReward = computePendingETHReward(_user); 
-        uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);  
+        uint pendingETHReward = _computePendingETHReward(_user); 
+        uint pendingCLVDebtReward = _computePendingCLVDebtReward(_user);  
 
         // Apply pending rewards
         CDPs[_user].coll = CDPs[_user].coll.add(pendingETHReward);  
@@ -617,8 +617,12 @@ contract CDPManager is Ownable, ICDPManager {
         return true;
     }
     
+    function getPendingETHReward(address _user) public view returns(uint) {
+        return _computePendingETHReward(_user);
+    }
+
     // Get the user's pending accumulated ETH reward, earned by its stake
-    function computePendingETHReward(address _user) internal view returns(uint) {
+    function _computePendingETHReward(address _user) internal view returns(uint) {
         uint snapshotETH = rewardSnapshots[_user].ETH; 
         uint rewardPerUnitStaked = L_ETH.sub(snapshotETH); 
         
@@ -631,8 +635,12 @@ contract CDPManager is Ownable, ICDPManager {
         return pendingETHReward;
     }
 
+    function getPendingCLVDebtReward(address _user) public view returns(uint) {
+        return _computePendingCLVDebtReward(_user);
+    }
+
      // Get the user's pending accumulated CLV reward, earned by its stake
-    function computePendingCLVDebtReward(address _user) internal view returns(uint) {
+    function _computePendingCLVDebtReward(address _user) internal view returns(uint) {
         uint snapshotCLVDebt = rewardSnapshots[_user].CLVDebt;  
         uint rewardPerUnitStaked = L_CLVDebt.sub(snapshotCLVDebt); 
        
@@ -660,8 +668,8 @@ contract CDPManager is Ownable, ICDPManager {
         coll = CDPs[_user].coll;
 
         if (hasPendingRewards(_user)) {
-            uint pendingCLVDebtReward = computePendingCLVDebtReward(_user);
-            uint pendingETHReward = computePendingETHReward(_user);
+            uint pendingCLVDebtReward = _computePendingCLVDebtReward(_user);
+            uint pendingETHReward = _computePendingETHReward(_user);
 
             debt = debt.add(pendingCLVDebtReward);
             coll = coll.add(pendingETHReward);

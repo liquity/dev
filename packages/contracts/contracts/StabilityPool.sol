@@ -16,7 +16,21 @@ contract StabilityPool is Ownable, IStabilityPool {
     // Total CLV held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.
     uint256 public totalCLVDeposits; 
 
-    constructor() public {}
+    // --- Modifiers ---
+
+    modifier onlyPoolManager {
+        require(_msgSender() == poolManagerAddress, "StabilityPool:  Caller is not the PoolManager");
+        _;
+    }
+
+    modifier onlyPoolManagerOrPool {
+        require(
+            _msgSender() == poolManagerAddress || 
+            _msgSender() == activePoolAddress || 
+            _msgSender() == defaultPoolAddress, 
+            "StabilityPool: Caller is neither the PoolManager nor a Pool");
+        _;
+    }
 
     // --- Contract setters ---
 
@@ -71,20 +85,6 @@ contract StabilityPool is Ownable, IStabilityPool {
     Not necessarily equal to the ETH state variable - ether can be forcibly sent to contracts. */
     function getRawETHBalance() public view returns(uint) {
         return address(this).balance;
-    }
-
-    modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "StabilityPool:  Caller is not the PoolManager");
-        _;
-    }
-
-    modifier onlyPoolManagerOrPool {
-        require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == activePoolAddress || 
-            _msgSender() == defaultPoolAddress, 
-            "StabilityPool: Caller is neither the PoolManager nor a Pool");
-        _;
     }
 
     function () external payable onlyPoolManagerOrPool {

@@ -14,9 +14,23 @@ contract DefaultPool is Ownable, IPool {
     uint256 public ETH;  // deposited ether tracker
     uint256 public CLV;  // total outstanding CDP debt
 
-    constructor() public {}
+    // --- Modifiers ---
 
-    // --- Contract setters ---
+    modifier onlyPoolManager {
+        require(_msgSender() == poolManagerAddress, "DefaultPool:  Caller is not the PoolManager");
+        _;
+    }
+
+    modifier onlyPoolManagerOrPool {
+        require(
+            _msgSender() == poolManagerAddress || 
+            _msgSender() == stabilityPoolAddress || 
+            _msgSender() == activePoolAddress, 
+            "DefaultPool: Caller is neither the PoolManager nor a Pool");
+        _;
+    }
+
+    // --- Dependency setters ---
 
     function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
         poolManagerAddress = _poolManagerAddress;
@@ -66,20 +80,6 @@ contract DefaultPool is Ownable, IPool {
     Not necessarily equal to the ETH state variable - ether can be forcibly sent to contracts. */
     function getRawETHBalance() public view returns(uint) {
         return address(this).balance;
-    }
-
-    modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "DefaultPool:  Caller is not the PoolManager");
-        _;
-    }
-
-    modifier onlyPoolManagerOrPool {
-        require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == stabilityPoolAddress || 
-            _msgSender() == activePoolAddress, 
-            "DefaultPool: Caller is neither the PoolManager nor a Pool");
-        _;
     }
 
     function () external payable onlyPoolManagerOrPool {

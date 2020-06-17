@@ -16,23 +16,6 @@ import "./Dependencies/console.sol";
 contract PoolManager is Ownable, IPoolManager {
     using SafeMath for uint;
 
-    // --- Events ---
-
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
-    event PriceFeedAddressChanged(address _newPriceFeedAddress);
-    event CLVTokenAddressChanged(address _newCLVTokenAddress);
-    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
-    event ActivePoolAddressChanged(address _newActivePoolAddress);
-    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    
-    event UserSnapshotUpdated(uint _P, uint _S);
-    event P_Updated(uint _P);
-    event S_Updated(uint _S);
-    event UserDepositChanged(address indexed _user, uint _amount);
-    event ETHGainWithdrawn(address indexed _user, uint _ETH);
-    event ETHGainWithdrawnToCDP(address indexed _CDPOwner, uint _ETH);
-
     // --- Connected contract declarations ---
 
     IBorrowerOperations borrowerOperations;
@@ -94,6 +77,23 @@ contract PoolManager is Ownable, IPoolManager {
     uint lastETHError_Offset;
     uint lastCLVLossError_Offset;
 
+    // --- Events ---
+
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event PriceFeedAddressChanged(address _newPriceFeedAddress);
+    event CLVTokenAddressChanged(address _newCLVTokenAddress);
+    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
+    event ActivePoolAddressChanged(address _newActivePoolAddress);
+    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
+    
+    event UserSnapshotUpdated(uint _P, uint _S);
+    event P_Updated(uint _P);
+    event S_Updated(uint _S);
+    event UserDepositChanged(address indexed _user, uint _amount);
+    event ETHGainWithdrawn(address indexed _user, uint _ETH);
+    event ETHGainWithdrawnToCDP(address indexed _CDPOwner, uint _ETH);
+
     // --- Modifiers ---
 
     modifier onlyCDPManager() {
@@ -112,8 +112,6 @@ contract PoolManager is Ownable, IPoolManager {
             "PoolManager: Caller is neither StabilityPool nor ActivePool");
         _;
     }
-
-    constructor() public {}
 
     // --- Dependency setters ---
 

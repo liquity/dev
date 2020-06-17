@@ -32,6 +32,15 @@ contract PriceFeed is Ownable, IPriceFeed {
     event CDPManagerAddressChanged(address _cdpManagerAddress);
     event PoolManagerAddressChanged(address _poolManagerAddress);
 
+    // --- Modifiers ---
+
+    modifier onlyCDPManagerOrPoolManager {
+        require(_msgSender() == cdpManagerAddress ||_msgSender() == poolManagerAddress,
+            "PriceFeed: Caller is neither CDPManager nor PoolManager"
+        );
+        _;
+    }
+
     // --- Dependency setters ---
 
     function setCDPManagerAddress(address _cdpManagerAddress) public onlyOwner {
@@ -54,15 +63,6 @@ contract PriceFeed is Ownable, IPriceFeed {
     // Testnet Chainlink address setter
     function setAggregator_Testnet(address _priceAggregatorAddress) public onlyOwner {
         priceAggregator_Testnet = AggregatorInterface(_priceAggregatorAddress);
-    }
-
-    // --- Modifiers ---
-
-    modifier onlyCDPManagerOrPoolManager {
-        require(_msgSender() == cdpManagerAddress ||_msgSender() == poolManagerAddress,
-            "PriceFeed: Caller is neither CDPManager nor PoolManager"
-        );
-        _;
     }
 
     // --- Functions ---

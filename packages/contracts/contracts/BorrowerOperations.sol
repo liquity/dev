@@ -18,18 +18,6 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
 
-    // --- Events --- 
-
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
-    event PoolManagerAddressChanged(address _newPoolManagerAddress);
-    event ActivePoolAddressChanged(address _activePoolAddress);
-    event DefaultPoolAddressChanged(address _defaultPoolAddress);
-    event PriceFeedAddressChanged(address  _newPriceFeedAddress);
-    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
-
-    event CDPCreated(address indexed _user, uint arrayIndex);
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
-   
     // --- Connected contract declarations ---
 
     ICDPManager cdpManager;
@@ -50,6 +38,18 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs sortedCDPs;
     address public sortedCDPsAddress;
+
+      // --- Events --- 
+
+    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event PoolManagerAddressChanged(address _newPoolManagerAddress);
+    event ActivePoolAddressChanged(address _activePoolAddress);
+    event DefaultPoolAddressChanged(address _defaultPoolAddress);
+    event PriceFeedAddressChanged(address  _newPriceFeedAddress);
+    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
+
+    event CDPCreated(address indexed _user, uint arrayIndex);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
 
     // --- Dependency setters --- 
 
