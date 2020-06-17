@@ -60,7 +60,7 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     modifier onlyCDPManagerOrPoolManager {
         require(_msgSender() == cdpManagerAddress ||_msgSender() == poolManagerAddress,
-            "PriceFeed: only callable by CDPManager or PoolManager"
+            "PriceFeed: Caller is neither CDPManager nor PoolManager"
         );
         _;
     }

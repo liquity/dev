@@ -166,9 +166,7 @@ const connectEchidnaProxy = async (echidnaProxy, addresses) => {
 }
 
 module.exports = {
-
   connectEchidnaProxy: connectEchidnaProxy,
-
   getAddresses: getAddresses,
   deployLiquityBuidler: deployLiquityBuidler,
   deployLiquityTruffle: deployLiquityTruffle,

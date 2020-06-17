@@ -22,7 +22,7 @@ contract CLVTokenData is Ownable {
     }
 
     modifier onlyCLVTokenAddress {
-        require(_msgSender() == clvTokenAddress, "CLVTokenData: only clvTokenAddress");
+        require(_msgSender() == clvTokenAddress, "CLVTokenData: Caller is not the CLVToken contract");
         _;
     }
 

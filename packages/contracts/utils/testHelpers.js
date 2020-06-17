@@ -191,40 +191,40 @@ static logGas(gas, message) {
 
  // --- CDPManager gas functions ---
 
- static async openLoan_allAccounts(accounts, cdpManager, ETHAmount, CLVAmount){
+ static async openLoan_allAccounts(accounts, borrowerOperations, ETHAmount, CLVAmount){
   const gasCostList = []
   for (const account of accounts) {
-    const tx = await cdpManager.openLoan(CLVAmount, account, { from: account, value: ETHAmount })
+    const tx = await borrowerOperations.openLoan(CLVAmount, account, { from: account, value: ETHAmount })
     const gas = this.gasUsed(tx)
     gasCostList.push(gas)
   }
  return this.getGasMetrics(gasCostList)
 }
 
-static async openLoan_allAccounts_randomETH(minETH, maxETH, accounts, cdpManager, CLVAmount) {
+static async openLoan_allAccounts_randomETH(minETH, maxETH, accounts, borrowerOperations, CLVAmount) {
   const gasCostList = []
   for (const account of accounts) {
     const randCollAmount = this.randAmountInWei(minETH, maxETH)
-    const tx = await cdpManager.openLoan(CLVAmount, account, { from: account, value: randCollAmount })
+    const tx = await borrowerOperations.openLoan(CLVAmount, account, { from: account, value: randCollAmount })
     const gas = this.gasUsed(tx)
     gasCostList.push(gas)
   }
  return this.getGasMetrics(gasCostList)
 }
 
-static async openLoan_allAccounts_randomETH_ProportionalCLV(minETH, maxETH, accounts, cdpManager, proportion) {
+static async openLoan_allAccounts_randomETH_ProportionalCLV(minETH, maxETH, accounts, borrowerOperations, proportion) {
   const gasCostList = []
   for (const account of accounts) {
     const randCollAmount = this.randAmountInWei(minETH, maxETH)
     const proportionalCLV = (web3.utils.toBN(proportion)).mul(web3.utils.toBN(randCollAmount))
-    const tx = await cdpManager.openLoan(proportionalCLV, account, { from: account, value: randCollAmount })
+    const tx = await borrowerOperations.openLoan(proportionalCLV, account, { from: account, value: randCollAmount })
     const gas = this.gasUsed(tx)
     gasCostList.push(gas)
   }
  return this.getGasMetrics(gasCostList)
 }
 
-static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, cdpManager, minCLVProportion, maxCLVProportion, logging) {
+static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, borrowerOperations, minCLVProportion, maxCLVProportion, logging) {
   const gasCostList = []
   const _1e18 = web3.utils.toBN('1000000000000000000')
 
@@ -235,7 +235,7 @@ static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, 
     const randCLVProportion = this.randAmountInWei(minCLVProportion, maxCLVProportion)
     const proportionalCLV = (web3.utils.toBN(randCLVProportion)).mul(web3.utils.toBN(randCollAmount).div(_1e18))
 
-    const tx = await cdpManager.openLoan(proportionalCLV, account, { from: account, value: randCollAmount })
+    const tx = await borrowerOperations.openLoan(proportionalCLV, account, { from: account, value: randCollAmount })
     
     if (logging === true && tx.receipt.status) {
       i++
@@ -248,11 +248,11 @@ static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, 
 }
 
 
-static async openLoan_allAccounts_randomCLV(minCLV, maxCLV, accounts, cdpManager, ETHAmount){
+static async openLoan_allAccounts_randomCLV(minCLV, maxCLV, accounts, borrowerOperations, ETHAmount){
   const gasCostList = []
   for (const account of accounts) {
     const randCLVAmount = this.randAmountInWei(minCLV, maxCLV)
-    const tx = await cdpManager.openLoan(randCLVAmount, account, { from: account, value: ETHAmount })
+    const tx = await borrowerOperations.openLoan(randCLVAmount, account, { from: account, value: ETHAmount })
     const gas = this.gasUsed(tx)
     gasCostList.push(gas)
   }
