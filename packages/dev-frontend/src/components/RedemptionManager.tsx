@@ -99,7 +99,7 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
             {edited && !changePending && (
               <Button
                 variant="titleIcon"
-                sx={{ "&:enabled:hover": { color: "danger" } }}
+                sx={{ ":enabled:hover": { color: "danger" } }}
                 onClick={() => setExchangedQui(zero)}
               >
                 <Icon name="history" size="lg" />

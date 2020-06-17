@@ -38,7 +38,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         {edited && !changePending && (
           <Button
             variant="titleIcon"
-            sx={{ "&:enabled:hover": { color: "danger" } }}
+            sx={{ ":enabled:hover": { color: "danger" } }}
             onClick={() => setEditedDeposit(originalDeposit)}
           >
             <Icon name="history" size="lg" />

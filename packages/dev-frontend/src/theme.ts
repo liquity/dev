@@ -15,7 +15,7 @@ const buttonBase = {
   alignItems: "center",
   justifyContent: "center",
 
-  "&:enabled": { cursor: "pointer" }
+  ":enabled": { cursor: "pointer" }
 } as const;
 
 const button = {
@@ -28,7 +28,7 @@ const button = {
 
   fontWeight: "bold",
 
-  "&:disabled": {
+  ":disabled": {
     opacity: 0.5
   }
 } as const;
@@ -42,7 +42,7 @@ const iconButton = {
 
   background: "none",
 
-  "&:disabled": {
+  ":disabled": {
     color: "text",
     opacity: 0.33
   }
@@ -158,7 +158,7 @@ const theme: Theme = {
     primary: {
       ...button,
       backgroundColor: "primary",
-      "&:enabled:hover": { backgroundColor: "secondary" }
+      ":enabled:hover": { backgroundColor: "secondary" }
     },
 
     success: {
@@ -169,25 +169,25 @@ const theme: Theme = {
     danger: {
       ...button,
       backgroundColor: "danger",
-      "&:enabled:hover": { backgroundColor: "dangerHover" }
+      ":enabled:hover": { backgroundColor: "dangerHover" }
     },
 
     icon: {
       ...iconButton,
       color: "primary",
-      "&:enabled:hover": { color: "accent" }
+      ":enabled:hover": { color: "accent" }
     },
 
     dangerIcon: {
       ...iconButton,
       color: "danger",
-      "&:enabled:hover": { color: "dangerHover" }
+      ":enabled:hover": { color: "dangerHover" }
     },
 
     titleIcon: {
       ...iconButton,
       color: "text",
-      "&:enabled:hover": { color: "success" }
+      ":enabled:hover": { color: "success" }
     }
   },
 
@@ -196,6 +196,13 @@ const theme: Theme = {
       ...card,
       borderColor: "light-gray",
       backgroundColor: "background"
+    },
+
+    tooltip: {
+      ...card,
+      borderColor: "light-gray",
+      borderRadius: "4px",
+      backgroundColor: "muted"
     },
 
     info: {
@@ -260,7 +267,7 @@ const theme: Theme = {
 
     a: {
       color: "primary",
-      "&:hover": { color: "accent" },
+      ":hover": { color: "accent" },
       textDecoration: "none",
       fontWeight: "bold"
     }

@@ -48,7 +48,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
         {isChanged && !changePending && (
           <Button
             variant="titleIcon"
-            sx={{ "&:enabled:hover": { color: "danger" } }}
+            sx={{ ":enabled:hover": { color: "danger" } }}
             onClick={() => setEdited(original)}
           >
             <Icon name="history" size="lg" />
