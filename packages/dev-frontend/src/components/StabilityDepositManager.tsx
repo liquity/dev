@@ -92,7 +92,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
         <Button key={i} disabled mt={3} mx={2}>
           {myTransactionState.id === `${myTransactionId}-${i}` ? (
             <>
-              <Spinner mr={2} color="white" />
+              <Spinner mr={2} color="white" size="20px" />
               Waiting for your approval
             </>
           ) : (

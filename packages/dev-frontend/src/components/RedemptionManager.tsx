@@ -54,7 +54,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex sx={{ mt: 4, justifyContent: "center" }}>
       <Button disabled mx={2}>
-        <Spinner sx={{ mr: 2 }} color="white" />
+        <Spinner mr={2} color="white" size="20px" />
         Waiting for your approval
       </Button>
     </Flex>
