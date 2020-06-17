@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Card, Box, Heading, Flex, Icon, Button } from "rimble-ui";
+import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 import { Transaction } from "./Transaction";
 
 import { Liquity } from "@liquity/lib";
-import { Label, EditableCell } from "./EditorCell";
+import { Icon } from "./Icon";
 
 type LiquidationManagerProps = {
   liquity: Liquity;
@@ -14,17 +14,13 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
 
   return (
     <Card mt={4} p={0}>
-      <Heading as="h3" bg="lightgrey" p={3}>
-        Liquidate
-      </Heading>
+      <Heading variant="editorTitle">Liquidate</Heading>
 
       <Box p={2}>
-        <Flex alignItems="center">
+        <Flex sx={{ alignItems: "stretch" }}>
           <Label>Up to</Label>
 
-          <EditableCell
-            width="40%"
-            flexGrow={1}
+          <Input
             type="number"
             min="1"
             step="1"
@@ -36,7 +32,7 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
 
           <Label>Troves</Label>
 
-          <Box height="32px">
+          <Flex sx={{ ml: 2, alignItems: "center" }}>
             <Transaction
               id="batch-liquidate"
               tooltip="Liquidate"
@@ -49,11 +45,11 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
               }}
               numberOfConfirmationsToWait={1}
             >
-              <Button.Text ml={2} variant="danger" size="small" icononly>
-                <Icon name="DeleteForever" size="32px" />
-              </Button.Text>
+              <Button variant="dangerIcon">
+                <Icon name="trash" size="lg" />
+              </Button>
             </Transaction>
-          </Box>
+          </Flex>
         </Flex>
       </Box>
     </Card>

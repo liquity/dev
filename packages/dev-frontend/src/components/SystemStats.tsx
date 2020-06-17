@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Text, Heading } from "rimble-ui";
+import { Card, Text, Heading, Link, Box } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib";
@@ -15,7 +15,7 @@ type SystemStatsProps = {
 
 const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
   children?.match(/[0-9a-f]{40}/) ? (
-    <a href={`https://github.com/liquity/dev/commit/${children}`}>{children.substr(0, 7)}</a>
+    <Link href={`https://github.com/liquity/dev/commit/${children}`}>{children.substr(0, 7)}</Link>
   ) : (
     <>unknown</>
   );
@@ -33,7 +33,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
 
   return (
-    <Card mt={4} p={3} bg="lavender">
+    <Card mt={4} p={3} variant="info">
       <Heading as="h3" mb={2}>
         System
       </Heading>
@@ -48,20 +48,20 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
         <Text color="danger">The system is in recovery mode!</Text>
       )}
 
-      <Text mt={3} fontSize={0} opacity={0.5}>
-        Contracts version: <GitHubCommit>{contractsVersion}</GitHubCommit>
-      </Text>
-      <Text fontSize={0} opacity={0.5}>
-        Deployed: {new Date(deploymentDate).toLocaleString()}
-      </Text>
-      <Text fontSize={0} opacity={0.5}>
-        Frontend version:{" "}
-        {process.env.NODE_ENV === "development" ? (
-          "development"
-        ) : (
-          <GitHubCommit>{process.env.REACT_APP_VERSION}</GitHubCommit>
-        )}
-      </Text>
+      <Box sx={{ mt: 3, opacity: 0.66 }}>
+        <Text sx={{ fontSize: 0 }}>
+          Contracts version: <GitHubCommit>{contractsVersion}</GitHubCommit>
+        </Text>
+        <Text sx={{ fontSize: 0 }}>Deployed: {new Date(deploymentDate).toLocaleString()}</Text>
+        <Text sx={{ fontSize: 0 }}>
+          Frontend version:{" "}
+          {process.env.NODE_ENV === "development" ? (
+            "development"
+          ) : (
+            <GitHubCommit>{process.env.REACT_APP_VERSION}</GitHubCommit>
+          )}
+        </Text>
+      </Box>
     </Card>
   );
 };

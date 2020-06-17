@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Button, Box, Flex, Loader, Card, Heading, Link, Icon } from "rimble-ui";
+import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
 import { Liquity } from "@liquity/lib";
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { EditableRow } from "./Editor";
+import { Icon } from "./Icon";
 
 type RedemptionActionProps = {
   liquity: Liquity;
@@ -51,14 +52,14 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   const send = liquity.redeemCollateral.bind(liquity, exchangedQui, price);
 
   return myTransactionState.type === "waitingForApproval" ? (
-    <Flex mt={4} justifyContent="center">
+    <Flex sx={{ mt: 4, justifyContent: "center" }}>
       <Button disabled mx={2}>
-        <Loader mr={2} color="white" />
+        <Spinner mr={2} color="white" size="20px" />
         Waiting for your approval
       </Button>
     </Flex>
   ) : changePending ? null : (
-    <Flex mt={4} justifyContent="center">
+    <Flex sx={{ mt: 4, justifyContent: "center" }}>
       <Transaction
         id={myTransactionId}
         requires={[[quiBalance.gte(exchangedQui), "You don't have enough LQTY"]]}
@@ -93,38 +94,20 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
     <>
       <Box mt={4}>
         <Card p={0}>
-          <Heading
-            as="h3"
-            bg="lightgrey"
-            pl={3}
-            py={2}
-            pr={2}
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
+          <Heading variant="editorTitle">
             Redeem Collateral with LQTY
-            <Box width="40px" height="40px">
-              {edited && !changePending && (
-                <Link
-                  color="text"
-                  hoverColor="danger"
-                  activeColor="danger"
-                  display="flex"
-                  alignItems="center"
-                  onClick={() => setExchangedQui(zero)}
-                >
-                  <Icon name="Replay" size="40px" />
-                </Link>
-              )}
-            </Box>
+            {edited && !changePending && (
+              <Button
+                variant="titleIcon"
+                sx={{ ":enabled:hover": { color: "danger" } }}
+                onClick={() => setExchangedQui(zero)}
+              >
+                <Icon name="history" size="lg" />
+              </Button>
+            )}
           </Heading>
 
-          {changePending && (
-            <LoadingOverlay>
-              <Loader size="24px" color="text" />
-            </LoadingOverlay>
-          )}
+          {changePending && <LoadingOverlay />}
 
           <Box p={2}>
             <EditableRow

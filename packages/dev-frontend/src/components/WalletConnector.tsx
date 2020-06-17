@@ -1,11 +1,13 @@
 import React, { useEffect, useReducer } from "react";
 import { useWeb3React } from "@web3-react/core";
-import { MetaMaskButton, Modal, Text, Flex, Link, Icon } from "rimble-ui";
+import { Button, Text, Flex, Link, Box } from "theme-ui";
 
 import { useInjectedConnector } from "../hooks/connectors/InjectedConnector";
 import { RetryDialog } from "./RetryDialog";
 import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
 import { MetaMaskIcon } from "./MetaMaskIcon";
+import { Icon } from "./Icon";
+import { Modal } from "./Modal";
 
 interface Connector {
   activate: () => Promise<void>;
@@ -95,12 +97,11 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
 
   return (
     <>
-      <Flex height="100vh" justifyContent="center" alignItems="center">
-        <MetaMaskButton
-          onClick={() => dispatch({ type: "activate", connector: connectors.injected })}
-        >
-          Connect to MetaMask
-        </MetaMaskButton>
+      <Flex sx={{ height: "100vh", justifyContent: "center", alignItems: "center" }}>
+        <Button onClick={() => dispatch({ type: "activate", connector: connectors.injected })}>
+          <MetaMaskIcon />
+          <Box ml={2}>Connect to MetaMask</Box>
+        </Button>
       </Flex>
 
       <Modal isOpen={connectionState.type === "failed"}>
@@ -109,18 +110,11 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
           onRetry={() => dispatch({ type: "retry" })}
           onCancel={() => dispatch({ type: "cancel" })}
         >
-          <Text textAlign="center">
+          <Text sx={{ textAlign: "center" }}>
             Make sure you're using a supported browser and MetaMask is installed.
           </Text>
-          <Link
-            mt={2}
-            href="https://metamask.io/download.html"
-            target="_blank"
-            display="flex"
-            alignItems="center"
-          >
-            Learn more
-            <Icon ml={1} size="16px" name="OpenInNew" />
+          <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
+            Learn more <Icon size="xs" name="external-link-alt" />
           </Link>
         </RetryDialog>
       </Modal>
@@ -131,7 +125,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
           icon={<MetaMaskIcon />}
           onCancel={() => dispatch({ type: "cancel" })}
         >
-          <Text textAlign="center">
+          <Text sx={{ textAlign: "center" }}>
             Confirm the request that's just appeared. If you can't see a request, open your MetaMask
             extension via your browser.
           </Text>

@@ -1,40 +1,45 @@
+/** @jsx jsx */
+import { jsx } from "theme-ui";
+
 import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Card, Button, Text, Box, Heading, Loader, Icon, Link, Tooltip, Flex } from "rimble-ui";
-import styled from "styled-components";
-import { theme } from "rimble-ui";
-import { space, SpaceProps, layout, LayoutProps } from "styled-system";
+import { Card, Button, Text, Box, Heading, Flex, Styled } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { Liquity, Trove } from "@liquity/lib";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
+import { Icon } from "./Icon";
+import { Tooltip } from "./Tooltip";
 
-const Table = styled.table<SpaceProps & LayoutProps>`
-  ${space}
-  ${layout}
+const tableLayout = {
+  mt: 3,
+  mb: 1,
+  width: "100%",
 
-  & tr td {
-    text-align: center;
+  textAlign: "center",
+
+  th: {
+    lineHeight: 1.15
+  },
+
+  td: {
+    ":nth-of-type(1)": {
+      width: "18%",
+      textAlign: "right"
+    },
+
+    ":nth-of-type(2)": {
+      width: "7%",
+      textAlign: "left"
+    },
+
+    ":nth-of-type(6)": {
+      width: "40px"
+    }
   }
-
-  & tr td:nth-child(1) {
-    width: 18%;
-    text-align: right;
-  }
-
-  & tr td:nth-child(2) {
-    width: 7%;
-    text-align: left;
-  }
-
-  & tr td:nth-child(6) {
-    width: 0;
-  }
-`;
-
-Table.defaultProps = { theme, width: "100%" };
+} as const;
 
 type RiskiestTrovesProps = {
   pageSize: number;
@@ -108,6 +113,24 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
     forceReload();
   }, [forceReload, numberOfTroves]);
 
+  const [copied, setCopied] = useState<string>();
+
+  useEffect(() => {
+    if (copied !== undefined) {
+      let cancelled = false;
+
+      setTimeout(() => {
+        if (!cancelled) {
+          setCopied(undefined);
+        }
+      }, 2000);
+
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [copied]);
+
   const troves = trovesWithoutRewards?.map(
     ([owner, trove]) => [owner, trove.applyRewards(totalRedistributed)] as const
   );
@@ -115,77 +138,44 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   return (
     <Box mt={3} p={3}>
       <Card p={0}>
-        <Heading
-          as="h3"
-          pl={3}
-          py={2}
-          pr={2}
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          bg="lightgrey"
-        >
+        <Heading variant="editorTitle">
           Riskiest Troves
-          <Flex alignItems="center">
+          <Flex sx={{ alignItems: "center" }}>
             {numberOfTroves !== 0 && (
-              <>
-                <Text mr={3}>
+              <React.Fragment>
+                <Text sx={{ mr: 3, fontWeight: "body", fontSize: 2 }}>
                   {clampedPage * pageSize + 1}-
                   {Math.min((clampedPage + 1) * pageSize, numberOfTroves)} of {numberOfTroves}
                 </Text>
-                <Link
-                  color="text"
-                  hoverColor="success"
-                  activeColor="success"
-                  display="flex"
-                  alignItems="center"
-                  onClick={previousPage}
-                >
-                  <Icon name="KeyboardArrowLeft" size="40px" />
-                </Link>
-                <Link
-                  color="text"
-                  hoverColor="success"
-                  activeColor="success"
-                  display="flex"
-                  alignItems="center"
-                  onClick={nextPage}
-                >
-                  <Icon name="KeyboardArrowRight" size="40px" />
-                </Link>
-              </>
+
+                <Button variant="titleIcon" onClick={previousPage}>
+                  <Icon name="chevron-left" size="lg" />
+                </Button>
+
+                <Button variant="titleIcon" onClick={nextPage}>
+                  <Icon name="chevron-right" size="lg" />
+                </Button>
+              </React.Fragment>
             )}
-            <Link
-              ml={3}
-              color="text"
-              hoverColor="success"
-              activeColor="success"
-              display="flex"
-              alignItems="center"
+
+            <Button
+              variant="titleIcon"
+              sx={{ opacity: loading ? 0 : 1, ml: 3 }}
               onClick={forceReload}
-              opacity={loading ? 0 : 1}
             >
-              <Icon name="Refresh" size="40px" />
-            </Link>
+              <Icon name="redo" size="lg" />
+            </Button>
           </Flex>
         </Heading>
 
-        {loading && (
-          <LoadingOverlay>
-            <Loader size="24px" color="text" />
-          </LoadingOverlay>
-        )}
+        {loading && <LoadingOverlay />}
 
         {!troves ? (
-          <Text p={4} fontSize={3} textAlign="center">
-            Loading...
-          </Text>
+          <Text sx={{ p: 4, fontSize: 3, textAlign: "center" }}>Loading...</Text>
         ) : troves.length === 0 ? (
-          <Text p={4} fontSize={3} textAlign="center">
-            There are no Troves yet
-          </Text>
+          <Text sx={{ p: 4, fontSize: 3, textAlign: "center" }}>There are no Troves yet</Text>
         ) : (
-          <Table mt={3} mb={1}>
+          <Styled.table sx={tableLayout}>
             <thead>
               <tr>
                 <th colSpan={2}>Owner</th>
@@ -219,10 +209,13 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                         </Tooltip>
                       </td>
                       <td>
-                        <CopyToClipboard text={owner}>
-                          <Button.Text mainColor="text" size="small" icononly>
-                            <Icon name="ContentCopy" size="16px" />
-                          </Button.Text>
+                        <CopyToClipboard text={owner} onCopy={() => setCopied(owner)}>
+                          <Button variant="icon" sx={{ width: "24px", height: "24px" }}>
+                            <Icon
+                              name={copied === owner ? "clipboard-check" : ["far", "clipboard"]}
+                              size="sm"
+                            />
+                          </Button>
                         </CopyToClipboard>
                       </td>
                       <td>{trove.collateral.prettify(4)}</td>
@@ -255,14 +248,16 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                           send={liquity.liquidate.bind(liquity, owner)}
                           numberOfConfirmationsToWait={1}
                         >
-                          <Button.Text variant="danger" icon="DeleteForever" icononly />
+                          <Button variant="dangerIcon">
+                            <Icon name="trash" />
+                          </Button>
                         </Transaction>
                       </td>
                     </tr>
                   )
               )}
             </tbody>
-          </Table>
+          </Styled.table>
         )}
       </Card>
     </Box>

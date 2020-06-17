@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Box, Flex, Loader } from "rimble-ui";
+import { Button, Box, Flex, Spinner } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { Trove, Liquity } from "@liquity/lib";
@@ -142,14 +142,14 @@ const TroveAction: React.FC<TroveActionProps> = ({
       ] as const);
 
   return myTransactionState.type === "waitingForApproval" ? (
-    <Flex mt={4} justifyContent="center">
+    <Flex sx={{ mt: 4, justifyContent: "center" }}>
       <Button disabled mx={2}>
-        <Loader mr={2} color="white" />
+        <Spinner mr={2} color="white" size="20px" />
         Waiting for your approval
       </Button>
     </Flex>
   ) : changePending ? null : (
-    <Flex mt={4} justifyContent="center">
+    <Flex sx={{ mt: 4, justifyContent: "center" }}>
       <Transaction
         id={myTransactionId}
         requires={[

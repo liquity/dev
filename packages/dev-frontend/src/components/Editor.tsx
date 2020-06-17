@@ -1,24 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Text, Flex, Box } from "rimble-ui";
-
-import { Label, StaticCell, EditableCell } from "./EditorCell";
+import { Text, Flex, Label, Input } from "theme-ui";
 
 type RowProps = {
   label: string;
-  hideLabel?: boolean;
   unit?: string;
 };
 
-const Row: React.FC<RowProps> = ({ label, hideLabel, unit, children }) => {
+const Row: React.FC<RowProps> = ({ label, unit, children }) => {
   return (
-    <Flex width="450px" alignItems="stretch">
-      {!hideLabel && <Label width={unit ? 0.25 : 0.4}>{label}</Label>}
+    <Flex sx={{ width: "450px", alignItems: "stretch" }}>
+      <Label sx={{ width: unit ? "25%" : "40%" }}>{label}</Label>
       {unit && (
-        <StaticCell bg="#eee" width={0.15} textAlign="center">
+        <Label variant="unit" sx={{ width: "15%" }}>
           {unit}
-        </StaticCell>
+        </Label>
       )}
-      <Box width={!hideLabel ? 0.6 : 0.85}>{children}</Box>
+      {children}
     </Flex>
   );
 };
@@ -43,13 +40,21 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
   invalid
 }) => {
   return (
-    <StaticCell data-testid={label} {...{ onClick, invalid }}>
-      <Flex justifyContent="space-between" alignItems="center">
-        <Text fontSize={StaticCell.defaultProps?.fontSize} {...{ color }}>
+    <Label
+      variant="input"
+      data-testid={label}
+      sx={{
+        ...(invalid ? { backgroundColor: "invalid" } : {}),
+        ...(onClick ? { cursor: "text" } : {})
+      }}
+      {...{ onClick, invalid }}
+    >
+      <Flex sx={{ justifyContent: "space-between", alignItems: "center" }}>
+        <Text sx={{ fontSize: 3 }} {...{ color }}>
           {amount}
         </Text>
 
-        <Text fontSize={2} color={pendingColor}>
+        <Text sx={{ fontSize: 2 }} color={pendingColor}>
           {pendingAmount &&
             `${pendingAmount
               .replace("++", "▲▲")
@@ -58,7 +63,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
               .replace("-", "▼ ")}`}
         </Text>
       </Flex>
-    </StaticCell>
+    </Label>
   );
 };
 
@@ -83,7 +88,6 @@ type EditableRowProps = Omit<
 
 export const EditableRow: React.FC<EditableRowProps> = ({
   label,
-  hideLabel,
   unit,
   amount,
   color,
@@ -108,9 +112,10 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   }, [editedAmount]);
 
   return (
-    <Row {...{ label, hideLabel, unit }}>
+    <Row {...{ label, unit }}>
       {editing === label ? (
-        <EditableCell
+        <Input
+          sx={{ ...(invalid ? { backgroundColor: "invalid" } : {}) }}
           data-testid={label}
           ref={inputRef}
           type="number"

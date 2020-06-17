@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Heading, Box, Card, Link, Icon, Loader } from "rimble-ui";
+import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Difference } from "@liquity/decimal";
 import { StabilityDeposit } from "@liquity/lib";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
+import { Icon } from "./Icon";
 
 type StabilityDepositEditorProps = {
   title: string;
@@ -32,38 +33,20 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
 
   return (
     <Card p={0}>
-      <Heading
-        as="h3"
-        bg="lightgrey"
-        pl={3}
-        py={2}
-        pr={2}
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-      >
+      <Heading variant="editorTitle">
         {title}
-        <Box width="40px" height="40px">
-          {edited && !changePending && (
-            <Link
-              color="text"
-              hoverColor="danger"
-              activeColor="danger"
-              display="flex"
-              alignItems="center"
-              onClick={() => setEditedDeposit(originalDeposit)}
-            >
-              <Icon name="Replay" size="40px" />
-            </Link>
-          )}
-        </Box>
+        {edited && !changePending && (
+          <Button
+            variant="titleIcon"
+            sx={{ ":enabled:hover": { color: "danger" } }}
+            onClick={() => setEditedDeposit(originalDeposit)}
+          >
+            <Icon name="history" size="lg" />
+          </Button>
+        )}
       </Heading>
 
-      {changePending && (
-        <LoadingOverlay>
-          <Loader size="24px" color="text" />
-        </LoadingOverlay>
-      )}
+      {changePending && <LoadingOverlay />}
 
       <Box p={2}>
         <EditableRow

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Card, Box, Heading, Flex, Icon, Button } from "rimble-ui";
+import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 import { Transaction } from "./Transaction";
 
 import { Decimal } from "@liquity/decimal";
 import { Liquity } from "@liquity/lib";
 import { useLiquity } from "../hooks/LiquityContext";
-import { Label, StaticCell, EditableCell } from "./EditorCell";
+import { Icon } from "./Icon";
 
 type PriceManagerProps = {
   liquity: Liquity;
@@ -22,28 +22,22 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
 
   return (
     <Card mt={4} p={0}>
-      <Heading as="h3" bg="lightgrey" p={3}>
-        Price
-      </Heading>
+      <Heading variant="editorTitle">Price</Heading>
 
       <Box p={2}>
-        <Flex alignItems="center">
+        <Flex sx={{ alignItems: "stretch" }}>
           <Label>ETH</Label>
 
-          <StaticCell bg="#eee" textAlign="center">
-            $
-          </StaticCell>
+          <Label variant="unit">$</Label>
 
-          <EditableCell
-            width="40%"
-            flexGrow={1}
+          <Input
             type="number"
             step="any"
             value={editedPrice}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedPrice(e.target.value)}
           />
 
-          <Flex height="32px">
+          <Flex sx={{ ml: 2, alignItems: "center" }}>
             <Transaction
               id="set-price"
               tooltip="Set"
@@ -56,9 +50,9 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
               }}
               numberOfConfirmationsToWait={1}
             >
-              <Button.Text ml={2} size="small" icononly>
-                <Icon name="Timeline" size="32px" />
-              </Button.Text>
+              <Button variant="icon">
+                <Icon name="chart-line" size="lg" />
+              </Button>
             </Transaction>
 
             <Transaction
@@ -69,9 +63,9 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
               send={liquity.updatePrice.bind(liquity)}
               numberOfConfirmationsToWait={1}
             >
-              <Button.Text ml={2} size="small" icononly>
-                <Icon name="Refresh" size="32px" />
-              </Button.Text>
+              <Button variant="icon">
+                <Icon name="redo" size="lg" />
+              </Button>
             </Transaction>
           </Flex>
         </Flex>
