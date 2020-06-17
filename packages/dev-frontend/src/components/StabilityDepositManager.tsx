@@ -89,7 +89,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex sx={{ mt: 3, flexWrap: "wrap", justifyContent: "center" }}>
       {actions.map(([actionName], i) => (
-        <Button disabled mt={3} mx={2}>
+        <Button key={i} disabled mt={3} mx={2}>
           {myTransactionState.id === `${myTransactionId}-${i}` ? (
             <>
               <Spinner mr={2} color="white" />
@@ -104,7 +104,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   ) : changePending ? null : (
     <Flex sx={{ mt: 3, flexWrap: "wrap", justifyContent: "center" }}>
       {actions.map(([actionName, send, requires], i) => (
-        <Transaction id={`${myTransactionId}-${i}`} {...{ send, requires }}>
+        <Transaction key={i} id={`${myTransactionId}-${i}`} {...{ send, requires }}>
           <Button mt={3} mx={2}>
             {actionName}
           </Button>

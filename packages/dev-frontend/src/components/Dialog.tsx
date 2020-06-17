@@ -1,5 +1,5 @@
 import React from "react";
-import { Heading, Flex, Card, Link, Box } from "theme-ui";
+import { Heading, Flex, Card, Button, Box } from "theme-ui";
 
 import { Icon } from "./Icon";
 
@@ -51,9 +51,9 @@ export const Dialog: React.FC<DialogProps> = ({
       <Heading as="h1" sx={{ textAlign: "center", fontSize: [2, 3], px: [3, 0] }}>
         {title}
       </Heading>
-      <Link onClick={onCancel}>
-        <Icon name="times" color="moon-gray" aria-label={cancelLabel || "Cancel"} />
-      </Link>
+      <Button variant="icon" onClick={onCancel}>
+        <Icon name="times" size="lg" aria-label={cancelLabel || "Cancel"} />
+      </Button>
     </Flex>
     {children}
   </Card>

@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Card, Box, Heading, Flex, Button } from "theme-ui";
+import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 import { Transaction } from "./Transaction";
 
 import { Liquity } from "@liquity/lib";
-import { Label, EditableCell } from "./EditorCell";
 import { Icon } from "./Icon";
 
 type LiquidationManagerProps = {
@@ -21,9 +20,7 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
         <Flex sx={{ alignItems: "stretch" }}>
           <Label>Up to</Label>
 
-          <EditableCell
-            width="40%"
-            flexGrow={1}
+          <Input
             type="number"
             min="1"
             step="1"

@@ -55,6 +55,31 @@ const card = {
   boxShadow: 2
 } as const;
 
+const formBase = {
+  display: "block",
+  width: "auto",
+  flexShrink: 0,
+  padding: 2,
+  fontSize: 3
+} as const;
+
+const formCell = {
+  ...formBase,
+
+  backgroundColor: "background",
+  border: 1,
+  borderColor: "muted",
+  borderRadius: 0,
+  boxShadow: 2
+} as const;
+
+const overlay = {
+  left: 0,
+  top: 0,
+  width: "100%",
+  height: "100%"
+} as const;
+
 const theme: Theme = {
   breakpoints: ["40em", "52em", "64em"],
 
@@ -97,6 +122,7 @@ const theme: Theme = {
     danger: colors.red,
     dangerHover: colors.lightRed,
     info: colors.blue,
+    invalid: "pink",
 
     text: "#333",
     background: "white",
@@ -142,7 +168,8 @@ const theme: Theme = {
 
     danger: {
       ...button,
-      backgroundColor: "danger"
+      backgroundColor: "danger",
+      "&:enabled:hover": { backgroundColor: "dangerHover" }
     },
 
     icon: {
@@ -167,13 +194,60 @@ const theme: Theme = {
   cards: {
     primary: {
       ...card,
-      borderColor: "light-gray"
+      borderColor: "light-gray",
+      backgroundColor: "background"
     },
 
     info: {
       ...card,
       borderColor: "rgba(122,199,240,0.4)",
       background: "linear-gradient(200deg, rgba(147,161,248,0.4) 0%, rgba(122,199,240,0.4) 100%);"
+    }
+  },
+
+  forms: {
+    label: {
+      ...formBase
+    },
+
+    unit: {
+      ...formCell,
+
+      textAlign: "center",
+      backgroundColor: "muted"
+    },
+
+    input: {
+      ...formCell,
+
+      flex: 1
+    }
+  },
+
+  layout: {
+    loadingOverlay: {
+      ...overlay,
+
+      zIndex: 2,
+      position: "absolute",
+      backgroundColor: "rgba(255, 255, 255, 0.5)"
+    },
+
+    modalOverlay: {
+      ...overlay,
+
+      zIndex: 3,
+      position: "fixed",
+      backgroundColor: "rgba(0, 0, 0, 0.8)",
+
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center"
+    },
+
+    modal: {
+      p: 3,
+      width: ["100%", "40em"]
     }
   },
 

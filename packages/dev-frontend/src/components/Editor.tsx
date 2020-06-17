@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Text, Flex } from "theme-ui";
-
-import { Label, StaticCell, EditableCell } from "./EditorCell";
+import { Text, Flex, Label, Input } from "theme-ui";
 
 type RowProps = {
   label: string;
@@ -11,11 +9,11 @@ type RowProps = {
 const Row: React.FC<RowProps> = ({ label, unit, children }) => {
   return (
     <Flex sx={{ width: "450px", alignItems: "stretch" }}>
-      <Label width={unit ? 0.25 : 0.4}>{label}</Label>
+      <Label sx={{ width: unit ? "25%" : "40%" }}>{label}</Label>
       {unit && (
-        <StaticCell bg="muted" width={0.15} textAlign="center">
+        <Label variant="unit" sx={{ width: "15%" }}>
           {unit}
-        </StaticCell>
+        </Label>
       )}
       {children}
     </Flex>
@@ -42,7 +40,15 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
   invalid
 }) => {
   return (
-    <StaticCell flexGrow={1} data-testid={label} {...{ onClick, invalid }}>
+    <Label
+      variant="input"
+      data-testid={label}
+      sx={{
+        ...(invalid ? { backgroundColor: "invalid" } : {}),
+        ...(onClick ? { cursor: "text" } : {})
+      }}
+      {...{ onClick, invalid }}
+    >
       <Flex sx={{ justifyContent: "space-between", alignItems: "center" }}>
         <Text sx={{ fontSize: 3 }} {...{ color }}>
           {amount}
@@ -57,7 +63,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
               .replace("-", "▼ ")}`}
         </Text>
       </Flex>
-    </StaticCell>
+    </Label>
   );
 };
 
@@ -108,8 +114,8 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   return (
     <Row {...{ label, unit }}>
       {editing === label ? (
-        <EditableCell
-          flexGrow={1}
+        <Input
+          sx={{ ...(invalid ? { backgroundColor: "invalid" } : {}) }}
           data-testid={label}
           ref={inputRef}
           type="number"

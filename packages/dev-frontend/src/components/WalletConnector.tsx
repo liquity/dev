@@ -113,17 +113,8 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
           <Text sx={{ textAlign: "center" }}>
             Make sure you're using a supported browser and MetaMask is installed.
           </Text>
-          <Link
-            sx={{
-              mt: 2,
-              display: "flex",
-              alignItems: "center"
-            }}
-            href="https://metamask.io/download.html"
-            target="_blank"
-          >
-            Learn more
-            <Icon sx={{ ml: 1 }} size="xs" name="external-link-alt" />
+          <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
+            Learn more <Icon size="xs" name="external-link-alt" />
           </Link>
         </RetryDialog>
       </Modal>

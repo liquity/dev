@@ -1,8 +1,9 @@
+/** @jsx jsx */
+import { jsx } from "theme-ui";
+
 import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Card, Button, Text, Box, Heading, Flex } from "theme-ui";
-import styled from "styled-components";
-import { space, SpaceProps, layout, LayoutProps } from "styled-system";
+import { Card, Button, Text, Box, Heading, Flex, Styled } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { Liquity, Trove } from "@liquity/lib";
@@ -11,36 +12,34 @@ import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
 import { Icon } from "./Icon";
 import { Tooltip } from "./Tooltip";
-import theme from "../theme";
 
-const Table = styled.table<SpaceProps & LayoutProps>`
-  ${space}
-  ${layout}
+const tableLayout = {
+  mt: 3,
+  mb: 1,
+  width: "100%",
 
-  & tr th {
-    line-height: 1.15;
+  textAlign: "center",
+
+  th: {
+    lineHeight: 1.15
+  },
+
+  td: {
+    ":nth-child(1)": {
+      width: "18%",
+      textAlign: "right"
+    },
+
+    ":nth-child(2)": {
+      width: "7%",
+      textAlign: "left"
+    },
+
+    ":nth-child(6)": {
+      width: "40px"
+    }
   }
-
-  & tr td {
-    text-align: center;
-  }
-
-  & tr td:nth-child(1) {
-    width: 18%;
-    text-align: right;
-  }
-
-  & tr td:nth-child(2) {
-    width: 7%;
-    text-align: left;
-  }
-
-  & tr td:nth-child(6) {
-    width: 40px;
-  }
-`;
-
-Table.defaultProps = { theme, width: "100%" };
+} as const;
 
 type RiskiestTrovesProps = {
   pageSize: number;
@@ -142,20 +141,21 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
         <Heading variant="editorTitle">
           Riskiest Troves
           <Flex sx={{ alignItems: "center" }}>
-            {numberOfTroves !== 0 && (
-              <>
-                <Text sx={{ mr: 3, fontWeight: "body", fontSize: 2 }}>
-                  {clampedPage * pageSize + 1}-
-                  {Math.min((clampedPage + 1) * pageSize, numberOfTroves)} of {numberOfTroves}
-                </Text>
-                <Button variant="titleIcon" onClick={previousPage}>
-                  <Icon name="chevron-left" size="lg" />
-                </Button>
-                <Button variant="titleIcon" onClick={nextPage}>
-                  <Icon name="chevron-right" size="lg" />
-                </Button>
-              </>
-            )}
+            {numberOfTroves !== 0 && [
+              <Text sx={{ mr: 3, fontWeight: "body", fontSize: 2 }}>
+                {clampedPage * pageSize + 1}-{Math.min((clampedPage + 1) * pageSize, numberOfTroves)}{" "}
+                of {numberOfTroves}
+              </Text>,
+
+              <Button variant="titleIcon" onClick={previousPage}>
+                <Icon name="chevron-left" size="lg" />
+              </Button>,
+
+              <Button variant="titleIcon" onClick={nextPage}>
+                <Icon name="chevron-right" size="lg" />
+              </Button>
+            ]}
+
             <Button
               variant="titleIcon"
               sx={{ opacity: loading ? 0 : 1, ml: 3 }}
@@ -173,7 +173,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
         ) : troves.length === 0 ? (
           <Text sx={{ p: 4, fontSize: 3, textAlign: "center" }}>There are no Troves yet</Text>
         ) : (
-          <Table mt={3} mb={1}>
+          <Styled.table sx={tableLayout}>
             <thead>
               <tr>
                 <th colSpan={2}>Owner</th>
@@ -255,7 +255,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                   )
               )}
             </tbody>
-          </Table>
+          </Styled.table>
         )}
       </Card>
     </Box>

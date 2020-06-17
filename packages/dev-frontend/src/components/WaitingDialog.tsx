@@ -25,7 +25,7 @@ export const WaitingDialog: React.FC<WaitingDialogProps> = ({
       <Flex
         sx={{
           flexDirection: ["column", "row"],
-          bg: "primary-2x-light",
+          bg: "muted",
           p: [3, 4],
           alignItems: ["center", "auto"]
         }}

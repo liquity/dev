@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Card, Box, Heading, Flex, Button } from "theme-ui";
+import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 import { Transaction } from "./Transaction";
 
 import { Decimal } from "@liquity/decimal";
 import { Liquity } from "@liquity/lib";
 import { useLiquity } from "../hooks/LiquityContext";
-import { Label, StaticCell, EditableCell } from "./EditorCell";
 import { Icon } from "./Icon";
 
 type PriceManagerProps = {
@@ -29,13 +28,9 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
         <Flex sx={{ alignItems: "stretch" }}>
           <Label>ETH</Label>
 
-          <StaticCell bg="muted" textAlign="center">
-            $
-          </StaticCell>
+          <Label variant="unit">$</Label>
 
-          <EditableCell
-            width="40%"
-            flexGrow={1}
+          <Input
             type="number"
             step="any"
             value={editedPrice}

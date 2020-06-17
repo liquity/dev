@@ -1,5 +1,4 @@
 import React from "react";
-import Popup from "reactjs-popup";
 
 const placement2position = {
   top: "top center",
@@ -14,8 +13,8 @@ type TooltipProps = {
   placement?: keyof typeof placement2position;
 };
 
-export const Tooltip: React.FC<TooltipProps> = ({ children, message, placement = "top" }) => (
-  <Popup trigger={children} on="hover" position={placement2position[placement]}>
-    <>{message}</>
-  </Popup>
-);
+export const Tooltip: React.FC<TooltipProps> = ({ children, message, placement = "top" }) =>
+  // <Popup trigger={children} on="hover" position={placement2position[placement]}>
+  //   <>{message}</>
+  // </Popup>
+  children;
