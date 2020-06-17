@@ -194,15 +194,21 @@ const theme: Theme = {
   cards: {
     primary: {
       ...card,
+
       borderColor: "light-gray",
       backgroundColor: "background"
     },
 
     tooltip: {
       ...card,
+
       borderColor: "light-gray",
       borderRadius: "4px",
-      backgroundColor: "muted"
+      backgroundColor: "muted",
+
+      fontSize: 1,
+
+      zIndex: 3
     },
 
     info: {
@@ -243,7 +249,7 @@ const theme: Theme = {
     modalOverlay: {
       ...overlay,
 
-      zIndex: 3,
+      zIndex: 4,
       position: "fixed",
       backgroundColor: "rgba(0, 0, 0, 0.8)",
 

@@ -1,46 +1,64 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { VirtualElement } from "@popperjs/core";
 import { usePopper } from "react-popper";
 import { Card } from "theme-ui";
 
-type TooltipProps = {
-  children: JSX.Element;
-  message: string;
-  placement?: string;
+export type Hoverable = {
+  onMouseOver: () => void;
+  onMouseOut: () => void;
+  ref: (instance: Element | VirtualElement | null) => void;
 };
 
-export const Tooltip: React.FC<TooltipProps> = ({ children, message, placement = "top" }) => {
-  const [show, setShow] = useState(false);
-  const [referenceElement, setReferenceElement] = useState<HTMLDivElement | null>();
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>();
-  //const [arrowElement, setArrowElement] = useState<HTMLDivElement | null>();
+export type TooltipProps<C> = {
+  children: C;
+  message: string;
+  placement?: "top" | "bottom" | "left" | "right";
+};
 
-  const { styles, attributes } = usePopper(
-    referenceElement,
-    popperElement /*, {
-    modifiers: [{ name: "arrow", options: { element: arrowElement } }]
-  } */
-  );
+export function Tooltip<C extends React.ReactElement<Hoverable>>({
+  children,
+  message,
+  placement = "top"
+}: TooltipProps<C>) {
+  const event = useRef<"over" | "out">();
+  const [show, setShow] = useState(false);
+  const [referenceElement, setReferenceElement] = useState<Element | VirtualElement | null>();
+  const [popperElement, setPopperElement] = useState<HTMLElement | null>();
+
+  const { styles, attributes } = usePopper(referenceElement, popperElement, { placement });
 
   return (
     <>
-      <div
-        onMouseEnter={() => setShow(true)}
-        onMouseLeave={() => setShow(false)}
-        ref={setReferenceElement}
-      >
-        {children}
-      </div>
+      {React.cloneElement(React.Children.only<C>(children), {
+        // Use a debounced onMouseOver/onMouseOut instead of onMouseEnter/onMouseLeave to
+        // work around https://github.com/facebook/react/issues/10109
 
-      <Card
-        variant="tooltip"
-        sx={{ display: show ? "block" : "none" }}
-        ref={setPopperElement}
-        style={styles.popper}
-        {...attributes.popper}
-      >
-        {message}
-        {/* <div ref={setArrowElement} style={styles.arrow} /> */}
-      </Card>
+        onMouseOver: () => {
+          event.current = "over";
+
+          if (!show) {
+            setShow(true);
+          }
+        },
+
+        onMouseOut: () => {
+          event.current = "out";
+
+          setTimeout(() => {
+            if (event.current === "out") {
+              setShow(false);
+            }
+          }, 0);
+        },
+
+        ref: setReferenceElement
+      })}
+
+      {show && (
+        <Card variant="tooltip" ref={setPopperElement} style={styles.popper} {...attributes.popper}>
+          {message}
+        </Card>
+      )}
     </>
   );
-};
+}

@@ -25,17 +25,17 @@ const tableLayout = {
   },
 
   td: {
-    ":nth-child(1)": {
+    ":nth-of-type(1)": {
       width: "18%",
       textAlign: "right"
     },
 
-    ":nth-child(2)": {
+    ":nth-of-type(2)": {
       width: "7%",
       textAlign: "left"
     },
 
-    ":nth-child(6)": {
+    ":nth-of-type(6)": {
       width: "40px"
     }
   }
@@ -141,20 +141,22 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
         <Heading variant="editorTitle">
           Riskiest Troves
           <Flex sx={{ alignItems: "center" }}>
-            {numberOfTroves !== 0 && [
-              <Text sx={{ mr: 3, fontWeight: "body", fontSize: 2 }}>
-                {clampedPage * pageSize + 1}-{Math.min((clampedPage + 1) * pageSize, numberOfTroves)}{" "}
-                of {numberOfTroves}
-              </Text>,
+            {numberOfTroves !== 0 && (
+              <React.Fragment>
+                <Text sx={{ mr: 3, fontWeight: "body", fontSize: 2 }}>
+                  {clampedPage * pageSize + 1}-
+                  {Math.min((clampedPage + 1) * pageSize, numberOfTroves)} of {numberOfTroves}
+                </Text>
 
-              <Button variant="titleIcon" onClick={previousPage}>
-                <Icon name="chevron-left" size="lg" />
-              </Button>,
+                <Button variant="titleIcon" onClick={previousPage}>
+                  <Icon name="chevron-left" size="lg" />
+                </Button>
 
-              <Button variant="titleIcon" onClick={nextPage}>
-                <Icon name="chevron-right" size="lg" />
-              </Button>
-            ]}
+                <Button variant="titleIcon" onClick={nextPage}>
+                  <Icon name="chevron-right" size="lg" />
+                </Button>
+              </React.Fragment>
+            )}
 
             <Button
               variant="titleIcon"

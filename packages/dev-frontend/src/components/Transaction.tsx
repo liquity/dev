@@ -15,7 +15,7 @@ import {
   contractsToInterfaces
 } from "@liquity/lib";
 import { useLiquity } from "../hooks/LiquityContext";
-import { Tooltip } from "./Tooltip";
+import { Tooltip, TooltipProps, Hoverable } from "./Tooltip";
 
 const circularProgressbarStyle = {
   strokeWidth: 10,
@@ -118,14 +118,14 @@ export type TransactionFunction = (
 type TransactionProps<C> = {
   id: string;
   tooltip?: string;
-  tooltipPlacement?: "top" | "bottom" | "left" | "right";
+  tooltipPlacement?: TooltipProps<C>["placement"];
   requires?: readonly (readonly [boolean, string])[];
   send: TransactionFunction;
   numberOfConfirmationsToWait?: number;
   children: C;
 };
 
-export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
+export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hoverable>>({
   id,
   tooltip,
   tooltipPlacement,
@@ -206,7 +206,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
   return tooltip ? (
     <>
       <Tooltip message={tooltip} placement={tooltipPlacement || "right"}>
-        <Box>{clonedTrigger}</Box>
+        {clonedTrigger}
       </Tooltip>
     </>
   ) : (
