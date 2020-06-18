@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { Trove, Liquity } from "@liquity/lib";
+import { usePrevious } from "../hooks/usePrevious";
 import { TroveEditor } from "./TroveEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
 
@@ -179,15 +180,6 @@ type TroveManagerProps = {
   total: Trove;
   quiBalance: Decimal;
 };
-
-function usePrevious<T>(value: T) {
-  const ref = useRef<T>(value);
-
-  const previousValue = ref.current;
-  ref.current = value;
-
-  return previousValue;
-}
 
 export const TroveManager: React.FC<TroveManagerProps> = ({
   liquity,
