@@ -14,7 +14,7 @@ type UserAccountProps = {
 export const UserAccount: React.FC<UserAccountProps> = ({ account, etherBalance, quiBalance }) => (
   <Flex sx={{ alignItems: "center", lineHeight: 1.25 }}>
     <Icon name="user-circle" size="lg" />
-    <Box ml={3} mr={4}>
+    <Box sx={{ ml: 3, mr: 4 }}>
       <Heading sx={{ fontSize: 1 }}>Connected as</Heading>
       <Text as="span" sx={{ fontSize: 1 }}>
         {shortenAddress(account)}
@@ -22,7 +22,7 @@ export const UserAccount: React.FC<UserAccountProps> = ({ account, etherBalance,
     </Box>
 
     <Icon name="wallet" size="lg" />
-    <Box ml={3}>
+    <Box sx={{ ml: 3 }}>
       <Heading sx={{ fontSize: 1 }}>Balance</Heading>
       <Text as="span" sx={{ mr: 3, fontSize: 1 }}>
         {etherBalance.prettify()} ETH

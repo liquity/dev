@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Box, Flex, Spinner } from "theme-ui";
+import { Button, Flex, Spinner } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { Trove, Liquity } from "@liquity/lib";
@@ -143,8 +143,8 @@ const TroveAction: React.FC<TroveActionProps> = ({
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex sx={{ mt: 4, justifyContent: "center" }}>
-      <Button disabled mx={2}>
-        <Spinner mr={2} color="white" size="20px" />
+      <Button disabled sx={{ mx: 2 }}>
+        <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
         Waiting for your approval
       </Button>
     </Flex>
@@ -165,7 +165,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
         ]}
         {...{ send }}
       >
-        <Button mx={2}>{actionName}</Button>
+        <Button sx={{ mx: 2 }}>{actionName}</Button>
       </Transaction>
     </Flex>
   );
@@ -221,18 +221,16 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
 
   return (
     <>
-      <Box mt={4}>
-        <TroveEditor
-          title={original.isEmpty ? "Open a new Liquity Trove" : "Your Liquity Trove"}
-          {...{
-            original,
-            edited,
-            setEdited,
-            changePending,
-            price
-          }}
-        />
-      </Box>
+      <TroveEditor
+        title={original.isEmpty ? "Open a new Liquity Trove" : "Your Liquity Trove"}
+        {...{
+          original,
+          edited,
+          setEdited,
+          changePending,
+          price
+        }}
+      />
 
       <TroveAction
         {...{

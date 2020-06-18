@@ -33,10 +33,8 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
 
   return (
-    <Card mt={4} p={3} variant="info">
-      <Heading as="h3" mb={2}>
-        System
-      </Heading>
+    <Card variant="info">
+      <Heading>System</Heading>
 
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
       <Text>LQTY in circulation: {total.debt.shorten()}</Text>

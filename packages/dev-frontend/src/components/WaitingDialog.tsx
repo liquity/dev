@@ -21,7 +21,7 @@ export const WaitingDialog: React.FC<WaitingDialogProps> = ({
 }) => (
   <Dialog title={title} icon={icon} cancelLabel={cancelLabel} onCancel={onCancel}>
     {children}
-    <Box px={[3, 4]} pb={[3, 4]}>
+    <Box sx={{ px: [3, 4], pb: [3, 4] }}>
       <Flex
         sx={{
           flexDirection: ["column", "row"],
@@ -30,7 +30,7 @@ export const WaitingDialog: React.FC<WaitingDialogProps> = ({
           alignItems: ["center", "auto"]
         }}
       >
-        <Spinner size="3em" mr={[0, 3]} mb={[2, 0]} />
+        <Spinner size="3em" sx={{ mr: [0, 3], mb: [2, 0] }} />
         <Flex sx={{ flexDirection: "column", alignItems: ["center", "flex-start"] }}>
           {waitReason}
         </Flex>

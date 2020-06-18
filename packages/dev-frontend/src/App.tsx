@@ -111,10 +111,12 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
           </Box>
         </Flex>
 
-        <RiskiestTroves
-          pageSize={10}
-          {...{ liquity, price, totalRedistributed, numberOfTroves, blockTag }}
-        />
+        <Box sx={{ px: 3 }}>
+          <RiskiestTroves
+            pageSize={10}
+            {...{ liquity, price, totalRedistributed, numberOfTroves, blockTag }}
+          />
+        </Box>
       </Box>
 
       <Footer>
@@ -129,7 +131,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 const App = () => {
   const loader = (
     <Flex sx={{ alignItems: "center", justifyContent: "center", height: "100vh" }}>
-      <Spinner sx={{ m: 2 }} size="32px" color="text" />
+      <Spinner sx={{ m: 2, color: "text" }} size="32px" />
       <Heading>Loading...</Heading>
     </Flex>
   );
@@ -144,7 +146,7 @@ const App = () => {
       }}
     >
       <Heading>Liquity is not yet deployed to {chainId === 1 ? "mainnet" : "this network"}.</Heading>
-      <Text mt={3}>Please switch to Ropsten, Rinkeby, Kovan or Görli.</Text>
+      <Text sx={{ mt: 3 }}>Please switch to Ropsten, Rinkeby, Kovan or Görli.</Text>
     </Flex>
   );
 

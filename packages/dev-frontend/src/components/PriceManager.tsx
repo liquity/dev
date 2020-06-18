@@ -21,10 +21,10 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
   }, [price]);
 
   return (
-    <Card mt={4} p={0}>
-      <Heading variant="editorTitle">Price</Heading>
+    <Card>
+      <Heading>Price</Heading>
 
-      <Box p={2}>
+      <Box>
         <Flex sx={{ alignItems: "stretch" }}>
           <Label>ETH</Label>
 

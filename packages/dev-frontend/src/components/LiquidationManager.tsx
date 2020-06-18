@@ -13,10 +13,10 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
   const [numberOfTrovesToLiquidate, setNumberOfTrovesToLiquidate] = useState("40");
 
   return (
-    <Card mt={4} p={0}>
-      <Heading variant="editorTitle">Liquidate</Heading>
+    <Card>
+      <Heading>Liquidate</Heading>
 
-      <Box p={2}>
+      <Box>
         <Flex sx={{ alignItems: "stretch" }}>
           <Label>Up to</Label>
 

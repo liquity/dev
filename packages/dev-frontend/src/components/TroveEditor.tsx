@@ -42,8 +42,8 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   const collateralRatioChangePct = new Percent(collateralRatioChange);
 
   return (
-    <Card p={0}>
-      <Heading variant="editorTitle">
+    <Card>
+      <Heading>
         {title}
         {isChanged && !changePending && (
           <Button
@@ -58,7 +58,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
       {changePending && <LoadingOverlay />}
 
-      <Box p={2}>
+      <Box>
         <EditableRow
           label="Collateral"
           amount={edited.collateral.prettify(4)}

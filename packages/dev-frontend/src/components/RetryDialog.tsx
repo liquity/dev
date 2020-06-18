@@ -19,7 +19,7 @@ export const RetryDialog: React.FC<RetryDialogProps> = ({
   children
 }) => (
   <Dialog intent="danger" title={title} cancelLabel={cancelLabel} onCancel={onCancel}>
-    <Box p={[3, 4]}>{children}</Box>
+    <Box sx={{ p: [3, 4] }}>{children}</Box>
     <Flex
       sx={{
         p: [3, 4],

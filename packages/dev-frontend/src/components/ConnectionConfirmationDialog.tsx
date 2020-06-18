@@ -27,6 +27,6 @@ export const ConnectionConfirmationDialog: React.FC<ConnectionConfirmationDialog
     cancelLabel="Cancel connection"
     onCancel={onCancel}
   >
-    <Box p={[3, 4]}>{children}</Box>
+    <Box sx={{ p: [3, 4] }}>{children}</Box>
   </WaitingDialog>
 );
