@@ -16,14 +16,29 @@ import {
 } from "@liquity/lib";
 import { useLiquity } from "../hooks/LiquityContext";
 import { Tooltip, TooltipProps, Hoverable } from "./Tooltip";
+import { Icon } from "./Icon";
+
+const strokeWidth = 10;
 
 const circularProgressbarStyle = {
-  strokeWidth: 10,
+  strokeLinecap: "butt",
+  pathColor: "white",
+  trailColor: "rgba(255, 255, 255, 0.33)"
+};
+
+const slowProgress = {
+  strokeWidth,
   styles: buildStyles({
-    strokeLinecap: "butt",
-    pathTransitionDuration: 0.5,
-    pathColor: "white",
-    trailColor: "rgba(255, 255, 255, 0.33)"
+    ...circularProgressbarStyle,
+    pathTransitionDuration: 30
+  })
+};
+
+const fastProgress = {
+  strokeWidth,
+  styles: buildStyles({
+    ...circularProgressbarStyle,
+    pathTransitionDuration: 0.75
   })
 };
 
@@ -131,7 +146,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
   tooltipPlacement,
   requires,
   send,
-  numberOfConfirmationsToWait = 3,
+  numberOfConfirmationsToWait = 1,
   children
 }: TransactionProps<C>) {
   const [transactionState, setTransactionState] = useTransactionState();
@@ -229,6 +244,51 @@ const tryToGetRevertReason = async (provider: Provider, hash: string) => {
   }
 };
 
+const Donut = React.memo(
+  CircularProgressbarWithChildren,
+  ({ value: prev }, { value: next }) => prev === next
+);
+
+type TransactionProgressDonutProps = {
+  state: TransactionState["type"];
+  confirmations?: number;
+  numberOfConfirmationsToWait?: number;
+};
+
+const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({
+  state,
+  confirmations,
+  numberOfConfirmationsToWait
+}) => {
+  const [value, setValue] = useState(0);
+  const maxValue = numberOfConfirmationsToWait || 1;
+  const targetValue = (confirmations ?? 0) + 1;
+
+  console.log({ state, value });
+
+  useEffect(() => {
+    if (state === "confirmed") {
+      setTimeout(() => setValue(maxValue), 40);
+    } else {
+      setTimeout(() => setValue(targetValue - 1 / 6), 20);
+    }
+  }, [state, targetValue, maxValue]);
+
+  return state === "confirmed" ? (
+    <Donut value={value} maxValue={maxValue} {...fastProgress}>
+      <Icon name="check" color="white" size="lg" />
+    </Donut>
+  ) : state === "failed" || state === "cancelled" ? (
+    <Donut value={0} maxValue={maxValue} {...fastProgress}>
+      <Icon name="times" color="white" size="lg" />
+    </Donut>
+  ) : (
+    <Donut {...{ value, maxValue, ...slowProgress }}>
+      <Icon name="cog" color="white" size="lg" spin />
+    </Donut>
+  );
+};
+
 export const TransactionMonitor: React.FC = () => {
   const { provider, contracts, account } = useLiquity();
   const [transactionState, setTransactionState] = useTransactionState();
@@ -244,11 +304,7 @@ export const TransactionMonitor: React.FC = () => {
       : undefined;
 
   const confirmations =
-    transactionState.type === "waitingForConfirmations"
-      ? transactionState.confirmations
-      : transactionState.type === "confirmed"
-      ? numberOfConfirmationsToWait
-      : undefined;
+    transactionState.type === "waitingForConfirmations" ? transactionState.confirmations : undefined;
 
   useEffect(() => {
     if (id && tx && numberOfConfirmationsToWait) {
@@ -397,19 +453,13 @@ export const TransactionMonitor: React.FC = () => {
         zIndex: 2
       }}
     >
-      <Box sx={{ width: "40px", height: "40px", mr: 3 }}>
-        <CircularProgressbarWithChildren
-          value={confirmations || 0}
-          maxValue={numberOfConfirmationsToWait || 1}
-          {...circularProgressbarStyle}
-        >
-          <Text sx={{ fontSize: 1, fontWeight: "bold", color: "white" }}>
-            {transactionState.type === "failed" || transactionState.type === "cancelled"
-              ? "✖"
-              : `${confirmations}/${numberOfConfirmationsToWait}`}
-          </Text>
-        </CircularProgressbarWithChildren>
+      <Box sx={{ mr: 3, width: "40px", height: "40px" }}>
+        <TransactionProgressDonut
+          state={transactionState.type}
+          {...{ confirmations, numberOfConfirmationsToWait }}
+        />
       </Box>
+
       <Text sx={{ fontSize: 3, color: "white" }}>
         {transactionState.type === "waitingForConfirmations"
           ? "Waiting for confirmation"
