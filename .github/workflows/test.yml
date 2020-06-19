@@ -17,4 +17,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - run: echo "::warning::Sample warning"
+      - run: echo "::warning file=app.js,line=1,col=5::Missing semicolon"
