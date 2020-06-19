@@ -25,6 +25,13 @@ dotenv.config();
 
 usePlugin("buidler-ethers-v5");
 
+const useLiveVersionEnv = (process.env.USE_LIVE_VERSION ?? "false").toLowerCase();
+const useLiveVersion = !["false", "no", "0"].some(falsyValue => useLiveVersionEnv === falsyValue);
+
+if (useLiveVersion) {
+  console.log("Using live version of contracts.".cyan);
+}
+
 const generateRandomAccounts = (numberOfAccounts: number) => {
   const accounts = new Array<string>(numberOfAccounts);
 
@@ -61,10 +68,15 @@ const config: BuidlerConfig = {
     ...infuraNetwork("goerli"),
     ...infuraNetwork("kovan")
   },
-  paths: {
-    artifacts: "../contracts/artifacts",
-    cache: "../contracts/cache"
-  }
+  paths: useLiveVersion
+    ? {
+        artifacts: "live/artifacts",
+        cache: "live/cache"
+      }
+    : {
+        artifacts: "../contracts/artifacts",
+        cache: "../contracts/cache"
+      }
 };
 
 type DeployParams = {

@@ -11,7 +11,8 @@
     "prepare:types": "ts-node scripts/generate-types.ts",
     "prepare:tsc": "tsc --project tsconfig.dist.json",
     "scrape-eth-usd": "ts-node scripts/scrape-eth-usd.ts",
-    "test": "buidler test"
+    "test": "buidler test",
+    "test-live": "cross-env USE_LIVE_VERSION=true buidler test"
   },
   "peerDependencies": {
     "@liquity/decimal": "^0.0.1",
@@ -30,6 +31,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "colors": "^1.4.0",
+    "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
     "ethers": "^5.0.2",
     "npm-run-all": "^4.1.5",
