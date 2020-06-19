@@ -270,7 +270,7 @@ const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({
     if (state === "confirmed") {
       setTimeout(() => setValue(maxValue), 40);
     } else {
-      setTimeout(() => setValue(targetValue - 1 / 6), 20);
+      setTimeout(() => setValue(targetValue - 1 / 3), 20);
     }
   }, [state, targetValue, maxValue]);
 
