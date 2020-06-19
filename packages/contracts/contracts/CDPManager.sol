@@ -196,9 +196,6 @@ contract CDPManager is Ownable, ICDPManager {
 
         uint CLVInPool = stabilityPool.getCLV();
 
-        _closeCDP(_user);
-        _updateSystemSnapshots();
-
         // Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder
         if (CLVInPool > 0) {
             (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(entireCDPDebt, entireCDPColl, CLVInPool);
@@ -207,6 +204,8 @@ contract CDPManager is Ownable, ICDPManager {
             _redistributeDebtAndColl(entireCDPDebt, entireCDPColl);
         }
 
+        _closeCDP(_user);
+        _updateSystemSnapshots();
         emit CDPUpdated(_user, 0, 0, 0);
 
         return true;
@@ -579,7 +578,6 @@ contract CDPManager is Ownable, ICDPManager {
         }
     }
 
-    
     function applyPendingRewards(address _user) external onlyBorrowerOperations returns(bool) {
         return _applyPendingRewards(_user);
     }
@@ -605,11 +603,6 @@ contract CDPManager is Ownable, ICDPManager {
 
         return true;
     }
-
-    function getPendingRewards(address _user) internal returns(uint CLV) {
-        
-    }
-
 
     // Update user's snapshots of L_ETH and L_CLVDebt to reflect the current values
 
@@ -664,20 +657,25 @@ contract CDPManager is Ownable, ICDPManager {
         return (rewardSnapshots[_user].ETH != L_ETH);
     }
 
-    /* Computes the CDPs entire debt and coll, including distribution pending rewards. Transfers any rewards 
+     /* Computes the CDPs entire debt and coll, including distribution pending rewards. Transfers any rewards 
     from Default Pool to Active Pool. */ 
-    function _getEntireDebtAndColl(address _user, uint pendingCLVDebtReward, uint pendingETHReward) 
+    function _getEntireDebtAndColl(address _user) 
     internal 
     returns (uint debt, uint coll)
     {
         debt = CDPs[_user].debt;
         coll = CDPs[_user].coll;
 
-        debt = debt.add(pendingCLVDebtReward);
-        coll = coll.add(pendingETHReward);
+        if (_hasPendingRewards(_user)) {
+            uint pendingCLVDebtReward = _computePendingCLVDebtReward(_user);
+            uint pendingETHReward = _computePendingETHReward(_user);
 
-        // poolManager.moveDistributionRewardsToActivePool(pendingCLVDebtReward, pendingETHReward); 
-        
+            debt = debt.add(pendingCLVDebtReward);
+            coll = coll.add(pendingETHReward);
+
+            poolManager.moveDistributionRewardsToActivePool(pendingCLVDebtReward, pendingETHReward); 
+        }
+
         return (debt, coll);
     }
 
