@@ -264,8 +264,6 @@ const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({
   const maxValue = numberOfConfirmationsToWait || 1;
   const targetValue = (confirmations ?? 0) + 1;
 
-  console.log({ state, value });
-
   useEffect(() => {
     if (state === "confirmed") {
       setTimeout(() => setValue(maxValue), 40);
