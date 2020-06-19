@@ -331,11 +331,11 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     // --- Helper functions --- 
 
     /* Converts the magnitude of an int to a uint
-    TODO:  check validity for num in region (num > 2**255) or (num < -2**255) */
+    TODO:  check validity for num in region (num > 2**255) or (num < -(2**255) ) */
     function _intToUint(int num) internal pure returns (uint) {
         if (num < 0) {
             return uint(-num);
-        } else {
+        } else if (num >= 0) {
             return uint(num);
         }
     }
@@ -486,16 +486,14 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     }
 
     function _computeICR(uint _coll, uint _debt, uint _price) view internal returns(uint) {
-        // Check if the total debt is higher than 0, to avoid division by 0
         if (_debt > 0) {
 
-            // Pure division to decimal
             uint newCollRatio = _coll.mul(_price).div(_debt);
 
             return newCollRatio;
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
-        else {
+        else if (_debt == 0) {
             return (2**256) - 1; 
         }
     }

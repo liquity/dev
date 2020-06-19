@@ -196,6 +196,9 @@ contract CDPManager is Ownable, ICDPManager {
 
         uint CLVInPool = stabilityPool.getCLV();
 
+        _closeCDP(_user);
+        _updateSystemSnapshots();
+
         // Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder
         if (CLVInPool > 0) {
             (uint CLVDebtRemainder, uint ETHRemainder) = poolManager.offset(entireCDPDebt, entireCDPColl, CLVInPool);
@@ -204,8 +207,6 @@ contract CDPManager is Ownable, ICDPManager {
             _redistributeDebtAndColl(entireCDPDebt, entireCDPColl);
         }
 
-        _closeCDP(_user);
-        _updateSystemSnapshots();
         emit CDPUpdated(_user, 0, 0, 0);
 
         return true;
@@ -567,10 +568,7 @@ contract CDPManager is Ownable, ICDPManager {
     }
 
     function _computeICR(uint _coll, uint _debt, uint _price) view internal returns(uint) {
-        // Check if the total debt is higher than 0, to avoid division by 0
         if (_debt > 0) {
-
-            // Pure division to decimal
             uint newCollRatio = _coll.mul(_price).div(_debt);
 
             return newCollRatio;
@@ -600,12 +598,18 @@ contract CDPManager is Ownable, ICDPManager {
         CDPs[_user].coll = CDPs[_user].coll.add(pendingETHReward);  
         CDPs[_user].debt = CDPs[_user].debt.add(pendingCLVDebtReward); 
 
+        _updateRewardSnapshots(_user);
+
         // Tell PM to transfer from DefaultPool to ActivePool when user claims rewards
         poolManager.moveDistributionRewardsToActivePool(pendingCLVDebtReward, pendingETHReward); 
 
-        _updateRewardSnapshots(_user); // 5259 (no rewards)
         return true;
     }
+
+    function getPendingRewards(address _user) internal returns(uint CLV) {
+        
+    }
+
 
     // Update user's snapshots of L_ETH and L_CLVDebt to reflect the current values
 
@@ -662,23 +666,18 @@ contract CDPManager is Ownable, ICDPManager {
 
     /* Computes the CDPs entire debt and coll, including distribution pending rewards. Transfers any rewards 
     from Default Pool to Active Pool. */ 
-    function _getEntireDebtAndColl(address _user) 
+    function _getEntireDebtAndColl(address _user, uint pendingCLVDebtReward, uint pendingETHReward) 
     internal 
     returns (uint debt, uint coll)
     {
         debt = CDPs[_user].debt;
         coll = CDPs[_user].coll;
 
-        if (_hasPendingRewards(_user)) {
-            uint pendingCLVDebtReward = _computePendingCLVDebtReward(_user);
-            uint pendingETHReward = _computePendingETHReward(_user);
+        debt = debt.add(pendingCLVDebtReward);
+        coll = coll.add(pendingETHReward);
 
-            debt = debt.add(pendingCLVDebtReward);
-            coll = coll.add(pendingETHReward);
-
-            poolManager.moveDistributionRewardsToActivePool(pendingCLVDebtReward, pendingETHReward); 
-        }
-
+        // poolManager.moveDistributionRewardsToActivePool(pendingCLVDebtReward, pendingETHReward); 
+        
         return (debt, coll);
     }
 
@@ -752,8 +751,8 @@ contract CDPManager is Ownable, ICDPManager {
         rewardSnapshots[_user].ETH = 0;
         rewardSnapshots[_user].CLVDebt = 0;
  
-        sortedCDPs.remove(_user);
         _removeCDPOwner(_user);
+        sortedCDPs.remove(_user);
        
         return true;
     }

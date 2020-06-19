@@ -130,7 +130,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     }
   })
 
-  it("openLoan(): reverts if system is in recovery mode", async () => {
+  it("openLoan(): with non-zero debt, reverts when system is in recovery mode", async () => {
     // --- SETUP ---
     await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
     await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
@@ -153,6 +153,33 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     } catch (err) {
       assert.include(err.message, 'revert')
     }
+  })
+
+  it("openLoan(): Can open a loan with zero debt when system is in recovery mode", async () => {
+    // --- SETUP ---
+     //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+
+    // price drops to 1ETH:100CLV, reducing TCR below 150%
+    await priceFeed.setPrice('100000000000000000000');
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    const txCarol = await borrowerOperations.openLoan('0', carol, { from: carol, value: _1_Ether })
+    assert.isTrue(txCarol.receipt.status)
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    assert.isTrue(await sortedCDPs.contains(carol))
+
+    const carol_CDPStatus = await cdpManager.getCDPStatus(carol)
+    assert.equal(carol_CDPStatus, 1)
   })
 
   it("withdrawColl(): reverts if system is in recovery mode", async () => {

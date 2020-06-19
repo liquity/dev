@@ -1,5 +1,6 @@
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 
 const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
@@ -28,9 +29,16 @@ contract('BorrowerOperations', async accounts => {
   let functionCaller
   let borrowerOperations
 
+  let borrowerOpsTester
+
+  before(async () => {
+    borrowerOpsTester = await BorrowerOperationsTester.new()
+    BorrowerOperationsTester.setAsDeployed(borrowerOpsTester)
+  })
+
   beforeEach(async () => {
     const contracts = await deployLiquity()
-
+    
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManager = contracts.poolManager
@@ -45,6 +53,9 @@ contract('BorrowerOperations', async accounts => {
 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
+
+    borrowerOpsTester.setActivePool(contracts.activePool.address)
+    borrowerOpsTester.setDefaultPool(contracts.defaultPool.address)
   })
 
   it("addColl(), non-existent CDP: creates a new CDP and assigns the correct collateral amount", async () => {
@@ -1066,7 +1077,6 @@ contract('BorrowerOperations', async accounts => {
     const txAlice = await borrowerOperations.adjustLoan(0, mv._100e18, alice, { from: alice, value: mv._1_Ether })
     assert.isTrue(txAlice.receipt.status)
 
-
     // Bob attempts to decrease coll  by 1 ETH and increase debt by 200 CLV. 
     // New ICR would be: ((2+1) * 100) / (100 + 200) = 300/300 = 100%, below the MCR.
     try {
@@ -1075,6 +1085,49 @@ contract('BorrowerOperations', async accounts => {
     } catch (err) {
       assert.include(err.message, "revert")
     }
+  })
+
+  it("adjustLoan(): With 0 coll change, doesnt change borrower's coll or ActivePool coll", async () => {
+    await borrowerOperations.addColl(whale, whale, { from: whale, value: mv._100_Ether })
+
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._10_Ether })
+
+    const collBefore = ((await cdpManager.CDPs(alice))[1]).toString()
+    const activePoolCollBefore = (await activePool.getETH()).toString()
+
+    assert.equal(collBefore, mv._10_Ether)
+    assert.equal(activePoolCollBefore, '110000000000000000000' )
+
+    // Alice adjusts loan. No coll change, and a debt increase (+50CLV)
+    await borrowerOperations.adjustLoan(0, mv._50e18, alice, { from: alice, value: 0 })
+
+    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    const activePoolCollAfter = (await activePool.getETH()).toString()
+
+    assert.equal(collAfter, collBefore)
+    assert.equal(activePoolCollAfter, activePoolCollBefore)
+  })
+
+  it("adjustLoan(): With 0 debt change, doesnt change borrower's debt or ActivePool debt", async () => {
+    await borrowerOperations.addColl(whale, whale, { from: whale, value: mv._100_Ether })
+
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._10_Ether })
+
+    const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
+    const activePoolDebtBefore = (await activePool.getCLV()).toString()
+
+    assert.equal(debtBefore, mv._100e18 )
+    assert.equal(activePoolDebtBefore, mv._100e18 )
+
+    // Alice adjusts loan. No coll change, and a debt increase (+50CLV)
+    await borrowerOperations.adjustLoan(0, 0, alice, { from: alice, value: mv._1_Ether })
+
+    const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
+    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    const activePoolDebtAfter = (await activePool.getCLV()).toString()
+
+    assert.equal(debtAfter, debtBefore)
+    assert.equal(activePoolDebtAfter, activePoolDebtBefore)
   })
 
   it("adjustLoan(): updates borrower's debt and coll with an increase in both", async () => {
@@ -1911,6 +1964,298 @@ contract('BorrowerOperations', async accounts => {
     const alice_CLVTokenBalance_After = await clvToken.balanceOf(alice)
     assert.equal(alice_CLVTokenBalance_After, '50000000000000000000')
   })
+
+
+  //  --- getNewICRFromTroveChange ---
+
+  describe("getNewICRFromTroveChange() returns the correct ICR", async () => {
+    
+
+    // 0, 0
+    it("collChange = 0, debtChange = 0", async () => { 
+      price = await priceFeed.getPrice()
+      const initialColl = mv._1_Ether
+      const initialDebt = mv._100e18
+      const collChange = 0
+      const debtChange = 0
+    
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      assert.equal(newICR, '2000000000000000000')
+    })
+
+    // 0, +ve
+    it("collChange = 0, debtChange is positive", async () => { 
+      price = await priceFeed.getPrice()
+      const initialColl = mv._1_Ether
+      const initialDebt = mv._100e18
+      const collChange = 0
+      const debtChange = mv._50e18
+
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      assert.isAtMost(th.getDifference(newICR, '1333333333333333333'), 100)
+    })
+
+    // 0, -ve
+    it("collChange = 0, debtChange is negative", async () => { 
+      price = await priceFeed.getPrice()
+      const initialColl = mv._1_Ether
+      const initialDebt = mv._100e18
+      const collChange = 0
+      const debtChange = mv.negative_50e18
+
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      assert.equal(newICR, '4000000000000000000')
+    })
+
+    // +ve, 0
+    it("collChange is positive, debtChange is 0", async () => { 
+      price = await priceFeed.getPrice()
+      const initialColl = mv._1_Ether
+      const initialDebt = mv._100e18
+      const collChange = mv._1_Ether
+      const debtChange = 0
+
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      assert.equal(newICR, '4000000000000000000')
+    })
+
+    // -ve, 0
+    it("collChange is negative, debtChange is 0", async () => { 
+      price = await priceFeed.getPrice()
+      const initialColl = mv._1_Ether
+      const initialDebt = mv._100e18
+      const collChange = mv.negative_5e17
+      const debtChange = 0
+
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      assert.equal(newICR, '1000000000000000000')
+    })
+
+    // -ve, -ve
+    it("collChange is negative, debtChange is negative", async () => { 
+      price = await priceFeed.getPrice()
+      const initialColl = mv._1_Ether
+      const initialDebt = mv._100e18
+      const collChange = mv.negative_5e17
+      const debtChange = mv.negative_50e18
+
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      assert.equal(newICR, '2000000000000000000')
+    })
+
+    // +ve, +ve 
+    it("collChange is positive, debtChange is positive", async () => { 
+      price = await priceFeed.getPrice()
+      const initialColl = mv._1_Ether
+      const initialDebt = mv._100e18
+      const collChange = mv._1_Ether
+      const debtChange = mv._100e18
+
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      assert.equal(newICR, '2000000000000000000')
+    })
+
+    // +ve, -ve
+    it("collChange is positive, debtChange is negative", async () => { 
+      price = await priceFeed.getPrice()
+      const initialColl = mv._1_Ether
+      const initialDebt = mv._100e18
+      const collChange = mv._1_Ether
+      const debtChange = mv.negative_50e18
+
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      assert.equal(newICR, '8000000000000000000')
+    })
+
+    // -ve, +ve
+    it("collChange is negative, debtChange is positive", async () => { 
+      price = await priceFeed.getPrice()
+      const initialColl = mv._1_Ether
+      const initialDebt = mv._100e18
+      const collChange = mv.negative_5e17
+      const debtChange = mv._100e18
+
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      assert.equal(newICR, '500000000000000000')
+    })
+  })
+
+   //  --- getNewICRFromTroveChange ---
+
+   describe("getNewTCRFromTroveChange() returns the correct TCR", async () => {
+
+    // 0, 0
+    it("collChange = 0, debtChange = 0", async () => { 
+      // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+      await priceFeed.setPrice(mv._100e18)
+      await cdpManager.liquidate(bob)
+      await priceFeed.setPrice(mv._200e18)
+      const price = await priceFeed.getPrice()
+
+      // --- TEST ---
+      const collChange = 0
+      const debtChange = 0
+      const newTCR = await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)
+
+     assert.equal(newTCR, '2000000000000000000')
+    })
+
+    // 0, +ve
+    it("collChange = 0, debtChange is positive", async () => { 
+      // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+      await priceFeed.setPrice(mv._100e18)
+      await cdpManager.liquidate(bob)
+      await priceFeed.setPrice(mv._200e18)
+      const price = await priceFeed.getPrice()
+
+      // --- TEST ---
+      const collChange = 0
+      const debtChange = mv._200e18
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+
+     assert.equal(newTCR, '1000000000000000000')
+    })
+
+    // 0, -ve
+    it("collChange = 0, debtChange is negative", async () => { 
+      // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+      await priceFeed.setPrice(mv._100e18)
+      await cdpManager.liquidate(bob)
+      await priceFeed.setPrice(mv._200e18)
+      const price = await priceFeed.getPrice()
+
+      // --- TEST ---
+      const collChange = 0
+      const debtChange = mv.negative_100e18
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+
+     assert.equal(newTCR, '4000000000000000000')
+    })
+
+    // +ve, 0
+    it("collChange is positive, debtChange is 0", async () => { 
+      // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+      await priceFeed.setPrice(mv._100e18)
+      await cdpManager.liquidate(bob)
+      await priceFeed.setPrice(mv._200e18)
+      const price = await priceFeed.getPrice()
+
+      // --- TEST ---
+      const collChange = mv._2_Ether
+      const debtChange = 0
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+
+     assert.equal(newTCR, '4000000000000000000')
+    })
+
+    // -ve, 0
+    it("collChange is negative, debtChange is 0", async () => { 
+      // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+      await priceFeed.setPrice(mv._100e18)
+      await cdpManager.liquidate(bob)
+      await priceFeed.setPrice(mv._200e18)
+      const price = await priceFeed.getPrice()
+
+      // --- TEST ---
+      const collChange = mv.negative_1e18
+      const debtChange = 0
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+
+     assert.equal(newTCR, '1000000000000000000')
+    })
+
+    // -ve, -ve
+    it("collChange is negative, debtChange is negative", async () => { 
+      // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+      await priceFeed.setPrice(mv._100e18)
+      await cdpManager.liquidate(bob)
+      await priceFeed.setPrice(mv._200e18)
+      const price = await priceFeed.getPrice()
+
+      // --- TEST ---
+      const collChange = mv.negative_1e18
+      const debtChange = mv.negative_100e18
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+
+     assert.equal(newTCR, '2000000000000000000')
+    })
+
+    // +ve, +ve 
+    it("collChange is positive, debtChange is positive", async () => { 
+      // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+      await priceFeed.setPrice(mv._100e18)
+      await cdpManager.liquidate(bob)
+      await priceFeed.setPrice(mv._200e18)
+      const price = await priceFeed.getPrice()
+
+      // --- TEST ---
+      const collChange = mv._1_Ether
+      const debtChange = mv._100e18
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+
+      assert.equal(newTCR, '2000000000000000000')
+    })
+
+    // +ve, -ve
+    it("collChange is positive, debtChange is negative", async () => { 
+      // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+      await priceFeed.setPrice(mv._100e18)
+      await cdpManager.liquidate(bob)
+      await priceFeed.setPrice(mv._200e18)
+      const price = await priceFeed.getPrice()
+
+      // --- TEST ---
+      const collChange = mv._1_Ether
+      const debtChange = mv.negative_100e18
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+
+      assert.equal(newTCR, '6000000000000000000')
+    })
+
+    // -ve, +ve
+    it("collChange is negative, debtChange is positive", async () => { 
+      // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+      await priceFeed.setPrice(mv._100e18)
+      await cdpManager.liquidate(bob)
+      await priceFeed.setPrice(mv._200e18)
+      const price = await priceFeed.getPrice()
+
+      // --- TEST ---
+      const collChange = mv.negative_1e18
+      const debtChange = mv._200e18
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+
+      assert.equal(newTCR, '500000000000000000')
+    })
+   })
+
 })
 
 

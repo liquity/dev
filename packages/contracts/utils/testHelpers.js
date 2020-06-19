@@ -78,6 +78,7 @@ const MoneyValues = {
   _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
 
   negative_5e17:  "-" + web3.utils.toWei('500', 'finney'),
+  negative_1e18:  "-" + web3.utils.toWei('1', 'ether'),
   negative_10e18:  "-" + web3.utils.toWei('10', 'ether'),
   negative_50e18:  "-" + web3.utils.toWei('50', 'ether'),
   negative_100e18:  "-" + web3.utils.toWei('100', 'ether'),
