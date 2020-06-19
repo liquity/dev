@@ -6,12 +6,16 @@
   "scripts": {
     "buidler": "buidler",
     "check-abi": "ts-node scripts/check-abi.ts",
+    "check-live-version": "ts-node scripts/check-live-version.ts",
     "prepare": "run-s prepare:*",
     "prepare:deployments": "ts-node scripts/copy-deployments.ts",
     "prepare:types": "ts-node scripts/generate-types.ts",
     "prepare:tsc": "tsc --project tsconfig.dist.json",
     "scrape-eth-usd": "ts-node scripts/scrape-eth-usd.ts",
-    "test": "buidler test"
+    "test": "buidler test",
+    "test-live": "run-s test-live:*",
+    "test-live:check-version": "run-s check-live-version",
+    "test-live:run": "cross-env USE_LIVE_VERSION=true buidler test"
   },
   "peerDependencies": {
     "@liquity/decimal": "^0.0.1",
@@ -30,6 +34,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "colors": "^1.4.0",
+    "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
     "ethers": "^5.0.2",
     "npm-run-all": "^4.1.5",

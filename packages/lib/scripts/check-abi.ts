@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { sha1 } from "object-hash";
+import "colors";
 
 import { abi, LiquityDeployment } from "../src/contracts";
 
@@ -28,7 +29,7 @@ const abisUpToDate = () => {
 if (abisUpToDate()) {
   console.log("ABI matches all deployments.");
 } else {
-  console.error("ABI has changed since last deployment.");
-  console.error("Must redeploy contracts before publishing new frontend.");
+  console.error("ABI has changed since last deployment.".red);
+  console.error("Must redeploy contracts before publishing new frontend.".red);
   process.exitCode = 1;
 }
