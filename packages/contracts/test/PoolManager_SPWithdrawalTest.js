@@ -207,6 +207,7 @@ contract('PoolManager', async accounts => {
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(mv._100e18, account, { from: account, value: mv._2_Ether })
+        console.log(`balance: ${await clvToken.balanceOf(account)}`)
         await poolManager.provideToSP(mv._100e18, { from: account })
       }
 

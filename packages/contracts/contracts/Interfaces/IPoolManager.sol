@@ -57,26 +57,26 @@ interface IPoolManager {
 
     function getCurrentETHGain(address _user) external view returns (uint);
 
-    function addColl() external payable returns(bool);
+    function addColl() external payable;
 
-    function withdrawColl(address _account, uint _ETH) external returns (bool);
+    function withdrawColl(address _account, uint _ETH) external;
 
-    function withdrawCLV(address _account, uint _CLV) external returns(bool);
+    function withdrawCLV(address _account, uint _CLV) external;
     
-    function repayCLV(address _account, uint _CLV) external returns(bool);
+    function repayCLV(address _account, uint _CLV) external;
 
-    function liquidate(uint _CLV, uint _ETH) external returns(bool);
+    function liquidate(uint _CLV, uint _ETH) external;
   
-    function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) external returns(bool);
+    function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) external;
 
-    function redeemCollateral(address _account, uint _CLV, uint _ETH) external returns(bool);
+    function redeemCollateral(address _account, uint _CLV, uint _ETH) external;
 
     // --- StabilityPool Functions ---
-    function provideToSP(uint _amount) external returns(bool);
+    function provideToSP(uint _amount) external;
 
-    function withdrawFromSP(uint _amount) external returns(bool);
+    function withdrawFromSP(uint _amount) external;
 
-    function withdrawFromSPtoCDP(address _user, address _hint) external returns(bool);
+    function withdrawFromSPtoCDP(address _user, address _hint) external;
 
     function offset(uint _debt, uint _coll, uint CLVInPool) external payable returns(uint, uint);
 }

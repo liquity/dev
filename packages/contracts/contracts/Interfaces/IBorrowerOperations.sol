@@ -31,17 +31,17 @@ interface IBorrowerOperations {
 
     function setDefaultPool(address _defaultPoolAddress) external;
 
-    function openLoan(uint _CLVAmount, address _hint) external payable returns(bool);
+    function openLoan(uint _CLVAmount, address _hint) external payable;
 
-    function addColl(address _user, address _hint) external payable returns(bool);
+    function addColl(address _user, address _hint) external payable;
 
-    function withdrawColl(uint _amount, address _hint) external returns(bool);
+    function withdrawColl(uint _amount, address _hint) external;
 
-    function withdrawCLV(uint _amount, address _hint) external returns(bool);
+    function withdrawCLV(uint _amount, address _hint) external;
 
-    function repayCLV(uint _amount, address _hint) external returns(bool);
+    function repayCLV(uint _amount, address _hint) external;
 
-    function closeLoan() external returns (bool);
+    function closeLoan() external;
 
-    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable returns(bool);
+    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable;
 }

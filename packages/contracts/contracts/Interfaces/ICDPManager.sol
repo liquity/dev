@@ -44,9 +44,9 @@ interface ICDPManager {
 
     function getApproxHint(uint CR, uint numTrials) external view returns(address);
 
-    function liquidate(address _user) external returns(bool);
+    function liquidate(address _user) external;
 
-    function liquidateCDPs(uint _n) external returns(bool);
+    function liquidateCDPs(uint _n) external;
 
     function checkRecoveryMode() external view returns(bool);
 
@@ -57,19 +57,19 @@ interface ICDPManager {
         address _firstRedemptionHint,
         address _partialRedemptionHint,
         uint _partialRedemptionHintICR
-    ) external returns (bool); 
+    ) external; 
 
     function updateStakeAndTotalStakes(address _user) external returns (uint);
 
-    function updateRewardSnapshots(address _user) external returns(bool);
+    function updateRewardSnapshots(address _user) external;
 
     function addCDPOwnerToArray(address _user) external returns (uint index);
 
-    function applyPendingRewards(address _user) external returns(bool);
+    function applyPendingRewards(address _user) external;
 
-    function closeCDP(address _user) external returns (bool);
+    function closeCDP(address _user) external;
 
-    function removeStake(address _user) external returns (bool);
+    function removeStake(address _user) external;
 
     function getCDPStatus(address _user) external view returns (uint);
     

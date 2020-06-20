@@ -91,7 +91,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     // --- Borrower Trove Operations ---
 
-    function openLoan(uint _CLVAmount, address _hint) public payable returns (bool) {
+    function openLoan(uint _CLVAmount, address _hint) public payable {
         address user = _msgSender(); 
         uint price = priceFeed.getPrice(); 
 
@@ -123,11 +123,10 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         poolManager.withdrawCLV(user, _CLVAmount); 
        
         emit CDPUpdated(user, _CLVAmount, msg.value, stake); 
-        return true;
     }
 
     // Send ETH as collateral to a CDP
-    function addColl(address _user, address _hint) public payable returns (bool) {
+    function addColl(address _user, address _hint) public payable {
         bool isFirstCollDeposit;
 
         uint price = priceFeed.getPrice();
@@ -161,11 +160,10 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
   
         uint debt = cdpManager.getCDPDebt(_user);
         emit CDPUpdated(_user, debt, newColl, stake);
-        return true;
     }
     
     // Withdraw ETH collateral from a CDP
-    function withdrawColl(uint _amount, address _hint) public returns (bool) {
+    function withdrawColl(uint _amount, address _hint) public {
         address user = _msgSender();
         uint status = cdpManager.getCDPStatus(user);
         _requireCDPisActive(status);
@@ -198,11 +196,10 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         poolManager.withdrawColl(user, _amount);
 
         emit CDPUpdated(user, debt, newColl, stake); 
-        return true;
     }
     
     // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
-    function withdrawCLV(uint _amount, address _hint) public returns (bool) {
+    function withdrawCLV(uint _amount, address _hint) public {
         address user = _msgSender();
         uint status = cdpManager.getCDPStatus(user);
         _requireCDPisActive(status);
@@ -231,11 +228,10 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         
         uint stake = cdpManager.getCDPStake(user);
         emit CDPUpdated(user, newDebt, coll, stake); 
-        return true; 
     }
     
     // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the debt accordingly
-    function repayCLV(uint _amount, address _hint) public returns (bool) {
+    function repayCLV(uint _amount, address _hint) public {
         address user = _msgSender();
         uint status = cdpManager.getCDPStatus(user);
         _requireCDPisActive(status);
@@ -260,10 +256,9 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         uint coll = cdpManager.getCDPColl(user);
         uint stake = cdpManager.getCDPStake(user);
         emit CDPUpdated(user, newDebt, coll, stake); 
-        return true;
     }
 
-    function closeLoan() public returns (bool) {
+    function closeLoan() public {
         address user = _msgSender();
         uint status = cdpManager.getCDPStatus(user);
         _requireCDPisActive(status);
@@ -282,12 +277,11 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         poolManager.withdrawColl(user, coll);
 
         emit CDPUpdated(user, 0, 0, 0);
-        return true; 
     }
 
     /* If ether is sent, the operation is considered as an increase in ether, and the first parameter 
     _collWithdrawal is ignored  */
-    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) public payable returns (bool) {
+    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) public payable {
         _requireCDPisActive(cdpManager.getCDPStatus(_msgSender()));
         _requireNotInRecoveryMode();
         
@@ -325,7 +319,6 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         _moveTokensAndETHfromAdjustment(_msgSender(), collChange, _debtChange);   
     
         emit CDPUpdated(_msgSender(), newDebt, newColl, stake); 
-        return true;
     }
 
     // --- Helper functions --- 
@@ -498,7 +491,3 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         }
     }
 }
-
-
-
-

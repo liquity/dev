@@ -214,62 +214,52 @@ contract PoolManager is Ownable, IPoolManager {
     }
     
     // Add the received ETH to the total active collateral
-    function addColl() public payable onlyBorrowerOperations returns (bool) {
+    function addColl() public payable onlyBorrowerOperations {
         // Send ETH to Active Pool and increase its recorded ETH balance
        (bool success, ) = activePoolAddress.call.value(msg.value)("");
        assert(success == true);
-       return success;
     }
     
     // Transfer the specified amount of ETH to _account and updates the total active collateral
-    function withdrawColl(address _account, uint _ETH) public onlyBorrowerOperations returns (bool) {
+    function withdrawColl(address _account, uint _ETH) public onlyBorrowerOperations {
         activePool.sendETH(_account, _ETH);
-        return true;
     }
     
     // Issue the specified amount of CLV to _account and increases the total active debt
-    function withdrawCLV(address _account, uint _CLV) public onlyBorrowerOperations returns (bool) {
-        activePool.increaseCLV(_CLV);  // 9500
-        CLV.mint(_account, _CLV);  // 37500
-         
-        return true;
+    function withdrawCLV(address _account, uint _CLV) public onlyBorrowerOperations {
+        activePool.increaseCLV(_CLV);  
+        CLV.mint(_account, _CLV);  
     }
     
     // Burn the specified amount of CLV from _account and decreases the total active debt
-    function repayCLV(address _account, uint _CLV) public onlyBorrowerOperations returns (bool) {
+    function repayCLV(address _account, uint _CLV) public onlyBorrowerOperations {
         activePool.decreaseCLV(_CLV);
         CLV.burn(_account, _CLV);
-        return true;
     }           
     
     // Update the Active Pool and the Default Pool when a CDP gets closed
-    function liquidate(uint _CLV, uint _ETH) public onlyCDPManager returns (bool) {
+    function liquidate(uint _CLV, uint _ETH) public onlyCDPManager {
         // Transfer the debt & coll from the Active Pool to the Default Pool
         defaultPool.increaseCLV(_CLV);
         activePool.decreaseCLV(_CLV);
         activePool.sendETH(defaultPoolAddress, _ETH);
-
-        return true;
     }
 
     // Move a CDP's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
-    function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) public onlyCDPManager returns (bool) {
+    function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) public onlyCDPManager {
         // Transfer the debt & coll from the Default Pool to the Active Pool
         defaultPool.decreaseCLV(_CLV);  
         activePool.increaseCLV(_CLV); 
         defaultPool.sendETH(activePoolAddress, _ETH); 
- 
-        return true;
     }
 
     // Burn the received CLV, transfers the redeemed ETH to _account and updates the Active Pool
-    function redeemCollateral(address _account, uint _CLV, uint _ETH) public onlyCDPManager returns (bool) {
+    function redeemCollateral(address _account, uint _CLV, uint _ETH) public onlyCDPManager {
         // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLV(_CLV);  
         activePool.sendETH(_account, _ETH); 
 
         CLV.burn(_account, _CLV); 
-        return true;
     }
 
     function getCurrentETHGain(address _user) public view returns(uint) {
@@ -343,7 +333,7 @@ contract PoolManager is Ownable, IPoolManager {
     // --- Internal Stability Pool functions --- 
 
     // Deposit _amount CLV from _address, to the Stability Pool.
-    function _depositCLV(address _address, uint _amount) internal returns(bool) {
+    function _depositCLV(address _address, uint _amount) internal {
         require(initialDeposits[_address] == 0, "PoolManager: user already has a StabilityPool deposit");
     
         // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
@@ -361,7 +351,6 @@ contract PoolManager is Ownable, IPoolManager {
 
         emit UserSnapshotUpdated(snapshot[_address].P, snapshot[_address].S);
         emit UserDepositChanged(_address, _amount);
-        return true;
     }
 
    // Transfers _address's compounded deposit and ETH gain, to _address.
@@ -423,23 +412,19 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Send ETHGain to user's address, and updates their deposit, 
     setting newDeposit = compounded deposit + amount. */
-    function provideToSP(uint _amount) external returns(bool) {
+    function provideToSP(uint _amount) external {
         address user = _msgSender();
 
-        // If user has no deposit, make one with _amount
         if (initialDeposits[user] == 0) {
             _depositCLV(user, _amount);
-            return true;
+        } else {
+            /* If user already has a deposit, retrieve their ETH gain and current deposit,
+            then make a new composite deposit */
+            (uint returnedCLV, ) = _retrieveToUser(user);
+
+            uint newDeposit = returnedCLV + _amount;
+            _depositCLV(user, newDeposit);
         }
-
-        /* If user already has a deposit, retrieve their ETH gain and current deposit,
-         then make a new composite deposit */
-        (uint returnedCLV, ) = _retrieveToUser(user);
-
-        uint newDeposit = returnedCLV + _amount;
-        _depositCLV(user, newDeposit);
-
-        return true;
     }
 
     /* Withdraw _amount of CLV and the caller’s entire ETH gain from the 
@@ -449,7 +434,7 @@ contract PoolManager is Ownable, IPoolManager {
     If _amount > userDeposit, the user withdraws all their ETH gain, and all of their compounded deposit.
 
     In all cases, the entire ETH gain is sent to user. */
-    function withdrawFromSP(uint _amount) external returns(bool) {
+    function withdrawFromSP(uint _amount) external {
         address user = _msgSender();
        
         // Retrieve CLV and ETH for the user
@@ -459,22 +444,19 @@ contract PoolManager is Ownable, IPoolManager {
         if (_amount < returnedCLV) {
             _depositCLV(user, returnedCLV.sub(_amount));
         }
-
-        return true;
     }
 
     /* Transfer the caller’s entire ETH gain from the Stability Pool to the caller’s CDP, and leaves
     their compounded deposit in the Stability Pool. */
-    function withdrawFromSPtoCDP(address _user, address _hint) external returns(bool) {
+    function withdrawFromSPtoCDP(address _user, address _hint) external {
         uint userDeposit = initialDeposits[_user]; 
        
-        if (userDeposit == 0) { return false; } 
+        if (userDeposit == 0) { return; } 
         
         // Retrieve all CLV to user's CLV balance, and ETH to their CDP
         (uint returnedCLV, ) = _retrieveToCDP(_user, _hint); 
         
         _depositCLV(_user, returnedCLV); 
-        return true;
     }
 
      /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  

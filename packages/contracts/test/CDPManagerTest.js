@@ -903,7 +903,6 @@ contract('CDPManager', async accounts => {
     const price = await priceFeed.getPrice()
 
     const whaleICR = web3.utils.toHex(await cdpManager.getCurrentICR(whale, price))
-
     const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
 
     assert.equal(whaleICR, maxBytes32)
@@ -911,11 +910,68 @@ contract('CDPManager', async accounts => {
 
   // --- computeICR ---
 
-  // test 0
+  it("computeICR(): Returns 0 if trove's coll is worth 0", async () => {
+    const price = 0
+    const coll = mv._1_Ether
+    const debt = mv._100e18
 
-  // test 3 arbitrary ICRs
+    const ICR = (await cdpManagerTester.computeICR(coll, debt, price)).toString()
+    
+    assert.equal(ICR, 0)
+  })
 
-  // test max
+  it("computeICR(): Returns 2^256-1 for ETH:USD = 100, coll = 1 ETH, debt = 100 CLV", async () => {
+    const price = mv._100e18
+    const coll = mv._1_Ether
+    const debt = mv._100e18
+
+    const ICR = (await cdpManagerTester.computeICR(coll, debt, price)).toString()
+    
+    assert.equal(ICR, mv._1e18)
+  })
+
+  it("computeICR(): returns correct ICR for ETH:USD = 100, coll = 200 ETH, debt = 30 CLV", async () => {
+    const price = mv._100e18
+    const coll = mv._200_Ether
+    const debt = mv._30e18
+
+    const ICR = (await cdpManagerTester.computeICR(coll, debt, price)).toString()
+    
+    assert.isAtMost(th.getDifference(ICR, '666666666666666666666'), 1000)
+  })
+
+  it("computeICR(): returns correct ICR for ETH:USD = 250, coll = 1350 ETH, debt = 127 CLV", async () => {
+    const price = '250000000000000000000'
+    const coll = '1350000000000000000000'
+    const debt = '127000000000000000000'
+
+    const ICR = (await cdpManagerTester.computeICR(coll, debt, price))
+  
+    assert.isAtMost(th.getDifference(ICR, '2657480314960630000000'), 1000000)
+  })
+
+  it("computeICR(): returns correct ICR for ETH:USD = 100, coll = 1 ETH, debt = 54321 CLV", async () => {
+    const price = mv._100e18
+    const coll = mv._1_Ether
+    const debt = '54321000000000000000000'
+
+    const ICR = (await cdpManagerTester.computeICR(coll, debt, price)).toString()
+    console.log(`ICR is ${ICR}`)
+
+    assert.isAtMost(th.getDifference(ICR, '1840908672520756'), 1000)
+  })
+
+  
+  it("computeICR(): Returns 2^256-1 if trove has non-zero coll and zero debt", async () => {
+    const price = mv._100e18
+    const coll = mv._1_Ether
+    const debt = 0
+
+    const ICR = web3.utils.toHex(await cdpManagerTester.computeICR(coll, debt, price))
+    const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+
+    assert.equal(ICR, maxBytes32)
+  })
 
   // --- checkRecoveryMode ---
 
