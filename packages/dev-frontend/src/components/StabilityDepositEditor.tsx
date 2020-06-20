@@ -32,8 +32,8 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   const edited = originalDeposit.calculateDifference(editedDeposit) !== undefined;
 
   return (
-    <Card p={0}>
-      <Heading variant="editorTitle">
+    <Card>
+      <Heading>
         {title}
         {edited && !changePending && (
           <Button
@@ -48,7 +48,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
 
       {changePending && <LoadingOverlay />}
 
-      <Box p={2}>
+      <Box>
         <EditableRow
           label="Deposit"
           amount={editedDeposit.depositAfterLoss.prettify()}

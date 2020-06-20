@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Box, Flex, Spinner } from "theme-ui";
+import { Button, Flex, Spinner } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
 import { Liquity, StabilityDeposit, Trove } from "@liquity/lib";
@@ -89,10 +89,10 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex sx={{ mt: 3, flexWrap: "wrap", justifyContent: "center" }}>
       {actions.map(([actionName], i) => (
-        <Button key={i} disabled mt={3} mx={2}>
+        <Button key={i} disabled sx={{ mt: 3, mx: 2 }}>
           {myTransactionState.id === `${myTransactionId}-${i}` ? (
             <>
-              <Spinner mr={2} color="white" size="20px" />
+              <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
               Waiting for your approval
             </>
           ) : (
@@ -105,9 +105,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     <Flex sx={{ mt: 3, flexWrap: "wrap", justifyContent: "center" }}>
       {actions.map(([actionName, send, requires], i) => (
         <Transaction key={i} id={`${myTransactionId}-${i}`} {...{ send, requires }}>
-          <Button mt={3} mx={2}>
-            {actionName}
-          </Button>
+          <Button sx={{ mt: 3, mx: 2 }}>{actionName}</Button>
         </Transaction>
       ))}
     </Flex>
@@ -152,12 +150,10 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
 
   return (
     <>
-      <Box mt={4}>
-        <StabilityDepositEditor
-          title={deposit.isEmpty ? "Make a Stability Deposit" : "Your Stability Deposit"}
-          {...{ originalDeposit, editedDeposit, setEditedDeposit, changePending }}
-        />
-      </Box>
+      <StabilityDepositEditor
+        title={deposit.isEmpty ? "Make a Stability Deposit" : "Your Stability Deposit"}
+        {...{ originalDeposit, editedDeposit, setEditedDeposit, changePending }}
+      />
 
       <StabilityDepositAction
         {...{

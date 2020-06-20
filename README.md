@@ -282,11 +282,37 @@ E.g.:
 yarn deploy --network ropsten
 ```
 
-Supported networks are currently: ropsten, kovan, rinkeby, goerli.
+Supported networks are currently: ropsten, kovan, rinkeby, goerli. The above command will deploy into the default channel (the one that's used by the public dev-frontend). To deploy into the internal channel instead:
+
+```
+yarn deploy --network ropsten --channel internal
+```
+
+You can optionally specify an explicit gas price too:
+
+```
+yarn deploy --network ropsten --gas-price 20
+```
 
 After a successful deployment, the addresses of the newly deployed contracts will be written to a version-controlled JSON file under `packages/lib/deployments/default`.
 
-To publish a new deployment, you'll have to commit and push the updated JSON file. The repo's GitHub workflow will build a new Docker image of the frontend interfacing with the new addresses.
+To publish a new deployment, you must execute the above command for all of the following combinations:
+
+| Network | Channel  |
+| ------- | -------- |
+| ropsten | default  |
+| ropsten | internal |
+| kovan   | default  |
+| rinkeby | default  |
+| goerli  | default  |
+
+At some point in the future, we will make this process automatic. Once you're done deploying to all the networks, execute the following command:
+
+```
+yarn save-live-version
+```
+
+This copies the contract artifacts to a version controlled area (`packages/lib/live`) then checks that you really did deploy to all the networks. Next you need to commit and push all changed files. The repo's GitHub workflow will then build a new Docker image of the frontend interfacing with the new addresses.
 
 #### Start a local blockchain and deploy the contracts
 

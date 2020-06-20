@@ -25,6 +25,13 @@ dotenv.config();
 
 usePlugin("buidler-ethers-v5");
 
+const useLiveVersionEnv = (process.env.USE_LIVE_VERSION ?? "false").toLowerCase();
+const useLiveVersion = !["false", "no", "0"].some(falsyValue => useLiveVersionEnv === falsyValue);
+
+if (useLiveVersion) {
+  console.log("Using live version of contracts.".cyan);
+}
+
 const generateRandomAccounts = (numberOfAccounts: number) => {
   const accounts = new Array<string>(numberOfAccounts);
 
@@ -61,10 +68,15 @@ const config: BuidlerConfig = {
     ...infuraNetwork("goerli"),
     ...infuraNetwork("kovan")
   },
-  paths: {
-    artifacts: "../contracts/artifacts",
-    cache: "../contracts/cache"
-  }
+  paths: useLiveVersion
+    ? {
+        artifacts: "live/artifacts",
+        cache: "live/cache"
+      }
+    : {
+        artifacts: "../contracts/artifacts",
+        cache: "../contracts/cache"
+      }
 };
 
 type DeployParams = {
@@ -165,7 +177,7 @@ task(
         value: Decimal.from(collateral).bigNumber
       });
 
-      await liquity.openTrove(new Trove({ collateral, debt }), price);
+      await liquity.openTrove(new Trove({ collateral, debt }), price, { gasPrice: 0 });
       if (i % 4 === 0) {
         await liquity.depositQuiInStabilityPool(debt);
       }
@@ -447,7 +459,7 @@ task(
                 `debt: ${newTrove.debt} })`
             );
 
-            await liquity.openTrove(newTrove, price);
+            await liquity.openTrove(newTrove, price, { gasPrice: 0 });
           } else {
             while (total.collateralRatioIsBelowCritical(price)) {
               // Cannot close Trove during recovery mode
@@ -460,7 +472,7 @@ task(
             await funderLiquity.sendQui(liquity.userAddress!, trove.debt);
 
             console.log(`[${shortenAddress(liquity.userAddress!)}] closeTrove()`);
-            await liquity.closeTrove();
+            await liquity.closeTrove({ gasPrice: 0 });
           }
         } else {
           const exchangedQui = benford(5000);
@@ -468,11 +480,11 @@ task(
           await funderLiquity.sendQui(liquity.userAddress!, exchangedQui);
 
           console.log(`[${shortenAddress(liquity.userAddress!)}] redeemCollateral(${exchangedQui})`);
-          await liquity.redeemCollateral(exchangedQui, price);
+          await liquity.redeemCollateral(exchangedQui, price, { gasPrice: 0 });
         }
 
         const quiBalance = await liquity.getQuiBalance();
-        await liquity.sendQui(funderLiquity.userAddress!, quiBalance);
+        await liquity.sendQui(funderLiquity.userAddress!, quiBalance, { gasPrice: 0 });
 
         // const listOfTroves = await getListOfTroves(deployerLiquity);
         // if (!(await sortedByICR(deployerLiquity, listOfTroves, price))) {

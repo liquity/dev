@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Button, Box, Flex, Spinner } from "theme-ui";
+import React, { useState, useEffect } from "react";
+import { Button, Flex, Spinner } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { Trove, Liquity } from "@liquity/lib";
+import { usePrevious } from "../hooks/usePrevious";
 import { TroveEditor } from "./TroveEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
 
@@ -143,8 +144,8 @@ const TroveAction: React.FC<TroveActionProps> = ({
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex sx={{ mt: 4, justifyContent: "center" }}>
-      <Button disabled mx={2}>
-        <Spinner mr={2} color="white" size="20px" />
+      <Button disabled sx={{ mx: 2 }}>
+        <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
         Waiting for your approval
       </Button>
     </Flex>
@@ -165,7 +166,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
         ]}
         {...{ send }}
       >
-        <Button mx={2}>{actionName}</Button>
+        <Button sx={{ mx: 2 }}>{actionName}</Button>
       </Transaction>
     </Flex>
   );
@@ -179,15 +180,6 @@ type TroveManagerProps = {
   total: Trove;
   quiBalance: Decimal;
 };
-
-function usePrevious<T>(value: T) {
-  const ref = useRef<T>(value);
-
-  const previousValue = ref.current;
-  ref.current = value;
-
-  return previousValue;
-}
 
 export const TroveManager: React.FC<TroveManagerProps> = ({
   liquity,
@@ -221,18 +213,16 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
 
   return (
     <>
-      <Box mt={4}>
-        <TroveEditor
-          title={original.isEmpty ? "Open a new Liquity Trove" : "Your Liquity Trove"}
-          {...{
-            original,
-            edited,
-            setEdited,
-            changePending,
-            price
-          }}
-        />
-      </Box>
+      <TroveEditor
+        title={original.isEmpty ? "Open a new Liquity Trove" : "Your Liquity Trove"}
+        {...{
+          original,
+          edited,
+          setEdited,
+          changePending,
+          price
+        }}
+      />
 
       <TroveAction
         {...{

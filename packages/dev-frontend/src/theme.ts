@@ -48,9 +48,11 @@ const iconButton = {
   }
 } as const;
 
+const cardHeadingFontSize = 18.7167;
+
 const card = {
   position: "relative",
-  padding: 2,
+  mt: 4,
   border: 1,
   boxShadow: 2
 } as const;
@@ -136,24 +138,6 @@ const theme: Theme = {
 
   shadows: ["0", "0px 2px 4px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
 
-  text: {
-    editorTitle: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-
-      height: "56px",
-
-      pl: 3,
-      py: 2,
-      pr: 2,
-
-      bg: "light-gray",
-
-      fontSize: "18.7167px"
-    }
-  },
-
   buttons: {
     primary: {
       ...button,
@@ -195,12 +179,51 @@ const theme: Theme = {
     primary: {
       ...card,
 
+      padding: 0,
+
       borderColor: "light-gray",
-      backgroundColor: "background"
+      backgroundColor: "background",
+
+      "> h2": {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+
+        height: "56px",
+
+        pl: 3,
+        py: 2,
+        pr: 2,
+
+        bg: "light-gray",
+
+        fontSize: cardHeadingFontSize
+      },
+
+      "> :last-child": {
+        padding: 2
+      }
+    },
+
+    info: {
+      ...card,
+
+      padding: 3,
+
+      borderColor: "rgba(122,199,240,0.4)",
+      background: "linear-gradient(200deg, rgba(147,161,248,0.4) 0%, rgba(122,199,240,0.4) 100%);",
+
+      "> h2": {
+        mb: 2,
+        fontSize: cardHeadingFontSize
+      }
     },
 
     tooltip: {
       ...card,
+
+      mt: 0,
+      padding: 2,
 
       borderColor: "light-gray",
       borderRadius: "4px",
@@ -209,12 +232,6 @@ const theme: Theme = {
       fontSize: 1,
 
       zIndex: 3
-    },
-
-    info: {
-      ...card,
-      borderColor: "rgba(122,199,240,0.4)",
-      background: "linear-gradient(200deg, rgba(147,161,248,0.4) 0%, rgba(122,199,240,0.4) 100%);"
     }
   },
 
@@ -259,7 +276,7 @@ const theme: Theme = {
     },
 
     modal: {
-      p: 3,
+      padding: 3,
       width: ["100%", "40em"]
     }
   },

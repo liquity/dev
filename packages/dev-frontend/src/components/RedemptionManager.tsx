@@ -53,8 +53,8 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex sx={{ mt: 4, justifyContent: "center" }}>
-      <Button disabled mx={2}>
-        <Spinner mr={2} color="white" size="20px" />
+      <Button disabled sx={{ mx: 2 }}>
+        <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
         Waiting for your approval
       </Button>
     </Flex>
@@ -65,7 +65,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
         requires={[[quiBalance.gte(exchangedQui), "You don't have enough LQTY"]]}
         {...{ send }}
       >
-        <Button mx={2}>Exchange {exchangedQui.prettify()} LQTY</Button>
+        <Button sx={{ mx: 2 }}>Exchange {exchangedQui.prettify()} LQTY</Button>
       </Transaction>
     </Flex>
   );
@@ -92,46 +92,44 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
 
   return (
     <>
-      <Box mt={4}>
-        <Card p={0}>
-          <Heading variant="editorTitle">
-            Redeem Collateral with LQTY
-            {edited && !changePending && (
-              <Button
-                variant="titleIcon"
-                sx={{ ":enabled:hover": { color: "danger" } }}
-                onClick={() => setExchangedQui(zero)}
-              >
-                <Icon name="history" size="lg" />
-              </Button>
-            )}
-          </Heading>
+      <Card>
+        <Heading>
+          Redeem Collateral with LQTY
+          {edited && !changePending && (
+            <Button
+              variant="titleIcon"
+              sx={{ ":enabled:hover": { color: "danger" } }}
+              onClick={() => setExchangedQui(zero)}
+            >
+              <Icon name="history" size="lg" />
+            </Button>
+          )}
+        </Heading>
 
-          {changePending && <LoadingOverlay />}
+        {changePending && <LoadingOverlay />}
 
-          <Box p={2}>
-            <EditableRow
-              label="Exchange"
-              //hideLabel
-              amount={exchangedQui.prettify()}
-              unit="LQTY"
-              {...{ editingState }}
-              editedAmount={exchangedQui.toString(2)}
-              setEditedAmount={editedQui => setExchangedQui(Decimal.from(editedQui))}
-            ></EditableRow>
+        <Box>
+          <EditableRow
+            label="Exchange"
+            //hideLabel
+            amount={exchangedQui.prettify()}
+            unit="LQTY"
+            {...{ editingState }}
+            editedAmount={exchangedQui.toString(2)}
+            setEditedAmount={editedQui => setExchangedQui(Decimal.from(editedQui))}
+          ></EditableRow>
 
-            <EditableRow
-              label="Redeem"
-              //hideLabel
-              amount={exchangedQui.div(price).prettify(4)}
-              unit="ETH"
-              {...{ editingState }}
-              editedAmount={exchangedQui.div(price).toString(4)}
-              setEditedAmount={editedEth => setExchangedQui(Decimal.from(editedEth).mul(price))}
-            ></EditableRow>
-          </Box>
-        </Card>
-      </Box>
+          <EditableRow
+            label="Redeem"
+            //hideLabel
+            amount={exchangedQui.div(price).prettify(4)}
+            unit="ETH"
+            {...{ editingState }}
+            editedAmount={exchangedQui.div(price).toString(4)}
+            setEditedAmount={editedEth => setExchangedQui(Decimal.from(editedEth).mul(price))}
+          ></EditableRow>
+        </Box>
+      </Card>
 
       <RedemptionAction
         {...{

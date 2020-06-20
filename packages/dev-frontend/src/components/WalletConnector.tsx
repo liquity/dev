@@ -100,7 +100,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
       <Flex sx={{ height: "100vh", justifyContent: "center", alignItems: "center" }}>
         <Button onClick={() => dispatch({ type: "activate", connector: connectors.injected })}>
           <MetaMaskIcon />
-          <Box ml={2}>Connect to MetaMask</Box>
+          <Box sx={{ ml: 2 }}>Connect to MetaMask</Box>
         </Button>
       </Flex>
 
