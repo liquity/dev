@@ -16,6 +16,6 @@ test("there's no smoke", async () => {
   fireEvent.click(getByText(/open new trove/i));
 
   expect(queryByText(/open new trove/i)).not.toBeInTheDocument();
-  expect(await findByText(/your liquity trove/i)).toBeInTheDocument();
+  expect(await findByText(/my liquity trove/i)).toBeInTheDocument();
   expect(await findByText(/1\-1 of 1/i)).toBeInTheDocument();
 });
