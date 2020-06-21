@@ -8,10 +8,10 @@ type RowProps = {
 
 const Row: React.FC<RowProps> = ({ label, unit, children }) => {
   return (
-    <Flex sx={{ width: "450px", alignItems: "stretch" }}>
-      <Label sx={{ width: unit ? "25%" : "40%" }}>{label}</Label>
+    <Flex sx={{ alignItems: "stretch", flexWrap: "wrap" }}>
+      <Label sx={{ width: unit ? "106px" : "170px" }}>{label}</Label>
       {unit && (
-        <Label variant="unit" sx={{ width: "15%" }}>
+        <Label variant="unit" sx={{ width: "64px", px: 0 }}>
           {unit}
         </Label>
       )}

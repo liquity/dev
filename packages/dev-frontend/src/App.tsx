@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { Flex, Spinner, Heading, Box, Text, ThemeProvider } from "theme-ui";
+import { Flex, Spinner, Heading, Text, ThemeProvider, Container, Button } from "theme-ui";
 
 import { Decimal, Difference, Percent } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
@@ -20,6 +20,7 @@ import { RedemptionManager } from "./components/RedemptionManager";
 import { LiquidationManager } from "./components/LiquidationManager";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
+import { Icon } from "./components/Icon";
 import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
@@ -48,6 +49,7 @@ type LiquityFrontendProps = {
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   const { account, provider, liquity, contracts, contractsVersion, deploymentDate } = useLiquity();
   const storeState = useLiquityStore(provider, account, liquity);
+  const [systemStatsOpen, setSystemStatsOpen] = useState(false);
 
   if (!storeState.loaded) {
     return <>{loader}</>;
@@ -84,18 +86,46 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   return (
     <>
       <Header>
-        <UserAccount {...{ account, etherBalance, quiBalance }} />
+        <Flex sx={{ alignItems: "center" }}>
+          <UserAccount {...{ account, etherBalance, quiBalance }} />
+
+          <Button
+            variant="icon"
+            sx={{ display: ["block", "none"] }}
+            onClick={() => setSystemStatsOpen(!systemStatsOpen)}
+          >
+            <Icon name="info-circle" size="2x" />
+          </Button>
+        </Flex>
       </Header>
 
-      <Box sx={{ width: "862px", mx: "auto" }}>
-        <Flex sx={{ flexWrap: "wrap", justifyItems: "center" }}>
-          <Box sx={{ px: 3, width: "500px" }}>
+      <Container variant="main">
+        {systemStatsOpen && (
+          <Container variant="infoOverlay">
+            <SystemStats
+              variant="infoPopup"
+              {...{
+                numberOfTroves,
+                price,
+                total,
+                quiInStabilityPool,
+                contractsVersion,
+                deploymentDate,
+                etherBalance,
+                quiBalance
+              }}
+            />
+          </Container>
+        )}
+
+        <Container variant="columns">
+          <Container variant="left">
             <TroveManager {...{ liquity, troveWithoutRewards, trove, price, total, quiBalance }} />
             <StabilityDepositManager {...{ liquity, deposit, trove, price, quiBalance }} />
             <RedemptionManager {...{ liquity, price, quiBalance }} />
-          </Box>
+          </Container>
 
-          <Box sx={{ px: 3, width: "362px" }}>
+          <Container variant="right">
             <SystemStats
               {...{
                 numberOfTroves,
@@ -108,16 +138,14 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
             />
             <PriceManager {...{ liquity, price }} />
             <LiquidationManager {...{ liquity }} />
-          </Box>
-        </Flex>
+          </Container>
+        </Container>
 
-        <Box sx={{ px: 3 }}>
-          <RiskiestTroves
-            pageSize={10}
-            {...{ liquity, price, totalRedistributed, numberOfTroves, blockTag }}
-          />
-        </Box>
-      </Box>
+        <RiskiestTroves
+          pageSize={10}
+          {...{ liquity, price, totalRedistributed, numberOfTroves, blockTag }}
+        />
+      </Container>
 
       <Footer>
         <Text>* Please note that the final user-facing application will look different.</Text>

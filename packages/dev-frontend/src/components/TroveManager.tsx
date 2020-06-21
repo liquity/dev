@@ -143,14 +143,14 @@ const TroveAction: React.FC<TroveActionProps> = ({
       ] as const);
 
   return myTransactionState.type === "waitingForApproval" ? (
-    <Flex sx={{ mt: 4, justifyContent: "center" }}>
+    <Flex variant="layout.actions">
       <Button disabled sx={{ mx: 2 }}>
         <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
         Waiting for your approval
       </Button>
     </Flex>
   ) : changePending ? null : (
-    <Flex sx={{ mt: 4, justifyContent: "center" }}>
+    <Flex variant="layout.actions">
       <Transaction
         id={myTransactionId}
         requires={[

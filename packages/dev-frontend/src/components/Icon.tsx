@@ -1,5 +1,5 @@
 import React from "react";
-import { library } from "@fortawesome/fontawesome-svg-core";
+import { library, IconName, IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faCircleNotch,
   faCheckCircle,
@@ -43,13 +43,19 @@ library.add(
   faCog
 );
 
-export type IconProps = {
-  name: FontAwesomeIconProps["icon"];
-  size?: FontAwesomeIconProps["size"];
-  color?: FontAwesomeIconProps["color"];
-  spin?: FontAwesomeIconProps["spin"];
+const getIcon = (name: IconName): IconProp => {
+  switch (name) {
+    case "clipboard":
+      return ["far", "clipboard"];
+    default:
+      return name;
+  }
 };
 
-export const Icon: React.FC<IconProps> = ({ name: icon, size, color, spin }) => (
-  <FontAwesomeIcon {...{ icon, size, color, spin }} />
+export type IconProps = Pick<FontAwesomeIconProps, "size" | "color" | "spin"> & {
+  name: IconName;
+};
+
+export const Icon: React.FC<IconProps> = ({ name, ...rest }) => (
+  <FontAwesomeIcon icon={getIcon(name)} {...rest} />
 );

@@ -1,32 +1,38 @@
 import React from "react";
-import { Flex, Box, Heading, Link } from "theme-ui";
+import { Container, Flex, Box, Heading, Link, Text } from "theme-ui";
 
-import { LiquityLogo } from "./LiquityLogo";
+import { LiquityLogo, LiquityLogoSmall } from "./LiquityLogo";
 
 export const Header: React.FC = ({ children }) => (
-  <Flex
-    sx={{
-      px: 5,
-      py: 2,
-      justifyContent: "space-between",
-      bg: "muted",
-      borderBottom: "1px solid lightgrey"
-    }}
-  >
-    <Flex sx={{ alignItems: "center", height: "48px" }}>
-      <Link sx={{ lineHeight: "0" }} href="https://www.liquity.org">
-        <LiquityLogo height="32px" />
+  <Container variant="header">
+    <Flex sx={{ alignItems: "center" }}>
+      <Link sx={{ lineHeight: 0 }} href="https://www.liquity.org">
+        <LiquityLogo height="32px" sx={{ display: ["none", "block"] }} />
+        <LiquityLogoSmall height="32px" sx={{ display: ["block", "none"] }} />
       </Link>
 
-      <Box sx={{ mx: 3, width: "0px", height: "100%", borderLeft: "1px solid lightgrey" }} />
+      <Box
+        sx={{
+          mx: [2, 3],
+          width: "0px",
+          height: "100%",
+          borderLeft: ["none", "1px solid lightgrey"]
+        }}
+      />
 
-      <Heading sx={{ fontWeight: "body" }}>
-        Developer Interface (Beta)
+      <Heading sx={{ fontWeight: "body", fontSize: [3, null, null, 4] }}>
+        <Text as="span" sx={{ display: ["none", "inline"] }}>
+          Developer UI (Beta)
+        </Text>
+        <Text as="span" sx={{ display: ["inline", "none"] }}>
+          Dev UI (Beta)
+        </Text>
         <Link href="#footnote" style={{ textDecoration: "none" }}>
           *
         </Link>
       </Heading>
     </Flex>
+
     {children}
-  </Flex>
+  </Container>
 );

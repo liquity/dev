@@ -1,6 +1,6 @@
 {
-  "short_name": "Liquity Dev",
-  "name": "Liquity Developer Interface",
+  "short_name": "Liquity Dev UI",
+  "name": "Liquity Developer UI",
   "icons": [
     {
       "src": "favicon.png",

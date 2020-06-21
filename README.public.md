@@ -29,11 +29,11 @@ This repository hosts an early preview of the Liquity codebase until we get read
 
 These are the Liquity components that have been made visible in this repo. They can be found under the `packages` directory.
 
-| Package               | Description                                                                                                                                                     |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                                                                             |
-| @liquity/dev-frontend | [Liquity Developer Interface](http://devui.liquity.org): a bare-bones but functional React app used for interfacing with the smart contracts during development |
-| @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                                                                             |
+| Package               | Description                                                                                                                                              |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                                                                      |
+| @liquity/dev-frontend | [Liquity Developer UI](http://devui.liquity.org): a bare-bones but functional React app used for interfacing with the smart contracts during development |
+| @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                                                                      |
 
 ## Running the dev-frontend
 
@@ -49,7 +49,7 @@ You will need to have [Docker](https://docs.docker.com/get-docker/) installed.
 docker run --name liquity -d --rm -p 3000:80 liquity/dev-frontend
 ```
 
-This will start serving the Liquity Developer Interface using HTTP on port 3000. If everything went well, you should be able to open http://localhost:3000/ in your browser. To use a different port, just replace 3000 with your desired port number.
+This will start serving the Liquity Developer UI using HTTP on port 3000. If everything went well, you should be able to open http://localhost:3000/ in your browser. To use a different port, just replace 3000 with your desired port number.
 
 To stop the service:
 

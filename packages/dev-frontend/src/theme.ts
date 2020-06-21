@@ -50,11 +50,28 @@ const iconButton = {
 
 const cardHeadingFontSize = 18.7167;
 
+const cardGapX = [0, 3, 4] as const;
+const cardGapY = [3, 3, 4] as const;
+
 const card = {
   position: "relative",
-  mt: 4,
+  mt: cardGapY,
   border: 1,
-  boxShadow: 2
+  boxShadow: [1, null, 2]
+} as const;
+
+const infoCard = {
+  ...card,
+
+  padding: 3,
+
+  borderColor: "rgba(122,199,240,0.4)",
+  background: "linear-gradient(200deg, rgba(212,217,252,1) 0%, rgba(202,233,249,1) 100%)",
+
+  h2: {
+    mb: 2,
+    fontSize: cardHeadingFontSize
+  }
 } as const;
 
 const formBase = {
@@ -72,7 +89,7 @@ const formCell = {
   border: 1,
   borderColor: "muted",
   borderRadius: 0,
-  boxShadow: 2
+  boxShadow: [1, 2]
 } as const;
 
 const overlay = {
@@ -83,7 +100,7 @@ const overlay = {
 } as const;
 
 const theme: Theme = {
-  breakpoints: ["40em", "52em", "64em"],
+  breakpoints: ["48em", "52em", "64em"],
 
   space: [0, 4, 8, 16, 32, 64, 128, 256, 512],
 
@@ -136,7 +153,14 @@ const theme: Theme = {
 
   borders: [0, "1px solid"],
 
-  shadows: ["0", "0px 2px 4px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
+  shadows: ["0", "0px 4px 8px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
+
+  text: {
+    address: {
+      fontFamily: "monospace",
+      fontSize: 1
+    }
+  },
 
   buttons: {
     primary: {
@@ -206,28 +230,29 @@ const theme: Theme = {
     },
 
     info: {
-      ...card,
+      ...infoCard,
 
-      padding: 3,
+      display: ["none", "block"]
+    },
 
-      borderColor: "rgba(122,199,240,0.4)",
-      background: "linear-gradient(200deg, rgba(147,161,248,0.4) 0%, rgba(122,199,240,0.4) 100%);",
+    infoPopup: {
+      ...infoCard,
 
-      "> h2": {
-        mb: 2,
-        fontSize: cardHeadingFontSize
-      }
+      position: "fixed",
+      top: 0,
+      right: 3,
+      left: 3,
+      mt: "72px"
     },
 
     tooltip: {
-      ...card,
-
-      mt: 0,
       padding: 2,
 
+      border: 1,
       borderColor: "light-gray",
       borderRadius: "4px",
       backgroundColor: "muted",
+      boxShadow: 2,
 
       fontSize: 1,
 
@@ -255,6 +280,65 @@ const theme: Theme = {
   },
 
   layout: {
+    header: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "stretch",
+
+      position: ["fixed", "relative"],
+      width: "100vw",
+      top: 0,
+      overflow: "hidden",
+      zIndex: 2,
+
+      px: [2, "12px", "12px", 5],
+      py: [2, "12px", "12px"],
+
+      backgroundColor: "muted",
+      borderBottom: "1px solid lightgrey",
+      boxShadow: [1, "none"]
+    },
+
+    footer: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+
+      mt: cardGapY,
+      px: 5,
+      height: "72px",
+
+      backgroundColor: "muted"
+    },
+
+    main: {
+      width: "100%",
+      maxWidth: "894px",
+      mx: "auto",
+      mt: ["40px", 0],
+      px: cardGapX
+    },
+
+    columns: {
+      display: "flex",
+      flexWrap: "wrap",
+      justifyItems: "center"
+    },
+
+    left: {
+      pr: cardGapX,
+      width: ["100%", "60%"]
+    },
+
+    right: {
+      width: ["100%", "40%"]
+    },
+
+    actions: {
+      mt: cardGapY,
+      justifyContent: "center"
+    },
+
     loadingOverlay: {
       ...overlay,
 
@@ -278,6 +362,16 @@ const theme: Theme = {
     modal: {
       padding: 3,
       width: ["100%", "40em"]
+    },
+
+    infoOverlay: {
+      ...overlay,
+
+      display: ["block", "none"],
+
+      zIndex: 1,
+      position: "fixed",
+      backgroundColor: "rgba(255, 255, 255, 0.8)"
     }
   },
 

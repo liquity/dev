@@ -13,32 +13,7 @@ import { Transaction } from "./Transaction";
 import { Icon } from "./Icon";
 import { Tooltip } from "./Tooltip";
 
-const tableLayout = {
-  mt: 2,
-  width: "100%",
-
-  textAlign: "center",
-
-  th: {
-    lineHeight: 1.15
-  },
-
-  td: {
-    ":nth-of-type(1)": {
-      width: "18%",
-      textAlign: "right"
-    },
-
-    ":nth-of-type(2)": {
-      width: "7%",
-      textAlign: "left"
-    },
-
-    ":nth-of-type(6)": {
-      width: "40px"
-    }
-  }
-} as const;
+const rowHeight = "40px";
 
 type RiskiestTrovesProps = {
   pageSize: number;
@@ -141,22 +116,30 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
         <Flex sx={{ alignItems: "center" }}>
           {numberOfTroves !== 0 && (
             <React.Fragment>
-              <Text sx={{ mr: 3, fontWeight: "body", fontSize: 2 }}>
+              <Text sx={{ mr: [0, 3], fontWeight: "body", fontSize: [1, 2] }}>
                 {clampedPage * pageSize + 1}-{Math.min((clampedPage + 1) * pageSize, numberOfTroves)}{" "}
                 of {numberOfTroves}
               </Text>
 
-              <Button variant="titleIcon" onClick={previousPage}>
+              <Button variant="titleIcon" onClick={previousPage} disabled={clampedPage <= 0}>
                 <Icon name="chevron-left" size="lg" />
               </Button>
 
-              <Button variant="titleIcon" onClick={nextPage}>
+              <Button
+                variant="titleIcon"
+                onClick={nextPage}
+                disabled={clampedPage >= numberOfPages - 1}
+              >
                 <Icon name="chevron-right" size="lg" />
               </Button>
             </React.Fragment>
           )}
 
-          <Button variant="titleIcon" sx={{ opacity: loading ? 0 : 1, ml: 3 }} onClick={forceReload}>
+          <Button
+            variant="titleIcon"
+            sx={{ opacity: loading ? 0 : 1, ml: [0, 3] }}
+            onClick={forceReload}
+          >
             <Icon name="redo" size="lg" />
           </Button>
         </Flex>
@@ -171,89 +154,128 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
           </Text>
         </Box>
       ) : (
-        <Styled.table sx={tableLayout}>
-          <thead>
-            <tr>
-              <th colSpan={2}>Owner</th>
-              <th>
-                Collateral
-                <br />
-                (ETH)
-              </th>
-              <th>
-                Debt
-                <br />
-                (LQTY)
-              </th>
-              <th>
-                Coll.
-                <br />
-                Ratio
-              </th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {troves.map(
-              ([owner, trove]) =>
-                !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
-                  // (TODO: remove check after we can fetch multiple Troves in one call)
-                  <tr key={owner}>
-                    <td>
-                      <Tooltip message={owner} placement="top">
-                        <Text>{shortenAddress(owner)}</Text>
-                      </Tooltip>
-                    </td>
-                    <td>
-                      <CopyToClipboard text={owner} onCopy={() => setCopied(owner)}>
-                        <Button variant="icon" sx={{ width: "24px", height: "24px" }}>
-                          <Icon
-                            name={copied === owner ? "clipboard-check" : ["far", "clipboard"]}
-                            size="sm"
-                          />
-                        </Button>
-                      </CopyToClipboard>
-                    </td>
-                    <td>{trove.collateral.prettify(4)}</td>
-                    <td>{trove.debt.prettify()}</td>
-                    <td>
-                      {(collateralRatio => (
-                        <Text
-                          color={
-                            collateralRatio.gt(Liquity.CRITICAL_COLLATERAL_RATIO)
-                              ? "success"
-                              : collateralRatio.gt(Liquity.MINIMUM_COLLATERAL_RATIO)
-                              ? "warning"
-                              : "danger"
-                          }
-                        >
-                          {new Percent(collateralRatio).prettify()}
-                        </Text>
-                      ))(trove.collateralRatio(price))}
-                    </td>
-                    <td>
-                      <Transaction
-                        id={`liquidate-${owner}`}
-                        tooltip="Liquidate"
-                        requires={[
-                          [
-                            trove.collateralRatioIsBelowMinimum(price),
-                            "Collateral ratio not low enough"
-                          ]
-                        ]}
-                        send={liquity.liquidate.bind(liquity, owner)}
-                        numberOfConfirmationsToWait={1}
+        <Box>
+          <Styled.table
+            sx={{ mt: 2, pl: [1, 4], width: "100%", textAlign: "center", lineHeight: 1.15 }}
+          >
+            <colgroup>
+              <col style={{ width: "50px" }} />
+              <col />
+              <col />
+              <col />
+              <col style={{ width: rowHeight }} />
+            </colgroup>
+
+            <thead>
+              <tr>
+                <th>Owner</th>
+                <th>
+                  Collateral
+                  <br />
+                  (ETH)
+                </th>
+                <th>
+                  Debt
+                  <br />
+                  (LQTY)
+                </th>
+                <th>
+                  Coll.
+                  <br />
+                  Ratio
+                </th>
+                <th></th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {troves.map(
+                ([owner, trove]) =>
+                  !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
+                    // (TODO: remove check after we can fetch multiple Troves in one call)
+                    <tr key={owner}>
+                      <td
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          height: rowHeight
+                        }}
                       >
-                        <Button variant="dangerIcon">
-                          <Icon name="trash" />
-                        </Button>
-                      </Transaction>
-                    </td>
-                  </tr>
-                )
-            )}
-          </tbody>
-        </Styled.table>
+                        <Tooltip message={owner} placement="top">
+                          <Text
+                            variant="address"
+                            sx={{
+                              width: ["73px", "unset"],
+                              overflow: "hidden",
+                              position: "relative"
+                            }}
+                          >
+                            {shortenAddress(owner)}
+                            <Box
+                              sx={{
+                                display: ["block", "none"],
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                width: "50px",
+                                height: "100%",
+                                background:
+                                  "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)"
+                              }}
+                            />
+                          </Text>
+                        </Tooltip>
+
+                        <CopyToClipboard text={owner} onCopy={() => setCopied(owner)}>
+                          <Button variant="icon" sx={{ width: "24px", height: "24px" }}>
+                            <Icon
+                              name={copied === owner ? "clipboard-check" : "clipboard"}
+                              size="sm"
+                            />
+                          </Button>
+                        </CopyToClipboard>
+                      </td>
+                      <td>{trove.collateral.prettify(4)}</td>
+                      <td>{trove.debt.prettify()}</td>
+                      <td>
+                        {(collateralRatio => (
+                          <Text
+                            color={
+                              collateralRatio.gt(Liquity.CRITICAL_COLLATERAL_RATIO)
+                                ? "success"
+                                : collateralRatio.gt(Liquity.MINIMUM_COLLATERAL_RATIO)
+                                ? "warning"
+                                : "danger"
+                            }
+                          >
+                            {new Percent(collateralRatio).prettify()}
+                          </Text>
+                        ))(trove.collateralRatio(price))}
+                      </td>
+                      <td>
+                        <Transaction
+                          id={`liquidate-${owner}`}
+                          tooltip="Liquidate"
+                          requires={[
+                            [
+                              trove.collateralRatioIsBelowMinimum(price),
+                              "Collateral ratio not low enough"
+                            ]
+                          ]}
+                          send={liquity.liquidate.bind(liquity, owner)}
+                          numberOfConfirmationsToWait={1}
+                        >
+                          <Button variant="dangerIcon">
+                            <Icon name="trash" />
+                          </Button>
+                        </Transaction>
+                      </td>
+                    </tr>
+                  )
+              )}
+            </tbody>
+          </Styled.table>
+        </Box>
       )}
     </Card>
   );

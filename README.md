@@ -46,7 +46,7 @@ Recovery Mode is designed to incentivise collateral top-ups, and also itself act
 
 ### Directories
 
-- `packages/dev-frontend/` - Liquity Developer Interface: a fully functional React app used for interfacing with the smart contracts during development
+- `packages/dev-frontend/` - Liquity Developer UI: a fully functional React app used for interfacing with the smart contracts during development
 - `packages/frontend/` - The front-end React app for the user-facing web interface
 - `packages/lib/` - A layer between the front-end and smart contracts that handles the intermediate logic and low-level transactions
 - `packages/contracts/` The backend development folder, contains the Buidler project, contracts and tests

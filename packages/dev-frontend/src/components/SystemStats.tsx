@@ -5,12 +5,15 @@ import { Decimal, Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib";
 
 type SystemStatsProps = {
+  variant?: string;
   numberOfTroves: number;
   price: Decimal;
   total: Trove;
   quiInStabilityPool: Decimal;
   contractsVersion: string;
   deploymentDate: number;
+  etherBalance?: Decimal;
+  quiBalance?: Decimal;
 };
 
 const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
@@ -21,19 +24,30 @@ const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
   );
 
 export const SystemStats: React.FC<SystemStatsProps> = ({
+  variant = "info",
   numberOfTroves,
   price,
   total,
   quiInStabilityPool,
   contractsVersion,
-  deploymentDate
+  deploymentDate,
+  etherBalance,
+  quiBalance
 }) => {
   const quiInStabilityPoolPct =
     total.debt.nonZero && new Percent(quiInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
 
   return (
-    <Card variant="info">
+    <Card {...{ variant }}>
+      {etherBalance && quiBalance && (
+        <Box sx={{ mb: 3 }}>
+          <Heading>My Account Balances</Heading>
+          <Text>ETH: {etherBalance.prettify()}</Text>
+          <Text>LQTY: {quiBalance.prettify()}</Text>
+        </Box>
+      )}
+
       <Heading>System</Heading>
 
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
