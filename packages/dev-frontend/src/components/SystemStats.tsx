@@ -48,7 +48,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
         </Box>
       )}
 
-      <Heading>System</Heading>
+      <Heading>Liquity System</Heading>
 
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
       <Text>LQTY in circulation: {total.debt.shorten()}</Text>

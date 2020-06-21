@@ -214,7 +214,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
   return (
     <>
       <TroveEditor
-        title={original.isEmpty ? "Open a new Liquity Trove" : "Your Liquity Trove"}
+        title={original.isEmpty ? "Open a new Liquity Trove" : "My Liquity Trove"}
         {...{
           original,
           edited,

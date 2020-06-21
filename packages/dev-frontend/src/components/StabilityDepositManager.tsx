@@ -151,7 +151,7 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
   return (
     <>
       <StabilityDepositEditor
-        title={deposit.isEmpty ? "Make a Stability Deposit" : "Your Stability Deposit"}
+        title={deposit.isEmpty ? "Make a Stability Deposit" : "My Stability Deposit"}
         {...{ originalDeposit, editedDeposit, setEditedDeposit, changePending }}
       />
 
