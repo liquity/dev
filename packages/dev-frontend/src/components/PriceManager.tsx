@@ -34,7 +34,7 @@ export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) =>
             type="number"
             step="any"
             value={editedPrice}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedPrice(e.target.value)}
+            onChange={e => setEditedPrice(e.target.value)}
           />
 
           <Flex sx={{ ml: 2, alignItems: "center" }}>

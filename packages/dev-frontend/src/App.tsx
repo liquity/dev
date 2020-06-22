@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Web3ReactProvider } from "@web3-react/core";
 import { Flex, Spinner, Heading, Text, ThemeProvider, Container, Button } from "theme-ui";
 
@@ -50,6 +50,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   const { account, provider, liquity, contracts, contractsVersion, deploymentDate } = useLiquity();
   const storeState = useLiquityStore(provider, account, liquity);
   const [systemStatsOpen, setSystemStatsOpen] = useState(false);
+  const systemStatsOverlayRef = useRef<HTMLDivElement>(null);
 
   if (!storeState.loaded) {
     return <>{loader}</>;
@@ -101,7 +102,15 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
       <Container variant="main">
         {systemStatsOpen && (
-          <Container variant="infoOverlay">
+          <Container
+            variant="infoOverlay"
+            ref={systemStatsOverlayRef}
+            onClick={e => {
+              if (e.target === systemStatsOverlayRef.current) {
+                setSystemStatsOpen(false);
+              }
+            }}
+          >
             <SystemStats
               variant="infoPopup"
               {...{

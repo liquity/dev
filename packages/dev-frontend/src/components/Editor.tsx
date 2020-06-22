@@ -122,7 +122,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
           step="any"
           defaultValue={editedAmount}
           {...{ invalid }}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+          onChange={e => {
             try {
               setEditedAmount(e.target.value);
             } catch {

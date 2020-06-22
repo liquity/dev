@@ -25,9 +25,7 @@ export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity 
             min="1"
             step="1"
             value={numberOfTrovesToLiquidate}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setNumberOfTrovesToLiquidate(e.target.value)
-            }
+            onChange={e => setNumberOfTrovesToLiquidate(e.target.value)}
           />
 
           <Label>Troves</Label>
