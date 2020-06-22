@@ -43,7 +43,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({
       {etherBalance && quiBalance && (
         <Box sx={{ mb: 3 }}>
           <Heading>My Account Balances</Heading>
-          <Text>ETH: {etherBalance.prettify()}</Text>
+          <Text>ETH: {etherBalance.prettify(4)}</Text>
           <Text>LQTY: {quiBalance.prettify()}</Text>
         </Box>
       )}

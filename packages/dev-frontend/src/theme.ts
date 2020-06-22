@@ -305,7 +305,7 @@ const theme: Theme = {
       justifyContent: "center",
 
       mt: cardGapY,
-      px: 5,
+      px: 3,
       height: "72px",
 
       backgroundColor: "muted"

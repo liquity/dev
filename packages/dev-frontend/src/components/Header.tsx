@@ -1,14 +1,18 @@
 import React from "react";
-import { Container, Flex, Box, Heading, Link, Text } from "theme-ui";
+import { Container, Flex, Box, Heading, Link } from "theme-ui";
 
 import { LiquityLogo, LiquityLogoSmall } from "./LiquityLogo";
+import { Abbreviation } from "./Abbreviation";
+
+const logoHeight = "32px";
 
 export const Header: React.FC = ({ children }) => (
   <Container variant="header">
     <Flex sx={{ alignItems: "center" }}>
       <Link sx={{ lineHeight: 0 }} href="https://www.liquity.org">
-        <LiquityLogo height="32px" sx={{ display: ["none", "block"] }} />
-        <LiquityLogoSmall height="32px" sx={{ display: ["block", "none"] }} />
+        <Abbreviation short={<LiquityLogoSmall height={logoHeight} />}>
+          <LiquityLogo height={logoHeight} />
+        </Abbreviation>
       </Link>
 
       <Box
@@ -20,13 +24,8 @@ export const Header: React.FC = ({ children }) => (
         }}
       />
 
-      <Heading sx={{ fontWeight: "body", fontSize: [3, null, null, 4] }}>
-        <Text as="span" sx={{ display: ["none", "inline"] }}>
-          Developer UI (Beta)
-        </Text>
-        <Text as="span" sx={{ display: ["inline", "none"] }}>
-          Dev UI (Beta)
-        </Text>
+      <Heading sx={{ fontWeight: "body", fontSize: [3, null, 4, null] }}>
+        <Abbreviation short="Dev UI (Beta)">Developer UI (Beta)</Abbreviation>
         <Link href="#footnote" style={{ textDecoration: "none" }}>
           *
         </Link>

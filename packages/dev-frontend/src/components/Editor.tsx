@@ -8,7 +8,7 @@ type RowProps = {
 
 const Row: React.FC<RowProps> = ({ label, unit, children }) => {
   return (
-    <Flex sx={{ alignItems: "stretch", flexWrap: "wrap" }}>
+    <Flex sx={{ alignItems: "stretch" }}>
       <Label sx={{ width: unit ? "106px" : "170px" }}>{label}</Label>
       {unit && (
         <Label variant="unit" sx={{ width: "64px", px: 0 }}>

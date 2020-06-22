@@ -12,6 +12,7 @@ import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
 import { Icon } from "./Icon";
 import { Tooltip } from "./Tooltip";
+import { Abbreviation } from "./Abbreviation";
 
 const rowHeight = "40px";
 
@@ -112,14 +113,18 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
   return (
     <Card>
       <Heading>
-        Riskiest Troves
+        <Abbreviation short="Troves">Riskiest Troves</Abbreviation>
+
         <Flex sx={{ alignItems: "center" }}>
           {numberOfTroves !== 0 && (
             <React.Fragment>
-              <Text sx={{ mr: [0, 3], fontWeight: "body", fontSize: [1, 2] }}>
+              <Abbreviation
+                short={`page ${clampedPage + 1} / ${numberOfPages}`}
+                sx={{ mr: [0, 3], fontWeight: "body", fontSize: [1, 2], letterSpacing: [-1, 0] }}
+              >
                 {clampedPage * pageSize + 1}-{Math.min((clampedPage + 1) * pageSize, numberOfTroves)}{" "}
                 of {numberOfTroves}
-              </Text>
+              </Abbreviation>
 
               <Button variant="titleIcon" onClick={previousPage} disabled={clampedPage <= 0}>
                 <Icon name="chevron-left" size="lg" />
@@ -170,14 +175,12 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
               <tr>
                 <th>Owner</th>
                 <th>
-                  Collateral
-                  <br />
-                  (ETH)
+                  <Abbreviation short="Coll.">Collateral</Abbreviation>
+                  <Text sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>ETH</Text>
                 </th>
                 <th>
                   Debt
-                  <br />
-                  (LQTY)
+                  <Text sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>LQTY</Text>
                 </th>
                 <th>
                   Coll.
@@ -235,8 +238,16 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                           </Button>
                         </CopyToClipboard>
                       </td>
-                      <td>{trove.collateral.prettify(4)}</td>
-                      <td>{trove.debt.prettify()}</td>
+                      <td>
+                        <Abbreviation short={trove.collateral.shorten()}>
+                          {trove.collateral.prettify(4)}
+                        </Abbreviation>
+                      </td>
+                      <td>
+                        <Abbreviation short={trove.debt.shorten()}>
+                          {trove.debt.prettify()}
+                        </Abbreviation>
+                      </td>
                       <td>
                         {(collateralRatio => (
                           <Text
@@ -248,7 +259,9 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                                 : "danger"
                             }
                           >
-                            {new Percent(collateralRatio).prettify()}
+                            {collateralRatio?.gt(10)
+                              ? "× " + collateralRatio.shorten()
+                              : new Percent(collateralRatio).prettify()}
                           </Text>
                         ))(trove.collateralRatio(price))}
                       </td>

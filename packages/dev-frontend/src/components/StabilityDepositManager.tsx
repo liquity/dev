@@ -102,7 +102,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
       ))}
     </Flex>
   ) : changePending ? null : (
-    <Flex sx={{ mt: [0, 0, 3], flexWrap: "wrap", justifyContent: "center" }}>
+    <Flex sx={{ mt: [0, null, 3], flexWrap: "wrap", justifyContent: "center" }}>
       {actions.map(([actionName, send, requires], i) => (
         <Transaction key={i} id={`${myTransactionId}-${i}`} {...{ send, requires }}>
           <Button sx={{ mt: 3, mx: 2 }}>{actionName}</Button>
