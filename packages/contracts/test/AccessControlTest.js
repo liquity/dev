@@ -600,14 +600,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
     // --- onlyCDPMorBM ---
     // reinsert
-    it("remove(): reverts when called by an account that is not CDPManager", async () => {
+    it("reinsert(): reverts when called by an account that is neither BorrowerOps nor CDPManager", async () => {
       // Attempt call from alice
       try {
         txAlice = await sortedCDPs.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither BM nor CDPM")
+        assert.include(err.message, "Caller is neither BO nor CDPM")
       }
     })
   })

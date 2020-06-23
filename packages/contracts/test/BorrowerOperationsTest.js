@@ -470,14 +470,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(mv._50e18, alice, { from: alice })
     await borrowerOperations.withdrawCLV(mv._50e18, bob, { from: bob })
 
-    const aliceICR = await cdpManager.getCurrentICR(alice, price)
-    console.log(`Alice ICR: ${aliceICR}`)
+    
     // Alice withdraws 0.45 ether, leaving 0.55 remaining. Her ICR = (0.55*100)/50 = 110%.
     const txAlice = await borrowerOperations.withdrawColl('450000000000000000', alice, { from: alice })
     assert.isTrue(txAlice.receipt.status)
-
-    const aliceICRAfter = await cdpManager.getCurrentICR(alice, price)
-    console.log(`Alice ICR after: ${aliceICRAfter}`)
 
     // Bob attempts to withdraws 0.46 ether, Which would leave him with 0.54 coll and ICR = (0.54*100)/50 = 108%.
     try {
@@ -546,7 +542,6 @@ contract('BorrowerOperations', async accounts => {
     // check before -  Alice has 2 ether in CDP 
     const alice_CDP_Before = await cdpManager.CDPs(alice)
     const coll_Before = alice_CDP_Before[1]
-    console.log(`coll before: ${coll_Before}`)
     assert.equal(coll_Before, _2_Ether)
 
     // Alice withdraws 1 ether
@@ -555,7 +550,6 @@ contract('BorrowerOperations', async accounts => {
     // Check 1 ether remaining
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const coll_After = alice_CDP_After[1]
-    console.log(`coll after: ${coll_After}`)
     assert.equal(coll_After, _1_Ether)
   })
 

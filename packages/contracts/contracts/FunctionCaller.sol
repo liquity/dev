@@ -3,7 +3,8 @@ pragma solidity ^0.5.16;
 import './Interfaces/ICDPManager.sol';
 import './Interfaces/ISortedCDPs.sol';
 import './Interfaces/IPriceFeed.sol';
-import './DeciMath.sol';
+import './Math.sol';
+
 
 // Proxy contract - used for calculating gas of read-only functions in gas calculation scripts.  Not part of the application.
 contract FunctionCaller {
@@ -11,93 +12,68 @@ contract FunctionCaller {
     uint number = 1;
 
     ICDPManager cdpManager;
-    address cdpManagerAddress;
+    address public cdpManagerAddress;
 
     ISortedCDPs sortedCDPs;
-    address sortedCDPsAddress;
+    address public sortedCDPsAddress;
 
     IPriceFeed priceFeed;
-    address priceFeedAddress;
+    address public priceFeedAddress;
 
     // --- Dependency setters ---
 
-    function setCDPManagerAddress(address _cdpManagerAddress) public {
+    function setCDPManagerAddress(address _cdpManagerAddress) external {
         cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
     }
     
-    function setSortedCDPsAddress(address _sortedCDPsAddress) public {
+    function setSortedCDPsAddress(address _sortedCDPsAddress) external {
         cdpManagerAddress = _sortedCDPsAddress;
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
     }
 
-     function setPriceFeedAddress(address _priceFeedAddress) public {
+     function setPriceFeedAddress(address _priceFeedAddress) external {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(_priceFeedAddress);
     }
 
-    // --- PriceFeed functions ---
+    // --- PriceFeed functions -  non-view wrappers ---
 
-     function priceFeed_getPrice() public returns(uint) {
+     function priceFeed_getPrice() external returns (uint) {
         return priceFeed.getPrice();
     }
 
-    // --- CDPManager functions ---
-    function cdpManager_getCurrentICR (address _address, uint _price) public returns(uint) {
+    // --- CDPManager functions - non-view wrappers ---
+    function cdpManager_getCurrentICR (address _address, uint _price) external returns (uint) {
         return cdpManager.getCurrentICR(_address, _price);  
     }
 
-    function cdpManager_getApproxHint (uint _CR, uint _numTrials) public returns(address) {
+    function cdpManager_getApproxHint (uint _CR, uint _numTrials) external returns (address) {
         return cdpManager.getApproxHint(_CR, _numTrials);
     }
 
-    // --- SortedCDPs functions ---
+    // --- SortedCDPs functions -  non-view wrappers ---
 
-    function sortedCDPs_findInsertPosition(uint _ICR, uint _price, address _prevId, address _nextId) public returns(address, address) {
+    function sortedCDPs_findInsertPosition(uint _ICR, uint _price, address _prevId, address _nextId) external returns (address, address) {
         return sortedCDPs.findInsertPosition(_ICR, _price, _prevId, _nextId);
     }
 
-    // --- DeciMath public functions ---
+    // --- Math functions -  non-view wrappers ---
 
-    // function decimath_accurateMulDiv(uint x, uint y, uint z) public returns(uint fraction) {
-    //     return DeciMath.accurateMulDiv(x ,y, z);
-    // }
-
-    function getMin(uint _a, uint _b) public view returns(uint) {
-        return DeciMath.getMin(_a, _b);
+    function _min(uint _a, uint _b) external returns (uint) {
+        return Math._min(_a, _b);
     }
 
-    function decimath_decMul(uint _x, uint _y) public returns (uint prod) {
-        return DeciMath.decMul(_x, _y);
-    }
-   
-    function decimath_decDiv(uint _x, uint _y) public returns (uint quotient) {
-        return DeciMath.decDiv(_x, _y);
-    }
 
-    function decimath_div_toDuint(uint _x, uint _y) public returns (uint quotient) {
-        // console.log("0. gas left: %s", gasleft());
-        uint quotient = DeciMath.div_toDuint(_x, _y); // 1097 gas
-        // console.log("1. gas left: %s", gasleft());
-        return quotient;
-    }
-
-    function decimath_mul_uintByDuint( uint _x, uint _y_duint)public returns (uint prod) {
-        //  console.log("0. gas left: %s", gasleft());
-        uint z = DeciMath.mul_uintByDuint(_x, _y_duint);  // 967 gas
-        //  console.log("1. gas left: %s", gasleft());
-        return z;
-    }
-    
     //  ---- Funcs for checking write-to-storage costs ---
 
-    function repeatedlySetVal (uint _n) public returns (uint, uint) {
+    function repeatedlySetVal (uint _n) external returns (uint, uint) {
         for (uint i = 2; i < _n + 2; i ++) {
             number = i;
         }
     }
     
-    function repeatedlySetValThenClearIt (uint _n) public returns (uint, uint) {
+    function repeatedlySetValThenClearIt (uint _n) external returns (uint, uint) {
         for (uint i = 2; i < _n + 2; i ++) {
             number = i;
         }
@@ -111,12 +87,12 @@ contract FunctionCaller {
    }
 
    // Check storage by way of an internal functional call
-   function callInternalStorageCheck () public returns (bool) {
+   function callInternalStorageCheck () external returns (bool) {
        return internalStorageCheck();
    }
 
     // Check storage directly
-   function rawStorageCheck () public returns (bool) {
+   function rawStorageCheck () external returns (bool) {
        return (number == 42);
    }
 }

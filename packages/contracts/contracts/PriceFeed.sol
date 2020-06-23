@@ -43,39 +43,39 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     // --- Dependency setters ---
 
-    function setCDPManagerAddress(address _cdpManagerAddress) public onlyOwner {
+    function setCDPManagerAddress(address _cdpManagerAddress) external onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
     }
 
-    function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
+    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
         poolManagerAddress = _poolManagerAddress;
         emit PoolManagerAddressChanged(_poolManagerAddress);
     }
 
     // Mainnet Chainlink address setter
-    function setAggregator(address _priceAggregatorAddress) public onlyOwner {
+    function setAggregator(address _priceAggregatorAddress) external onlyOwner {
         priceAggregatorAddress = _priceAggregatorAddress;
         priceAggregator = IDeployedAggregator(_priceAggregatorAddress);
     }
 
     // Testnet Chainlink address setter
-    function setAggregator_Testnet(address _priceAggregatorAddress) public onlyOwner {
+    function setAggregator_Testnet(address _priceAggregatorAddress) external onlyOwner {
         priceAggregator_Testnet = AggregatorInterface(_priceAggregatorAddress);
     }
 
     // --- Functions ---
 
-    function getPrice() public view returns (uint256) {
+    function getPrice() external view returns (uint256) {
         return price;
     }
 
     // --- DEVELOPMENT FUNCTIONALITY  ---
 
-    /* Manual public price setter. 
+    /* Manual external price setter. 
     TODO: remove before mainnet deployment. */
-    function setPrice(uint256 _price) public returns (bool) {
+    function setPrice(uint256 _price) external returns (bool) {
         price = _price;
         emit PriceUpdated(price);
         return true;
@@ -84,7 +84,7 @@ contract PriceFeed is Ownable, IPriceFeed {
     // --- MAINNET FUNCTIONALITY ---
 
     // TODO: convert received Chainlink price to precision-18 before setting state variable
-    function updatePrice() public onlyCDPManagerOrPoolManager returns (uint256) {
+    function updatePrice() external onlyCDPManagerOrPoolManager returns (uint256) {
         price = getLatestPrice();
         emit PriceUpdated(price);
         return price;
@@ -97,18 +97,18 @@ contract PriceFeed is Ownable, IPriceFeed {
         return uint256(intPrice);
     }
 
-    function getLatestAnswerID() public view returns (uint256) {
+    function getLatestAnswerID() external view returns (uint256) {
         return priceAggregator.latestCompletedAnswer();
     }
 
     // Get the block timestamp at which the reference price was last updated
-    function getLatestTimestamp() public view returns (uint256) {
+    function getLatestTimestamp() external view returns (uint256) {
         return priceAggregator.updatedHeight();
     }
 
     // ---- ROPSTEN FUNCTIONALITY - TODO: Remove before Mainnet deployment ----
 
-    function updatePrice_Testnet() public returns (uint256) {
+    function updatePrice_Testnet() external returns (uint256) {
         price = getLatestPrice_Testnet();
         emit PriceUpdated(price);
         return price;
@@ -122,14 +122,14 @@ contract PriceFeed is Ownable, IPriceFeed {
     }
 
     // Get the block timestamp at which the reference data was last updated
-    function getLatestTimestamp_Testnet() public view returns (uint256) {
+    function getLatestTimestamp_Testnet() external view returns (uint256) {
         uint256 latestTimestamp = priceAggregator_Testnet.latestTimestamp();
 
         return latestTimestamp;
     }
 
     // Get the past price from 'n' rounds ago
-    function getPreviousPrice_Testnet(uint256 _n) public view returns (uint256) {
+    function getPreviousPrice_Testnet(uint256 _n) external view returns (uint256) {
         uint256 latestAnswerID = priceAggregator_Testnet.latestRound();
         require(_n <= latestAnswerID, "Not enough history");
 
@@ -140,7 +140,7 @@ contract PriceFeed is Ownable, IPriceFeed {
     }
 
     // Get the block timestamp from the round that occurred 'n' rounds ago
-    function getPreviousTimestamp_Testnet(uint256 _n) public view returns (uint256) {
+    function getPreviousTimestamp_Testnet(uint256 _n) external view returns (uint256) {
         uint256 latestAnswerID = priceAggregator_Testnet.latestRound();
         require(_n <= latestAnswerID, "Not enough history");
 

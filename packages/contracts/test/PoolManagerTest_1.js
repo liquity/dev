@@ -107,7 +107,6 @@ contract('PoolManager', async accounts => {
     
     // check expected is within 100 wei of actual
     const diff = Number(expectedTCR.sub(TCR).abs())
-    console.log(`diff is ${diff}`)
     assert.isAtMost(diff, 100)
   })
 
@@ -425,7 +424,6 @@ contract('PoolManager', async accounts => {
       const alice_EtherBalance_After = web3.utils.toBN(await web3.eth.getBalance(alice))
 
       const balanceChange = (alice_EtherBalance_After.sub(alice_EtherBalance_Before)).toString()
-      console.log(balanceChange)
       assert.equal(balanceChange, _1_Ether)
     })
 

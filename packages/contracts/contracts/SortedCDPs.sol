@@ -68,22 +68,22 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         _;
     }
 
-     modifier onlyBMorCDPM() {
+     modifier onlyBOorCDPM() {
         address sender = _msgSender();
-        require(sender == CDPManagerAddress || sender == borrowerOperationsAddress, 
-                "SortedCDPs: Caller is neither BM nor CDPM");
+        require(sender == borrowerOperationsAddress || sender == CDPManagerAddress, 
+                "SortedCDPs: Caller is neither BO nor CDPM");
         _;
     }
 
     // --- Dependency setters --- 
 
-    function setCDPManager(address _CDPManagerAddress) public onlyOwner {
+    function setCDPManager(address _CDPManagerAddress) external onlyOwner {
         CDPManagerAddress = _CDPManagerAddress;
         cdpManager = ICDPManager(_CDPManagerAddress);
         emit CDPManagerAddressChanged(_CDPManagerAddress);
     }
 
-    function setBorrowerOperations(address _borrowerOperationsAddress) public onlyOwner {
+    function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
         borrowerOperationsAddress = _borrowerOperationsAddress;
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
@@ -97,7 +97,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @dev Set the maximum size of the list
      * @param _size Maximum size
      */
-    function setMaxSize(uint256 _size) public onlyOwner {
+    function setMaxSize(uint256 _size) external onlyOwner {
         // New max size must be greater than old max size
         require(_size > data.maxSize);
 
@@ -112,7 +112,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _nextId Id of next node for the insert position
      */
 
-    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) public onlyBorrowerOperations {
+    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external onlyBorrowerOperations {
         _insert (_id, _ICR, _price, _prevId, _nextId);
     }
     
@@ -162,7 +162,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         data.size = data.size.add(1); 
     }
 
-    function remove(address _id) public onlyCDPManager {
+    function remove(address _id) external onlyCDPManager {
         _remove(_id);
     }
 
@@ -213,7 +213,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the new insert position
      * @param _nextId Id of next node for the new insert position
      */
-    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) public onlyBMorCDPM {
+    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external onlyBOorCDPM {
         // List must contain the node
         require(contains(_id));
 
@@ -251,28 +251,28 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     /*
      * @dev Returns the current size of the list
      */
-    function getSize() public view returns (uint256) {
+    function getSize() external view returns (uint256) {
         return data.size;
     }
 
     /*
      * @dev Returns the maximum size of the list
      */
-    function getMaxSize() public view returns (uint256) {
+    function getMaxSize() external view returns (uint256) {
         return data.maxSize;
     }
 
     /*
      * @dev Returns the first node in the list (node with the largest ICR)
      */
-    function getFirst() public view returns (address) {
+    function getFirst() external view returns (address) {
         return data.head;
     }
 
     /*
      * @dev Returns the last node in the list (node with the smallest ICR)
      */
-    function getLast() public view returns (address) {
+    function getLast() external view returns (address) {
         return data.tail;
     }
 
@@ -280,7 +280,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @dev Returns the next node (with a smaller ICR) in the list for a given node
      * @param _id Node's id
      */
-    function getNext(address _id) public view returns (address) {
+    function getNext(address _id) external view returns (address) {
         return data.nodes[_id].nextId;
     }
 
@@ -288,7 +288,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @dev Returns the previous node (with a larger ICR) in the list for a given node
      * @param _id Node's id
      */
-    function getPrev(address _id) public view returns (address) {
+    function getPrev(address _id) external view returns (address) {
         return data.nodes[_id].prevId;
     }
 

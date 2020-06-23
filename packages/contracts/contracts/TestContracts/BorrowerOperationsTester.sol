@@ -7,7 +7,7 @@ for testing the parent's internal functions. */
 contract BorrowerOperationsTester is BorrowerOperations {
 
     function getNewICRFromTroveChange(uint _coll, uint _debt, int _collChange, int _debtChange, uint _price) 
-        view
+        pure
         external
         returns (uint)
     {
@@ -16,7 +16,7 @@ contract BorrowerOperationsTester is BorrowerOperations {
 
     function getNewTCRFromTroveChange(int _collChange, int _debtChange, uint _price) 
     external 
-    view 
+    view
     returns (uint) 
     {
         return _getNewTCRFromTroveChange(_collChange,  _debtChange, _price);

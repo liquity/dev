@@ -24,10 +24,6 @@ contract MultiCDPGetter {
         sortedCDPs = _sortedCDPs;
     }
 
-    function _min(uint a, uint b) internal pure returns (uint) {
-        return a < b ? a : b;
-    }
-
     function getMultipleSortedCDPs(int _startIdx, uint _count)
         external view returns (CombinedCDPData[] memory _cdps)
     {

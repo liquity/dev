@@ -956,7 +956,6 @@ contract('CDPManager', async accounts => {
     const debt = '54321000000000000000000'
 
     const ICR = (await cdpManagerTester.computeICR(coll, debt, price)).toString()
-    console.log(`ICR is ${ICR}`)
 
     assert.isAtMost(th.getDifference(ICR, '1840908672520756'), 1000)
   })

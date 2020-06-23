@@ -37,29 +37,25 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
 
     // --- Functions ---
 
-    function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
+    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
         poolManagerAddress =  _poolManagerAddress;
         emit PoolManagerAddressChanged(_poolManagerAddress);
     }
 
-    function mint(address _account, uint256 _amount) public onlyPoolManager returns (bool) {
+    function mint(address _account, uint256 _amount) external onlyPoolManager {
         _mint(_account, _amount); 
-        return true;
     }
     
-    function burn(address _account, uint256 _amount) public onlyPoolManager returns (bool) {
+    function burn(address _account, uint256 _amount) external onlyPoolManager {
         _burn(_account, _amount); 
-        return true;
     }
     
-    function sendToPool(address _sender,  address _poolAddress, uint256 _amount) public onlyPoolManager returns (bool) {
+    function sendToPool(address _sender,  address _poolAddress, uint256 _amount) external onlyPoolManager {
         _transfer(_sender, _poolAddress, _amount);
-        return true;
     }
     
-    function returnFromPool(address _poolAddress, address _receiver, uint256 _amount ) public onlyPoolManager returns (bool) {
+    function returnFromPool(address _poolAddress, address _receiver, uint256 _amount ) external onlyPoolManager {
         _transfer(_poolAddress, _receiver, _amount);
-        return true;
     }
 
    // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---

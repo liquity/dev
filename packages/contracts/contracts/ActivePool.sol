@@ -35,53 +35,52 @@ contract ActivePool is Ownable, IPool {
 
     // --- Contract setters ---
 
-    function setPoolManagerAddress(address _poolManagerAddress) public onlyOwner {
+    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
         poolManagerAddress = _poolManagerAddress;
         emit PoolManagerAddressChanged(_poolManagerAddress);
     }
 
-    function setDefaultPoolAddress(address _defaultPoolAddress) public onlyOwner {
+    function setDefaultPoolAddress(address _defaultPoolAddress) external onlyOwner {
         defaultPoolAddress = _defaultPoolAddress; 
         emit DefaultPoolAddressChanged(defaultPoolAddress);
     }
 
-    function setStabilityPoolAddress(address _stabilityPoolAddress) public onlyOwner {
+    function setStabilityPoolAddress(address _stabilityPoolAddress) external onlyOwner {
         stabilityPoolAddress = _stabilityPoolAddress;
         emit StabilityPoolAddressChanged(stabilityPoolAddress);
     }
 
     // --- Getters for public variables. Required by IPool interface ---
 
-    function getETH() public view returns(uint) {
+    function getETH() external view returns (uint) {
         return ETH;
     }
 
-    function getCLV() public view returns(uint) {
+    function getCLV() external view returns (uint) {
         return CLV;
     }
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) public onlyPoolManager returns(bool) {
+    function sendETH(address _account, uint _amount) public onlyPoolManager {
         ETH = ETH.sub(_amount);  
         (bool success, ) = _account.call.value(_amount)(""); //  use call.value()('') as per Consensys latest advice 
         assert(success == true); 
        
         emit EtherSent(_account, _amount);  
-        return true;
     }
 
-    function increaseCLV(uint _amount) public onlyPoolManager () {
+    function increaseCLV(uint _amount) external onlyPoolManager () {
         CLV  = CLV.add(_amount); 
     }
 
-    function decreaseCLV(uint _amount) public onlyPoolManager () {
+    function decreaseCLV(uint _amount) external onlyPoolManager () {
         CLV = CLV.sub(_amount); 
     }
 
     /* Returns the raw ether balance at ActivePool address.  
     Not necessarily equal to the ETH state variable - ether can be forcibly sent to contracts. */
-    function getRawETHBalance() public view returns(uint) {
+    function getRawETHBalance() external view returns (uint) {
         return address(this).balance;
     }
 

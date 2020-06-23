@@ -30,7 +30,7 @@ contract CLVTokenData is Ownable {
 
     // --- Balance functions --- 
 
-    function getBalance(address _account) external view returns(uint) { 
+    function getBalance(address _account) external view returns (uint) { 
         return balances[_account];
     }
 
@@ -48,7 +48,7 @@ contract CLVTokenData is Ownable {
 
     // --- Allowance functions ---
     
-    function getAllowance(address _owner, address _spender) external view returns(uint) {
+    function getAllowance(address _owner, address _spender) external view returns (uint) {
         return allowances[_owner][_spender];
     }
 

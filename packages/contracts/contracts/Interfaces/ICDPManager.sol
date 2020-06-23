@@ -38,17 +38,17 @@ interface ICDPManager {
 
     function setDefaultPool(address _defaultPoolAddress) external;
 
-    function getCDPOwnersCount() external view returns(uint);
+    function getCDPOwnersCount() external view returns (uint);
 
-    function getCurrentICR(address _user, uint _price) external view returns(uint);
+    function getCurrentICR(address _user, uint _price) external view returns (uint);
 
-    function getApproxHint(uint CR, uint numTrials) external view returns(address);
+    function getApproxHint(uint CR, uint numTrials) external view returns (address);
 
     function liquidate(address _user) external;
 
     function liquidateCDPs(uint _n) external;
 
-    function checkRecoveryMode() external view returns(bool);
+    function checkRecoveryMode() external view returns (bool);
 
     function getRedemptionHints(uint _CLVamount, uint _price) external view returns (address, uint);
 

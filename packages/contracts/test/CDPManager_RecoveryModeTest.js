@@ -65,10 +65,6 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    // const TCR = (await poolManager.getTCR()).toString()
-    // console.log("TCR is" + TCR)
-    // assert.equal(TCR, '1500000000000000000')
-
     // --- TEST ---
 
     // Alice attempts to withdraw 10 CLV, which would reducing TCR below 150%

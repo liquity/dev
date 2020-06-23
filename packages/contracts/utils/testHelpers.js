@@ -576,7 +576,6 @@ static async withdrawFromSPtoCDP_allAccounts(accounts, poolManager){
 }
 }
 
-// TODO:  Group functions into classes for export
 module.exports = {
   TestHelper: TestHelper,
   MoneyValues: MoneyValues

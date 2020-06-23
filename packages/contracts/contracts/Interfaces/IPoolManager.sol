@@ -43,15 +43,15 @@ interface IPoolManager {
 
     function setDefaultPool(address _defaultPoolAddress) external;
     
-    function getBalance() external view returns(uint);
+    function getBalance() external view returns (uint);
     
-    function getActiveDebt() external view returns(uint);
+    function getActiveDebt() external view returns (uint);
     
-    function getActiveColl() external view returns(uint);
+    function getActiveColl() external view returns (uint);
     
     function getClosedDebt() external view returns (uint);
     
-    function getLiquidatedColl() external view returns(uint);
+    function getLiquidatedColl() external view returns (uint);
 
     function getStabilityPoolCLV() external view returns (uint);
 
@@ -76,7 +76,7 @@ interface IPoolManager {
 
     function withdrawFromSP(uint _amount) external;
 
-    function withdrawFromSPtoCDP(address _user, address _hint) external;
+    function withdrawFromSPtoCDP(address _hint) external;
 
-    function offset(uint _debt, uint _coll, uint CLVInPool) external payable returns(uint, uint);
+    function offset(uint _debt, uint _coll, uint CLVInPool) external payable returns (uint, uint);
 }

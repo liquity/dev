@@ -99,9 +99,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._100e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '66666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '66666666666666666666'), 1000)
@@ -141,9 +141,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._100e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '33333333333333333333'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '33333333333333333333'), 1000)
@@ -186,9 +186,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._100e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
@@ -207,7 +207,6 @@ contract('PoolManager', async accounts => {
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(mv._100e18, account, { from: account, value: mv._2_Ether })
-        console.log(`balance: ${await clvToken.balanceOf(account)}`)
         await poolManager.provideToSP(mv._100e18, { from: account })
       }
 
@@ -230,9 +229,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._100e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '90000000000000000000'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '90000000000000000000'), 1000)
@@ -275,9 +274,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._100e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '80000000000000000000'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '80000000000000000000'), 1000)
@@ -322,9 +321,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._300e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '66666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '133333333333333333333'), 1000)
@@ -371,9 +370,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._300e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '50000000000000000000'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '100000000000000000000'), 1000)
@@ -430,9 +429,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._5000e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '9017193801740610000'), 10000000000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '2055920186796860000000'), 1000000000)
@@ -483,10 +482,10 @@ contract('PoolManager', async accounts => {
       const txD = await poolManager.withdrawFromSP(mv._100e18, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '16666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '16666666666666666666'), 1000)
@@ -542,10 +541,10 @@ contract('PoolManager', async accounts => {
       const txD = await poolManager.withdrawFromSP(mv._100e18, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
@@ -613,10 +612,10 @@ contract('PoolManager', async accounts => {
       const txD = await poolManager.withdrawFromSP(mv._5000e18, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '178328173374613000000'), 1000000000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '59442724458204300000'), 1000000000)
@@ -661,7 +660,7 @@ contract('PoolManager', async accounts => {
       // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSP(mv._100e18, { from: dennis })
 
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[2].args[1].toString()
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '50000000000000000000'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '500000000000000000'), 1000)
 
@@ -674,9 +673,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._100e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
@@ -734,7 +733,7 @@ contract('PoolManager', async accounts => {
       // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSP(mv._5000e18, { from: dennis })
 
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[2].args[1].toString()
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '1230769230769230000'), 1000000000)
 
@@ -747,9 +746,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._5000e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '16722408026755900000'), 100000000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '20903010033444800000'), 1000000000)
@@ -797,7 +796,7 @@ contract('PoolManager', async accounts => {
       // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSP(mv._100e18, { from: dennis })
 
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[2].args[1].toString()
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '833333333333333333'), 1000)
 
@@ -808,9 +807,9 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._100e18, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '6666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '6666666666666666666'), 1000)
@@ -871,10 +870,10 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._100e18, { from: carol })
       const txD = await poolManager.withdrawFromSP(mv._100e18, { from: dennis })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[2].args[1].toString()
 
       // Expect Alice And Bob's compounded deposit to be 0 CLV
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
@@ -1043,11 +1042,11 @@ contract('PoolManager', async accounts => {
       const txD = await poolManager.withdrawFromSP(mv._200e18, { from: dennis })
       const txE = await poolManager.withdrawFromSP(mv._300e18, { from: erin })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
-      const erin_ETHWithdrawn = txE.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[2].args[1].toString()
+      const erin_ETHWithdrawn = txE.logs[2].args[1].toString()
 
       // Expect Alice And Bob's compounded deposit to be 0 CLV
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
@@ -1100,7 +1099,7 @@ contract('PoolManager', async accounts => {
       const txA = await poolManager.withdrawFromSP(mv._100e18, { from: alice })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = await txA.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), 0), 1000)
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, mv._1_Ether), 1000)
@@ -1188,14 +1187,14 @@ contract('PoolManager', async accounts => {
       const txG = await poolManager.withdrawFromSP(mv._100e18, { from: graham })
       const txH = await poolManager.withdrawFromSP(mv._100e18, { from: harriet })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
-      const erin_ETHWithdrawn = txE.logs[1].args[1].toString()
-      const flyn_ETHWithdrawn = txF.logs[1].args[1].toString()
-      const graham_ETHWithdrawn = txG.logs[1].args[1].toString()
-      const harriet_ETHWithdrawn = txH.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = txC.logs[2].args[1].toString()
+      const dennis_ETHWithdrawn = txD.logs[2].args[1].toString()
+      const erin_ETHWithdrawn = txE.logs[2].args[1].toString()
+      const flyn_ETHWithdrawn = txF.logs[2].args[1].toString()
+      const graham_ETHWithdrawn = txG.logs[2].args[1].toString()
+      const harriet_ETHWithdrawn = txH.logs[2].args[1].toString()
 
       // Expect all deposits to be 0 CLV
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
@@ -1257,7 +1256,7 @@ contract('PoolManager', async accounts => {
       const txA = await poolManager.withdrawFromSP(mv._100e18, { from: alice })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = await txA.logs[2].args[1].toString()
 
       await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._2_Ether })
       await poolManager.provideToSP(mv._100e18, { from: bob })
@@ -1266,7 +1265,7 @@ contract('PoolManager', async accounts => {
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       const txB = await poolManager.withdrawFromSP(mv._100e18, { from: bob })
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const bob_ETHWithdrawn = await txB.logs[2].args[1].toString()
 
       // Expect Bob to withdraw 10% of initial deposit (10 CLV) and all the liquidated ETH (0.5 ether)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '10000000000000000000'), 1000)
@@ -1335,9 +1334,9 @@ contract('PoolManager', async accounts => {
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), mv._20e18), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), mv._30e18), 1000)
 
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+      const bob_ETHWithdrawn = await txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = await txC.logs[2].args[1].toString()
+      const dennis_ETHWithdrawn = await txD.logs[2].args[1].toString()
 
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '500000000000000000'), 1000)
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '1000000000000000000'), 1000)
@@ -1386,7 +1385,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(txL2.receipt.status)
      
       const txB = await poolManager.withdrawFromSP(mv._100e18, { from: bob })
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const bob_ETHWithdrawn = await txB.logs[2].args[1].toString()
 
       // Bob should withdraw 0 deposit, and the full ETH gain of 1 ether
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), 0), 1000)
@@ -1440,13 +1439,13 @@ contract('PoolManager', async accounts => {
       assert.isTrue(txL2.receipt.status)
 
       const txB = await poolManager.withdrawFromSP(mv._100e18, { from: bob })
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const bob_ETHWithdrawn = await txB.logs[2].args[1].toString()
 
       const txC = await poolManager.withdrawFromSP(mv._200e18, { from: carol })
-      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
+      const carol_ETHWithdrawn = await txC.logs[2].args[1].toString()
 
       const txD = await poolManager.withdrawFromSP(mv._300e18, { from: dennis })
-      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = await txD.logs[2].args[1].toString()
 
       // B, C and D should have a compounded deposit of 1e-10 of initial deposit, which the system rounds down to 0
      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0' ), 1000)
@@ -1549,10 +1548,10 @@ contract('PoolManager', async accounts => {
       const txC = await poolManager.withdrawFromSP(mv._100e18, { from: carol })
       const txD = await poolManager.withdrawFromSP(mv._100e18, { from: dennis })
 
-      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = await txA.logs[2].args[1].toString()
+      const bob_ETHWithdrawn = await txB.logs[2].args[1].toString()
+      const carol_ETHWithdrawn = await txC.logs[2].args[1].toString()
+      const dennis_ETHWithdrawn = await txD.logs[2].args[1].toString()
 
       // B, C and D should withdraw 1e-10 of initial deposit, 
 
@@ -1669,8 +1668,8 @@ contract('PoolManager', async accounts => {
       const txB = await poolManager.withdrawFromSP(mv._1e36, { from: bob })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1]
-      const bob_ETHWithdrawn = txB.logs[1].args[1]
+      const alice_ETHWithdrawn = txA.logs[2].args[1]
+      const bob_ETHWithdrawn = txB.logs[2].args[1]
 
       aliceBalance = await clvToken.balanceOf(alice)
       aliceExpectedBalance = web3.utils.toBN(mv._5e35)
@@ -1725,8 +1724,8 @@ contract('PoolManager', async accounts => {
       const txA = await poolManager.withdrawFromSP(mv._1e36, { from: alice })
       const txB = await poolManager.withdrawFromSP(mv._1e36, { from: bob })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1]
-      const bob_ETHWithdrawn = txB.logs[1].args[1]
+      const alice_ETHWithdrawn = txA.logs[2].args[1]
+      const bob_ETHWithdrawn = txB.logs[2].args[1]
 
       aliceBalance = await clvToken.balanceOf(alice)
       aliceExpectedBalance = web3.utils.toBN('999999999999999990000000000000000000')

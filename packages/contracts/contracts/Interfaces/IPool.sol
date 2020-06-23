@@ -18,15 +18,15 @@ interface IPool {
     event EtherSent(address _to, uint _amount);
 
     // --- Functions ---
-    function getETH() external view returns(uint);
+    function getETH() external view returns (uint);
     
-    function getCLV() external view returns(uint);
+    function getCLV() external view returns (uint);
     
-    function sendETH(address _account, uint _amount) external returns(bool);
+    function sendETH(address _account, uint _amount) external;
 
     function increaseCLV(uint _amount) external;
 
     function decreaseCLV(uint _amount) external;
 
-    function getRawETHBalance() external view returns(uint);
+    function getRawETHBalance() external view returns (uint);
 }
