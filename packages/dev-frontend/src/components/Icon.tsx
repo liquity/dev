@@ -17,7 +17,8 @@ import {
   faExternalLinkAlt,
   faClipboardCheck,
   faCog,
-  faCheck
+  faCheck,
+  faPlug
 } from "@fortawesome/free-solid-svg-icons";
 import { faClipboard } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
@@ -40,7 +41,8 @@ library.add(
   faUserCircle,
   faWallet,
   faExternalLinkAlt,
-  faCog
+  faCog,
+  faPlug
 );
 
 const getIcon = (name: IconName): IconProp => {

@@ -69,29 +69,33 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
   throw new Error(`Cannot ${action.type} when ${state.type}`);
 };
 
+const detectMetaMask = () => window.ethereum?.isMetaMask ?? false;
+
 type WalletConnectorProps = {
   loader?: React.ReactNode;
 };
 
 export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, loader }) => {
-  const web3 = useWeb3React<unknown>();
+  const web3React = useWeb3React<unknown>();
 
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
   const connectors = {
-    injected: useInjectedConnector(web3)
+    injected: useInjectedConnector(web3React)
   };
 
+  const isMetaMask = detectMetaMask();
+
   useEffect(() => {
-    if (web3.error) {
-      dispatch({ type: "fail", error: web3.error });
+    if (web3React.error) {
+      dispatch({ type: "fail", error: web3React.error });
     }
-  }, [web3.error]);
+  }, [web3React.error]);
 
   if (!connectors.injected.triedAuthorizedConnection) {
     return <>{loader}</>;
   }
 
-  if (web3.active) {
+  if (web3React.active) {
     return <>{children}</>;
   }
 
@@ -99,19 +103,28 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
     <>
       <Flex sx={{ height: "100vh", justifyContent: "center", alignItems: "center" }}>
         <Button onClick={() => dispatch({ type: "activate", connector: connectors.injected })}>
-          <MetaMaskIcon />
-          <Box sx={{ ml: 2 }}>Connect to MetaMask</Box>
+          {isMetaMask ? (
+            <>
+              <MetaMaskIcon />
+              <Box sx={{ ml: 2 }}>Connect to MetaMask</Box>
+            </>
+          ) : (
+            <>
+              <Icon name="plug" size="lg" />
+              <Box sx={{ ml: 2 }}>Connect wallet</Box>
+            </>
+          )}
         </Button>
       </Flex>
 
       <Modal isOpen={connectionState.type === "failed"}>
         <RetryDialog
-          title="Failed to connect to MetaMask"
+          title={isMetaMask ? "Failed to connect to MetaMask" : "Failed to connect wallet"}
           onRetry={() => dispatch({ type: "retry" })}
           onCancel={() => dispatch({ type: "cancel" })}
         >
           <Text sx={{ textAlign: "center" }}>
-            Make sure you're using a supported browser and MetaMask is installed.
+            You might need to install MetaMask or use a different browser.
           </Text>
           <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
             Learn more <Icon size="xs" name="external-link-alt" />
@@ -121,13 +134,17 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
 
       <Modal isOpen={connectionState.type === "activating"}>
         <ConnectionConfirmationDialog
-          title="Confirm connection in MetaMask"
-          icon={<MetaMaskIcon />}
+          title={isMetaMask ? "Confirm connection in MetaMask" : "Confirm connection in your wallet"}
+          icon={isMetaMask ? <MetaMaskIcon /> : <Icon name="wallet" size="lg" />}
           onCancel={() => dispatch({ type: "cancel" })}
         >
           <Text sx={{ textAlign: "center" }}>
-            Confirm the request that's just appeared. If you can't see a request, open your MetaMask
-            extension via your browser.
+            Confirm the request that's just appeared.
+            {isMetaMask ? (
+              <> If you can't see a request, open your MetaMask extension via your browser.</>
+            ) : (
+              <> If you can't see a request, you might have to open your wallet.</>
+            )}
           </Text>
         </ConnectionConfirmationDialog>
       </Modal>
