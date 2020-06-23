@@ -99,13 +99,6 @@ export const EditableRow: React.FC<EditableRowProps> = ({
 }) => {
   const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (editing === label && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [editing, label]);
 
   useEffect(() => {
     setInvalid(false);
@@ -115,9 +108,9 @@ export const EditableRow: React.FC<EditableRowProps> = ({
     <Row {...{ label, unit }}>
       {editing === label ? (
         <Input
+          autoFocus
           sx={{ ...(invalid ? { backgroundColor: "invalid" } : {}) }}
           data-testid={label}
-          ref={inputRef}
           type="number"
           step="any"
           defaultValue={editedAmount}
