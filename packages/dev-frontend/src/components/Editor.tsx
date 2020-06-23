@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Text, Flex, Label, Input } from "theme-ui";
 
 type RowProps = {
