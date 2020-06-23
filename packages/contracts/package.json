@@ -1,6 +1,7 @@
 {
   "name": "@liquity/contracts",
   "version": "1.0.0",
+  "private": true,
   "description": "",
   "main": "truffle-config.js",
   "directories": {
