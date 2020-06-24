@@ -35,8 +35,8 @@ export const Dialog: React.FC<DialogProps> = ({
   onCancel,
   children
 }) => (
-  <Card sx={{ p: 0, borderRadius: 1 }}>
-    {intent ? <Box sx={{ height: "4px", bg: intent, borderRadius: "1rem 1rem 0 0" }} /> : null}
+  <Card sx={{ p: 0, borderRadius: "4px" }}>
+    {intent ? <Box sx={{ height: "4px", bg: intent, borderRadius: "3px 3px 0 0" }} /> : null}
     <Flex
       sx={{
         justifyContent: "space-between",

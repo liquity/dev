@@ -93,10 +93,25 @@ const formCell = {
 } as const;
 
 const overlay = {
+  position: "absolute",
+
   left: 0,
   top: 0,
   width: "100%",
-  height: "100%"
+  height: "100%",
+
+  zIndex: 2
+} as const;
+
+const modalOverlay = {
+  position: "fixed",
+
+  left: 0,
+  top: 0,
+  width: "100vw",
+  height: "100vh",
+
+  zIndex: 4
 } as const;
 
 const theme: Theme = {
@@ -288,7 +303,6 @@ const theme: Theme = {
       position: ["fixed", "relative"],
       width: "100vw",
       top: 0,
-      overflow: "hidden",
       zIndex: 2,
 
       px: [2, "12px", "12px", 5],
@@ -342,16 +356,12 @@ const theme: Theme = {
     loadingOverlay: {
       ...overlay,
 
-      zIndex: 2,
-      position: "absolute",
       backgroundColor: "rgba(255, 255, 255, 0.5)"
     },
 
     modalOverlay: {
-      ...overlay,
+      ...modalOverlay,
 
-      zIndex: 4,
-      position: "fixed",
       backgroundColor: "rgba(0, 0, 0, 0.8)",
 
       display: "flex",
@@ -365,12 +375,10 @@ const theme: Theme = {
     },
 
     infoOverlay: {
-      ...overlay,
+      ...modalOverlay,
 
       display: ["block", "none"],
 
-      zIndex: 1,
-      position: "fixed",
       backgroundColor: "rgba(255, 255, 255, 0.8)"
     }
   },
