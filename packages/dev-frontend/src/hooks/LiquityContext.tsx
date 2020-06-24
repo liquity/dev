@@ -54,7 +54,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         if (network.name && network.name !== "unknown") {
           provider.openWebSocket(...wsParams(network.name));
         } else if (chainId === DEV_CHAIN_ID) {
-          provider.openWebSocket("ws://localhost:8546", chainId);
+          provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
         }
 
         return () => {
