@@ -4,7 +4,7 @@ import { Card, Text, Heading, Link, Box } from "theme-ui";
 import { Decimal, Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib";
 
-type SystemStatsProps = {
+export type SystemStatsProps = {
   variant?: string;
   numberOfTroves: number;
   price: Decimal;

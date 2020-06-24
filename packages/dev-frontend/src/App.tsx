@@ -1,6 +1,6 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { Flex, Spinner, Heading, Text, ThemeProvider, Container, Button } from "theme-ui";
+import { Flex, Spinner, Heading, Text, ThemeProvider, Container } from "theme-ui";
 
 import { Decimal, Difference, Percent } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
@@ -20,10 +20,10 @@ import { RedemptionManager } from "./components/RedemptionManager";
 import { LiquidationManager } from "./components/LiquidationManager";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
-import { Icon } from "./components/Icon";
 import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
+import { SystemStatsPopup } from "./components/SystemStatsPopup";
 
 if (process.env.REACT_APP_DEMO_MODE === "true") {
   const ethereum = new DisposableWalletProvider(
@@ -49,8 +49,6 @@ type LiquityFrontendProps = {
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   const { account, provider, liquity, contracts, contractsVersion, deploymentDate } = useLiquity();
   const storeState = useLiquityStore(provider, account, liquity);
-  const [systemStatsOpen, setSystemStatsOpen] = useState(false);
-  const systemStatsOverlayRef = useRef<HTMLDivElement>(null);
 
   if (!storeState.loaded) {
     return <>{loader}</>;
@@ -87,46 +85,23 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   return (
     <>
       <Header>
-        <Flex sx={{ alignItems: "center" }}>
-          <UserAccount {...{ account, etherBalance, quiBalance }} />
+        <UserAccount {...{ account, etherBalance, quiBalance }} />
 
-          <Button
-            variant="icon"
-            sx={{ display: ["block", "none"] }}
-            onClick={() => setSystemStatsOpen(!systemStatsOpen)}
-          >
-            <Icon name="info-circle" size="2x" />
-          </Button>
-        </Flex>
+        <SystemStatsPopup
+          {...{
+            numberOfTroves,
+            price,
+            total,
+            quiInStabilityPool,
+            contractsVersion,
+            deploymentDate,
+            etherBalance,
+            quiBalance
+          }}
+        />
       </Header>
 
       <Container variant="main">
-        {systemStatsOpen && (
-          <Container
-            variant="infoOverlay"
-            ref={systemStatsOverlayRef}
-            onClick={e => {
-              if (e.target === systemStatsOverlayRef.current) {
-                setSystemStatsOpen(false);
-              }
-            }}
-          >
-            <SystemStats
-              variant="infoPopup"
-              {...{
-                numberOfTroves,
-                price,
-                total,
-                quiInStabilityPool,
-                contractsVersion,
-                deploymentDate,
-                etherBalance,
-                quiBalance
-              }}
-            />
-          </Container>
-        )}
-
         <Container variant="columns">
           <Container variant="left">
             <TroveManager {...{ liquity, troveWithoutRewards, trove, price, total, quiBalance }} />
