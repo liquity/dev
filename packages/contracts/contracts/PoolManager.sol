@@ -440,22 +440,24 @@ contract PoolManager is Ownable, IPoolManager {
         emit ETHGainWithdrawn(user, ETHGain);
     }
 
-    /* Transfer the caller’s entire ETH gain from the Stability Pool to the caller’s CDP, and leaves
-    their compounded deposit in the Stability Pool. */
-    function withdrawFromSPtoCDP(address _hint) external {
-         address user = _msgSender();
-        _requireUserHasDeposit(user); 
+    /* Transfer the caller's entire ETH gain from the Stability Pool to the caller's CDP, and leaves
+    their compounded deposit in the Stability Pool.
+    
+    TODO: Remove _user param and just use _msgSender(). */
+    function withdrawFromSPtoCDP(address _user, address _hint) external {
+        require (_user == _msgSender(), "PoolManager: A user may only withdraw ETH gains to their own trove" );
+        _requireUserHasDeposit(_user); 
        
-        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
-        uint ETHGain = _getCurrentETHGain(user);
+        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_user);
+        uint ETHGain = _getCurrentETHGain(_user);
        
         // Update the recorded deposit value, and deposit snapshots
-        _updateDeposit(user, compoundedCLVDeposit);
+        _updateDeposit(_user, compoundedCLVDeposit);
 
-        _sendETHGainToCDP(user, ETHGain, _hint);
+        _sendETHGainToCDP(_user, ETHGain, _hint);
 
-        emit UserDepositChanged(user, compoundedCLVDeposit); 
-        emit ETHGainWithdrawn(user, ETHGain);
+        emit UserDepositChanged(_user, compoundedCLVDeposit); 
+        emit ETHGainWithdrawn(_user, ETHGain);
     }
 
      /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
