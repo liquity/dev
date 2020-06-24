@@ -51,6 +51,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
       <Box>
         <EditableRow
           label="Deposit"
+          inputId="deposit-lqty"
           amount={editedDeposit.depositAfterLoss.prettify()}
           pendingAmount={pendingDepositChange.nonZero?.prettify()}
           pendingColor={pendingDepositChange.positive ? "success" : "danger"}
@@ -65,6 +66,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         {!originalDeposit.isEmpty && (
           <StaticRow
             label="Gain"
+            inputId="deposit-gain"
             amount={originalDeposit.pendingCollateralGain.prettify(4)}
             color={originalDeposit.pendingCollateralGain.nonZero && "success"}
             unit="ETH"

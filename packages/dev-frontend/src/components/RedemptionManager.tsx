@@ -111,7 +111,7 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
         <Box>
           <EditableRow
             label="Exchange"
-            //hideLabel
+            inputId="redeem-exchange"
             amount={exchangedQui.prettify()}
             unit="LQTY"
             {...{ editingState }}
@@ -121,7 +121,7 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
 
           <EditableRow
             label="Redeem"
-            //hideLabel
+            inputId="redeem-eth"
             amount={exchangedQui.div(price).prettify(4)}
             unit="ETH"
             {...{ editingState }}

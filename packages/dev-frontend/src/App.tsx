@@ -13,6 +13,7 @@ import { TransactionProvider, TransactionMonitor } from "./components/Transactio
 import { TroveManager } from "./components/TroveManager";
 import { UserAccount } from "./components/UserAccount";
 import { SystemStats } from "./components/SystemStats";
+import { SystemStatsPopup } from "./components/SystemStatsPopup";
 import { StabilityDepositManager } from "./components/StabilityDepositManager";
 import { RiskiestTroves } from "./components/RiskiestTroves";
 import { PriceManager } from "./components/PriceManager";
@@ -23,7 +24,6 @@ import { Footer } from "./components/Footer";
 import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
-import { SystemStatsPopup } from "./components/SystemStatsPopup";
 
 if (process.env.REACT_APP_DEMO_MODE === "true") {
   const ethereum = new DisposableWalletProvider(

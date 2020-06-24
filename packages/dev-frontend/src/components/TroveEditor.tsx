@@ -61,6 +61,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
       <Box>
         <EditableRow
           label="Collateral"
+          inputId="trove-collateral"
           amount={edited.collateral.prettify(4)}
           pendingAmount={pendingCollateral?.prettify()}
           pendingColor={pendingCollateral?.positive ? "success" : "danger"}
@@ -74,6 +75,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
         <EditableRow
           label="Debt"
+          inputId="trove-debt"
           amount={edited.debt.prettify()}
           pendingAmount={pendingDebt?.prettify()}
           pendingColor={pendingDebt?.positive ? "danger" : "success"}
@@ -85,6 +87,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
         <StaticRow
           label="Collateral ratio"
+          inputId="trove-collateral-ratio"
           amount={
             collateralRatio?.gt(10)
               ? "× " + collateralRatio.shorten()

@@ -3,13 +3,16 @@ import { Text, Flex, Label, Input } from "theme-ui";
 
 type RowProps = {
   label: string;
+  labelFor?: string;
   unit?: string;
 };
 
-const Row: React.FC<RowProps> = ({ label, unit, children }) => {
+const Row: React.FC<RowProps> = ({ label, labelFor, unit, children }) => {
   return (
     <Flex sx={{ alignItems: "stretch" }}>
-      <Label sx={{ width: unit ? "106px" : "170px" }}>{label}</Label>
+      <Label htmlFor={labelFor} sx={{ width: unit ? "106px" : "170px" }}>
+        {label}
+      </Label>
       {unit && (
         <Label variant="unit" sx={{ width: "64px", px: 0 }}>
           {unit}
@@ -21,7 +24,7 @@ const Row: React.FC<RowProps> = ({ label, unit, children }) => {
 };
 
 type StaticAmountsProps = {
-  label?: string;
+  inputId: string;
   amount: string;
   color?: string;
   pendingAmount?: string;
@@ -31,7 +34,7 @@ type StaticAmountsProps = {
 };
 
 const StaticAmounts: React.FC<StaticAmountsProps> = ({
-  label,
+  inputId,
   amount,
   color,
   pendingAmount,
@@ -42,7 +45,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
   return (
     <Label
       variant="input"
-      data-testid={label}
+      id={inputId}
       sx={{
         ...(invalid ? { backgroundColor: "invalid" } : {}),
         ...(onClick ? { cursor: "text" } : {})
@@ -88,6 +91,7 @@ type EditableRowProps = Omit<
 
 export const EditableRow: React.FC<EditableRowProps> = ({
   label,
+  inputId,
   unit,
   amount,
   color,
@@ -105,12 +109,12 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   }, [editedAmount]);
 
   return (
-    <Row {...{ label, unit }}>
-      {editing === label ? (
+    <Row {...{ label, labelFor: inputId, unit }}>
+      {editing === inputId ? (
         <Input
           autoFocus
           sx={{ ...(invalid ? { backgroundColor: "invalid" } : {}) }}
-          data-testid={label}
+          id={inputId}
           type="number"
           step="any"
           defaultValue={editedAmount}
@@ -126,8 +130,8 @@ export const EditableRow: React.FC<EditableRowProps> = ({
         />
       ) : (
         <StaticAmounts
-          {...{ label, amount, color, pendingAmount, pendingColor, invalid }}
-          onClick={() => setEditing(label)}
+          {...{ inputId, amount, color, pendingAmount, pendingColor, invalid }}
+          onClick={() => setEditing(inputId)}
         />
       )}
     </Row>
