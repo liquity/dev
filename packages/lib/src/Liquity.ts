@@ -731,7 +731,6 @@ export class Liquity {
     const finalTrove = initialTrove.addCollateral(deposit.pendingCollateralGain);
 
     return this.poolManager.withdrawFromSPtoCDP(
-      address,
       await this._findHint(finalTrove, Decimal.from(price), address),
       { ...overrides }
     );
