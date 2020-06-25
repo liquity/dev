@@ -65,37 +65,112 @@ The core Liquity system consists of several smart contracts, which are deployabl
 
 All application logic and data is contained in these contracts - there is no need for a separate database or back end logic running on a web server. In effect, the Ethereum network is itself the Liquity back end. As such, all balances and contract data are public.
 
-The three main contracts - `BorrowerOperations.sol`, `CDPManager.sol` and `PoolManager.sol` - hold the user-facing public functions, and contain most of the internal logic. They control movements of ether and tokens around the system.
+The system has no admin key or human governance. Once deployed, it is fully automated, decentralized and no user holds any special privileges in or control over the system.
+
+The three main contracts - `BorrowerOperations.sol`, `CDPManager.sol` and `PoolManager.sol` - hold the user-facing public functions, and contain most of the internal system logic. Together they control trove state updates and movements of ether and tokens around the system.
 
 ### Core Smart Contracts
 
-`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their CDP: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment.
+`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their CDP: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment. BorrowerOperations functions call in to CDPManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to PoolManager, telling it to move Ether and/or tokens between Pools, where necessary.
 
-`CDPManager.sol` - contains functionality for liquidations and redemptions, and contains the state of each CDP, but does not hold value (i.e. ether / tokens).
+`CDPManager.sol` - contains functionality for liquidations and redemptions. Also  contains the state of each trove - i.e. a record of the trove’s collateral and debt.  The CDPManager does not hold value (i.e. ether / tokens). CDPManager functions call in to PooManager to tell it to move Ether/tokens between Pools, where necessary.
 
-`PoolManager.sol` - contains functionality for Stability Pool operations: depositing and withdrawing tokens. Also directs transfers of ether and tokens between pools.
+`PoolManager.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated ETH rewards. It also directs the transfers of ether and tokens between Pools.
 
 `CLVToken.sol` - the stablecoin token contract, which implements the ERC20 fungible token standard. The contract mints, burns and transfers CLV tokens.
 
-`SortedCDPs.sol` - a doubly linked list that stores addresses of CDP owners, sorted by their individual collateral ratio (ICR). Inserts and re-inserted CDPs at the correct position, based on their ICR.
+`SortedCDPs.sol` - a doubly linked list that stores addresses of CDP owners, sorted by their individual collateral ratio (ICR). It inserts and re-inserts CDPs at the correct position, based on their ICR.
 
-`PriceFeed.sol` - Contains the current ETH:USD price, which the system will use for calculating collateral ratios. Currently, the price is set by the admin. This contract will eventually regularly obtain current and decentralized ETH:USD price data.
+`PriceFeed.sol` - Contains functionality for obtaining the current ETH:USD price, which the system will use for calculating collateral ratios. Currently, the price is a state variable that can be manually set by the admin or manually retrieved from a Chainlink ETH:USD price reference contract. The PriceFeed contract will eventually store no price data, and when called from within other Liquity contracts, will automatically pull the current and decentralized ETH:USD price data from the Chainlink contract.
 
 ### Data and Value Silo Contracts
 
 These contracts hold ether and/or tokens for their respective parts of the system, and contain minimal logic.
 
-`CLVTokenData.sol` - contains the record of stablecoin balances.
+`CLVTokenData.sol` - contains the record of stablecoin balances for all addresses.
 
-`StabilityPool.sol` stores ether and stablecoin tokens deposited by users in the StabilityPool.
+`StabilityPool.sol` - holds an ERC20 balance of all stablecoin tokens deposits, and the total Ether balance of all the ETH earned by depositors.
 
-`ActivePool.sol` stores ether and stablecoin debts of the active loans.
+`ActivePool.sol` - holds the total Ether balance and records the total stablecoin debt of the active loans.
 
-`DefaultPool.sol` holds the ether and stablecoin debts of the liquidated loans.
+`DefaultPool.sol` - holds the total Ether balance and records the total stablecoin debt of the liquidated loans that are pending redistribution to active troves. If a trove has pending Ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
 
 ### Contract Interfaces
 
 `ICDPManager.sol`, `IPool.sol` etc. These provide specification for a contract’s functions, without implementation. They are similar to interfaces in Java or C#.
+
+### Flow of Ether in Liquity
+
+Ether in the system lives in three Pools: the ActivePool, the DefaultPool and the StabilityPool. When an operation is made, Ether is transferred in one of three ways:
+- From a user to a Pool
+- From a Pool to a user
+- From one Pool to another Pool
+
+Ether is recorded on an _individual_ level, but stored in _aggregate_ in a Pool. An active trove with collateral and debt has a struct in the CDPManager that stores its collateral value in a uint, but its actual ether is in the balance of the ActivePool contract.
+
+Likewise, a StabilityPool depositor who has earned some ETH gain from their deposit will have a computed ETH gain based on a variable in the PoolManager. But their actual withdrawable ether is in the balance of the StabilityPool contract.
+
+**Borrower Operations**
+
+| Function                    | ETH quantity      | Path                                |
+|-----------------------------|-------------------|-------------------------------------|
+| openLoan                    | msg.value         | msg.sender->PoolManager->ActivePool |
+| addColl                     | msg.value         | msg.sender->PoolManager->ActivePool |
+| withdrawColl                | _amount parameter | ActivePool->msg.sender              |
+| adjustLoan: adding ETH      | msg.value         | msg.sender->PoolManager->ActivePool |
+| adjustLoan: withdrawing ETH | _amount parameter | ActivePool->msg.sender              |
+| closeLoan                   | _amount parameter | ActivePool->msg.sender              |
+
+**CDP Manager**
+
+| Function                   | ETH quantity                   | Path                      |
+|----------------------------|--------------------------------|---------------------------|
+| liquidate (offset)         | collateral to be offset        | ActivePool->StabilityPool |
+| liquidate (redistribution) | collateral to be redistributed | ActivePool->DefaultPool   |
+| redeemCollateral           | collateral to be swapped       | ActivePool->msg.sender    |
+
+**Pool Manager**
+
+| Function            | ETH quantity                 | Path                                                                        |
+|---------------------|------------------------------|-----------------------------------------------------------------------------|
+| provideToSP         | depositor's current ETH gain | StabilityPool -> msg.sender                                                 |
+| withdrawFromSP      | depositor's current ETH gain | StabilityPool -> msg.sender                                                 |
+| withdrawFromSPtoCDP | depositor's current ETH gain | StabilityPool -> PoolManager ->BorrowerOperations ->PoolManager->ActivePool |
+
+### Flow of ERC20 tokens in Liquity
+
+When a user issues debt from their trove, LQTY tokens are minted to their own address, and a debt is recorded on the trove. Conversely, when they repay their trove’s LQTY debt, LQTY is burned from their address, and the debt on their trove is reduced.
+
+Redemptions burn LQTY from the redeemer’s balance, and reduce the debt of the trove redeemed against.
+
+Liquidations that involve a Stability Pool offset burn tokens from the Stability Pool’s balance, and reduced the LQTY debt of the liquidated trove.
+
+The only time LQTY is transferred to/from a Liquity contract, is when a user deposits LQTY to, or withdraws LQTY from, the StabilityPool.
+
+**Borrower Operations**
+
+| Function                    | ERC20 Operation                     |
+|-----------------------------|-------------------------------------|
+| openLoan                    | ERC20._mint(msg.sender, _CLVAmount) |
+| withdrawCLV                 | ERC20._mint(msg.sender, _CLVAmount) |
+| repayCLV                    | ERC20._burn(msg.sender, _CLVAmount) |
+| adjustLoan: withdrawing CLV | ERC20._mint(msg.sender, _CLVAmount) |
+| adjustLoan: repaying CLV    | ERC20._burn(msg.sender, _CLVAmount) |
+| closeLoan                   | ERC20._burn(msg.sender, _CLVAmount) |
+
+**CDP Manager**
+
+| Function           | ERC20 Operation                                   |
+|--------------------|---------------------------------------------------|
+| liquidate (offset) | ERC20._burn(stabilityPoolAddress, _debtToOffset); |
+| redeemCollateral   | ERC20._burn(msg.sender, _CLV)                     |
+
+**Pool Manager**
+
+| Function       | ERC20 Operation                                              |
+|----------------|--------------------------------------------------------------|
+| provideToSP    | ERC20._transfer(msg.sender, stabilityPoolAddress, _amount)  |
+| withdrawFromSP | ERC20._transfer(stabilityPoolAddress, msg.sender, _amount)  |
 
 ## Expected User Behaviors
 
