@@ -198,11 +198,55 @@ Run all tests with `npx buidler test`, or run a specific test with `npx buidler 
 
 Tests are run against the Buidler EVM.
 
-## Units for Quantities
+## System Quantities - Units and Representation
 
-Unless otherwise specified, all ether quantities are expressed in units of wei.
+Below are all quantity state variables used in Liquity, along with their type, representation and unit.
 
-All ratios, CLV quantities, and the ETH:USD price are integer representations of decimals, to 18 decimal places of precision. For example:
+| Contract      | type     | Quantity                 | Description                                                                      | Representation          | Units                      |
+|---------------|----------|--------------------------|----------------------------------------------------------------------------------|-------------------------|----------------------------|
+| ActivePool    | uint256  | ETH                      | Total ETH in all active troves                                                   | integer                 | wei (E)                    |
+|               | uint256  | CLVDebt                  | Total outstanding CLV Debt in active troves                                      | integer                 | attoCLV (C)                |
+| DefaultPool   | uint256  | ETH                      | Total liquidated ETH, pending reward                                             | integer                 | wei (E)                    |
+|               | uint256  | CLVDebt                  | Total closed CLV debt, pending reward                                            | integer                 | attoCLV (C)                |
+| StabilityPool | uint256  | ETH                      | Total accumulated ETH Gains from StabilityPool                                   | integer                 | wei (E)                    |
+|               | uint256  | totalCLVDeposits         | Total current CLV deposits                                                       | integer                 | attoCLV (C)                |
+|               |          |                          |                                                                                  |                         |                            |
+| PriceFeed     | uint256  | price                    | The last recorded price of 1 Ether, in USD                                       | 18 digit decimal        | dollars per ether ($ / E)  |
+|               |          |                          |                                                                                  |                         |                            |
+| CDPManager    | constant | MCR                      | Min collateral ratio.                                                            | 18 digit decimal        | none ( $ / $)              |
+|               | constant | CCR                      | Critical collateral ratio.                                                       | 18 digit decimal        | none ( $ / $)              |
+|               | uint256  | totalStakes              | sum of all trove stakes                                                          | integer                 | wei (E)                    |
+|               | uint256  | totalStakesSnapshot      | snapshot of totalStakes at last liquidation                                      | integer                 | wei (E)                    |
+|               | uint256  | totalCollateralSnapshot  | snapshot of totalCollateral at last liquidation                                  | integer                 | wei (E)                    |
+|               |          |                          |                                                                                  |                         |                            |
+|               | uint256  | L_ETH                    | accumulated ETH reward-per-unit-staked for troves                                | 18 digit decimal        | none (E / E)               |
+|               | uint256  | L_CLVDebt                | accumulated CLV Debt reward-per-unit-staked for troves                           | 18 digit decimal        | CLV Debt per ether (C / E) |
+|               |          |                          |                                                                                  |                         |                            |
+|               | uint256  | lastETHError_Redist.     | error tracker for the ETH error correction in _redistributeDebtAndColl()         | 18 digit decimal * 1e18 | Ether (E)                  |
+|               | uint256  | lastCLVDebtError_Redist. | error tracker for the CLVDebt error correction in _redistributeDebtAndColl()     | 18 digit decimal * 1e18 | CLV (C)                    |
+|               |          |                          |                                                                                  |                         |                            |
+|               | uint256  | CDP[user].debt           | user's trove debt                                                                | integer                 | attoCLV(C)                 |
+|               | uint256  | CDP[user].coll           | user's trove collateral                                                          | integer                 | wei (E)                    |
+|               | uint256  | CDP[user].stake          | user's trove stake                                                               | integer                 | wei (E)                    |
+|               | uint256  | CDP[user].arrayIndex     | user's index in the trove owners array                                           | integer                 | none                       |
+|               |          |                          |                                                                                  |                         |                            |
+|               |          |                          |                                                                                  |                         |                            |
+| PoolManager   | uint256  | epochToScaleToSum[S]     | Sum term for the accumulated ETH gain per-unit-deposited                         | 18 digit decimal * 1e18 | Ether per CLV  (E / C)     |
+|               | uint256  | P                        | Product term for the compounded-deposit-per-unit-deposited                       | 18 digit decimal        | none (C / C)               |
+|               | uint256  | currentScale             | The number of times the scale of P has shifted by 1e-18                          | integer                 | none                       |
+|               | uint256  | currentEpoch             | The number of times the Stability Pool has been fully emptied by a liquidation   | integer                 | none                       |
+|               |          |                          |                                                                                  |                         |                            |
+|               | uint256  | lastETHError_Offset      | error tracker for the ETH error correction in _computeRewardsPerUnitStaked()     | 18 digit decimal * 1e18 | Ether (E)                  |
+|               | uint256  | lastCLVLossError_Offset  | error tracker for the CLVLoss error correction in _computeRewardsPerUnitStaked() | 18 digit decimal * 1e18 | CLV (C)                    |
+|               |          |                          |                                                                                  |                         |                            |
+| BorrowerOps   | constant | MCR                      | Min collateral ratio.                                                            | 18 digit decimal        | none ( $ / $)              |
+|               | constant | CCR                      | Critical collateral ratio.                                                       | 18 digit decimal        | none ( $ / $)              |
+|               | constant | MIN_COLL_IN_USD          | Minimum collateral value (in USD) for opening loan                               | 18 digit decimal        | none ( $ / $)              |
+
+
+### Integer representations of decimals
+
+Several ratios and the ETH:USD price are integer representations of decimals, to 18 digits of precision. For example:
 
 | **uint representation of decimal** | **Number**    |
 | ---------------------------------- | ------------- |
