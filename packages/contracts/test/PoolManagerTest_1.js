@@ -62,7 +62,7 @@ contract('PoolManager', async accounts => {
 
   it('getTCR(): with 0 ActivePool ETH and 0 ActivePool CLV, returns a TCR of 1', async () => {
     const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
-    const activePoolCLV = await activePool.getCLV({ from: mockPoolManagerAddress })
+    const activePoolCLV = await activePool.getCLVDebt({ from: mockPoolManagerAddress })
     assert.equal(activePoolETH, 0)
     assert.equal(activePoolCLV, 0)
 
@@ -76,7 +76,7 @@ contract('PoolManager', async accounts => {
     await activePool.setPoolManagerAddress(mockPoolManagerAddress)
     await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })
     const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
-    const activePoolCLV = await activePool.getCLV({ from: mockPoolManagerAddress })
+    const activePoolCLV = await activePool.getCLVDebt({ from: mockPoolManagerAddress })
     assert.equal(activePoolETH, _1_Ether)
     assert.equal(activePoolCLV, 0)
 
@@ -95,11 +95,11 @@ contract('PoolManager', async accounts => {
     await activePool.setPoolManagerAddress(mockPoolManagerAddress)
     await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })
     _600_CLV = web3.utils.toWei('3', 'ether')  // assume a price of 1ETH: 200CLV
-    await activePool.increaseCLV(_600_CLV, { from: mockPoolManagerAddress })
+    await activePool.increaseCLVDebt(_600_CLV, { from: mockPoolManagerAddress })
 
     // get recorded values from contracts
     const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
-    const activePoolCLV = await activePool.getCLV({ from: mockPoolManagerAddress })
+    const activePoolCLV = await activePool.getCLVDebt({ from: mockPoolManagerAddress })
     const price = await priceFeed.getPrice()  // use the actual pool manager contract to get the price
     
     const expectedTCR = web3.utils.toBN('66666666666666666666')
@@ -111,7 +111,7 @@ contract('PoolManager', async accounts => {
   })
 
   it('getActiveDebt(): returns the total CLV balance of the ActivePool', async () => {
-    const actualActiveDebt = await activePool.getCLV({ from: poolManager.address })
+    const actualActiveDebt = await activePool.getCLVDebt({ from: poolManager.address })
     const returnedActiveDebt = await poolManager.getActiveDebt()
     assert.equal(actualActiveDebt.toNumber(), returnedActiveDebt.toNumber())
   })
@@ -201,7 +201,7 @@ contract('PoolManager', async accounts => {
   // TODO - extract impact on user to seperate test
   it('withdrawCLV(): increases the CLV of ActivePool and user CLV balance by the correct amount', async () => {
     // check CLV balances before
-    const activePool_CLVBalance_Before = await activePool.getCLV({ from: poolManager.address })
+    const activePool_CLVBalance_Before = await activePool.getCLVDebt({ from: poolManager.address })
     const alice_CLVBalance_Before = await clvToken.balanceOf(alice)
     assert.equal(activePool_CLVBalance_Before, 0)
     assert.equal(alice_CLVBalance_Before, 0)
@@ -211,7 +211,7 @@ contract('PoolManager', async accounts => {
 
     // Check CLV balances after - both should increase.
     // Outstanding CLV is issued to alice, and corresponding CLV debt recorded in activePool
-    const activePool_CLVBalance_After = await activePool.getCLV({ from: poolManager.address })
+    const activePool_CLVBalance_After = await activePool.getCLVDebt({ from: poolManager.address })
     const alice_CLVBalance_After = await clvToken.balanceOf(alice)
 
     assert.equal(activePool_CLVBalance_After, 100)
@@ -223,7 +223,7 @@ contract('PoolManager', async accounts => {
     // issue CLV debt to alice and record in activePool
     await poolManager.withdrawCLV(alice, 100, { from: mockBorrowerOperationsAddress })
 
-    const activePool_CLVBalance_Before = await activePool.getCLV({ from: poolManager.address })
+    const activePool_CLVBalance_Before = await activePool.getCLVDebt({ from: poolManager.address })
     const alice_CLVBalance_Before = await clvToken.balanceOf(alice)
     assert.equal(activePool_CLVBalance_Before, 100)
     assert.equal(alice_CLVBalance_Before, 100)
@@ -233,7 +233,7 @@ contract('PoolManager', async accounts => {
     await poolManager.repayCLV(alice, 100, { from: mockBorrowerOperationsAddress })
 
     // Check repayed CLV is wiped from activePool
-    const activePool_CLVBalance_After = await activePool.getCLV({ from: poolManager.address })
+    const activePool_CLVBalance_After = await activePool.getCLVDebt({ from: poolManager.address })
     assert.equal(activePool_CLVBalance_After, 0)
   })
 
@@ -242,7 +242,7 @@ contract('PoolManager', async accounts => {
     // issue CLV debt to alice and record in activePool
     await poolManager.withdrawCLV(alice, 100, { from: mockBorrowerOperationsAddress })
 
-    const activePool_CLVBalance_Before = await activePool.getCLV({ from: poolManager.address })
+    const activePool_CLVBalance_Before = await activePool.getCLVDebt({ from: poolManager.address })
     const alice_CLVBalance_Before = await clvToken.balanceOf(alice)
     assert.equal(activePool_CLVBalance_Before, 100)
     assert.equal(alice_CLVBalance_Before, 100)
@@ -262,13 +262,13 @@ contract('PoolManager', async accounts => {
     // give activePool 1 ether and 200 CLV.
     await activePool.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
     await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })
-    await activePool.increaseCLV(200, { from: mockPoolManagerAddress })
+    await activePool.increaseCLVDebt(200, { from: mockPoolManagerAddress })
     // reconnect activePool to the real poolManager
     await activePool.setPoolManagerAddress(poolManager.address, { from: owner })
 
     // --- TEST ---
     // activePool CLV, ETH and raw ether before
-    const activePool_CLV_Before = await activePool.getCLV({ from: poolManager.address })
+    const activePool_CLV_Before = await activePool.getCLVDebt({ from: poolManager.address })
     const activePool_ETH_Before = await activePool.getETH({ from: poolManager.address })
     const active_Pool_rawEther_Before = await web3.eth.getBalance(activePool.address)
 
@@ -280,7 +280,7 @@ contract('PoolManager', async accounts => {
     await poolManager.liquidate(200, _1_Ether, { from: mockCDPManagerAddress })
 
     // check activePool CLV, ETH and raw ether after
-    const activePool_CLV_After = await activePool.getCLV({ from: poolManager.address })
+    const activePool_CLV_After = await activePool.getCLVDebt({ from: poolManager.address })
     const activePool_ETH_After = await activePool.getETH({ from: poolManager.address })
     const active_Pool_rawEther_After = await web3.eth.getBalance(activePool.address)
 
@@ -294,13 +294,13 @@ contract('PoolManager', async accounts => {
     // give activePool 1 ether and 200 CLV.
     await activePool.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
     await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })
-    await activePool.increaseCLV(200, { from: mockPoolManagerAddress })
+    await activePool.increaseCLVDebt(200, { from: mockPoolManagerAddress })
     // reconnect activePool to the real poolManager
     await activePool.setPoolManagerAddress(poolManager.address, { from: owner })
 
     // --- TEST ---
     // check defaultPool CLV, ETH and raw ether before
-    const defaultPool_CLV_Before = await defaultPool.getCLV({ from: poolManager.address })
+    const defaultPool_CLV_Before = await defaultPool.getCLVDebt({ from: poolManager.address })
     const defaultPool_ETH_Before = await defaultPool.getETH({ from: poolManager.address })
     const defaultPool_rawEther_Before = await web3.eth.getBalance(defaultPool.address)
 
@@ -312,7 +312,7 @@ contract('PoolManager', async accounts => {
     await poolManager.liquidate(200, _1_Ether, { from: mockCDPManagerAddress })
 
     // check defaultPool CLV, ETH and raw ether after
-    const defaultPool_CLV_After = await defaultPool.getCLV({ from: poolManager.address })
+    const defaultPool_CLV_After = await defaultPool.getCLVDebt({ from: poolManager.address })
     const defaultPool_ETH_After = await defaultPool.getETH({ from: poolManager.address })
     const defaultPool_rawEther_After = await web3.eth.getBalance(defaultPool.address)
 
@@ -326,14 +326,14 @@ contract('PoolManager', async accounts => {
     // give defaultPool 1 ether and 200 CLV
     await defaultPool.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
     await web3.eth.sendTransaction( {to: defaultPool.address, from: mockPoolManagerAddress, value: _1_Ether })
-    await defaultPool.increaseCLV(200, { from: mockPoolManagerAddress })
+    await defaultPool.increaseCLVDebt(200, { from: mockPoolManagerAddress })
 
     // reconnect defaultPool to the real poolManager
     await defaultPool.setPoolManagerAddress(poolManager.address, { from: owner })
 
     // --- TEST ---
     // activePool CLV, ETH and raw ether before
-    const activePool_CLV_Before = await activePool.getCLV({ from: poolManager.address })
+    const activePool_CLV_Before = await activePool.getCLVDebt({ from: poolManager.address })
     const activePool_ETH_Before = await activePool.getETH({ from: poolManager.address })
     const active_Pool_rawEther_Before = await web3.eth.getBalance(activePool.address)
 
@@ -345,7 +345,7 @@ contract('PoolManager', async accounts => {
     await poolManager.moveDistributionRewardsToActivePool(200, _1_Ether, { from: mockCDPManagerAddress })
 
     // check activePool CLV, ETH and raw ether after
-    const activePool_CLV_After = await activePool.getCLV({ from: poolManager.address })
+    const activePool_CLV_After = await activePool.getCLVDebt({ from: poolManager.address })
     const activePool_ETH_After = await activePool.getETH({ from: poolManager.address })
     const active_Pool_rawEther_After = await web3.eth.getBalance(activePool.address)
 
@@ -359,13 +359,13 @@ contract('PoolManager', async accounts => {
     // give defaultPool 1 ether and 200 CLV
     await defaultPool.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
     await web3.eth.sendTransaction( {to: defaultPool.address, from: mockPoolManagerAddress, value: _1_Ether })
-    await defaultPool.increaseCLV(200, { from: mockPoolManagerAddress })
+    await defaultPool.increaseCLVDebt(200, { from: mockPoolManagerAddress })
     // reconnect defaultPool to the real poolManager
     await defaultPool.setPoolManagerAddress(poolManager.address, { from: owner })
 
     // --- TEST ---
     // check defaultPool CLV, ETH and raw ether before
-    const defaultPool_CLV_Before = await defaultPool.getCLV({ from: poolManager.address })
+    const defaultPool_CLV_Before = await defaultPool.getCLVDebt({ from: poolManager.address })
     const defaultPool_ETH_Before = await defaultPool.getETH({ from: poolManager.address })
     const defaultPool_rawEther_Before = await web3.eth.getBalance(defaultPool.address)
 
@@ -377,7 +377,7 @@ contract('PoolManager', async accounts => {
     await poolManager.moveDistributionRewardsToActivePool(200, _1_Ether, { from: mockCDPManagerAddress })
 
     // check defaultPool CLV, ETH and raw ether after
-    const defaultPool_CLV_After = await defaultPool.getCLV({ from: poolManager.address })
+    const defaultPool_CLV_After = await defaultPool.getCLVDebt({ from: poolManager.address })
     const defaultPool_ETH_After = await defaultPool.getETH({ from: poolManager.address })
     const defaultPool_rawEther_After = await web3.eth.getBalance(defaultPool.address)
 
@@ -392,7 +392,7 @@ contract('PoolManager', async accounts => {
       await activePool.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
       await clvToken.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
       await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _10_Ether })
-      await activePool.increaseCLV(5000, { from: mockPoolManagerAddress })
+      await activePool.increaseCLVDebt(5000, { from: mockPoolManagerAddress })
       // use the mockPool to set alice's CLV Balance
       await clvToken.mint(alice, 200, { from: mockPoolManagerAddress })
       // reconnect activePool and CLVToken to the real poolManager
@@ -430,7 +430,7 @@ contract('PoolManager', async accounts => {
     it("redeemCollateral(): decreases the ActivePool ETH and CLV balances by the correct amount", async () => {
       // --- TEST ---
       // check activePool CLV, ETH and raw ether before
-      const activePool_CLV_Before = await activePool.getCLV({ from: poolManager.address })
+      const activePool_CLV_Before = await activePool.getCLVDebt({ from: poolManager.address })
       const activePool_ETH_Before = await activePool.getETH({ from: poolManager.address })
       const active_Pool_rawEther_Before = await web3.eth.getBalance(activePool.address)
 
@@ -442,7 +442,7 @@ contract('PoolManager', async accounts => {
       await poolManager.redeemCollateral(alice, 200, _1_Ether, { from: mockCDPManagerAddress })
 
       // check activePool CLV, ETH and raw ether after
-      const activePool_CLV_After = await activePool.getCLV({ from: poolManager.address })
+      const activePool_CLV_After = await activePool.getCLVDebt({ from: poolManager.address })
       const activePool_ETH_After = await activePool.getETH({ from: poolManager.address })
       const active_Pool_rawEther_After = await web3.eth.getBalance(activePool.address)
 

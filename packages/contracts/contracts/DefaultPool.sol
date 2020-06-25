@@ -12,7 +12,7 @@ contract DefaultPool is Ownable, IPool {
     address public stabilityPoolAddress;
     address public activePoolAddress;
     uint256 public ETH;  // deposited ether tracker
-    uint256 public CLV;  // total outstanding CDP debt
+    uint256 public CLVDebt;  // total outstanding CDP debt
 
     // --- Modifiers ---
 
@@ -53,8 +53,8 @@ contract DefaultPool is Ownable, IPool {
         return ETH;
     }
 
-    function getCLV() external view returns (uint) {
-        return CLV;
+    function getCLVDebt() external view returns (uint) {
+        return CLVDebt;
     }
 
     // --- Pool functionality ---
@@ -67,12 +67,12 @@ contract DefaultPool is Ownable, IPool {
         emit EtherSent(_account, _amount);  
     }
 
-    function increaseCLV(uint _amount) external onlyPoolManager {
-        CLV  = CLV.add(_amount);
+    function increaseCLVDebt(uint _amount) external onlyPoolManager {
+        CLVDebt = CLVDebt.add(_amount);
     }
 
-    function decreaseCLV(uint _amount) external onlyPoolManager {
-        CLV = CLV.sub(_amount); 
+    function decreaseCLVDebt(uint _amount) external onlyPoolManager {
+        CLVDebt = CLVDebt.sub(_amount); 
     }
 
     /* Returns the raw ether balance at DefaultPool address.  

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.5.16;
 
 // Common interface for the Pools.
 interface IPool {
@@ -20,13 +20,13 @@ interface IPool {
     // --- Functions ---
     function getETH() external view returns (uint);
     
-    function getCLV() external view returns (uint);
+    function getCLVDebt() external view returns (uint);
     
     function sendETH(address _account, uint _amount) external;
 
-    function increaseCLV(uint _amount) external;
+    function increaseCLVDebt(uint _amount) external;
 
-    function decreaseCLV(uint _amount) external;
+    function decreaseCLVDebt(uint _amount) external;
 
     function getRawETHBalance() external view returns (uint);
 }

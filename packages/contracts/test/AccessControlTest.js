@@ -313,10 +313,10 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // increaseCLV	
-    it("increaseCLV(): reverts when called by an account that is not PoolManager", async () => {
+    it("increaseCLVDebt(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await activePool.increaseCLV(100, { from: alice })
+        txAlice = await activePool.increaseCLVDebt(100, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
@@ -324,11 +324,11 @@ contract('All Liquity functions with intra-system access control restrictions', 
       }
     })
 
-    // decreaseCLV	
-    it("increaseCLV(): reverts when called by an account that is not PoolManager", async () => {
+    // decreaseCLV
+    it("decreaseCLVDebt(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await activePool.decreaseCLV(100, { from: alice })
+        txAlice = await activePool.decreaseCLVDebt(100, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
@@ -365,10 +365,10 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // increaseCLV	
-    it("increaseCLV(): reverts when called by an account that is not PoolManager", async () => {
+    it("increaseCLVDebt(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await defaultPool.increaseCLV(100, { from: alice })
+        txAlice = await defaultPool.increaseCLVDebt(100, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
@@ -377,10 +377,10 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // decreaseCLV	
-    it("increaseCLV(): reverts when called by an account that is not PoolManager", async () => {
+    it("decreaseCLV(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await defaultPool.decreaseCLV(100, { from: alice })
+        txAlice = await defaultPool.decreaseCLVDebt(100, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
@@ -428,7 +428,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // decreaseCLV	
-    it("increaseCLV(): reverts when called by an account that is not PoolManager", async () => {
+    it("decreaseCLV(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
         txAlice = await stabilityPool.decreaseCLV(100, { from: alice })

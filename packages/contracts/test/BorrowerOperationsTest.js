@@ -917,13 +917,13 @@ contract('BorrowerOperations', async accounts => {
 
     //check before
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
-    const activePool_CLV_Before = await activePool.getCLV()
+    const activePool_CLV_Before = await activePool.getCLVDebt()
     assert.equal(activePool_CLV_Before, 100)
 
     await borrowerOperations.repayCLV(100, alice, { from: alice })
 
     // check after
-    activePool_CLV_After = await activePool.getCLV()
+    activePool_CLV_After = await activePool.getCLVDebt()
     assert.equal(activePool_CLV_After, 0)
   })
 
@@ -1108,7 +1108,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._10_Ether })
 
     const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
-    const activePoolDebtBefore = (await activePool.getCLV()).toString()
+    const activePoolDebtBefore = (await activePool.getCLVDebt()).toString()
 
     assert.equal(debtBefore, mv._100e18 )
     assert.equal(activePoolDebtBefore, mv._100e18 )
@@ -1118,7 +1118,7 @@ contract('BorrowerOperations', async accounts => {
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
-    const activePoolDebtAfter = (await activePool.getCLV()).toString()
+    const activePoolDebtAfter = (await activePool.getCLVDebt()).toString()
 
     assert.equal(debtAfter, debtBefore)
     assert.equal(activePoolDebtAfter, activePoolDebtBefore)
@@ -1327,13 +1327,13 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: _1_Ether })
 
-    const activePool_CLVDebt_Before = (await activePool.getCLV()).toString()
+    const activePool_CLVDebt_Before = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_CLVDebt_Before, mv._100e18)
 
     // Alice adjusts loan - coll increase and debt increase
     await borrowerOperations.adjustLoan(0, mv.negative_50e18, alice, { from: alice, value: mv._1_Ether })
 
-    const activePool_CLVDebt_After = (await activePool.getCLV()).toString()
+    const activePool_CLVDebt_After = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_CLVDebt_After, mv._50e18)
   })
 
@@ -1342,13 +1342,13 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: _1_Ether })
 
-    const activePool_CLVDebt_Before = (await activePool.getCLV()).toString()
+    const activePool_CLVDebt_Before = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_CLVDebt_Before, mv._100e18)
 
     // Alice adjusts loan - coll increase and debt increase
     await borrowerOperations.adjustLoan(0, mv._100e18, alice, { from: alice, value: mv._1_Ether })
 
-    const activePool_CLVDebt_After = (await activePool.getCLV()).toString()
+    const activePool_CLVDebt_After = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_CLVDebt_After, mv._200e18)
   })
 
@@ -1541,7 +1541,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.closeLoan({ from: alice })
 
     // Check after
-    const activePool_Debt_After = (await activePool.getCLV()).toString()
+    const activePool_Debt_After = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_Debt_After, 0)
   })
 
@@ -1652,7 +1652,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isAtMost(th.getDifference(L_CLVDebt, '9000000000000000000'), 100)
 
     const defaultPool_ETH = await defaultPool.getETH()
-    const defaultPool_CLVDebt = await defaultPool.getCLV()
+    const defaultPool_CLVDebt = await defaultPool.getCLVDebt()
 
     // Carol's liquidated coll (1 ETH) and debt (180 CLV) should have entered the Default Pool
     assert.isAtMost(th.getDifference(defaultPool_ETH, _1_Ether), 100)
@@ -1668,7 +1668,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.closeLoan({ from: alice })
 
     const defaultPool_ETH_afterAliceCloses = await defaultPool.getETH()
-    const defaultPool_CLVDebt_afterAliceCloses = await defaultPool.getCLV()
+    const defaultPool_CLVDebt_afterAliceCloses = await defaultPool.getCLVDebt()
 
     assert.isAtMost(th.getDifference(defaultPool_ETH_afterAliceCloses, 250000000000000000), 100)
     assert.isAtMost(th.getDifference(defaultPool_CLVDebt_afterAliceCloses, 45000000000000000000), 100)
@@ -1681,7 +1681,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.closeLoan({ from: bob })
 
     const defaultPool_ETH_afterBobCloses = await defaultPool.getETH()
-    const defaultPool_CLVDebt_afterBobCloses = await defaultPool.getCLV()
+    const defaultPool_CLVDebt_afterBobCloses = await defaultPool.getCLVDebt()
 
     assert.isAtMost(th.getDifference(defaultPool_ETH_afterBobCloses, 0), 100)
     assert.isAtMost(th.getDifference(defaultPool_CLVDebt_afterBobCloses, 0), 100)
@@ -1938,12 +1938,12 @@ contract('BorrowerOperations', async accounts => {
   it("openLoan(): increases CLV debt in ActivePool by correct amount", async () => {
     await borrowerOperations.addColl(whale, whale, { from: whale, value: mv._100_Ether })
 
-    const activePool_CLVDebt_Before = await activePool.getCLV()
+    const activePool_CLVDebt_Before = await activePool.getCLVDebt()
     assert.equal(activePool_CLVDebt_Before, 0)
 
     await borrowerOperations.openLoan(mv._50e18, alice, { from: alice, value: _1_Ether })
 
-    const activePool_CLVDebt_After = await activePool.getCLV()
+    const activePool_CLVDebt_After = await activePool.getCLVDebt()
     assert.equal(activePool_CLVDebt_After, mv._50e18)
   })
 

@@ -50,10 +50,10 @@ contract PoolManager is Ownable, IPoolManager {
         uint epoch;
     }
 
-    /* P: Running product by which to multiply an initial deposit, in order to find the current compounded deposit, 
+    /* Product 'P': Running product by which to multiply an initial deposit, in order to find the current compounded deposit, 
     given a series of liquidations, each of which cancel some CLV debt with the deposit. 
 
-    During its lifetime, a deposit's value evolves from d0 to (d0 * P / P(0) ), where P(0) 
+    During its lifetime, a deposit's value evolves from d(0) to (d(0) * P / P(0) ), where P(0) 
     is the snapshot of P taken at the instant the deposit was made. 18 DP decimal.  */
     uint public P = 1e18;
 
@@ -61,7 +61,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     uint public currentEpoch;  // With each offset that fully empties the Pool, the epoch is incremented by 1
 
-    /* S: During it's lifetime, each deposit d0 earns an ETH gain of ( d0 * [S - S(0)] )/P(0), where S(0) 
+    /* ETH Gain sum 'S': During it's lifetime, each deposit d(0) earns an ETH gain of ( d(0) * [S - S(0)] )/P(0), where S(0) 
     is the snapshot of S taken at the instant the deposit was made.
    
     The 'S' sums are stored in a nested mapping (epoch => scale => sum):
@@ -169,9 +169,9 @@ contract PoolManager is Ownable, IPoolManager {
         uint price = priceFeed.getPrice();
 
         uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getCLV();
+        uint activeDebt = activePool.getCLVDebt();
         uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getCLV();
+        uint closedDebt = defaultPool.getCLVDebt();
 
         uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt); 
@@ -188,11 +188,9 @@ contract PoolManager is Ownable, IPoolManager {
         return TCR;
     }
 
-    // --- Pool interaction functions ---
-
     // Return the total active debt (in CLV) in the system
     function getActiveDebt() external view returns (uint) {
-        return activePool.getCLV();
+        return activePool.getCLVDebt();
     }    
     
     // Return the total active collateral (in ETH) in the system
@@ -202,7 +200,7 @@ contract PoolManager is Ownable, IPoolManager {
     
     // Return the amount of closed debt (in CLV)
     function getClosedDebt() external view returns (uint) {
-        return defaultPool.getCLV();
+        return defaultPool.getCLVDebt();
     }    
     
     // Return the amount of closed collateral (in ETH)
@@ -215,6 +213,8 @@ contract PoolManager is Ownable, IPoolManager {
         return stabilityPool.getCLV();
     }
     
+    // --- Pool interaction functions ---
+
     // Add the received ETH to the total active collateral
     function addColl() external payable onlyBorrowerOperations {
         // Send ETH to Active Pool and increase its recorded ETH balance
@@ -229,29 +229,29 @@ contract PoolManager is Ownable, IPoolManager {
     
     // Issue the specified amount of CLV to _account and increases the total active debt
     function withdrawCLV(address _account, uint _CLV) external onlyBorrowerOperations {
-        activePool.increaseCLV(_CLV);  
+        activePool.increaseCLVDebt(_CLV);  
         CLV.mint(_account, _CLV);  
     }
     
     // Burn the specified amount of CLV from _account and decreases the total active debt
     function repayCLV(address _account, uint _CLV) external onlyBorrowerOperations {
-        activePool.decreaseCLV(_CLV);
+        activePool.decreaseCLVDebt(_CLV);
         CLV.burn(_account, _CLV);
     }           
     
     // Update the Active Pool and the Default Pool when a CDP gets closed
     function liquidate(uint _CLV, uint _ETH) external onlyCDPManager {
         // Transfer the debt & coll from the Active Pool to the Default Pool
-        defaultPool.increaseCLV(_CLV);
-        activePool.decreaseCLV(_CLV);
+        defaultPool.increaseCLVDebt(_CLV);
+        activePool.decreaseCLVDebt(_CLV);
         activePool.sendETH(defaultPoolAddress, _ETH);
     }
 
     // Move a CDP's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
     function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) external onlyCDPManager {
         // Transfer the debt & coll from the Default Pool to the Active Pool
-        defaultPool.decreaseCLV(_CLV);  
-        activePool.increaseCLV(_CLV); 
+        defaultPool.decreaseCLVDebt(_CLV);  
+        activePool.increaseCLVDebt(_CLV); 
         defaultPool.sendETH(activePoolAddress, _ETH); 
     }
 
@@ -259,7 +259,7 @@ contract PoolManager is Ownable, IPoolManager {
     function redeemCollateral(address _account, uint _CLV, uint _ETH) external onlyCDPManager {
         // Update Active Pool CLV, and send ETH to account
         CLV.burn(_account, _CLV); 
-        activePool.decreaseCLV(_CLV);  
+        activePool.decreaseCLVDebt(_CLV);  
 
         activePool.sendETH(_account, _ETH); 
     }
@@ -309,9 +309,9 @@ contract PoolManager is Ownable, IPoolManager {
     /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
     where P(0) is the depositor's snapshot of the product P. */
     function _getCompoundedCLVDeposit(address _user) internal view returns (uint) {
-        uint userDeposit = initialDeposits[_user];
+        uint initialDeposit = initialDeposits[_user];
 
-        if (userDeposit == 0) { return 0; }
+        if (initialDeposit == 0) { return 0; }
 
         uint snapshot_P = snapshot[_user].P; 
         uint scaleSnapshot = snapshot[_user].scale;
@@ -327,15 +327,15 @@ contract PoolManager is Ownable, IPoolManager {
         account for it.  If more than one scale change was made, then the deposit has decreased by a factor of 
         at least 1e-18 -- so return 0.*/
         if (scaleDiff == 0) { 
-            compoundedDeposit = userDeposit.mul(P).div(snapshot_P);
+            compoundedDeposit = initialDeposit.mul(P).div(snapshot_P);
         } else if (scaleDiff == 1) {
-            compoundedDeposit = userDeposit.mul(P).div(snapshot_P).div(1e18);
+            compoundedDeposit = initialDeposit.mul(P).div(snapshot_P).div(1e18);
         } else {
             compoundedDeposit = 0;
         }
 
         // If compounded deposit is less than a billionth of the initial deposit, return 0
-        if (compoundedDeposit < userDeposit.div(1e9)) { return 0; }
+        if (compoundedDeposit < initialDeposit.div(1e9)) { return 0; }
 
         return compoundedDeposit;
     }
@@ -520,12 +520,12 @@ contract PoolManager is Ownable, IPoolManager {
          // Make product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
         uint newProductFactor = _CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_CLVLossPerUnitStaked);
      
-        // Update the ETH reward sum at the current scale
+        // Update the ETH reward sum at the current scale and current epoch
         uint marginalETHGain = _ETHGainPerUnitStaked.mul(P);
         epochToScaleToSum[currentEpoch][currentScale] = epochToScaleToSum[currentEpoch][currentScale].add(marginalETHGain);
         emit S_Updated(epochToScaleToSum[currentEpoch][currentScale]); 
 
-       // If the pool was emptied, increment the epoch and reset the scale and product P
+       // If the Pool was emptied, increment the epoch and reset the scale and product P
         if (newProductFactor == 0) {
             currentEpoch = currentEpoch.add(1);
             currentScale = 0;
@@ -544,7 +544,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal {
         // Cancel the liquidated CLV debt with the CLV in the stability pool
-        activePool.decreaseCLV(_debtToOffset);  
+        activePool.decreaseCLVDebt(_debtToOffset);  
         stabilityPool.decreaseCLV(_debtToOffset); 
        
         // Send ETH from Active Pool to Stability Pool

@@ -267,6 +267,34 @@ contract('PoolManager', async accounts => {
       assert.equal(alice_Snapshot_P_2, P_2)
     })
 
+    // --- withdrawFromSP ---
+
+    it("withdrawFromSP(): reverts when user has no active deposit", async () => {
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._10_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._10_Ether })
+
+      await poolManager.provideToSP(mv._100e18, {from: alice})
+
+      const alice_initialDeposit = (await poolManager.initialDeposits(alice)).toString()
+      const bob_initialDeposit = (await poolManager.initialDeposits(bob)).toString()
+
+      assert.equal(alice_initialDeposit, mv._100e18)
+      assert.equal(bob_initialDeposit,'0')
+
+      const txAlice = await poolManager.withdrawFromSP(mv._100e18, {from: alice})
+      assert.isTrue(txAlice.receipt.status)
+
+
+      try {
+        const txBob = await poolManager.withdrawFromSP(mv._100e18, {from: bob})
+        assert.isFalse(txBob.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+        assert.include(err.message, "User must have a non-zero deposit")
+        
+      }
+    })
+
     it("withdrawFromSP(): partial retrieval - retrieves correct CLV amount and the entire ETH Gain, and updates deposit", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
@@ -625,6 +653,58 @@ contract('PoolManager', async accounts => {
 
     // --- withdrawFromSPtoCDP ---
 
+    it("withdrawFromSPtoCDP(): reverts when user has no active deposit", async () => {
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._10_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._10_Ether })
+
+      await poolManager.provideToSP(mv._100e18, {from: alice})
+
+      const alice_initialDeposit = (await poolManager.initialDeposits(alice)).toString()
+      const bob_initialDeposit = (await poolManager.initialDeposits(bob)).toString()
+
+      assert.equal(alice_initialDeposit, mv._100e18)
+      assert.equal(bob_initialDeposit,'0')
+
+      const txAlice = await poolManager.withdrawFromSPtoCDP(alice, alice, {from: alice})
+      assert.isTrue(txAlice.receipt.status)
+
+      try {
+        const txBob = await poolManager.withdrawFromSPtoCDP(bob, bob, {from: bob})
+        assert.isFalse(txBob.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+        assert.include(err.message, "User must have a non-zero deposit")
+      }
+    })
+
+    it("withdrawFromSPtoCDP(): reverts when user passes an argument != their own addresss", async () => {
+      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._10_Ether })
+      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._10_Ether })
+      await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._10_Ether })
+
+      await poolManager.provideToSP(mv._100e18, {from: alice})
+      await poolManager.provideToSP(mv._100e18, {from: bob})
+      await poolManager.provideToSP(mv._100e18, {from: carol})
+
+      const alice_initialDeposit = (await poolManager.initialDeposits(alice)).toString()
+      const bob_initialDeposit = (await poolManager.initialDeposits(bob)).toString()
+      const carol_initialDeposit = (await poolManager.initialDeposits(carol)).toString()
+
+      assert.equal(alice_initialDeposit, mv._100e18)
+      assert.equal(bob_initialDeposit, mv._100e18)
+      assert.equal(carol_initialDeposit, mv._100e18)
+
+      const txAlice = await poolManager.withdrawFromSPtoCDP(alice, alice, {from: alice})
+      assert.isTrue(txAlice.receipt.status)
+
+      try {
+        const txBob = await poolManager.withdrawFromSPtoCDP(carol, bob, {from: bob})
+        assert.isFalse(txBob.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+        assert.include(err.message, "A user may only withdraw ETH gains to their own trove")
+      }
+    })
 
     it("withdrawFromSPtoCDP(): Applies CLVLoss to user's deposit, and redirects ETH reward to user's CDP", async () => {
       // --- SETUP ---
@@ -674,6 +754,59 @@ contract('PoolManager', async accounts => {
       const CDP_ETH_Increase = (aliceCDP_ETH_After.sub(aliceCDP_ETH_Before)).toString()
 
       assert.equal(CDP_ETH_Increase, '75000000000000000') // expect gain of 0.075 Ether
+    })
+
+    it("withdrawFromSPtoCDP(): Subsequent deposit and withdrawal attempt from same account, with no intermediate liquidations, withdraws zero ETH", async () => {
+      // --- SETUP ---
+      // Whale deposits 1850 CLV in StabilityPool
+      await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
+
+      await borrowerOperations.openLoan('1850000000000000000000', whale, { from: whale, value: mv._50_Ether })
+      await poolManager.provideToSP('1850000000000000000000', { from: whale })
+
+      // 1 CDP opened, 180 CLV withdrawn
+      await borrowerOperations.openLoan('180000000000000000000', defaulter_1, { from: defaulter_1, value: mv._1_Ether })
+
+      // --- TEST ---
+
+      // Alice makes deposit #1: 150 CLV
+      await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._10_Ether })
+      await borrowerOperations.withdrawCLV('150000000000000000000', alice, { from: alice })
+      await poolManager.provideToSP('150000000000000000000', { from: alice })
+
+      // check alice's CDP recorded ETH Before:
+      const aliceCDP_Before = await cdpManager.CDPs(alice)
+      const aliceCDP_ETH_Before = aliceCDP_Before[1]
+      assert.equal(aliceCDP_ETH_Before, mv._10_Ether)
+
+      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      await priceFeed.setPrice('100000000000000000000');
+
+      // defaulter's CDP is closed.
+      await cdpManager.liquidate(defaulter_1, { from: owner })  
+
+      // Alice sends her ETH Gains to her CDP
+      await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
+
+      assert.equal( await poolManager.getCurrentETHGain(alice), 0)
+
+      const ETHinSP_Before = (await stabilityPool.getETH()).toString()
+
+      // Alice attempts second withdrawal from SP to CDP
+      await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
+      assert.equal( await poolManager.getCurrentETHGain(alice), 0)
+
+      // Check ETH in pool does not change
+      const ETHinSP_1 = (await stabilityPool.getETH()).toString()
+      assert.equal(ETHinSP_Before, ETHinSP_1)
+      
+      // Alice attempts third withdrawal (this time, from SP to her own account)
+      await poolManager.withdrawFromSP('150000000000000000000', { from: alice })
+
+      // Check ETH in pool does not change
+      const ETHinSP_2 = (await stabilityPool.getETH()).toString()
+      assert.equal(ETHinSP_Before, ETHinSP_2)
+      
     })
 
     it("withdrawFromSPtoCDP(): decreases StabilityPool ETH and increases activePool ETH", async () => {

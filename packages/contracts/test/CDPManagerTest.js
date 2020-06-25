@@ -108,7 +108,7 @@ contract('CDPManager', async accounts => {
     // check ActivePool ETH and CLV debt before
     const activePool_ETH_Before = (await activePool.getETH()).toString()
     const activePool_RawEther_Before = (await web3.eth.getBalance(activePool.address)).toString()
-    const activePool_CLVDebt_Before = (await activePool.getCLV()).toString()
+    const activePool_CLVDebt_Before = (await activePool.getCLVDebt()).toString()
 
     assert.equal(activePool_ETH_Before, _11_Ether)
     assert.equal(activePool_RawEther_Before, _11_Ether)
@@ -124,7 +124,7 @@ contract('CDPManager', async accounts => {
     // check ActivePool ETH and CLV debt 
     const activePool_ETH_After = (await activePool.getETH()).toString()
     const activePool_RawEther_After = (await web3.eth.getBalance(activePool.address)).toString()
-    const activePool_CLVDebt_After = (await activePool.getCLV()).toString()
+    const activePool_CLVDebt_After = (await activePool.getCLVDebt()).toString()
 
     assert.equal(activePool_ETH_After, _10_Ether)
     assert.equal(activePool_RawEther_After, _10_Ether)
@@ -144,7 +144,7 @@ contract('CDPManager', async accounts => {
     // check DefaultPool ETH and CLV debt before
     const defaultPool_ETH_Before = (await defaultPool.getETH())
     const defaultPool_RawEther_Before = (await web3.eth.getBalance(defaultPool.address)).toString()
-    const defaultPool_CLVDebt_Before = (await defaultPool.getCLV()).toString()
+    const defaultPool_CLVDebt_Before = (await defaultPool.getCLVDebt()).toString()
 
     assert.equal(defaultPool_ETH_Before, '0')
     assert.equal(defaultPool_RawEther_Before, '0')
@@ -159,7 +159,7 @@ contract('CDPManager', async accounts => {
     // check after
     const defaultPool_ETH_After = (await defaultPool.getETH()).toString()
     const defaultPool_RawEther_After = (await web3.eth.getBalance(defaultPool.address)).toString()
-    const defaultPool_CLVDebt_After = (await defaultPool.getCLV()).toString()
+    const defaultPool_CLVDebt_After = (await defaultPool.getCLVDebt()).toString()
 
     assert.equal(defaultPool_ETH_After, _1_Ether)
     assert.equal(defaultPool_RawEther_After, _1_Ether)
@@ -382,6 +382,53 @@ contract('CDPManager', async accounts => {
     assert.isTrue(bob_isInSortedList)
   })
 
+  it("liquidate(): reverts if trove is non-existent", async () => {
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._10_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._10_Ether })
+
+    assert.equal(await cdpManager.getCDPStatus(carol), 0) // check trove non-existent
+
+    assert.isFalse(await sortedCDPs.contains(carol))
+
+    try {
+      const txCarol = await cdpManager.liquidate(carol)
+
+      assert.isFalse(txCarol.receipt.status)
+    } catch (err) {
+      assert.include(err.message, "revert")
+      assert.include(err.message, "Trove does not exist or is closed")
+    }
+  })
+
+  it("liquidate(): reverts if trove has been closed", async () => {
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._10_Ether })
+    await borrowerOperations.openLoan(mv._180e18, bob, { from: bob, value: mv._10_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+
+    assert.isTrue(await sortedCDPs.contains(carol))
+
+    // price drops, Carol ICR falls below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    // Carol liquidated, and her trove is closed
+    const txCarol_L1 = await cdpManager.liquidate(carol)
+    assert.isTrue(txCarol_L1.receipt.status)
+
+    assert.isFalse(await sortedCDPs.contains(carol))
+
+    assert.equal(await cdpManager.getCDPStatus(carol), 2)  // check trove closed
+
+    try {
+      const txCarol_L2 = await cdpManager.liquidate(carol)
+
+      assert.isFalse(txCarol_L2.receipt.status)
+    } catch (err) {
+      assert.include(err.message, "revert")
+      assert.include(err.message, "Trove does not exist or is closed")
+    }
+  })
+
+  it("liquidate(): reverts if CDP is closed", async () => {})
 
   it('liquidateCDPs(): closes every CDP with ICR < MCR', async () => {
     // --- SETUP ---
@@ -633,7 +680,6 @@ contract('CDPManager', async accounts => {
     assert.equal(dennis_Coll, mv._1_Ether)
     assert.equal(erin_Coll, mv._1_Ether)
   })
-
 
   it('redeemCollateral(): performs a partial redemption if the hint has gotten out-of-date', async () => {
     // --- SETUP ---

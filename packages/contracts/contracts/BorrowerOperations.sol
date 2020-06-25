@@ -426,7 +426,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     function _getNewTCRFromTroveChange(int _collChange, int _debtChange, uint _price) internal view returns (uint) {
         uint totalColl = activePool.getETH().add(defaultPool.getETH());
-        uint totalDebt = activePool.getCLV().add(defaultPool.getCLV());
+        uint totalDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());
        
         if (_collChange > 0) {
             totalColl = totalColl.add(Math._intToUint(_collChange));
@@ -450,9 +450,9 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         uint price = priceFeed.getPrice();
 
         uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getCLV();
+        uint activeDebt = activePool.getCLVDebt();
         uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getCLV();
+        uint closedDebt = defaultPool.getCLVDebt();
 
         uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt); 

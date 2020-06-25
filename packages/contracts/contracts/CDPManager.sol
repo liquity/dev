@@ -780,9 +780,9 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint price = priceFeed.getPrice();
 
         uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getCLV();
+        uint activeDebt = activePool.getCLVDebt();
         uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getCLV();
+        uint closedDebt = defaultPool.getCLVDebt();
 
         uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt); 
@@ -797,7 +797,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     }
 
     function _requireCDPisActive(address _user) internal view {
-        require(CDPs[_user].status == Status.active, "CDPManager: CDP does not exist or is closed");
+        require(CDPs[_user].status == Status.active, "CDPManager: Trove does not exist or is closed");
     }
 
     // --- Trove property getters ---
