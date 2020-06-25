@@ -73,7 +73,7 @@ The three main contracts - `BorrowerOperations.sol`, `CDPManager.sol` and `PoolM
 
 `BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their CDP: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment. BorrowerOperations functions call in to CDPManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to PoolManager, telling it to move Ether and/or tokens between Pools, where necessary.
 
-`CDPManager.sol` - contains functionality for liquidations and redemptions. Also  contains the state of each trove - i.e. a record of the trove’s collateral and debt.  The CDPManager does not hold value (i.e. ether / tokens). CDPManager functions call in to PooManager to tell it to move Ether/tokens between Pools, where necessary.
+`CDPManager.sol` - contains functionality for liquidations and redemptions. Also  contains the state of each trove - i.e. a record of the trove’s collateral and debt.  The CDPManager does not hold value (i.e. ether / tokens). CDPManager functions call in to PooManager to tell it to move ether/tokens between Pools, where necessary.
 
 `PoolManager.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated ETH rewards. It also directs the transfers of ether and tokens between Pools.
 
@@ -89,11 +89,11 @@ These contracts hold ether and/or tokens for their respective parts of the syste
 
 `CLVTokenData.sol` - contains the record of stablecoin balances for all addresses.
 
-`StabilityPool.sol` - holds an ERC20 balance of all stablecoin tokens deposits, and the total Ether balance of all the ETH earned by depositors.
+`StabilityPool.sol` - holds an ERC20 balance of all stablecoin tokens deposits, and the total ether balance of all the ETH earned by depositors.
 
-`ActivePool.sol` - holds the total Ether balance and records the total stablecoin debt of the active loans.
+`ActivePool.sol` - holds the total ether balance and records the total stablecoin debt of the active loans.
 
-`DefaultPool.sol` - holds the total Ether balance and records the total stablecoin debt of the liquidated loans that are pending redistribution to active troves. If a trove has pending Ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
+`DefaultPool.sol` - holds the total ether balance and records the total stablecoin debt of the liquidated loans that are pending redistribution to active troves. If a trove has pending ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
 
 ### Contract Interfaces
 
@@ -101,12 +101,12 @@ These contracts hold ether and/or tokens for their respective parts of the syste
 
 ### Flow of Ether in Liquity
 
-Ether in the system lives in three Pools: the ActivePool, the DefaultPool and the StabilityPool. When an operation is made, Ether is transferred in one of three ways:
+Ether in the system lives in three Pools: the ActivePool, the DefaultPool and the StabilityPool. When an operation is made, ether is transferred in one of three ways:
 - From a user to a Pool
 - From a Pool to a user
 - From one Pool to another Pool
 
-Ether is recorded on an _individual_ level, but stored in _aggregate_ in a Pool. An active trove with collateral and debt has a struct in the CDPManager that stores its collateral value in a uint, but its actual ether is in the balance of the ActivePool contract.
+Ether is recorded on an _individual_ level, but stored in _aggregate_ in a Pool. An active trove with collateral and debt has a struct in the CDPManager that stores its ether collateral value in a uint, but its actual ether is in the balance of the ActivePool contract.
 
 Likewise, a StabilityPool depositor who has earned some ETH gain from their deposit will have a computed ETH gain based on a variable in the PoolManager. But their actual withdrawable ether is in the balance of the StabilityPool contract.
 
@@ -204,16 +204,16 @@ Below are all quantity state variables used in Liquity, along with their type, r
 
 | Contract      | type     | Quantity                 | Description                                                                      | Representation          | Units                      |
 |---------------|----------|--------------------------|----------------------------------------------------------------------------------|-------------------------|----------------------------|
-| ActivePool    | uint256  | ETH                      | Total ETH in all active troves                                                   | integer                 | wei (E)                    |
+| **ActivePool**    | uint256  | ETH                      | Total ETH in all active troves                                                   | integer                 | wei (E)                    |
 |               | uint256  | CLVDebt                  | Total outstanding CLV Debt in active troves                                      | integer                 | attoCLV (C)                |
-| DefaultPool   | uint256  | ETH                      | Total liquidated ETH, pending reward                                             | integer                 | wei (E)                    |
+| **DefaultPool**   | uint256  | ETH                      | Total liquidated ETH, pending reward                                             | integer                 | wei (E)                    |
 |               | uint256  | CLVDebt                  | Total closed CLV debt, pending reward                                            | integer                 | attoCLV (C)                |
-| StabilityPool | uint256  | ETH                      | Total accumulated ETH Gains from StabilityPool                                   | integer                 | wei (E)                    |
+| **StabilityPool** | uint256  | ETH                      | Total accumulated ETH Gains from StabilityPool                                   | integer                 | wei (E)                    |
 |               | uint256  | totalCLVDeposits         | Total current CLV deposits                                                       | integer                 | attoCLV (C)                |
 |               |          |                          |                                                                                  |                         |                            |
-| PriceFeed     | uint256  | price                    | The last recorded price of 1 Ether, in USD                                       | 18 digit decimal        | dollars per ether ($ / E)  |
+| **PriceFeed**     | uint256  | price                    | The last recorded price of 1 Ether, in USD                                       | 18 digit decimal        | dollars per ether ($ / E)  |
 |               |          |                          |                                                                                  |                         |                            |
-| CDPManager    | constant | MCR                      | Min collateral ratio.                                                            | 18 digit decimal        | none ( $ / $)              |
+| **CDPManager**    | constant | MCR                      | Min collateral ratio.                                                            | 18 digit decimal        | none ( $ / $)              |
 |               | constant | CCR                      | Critical collateral ratio.                                                       | 18 digit decimal        | none ( $ / $)              |
 |               | uint256  | totalStakes              | sum of all trove stakes                                                          | integer                 | wei (E)                    |
 |               | uint256  | totalStakesSnapshot      | snapshot of totalStakes at last liquidation                                      | integer                 | wei (E)                    |
@@ -231,7 +231,7 @@ Below are all quantity state variables used in Liquity, along with their type, r
 |               | uint256  | CDP[user].arrayIndex     | user's index in the trove owners array                                           | integer                 | none                       |
 |               |          |                          |                                                                                  |                         |                            |
 |               |          |                          |                                                                                  |                         |                            |
-| PoolManager   | uint256  | epochToScaleToSum[S]     | Sum term for the accumulated ETH gain per-unit-deposited                         | 18 digit decimal * 1e18 | Ether per CLV  (E / C)     |
+| **PoolManager**   | uint256  | epochToScaleToSum[S]     | Sum term for the accumulated ETH gain per-unit-deposited                         | 18 digit decimal * 1e18 | Ether per CLV  (E / C)     |
 |               | uint256  | P                        | Product term for the compounded-deposit-per-unit-deposited                       | 18 digit decimal        | none (C / C)               |
 |               | uint256  | currentScale             | The number of times the scale of P has shifted by 1e-18                          | integer                 | none                       |
 |               | uint256  | currentEpoch             | The number of times the Stability Pool has been fully emptied by a liquidation   | integer                 | none                       |
@@ -239,7 +239,7 @@ Below are all quantity state variables used in Liquity, along with their type, r
 |               | uint256  | lastETHError_Offset      | error tracker for the ETH error correction in _computeRewardsPerUnitStaked()     | 18 digit decimal * 1e18 | Ether (E)                  |
 |               | uint256  | lastCLVLossError_Offset  | error tracker for the CLVLoss error correction in _computeRewardsPerUnitStaked() | 18 digit decimal * 1e18 | CLV (C)                    |
 |               |          |                          |                                                                                  |                         |                            |
-| BorrowerOps   | constant | MCR                      | Min collateral ratio.                                                            | 18 digit decimal        | none ( $ / $)              |
+| **BorrowerOps**   | constant | MCR                      | Min collateral ratio.                                                            | 18 digit decimal        | none ( $ / $)              |
 |               | constant | CCR                      | Critical collateral ratio.                                                       | 18 digit decimal        | none ( $ / $)              |
 |               | constant | MIN_COLL_IN_USD          | Minimum collateral value (in USD) for opening loan                               | 18 digit decimal        | none ( $ / $)              |
 
