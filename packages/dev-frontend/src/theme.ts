@@ -184,11 +184,6 @@ const theme: Theme = {
       ":enabled:hover": { backgroundColor: "secondary" }
     },
 
-    success: {
-      ...button,
-      backgroundColor: "success"
-    },
-
     danger: {
       ...button,
       backgroundColor: "danger",
