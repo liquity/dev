@@ -1,5 +1,40 @@
 # Liquity System Summary
 
+- [Liquity Overview](#liquity-overview)
+  * [Liquidation](#liquidation)
+  * [Rewards From Liquidations](#rewards-from-liquidations)
+  * [Recovery Mode](#recovery-mode)
+  * [Project Structure](#project-structure)
+    + [Directories](#directories)
+  * [System Architecture](#system-architecture)
+    + [Core Smart Contracts](#core-smart-contracts)
+    + [Data and Value Silo Contracts](#data-and-value-silo-contracts)
+    + [Contract Interfaces](#contract-interfaces)
+    + [Flow of Ether in Liquity](#flow-of-ether-in-liquity)
+    + [Flow of ERC20 tokens in Liquity](#flow-of-erc20-tokens-in-liquity)
+  * [Expected User Behaviors](#expected-user-behaviors)
+  * [Contract Ownership and Function Permissions](#contract-ownership-and-function-permissions)
+  * [Deployment to a Development Blockchain](#deployment-to-a-development-blockchain)
+  * [Running Tests](#running-tests)
+  * [System Quantities - Units and Representation](#system-quantities---units-and-representation)
+    + [Integer representations of decimals](#integer-representations-of-decimals)
+  * [Public Data](#public-data)
+  * [Public User-Facing Functions](#public-user-facing-functions)
+  * [Supplying Hints to CDP operations](#supplying-hints-to-cdp-operations)
+  * [Math Proofs](#math-proofs)
+  * [Development](#development)
+    + [Prerequisites](#prerequisites)
+      - [Making node-gyp work](#making-node-gyp-work)
+    + [Top-level scripts](#top-level-scripts)
+      - [Run all tests](#run-all-tests)
+      - [Deploy contracts to a testnet](#deploy-contracts-to-a-testnet)
+      - [Start a local blockchain and deploy the contracts](#start-a-local-blockchain-and-deploy-the-contracts)
+      - [Start dev-frontend in development mode](#start-dev-frontend-in-development-mode)
+      - [Start dev-frontend in demo mode](#start-dev-frontend-in-demo-mode)
+      - [Build dev-frontend for production](#build-dev-frontend-for-production)
+
+## Liquity Overview
+
 ![Tests](https://github.com/cvalkan/cleverage/workflows/CI/badge.svg) [![Frontend status](https://img.shields.io/uptimerobot/status/m785036778-7edf816c69dafd2d19c45491?label=Frontend&logo=nginx&logoColor=white)](https://devui.liquity.org/internal) ![uptime](https://img.shields.io/uptimerobot/ratio/7/m785036778-7edf816c69dafd2d19c45491) [![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32) [![Docker Pulls](https://img.shields.io/docker/pulls/liquity/dev-frontend?label=dev-frontend%20pulls&logo=docker&logoColor=white)](https://hub.docker.com/r/liquity/dev-frontend)
 
 Liquity is a collateralized stablecoin platform. Users can lock up ether, and issue stablecoin tokens (CLV) to their own Ethereum address, and subsequently transfer those tokens to any other Ethereum address.
