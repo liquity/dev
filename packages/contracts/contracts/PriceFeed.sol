@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 
 import "./Interfaces/ICDPManager.sol";
@@ -18,15 +18,13 @@ contract PriceFeed is Ownable, IPriceFeed {
     address public cdpManagerAddress;
     address public poolManagerAddress;
     
-    ICDPManager cdpManager;
-
     // Mainnet Chainlink aggregator
     address public priceAggregatorAddress;
-    IDeployedAggregator priceAggregator;
+    IDeployedAggregator public priceAggregator;
 
     // Testnet Chainlink aggregator
     address public priceAggregatorAddress_Testnet;
-    AggregatorInterface priceAggregator_Testnet;
+    AggregatorInterface public priceAggregator_Testnet;
 
     event PriceUpdated(uint256 _newPrice);
     event CDPManagerAddressChanged(address _cdpManagerAddress);
@@ -45,7 +43,6 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     function setCDPManagerAddress(address _cdpManagerAddress) external onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
-        cdpManager = ICDPManager(_cdpManagerAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
     }
 

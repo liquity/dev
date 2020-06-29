@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity 0.5.16;
 
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
@@ -15,7 +15,7 @@ contract CLVTokenData is Ownable {
     mapping (address => mapping (address => uint256)) public allowances;
 
     // CLV token logic contract address
-    address clvTokenAddress;
+    address public clvTokenAddress;
 
     constructor() public {
         clvTokenAddress = _msgSender();

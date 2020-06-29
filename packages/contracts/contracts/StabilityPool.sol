@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import './Interfaces/IStabilityPool.sol';
 import "./Dependencies/SafeMath.sol";
@@ -63,11 +63,11 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     function sendETH(address _account, uint _amount) external onlyPoolManager {
         ETH = ETH.sub(_amount);
-        (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
-        assert(success == true);
-    
         emit ETHBalanceUpdated(ETH);
         emit EtherSent(_account, _amount);
+
+        (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
+        assert(success == true);
     }
 
     function increaseCLV(uint _amount) external onlyPoolManager () {

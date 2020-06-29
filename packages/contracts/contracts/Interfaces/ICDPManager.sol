@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity >=0.5.16;
 
 // Common interface for the CDP Manager.
 interface ICDPManager {
@@ -29,8 +29,6 @@ interface ICDPManager {
     function setPoolManager(address _poolManagerAddress) external;
 
     function setPriceFeed(address _priceFeedAddress) external;
-
-    function setCLVToken(address _clvTokenAddress) external;
 
     function setSortedCDPs(address _sortedCDPsAddress) external;
 

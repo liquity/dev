@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -32,10 +32,9 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     event CDPManagerAddressChanged(address _newCDPlManagerAddress);
     event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
 
-    IBorrowerOperations borrowerOperations;
     address public borrowerOperationsAddress;
 
-    ICDPManager cdpManager;
+    ICDPManager public cdpManager;
     address public CDPManagerAddress;
 
     // Information for a node in the list
@@ -54,7 +53,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         mapping (address => Node) nodes;     // Track the corresponding ids for each node in the list
     }
 
-    Data data;
+    Data public data;
 
     // --- Modifiers ---
 
@@ -85,7 +84,6 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
     function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
         borrowerOperationsAddress = _borrowerOperationsAddress;
-        borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
     }
 

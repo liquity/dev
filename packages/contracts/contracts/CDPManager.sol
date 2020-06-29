@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -19,33 +19,28 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant public MIN_COLL_IN_USD = 20000000000000000000;
     
     // --- Connected contract declarations ---
 
-    IBorrowerOperations borrowerOperations;
     address public borrowerOperationsAddress;
 
-    IPoolManager poolManager;
+    IPoolManager public poolManager;
     address public poolManagerAddress;
 
-    IPool activePool;
+    IPool public activePool;
     address public activePoolAddress;
 
-    IPool defaultPool;
+    IPool public defaultPool;
     address public defaultPoolAddress;
 
-    ICLVToken CLV; 
-    address public clvTokenAddress;
-
-    IPriceFeed priceFeed;
+    IPriceFeed public priceFeed;
     address public priceFeedAddress;
 
-    IStabilityPool stabilityPool;
+    IStabilityPool public stabilityPool;
     address public stabilityPoolAddress;
 
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
-    ISortedCDPs sortedCDPs;
+    ISortedCDPs public sortedCDPs;
     address public sortedCDPsAddress;
 
     // --- Data structures ---
@@ -90,8 +85,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     address[] public CDPOwners;
 
     // Error trackers for the trove redistribution calculation
-    uint lastETHError_Redistribution;
-    uint lastCLVDebtError_Redistribution;
+    uint public lastETHError_Redistribution;
+    uint public lastCLVDebtError_Redistribution;
 
      // --- Events --- 
 
@@ -117,7 +112,6 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
         borrowerOperationsAddress = _borrowerOperationsAddress;
-        borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
     }
     
@@ -149,12 +143,6 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(priceFeedAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
-    }
-
-    function setCLVToken(address _clvTokenAddress) external onlyOwner {
-        clvTokenAddress = _clvTokenAddress;
-        CLV = ICLVToken(_clvTokenAddress);
-        emit CLVTokenAddressChanged(_clvTokenAddress);
     }
 
     function setSortedCDPs(address _sortedCDPsAddress) external onlyOwner {

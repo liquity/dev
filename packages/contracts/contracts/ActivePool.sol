@@ -1,9 +1,6 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import './Interfaces/IPool.sol';
-// import '@openzeppelin/contracts/ownership/Ownable.sol';
-// import '@openzeppelin/contracts/math/SafeMath.sol';
-// import "@nomiclabs/buidler/console.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -64,10 +61,10 @@ contract ActivePool is Ownable, IPool {
 
     function sendETH(address _account, uint _amount) public onlyPoolManager {
         ETH = ETH.sub(_amount);  
+        emit EtherSent(_account, _amount);  
+
         (bool success, ) = _account.call.value(_amount)(""); //  use call.value()('') as per Consensys latest advice 
         assert(success == true); 
-       
-        emit EtherSent(_account, _amount);  
     }
 
     function increaseCLVDebt(uint _amount) external onlyPoolManager () {

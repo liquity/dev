@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import "./Interfaces/ICLVToken.sol";
 import "./CLVTokenData.sol";
@@ -15,7 +15,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
 
     uint256 public _totalSupply;
 
-    CLVTokenData clvTokenData;
+    CLVTokenData public clvTokenData;
     address public tokenDataAddress;
 
     constructor() public {

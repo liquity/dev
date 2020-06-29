@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -20,23 +20,23 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     // --- Connected contract declarations ---
 
-    ICDPManager cdpManager;
+    ICDPManager public cdpManager;
     address public cdpManagerAddress;
 
-    IPoolManager poolManager;
+    IPoolManager public poolManager;
     address public poolManagerAddress;
 
-    IPool activePool;
+    IPool public activePool;
     address public activePoolAddress;
 
-    IPool defaultPool;
+    IPool public defaultPool;
     address public defaultPoolAddress;
 
-    IPriceFeed priceFeed;
+    IPriceFeed public priceFeed;
     address public priceFeedAddress;
 
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
-    ISortedCDPs sortedCDPs;
+    ISortedCDPs public sortedCDPs;
     address public sortedCDPsAddress;
 
       // --- Events --- 

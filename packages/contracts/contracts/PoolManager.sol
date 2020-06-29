@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/IPool.sol';
@@ -18,16 +18,15 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Connected contract declarations ---
 
-    IBorrowerOperations borrowerOperations;
+    IBorrowerOperations public borrowerOperations;
     address public borrowerOperationsAddress;
 
     address public cdpManagerAddress;
-    ICDPManager cdpManager = ICDPManager(cdpManagerAddress);
 
-    IPriceFeed priceFeed;
+    IPriceFeed public priceFeed;
     address public priceFeedAddress;
 
-    ICLVToken CLV;
+    ICLVToken public CLV;
     address public clvAddress;
 
     IStabilityPool public stabilityPool;
@@ -74,8 +73,8 @@ contract PoolManager is Ownable, IPoolManager {
     mapping (address => Snapshot) public snapshot;
 
     // Error trackers for the error correction in the offset calculation
-    uint lastETHError_Offset;
-    uint lastCLVLossError_Offset;
+    uint public lastETHError_Offset;
+    uint public lastCLVLossError_Offset;
 
     // --- Events ---
 
@@ -123,7 +122,6 @@ contract PoolManager is Ownable, IPoolManager {
 
     function setCDPManagerAddress(address _cdpManagerAddress) external onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
-        cdpManager = ICDPManager(_cdpManagerAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
     }
 

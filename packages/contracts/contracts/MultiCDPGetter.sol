@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import "./CDPManager.sol";
@@ -16,8 +16,8 @@ contract MultiCDPGetter {
         uint snapshotCLVDebt;
     }
 
-    CDPManager cdpManager; // XXX CDPs missing from ICDPManager?
-    ISortedCDPs sortedCDPs;
+    CDPManager public cdpManager; // XXX CDPs missing from ICDPManager?
+    ISortedCDPs public sortedCDPs;
 
     constructor(CDPManager _cdpManager, ISortedCDPs _sortedCDPs) public {
         cdpManager = _cdpManager;

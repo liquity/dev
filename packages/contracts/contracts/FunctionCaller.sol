@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import './Interfaces/ICDPManager.sol';
 import './Interfaces/ISortedCDPs.sol';
