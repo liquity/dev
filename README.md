@@ -24,6 +24,7 @@
   * [Public User-Facing Functions](#public-user-facing-functions)
   * [Supplying Hints to CDP operations](#supplying-hints-to-cdp-operations)
   * [Math Proofs](#math-proofs)
+  * [Definitions](#definitions)
   * [Development](#development)
     + [Prerequisites](#prerequisites)
       - [Making node-gyp work](#making-node-gyp-work)
@@ -404,6 +405,60 @@ In particular, we have:
 - A derivation of a formula and implementation for a highly scalable (O(1) complexity) reward distribution in the Stability Pool, involving compounding and decreasing stakes.
 
 PDFs of these can be found in https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs
+
+## Definitions
+
+_**Trove:**_  a collateralized debt position, bound to a single Ethereum address. Also referred to as a “CDP”.
+
+_**Active trove:**_ an Ethereum address owns an “active trove” if there is a node in the sortedCDPs list with ID equal to the address, and non-zero collateral is recorded on the CDP struct for that address.  
+
+_**Closed trove:**_ a trove that was once active, but now has zero debt and zero collateral recorded on its struct, and there is no node in the sortedCDPs list with ID equal to the owning address.
+
+_**Active collateral:**_ the amount of ETH collateral recorded on a trove’s struct 
+
+_**Active debt:**_ the amount of CLV debt recorded on a trove’s struct
+
+_**Entire collateral:**_ the sum of a trove’s active collateral plus its pending collateral rewards accumulated from distributions
+
+_**Entire debt:**_ the sum of a trove’s active debt plus its pending debt rewards accumulated from distributions
+
+_**Individual collateral ratio (ICR):**_ a trove's ICR is the ratio of the dollar value of its entire collateral at the current ETH:USD price, to its entire debt
+
+_**Total active collateral:**_ the sum of active collateral over all troves. Equal to the ETH in the ActivePool.
+
+_**Total active debt:**_ the sum of active debt over all troves. Equal to the CLV in the ActivePool.
+
+_**Total defaulted collateral:**_ the total ETH collateral in the DefaultPool
+
+_**Total defaulted debt:**_ the total CLV debt in the DefaultPool
+
+_**Entire system collateral:**_ the sum of the collateral in the ActivePool and DefaultPool
+
+_**Entire system debt:**_ the sum of the debt in the ActivePool and DefaultPool
+
+_**Total collateral ratio (TCR):**_ the ratio of the dollar value of the entire system collateral at the current ETH:USD price, to the entire system debt
+
+_**Critical collateral ratio (CCR):**_ 150%. When the TCR is below the CCR, the system enters Recovery Mode.
+
+_**Borrower:**_ an externally owned account or contract that locks collateral in a trove and issues CLV tokens to their own address.They “borrow” CLV tokens against their ETH collateral.
+
+_**Depositor:**_ an externally owned account or contract that has assigned CLV tokens to the Stability Pool, in order to earn returns from liquidations, and receive GT token issuance.
+
+_**Redemption:**_ the act of swapping CLV tokens with the system, in return for an equivalent value of ETH. Any account with a CLV token balance may redeem them, whether or not they are a borrower.
+
+When CLV is redeemed for ETH, the ETH is always withdrawn from the lowest collateral troves, in ascending order of their collateral ratio. A redeemer can not selectively target troves with which to swap CLV for ETH.
+
+_**Repayment:**_ when a borrower sends CLV tokens to their own trove, reducing their debt, and increasing their collateral ratio.
+
+_**Retrieval:**_ when a borrower with an active trove withdraws some or all of their ETH collateral from their own trove, either reducing their collateral ratio, or closing their trove (if they have zero debt and withdraw all their ETH)
+
+_**Liquidation:**_ the act of force-closing an undercollateralized trove and redistributing its collateral and debt. When the Stability Pool is sufficiently large, the liquidated debt is offset with the Stability Pool, and the ETH distributed to depositors.  If the liquidated debt can not be offset with the Pool, the system redistributes the liquidated collateral and debt directly to the active troves with >110% collateral ratio.
+
+Liquidation functionality is permissionless and publically available - anyone may liquidate an undercollateralized trove, or batch liquidate troves in ascending order of collateral ratio.
+
+_**Offset:**_ cancellation of liquidated debt with CLV in the Stability Pool, and assignment of liquidated collateral to Stability Pool depositors, in proportion to their deposit.
+
+_**Distribution:**_ assignment of liquidated debt and collateral directly to active troves, in proportion to their collateral.
 
 ## Development
 
