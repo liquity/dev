@@ -428,7 +428,212 @@ contract('CDPManager', async accounts => {
     }
   })
 
-  it("liquidate(): reverts if CDP is closed", async () => {})
+  it("liquidate(): does nothing if trove has >= 110% ICR", async () => {
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
+    await borrowerOperations.openLoan(mv._180e18, bob, { from: bob, value: mv._10_Ether })
+   
+    const TCR_Before = (await poolManager.getTCR()).toString()
+    const listSize_Before = (await sortedCDPs.getSize()).toString()
+
+    // Attempt to liquidate bob
+    await cdpManager.liquidate(bob)
+
+    // check bob active, check whale active
+    assert.isTrue((await sortedCDPs.contains(bob)))
+    assert.isTrue((await sortedCDPs.contains(whale)))
+
+    const TCR_After = (await poolManager.getTCR()).toString()
+    const listSize_After = (await sortedCDPs.getSize()).toString()
+   
+    assert.equal(TCR_Before, TCR_After)
+    assert.equal(listSize_Before, listSize_After)
+  })
+
+  it("liquidate(): does not affect the SP deposit or ETH gain when called on an SP depositor's address that has no trove", async () => {
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
+    await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._2_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+
+    // Bob sends tokens to Dennis, who has no trove
+    await clvToken.transfer(dennis, mv._200e18, {from: bob})
+
+    //Dennis provides 200 CLV to SP
+    await poolManager.provideToSP(mv._200e18, {from: dennis})
+
+    // Carol gets liquidated
+    await priceFeed.setPrice(mv._100e18)
+    await cdpManager.liquidate(carol)
+
+    // Check Dennis' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
+    const dennis_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(dennis)).toString()
+    const dennis_ETHGain_Before = (await poolManager.getCurrentETHGain(dennis)).toString()
+    assert.isAtMost(th.getDifference(dennis_Deposit_Before, mv._100e18), 1000)
+    assert.isAtMost(th.getDifference(dennis_ETHGain_Before, mv._1_Ether), 1000)
+
+    // Attempt to liquidate Dennis
+    try {
+      const txDennis = await cdpManager.liquidate(dennis)
+      assert.isFalse(txDennis.receipt.status)
+    } catch (err) {
+      assert.include(err.message, "revert")
+      assert.include(err.message, "Trove does not exist or is closed")
+    }
+
+    // Check Dennis' SP deposit does not change after liquidation attempt
+    const dennis_Deposit_After = (await poolManager.getCompoundedCLVDeposit(dennis)).toString()
+    const dennis_ETHGain_After = (await poolManager.getCurrentETHGain(dennis)).toString()
+    assert.equal(dennis_Deposit_Before, dennis_Deposit_After)
+    assert.equal(dennis_ETHGain_Before, dennis_ETHGain_After)
+  })
+
+  it("liquidate(): does not liquidate a SP depositor's trove with ICR > 110%, and does not affect their SP deposit or ETH gain", async () => {
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
+    await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._2_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+
+    //Bob provides 200 CLV to SP
+    await poolManager.provideToSP(mv._200e18, {from: bob})
+
+    // Carol gets liquidated
+    await priceFeed.setPrice(mv._100e18)
+    await cdpManager.liquidate(carol)
+
+    // price bounces back - Bob's trove is >110% ICR again
+    await priceFeed.setPrice(mv._200e18)
+
+    // Check Bob' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
+    const bob_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
+    const bob_ETHGain_Before = (await poolManager.getCurrentETHGain(bob)).toString()
+    assert.isAtMost(th.getDifference(bob_Deposit_Before, mv._100e18), 1000)
+    assert.isAtMost(th.getDifference(bob_ETHGain_Before, mv._1_Ether), 1000)
+
+    // Attempt to liquidate Bob
+    await cdpManager.liquidate(bob)
+
+    // Confirm Bob's trove is still active
+    assert.isTrue(await sortedCDPs.contains(bob))
+  
+    // Check Bob' SP deposit does not change after liquidation attempt
+    const bob_Deposit_After = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
+    const bob_ETHGain_After = (await poolManager.getCurrentETHGain(bob)).toString()
+    assert.equal(bob_Deposit_Before, bob_Deposit_After)
+    assert.equal(bob_ETHGain_Before, bob_ETHGain_After)
+  })
+  
+  it("liquidate(): liquidates a SP depositor's trove with ICR < 110%, and the liquidation correctly impacts their SP deposit and ETH gain", async () => {
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
+    await borrowerOperations.openLoan(mv._300e18, alice, { from: alice, value: mv._3_Ether })
+    await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._2_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+
+    //Bob provides 200 CLV to SP
+    await poolManager.provideToSP(mv._200e18, {from: bob})
+
+    // Carol gets liquidated
+    await priceFeed.setPrice(mv._100e18)
+    await cdpManager.liquidate(carol)
+
+    // Check Bob' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
+    const bob_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
+    const bob_ETHGain_Before = (await poolManager.getCurrentETHGain(bob)).toString()
+    assert.isAtMost(th.getDifference(bob_Deposit_Before, mv._100e18), 1000)
+    assert.isAtMost(th.getDifference(bob_ETHGain_Before, mv._1_Ether), 1000)
+
+    // Alice provides 300 CLV to SP
+    await poolManager.provideToSP(mv._300e18, {from: alice})
+
+    // Liquidate Bob. 200 CLV and 2 ETH is liquidated
+    await cdpManager.liquidate(bob)
+
+    // Confirm Bob's trove has been closed
+    assert.isFalse(await sortedCDPs.contains(bob))
+    const bob_Trove_Status = ((await cdpManager.CDPs(bob))[3]).toString()
+    assert.equal(bob_Trove_Status, 2) // check closed
+  
+    /* Alice's CLV Loss = (300 / 400) * 200 = 150 CLV
+       Alice's ETH gain = (300 / 400) * 2 = 1.5 ETH
+
+       Bob's CLVLoss = (300 / 400) * 200 = 50 CLV
+       Bob's ETH gain = (300 / 400) * 2 = 0.5 ETH
+
+     Check Bob' SP deposit has been reduced to 50 CLV, and his ETH gain has increased to 1.5 ETH. */
+    const bob_Deposit_After = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
+    const bob_ETHGain_After =(await poolManager.getCurrentETHGain(bob)).toString()
+
+    assert.isAtMost(th.getDifference(bob_Deposit_After, mv._50e18), 1000)
+    assert.isAtMost(th.getDifference(bob_ETHGain_After, '1500000000000000000'), 1000)
+  })
+
+  it("liquidate(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {
+    await borrowerOperations.openLoan(mv._50e18, alice, { from: alice, value: mv._1_Ether })  
+    await borrowerOperations.openLoan('90500000000000000000', bob, { from: bob, value: mv._1_Ether })  // 90.5 CLV, 1 ETH
+    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+
+    // Defaulter opens with 30 CLV, 0.3 ETH
+    await borrowerOperations.openLoan(mv._30e18, defaulter_1, { from: defaulter_1, value: mv._3e17  })
+    
+    // Price drops
+    await priceFeed.setPrice(mv._100e18)
+    const price = await priceFeed.getPrice()
+
+    const alice_ICR_Before = await cdpManager.getCurrentICR(alice, price)
+    const bob_ICR_Before = await cdpManager.getCurrentICR(bob, price)
+    const carol_ICR_Before = await cdpManager.getCurrentICR(carol, price)
+
+    /* Before liquidation: 
+    Alice ICR: = (1 * 100 / 50) = 200%
+    Bob ICR: (1 * 100 / 90.5) = 110.5%
+    Carol ICR: (1 * 100 / 100 ) =  100%
+
+    Therefore Alice and Bob above the MCR, Carol is below */
+    assert.isTrue(alice_ICR_Before.gte(mv._MCR))
+    assert.isTrue(bob_ICR_Before.gte(mv._MCR))
+    assert.isTrue(carol_ICR_Before.lte(mv._MCR))  
+
+    // Liquidate defaulter. 30 CLV and 0.3 ETH is distributed uniformly between A, B and C. Each receive 10 CLV, 0.1 ETH
+    await cdpManager.liquidate(defaulter_1)
+
+    const alice_ICR_After = await cdpManager.getCurrentICR(alice, price)
+    const bob_ICR_After = await cdpManager.getCurrentICR(bob, price)
+    const carol_ICR_After = await cdpManager.getCurrentICR(carol, price)
+   
+    /* After liquidation: 
+
+    Alice ICR: (1.1 * 100 / 60) = 183.33%
+    Bob ICR:(1.1 * 100 / 100.5) =  109.45%
+    Carol ICR: (1.1 * 100 ) 100%
+
+    Check Alice is above MCR, Bob below, Carol below. */
+    assert.isTrue(alice_ICR_After.gte(mv._MCR))
+    assert.isTrue(bob_ICR_After.lte(mv._MCR))
+    assert.isTrue(carol_ICR_After.lte(mv._MCR)) 
+
+    /* Though Bob's true ICR (including pending rewards) is below the MCR, check that Bob's raw coll and debt has not changed */
+    const bob_Coll = (await cdpManager.CDPs(bob))[1]
+    const bob_Debt = (await cdpManager.CDPs(bob))[0]
+
+    const bob_rawICR = bob_Coll.mul(mv._100e18BN).div(bob_Debt)
+    assert.isTrue(bob_rawICR.gte(mv._MCR))
+    
+    // Whale enters system, pulling it into Normal Mode
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
+
+    //liquidate A, B, C
+    await cdpManager.liquidate(alice)
+    await cdpManager.liquidate(bob)
+    await cdpManager.liquidate(carol)
+
+    // Check A stays active, B and C get liquidated
+    assert.isTrue(await sortedCDPs.contains(alice))
+    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedCDPs.contains(carol))
+
+    // check trove statuses - A active (1),  B and C closed (2)
+    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '1')
+    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
+    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
+  })
+
 
   it('liquidateCDPs(): closes every CDP with ICR < MCR', async () => {
     // --- SETUP ---

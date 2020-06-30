@@ -128,7 +128,6 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.priceFeed.setCDPManagerAddress(addresses.CDPManager)
 
   // set contracts in the CDP Manager
-  await contracts.cdpManager.setCLVToken(addresses.CLVToken)
   await contracts.cdpManager.setSortedCDPs(addresses.SortedCDPs)
   await contracts.cdpManager.setPoolManager(addresses.PoolManager)
   await contracts.cdpManager.setPriceFeed(addresses.PriceFeed)

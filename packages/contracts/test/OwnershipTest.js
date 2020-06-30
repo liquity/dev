@@ -134,21 +134,6 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
       const txOwner2 = await cdpManager.setPriceFeed(priceFeed.address, { from: owner })
     })
 
-    // setCLVToken
-    it("setCLVToken(): reverts when called by non-owner", async () => {
-      // Attempt call from alice
-      try {
-        txAlice = await cdpManager.setCLVToken(bob, { from: alice })
-        assert.fail(txAlice)
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Owner can successfully set any address
-      const txOwner1 = await cdpManager.setCLVToken(bob, { from: owner })
-      const txOwner2 = await cdpManager.setCLVToken(clvToken.address, { from: owner })
-    })
-
     // setSortedCDPs
     it("setSortedCDPs(): reverts when called by non-owner", async () => {
       // Attempt call from alice

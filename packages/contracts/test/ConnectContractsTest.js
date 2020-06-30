@@ -56,14 +56,6 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(sortedCDPsAddress, recordedSortedCDPsAddress)
   })
 
-  it('sets the correct CLVToken address in CDPManager', async () => {
-    const clvTokenAddress = clvToken.address
-
-    const recordedClvTokenAddress = await cdpManager.clvTokenAddress()
-
-    assert.equal(clvTokenAddress, recordedClvTokenAddress)
-  })
-
   it('sets the correct PoolManager address in CDPManager', async () => {
     const poolManagerAddress = poolManager.address
 
