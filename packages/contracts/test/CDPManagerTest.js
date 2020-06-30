@@ -449,6 +449,34 @@ contract('CDPManager', async accounts => {
     assert.equal(listSize_Before, listSize_After)
   })
 
+  it.only("liquidate(): does nothing if trove has non-zero coll, zero debt, and infinite ICR", async () => {
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._10_Ether })
+   
+    const TCR_Before = (await poolManager.getTCR()).toString()
+    const listSize_Before = (await sortedCDPs.getSize()).toString()
+
+    const price = await priceFeed.getPrice()
+
+    const bob_ICR = web3.utils.toHex(await cdpManager.getCurrentICR(bob, price))
+    const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+
+    assert.equal(bob_ICR, maxBytes32)
+
+    // Attempt to liquidate bob
+    await cdpManager.liquidate(bob)
+
+    // check bob active, check whale active
+    assert.isTrue((await sortedCDPs.contains(bob)))
+    assert.isTrue((await sortedCDPs.contains(whale)))
+
+    const TCR_After = (await poolManager.getTCR()).toString()
+    const listSize_After = (await sortedCDPs.getSize()).toString()
+   
+    assert.equal(TCR_Before, TCR_After)
+    assert.equal(listSize_Before, listSize_After)
+  })
+
   it("liquidate(): does not affect the SP deposit or ETH gain when called on an SP depositor's address that has no trove", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
     await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._2_Ether })
