@@ -26,7 +26,7 @@ contract('CDPManager', async accounts => {
 
   const _18_zeros = '000000000000000000'
 
-  const [owner, alice, bob, carol, dennis, erin, flyn, defaulter_1, defaulter_2, whale] = accounts;
+  const [owner, alice, bob, carol, dennis, erin, flyn, defaulter_1, defaulter_2, defaulter_3, defaulter_4, whale] = accounts;
   let priceFeed
   let clvToken
   let poolManager
@@ -449,7 +449,7 @@ contract('CDPManager', async accounts => {
     assert.equal(listSize_Before, listSize_After)
   })
 
-  it.only("liquidate(): does nothing if trove has non-zero coll, zero debt, and infinite ICR", async () => {
+  it("liquidate(): does nothing if trove has non-zero coll, zero debt, and infinite ICR", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._10_Ether })
    
@@ -476,6 +476,153 @@ contract('CDPManager', async accounts => {
     assert.equal(TCR_Before, TCR_After)
     assert.equal(listSize_Before, listSize_After)
   })
+
+  it("liquidate(): Given the same price and no other loan changes, complete Pool offsets restore the TCR to its value prior to the defaulters opening troves", async () => {
+    // Whale provides 2000 CLV to SP
+    await borrowerOperations.openLoan(mv._2000e18, whale, { from: whale, value: mv._100_Ether })
+    await poolManager.provideToSP(mv._2000e18, {from: whale})
+
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._7_Ether })
+    await borrowerOperations.openLoan(0, carol, { from: carol, value: mv._2_Ether })
+    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._20_Ether })
+
+    const TCR_Before = (await poolManager.getTCR()).toString()
+
+    await borrowerOperations.openLoan('101000000000000000000', defaulter_1, { from: defaulter_1, value: mv._1_Ether })
+    await borrowerOperations.openLoan('257000000000000000000', defaulter_2, { from: defaulter_2, value: mv._2_Ether })
+    await borrowerOperations.openLoan('328000000000000000000', defaulter_3, { from: defaulter_3, value: mv._3_Ether })
+    await borrowerOperations.openLoan('480000000000000000000', defaulter_4, { from: defaulter_4, value: mv._4_Ether })
+
+    assert.isTrue((await sortedCDPs.contains(defaulter_1)))
+    assert.isTrue((await sortedCDPs.contains(defaulter_2)))
+    assert.isTrue((await sortedCDPs.contains(defaulter_3)))
+    assert.isTrue((await sortedCDPs.contains(defaulter_4)))
+
+    // Price drop
+    await priceFeed.setPrice(mv._100e18)
+
+    // All defaulters liquidated
+    await cdpManager.liquidate(defaulter_1)
+    assert.isFalse((await sortedCDPs.contains(defaulter_1)))
+
+    await cdpManager.liquidate(defaulter_2)
+    assert.isFalse((await sortedCDPs.contains(defaulter_2)))
+
+    await cdpManager.liquidate(defaulter_3)
+    assert.isFalse((await sortedCDPs.contains(defaulter_3)))
+
+    await cdpManager.liquidate(defaulter_4)
+    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
+  
+    // Price bounces back
+    await priceFeed.setPrice(mv._200e18)
+
+    const TCR_After = (await poolManager.getTCR()).toString()
+    assert.equal(TCR_Before, TCR_After)
+  })
+
+
+  it("liquidate(): Pool offsets increase the TCR", async () => {
+    // Whale provides 2000 CLV to SP
+    await borrowerOperations.openLoan(mv._2000e18, whale, { from: whale, value: mv._100_Ether })
+    await poolManager.provideToSP(mv._2000e18, {from: whale})
+
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._7_Ether })
+    await borrowerOperations.openLoan(0, carol, { from: carol, value: mv._2_Ether })
+    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._20_Ether })
+
+    await borrowerOperations.openLoan('101000000000000000000', defaulter_1, { from: defaulter_1, value: mv._1_Ether })
+    await borrowerOperations.openLoan('257000000000000000000', defaulter_2, { from: defaulter_2, value: mv._2_Ether })
+    await borrowerOperations.openLoan('328000000000000000000', defaulter_3, { from: defaulter_3, value: mv._3_Ether })
+    await borrowerOperations.openLoan('480000000000000000000', defaulter_4, { from: defaulter_4, value: mv._4_Ether })
+
+    assert.isTrue((await sortedCDPs.contains(defaulter_1)))
+    assert.isTrue((await sortedCDPs.contains(defaulter_2)))
+    assert.isTrue((await sortedCDPs.contains(defaulter_3)))
+    assert.isTrue((await sortedCDPs.contains(defaulter_4)))
+
+    await priceFeed.setPrice(mv._100e18)
+
+    const TCR_1 = await poolManager.getTCR()
+
+    // Check TCR improves with each liquidation that is offset with Pool
+    await cdpManager.liquidate(defaulter_1)
+    assert.isFalse((await sortedCDPs.contains(defaulter_1)))
+    const TCR_2 = await poolManager.getTCR()
+    assert.isTrue(TCR_2.gte(TCR_1))
+
+    await cdpManager.liquidate(defaulter_2)
+    assert.isFalse((await sortedCDPs.contains(defaulter_2)))
+    const TCR_3 = await poolManager.getTCR()
+    assert.isTrue(TCR_3.gte(TCR_2))
+
+    await cdpManager.liquidate(defaulter_3)
+    assert.isFalse((await sortedCDPs.contains(defaulter_3)))
+    const TCR_4 = await poolManager.getTCR()
+    assert.isTrue(TCR_4.gte(TCR_4))
+
+    await cdpManager.liquidate(defaulter_4)
+    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
+    const TCR_5 = await poolManager.getTCR()
+    assert.isTrue(TCR_5.gte(TCR_5))
+  })
+
+  it("liquidate(): Pure redistributions do not decrease the TCR", async () => {
+    // Whale provides 2000 CLV to SP
+    await borrowerOperations.openLoan(mv._2000e18, whale, { from: whale, value: mv._100_Ether })
+
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._7_Ether })
+    await borrowerOperations.openLoan(0, carol, { from: carol, value: mv._2_Ether })
+    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._20_Ether })
+
+    await borrowerOperations.openLoan('101000000000000000000', defaulter_1, { from: defaulter_1, value: mv._1_Ether })
+    await borrowerOperations.openLoan('257000000000000000000', defaulter_2, { from: defaulter_2, value: mv._2_Ether })
+    await borrowerOperations.openLoan('328000000000000000000', defaulter_3, { from: defaulter_3, value: mv._3_Ether })
+    await borrowerOperations.openLoan('480000000000000000000', defaulter_4, { from: defaulter_4, value: mv._4_Ether })
+
+    assert.isTrue((await sortedCDPs.contains(defaulter_1)))
+    assert.isTrue((await sortedCDPs.contains(defaulter_2)))
+    assert.isTrue((await sortedCDPs.contains(defaulter_3)))
+    assert.isTrue((await sortedCDPs.contains(defaulter_4)))
+
+    await priceFeed.setPrice(mv._100e18)
+
+    const TCR_1 = await poolManager.getTCR()
+
+    // Check TCR does not decrease with each liquidation 
+    await cdpManager.liquidate(defaulter_1)
+    assert.isFalse((await sortedCDPs.contains(defaulter_1)))
+    const TCR_2 = await poolManager.getTCR()
+
+    console.log(`TCR_1 is ${TCR_1}`)
+    console.log(`TCR_2 is ${TCR_2}`)
+    assert.isTrue(TCR_2.gte(TCR_1))
+
+    await cdpManager.liquidate(defaulter_2)
+    assert.isFalse((await sortedCDPs.contains(defaulter_2)))
+    const TCR_3 = await poolManager.getTCR()
+    console.log(`TCR_3 is ${TCR_3}`)
+    assert.isTrue(TCR_3.gte(TCR_2))
+
+    await cdpManager.liquidate(defaulter_3)
+    assert.isFalse((await sortedCDPs.contains(defaulter_3)))
+    const TCR_4 = await poolManager.getTCR()
+    console.log(`TCR_4 is ${TCR_4}`)
+    assert.isTrue(TCR_4.gte(TCR_4))
+
+    await cdpManager.liquidate(defaulter_4)
+    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
+    const TCR_5 = await poolManager.getTCR()
+    console.log(`TCR_5 is ${TCR_5}`)
+    assert.isTrue(TCR_5.gte(TCR_5))
+  })
+
+  
+
+
 
   it("liquidate(): does not affect the SP deposit or ETH gain when called on an SP depositor's address that has no trove", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
@@ -661,6 +808,8 @@ contract('CDPManager', async accounts => {
     assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
     assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
   })
+
+
 
 
   it('liquidateCDPs(): closes every CDP with ICR < MCR', async () => {
