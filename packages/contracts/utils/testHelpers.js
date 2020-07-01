@@ -61,6 +61,7 @@ const MoneyValues = {
   _450e18: web3.utils.toWei('450', 'ether'),
   _500e18: web3.utils.toWei('500', 'ether'),
   _600e18: web3.utils.toWei('600', 'ether'),
+  _800e18: web3.utils.toWei('800', 'ether'),
   _900e18: web3.utils.toWei('900', 'ether'),
   _1000e18: web3.utils.toWei('1000', 'ether'),
   _1500e18: web3.utils.toWei('1500', 'ether'),
