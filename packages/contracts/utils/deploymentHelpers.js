@@ -131,6 +131,7 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.cdpManager.setSortedCDPs(addresses.SortedCDPs)
   await contracts.cdpManager.setPoolManager(addresses.PoolManager)
   await contracts.cdpManager.setPriceFeed(addresses.PriceFeed)
+  await contracts.cdpManager.setCLVToken(addresses.CLVToken)
   await contracts.cdpManager.setActivePool(addresses.ActivePool)
   await contracts.cdpManager.setDefaultPool(addresses.DefaultPool)
   await contracts.cdpManager.setStabilityPool(addresses.StabilityPool)

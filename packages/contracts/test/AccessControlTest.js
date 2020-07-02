@@ -145,7 +145,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // decreaseCDPColl
-    it("increaseCDPColl(): reverts when called by an account that is not BorrowerOperations", async () => {
+    it("decreaseCDPColl(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
         txAlice = await cdpManager.decreaseCDPColl(bob, 100, { from: alice })

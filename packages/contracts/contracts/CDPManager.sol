@@ -33,6 +33,9 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     IPool public defaultPool;
     address public defaultPoolAddress;
 
+    ICLVToken public clvToken;
+    address public clvTokenAddress;
+
     IPriceFeed public priceFeed;
     address public priceFeedAddress;
 
@@ -143,6 +146,12 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(priceFeedAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
+    }
+
+    function setCLVToken(address _clvTokenAddress) external onlyOwner {
+        clvTokenAddress = _clvTokenAddress;
+        clvToken = ICLVToken(_clvTokenAddress);
+        emit CLVTokenAddressChanged(_clvTokenAddress);
     }
 
     function setSortedCDPs(address _sortedCDPsAddress) external onlyOwner {
@@ -403,6 +412,15 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     )
     nonReentrant external
     {
+        address redeemer = _msgSender();
+        uint activeDebt = activePool.getCLVDebt();
+        uint defaultedDebt = defaultPool.getCLVDebt();
+
+        _requireCLVBalanceCoversRedemption(redeemer, _CLVamount);
+        
+        // Confirm redeemer's balance is less than total systemic debt
+        assert(clvToken.balanceOf(redeemer) <= (activeDebt.add(defaultedDebt)));
+
         uint remainingCLV = _CLVamount;
         uint price = priceFeed.getPrice();
         address currentCDPuser;
@@ -786,6 +804,10 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     function _requireCDPisActive(address _user) internal view {
         require(CDPs[_user].status == Status.active, "CDPManager: Trove does not exist or is closed");
+    }
+
+    function _requireCLVBalanceCoversRedemption(address _user, uint _amount) internal view {
+        require(clvToken.balanceOf(_user) >= _amount, "CDPManager: Requested redemption amount must be >= user's CLV token balance");
     }
 
     // --- Trove property getters ---
