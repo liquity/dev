@@ -4,7 +4,6 @@ import {
   ThemeProvider,
   Box,
   Flex,
-  Container,
   Heading,
   Card,
   Text,
@@ -24,43 +23,41 @@ const LiquityFrontend: React.FC = () => {
   return (
     <Flex
       sx={{
-        position: "absolute",
-        width: "100%",
-        height: ["unset", "680px"],
-        minHeight: "100%",
         flexDirection: "column",
+
+        position: "relative",
+        width: "100%",
+        minHeight: "100%",
 
         backgroundImage: ["url(blob-collapsed.svg)", null, null, "url(blob.svg)"],
         backgroundRepeat: "no-repeat",
-        backgroundPosition: "100% 0%",
-        backgroundSize: "auto"
+        backgroundPosition: "100% 0%"
       }}
     >
       <Flex
         as="header"
         variant="styles.backgroundGradient"
         sx={{
-          p: [3, 4],
-          mb: ["0px", 0],
-          fontSize: "38px",
-          zIndex: 1
+          position: "relative",
+          zIndex: 1,
+
+          p: [5, 7],
+          fontSize: 6
         }}
       >
         <AccessibleLiquityLogo />
 
         <Heading
+          variant="caps"
           sx={{
             flexGrow: 1,
-            ml: [0, "0.75em"],
-            textTransform: "uppercase",
-            fontSize: "0.5em",
-            fontFamily: "body",
-            fontWeight: "body",
-            letterSpacing: "0.06em",
-            lineHeight: 2.2,
 
             position: ["absolute", "unset"],
-            top: "80px"
+            top: "100%",
+
+            ml: [0, "0.75em"],
+            fontSize: "0.5em",
+            lineHeight: 2.2
           }}
         >
           <Switch>
@@ -74,41 +71,46 @@ const LiquityFrontend: React.FC = () => {
           sx={{
             display: ["none", null, null, "flex"],
             alignItems: "center",
-            mr: "48px",
+
+            mr: 8,
             fontSize: 3,
             lineHeight: 1.1
           }}
         >
           <Icon name="wallet" size="lg" aria-label="Wallet balance" aria-hidden={false} />
 
-          <Text sx={{ ml: 3, my: -3, fontSize: "0.9em", fontFamily: "heading", fontWeight: "body" }}>
+          <Text sx={{ ml: 5, my: -5, fontSize: "0.9em", fontFamily: "heading", fontWeight: "body" }}>
             <div>10.4527 ETH</div>
             <div>278.10 LQTY</div>
           </Text>
         </Box>
 
         <Button
-          variant="dropdown"
-          sx={{ display: ["none", null, null, "flex"], alignItems: "center" }}
+          variant="cardlike"
+          sx={{
+            display: ["none", null, null, "flex"],
+            fontSize: 3
+          }}
         >
           <Icon name="user-circle" />
-          <Text sx={{ mx: 2 }}>0x70E...DDF</Text>
+          <Text sx={{ mx: 3 }}>0x70E...DDF</Text>
           <Icon name="caret-down" />
         </Button>
 
-        <Box
+        <IconButton
+          variant="cardlike"
           sx={{
-            display: ["block", null, null, "none"],
+            display: ["flex", null, null, "none"],
+
             position: "absolute",
-            right: "12px",
-            top: "12px",
-            lineHeight: 0
+            right: 4,
+            top: 4,
+
+            fontSize: 2
           }}
         >
-          <IconButton variant="dropdown" sx={{ fontSize: 2 }}>
-            <Icon name="info" />
-          </IconButton>
-        </Box>
+          <Icon name="info" />
+        </IconButton>
       </Flex>
 
       <Flex variant="styles.backgroundGradient" sx={{ flexGrow: 1 }}>
@@ -116,13 +118,14 @@ const LiquityFrontend: React.FC = () => {
           <Nav
             sx={{
               flexGrow: 1,
-              px: "1.4em",
-              lineHeight: [1.1, 1.8],
 
               position: ["absolute", "unset"],
-              top: "17px",
-              left: "50px",
-              right: "50px",
+              top: 5,
+              left: 8,
+              right: 8,
+
+              px: "1.4em",
+              lineHeight: [1.1, 1.8],
 
               ul: {
                 display: "flex",
@@ -132,7 +135,6 @@ const LiquityFrontend: React.FC = () => {
                 a: {
                   color: "text",
                   textDecoration: "none",
-
                   fontFamily: "heading",
                   fontSize: [1, 4],
 
@@ -164,7 +166,7 @@ const LiquityFrontend: React.FC = () => {
             as="footer"
             sx={{
               display: ["none", "block"],
-              p: 4,
+              p: 7,
               whiteSpace: "nowrap"
             }}
           >
@@ -172,7 +174,7 @@ const LiquityFrontend: React.FC = () => {
           </Box>
         </Flex>
 
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ flexGrow: 1, minHeight: ["440px", "560px"] }}>
           <Flex
             sx={{
               alignItems: "center",
@@ -185,12 +187,14 @@ const LiquityFrontend: React.FC = () => {
               height: "100%"
             }}
           >
-            <Container
+            <Box
               as="main"
               sx={{
-                mr: [0, 0, 0, "320px"],
-                ml: [0, "220px", "220px", "320px"],
-                height: ["100%", "unset"]
+                height: ["100%", "470px"],
+                width: ["100%", "500px"],
+                mr: [0, null, null, "320px"],
+                ml: [0, "220px", null, "320px"],
+                p: 5
               }}
             >
               <Switch>
@@ -199,35 +203,36 @@ const LiquityFrontend: React.FC = () => {
                 </Route>
 
                 <Route path="/borrow">
-                  <Box
+                  <Flex
                     as="form"
                     sx={{
-                      position: "relative",
-                      zIndex: 0,
-
-                      height: ["100%", "unset"],
-                      display: "flex",
                       flexDirection: "column",
-                      justifyContent: ["space-between", "start"],
+                      justifyContent: "space-between",
                       alignItems: ["stretch", "center"],
 
+                      position: "relative",
+                      zIndex: 0,
+                      height: "100%",
+
                       ":before": {
+                        display: ["block", "none"],
                         content: '""'
                       }
                     }}
                   >
                     <Flex
                       sx={{
-                        position: "absolute",
-                        top: ["12%", 0],
-                        width: "100%",
-                        height: ["88%", "100%"],
                         justifyContent: "center",
                         alignItems: "center",
 
+                        position: "absolute",
+                        zIndex: -1,
+                        top: ["12%", 0],
+                        width: "100%",
+                        height: ["88%", "100%"],
+
                         color: "muted",
-                        opacity: 0.5,
-                        zIndex: -1
+                        opacity: 0.5
                       }}
                     >
                       <Icon name="lock" size="10x" />
@@ -235,15 +240,14 @@ const LiquityFrontend: React.FC = () => {
 
                     <Flex
                       sx={{
-                        width: "100%",
                         justifyContent: "space-around",
-                        fontSize: [0, 1],
-                        mb: [0, 5]
+                        width: "100%",
+                        fontSize: [0, 1]
                       }}
                     >
                       <Flex sx={{ alignItems: "center" }}>
                         <Icon name="percent" size="lg" />
-                        <Box sx={{ ml: [2, 3] }}>
+                        <Box sx={{ ml: [3, 5] }}>
                           <Text>Collateral ratio</Text>
                           <Text sx={{ fontSize: 3, fontWeight: "medium", color: "success" }}>
                             202.0%
@@ -253,7 +257,7 @@ const LiquityFrontend: React.FC = () => {
 
                       <Flex sx={{ alignItems: "center" }}>
                         <Icon name="exclamation-circle" size="2x" />
-                        <Box sx={{ ml: [2, 3] }}>
+                        <Box sx={{ ml: [3, 5] }}>
                           <Text>Liquidation price</Text>
                           <Text sx={{ fontSize: 3, fontWeight: "medium" }}>$87.74</Text>
                         </Box>
@@ -265,7 +269,7 @@ const LiquityFrontend: React.FC = () => {
                         Collateral
                       </Label>
 
-                      <Flex sx={{ mb: [0, 5] }}>
+                      <Flex>
                         <Input
                           id="trove-collateral"
                           aria-describedby="trove-collateral-unit"
@@ -274,8 +278,8 @@ const LiquityFrontend: React.FC = () => {
                         />
                         <Flex id="trove-collateral-unit" variant="forms.unit">
                           ETH
-                          <IconButton aria-label="Change currency">
-                            <Icon name="retweet" size="lg" />
+                          <IconButton aria-label="Change currency" sx={{ fontSize: 2 }}>
+                            <Icon name="retweet" />
                           </IconButton>
                         </Flex>
                       </Flex>
@@ -299,14 +303,14 @@ const LiquityFrontend: React.FC = () => {
                       </Flex>
                     </Box>
 
-                    <Button sx={{ mt: [0, 5] }}>
+                    <Button>
                       <Icon name="unlock" />
                       Make changes
                     </Button>
-                  </Box>
+                  </Flex>
                 </Route>
               </Switch>
-            </Container>
+            </Box>
           </Flex>
         </Box>
 
@@ -332,7 +336,7 @@ const LiquityFrontend: React.FC = () => {
             </table>
           </Card>
 
-          <Card sx={{ ml: 5 }}>
+          <Card sx={{ ml: 9 }}>
             <Heading>Price Feeds</Heading>
 
             <table style={{ width: "100%" }}>

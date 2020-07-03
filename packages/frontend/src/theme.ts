@@ -25,13 +25,23 @@ const colors = {
   text: "#293147",
   background: "white",
   border: "#c8cbd0",
-  muted: "#eaebed"
+  muted: "#eaebed",
+  "muted-transparent": "rgba(45, 55, 75, 0.1)"
+};
+
+const cardBase = {
+  bg: "rgba(255, 255, 255, 0.75)",
+  borderRadius: 2,
+  boxShadow: 2
+} as const;
+
+const buttonBase = {
+  cursor: "pointer"
 };
 
 const theme: Theme = {
   breakpoints: ["40em", "52em", "64em"],
-
-  space: [0, 4, 8, 16, 32, 64, 128, 256, 512],
+  space: [0, 4, 6, 8, 12, 16, 24, 32, 48, 64, 128, 256, 512],
 
   radii: [0, 8, 16],
 
@@ -41,7 +51,7 @@ const theme: Theme = {
     monospace: "Menlo, monospace"
   },
 
-  fontSizes: [13, 14, 16, 20, 24, 32, 48, 64, 96],
+  fontSizes: [13, 14, 16, 20, 24, 32, 38, 48, 64, 96],
 
   fontWeights: {
     regular: 400,
@@ -64,36 +74,26 @@ const theme: Theme = {
   shadows: ["0", "0px 4px 8px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
 
   text: {
-    heading: {
-      fontSize: 4
-    }
-  },
-
-  sizes: {
-    container: "500px"
-  },
-
-  layout: {
-    container: {
-      p: 3,
-      minHeight: "440px"
+    caps: {
+      textTransform: "uppercase",
+      fontFamily: "body",
+      fontWeight: "body",
+      letterSpacing: "0.06em"
     }
   },
 
   cards: {
     primary: {
-      mx: 4,
-      mt: "10px",
-      mb: "42px",
-      p: 3,
+      ...cardBase,
 
-      bg: "rgba(255, 255, 255, 0.75)",
-      borderRadius: 2,
-      boxShadow: 2,
+      mx: 7,
+      mt: 5,
+      mb: 8,
+      p: 5,
 
       h2: {
         fontSize: 3,
-        mb: 2
+        mb: 3
       },
 
       table: {
@@ -110,10 +110,11 @@ const theme: Theme = {
 
   buttons: {
     primary: {
-      px: 4,
-      py: 3,
+      ...buttonBase,
 
-      cursor: "pointer",
+      px: 7,
+      py: 5,
+
       fontFamily: "body",
       fontWeight: "bold",
       borderRadius: 1,
@@ -127,13 +128,14 @@ const theme: Theme = {
       },
 
       svg: {
-        mr: 2
+        mr: 3
       }
     },
 
     icon: {
+      ...buttonBase,
+
       color: "primary",
-      cursor: "pointer",
 
       ":hover": {
         color: "accent"
@@ -144,19 +146,19 @@ const theme: Theme = {
       }
     },
 
-    dropdown: {
-      px: 3,
+    cardlike: {
+      ...buttonBase,
+      ...cardBase,
+
+      display: "flex",
+      alignItems: "center",
+
+      px: 5,
       py: 0,
 
-      cursor: "pointer",
-      fontSize: 3,
+      color: "text",
       fontFamily: "heading",
       fontWeight: "heading",
-      color: "text",
-
-      bg: "rgba(255, 255, 255, 0.75)",
-      borderRadius: 2,
-      boxShadow: 2,
 
       ":hover": {
         bg: "secondary",
@@ -172,7 +174,7 @@ const theme: Theme = {
 
   forms: {
     input: {
-      p: 3,
+      p: 5,
 
       fontFamily: "heading",
       fontWeight: "medium",
@@ -193,10 +195,9 @@ const theme: Theme = {
     },
 
     unit: {
-      p: 3,
+      p: 5,
       minWidth: "3.5em",
-      //bg: "muted",
-      bg: "rgba(45, 55, 75, 0.1)",
+      bg: "muted-transparent",
 
       fontFamily: "heading",
       fontWeight: "medium",

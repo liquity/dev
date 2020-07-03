@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import "./bodyHeight.css";
+import "./root.css";
 import "./fonts.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
