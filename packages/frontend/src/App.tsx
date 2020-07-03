@@ -14,6 +14,12 @@ import {
 } from "theme-ui";
 
 import theme from "./theme";
+import {
+  displayOnMobile,
+  displayOnNonMobile,
+  displayOnWide,
+  displayOnNonWide
+} from "./utils/breakpoints";
 import { Icon } from "./components/Icon";
 import { Nav } from "./components/Nav";
 import { NavLink } from "./components/NavLink";
@@ -27,16 +33,11 @@ const LiquityFrontend: React.FC = () => {
 
         position: "relative",
         width: "100%",
-        minHeight: "100%",
-
-        backgroundImage: ["url(blob-collapsed.svg)", null, null, "url(blob.svg)"],
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "100% 0%"
+        minHeight: "100%"
       }}
     >
       <Flex
         as="header"
-        variant="styles.backgroundGradient"
         sx={{
           position: "relative",
           zIndex: 1,
@@ -50,8 +51,6 @@ const LiquityFrontend: React.FC = () => {
         <Heading
           variant="caps"
           sx={{
-            flexGrow: 1,
-
             position: ["absolute", "unset"],
             top: "100%",
 
@@ -66,54 +65,9 @@ const LiquityFrontend: React.FC = () => {
             <Route path="/redeem">Redeem</Route>
           </Switch>
         </Heading>
-
-        <Box
-          sx={{
-            display: ["none", null, null, "flex"],
-            alignItems: "center",
-
-            mr: 8,
-            fontSize: 3,
-            lineHeight: 1.1
-          }}
-        >
-          <Icon name="wallet" size="lg" aria-label="Wallet balance" aria-hidden={false} />
-
-          <Text sx={{ ml: 5, my: -5, fontSize: "0.9em", fontFamily: "heading", fontWeight: "body" }}>
-            <div>10.4527 ETH</div>
-            <div>278.10 LQTY</div>
-          </Text>
-        </Box>
-
-        <Button
-          variant="cardlike"
-          sx={{
-            display: ["none", null, null, "flex"],
-            fontSize: 3
-          }}
-        >
-          <Icon name="user-circle" />
-          <Text sx={{ mx: 3 }}>0x70E...DDF</Text>
-          <Icon name="caret-down" />
-        </Button>
-
-        <IconButton
-          variant="cardlike"
-          sx={{
-            display: ["flex", null, null, "none"],
-
-            position: "absolute",
-            right: 4,
-            top: 4,
-
-            fontSize: 2
-          }}
-        >
-          <Icon name="info" />
-        </IconButton>
       </Flex>
 
-      <Flex variant="styles.backgroundGradient" sx={{ flexGrow: 1 }}>
+      <Flex sx={{ flexGrow: 1 }}>
         <Flex sx={{ flexDirection: "column", zIndex: 1 }}>
           <Nav
             sx={{
@@ -165,7 +119,7 @@ const LiquityFrontend: React.FC = () => {
           <Box
             as="footer"
             sx={{
-              display: ["none", "block"],
+              ...displayOnNonMobile,
               p: 7,
               whiteSpace: "nowrap"
             }}
@@ -215,7 +169,7 @@ const LiquityFrontend: React.FC = () => {
                       height: "100%",
 
                       ":before": {
-                        display: ["block", "none"],
+                        ...displayOnMobile,
                         content: '""'
                       }
                     }}
@@ -314,44 +268,104 @@ const LiquityFrontend: React.FC = () => {
           </Flex>
         </Box>
 
-        <Box as="aside" sx={{ display: ["none", null, null, "block"], zIndex: 1 }}>
-          <Card>
-            <Heading>Liquity System</Heading>
+        <Box
+          as="aside"
+          sx={{
+            ...displayOnNonWide,
 
-            <table>
-              <tbody>
-                {[
-                  ["Total collateral ratio:", "311%"],
-                  ["Total LQTY supply:", "7.48M"],
-                  ["LQTY in Stability Pool:", "1.35M"],
-                  ["% of LQTY in Stability Pool:", "18%"],
-                  ["Number of Troves:", "3421"]
-                ].map(([c1, c2], i) => (
-                  <tr key={i}>
-                    <td>{c1}</td>
-                    <td style={{ textAlign: "right" }}>{c2}</td>
+            position: "absolute",
+            right: 4,
+            top: 4
+          }}
+        >
+          <IconButton variant="cardlike">
+            <Icon name="info" size="xs" aria-label="More information" aria-hidden={false} />
+          </IconButton>
+        </Box>
+
+        <Box
+          as="aside"
+          sx={{
+            ...displayOnWide,
+
+            position: "absolute",
+            zIndex: 1,
+            top: 0,
+            right: 0,
+
+            m: 7
+          }}
+        >
+          <Flex
+            sx={{
+              flexDirection: "row-reverse",
+              justifyContent: "space-between",
+              width: "360px"
+            }}
+          >
+            <Button variant="cardlike">
+              <Icon name="user-circle" aria-label="Connected user" aria-hidden={false} />
+              <Text sx={{ mx: 3 }}>0x70E...DDF</Text>
+              <Icon name="caret-down" />
+            </Button>
+
+            <Flex
+              sx={{
+                alignItems: "center",
+                fontSize: 3,
+                lineHeight: 1.1
+              }}
+            >
+              <Icon name="wallet" size="lg" aria-label="Wallet balance" aria-hidden={false} />
+
+              <Text
+                sx={{ ml: 5, my: -5, fontSize: "0.9em", fontFamily: "heading", fontWeight: "body" }}
+              >
+                <div>10.4527 ETH</div>
+                <div>278.10 LQTY</div>
+              </Text>
+            </Flex>
+          </Flex>
+
+          <Box sx={{ position: "absolute", right: 0 }}>
+            <Card sx={{ mt: 8 }}>
+              <Heading>Liquity System</Heading>
+
+              <table>
+                <tbody>
+                  {[
+                    ["Total collateral ratio:", "311%"],
+                    ["Total LQTY supply:", "7.48M"],
+                    ["LQTY in Stability Pool:", "1.35M"],
+                    ["% of LQTY in Stability Pool:", "18%"],
+                    ["Number of Troves:", "3421"]
+                  ].map(([c1, c2], i) => (
+                    <tr key={i}>
+                      <td>{c1}</td>
+                      <td style={{ textAlign: "right" }}>{c2}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+
+            <Card sx={{ mt: 8, ml: 7 }}>
+              <Heading>Price Feeds</Heading>
+
+              <table style={{ width: "100%" }}>
+                <tbody>
+                  <tr>
+                    <td>ETH:</td>
+                    <td style={{ textAlign: "right" }}>$161.13</td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-
-          <Card sx={{ ml: 9 }}>
-            <Heading>Price Feeds</Heading>
-
-            <table style={{ width: "100%" }}>
-              <tbody>
-                <tr>
-                  <td>ETH:</td>
-                  <td style={{ textAlign: "right" }}>$161.13</td>
-                </tr>
-                <tr>
-                  <td>LQTY:</td>
-                  <td style={{ textAlign: "right" }}>$1.01</td>
-                </tr>
-              </tbody>
-            </table>
-          </Card>
+                  <tr>
+                    <td>LQTY:</td>
+                    <td style={{ textAlign: "right" }}>$1.01</td>
+                  </tr>
+                </tbody>
+              </table>
+            </Card>
+          </Box>
         </Box>
       </Flex>
     </Flex>

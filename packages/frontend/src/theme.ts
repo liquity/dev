@@ -1,5 +1,7 @@
 import { Theme } from "theme-ui";
 
+import { breakOnWide } from "./utils/breakpoints";
+
 const baseColors = {
   blue: "#1542cd",
   purple: "#745ddf",
@@ -74,6 +76,12 @@ const theme: Theme = {
   shadows: ["0", "0px 4px 8px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
 
   text: {
+    logo: {
+      fontFamily: "heading",
+      fontWeight: "regular",
+      letterSpacing: "-0.005em"
+    },
+
     caps: {
       textTransform: "uppercase",
       fontFamily: "body",
@@ -86,9 +94,6 @@ const theme: Theme = {
     primary: {
       ...cardBase,
 
-      mx: 7,
-      mt: 5,
-      mb: 8,
       p: 5,
 
       h2: {
@@ -153,12 +158,14 @@ const theme: Theme = {
       display: "flex",
       alignItems: "center",
 
-      px: 5,
-      py: 0,
+      px: 4,
+      py: "0.5em",
 
       color: "text",
       fontFamily: "heading",
       fontWeight: "heading",
+      fontSize: 3,
+      lineHeight: 1,
 
       ":hover": {
         bg: "secondary",
@@ -227,19 +234,29 @@ const theme: Theme = {
       fontSize: 2,
       fontFamily: "body",
       fontWeight: "body",
-      lineHeight: "body"
+      lineHeight: "body",
+
+      ...breakOnWide({ backgroundImage: ["url(blob-collapsed.svg)", "url(blob.svg)"] }),
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "100% 0%",
+
+      height: "100%",
+
+      "#root": {
+        height: "100%",
+
+        "> *": {
+          background: [
+            "none",
+            "linear-gradient(90deg, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 90%)"
+          ]
+        }
+      }
     },
 
     a: {
       color: "primary",
       ":hover": { color: "accent" }
-    },
-
-    backgroundGradient: {
-      background: [
-        "none",
-        "linear-gradient(90deg, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 90%)"
-      ]
     }
   }
 };

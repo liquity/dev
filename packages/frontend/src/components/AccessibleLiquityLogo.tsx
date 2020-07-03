@@ -1,6 +1,7 @@
 import React from "react";
-import { Box, Flex } from "theme-ui";
+import { Text, Flex } from "theme-ui";
 
+import { displayOnNonMobile } from "../utils/breakpoints";
 import { LiquityLogo } from "./LiquityLogo";
 
 export const AccessibleLiquityLogo: React.FC = () => (
@@ -9,18 +10,16 @@ export const AccessibleLiquityLogo: React.FC = () => (
       <title id="liquity-logo-title">Liquity Logo</title>
     </LiquityLogo>
 
-    <Box
+    <Text
       as="h1"
+      variant="logo"
       sx={{
-        display: ["none", "block"],
+        ...displayOnNonMobile,
         ml: "0.16em",
-        fontSize: "inherit",
-        fontFamily: "heading",
-        fontWeight: "regular",
-        letterSpacing: "-0.005em"
+        fontSize: "inherit"
       }}
     >
       Liquity
-    </Box>
+    </Text>
   </Flex>
 );
