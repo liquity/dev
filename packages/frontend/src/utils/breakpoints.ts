@@ -1,42 +1,37 @@
-const mobileBreakpoint = 1;
-const wideBreakpoint = 3;
+const mobileBreakpoint = 0;
+const wideBreakpoint = 2;
 
-const breakOn = (breakpoint: number) => <T extends { [prop: string]: readonly [unknown, unknown] }>(
-  fragment: T
-) =>
+type ResponsiveFragment<T1 = unknown, T2 = unknown> = {
+  readonly [prop: string]: readonly [T1, T2];
+};
+
+type NullPadded<T1, T2, N extends number> = N extends 0
+  ? [T1, T2]
+  : N extends 1
+  ? [T1, null, T2]
+  : N extends 2
+  ? [T1, null, null, T2]
+  : (T1 | T2 | null)[];
+
+type NullPaddedResponsiveFragment<T extends ResponsiveFragment, N extends number> = {
+  [P in keyof T]: NullPadded<T[P][0], T[P][1], N>;
+};
+
+const breakOn = <N extends number>(breakpoint: N) => <T extends ResponsiveFragment>(fragment: T) =>
   Object.fromEntries(
     Object.entries(fragment).map(([k, [v1, v2]]) => [
       k,
-      [v1, ...new Array(breakpoint - 1).fill(null), v2]
+      [v1, ...new Array(breakpoint).fill(null), v2]
     ])
-  ) as {
-    [P in keyof T]: (T[P][0] | T[P][1] | null)[];
-  };
+  ) as NullPaddedResponsiveFragment<T, N>;
 
 export const breakOnMobile = breakOn(mobileBreakpoint);
 export const breakOnWide = breakOn(wideBreakpoint);
 
-const displayOnOff = <
-  T extends (fragment: { display: [string, string] }) => { display: (string | null)[] }
->(
-  breakF: T
-) =>
-  Object.assign(
-    (display: string) => breakF({ display: [display, "none"] }),
-    breakF({ display: ["block", "none"] })
-  );
+const displayBlockNone = { display: ["block", "none"] } as const;
+const displayNoneBlock = { display: ["none", "block"] } as const;
 
-const displayOffOn = <
-  T extends (fragment: { display: [string, string] }) => { display: (string | null)[] }
->(
-  breakF: T
-) =>
-  Object.assign(
-    (display: string) => breakF({ display: ["none", display] }),
-    breakF({ display: ["none", "block"] })
-  );
-
-export const displayOnMobile = displayOnOff(breakOnMobile);
-export const displayOnNonMobile = displayOffOn(breakOnMobile);
-export const displayOnWide = displayOffOn(breakOnWide);
-export const displayOnNonWide = displayOnOff(breakOnWide);
+export const displayOnMobile = breakOnMobile(displayBlockNone);
+export const displayOnNonMobile = breakOnMobile(displayNoneBlock);
+export const displayOnWide = breakOnWide(displayNoneBlock);
+export const displayOnNonWide = breakOnMobile(displayBlockNone);
