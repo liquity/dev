@@ -53,7 +53,7 @@ const theme: Theme = {
     monospace: "Menlo, monospace"
   },
 
-  fontSizes: [13, 14, 16, 20, 24, 32, 38, 48, 64, 96],
+  fontSizes: [13, 14, 16, 20, 24, 32, 48, 64, 96],
 
   fontWeights: {
     regular: 400,

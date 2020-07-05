@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, BoxOwnProps } from "theme-ui";
 
-type NavProps = Omit<BoxOwnProps, "as">;
+export type NavProps = Omit<BoxOwnProps, "as">;
 
 export const Nav: React.FC<NavProps> = ({ children, ...boxProps }) => (
   <Box as="nav" {...boxProps}>

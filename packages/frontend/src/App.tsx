@@ -1,5 +1,5 @@
 import React from "react";
-import { HashRouter as Router, Switch, Route, Redirect } from "react-router-dom";
+import { HashRouter as Router, Switch, Route, Redirect, NavLink } from "react-router-dom";
 import {
   ThemeProvider,
   Box,
@@ -21,8 +21,7 @@ import {
   displayOnNonWide
 } from "./utils/breakpoints";
 import { Icon } from "./components/Icon";
-import { Nav } from "./components/Nav";
-import { NavLink } from "./components/NavLink";
+import { NavBar } from "./components/NavBar";
 import { AccessibleLiquityLogo } from "./components/AccessibleLiquityLogo";
 
 const LiquityFrontend: React.FC = () => {
@@ -43,7 +42,7 @@ const LiquityFrontend: React.FC = () => {
           zIndex: 1,
 
           p: [5, 7],
-          fontSize: 6
+          fontSize: "38px"
         }}
       >
         <AccessibleLiquityLogo />
@@ -69,7 +68,7 @@ const LiquityFrontend: React.FC = () => {
 
       <Flex sx={{ flexGrow: 1 }}>
         <Flex sx={{ flexDirection: "column", zIndex: 1 }}>
-          <Nav
+          <NavBar
             sx={{
               flexGrow: 1,
 
@@ -78,43 +77,24 @@ const LiquityFrontend: React.FC = () => {
               left: 8,
               right: 8,
 
-              px: "1.4em",
-              lineHeight: [1.1, 1.8],
-
-              ul: {
-                display: "flex",
-                flexDirection: ["row", "column"],
-                justifyContent: "center",
-
-                a: {
-                  color: "text",
-                  textDecoration: "none",
-                  fontFamily: "heading",
-                  fontSize: [1, 4],
-
-                  "&.active": {
-                    color: "primary"
-                  },
-
-                  "&:hover": {
-                    color: "secondary"
-                  }
-                }
-              }
+              mx: 7
             }}
           >
-            <NavLink to="/borrow" icon="hands-helping">
+            <NavLink to="/borrow">
+              <Icon name="hands-helping" />
               Borrow
             </NavLink>
 
-            <NavLink to="/grow" icon="seedling">
+            <NavLink to="/grow">
+              <Icon name="seedling" />
               Grow
             </NavLink>
 
-            <NavLink to="/redeem" icon="retweet">
+            <NavLink to="/redeem">
+              <Icon name="retweet" />
               Redeem
             </NavLink>
-          </Nav>
+          </NavBar>
 
           <Box
             as="footer"
@@ -168,7 +148,7 @@ const LiquityFrontend: React.FC = () => {
                       zIndex: 0,
                       height: "100%",
 
-                      ":before": {
+                      "::before": {
                         ...displayOnMobile,
                         content: '""'
                       }
@@ -274,6 +254,7 @@ const LiquityFrontend: React.FC = () => {
             ...displayOnNonWide,
 
             position: "absolute",
+            zIndex: 1,
             right: 4,
             top: 4
           }}
