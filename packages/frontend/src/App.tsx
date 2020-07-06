@@ -259,7 +259,7 @@ const LiquityFrontend: React.FC = () => {
             top: 4
           }}
         >
-          <IconButton variant="cardlike">
+          <IconButton variant="cardlike" sx={{ p: 0 }}>
             <Icon name="info" size="xs" aria-label="More information" aria-hidden={false} />
           </IconButton>
         </Box>

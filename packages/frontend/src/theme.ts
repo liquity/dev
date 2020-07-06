@@ -246,10 +246,12 @@ const theme: Theme = {
         height: "100%",
 
         "> *": {
-          background: [
-            "none",
-            "linear-gradient(90deg, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 90%)"
-          ]
+          ...breakOnWide({
+            background: [
+              "none",
+              "linear-gradient(90deg, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 90%)"
+            ]
+          })
         }
       }
     },

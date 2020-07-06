@@ -1,11 +1,9 @@
+import { ThemeUIExtendedCSSProperties } from "@theme-ui/css";
+
 const mobileBreakpoint = 0;
 const wideBreakpoint = 2;
 
-type ResponsiveFragment<T1 = unknown, T2 = unknown> = {
-  readonly [prop: string]: readonly [T1, T2];
-};
-
-type NullPadded<T1, T2, N extends number> = N extends 0
+type NullPaddedValues<T1, T2, N extends number> = N extends 0
   ? [T1, T2]
   : N extends 1
   ? [T1, null, T2]
@@ -13,25 +11,31 @@ type NullPadded<T1, T2, N extends number> = N extends 0
   ? [T1, null, null, T2]
   : (T1 | T2 | null)[];
 
-type NullPaddedResponsiveFragment<T extends ResponsiveFragment, N extends number> = {
-  [P in keyof T]: NullPadded<T[P][0], T[P][1], N>;
+type NullPadded<T, N extends number> = {
+  [P in keyof T]: Required<T>[P] extends [infer U1, infer U2] ? NullPaddedValues<U1, U2, N> : never;
 };
 
-const breakOn = <N extends number>(breakpoint: N) => <T extends ResponsiveFragment>(fragment: T) =>
+type Responsive<T> = {
+  [P in keyof T]: [Required<T>[P], Required<T>[P]];
+};
+
+const breakOn = <N extends number>(breakpoint: N) => (
+  responsiveCss: Responsive<ThemeUIExtendedCSSProperties>
+) =>
   Object.fromEntries(
-    Object.entries(fragment).map(([k, [v1, v2]]) => [
+    Object.entries(responsiveCss).map(([k, v]) => [
       k,
-      [v1, ...new Array(breakpoint).fill(null), v2]
+      v && [v[0], ...new Array(breakpoint).fill(null), v[1]]
     ])
-  ) as NullPaddedResponsiveFragment<T, N>;
+  ) as NullPadded<Responsive<ThemeUIExtendedCSSProperties>, N>;
 
 export const breakOnMobile = breakOn(mobileBreakpoint);
 export const breakOnWide = breakOn(wideBreakpoint);
 
-const displayBlockNone = { display: ["block", "none"] } as const;
-const displayNoneBlock = { display: ["none", "block"] } as const;
+const displayBlockNone: Responsive<ThemeUIExtendedCSSProperties> = { display: ["block", "none"] };
+const displayNoneBlock: Responsive<ThemeUIExtendedCSSProperties> = { display: ["none", "block"] };
 
 export const displayOnMobile = breakOnMobile(displayBlockNone);
 export const displayOnNonMobile = breakOnMobile(displayNoneBlock);
 export const displayOnWide = breakOnWide(displayNoneBlock);
-export const displayOnNonWide = breakOnMobile(displayBlockNone);
+export const displayOnNonWide = breakOnWide(displayBlockNone);
