@@ -14,7 +14,7 @@ contract('PoolManager', async accounts => {
   const _9_Ether = web3.utils.toWei('9', 'ether')
   const _10_Ether = web3.utils.toWei('10', 'ether')
 
-  const [owner, mockCDPManagerAddress, mockBorrowerOperationsAddress, mockPoolManagerAddress, alice] = accounts;
+  const [owner, mockCDPManagerAddress, mockBorrowerOperationsAddress, mockPoolManagerAddress, alice, whale] = accounts;
   let priceFeed
   let clvToken
   let poolManager
@@ -46,7 +46,7 @@ contract('PoolManager', async accounts => {
     await connectContracts(contracts, contractAddresses)
 
     await poolManager.setBorrowerOperations(mockBorrowerOperationsAddress, { from: owner })
-    await poolManager.setCDPManagerAddress(mockCDPManagerAddress, { from: owner })
+    await poolManager.setCDPManager(mockCDPManagerAddress, { from: owner })
   })
 
   // Getters and setters
@@ -450,6 +450,70 @@ contract('PoolManager', async accounts => {
       assert.equal(activePool_ETH_After, _9_Ether)
       assert.equal(active_Pool_rawEther_After, _9_Ether)
     })
+  })
+
+  it("offset(): increases S_ETH and S_CLV by correct amounts", async () => {
+    // --- SETUP ---
+    await poolManager.setCDPManager(cdpManager.address, { from: owner })
+
+    // Whale opens CDP with 50 ETH, adds 2000 CLV to StabilityPool
+    await borrowerOperations.addColl(whale, whale, { from: whale, value: mv._100_Ether })
+    await borrowerOperations.withdrawCLV('2000000000000000000000', whale, { from: whale })
+    await poolManager.provideToSP('2000000000000000000000', { from: whale })
+    // 2 CDPs opened, each withdraws 100 CLV
+    await borrowerOperations.addColl(defaulter_1, defaulter_1, { from: defaulter_1, value: mv._1_Ether })
+    await borrowerOperations.addColl(defaulter_2, defaulter_2, { from: defaulter_2, value: mv._1_Ether })
+    await borrowerOperations.withdrawCLV('100000000000000000000', defaulter_1, { from: defaulter_1 })
+    await borrowerOperations.withdrawCLV('100000000000000000000', defaulter_2, { from: defaulter_2 })
+
+    const P_Before = await poolManager.P()
+    const S_Before = await poolManager.epochToScaleToSum(0, 0)
+    const totalCLVDeposits = await stabilityPool.getCLV()
+
+    assert.equal(P_Before, '1000000000000000000')
+    assert.equal(S_Before, 0)
+    assert.equal(totalCLVDeposits, '2000000000000000000000')
+
+    // price drops: defaulter's CDPs fall below MCR, whale doesn't
+    await priceFeed.setPrice('100000000000000000000');
+    // CDPs are closed
+    const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
+
+    // console.log("P after L1:" + (await poolManager.P()))  
+    // console.log("S after L1:" + (await poolManager.epochToScaleToSum(0,0)))  
+
+    const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
+
+    assert.isTrue(txL1.receipt.status)
+    assert.isTrue(txL2.receipt.status)
+    /*
+    With 2000 CLV in StabilityPool, each closed CDP contributes 100CLV, 1 ETH.
+
+    Starting vals:
+    P = 1
+    S = 0
+
+    L1:
+    S = S + (1/2000)*P = 0.0005
+    P = P * (1-(100/2000)) = 0.95
+
+    L2:
+    S = S + (1/1900) * P = 0.0005 + 0.0005 = 0.001
+    P = P * (1-(100/1900)) = 0.95 * 0.9473684210526316 = 0.9
+    */
+
+    // Get accumulated rewards per unit staked
+    const P_After = (await poolManager.P())
+    const S_After = (await poolManager.epochToScaleToSum(0, 0))
+
+    // console.log("P after L2:" + P_After.toString())  
+    // console.log("S after L2:" + S_After.toString()) 
+
+    // console.log("total SP deposits after L2: " + (await stabilityPool.getCLV()).toString())
+    // console.log(`${P_After}`)
+    // console.log(`${S_After}`)
+
+    assert.isAtMost(th.getDifference(P_After, '900000000000000000'), 1000)
   })
 })
 

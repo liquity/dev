@@ -109,7 +109,7 @@ const connectContracts = async (contracts, addresses) => {
 
    // set contracts in the PoolManager
   await contracts.poolManager.setBorrowerOperations(addresses.BorrowerOperations)
-  await contracts.poolManager.setCDPManagerAddress(addresses.CDPManager)
+  await contracts.poolManager.setCDPManager(addresses.CDPManager)
   await contracts.poolManager.setCLVToken(addresses.CLVToken)
   await contracts.poolManager.setPriceFeed(addresses.PriceFeed)
   await contracts.poolManager.setStabilityPool(addresses.StabilityPool)

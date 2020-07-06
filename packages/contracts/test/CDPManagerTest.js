@@ -844,9 +844,6 @@ contract('CDPManager', async accounts => {
     assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
   })
 
-
-
-
   it('liquidateCDPs(): closes every CDP with ICR < MCR', async () => {
     // --- SETUP ---
 
@@ -1509,7 +1506,7 @@ contract('CDPManager', async accounts => {
     assert.equal(erin_Coll, mv._1_Ether)
   })
 
-  it('redeemCollateral(): performs a partial redemption if the hint has gotten out-of-date', async () => {
+  it('redeemCollateral(): doesnt perform the final partial redemption in the sequence if the hint is out-of-date', async () => {
     // --- SETUP ---
 
     await borrowerOperations.openLoan('5' + _18_zeros, alice, { from: alice, value: _1_Ether })
@@ -1592,7 +1589,7 @@ contract('CDPManager', async accounts => {
     assert.equal(dennis_CLVBalance_After, '133' + _18_zeros)
   })
 
-  it("redeemCollateral(): can redeem even if there's no active debt", async () => {
+  it("redeemCollateral(): can redeem if there is zero active debt but non-zero debt in DefaultPool", async () => {
     // --- SETUP ---
 
     await borrowerOperations.openLoan('0', alice, { from: alice, value: _10_Ether })

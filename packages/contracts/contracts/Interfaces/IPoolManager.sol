@@ -31,7 +31,7 @@ interface IPoolManager {
     // --- Functions ---
     function setBorrowerOperations(address _borrowerOperationsAddress) external;
 
-    function setCDPManagerAddress(address _cdpManagerAddress) external;
+    function setCDPManager(address _cdpManagerAddress) external;
 
     function setPriceFeed(address _priceFeedAddress) external;
 

@@ -22,6 +22,7 @@ contract PoolManager is Ownable, IPoolManager {
     address public borrowerOperationsAddress;
 
     address public cdpManagerAddress;
+    ICDPManager public cdpManager;
 
     IPriceFeed public priceFeed;
     address public priceFeedAddress;
@@ -120,8 +121,9 @@ contract PoolManager is Ownable, IPoolManager {
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
     }
 
-    function setCDPManagerAddress(address _cdpManagerAddress) external onlyOwner {
+    function setCDPManager(address _cdpManagerAddress) external onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
+        cdpManager = ICDPManager(_cdpManagerAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
     }
 
@@ -379,11 +381,6 @@ contract PoolManager is Ownable, IPoolManager {
 
         emit UserSnapshotUpdated(snapshot[_address].P, snapshot[_address].S);
     }
-
-    function _requireUserHasDeposit(address _address) internal view {
-        uint initialDeposit = initialDeposits[_address];  
-        require(initialDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
-    }
  
     // --- External StabilityPool Functions ---
 
@@ -443,8 +440,9 @@ contract PoolManager is Ownable, IPoolManager {
     
     TODO: Remove _user param and just use _msgSender(). */
     function withdrawFromSPtoCDP(address _user, address _hint) external {
-        require (_user == _msgSender(), "PoolManager: A user may only withdraw ETH gains to their own trove" );
+        require(_user == _msgSender(), "PoolManager: A user may only withdraw ETH gains to their own trove" );
         _requireUserHasDeposit(_user); 
+        _requireUserHasTrove(_user);
        
         uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_user);
         uint ETHGain = _getCurrentETHGain(_user);
@@ -550,6 +548,17 @@ contract PoolManager is Ownable, IPoolManager {
 
         // Burn the debt that was successfully offset
         CLV.burn(stabilityPoolAddress, _debtToOffset); 
+    }
+
+    // --- 'require' wrapper functions ---
+
+    function _requireUserHasDeposit(address _address) internal view {
+        uint initialDeposit = initialDeposits[_address];  
+        require(initialDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
+    }
+
+    function _requireUserHasTrove(address _user) internal view {
+        require(cdpManager.getCDPStatus(_user) == 1, "CDPManager: caller must have an active trove to withdraw ETHGain to");
     }
 
     function () external payable onlyStabilityPoolorActivePool {}

@@ -484,6 +484,32 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
+  it("withdrawColl(): reverts if system is in recovery mode", async () => {
+    // --- SETUP ---
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._3_Ether })
+
+    //  Alice and Bob withdraw such that the TCR is ~150%
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+
+    // --- TEST ---
+
+    // price drops to 1ETH:150CLV, reducing TCR below 150%
+    await priceFeed.setPrice('150000000000000000000');
+
+    //Alice tries to withdraw collateral during Recovery Mode
+    try {
+      const txData = await borrowerOperations.withdrawColl('1', alice, { from: alice })
+      assert.fail(txData)
+    } catch (err) {
+      assert.include(err.message, 'revert')
+    }
+  })
+
   it("withdrawColl(): allows a user to completely withdraw all collateral from their CDP", async () => {
     await borrowerOperations.addColl(alice, alice, { from: alice, value: _100_Finney })
 
@@ -803,6 +829,50 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
+  it("withdrawCLV(): reverts if withdrawal would pull TCR below CCR", async () => {
+    // --- SETUP ---
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._3_Ether })
+
+    //  Alice and Bob withdraw such that the TCR is 150%
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+
+    // --- TEST ---
+
+    // Alice attempts to withdraw 10 CLV, which would reducing TCR below 150%
+    try {
+      const txData = await borrowerOperations.withdrawCLV('10000000000000000000', alice, { from: alice })
+      assert.fail(txData)
+    } catch (err) {
+      assert.include(err.message, 'revert')
+    }
+  })
+
+  it("withdrawCLV(): reverts if system is in recovery mode", async () => {
+    // --- SETUP ---
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._3_Ether })
+
+    //  Alice and Bob withdraw such that the TCR is ~150%
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+
+    // const TCR = (await poolManager.getTCR()).toString()
+    // assert.equal(TCR, '1500000000000000000')
+
+    // --- TEST ---
+
+    // price drops to 1ETH:150CLV, reducing TCR below 150%
+    await priceFeed.setPrice('150000000000000000000');
+
+    try {
+      const txData = await borrowerOperations.withdrawCLV('200', alice, { from: alice })
+      assert.fail(txData)
+    } catch (err) {
+      assert.include(err.message, 'revert')
+    }
+  })
 
 
 
@@ -1746,6 +1816,104 @@ contract('BorrowerOperations', async accounts => {
     } catch (err) {
       assert.include(err.message, "revert")
     }
+  })
+
+  it("openLoan(): reverts if withdrawal would pull TCR below CCR", async () => {
+    // --- SETUP ---
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._3_Ether })
+
+    //  Alice and Bob withdraw such that the TCR is ~150%
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+
+    // --- TEST ---
+
+    // Carol attempts to open a loan, which would reduce TCR to below 150%
+    try {
+      const txData = await borrowerOperations.openLoan('180000000000000000000', carol, { from: carol, value: _1_Ether })
+      assert.fail(txData)
+    } catch (err) {
+      assert.include(err.message, 'revert')
+    }
+  })
+
+  it("openLoan(): with non-zero debt, reverts when system is in recovery mode", async () => {
+    // --- SETUP ---
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._3_Ether })
+
+    //  Alice and Bob withdraw such that the TCR is ~150%
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+
+    // --- TEST ---
+
+    // price drops to 1ETH:150CLV, reducing TCR below 150%
+    await priceFeed.setPrice('150000000000000000000');
+
+    try {
+      const txData = await borrowerOperations.openLoan('50000000000000000000', carol, { from: carol, value: mv._1_Ether })
+      assert.fail(txData)
+    } catch (err) {
+      assert.include(err.message, 'revert')
+    }
+  })
+
+  it("openLoan(): reverts if trove is already active", async () => {
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
+
+    await borrowerOperations.openLoan(mv._50e18, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._50e18, bob, { from: bob, value: mv._1_Ether })
+
+    try {
+      const txB_1 = await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      assert.isFalse(txB_1.receipt.status)
+    } catch (err) {
+      assert.include(err.message, 'revert')
+    }
+
+    try {
+      const txB_2 = await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
+      assert.isFalse(txB_2.receipt.status)
+    } catch (err) {
+      assert.include(err.message, 'revert')
+    } 
+  })
+
+
+
+  it("openLoan(): Can open a loan with zero debt when system is in recovery mode", async () => {
+    // --- SETUP ---
+    //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._3_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._3_Ether })
+    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+
+    const TCR = (await poolManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+
+    // price drops to 1ETH:100CLV, reducing TCR below 150%
+    await priceFeed.setPrice('100000000000000000000');
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    const txCarol = await borrowerOperations.openLoan('0', carol, { from: carol, value: mv._1_Ether })
+    assert.isTrue(txCarol.receipt.status)
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    assert.isTrue(await sortedCDPs.contains(carol))
+
+    const carol_CDPStatus = await cdpManager.getCDPStatus(carol)
+    assert.equal(carol_CDPStatus, 1)
   })
 
   it("openLoan(): creates a new CDP and assigns the correct collateral and debt amount", async () => {

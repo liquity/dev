@@ -167,18 +167,18 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     })
 
     // setCDPManagerAddress
-    it("setCDPManagerAddress(): reverts when called by non-owner", async () => {
+    it("setCDPManager(): reverts when called by non-owner", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.setCDPManagerAddress(bob, { from: alice })
+        txAlice = await poolManager.setCDPManager(bob, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
       }
 
       // Owner can successfully set any address
-      const txOwner1 = await poolManager.setCDPManagerAddress(bob, { from: owner })
-      const txOwner2 = await poolManager.setCDPManagerAddress(cdpManager.address, { from: owner })
+      const txOwner1 = await poolManager.setCDPManager(bob, { from: owner })
+      const txOwner2 = await poolManager.setCDPManager(cdpManager.address, { from: owner })
     })
 
     // setPriceFeed

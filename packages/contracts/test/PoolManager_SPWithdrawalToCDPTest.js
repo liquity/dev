@@ -8,7 +8,7 @@ const connectContracts = deploymentHelpers.connectContracts
 const th = testHelpers.TestHelper
 const moneyVals = testHelpers.MoneyValues
 
-contract('PoolManager', async accounts => {
+contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculations', async accounts => {
 
   const [owner,
     defaulter_1,
