@@ -1,15 +1,13 @@
 import React from "react";
 import { NavLink, NavLinkProps } from "react-router-dom";
-import { Box, SxStyleProp } from "theme-ui";
+import { Box, SxProps } from "theme-ui";
 
 import { Nav, NavProps } from "./Nav";
 import { Icon } from "./Icon";
 
 const activeClassName = "active";
 
-type NavBarProps = NavProps & {
-  sx?: SxStyleProp;
-};
+type NavBarProps = NavProps & SxProps;
 
 export const NavBar: React.FC<NavBarProps> = ({ sx, children, ...navProps }) => (
   <Nav

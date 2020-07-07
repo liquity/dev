@@ -1,10 +1,10 @@
 import React from "react";
-import { Box, BoxOwnProps } from "theme-ui";
+import { Box, SxProps } from "theme-ui";
 
-export type NavProps = Omit<BoxOwnProps, "as">;
+export type NavProps = SxProps;
 
-export const Nav: React.FC<NavProps> = ({ children, ...boxProps }) => (
-  <Box as="nav" {...boxProps}>
+export const Nav: React.FC<NavProps> = ({ sx, children }) => (
+  <Box as="nav" {...{ sx }}>
     <Box as="ul" sx={{ listStyle: "none", p: 0 }}>
       {React.Children.map(children, child => (
         <li>{child}</li>

@@ -156,7 +156,6 @@ const theme: Theme = {
       ...cardBase,
 
       display: "flex",
-      alignItems: "center",
 
       px: 4,
       py: "0.5em",
