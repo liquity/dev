@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  frontend:
+    build: "."
+    image: "liquity/frontend"
+    ports:
+      - "${LIQUITY_FRONTEND_HTTP_PORT:-80}:80"
+    restart: "always"
