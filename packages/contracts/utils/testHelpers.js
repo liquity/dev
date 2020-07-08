@@ -47,6 +47,7 @@ const MoneyValues = {
   _40e18: web3.utils.toWei('40', 'ether'),
   _50e18: web3.utils.toWei('50', 'ether'),
   _60e18: web3.utils.toWei('60', 'ether'),
+  _70e18: web3.utils.toWei('70', 'ether'),
   _80e18: web3.utils.toWei('80', 'ether'),
   _90e18: web3.utils.toWei('90', 'ether'),
   _100e18: web3.utils.toWei('100', 'ether'),
@@ -94,8 +95,10 @@ const MoneyValues = {
   _1e18BN: web3.utils.toBN('1000000000000000000'),
   _100e18BN: web3.utils.toBN('100000000000000000000'),
   _100BN: web3.utils.toBN('100'),
+  _110BN: web3.utils.toBN('110'),
 
   _MCR: web3.utils.toBN('1100000000000000000'),
+  _ICR100: web3.utils.toBN('1000000000000000000'),
   _TCR: web3.utils.toBN('1500000000000000000')
 
 }
