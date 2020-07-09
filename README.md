@@ -6,6 +6,7 @@
   * [Liquidation](#liquidation)
   * [Rewards From Liquidations](#rewards-from-liquidations)
   * [Recovery Mode](#recovery-mode)
+  * [CLV Token Redemption](#clv-token-redemption)
   * [Project Structure](#project-structure)
     + [Directories](#directories)
   * [System Architecture](#system-architecture)
@@ -69,6 +70,16 @@ Secondly, if the Pool is not sufficient to cancel with the liquidated debt, the 
 Stability Pool depositors earn rewards in Ether over time, as liquidated debt is cancelled with their deposit. When they withdraw all or part of their deposited tokens, or top up their deposit, they system sends them their accumulated ETH gains.
 
 Similarly, a CDP’s accumulated rewards from liquidations are automatically applied to the CDP when the owner performs any operation - e.g. adding/withdrawing collateral, or issuing/repaying CLV.
+
+## CLV Token Redemption
+
+Any CLV holder (whether or not they have an active CDP) may redeem their CLV directly with the system. Their CLV is exchanged for ETH, at face value: redeeming x CLV tokens returns $x worth of ETH.
+
+When CLV is redeemed for ETH, the system cancels the CLV with debt from troves, and the ETH is drawn from their collateral. 
+
+In order to fulfill the redemption request, troves are redeemed from in ascending order of their collateral ratio.
+
+Economically, this redemption mechanism creates a hard price floor for CLV, ensuring that the market price stays at or near to $1 USD.
 
 ## Recovery Mode
 
