@@ -1,9 +1,10 @@
 import React from "react";
-import { NavLink, NavLinkProps } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { Box, SxProps } from "theme-ui";
 
 import { Nav, NavProps } from "./Nav";
 import { Icon } from "./Icon";
+import { isElement } from "../utils/children";
 
 const activeClassName = "active";
 
@@ -44,13 +45,13 @@ export const NavBar: React.FC<NavBarProps> = ({ sx, children, ...navProps }) => 
     }}
   >
     {React.Children.map(children, child =>
-      React.isValidElement<NavLinkProps>(child) && child.type === NavLink
+      isElement(NavLink)(child)
         ? React.cloneElement(
             child,
             { activeClassName },
 
             React.Children.map(child.props.children, linkChild =>
-              React.isValidElement(linkChild) && linkChild.type === Icon ? (
+              isElement(Icon)(linkChild) ? (
                 <Box
                   sx={{
                     width: ["60px", "46px"],

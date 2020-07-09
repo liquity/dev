@@ -1,13 +1,7 @@
-import React, { ReactNode, ReactElement } from "react";
+import React from "react";
 import { Box, SxProps, Label as ThemeUILabel, LabelProps, Flex, Input } from "theme-ui";
 
-const partition = <T, U extends T>(a: T[], u: (t: T) => t is U) =>
-  a.reduce<[U[], T[]]>(([uu, tt], t) => (u(t) ? [[...uu, t], tt] : [uu, [...tt, t]]), [[], []]);
-
-const isElement = <T extends React.JSXElementConstructor<any>>(t: T) => (
-  node: ReactNode
-): node is ReactElement<T extends React.JSXElementConstructor<infer P> ? P : any> =>
-  React.isValidElement(node) && node.type === t;
+import { partition, isElement } from "../utils/children";
 
 export const Label: React.FC<React.PropsWithoutRef<LabelProps> & SxProps> = ({
   sx,
