@@ -65,7 +65,7 @@ interface ICDPManager {
 
     function updateStakeAndTotalStakes(address _user) external returns (uint);
 
-    function updateRewardSnapshots(address _user) external;
+    function updateCDPRewardSnapshots(address _user) external;
 
     function addCDPOwnerToArray(address _user) external returns (uint index);
 

@@ -62,7 +62,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("updateRewardSnapshots(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.updateRewardSnapshots(bob, { from: alice })
+        txAlice = await cdpManager.updateCDPRewardSnapshots(bob, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")

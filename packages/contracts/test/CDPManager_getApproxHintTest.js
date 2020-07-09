@@ -44,7 +44,7 @@ contract('CDPManager', async accounts => {
  const openCDP = async (account, index) => {
    const amountFinney = 2000 + index * 10
    const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-   await borrowerOperations.addColl(account, account, { from: account, value: coll })
+   await borrowerOperations.openLoan(0, account, { from: account, value: coll })
  }
 
  const withdrawCLVfromCDP = async (account) => {
@@ -61,7 +61,7 @@ contract('CDPManager', async accounts => {
     console.time('makeCDPsInSequence')
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-      await borrowerOperations.addColl(account, account, { from: account, value: coll })
+      await borrowerOperations.openLoan(0, account, { from: account, value: coll })
       await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
   
       amountFinney += 10

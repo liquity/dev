@@ -577,7 +577,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             CDPs[_user].coll = CDPs[_user].coll.add(pendingETHReward);  
             CDPs[_user].debt = CDPs[_user].debt.add(pendingCLVDebtReward); 
 
-            _updateRewardSnapshots(_user);
+            _updateCDPRewardSnapshots(_user);
 
             // Tell PM to transfer from DefaultPool to ActivePool when user claims rewards
             poolManager.moveDistributionRewardsToActivePool(pendingCLVDebtReward, pendingETHReward); 
@@ -585,11 +585,11 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     }
 
     // Update user's snapshots of L_ETH and L_CLVDebt to reflect the current values
-    function updateRewardSnapshots(address _user) external onlyBorrowerOperations {
-       return  _updateRewardSnapshots(_user);
+    function updateCDPRewardSnapshots(address _user) external onlyBorrowerOperations {
+       return  _updateCDPRewardSnapshots(_user);
     }
 
-    function _updateRewardSnapshots(address _user) internal {
+    function _updateCDPRewardSnapshots(address _user) internal {
         rewardSnapshots[_user].ETH = L_ETH; 
         rewardSnapshots[_user].CLVDebt = L_CLVDebt; 
     }

@@ -70,8 +70,8 @@ contract('CDPManager', async accounts => {
   })
 
   it('liquidate(): closes a CDP that has ICR < MCR', async () => {
-    await borrowerOperations.addColl(whale, whale, { from: whale, value: _50_Ether })
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: _1_Ether })
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: _50_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: _1_Ether })
 
     const price = await priceFeed.getPrice()
     const ICR_Before = web3.utils.toHex(await cdpManager.getCurrentICR(alice, price))
@@ -104,8 +104,8 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): decreases ActivePool ETH and CLVDebt by correct amounts", async () => {
     // --- SETUP ---
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: _10_Ether })
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: _1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
     // Alice withdraws 100CLV, Bob withdraws 180CLV
     await borrowerOperations.withdrawCLV('100000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
@@ -143,8 +143,8 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): increases DefaultPool ETH and CLV debt by correct amounts", async () => {
     // --- SETUP ---
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: _10_Ether })
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: _1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
 
     await borrowerOperations.withdrawCLV('1000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
@@ -181,8 +181,8 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): removes the CDP's stake from the total stakes", async () => {
     // --- SETUP ---
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: _10_Ether })
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: _1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
 
     await borrowerOperations.withdrawCLV('1000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
@@ -275,8 +275,8 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): updates the snapshots of total stakes and total collateral", async () => {
     // --- SETUP ---
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: _10_Ether })
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: _1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
 
     await borrowerOperations.withdrawCLV('1000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
@@ -312,9 +312,9 @@ contract('CDPManager', async accounts => {
 
   it("liquidate(): updates the L_ETH and L_CLVDebt reward-per-unit-staked totals", async () => {
     // --- SETUP ---
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: _10_Ether })
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: _10_Ether })
-    await borrowerOperations.addColl(carol, carol, { from: carol, value: _1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: _10_Ether })
+    await borrowerOperations.openLoan(0, carol, { from: carol, value: _1_Ether })
 
     // Carol withdraws 180CLV, lowering her ICR to 1.11
     await borrowerOperations.withdrawCLV('180000000000000000000', carol, { from: carol })

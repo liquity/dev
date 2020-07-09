@@ -112,7 +112,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         cdpManager.increaseCDPColl(user, msg.value);
         cdpManager.increaseCDPDebt(user, _CLVAmount);
         
-        cdpManager.updateRewardSnapshots(user); 
+        cdpManager.updateCDPRewardSnapshots(user); 
         uint stake = cdpManager.updateStakeAndTotalStakes(user); 
         
         sortedCDPs.insert(user, ICR, price, _hint, _hint); 
@@ -128,19 +128,10 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     // Send ETH as collateral to a CDP
     function addColl(address _user, address _hint) external payable {
-        bool isFirstCollDeposit = false;
+        _requireCDPisActive(_user);
 
         uint price = priceFeed.getPrice();
-        uint status = cdpManager.getCDPStatus(_user);
     
-        // If non-existent or closed, open a new trove
-        if (status == 0 || status == 2 ) {
-            _requireValueIsGreaterThan20Dollars(msg.value, price);
-
-            isFirstCollDeposit = true; 
-            cdpManager.setCDPStatus(_user, 1);
-        } 
-
         cdpManager.applyPendingRewards(_user);
        
         // Update the CDP's coll and stake
@@ -148,14 +139,8 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         uint stake = cdpManager.updateStakeAndTotalStakes(_user);
         uint newICR = cdpManager.getCurrentICR(_user, price);
    
-        if (isFirstCollDeposit) { 
-            sortedCDPs.insert(_user, newICR, price, _hint, _hint);
-            uint arrayIndex = cdpManager.addCDPOwnerToArray(_user);
-            emit CDPCreated(_user, arrayIndex);
-        } else {
-            sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);  
-        }
-
+        sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);  
+       
         // Tell PM to move the ether to the Active Pool
         poolManager.addColl.value(msg.value)();
   
