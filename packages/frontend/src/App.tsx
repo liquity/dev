@@ -18,9 +18,9 @@ import { ContentInfo } from "./components/ContentInfo";
 import { Main } from "./components/Main";
 import { BorrowPage } from "./pages/BorrowPage";
 import { Complementary } from "./components/Complementary";
-import { WalletDropdown } from "./components/WalletDropdown";
+import { WalletDropdownButton } from "./components/WalletDropdownButton";
 import { MoreInfoButton } from "./components/MoreInfoButton";
-import { WalletBalance } from "./components/WalletBalance";
+import { WalletBalanceWidget } from "./components/WalletBalanceWidget";
 import { SystemStatsCard } from "./components/SystemStatsCard";
 import { PriceFeedsCard } from "./components/PriceFeedsCard";
 
@@ -124,8 +124,8 @@ const LiquityFrontend: React.FC = () => {
                 width: "360px"
               }}
             >
-              <WalletDropdown />
-              <WalletBalance />
+              <WalletDropdownButton />
+              <WalletBalanceWidget />
             </Flex>
 
             <Box sx={{ position: "absolute", right: 0 }}>

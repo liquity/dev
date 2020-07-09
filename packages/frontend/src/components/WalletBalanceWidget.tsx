@@ -3,7 +3,7 @@ import { Flex, Text } from "theme-ui";
 
 import { Icon } from "./Icon";
 
-export const WalletBalance: React.FC = () => (
+export const WalletBalanceWidget: React.FC = () => (
   <Flex
     sx={{
       alignItems: "center",
