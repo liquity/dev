@@ -53,17 +53,19 @@ Tokens are freely exchangeable - anyone with an Ethereum address can send or rec
 
 The Liquity system regularly updates the ETH:USD price via a decentralized data feed. When a CDP falls below a minimum collateral ratio (MCR) of 110%, it is considered under-collateralized, and is vulnerable to liquidation.
 
-## Liquidation
+## Liquidation and the Stability Pool
 
 Liquity redistributes the collateral and debt from under-collateralized loans. It distributes primarily to CLV holders who have added tokens to the Stability Pool.
 
-Any user may deposit CLV tokens to the Stability Pool. This allows them to earn “rewards” over time, from liquidated CDPs. Stability Pool depositors can expect a net gain from their deposited tokens, as they receive a share of the collateral surplus of liquidated CDPs. The Ether they receive will in most cases be greater than the value of the cancelled debt. 
+Any user may deposit CLV tokens to the Stability Pool. This allows them to earn “rewards” over time, from liquidated CDPs. When a liquidation occurs, the liquidated debt is cancelled with CLV in the Pool, and the liquidated Ether is proportionally distributed to depositors.
+
+Stability Pool depositors can expect to earn net gains from liquidations, as in most cases, the value of the liquidated Ether will be greater than the value of the cancelled debt (since a liquidated CDP will likely have an ICR just slightly below 110%).
 
 Anyone may call the public `liquidateCDPs()` function, which will check for under-collateralized loans, and liquidate them.
 
-Liquity redistributes liquidations in two ways: firstly, it tries to cancel as much debt as possible with the tokens in the Stability pool, and distributes the liquidated collateral between the Stability Pool participants.
+Liquity redistributes liquidations in two ways: firstly, it tries to cancel as much debt as possible with the tokens in the Stability pool, and distributes the liquidated collateral between the Stability Pool depositors.
 
-Secondly, if the Pool is not sufficient to cancel with the liquidated debt, the system distributes the liquidated collateral and debt across all active CDPs.
+Secondly, if the CLV in the Pool is not sufficient to cancel with the liquidated debt, the system cancels as much as possible, and then distributes the remaining liquidated collateral and debt across all active CDPs.
 
 ## Rewards From Liquidations
 
