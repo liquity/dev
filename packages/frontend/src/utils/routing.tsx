@@ -20,7 +20,11 @@ export const NestedSwitch: React.FC = ({ children }) => {
 export const RelativeLink: React.FC<LinkProps> = ({ to, children, ...linkProps }) => {
   const { url } = useRouteMatch();
 
-  return <Link to={`${url}/${to}`}>{children}</Link>;
+  return (
+    <Link to={`${url}/${to}`} {...linkProps}>
+      {children}
+    </Link>
+  );
 };
 
 type DialogRouteParams = { basePage: string };
