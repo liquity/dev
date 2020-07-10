@@ -11,7 +11,8 @@ import {
   faExclamationCircle,
   faUnlock,
   faLock,
-  faInfo
+  faInfo,
+  faSearch
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
 
@@ -26,7 +27,8 @@ library.add(
   faExclamationCircle,
   faUnlock,
   faLock,
-  faInfo
+  faInfo,
+  faSearch
 );
 
 export type IconProps = Pick<FontAwesomeIconProps, "size" | "color" | "spin" | "fixedWidth"> & {

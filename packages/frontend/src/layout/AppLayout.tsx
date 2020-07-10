@@ -48,7 +48,13 @@ export const AppLayout: React.FC = ({ children }) => {
         <AccessibleLiquityLogo />
 
         {React.cloneElement(title, {
-          sx: { position: ["absolute", "unset"], top: "100%", ml: [0, "0.75em"] }
+          sx: {
+            position: ["absolute", "unset"],
+            top: "100%",
+            ml: [0, "0.75em"],
+            mt: "0.6em",
+            fontSize: "0.5em"
+          }
         })}
       </Banner>
 

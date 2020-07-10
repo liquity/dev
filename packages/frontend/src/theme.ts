@@ -82,11 +82,12 @@ const theme: Theme = {
       letterSpacing: "-0.005em"
     },
 
-    caps: {
+    title: {
       textTransform: "uppercase",
       fontFamily: "body",
       fontWeight: "body",
-      letterSpacing: "0.06em"
+      letterSpacing: "0.06em",
+      lineHeight: 1
     }
   },
 

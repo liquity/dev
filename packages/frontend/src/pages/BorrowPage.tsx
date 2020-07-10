@@ -6,6 +6,7 @@ import { IndicatorWidget, IndicatorLabel } from "../components/IndicatorWidget";
 import { BackgroundOverlay } from "../components/BackgroundOverlay";
 import { Form } from "../components/Form";
 import { Field, Label, Unit } from "../components/Field";
+import { RelativeLink } from "../utils/routing";
 
 export const BorrowPage: React.FC = () => (
   <Form sx={{ maxHeight: ["650px", "500px"] }}>
@@ -49,9 +50,11 @@ export const BorrowPage: React.FC = () => (
       <Unit>LQTY</Unit>
     </Field>
 
-    <Button>
-      <Icon name="unlock" />
-      Make changes
-    </Button>
+    <RelativeLink to="dialog/changeTrove">
+      <Button>
+        <Icon name="unlock" />
+        Make changes
+      </Button>
+    </RelativeLink>
   </Form>
 );
