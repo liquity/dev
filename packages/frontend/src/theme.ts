@@ -12,6 +12,8 @@ const baseColors = {
   lightRed: "#ff755f"
 };
 
+const backgroundColorRgb = "255, 255, 255";
+
 const colors = {
   primary: baseColors.blue,
   secondary: baseColors.purple,
@@ -25,14 +27,16 @@ const colors = {
   invalid: "pink",
 
   text: "#293147",
-  background: "white",
+  background: `rgba(${backgroundColorRgb}, 1)`,
   border: "#c8cbd0",
   muted: "#eaebed",
+
+  "background-transparent": `rgba(${backgroundColorRgb}, 0.75)`,
   "muted-transparent": "rgba(45, 55, 75, 0.1)"
 };
 
 const cardBase = {
-  bg: "rgba(255, 255, 255, 0.75)",
+  bg: "background-transparent",
   borderRadius: 2,
   boxShadow: 2
 } as const;
@@ -141,7 +145,11 @@ const theme: Theme = {
     icon: {
       ...buttonBase,
 
+      width: "36px",
+      height: "36px",
+
       color: "primary",
+      fontSize: 4,
 
       ":hover": {
         color: "accent"
@@ -149,6 +157,36 @@ const theme: Theme = {
 
       ":focus": {
         color: "accent"
+      }
+    },
+
+    inline: {
+      ...buttonBase,
+
+      display: "inline",
+
+      width: "unset",
+      height: "unset",
+      p: 0,
+      mx: "0.25em",
+
+      color: "primary",
+      fontSize: "inherit",
+      fontFamily: "inherit",
+      fontWeight: "bold",
+      lineHeight: 1,
+
+      ":hover": {
+        color: "accent"
+      },
+
+      ":focus": {
+        color: "accent"
+      },
+
+      svg: {
+        mt: "0.25em",
+        ml: "0.25em"
       }
     },
 
@@ -243,22 +281,29 @@ const theme: Theme = {
       height: "100%",
 
       "#root": {
-        height: "100%",
-
-        "> *": {
-          ...breakOnWide({
-            background: [
-              "none",
-              "linear-gradient(90deg, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 90%)"
-            ]
-          })
-        }
+        height: "100%"
       }
     },
 
     a: {
       color: "primary",
       ":hover": { color: "accent" }
+    },
+
+    appBackground: {
+      ...breakOnWide({
+        background: [
+          "none",
+          `linear-gradient(` +
+            `90deg, ` +
+            `rgba(${backgroundColorRgb}, 1) 60%, ` +
+            `rgba(${backgroundColorRgb}, 0) 90%)`
+        ]
+      })
+    },
+
+    dialogBackground: {
+      bg: "background-transparent"
     }
   }
 };

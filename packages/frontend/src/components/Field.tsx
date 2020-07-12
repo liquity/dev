@@ -8,7 +8,7 @@ export const Label: React.FC<React.PropsWithoutRef<LabelProps> & SxProps> = ({
   children,
   ...labelProps
 }) => (
-  <ThemeUILabel {...labelProps} sx={{ position: "absolute", top: "-1.5em", ...sx }}>
+  <ThemeUILabel {...labelProps} sx={{ ml: 1, ...sx }}>
     {children}
   </ThemeUILabel>
 );
@@ -42,7 +42,7 @@ export const Field: React.FC<FieldProps> = ({ id, sx, children }) => {
   }
 
   return (
-    <Box sx={{ position: "relative", ...sx }}>
+    <Box {...{ sx }}>
       {React.cloneElement(label, { htmlFor: id })}
 
       <Flex>

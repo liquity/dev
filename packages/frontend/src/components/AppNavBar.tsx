@@ -2,17 +2,14 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { Box, SxProps } from "theme-ui";
 
-import { Nav, NavProps } from "./Nav";
+import { Nav } from "./Nav";
 import { Icon } from "./Icon";
 import { isElement } from "../utils/children";
 
 const activeClassName = "active";
 
-type NavBarProps = NavProps & SxProps;
-
-export const NavBar: React.FC<NavBarProps> = ({ sx, children, ...navProps }) => (
+export const AppNavBar: React.FC<SxProps> = ({ sx, children }) => (
   <Nav
-    {...navProps}
     sx={{
       fontFamily: "heading",
       fontSize: [1, 4],

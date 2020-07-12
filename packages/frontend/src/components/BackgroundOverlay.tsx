@@ -13,9 +13,9 @@ export const BackgroundOverlay: React.FC<SxProps> = ({ sx, children }) => (
       width: "100%",
       height: ["88%", "100%"],
 
-      color: "muted",
+      color: "text",
       fontSize: "10em",
-      opacity: 0.5,
+      opacity: 0.05,
 
       ...sx
     }}

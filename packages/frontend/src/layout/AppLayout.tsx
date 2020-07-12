@@ -11,7 +11,8 @@ import {
 import { Banner } from "../components/Banner";
 import { AccessibleLiquityLogo } from "../components/AccessibleLiquityLogo";
 import { Title } from "../components/Title";
-import { NavBar } from "../components/NavBar";
+import { Nav } from "../components/Nav";
+import { AppNavBar } from "../components/AppNavBar";
 import { ContentInfo } from "../components/ContentInfo";
 import { Main } from "../components/Main";
 import { Complementary } from "../components/Complementary";
@@ -24,18 +25,19 @@ import { PriceFeedsCard } from "../components/PriceFeedsCard";
 export const AppLayout: React.FC = ({ children }) => {
   const arrayOfChildren = React.Children.toArray(children);
   const [[title, ...extraTitles], tmpChildren] = partition(arrayOfChildren, isElement(Title));
-  const [[navBar, ...extraNavBars], restOfChildren] = partition(tmpChildren, isElement(NavBar));
+  const [[nav, ...extraNavs], restOfChildren] = partition(tmpChildren, isElement(Nav));
 
   if (extraTitles.length > 0) {
     throw new Error("<AppLayout> mustn't have more than one <Title>");
   }
 
-  if (extraNavBars.length > 0) {
-    throw new Error("<AppLayout> mustn't have more than one <NavBar>");
+  if (extraNavs.length > 0) {
+    throw new Error("<AppLayout> mustn't have more than one <Nav>");
   }
 
   return (
     <Flex
+      variant="styles.appBackground"
       sx={{
         flexDirection: "column",
 
@@ -47,31 +49,38 @@ export const AppLayout: React.FC = ({ children }) => {
       <Banner sx={{ position: "relative" }}>
         <AccessibleLiquityLogo />
 
-        {React.cloneElement(title, {
-          sx: {
-            position: ["absolute", "unset"],
-            top: "100%",
-            ml: [0, "0.75em"],
-            mt: "0.6em",
-            fontSize: "0.5em"
-          }
-        })}
+        {title &&
+          React.cloneElement(title, {
+            sx: {
+              position: ["absolute", "unset"],
+              top: "100%",
+              ml: [0, "0.75em"],
+              mt: "0.6em",
+              fontSize: "0.5em"
+            }
+          })}
       </Banner>
 
       <Flex sx={{ flexGrow: 1 }}>
         <Flex sx={{ flexDirection: "column" }}>
-          {React.cloneElement(navBar, {
-            sx: {
-              flexGrow: 1,
+          {nav && (
+            <AppNavBar
+              sx={{
+                flexGrow: 1,
 
-              position: ["absolute", "unset"],
-              top: 5,
-              left: 8,
-              right: 8,
+                position: ["absolute", "unset"],
+                top: 5,
+                left: 8,
+                right: 8,
 
-              mx: 7
-            }
-          })}
+                mx: 7,
+
+                ...nav.props.sx
+              }}
+            >
+              {nav.props.children}
+            </AppNavBar>
+          )}
 
           <ContentInfo sx={{ ...displayOnNonMobile }}>© Liquity.org | 2020</ContentInfo>
         </Flex>

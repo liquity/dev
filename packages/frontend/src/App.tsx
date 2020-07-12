@@ -4,11 +4,10 @@ import { ThemeProvider } from "theme-ui";
 
 import theme from "./theme";
 import { Icon } from "./components/Icon";
-import { NavBar } from "./components/NavBar";
+import { Nav } from "./components/Nav";
 import { Title } from "./components/Title";
 import { BorrowPage } from "./pages/BorrowPage";
 import { AppLayout } from "./layout/AppLayout";
-import { DialogLayout } from "./layout/DialogLayout";
 import { DialogSwitch, NestedSwitch } from "./utils/routing";
 import { ChangeTroveDialog } from "./dialogs/ChangeTroveDialog";
 import { NotFoundRedirect, NotFoundPage } from "./pages/NotFoundPage";
@@ -18,15 +17,13 @@ const notFoundPageUrl = "/404";
 const LiquityFrontend: React.FC = () => {
   return (
     <DialogSwitch>
-      <DialogLayout>
-        <NestedSwitch>
-          <Route path="changeTrove">
-            <ChangeTroveDialog />
-          </Route>
+      <NestedSwitch>
+        <Route path="changeTrove">
+          <ChangeTroveDialog />
+        </Route>
 
-          <NotFoundRedirect to={notFoundPageUrl} />
-        </NestedSwitch>
-      </DialogLayout>
+        <NotFoundRedirect to={notFoundPageUrl} />
+      </NestedSwitch>
 
       <AppLayout>
         <Title>
@@ -37,7 +34,7 @@ const LiquityFrontend: React.FC = () => {
           </Switch>
         </Title>
 
-        <NavBar>
+        <Nav>
           <NavLink to="/borrow">
             <Icon name="hands-helping" />
             Borrow
@@ -52,22 +49,20 @@ const LiquityFrontend: React.FC = () => {
             <Icon name="retweet" />
             Redeem
           </NavLink>
-        </NavBar>
+        </Nav>
 
         <Switch>
           <Route exact path={notFoundPageUrl}>
             <NotFoundPage />
           </Route>
 
-          <Route exact path="/">
-            <Redirect to="/borrow" />
-          </Route>
+          <Redirect exact from="/" to="/borrow" />
 
           <Route path="/borrow">
             <BorrowPage />
           </Route>
 
-          <NotFoundRedirect to={notFoundPageUrl} />
+          <NotFoundPage />
         </Switch>
       </AppLayout>
     </DialogSwitch>

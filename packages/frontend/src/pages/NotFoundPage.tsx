@@ -5,22 +5,16 @@ import { useLocation, Redirect, RedirectProps } from "react-router-dom";
 import { Icon } from "../components/Icon";
 
 export const NotFoundPage: React.FC = () => {
-  const { search } = useLocation();
+  const { pathname, search } = useLocation();
   const resource = new URLSearchParams(search).get("resource");
 
   return (
     <>
-      <Flex sx={{ alignItems: "center", fontSize: 5 }}>
+      <Flex sx={{ alignItems: "center", fontSize: 5, mt: 9 }}>
         <Icon name="search" />
 
         <Text sx={{ ml: 5, fontSize: 3, maxWidth: "320px" }}>
-          {resource ? (
-            <>
-              Couldn't find <strong>{resource}</strong>
-            </>
-          ) : (
-            <>The resource you were looking for couldn't be found.</>
-          )}
+          Couldn't find <strong>{resource || pathname}</strong>
         </Text>
       </Flex>
     </>

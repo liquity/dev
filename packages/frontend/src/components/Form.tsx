@@ -13,7 +13,7 @@ export const Form: React.FC<SxProps> = ({ sx, children }) => (
 
       position: "relative",
       zIndex: 0,
-      height: "100%",
+      flexGrow: 1,
 
       "::before": {
         ...displayOnMobile,

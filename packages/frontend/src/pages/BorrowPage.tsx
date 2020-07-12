@@ -33,19 +33,19 @@ export const BorrowPage: React.FC = () => (
       </IndicatorWidget>
     </Flex>
 
-    <Field id="trove-collateral">
-      <Label>Collateral</Label>
+    <Field id="trove-collateral" sx={{ position: "relative" }}>
+      <Label sx={{ position: "absolute", top: "-1.5em" }}>Collateral</Label>
       <Input value="12.5390" disabled />
       <Unit>
         ETH
         <IconButton aria-label="Change currency">
-          <Icon name="retweet" size="lg" />
+          <Icon name="retweet" size="xs" />
         </IconButton>
       </Unit>
     </Field>
 
-    <Field id="trove-debt">
-      <Label>Outstanding debt</Label>
+    <Field id="trove-debt" sx={{ position: "relative" }}>
+      <Label sx={{ position: "absolute", top: "-1.5em" }}>Outstanding debt</Label>
       <Input value="1000.00" disabled />
       <Unit>LQTY</Unit>
     </Field>
