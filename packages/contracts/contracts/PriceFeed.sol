@@ -68,10 +68,9 @@ contract PriceFeed is Ownable, IPriceFeed {
         return price;
     }
 
-    // --- DEVELOPMENT FUNCTIONALITY  ---
+    // --- DEVELOPMENT FUNCTIONALITY - TODO: remove before mainnet deployment.  ---
 
-    /* Manual external price setter. 
-    TODO: remove before mainnet deployment. */
+    // Manual external price setter. 
     function setPrice(uint256 _price) external returns (bool) {
         price = _price;
         emit PriceUpdated(price);
