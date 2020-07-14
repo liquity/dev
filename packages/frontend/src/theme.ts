@@ -28,11 +28,11 @@ const colors = {
 
   text: "#293147",
   background: `rgba(${backgroundColorRgb}, 1)`,
-  border: "#c8cbd0",
-  muted: "#eaebed",
+  border: "#dfe2e8",
+  muted: "#f0f1f2",
 
   "background-transparent": `rgba(${backgroundColorRgb}, 0.75)`,
-  "muted-transparent": "rgba(45, 55, 75, 0.1)"
+  "muted-transparent": "#f0f1f2"
 };
 
 const cardBase = {
@@ -77,7 +77,13 @@ const theme: Theme = {
 
   borders: [0, "1px solid"],
 
-  shadows: ["0", "0px 4px 8px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
+  shadows: [
+    "0",
+    "0px 4px 8px rgba(41, 49, 71, 0.2)",
+    // "0px 8px 16px rgba(41, 49, 71, 0.2)",
+    "0",
+    "0px 8px 16px rgba(176, 207, 244, 0.4)"
+  ],
 
   text: {
     logo: {

@@ -8,6 +8,7 @@ import { Nav } from "./components/Nav";
 import { Title } from "./components/Title";
 import { BorrowPage } from "./pages/BorrowPage";
 import { AppLayout } from "./layout/AppLayout";
+import { AppLayout as AppLayout2 } from "./layout/AppLayout2";
 import { DialogSwitch, NestedSwitch } from "./utils/routing";
 import { ChangeTroveDialog } from "./dialogs/ChangeTroveDialog";
 import { NotFoundRedirect, NotFoundPage } from "./pages/NotFoundPage";
@@ -15,6 +16,55 @@ import { NotFoundRedirect, NotFoundPage } from "./pages/NotFoundPage";
 const notFoundPageUrl = "/404";
 
 const LiquityFrontend: React.FC = () => {
+  const layouts = [AppLayout, AppLayout2];
+
+  const { props: layoutProps } = (
+    <>
+      <Title>
+        <Switch>
+          <Route path="/borrow">My Trove</Route>
+          <Route path="/grow">My Stability Deposit</Route>
+          <Route path="/redeem">Redeem</Route>
+        </Switch>
+      </Title>
+
+      <Nav>
+        <NavLink to="/borrow">
+          <Icon name="hands-helping" />
+          Borrow
+        </NavLink>
+
+        <NavLink to="/grow">
+          <Icon name="seedling" />
+          Grow
+        </NavLink>
+
+        <NavLink to="/redeem">
+          <Icon name="retweet" />
+          Redeem
+        </NavLink>
+      </Nav>
+
+      <Switch>
+        <Route exact path={notFoundPageUrl}>
+          <NotFoundPage />
+        </Route>
+
+        <Redirect exact from="/" to="/borrow" />
+
+        <Route path="/borrow">
+          <BorrowPage />
+        </Route>
+
+        <NotFoundPage />
+      </Switch>
+    </>
+  );
+
+  const [, layoutIdx] = (
+    document.cookie.split("; ").find(cookie => cookie.startsWith("layout=")) ?? "layout=0"
+  ).split("=");
+
   return (
     <DialogSwitch>
       <NestedSwitch>
@@ -25,46 +75,7 @@ const LiquityFrontend: React.FC = () => {
         <NotFoundRedirect to={notFoundPageUrl} />
       </NestedSwitch>
 
-      <AppLayout>
-        <Title>
-          <Switch>
-            <Route path="/borrow">My Trove</Route>
-            <Route path="/grow">My Stability Deposit</Route>
-            <Route path="/redeem">Redeem</Route>
-          </Switch>
-        </Title>
-
-        <Nav>
-          <NavLink to="/borrow">
-            <Icon name="hands-helping" />
-            Borrow
-          </NavLink>
-
-          <NavLink to="/grow">
-            <Icon name="seedling" />
-            Grow
-          </NavLink>
-
-          <NavLink to="/redeem">
-            <Icon name="retweet" />
-            Redeem
-          </NavLink>
-        </Nav>
-
-        <Switch>
-          <Route exact path={notFoundPageUrl}>
-            <NotFoundPage />
-          </Route>
-
-          <Redirect exact from="/" to="/borrow" />
-
-          <Route path="/borrow">
-            <BorrowPage />
-          </Route>
-
-          <NotFoundPage />
-        </Switch>
-      </AppLayout>
+      {React.createElement(layouts[parseInt(layoutIdx, 10)], layoutProps)}
     </DialogSwitch>
   );
 };

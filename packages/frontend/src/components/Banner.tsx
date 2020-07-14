@@ -5,7 +5,6 @@ export const Banner: React.FC<SxProps> = ({ sx, children }) => (
   <Flex
     as="header"
     sx={{
-      p: [5, 7],
       fontSize: "38px",
 
       ...sx

@@ -46,7 +46,7 @@ export const AppLayout: React.FC = ({ children }) => {
         minHeight: "100%"
       }}
     >
-      <Banner sx={{ position: "relative" }}>
+      <Banner sx={{ position: "relative", p: [5, 7] }}>
         <AccessibleLiquityLogo />
 
         {title &&
