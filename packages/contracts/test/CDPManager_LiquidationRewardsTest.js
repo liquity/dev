@@ -774,6 +774,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.equal(entireSystemColl_3, '3998000000000000000000')
   })
 
+ // For calculations of correct values used in test, see scenario 1:
+ // https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). A, B, C withdraw. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
@@ -878,6 +880,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.equal(entireSystemColl_3, '3997000000000000000000')
   })
 
+    // For calculations of correct values used in test, see scenario 2:
+ // https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
   it("redistribution, all operations: A,B,C open. Liq(A). D opens. B adds, C withdraws. Liq(B). E & F open. D adds. Liq(F). All 1 ETH operations. Distributes correct rewards", async () => {
     // A, B, C open troves
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
