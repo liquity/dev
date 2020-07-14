@@ -14,7 +14,9 @@ import {
   faInfo,
   faSearch,
   faTimes,
-  faCircle
+  faCircle,
+  faArrowLeft,
+  faExternalLinkAlt
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
 
@@ -32,7 +34,9 @@ library.add(
   faInfo,
   faSearch,
   faTimes,
-  faCircle
+  faCircle,
+  faArrowLeft,
+  faExternalLinkAlt
 );
 
 export type IconProps = Pick<FontAwesomeIconProps, "size" | "color" | "spin" | "fixedWidth"> & {

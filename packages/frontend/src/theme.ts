@@ -42,7 +42,13 @@ const cardBase = {
 } as const;
 
 const buttonBase = {
-  cursor: "pointer"
+  ":enabled": {
+    cursor: "pointer"
+  },
+
+  ":disabled": {
+    opacity: 0.33
+  }
 };
 
 const theme: Theme = {
@@ -135,7 +141,7 @@ const theme: Theme = {
       fontWeight: "bold",
       borderRadius: 1,
 
-      ":hover": {
+      ":enabled:hover": {
         bg: "secondary"
       },
 

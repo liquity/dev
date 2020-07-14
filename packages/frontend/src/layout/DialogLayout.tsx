@@ -41,7 +41,7 @@ export const DialogLayout: React.FC = ({ children }) => {
           bottom: 9,
           left: 0,
           right: 0,
-          minHeight: "580px"
+          minHeight: ["450px", "580px"]
         }}
       >
         {title &&

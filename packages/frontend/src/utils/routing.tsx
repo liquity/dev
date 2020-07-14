@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { Switch, Route, useRouteMatch, useParams, LinkProps, Link } from "react-router-dom";
+import { Box, SxProps } from "theme-ui";
 
 import { isElement } from "./children";
 
@@ -17,24 +18,25 @@ export const NestedSwitch: React.FC = ({ children }) => {
   );
 };
 
-export const RelativeLink: React.FC<LinkProps> = ({ to, style, children, ...linkProps }) => {
-  const { url } = useRouteMatch();
-
+export const ButtonLink: React.FC<LinkProps & SxProps> = ({ sx, children, ...linkProps }) => {
   return (
-    <Link
-      to={`${url}/${to}`}
-      {...linkProps}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "stretch",
-        textDecoration: "none",
+    <Box
+      sx={{
+        display: "inline-block",
 
-        ...style
+        a: {
+          width: "100%",
+          cursor: "default",
+          textDecoration: "none",
+
+          button: {
+            width: "100%"
+          }
+        }
       }}
     >
-      {children}
-    </Link>
+      <Link {...linkProps}>{children}</Link>
+    </Box>
   );
 };
 
@@ -64,4 +66,4 @@ export const DialogSwitch: React.FC = ({ children }) => {
   );
 };
 
-export const useDialogBasePage = () => useContext(DialogBasePageContext);
+export const useDialogBasePage = () => `/${useContext(DialogBasePageContext) ?? ""}`;
