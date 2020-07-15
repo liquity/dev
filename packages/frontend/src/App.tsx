@@ -1,6 +1,6 @@
 import React from "react";
 import { HashRouter as Router, Switch, Route, Redirect, NavLink } from "react-router-dom";
-import { ThemeProvider } from "theme-ui";
+import { ThemeProvider, Link, Flex, Text } from "theme-ui";
 
 import theme from "./theme";
 import { Icon } from "./components/Icon";
@@ -62,22 +62,41 @@ const LiquityFrontend: React.FC = () => {
     </>
   );
 
-  const [, layoutIdx] = (
+  const [, layoutIdxString] = (
     document.cookie.split("; ").find(cookie => cookie.startsWith("layout=")) ?? "layout=0"
   ).split("=");
+  const rawLayoutIdx = parseInt(layoutIdxString, 10);
+  const layoutIdx = rawLayoutIdx < layouts.length ? rawLayoutIdx : 0;
+  const layout = layouts[layoutIdx];
 
   return (
-    <DialogSwitch>
-      <NestedSwitch>
-        <Route path="changeTrove">
-          <ChangeTroveDialog />
-        </Route>
+    <>
+      <DialogSwitch>
+        <NestedSwitch>
+          <Route path="changeTrove">
+            <ChangeTroveDialog />
+          </Route>
 
-        <NotFoundRedirect to={notFoundPageUrl} />
-      </NestedSwitch>
+          <NotFoundRedirect to={notFoundPageUrl} />
+        </NestedSwitch>
 
-      {React.createElement(layouts[parseInt(layoutIdx, 10)], layoutProps)}
-    </DialogSwitch>
+        {React.createElement(layout, layoutProps)}
+      </DialogSwitch>
+
+      <Flex sx={{ position: "absolute", bottom: 3, right: 3 }}>
+        <Text sx={{ mr: 3 }}>layout #{layoutIdx + 1}</Text>
+
+        <Link
+          onClick={() => {
+            document.cookie = `layout=${(layoutIdx + 1) % layouts.length}`;
+            window.location.reload();
+          }}
+          sx={{ cursor: "pointer" }}
+        >
+          next {">"}
+        </Link>
+      </Flex>
+    </>
   );
 };
 
