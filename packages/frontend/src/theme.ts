@@ -85,7 +85,7 @@ const theme: Theme = {
 
   shadows: [
     "0",
-    "0px 4px 8px rgba(41, 49, 71, 0.2)",
+    "0px 6px 12px rgba(41, 49, 71, 0.05)",
     // "0px 8px 16px rgba(41, 49, 71, 0.2)",
     "0",
     "0px 8px 16px rgba(176, 207, 244, 0.4)"
@@ -126,6 +126,29 @@ const theme: Theme = {
         td: {
           p: 0
         }
+      }
+    },
+
+    new: {
+      p: 6,
+
+      bg: "white",
+      boxShadow: "none",
+      border: 1,
+      borderColor: "border",
+      borderRadius: 1,
+
+      h2: {
+        m: -6,
+        mb: 5,
+        px: 6,
+        py: 5,
+
+        fontSize: 4,
+        lineHeight: 1,
+
+        borderBottom: 1,
+        borderColor: "border"
       }
     }
   },

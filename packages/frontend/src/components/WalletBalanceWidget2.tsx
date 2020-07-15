@@ -1,9 +1,9 @@
 import React from "react";
-import { Flex, Text, Box } from "theme-ui";
+import { Flex, Text, Box, SxProps } from "theme-ui";
 
 import { Icon } from "./Icon";
 
-export const WalletBalanceWidget: React.FC = () => (
+export const WalletBalanceWidget: React.FC<SxProps> = ({ sx }) => (
   <Flex
     sx={{
       mx: 7,
@@ -11,17 +11,19 @@ export const WalletBalanceWidget: React.FC = () => (
       fontSize: 3,
       lineHeight: 1.1,
       fontFamily: "heading",
-      fontWeight: "body"
+      fontWeight: "medium",
+
+      ...sx
     }}
   >
     <Icon name="wallet" size="sm" aria-label="Wallet balance" aria-hidden={false} />
 
-    <Text sx={{ ml: 4 }}>10.4527</Text>
+    <Text sx={{ ml: 4 }}>10.4527 ETH</Text>
 
     <Box sx={{ mx: 4, fontSize: "5px" }}>
       <Icon name="circle" size="xs" />
     </Box>
 
-    <Text>ETH 278.10 LQTY</Text>
+    <Text>278.10 LQTY</Text>
   </Flex>
 );

@@ -9,6 +9,7 @@ import { Title } from "./components/Title";
 import { BorrowPage } from "./pages/BorrowPage";
 import { AppLayout } from "./layout/AppLayout";
 import { AppLayout as AppLayout2 } from "./layout/AppLayout2";
+import { AppLayout as AppLayout3 } from "./layout/AppLayout3";
 import { DialogSwitch, NestedSwitch } from "./utils/routing";
 import { ChangeTroveDialog } from "./dialogs/ChangeTroveDialog";
 import { NotFoundRedirect, NotFoundPage } from "./pages/NotFoundPage";
@@ -16,7 +17,7 @@ import { NotFoundRedirect, NotFoundPage } from "./pages/NotFoundPage";
 const notFoundPageUrl = "/404";
 
 const LiquityFrontend: React.FC = () => {
-  const layouts = [AppLayout, AppLayout2];
+  const layouts = [AppLayout, AppLayout2, AppLayout3];
 
   const { props: layoutProps } = (
     <>

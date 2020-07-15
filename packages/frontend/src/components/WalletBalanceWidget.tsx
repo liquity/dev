@@ -19,7 +19,7 @@ export const WalletBalanceWidget: React.FC = () => (
         my: -5,
         fontSize: "0.9em",
         fontFamily: "heading",
-        fontWeight: "body"
+        fontWeight: "medium"
       }}
     >
       <div>10.4527 ETH</div>

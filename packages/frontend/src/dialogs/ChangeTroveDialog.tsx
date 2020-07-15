@@ -158,7 +158,12 @@ const ReviewPage: React.FC<DialogPageProps> = ({ backTo, continueTo }) => {
               {[
                 ["I add collateral", "3.500 ETH", "My new collateral", "16.039 ETH"],
                 ["I mint", "800.00 LQTY", "My new debt", "1800.00 LQTY"],
-                ["My new collateral ratio", "143.6%", "Total collateral ratio", "311%"],
+                [
+                  "My new collateral ratio",
+                  <Text sx={{ color: "warning" }}>143.6%</Text>,
+                  "Total collateral ratio",
+                  "311%"
+                ],
                 ["My new liquidation price", "$123.43", "Current price of ETH", "161.13$"]
               ].map(([leftLabel, leftText, rightLabel, rightText], i) => (
                 <tr key={i}>
