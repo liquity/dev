@@ -121,7 +121,7 @@ export const AppLayout: React.FC = ({ children }) => {
           <Main sx={{ flexGrow: 1, justifyContent: "center", mb: 8 }}>{restOfChildren}</Main>
         </Flex>
 
-        <Box sx={{ pr: 8, pl: 5, bg: "muted" }}>
+        <Box sx={{ pr: 8, pl: 5, bg: "muted", borderLeft: 1, borderColor: "border" }}>
           <Complementary sx={{ ...displayOnNonWide }}>
             <MoreInfoButton />
           </Complementary>
