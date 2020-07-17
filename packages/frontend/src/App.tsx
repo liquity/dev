@@ -1,6 +1,6 @@
 import React from "react";
 import { HashRouter as Router, Switch, Route, Redirect, NavLink } from "react-router-dom";
-import { ThemeProvider, Link, Flex, Text } from "theme-ui";
+import { ThemeProvider, Link, Text, Box } from "theme-ui";
 
 import theme from "./theme";
 import { Icon } from "./components/Icon";
@@ -9,7 +9,6 @@ import { Title } from "./components/Title";
 import { BorrowPage } from "./pages/BorrowPage";
 import { AppLayout } from "./layout/AppLayout";
 import { AppLayout as AppLayout2 } from "./layout/AppLayout2";
-import { AppLayout as AppLayout3 } from "./layout/AppLayout3";
 import { DialogSwitch, NestedSwitch } from "./utils/routing";
 import { ChangeTroveDialog } from "./dialogs/ChangeTroveDialog";
 import { NotFoundRedirect, NotFoundPage } from "./pages/NotFoundPage";
@@ -17,7 +16,7 @@ import { NotFoundRedirect, NotFoundPage } from "./pages/NotFoundPage";
 const notFoundPageUrl = "/404";
 
 const LiquityFrontend: React.FC = () => {
-  const layouts = [AppLayout, AppLayout2, AppLayout3];
+  const layouts = [AppLayout, AppLayout2];
 
   const { props: layoutProps } = (
     <>
@@ -83,7 +82,7 @@ const LiquityFrontend: React.FC = () => {
         {React.createElement(layout, layoutProps)}
       </DialogSwitch>
 
-      <Flex sx={{ position: "absolute", bottom: 3, right: 3 }}>
+      <Box sx={{ display: ["none", "flex"], position: "absolute", bottom: 3, right: 3 }}>
         <Text sx={{ mr: 3 }}>layout #{layoutIdx + 1}</Text>
 
         <Link
@@ -95,7 +94,7 @@ const LiquityFrontend: React.FC = () => {
         >
           next {">"}
         </Link>
-      </Flex>
+      </Box>
     </>
   );
 };
