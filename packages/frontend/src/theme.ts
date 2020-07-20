@@ -37,8 +37,7 @@ const colors = {
 
 const cardBase = {
   bg: "background-transparent",
-  borderRadius: 2,
-  boxShadow: 2
+  borderRadius: 2
 } as const;
 
 const buttonBase = {
@@ -86,8 +85,7 @@ const theme: Theme = {
   shadows: [
     "0",
     "0px 6px 12px rgba(41, 49, 71, 0.05)",
-    // "0px 8px 16px rgba(41, 49, 71, 0.2)",
-    "0",
+    "8px 8px 16px rgba(41, 49, 71, 0.1)",
     "0px 8px 16px rgba(176, 207, 244, 0.4)"
   ],
 
@@ -192,6 +190,24 @@ const theme: Theme = {
 
       ":focus": {
         color: "accent"
+      }
+    },
+
+    nav: {
+      ...buttonBase,
+
+      width: "36px",
+      height: "36px",
+
+      color: "text",
+      fontSize: 4,
+
+      ":hover": {
+        color: "secondary"
+      },
+
+      ":focus": {
+        color: "secondary"
       }
     },
 

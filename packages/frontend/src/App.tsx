@@ -16,9 +16,11 @@ import { NotFoundRedirect, NotFoundPage } from "./pages/NotFoundPage";
 const notFoundPageUrl = "/404";
 
 const LiquityFrontend: React.FC = () => {
-  const layouts = [AppLayout, AppLayout2];
+  const layouts = [AppLayout2, AppLayout];
 
-  const { props: layoutProps } = (
+  const {
+    props: { children: layoutChildren }
+  } = (
     <>
       <Title>
         <Switch>
@@ -79,22 +81,32 @@ const LiquityFrontend: React.FC = () => {
           <NotFoundRedirect to={notFoundPageUrl} />
         </NestedSwitch>
 
-        {React.createElement(layout, layoutProps)}
+        <>
+          {React.createElement(layout, {}, ...layoutChildren)}
+
+          <Box
+            sx={{
+              display: ["none", "flex"],
+              position: "fixed",
+              zIndex: 99,
+              bottom: 3,
+              right: 3
+            }}
+          >
+            <Text sx={{ mr: 3 }}>layout #{layoutIdx + 1}</Text>
+
+            <Link
+              onClick={() => {
+                document.cookie = `layout=${(layoutIdx + 1) % layouts.length}`;
+                window.location.reload();
+              }}
+              sx={{ cursor: "pointer" }}
+            >
+              next {">"}
+            </Link>
+          </Box>
+        </>
       </DialogSwitch>
-
-      <Box sx={{ display: ["none", "flex"], position: "absolute", bottom: 3, right: 3 }}>
-        <Text sx={{ mr: 3 }}>layout #{layoutIdx + 1}</Text>
-
-        <Link
-          onClick={() => {
-            document.cookie = `layout=${(layoutIdx + 1) % layouts.length}`;
-            window.location.reload();
-          }}
-          sx={{ cursor: "pointer" }}
-        >
-          next {">"}
-        </Link>
-      </Box>
     </>
   );
 };

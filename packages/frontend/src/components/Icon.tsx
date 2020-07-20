@@ -4,7 +4,7 @@ import {
   faRetweet,
   faSeedling,
   faHandsHelping,
-  faUserCircle,
+  faUser,
   faCaretDown,
   faWallet,
   faPercent,
@@ -16,7 +16,8 @@ import {
   faTimes,
   faCircle,
   faArrowLeft,
-  faExternalLinkAlt
+  faExternalLinkAlt,
+  faBars
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
 
@@ -24,7 +25,7 @@ library.add(
   faHandsHelping,
   faSeedling,
   faRetweet,
-  faUserCircle,
+  faUser,
   faCaretDown,
   faWallet,
   faPercent,
@@ -36,7 +37,8 @@ library.add(
   faTimes,
   faCircle,
   faArrowLeft,
-  faExternalLinkAlt
+  faExternalLinkAlt,
+  faBars
 );
 
 export type IconProps = Pick<FontAwesomeIconProps, "size" | "color" | "spin" | "fixedWidth"> & {

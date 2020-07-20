@@ -1,23 +1,30 @@
-import React from "react";
-import { Flex, Box } from "theme-ui";
+import React, { useState } from "react";
+import { Flex, IconButton, Box } from "theme-ui";
 
 import { partition, isElement } from "../utils/children";
-import { displayOnNonMobile, displayOnWide, displayOnNonWide } from "../utils/breakpoints";
+import { breakOnWide } from "../utils/breakpoints";
 import { Banner } from "../components/Banner";
-import { AccessibleLiquityLogo } from "../components/AccessibleLiquityLogo";
+import { AccessibleLiquityLogo } from "../components/AccessibleLiquityLogo2";
 import { Title } from "../components/Title";
 import { Nav } from "../components/Nav";
 import { AppNavBar } from "../components/AppNavBar2";
 import { ContentInfo } from "../components/ContentInfo";
 import { Main } from "../components/Main";
 import { Complementary } from "../components/Complementary";
-import { MoreInfoButton } from "../components/MoreInfoButton";
 import { WalletDropdownButton } from "../components/WalletDropdownButton";
 import { SystemStatsCard } from "../components/SystemStatsCard2";
 import { PriceFeedsCard } from "../components/PriceFeedsCard2";
 import { WalletBalanceWidget } from "../components/WalletBalanceWidget2";
+import { Icon } from "../components/Icon";
+
+const baseGap = [3, null, null, 5] as const;
+const bannerHeight = ["56px", null, null, "72px"] as const;
+const navBarWidth = "250px";
+const transitionDuration = "0.33s";
 
 export const AppLayout: React.FC = ({ children }) => {
+  const [sideBarOpen, setSideBarOpen] = useState(false);
+
   const arrayOfChildren = React.Children.toArray(children);
   const [[title, ...extraTitles], tmpChildren] = partition(arrayOfChildren, isElement(Title));
   const [[nav, ...extraNavs], restOfChildren] = partition(tmpChildren, isElement(Nav));
@@ -42,55 +49,108 @@ export const AppLayout: React.FC = ({ children }) => {
         bg: "background"
       }}
     >
-      <Banner
+      <Box
         sx={{
-          justifyContent: "space-between",
-          position: "relative",
-          px: 9,
-          py: 5,
+          position: "fixed",
+          zIndex: 9,
+          top: 0,
+          left: 0,
+          right: 0,
+          height: bannerHeight,
+
+          pt: "env(safe-area-inset-top)",
+          pl: "env(safe-area-inset-left)",
+          pr: "env(safe-area-inset-right)",
+
+          bg: "background",
           borderBottom: 1,
           borderBottomColor: "border",
-          boxShadow: 1
+          boxShadow: 2
         }}
       >
-        <AccessibleLiquityLogo />
+        <Banner
+          sx={{
+            justifyContent: "space-between",
+            p: baseGap
+          }}
+        >
+          <Flex sx={{ alignItems: "center" }}>
+            <IconButton
+              variant="nav"
+              sx={{
+                ...breakOnWide({ opacity: [1, 0], fontSize: [4, "0"] }),
+                transitionDuration
+              }}
+              onClick={() => setSideBarOpen(open => !open)}
+            >
+              <Icon name="bars" />
+            </IconButton>
 
-        <Flex>
-          <WalletBalanceWidget
-            sx={{ border: 1, borderColor: "border", borderRadius: 1, bg: "muted", px: 5 }}
-          />
+            <AccessibleLiquityLogo
+              sx={{ ...breakOnWide({ ml: [3, "-26px"] }), transitionDuration }}
+            />
+          </Flex>
 
-          <WalletDropdownButton
-            sx={{
-              boxShadow: "none",
-              bg: "primary",
-              color: "white",
-              fontWeight: "medium",
-              borderRadius: 1
-            }}
-          />
-        </Flex>
-      </Banner>
+          <Flex>
+            <Box sx={{ display: ["none", null, "block"] }}>
+              <WalletBalanceWidget
+                sx={{
+                  mx: [5, null, null, 7],
+                  px: 5,
+                  height: "100%",
 
-      <Flex sx={{ flexGrow: 1 }}>
+                  bg: "muted",
+                  border: 1,
+                  borderColor: "border",
+                  borderRadius: 1
+                }}
+              />
+            </Box>
+
+            <WalletDropdownButton
+              sx={{
+                boxShadow: "none",
+                bg: "primary",
+                color: "white",
+                fontWeight: "medium",
+                borderRadius: 1
+              }}
+            />
+          </Flex>
+        </Banner>
+      </Box>
+
+      <Box
+        sx={{
+          position: "fixed",
+          zIndex: 8,
+          top: bannerHeight,
+          bottom: 0,
+          left: sideBarOpen ? 0 : [`-${navBarWidth}`, null, null, 0],
+          width: navBarWidth,
+          transitionDuration,
+
+          pl: "env(safe-area-inset-left)",
+
+          bg: "muted",
+          borderRight: 1,
+          borderColor: "border",
+          boxShadow: [sideBarOpen ? 2 : "none", null, null, "none"]
+        }}
+      >
         <Flex
           sx={{
             flexDirection: "column",
-            pt: 6,
-            bg: "muted",
-            borderRight: 1,
-            borderRightColor: "border"
+            height: "100%",
+            p: baseGap
           }}
         >
           {nav && (
             <AppNavBar
+              onClick={() => setSideBarOpen(false)}
               sx={{
                 flexGrow: 1,
-
-                position: ["absolute", "unset"],
-                top: 5,
-                left: 8,
-                right: 8,
+                mr: [0, null, null, -baseGap[3]],
 
                 ...nav.props.sx
               }}
@@ -99,11 +159,20 @@ export const AppLayout: React.FC = ({ children }) => {
             </AppNavBar>
           )}
 
-          <ContentInfo sx={{ ...displayOnNonMobile, textAlign: "center" }}>
-            © Liquity.org | 2020
-          </ContentInfo>
+          <ContentInfo sx={{ p: 5 }}>© Liquity.org | 2020</ContentInfo>
         </Flex>
+      </Box>
 
+      <Flex
+        sx={{
+          flexGrow: 1,
+
+          mt: bannerHeight,
+          ml: [0, null, null, navBarWidth],
+
+          transitionDuration
+        }}
+      >
         <Flex sx={{ flexGrow: 1, flexDirection: "column", minHeight: ["440px", "605px"] }}>
           {title &&
             React.cloneElement(title, {
@@ -121,14 +190,25 @@ export const AppLayout: React.FC = ({ children }) => {
           <Main sx={{ flexGrow: 1, justifyContent: "center", mb: 8 }}>{restOfChildren}</Main>
         </Flex>
 
-        <Box sx={{ pr: 8, pl: 5, bg: "muted", borderLeft: 1, borderColor: "border" }}>
-          <Complementary sx={{ ...displayOnNonWide }}>
-            <MoreInfoButton />
-          </Complementary>
+        <Box
+          sx={{
+            display: ["none", null, "block"],
 
-          <Complementary sx={{ ...displayOnWide }}>
-            <SystemStatsCard sx={{ mt: 5 }} />
-            <PriceFeedsCard sx={{ mt: 5 }} />
+            pr: "env(safe-area-inset-right)",
+
+            bg: "muted",
+            borderLeft: 1,
+            borderColor: "border"
+          }}
+        >
+          <Complementary
+            sx={{
+              px: baseGap,
+              pb: baseGap
+            }}
+          >
+            <SystemStatsCard sx={{ mt: baseGap }} />
+            <PriceFeedsCard sx={{ mt: baseGap }} />
           </Complementary>
         </Box>
       </Flex>

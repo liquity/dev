@@ -5,8 +5,6 @@ export const SystemStatsCard: React.FC<SxProps> = ({ sx }) => (
   <Card
     variant="new"
     sx={{
-      width: "280px",
-
       "::before": {
         content: '""',
         display: "block",
@@ -16,8 +14,8 @@ export const SystemStatsCard: React.FC<SxProps> = ({ sx }) => (
         pt: 3,
 
         background: "linear-gradient(55deg, rgba(53, 190, 237, 0.5), rgb(128, 104, 227, 0.5))",
-        borderTopLeftRadius: 1,
-        borderTopRightRadius: 1
+        borderTopLeftRadius: "7px",
+        borderTopRightRadius: "7px"
       },
 
       ...sx

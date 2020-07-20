@@ -1,7 +1,6 @@
 import React from "react";
 import { Text, Flex, SxProps } from "theme-ui";
 
-import { displayOnNonMobile } from "../utils/breakpoints";
 import { LiquityLogo } from "./LiquityLogo";
 
 export const AccessibleLiquityLogo: React.FC<SxProps> = ({ sx }) => (
@@ -14,7 +13,6 @@ export const AccessibleLiquityLogo: React.FC<SxProps> = ({ sx }) => (
       as="h1"
       variant="logo"
       sx={{
-        ...displayOnNonMobile,
         ml: "0.16em",
         fontSize: "inherit"
       }}

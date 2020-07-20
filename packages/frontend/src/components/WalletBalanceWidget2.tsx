@@ -6,7 +6,6 @@ import { Icon } from "./Icon";
 export const WalletBalanceWidget: React.FC<SxProps> = ({ sx }) => (
   <Flex
     sx={{
-      mx: 7,
       alignItems: "center",
       fontSize: 3,
       lineHeight: 1.1,

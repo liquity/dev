@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Box, SxProps } from "theme-ui";
+import { Box, SxProps, BoxProps } from "theme-ui";
 
 import { Nav } from "./Nav";
 import { Icon } from "./Icon";
@@ -8,40 +8,35 @@ import { isElement } from "../utils/children";
 
 const activeClassName = "active";
 
-export const AppNavBar: React.FC<SxProps> = ({ sx, children }) => (
+export const AppNavBar: React.FC<SxProps & BoxProps> = ({ sx, children, ...boxProps }) => (
   <Nav
+    {...boxProps}
     sx={{
       fontFamily: "heading",
-      fontSize: [1, 4],
-      lineHeight: [1, 1.8],
+      fontSize: 4,
+      lineHeight: 1.8,
 
       ul: {
-        display: "flex",
-        flexDirection: ["row", "column"],
-        justifyContent: "center",
-
         a: {
           display: "flex",
-          flexDirection: ["column", "row"],
           alignItems: "stretch",
-
-          ml: 7,
-          pr: 9,
 
           color: "text",
           textDecoration: "none",
 
           border: 1,
-          borderRight: 0,
           borderTopLeftRadius: 1,
           borderBottomLeftRadius: 1,
+          borderRight: [1, null, null, 0],
+          borderTopRightRadius: [1, null, null, 0],
+          borderBottomRightRadius: [1, null, null, 0],
           borderColor: "transparent",
 
           "::before": {
             content: '""',
             display: "block",
             pl: 2,
-            mr: 6,
+            mr: 3,
             bg: "primary",
             borderTopLeftRadius: 1,
             borderBottomLeftRadius: 1,
@@ -78,9 +73,9 @@ export const AppNavBar: React.FC<SxProps> = ({ sx, children }) => (
               isElement(Icon)(linkChild) ? (
                 <Box
                   sx={{
-                    width: ["60px", "46px"],
-                    mt: [0, 1],
-                    mr: [0, 3],
+                    width: "40px",
+                    mt: 1,
+                    mr: 3,
                     textAlign: "center",
                     fontSize: 4
                   }}
