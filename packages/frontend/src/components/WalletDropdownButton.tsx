@@ -1,12 +1,14 @@
 import React from "react";
 import { Button, Text, SxProps } from "theme-ui";
 
-import { Icon } from "./Icon";
+import { Icon, UserWalletIcon, UserIcon } from "./Icon";
 import { breakOnMobile } from "../utils/breakpoints";
 
 export const WalletDropdownButton: React.FC<SxProps> = ({ sx }) => (
   <Button variant="cardlike" {...{ sx }}>
-    <Icon name="user" aria-label="Connected user" aria-hidden={false} />
+    <UserIcon sx={{ display: ["none", null, "block"] }} />
+    <UserWalletIcon sx={{ display: ["block", null, "none"] }} />
+
     <Text
       sx={{
         ...breakOnMobile({ mx: [1, 3], fontSize: ["0px", "unset"] }),
@@ -16,6 +18,7 @@ export const WalletDropdownButton: React.FC<SxProps> = ({ sx }) => (
     >
       0x70E...DDF
     </Text>
+
     <Icon name="caret-down" />
   </Button>
 );

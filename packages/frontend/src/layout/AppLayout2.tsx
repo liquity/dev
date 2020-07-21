@@ -92,7 +92,14 @@ export const AppLayout: React.FC = ({ children }) => {
           </Flex>
 
           <Flex>
-            <Box sx={{ display: ["none", null, "block"] }}>
+            <Box
+              sx={{
+                mr: ["-250px", null, 0],
+                opacity: [0, null, 1],
+                zIndex: -1,
+                transitionDuration
+              }}
+            >
               <WalletBalanceWidget
                 sx={{
                   mx: [5, null, null, 7],
