@@ -17,7 +17,7 @@ export const WalletBalanceWidget: React.FC<SxProps> = ({ sx }) => (
   >
     <Icon name="wallet" size="sm" aria-label="Wallet balance" aria-hidden={false} />
 
-    <Text sx={{ ml: 4 }}>10.4527 ETH</Text>
+    <Text sx={{ ml: 4, py: 5 }}>10.4527 ETH</Text>
 
     <Box sx={{ mx: 4, fontSize: "5px" }}>
       <Icon name="circle" size="xs" />

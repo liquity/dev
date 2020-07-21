@@ -15,15 +15,17 @@ import { WalletDropdownButton } from "../components/WalletDropdownButton";
 import { SystemStatsCard } from "../components/SystemStatsCard2";
 import { PriceFeedsCard } from "../components/PriceFeedsCard2";
 import { WalletBalanceWidget } from "../components/WalletBalanceWidget2";
-import { Icon } from "../components/Icon";
+import { Icon, InfoPaneIcon } from "../components/Icon";
 
 const baseGap = [3, null, null, 5] as const;
 const bannerHeight = ["56px", null, null, "72px"] as const;
 const navBarWidth = "250px";
+const complementaryWidth = "272px";
 const transitionDuration = "0.33s";
 
 export const AppLayout: React.FC = ({ children }) => {
-  const [sideBarOpen, setSideBarOpen] = useState(false);
+  const [navBarOpen, setNavBarOpen] = useState(false);
+  const [complementaryOpen, setComplementaryOpen] = useState(false);
 
   const arrayOfChildren = React.Children.toArray(children);
   const [[title, ...extraTitles], tmpChildren] = partition(arrayOfChildren, isElement(Title));
@@ -78,44 +80,56 @@ export const AppLayout: React.FC = ({ children }) => {
             <IconButton
               variant="nav"
               sx={{
-                ...breakOnWide({ opacity: [1, 0], fontSize: [4, "0"] }),
+                ...breakOnWide({ opacity: [1, 0], fontSize: [4, "0"], mr: [3, "-26px"] }),
                 transitionDuration
               }}
-              onClick={() => setSideBarOpen(open => !open)}
+              onClick={() => {
+                setNavBarOpen(open => !open);
+                setComplementaryOpen(false);
+              }}
             >
               <Icon name="bars" />
             </IconButton>
 
-            <AccessibleLiquityLogo
-              sx={{ ...breakOnWide({ ml: [3, "-26px"] }), transitionDuration }}
-            />
+            <AccessibleLiquityLogo />
           </Flex>
 
-          <Flex>
-            <Box
-              sx={{
-                mr: ["-250px", null, 0],
-                opacity: [0, null, 1],
-                zIndex: -1,
-                transitionDuration
-              }}
-            >
-              <WalletBalanceWidget
+          <Flex sx={{ alignItems: "center" }}>
+            <Box sx={{ position: "relative", height: "100%" }}>
+              <Flex
                 sx={{
-                  mx: [5, null, null, 7],
-                  px: 5,
-                  height: "100%",
+                  justifyContent: "flex-end",
 
-                  bg: "muted",
-                  border: 1,
-                  borderColor: "border",
-                  borderRadius: 1
+                  position: "absolute",
+                  right: 0,
+                  width: "450px",
+                  height: "100%",
+                  zIndex: -1,
+
+                  mr: ["-300px", null, 0],
+                  opacity: [0, null, 1],
+                  transitionDuration
                 }}
-              />
+              >
+                <WalletBalanceWidget
+                  sx={{
+                    mx: [5, null, null, 7],
+                    px: 5,
+                    height: "100%",
+
+                    bg: "muted",
+                    border: 1,
+                    borderColor: "border",
+                    borderRadius: 1
+                  }}
+                />
+              </Flex>
             </Box>
 
             <WalletDropdownButton
               sx={{
+                px: [3, 4],
+
                 boxShadow: "none",
                 bg: "primary",
                 color: "white",
@@ -123,6 +137,22 @@ export const AppLayout: React.FC = ({ children }) => {
                 borderRadius: 1
               }}
             />
+
+            <IconButton
+              variant="nav"
+              sx={{
+                opacity: [1, null, 0],
+                fontSize: [4, null, "0"],
+                ml: [4, null, "-36px"],
+                transitionDuration
+              }}
+              onClick={() => {
+                setComplementaryOpen(open => !open);
+                setNavBarOpen(false);
+              }}
+            >
+              <InfoPaneIcon />
+            </IconButton>
           </Flex>
         </Banner>
       </Box>
@@ -133,7 +163,7 @@ export const AppLayout: React.FC = ({ children }) => {
           zIndex: 8,
           top: bannerHeight,
           bottom: 0,
-          left: sideBarOpen ? 0 : [`-${navBarWidth}`, null, null, 0],
+          left: navBarOpen ? 0 : [`-${navBarWidth}`, null, null, 0],
           width: navBarWidth,
           transitionDuration,
 
@@ -141,8 +171,7 @@ export const AppLayout: React.FC = ({ children }) => {
 
           bg: "muted",
           borderRight: 1,
-          borderColor: "border",
-          boxShadow: [sideBarOpen ? 2 : "none", null, null, "none"]
+          borderColor: "border"
         }}
       >
         <Flex
@@ -154,7 +183,7 @@ export const AppLayout: React.FC = ({ children }) => {
         >
           {nav && (
             <AppNavBar
-              onClick={() => setSideBarOpen(false)}
+              onClick={() => setNavBarOpen(false)}
               sx={{
                 flexGrow: 1,
                 mr: [0, null, null, -baseGap[3]],
@@ -174,13 +203,43 @@ export const AppLayout: React.FC = ({ children }) => {
         sx={{
           flexGrow: 1,
 
+          position: "relative",
+
           mt: bannerHeight,
           ml: [0, null, null, navBarWidth],
 
           transitionDuration
         }}
       >
-        <Flex sx={{ flexGrow: 1, flexDirection: "column", minHeight: ["440px", "605px"] }}>
+        <Box
+          sx={{
+            position: "absolute",
+            zIndex: 7,
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+
+            bg: "text",
+            opacity: navBarOpen || complementaryOpen ? 0.25 : 0,
+            pointerEvents: navBarOpen || complementaryOpen ? "auto" : "none",
+
+            transitionDuration
+          }}
+          onClick={() => {
+            setNavBarOpen(false);
+            setComplementaryOpen(false);
+          }}
+        />
+
+        <Flex
+          sx={{
+            flexGrow: 1,
+            flexDirection: "column",
+
+            minHeight: ["440px", "605px"]
+          }}
+        >
           {title &&
             React.cloneElement(title, {
               sx: {
@@ -199,13 +258,21 @@ export const AppLayout: React.FC = ({ children }) => {
 
         <Box
           sx={{
-            display: ["none", null, "block"],
+            position: ["fixed", null, "unset"],
+            zIndex: [8, null, "unset"],
+            top: bannerHeight,
+            bottom: 0,
+            right: complementaryOpen ? 0 : `-${complementaryWidth}`,
+            width: complementaryWidth,
+            overflow: "auto",
 
             pr: "env(safe-area-inset-right)",
 
             bg: "muted",
             borderLeft: 1,
-            borderColor: "border"
+            borderColor: "border",
+
+            transitionDuration
           }}
         >
           <Complementary

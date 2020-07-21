@@ -11,7 +11,7 @@ export const WalletDropdownButton: React.FC<SxProps> = ({ sx }) => (
 
     <Text
       sx={{
-        ...breakOnMobile({ mx: [1, 3], fontSize: ["0px", "unset"] }),
+        ...breakOnMobile({ mx: [0, 3], fontSize: ["0px", "unset"] }),
         lineHeight: "20px",
         transitionDuration: "0.33s"
       }}

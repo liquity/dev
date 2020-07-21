@@ -85,7 +85,7 @@ const theme: Theme = {
   shadows: [
     "0",
     "0px 6px 12px rgba(41, 49, 71, 0.05)",
-    "8px 8px 16px rgba(41, 49, 71, 0.1)",
+    "0px 8px 16px rgba(41, 49, 71, 0.1)",
     "0px 8px 16px rgba(176, 207, 244, 0.4)"
   ],
 
