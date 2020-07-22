@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Flex, IconButton, Box } from "theme-ui";
+import { useResponsiveValue } from "@theme-ui/match-media";
 
 import { partition, isElement } from "../utils/children";
 import { breakOnWide } from "../utils/breakpoints";
@@ -26,6 +27,21 @@ const transitionDuration = "0.33s";
 export const AppLayout: React.FC = ({ children }) => {
   const [navBarOpen, setNavBarOpen] = useState(false);
   const [complementaryOpen, setComplementaryOpen] = useState(false);
+
+  const closeNavBar = useResponsiveValue([false, null, null, true]);
+  const closeComplementary = useResponsiveValue([false, null, true]);
+
+  useEffect(() => {
+    if (closeNavBar) {
+      setNavBarOpen(false);
+    }
+  }, [closeNavBar]);
+
+  useEffect(() => {
+    if (closeComplementary) {
+      setComplementaryOpen(false);
+    }
+  }, [closeComplementary]);
 
   const arrayOfChildren = React.Children.toArray(children);
   const [[title, ...extraTitles], tmpChildren] = partition(arrayOfChildren, isElement(Title));
@@ -83,7 +99,12 @@ export const AppLayout: React.FC = ({ children }) => {
             <IconButton
               variant="nav"
               sx={{
-                ...breakOnWide({ opacity: [1, 0], fontSize: [4, "0"], mr: [3, "-26px"] }),
+                ...breakOnWide({
+                  opacity: [1, 0],
+                  fontSize: [4, "0"],
+                  mr: [3, "-26px"],
+                  pointerEvents: ["auto", "none"]
+                }),
                 transitionDuration
               }}
               onClick={() => {
@@ -148,6 +169,7 @@ export const AppLayout: React.FC = ({ children }) => {
                 opacity: [1, null, 0],
                 fontSize: [4, null, "0"],
                 ml: [4, null, "-36px"],
+                pointerEvents: ["auto", null, "none"],
                 transitionDuration
               }}
               onClick={() => {

@@ -2644,6 +2644,11 @@
   dependencies:
     csstype "^2.5.7"
 
+"@theme-ui/match-media@^0.4.0-rc.1":
+  version "0.4.0-rc.1"
+  resolved "https://registry.yarnpkg.com/@theme-ui/match-media/-/match-media-0.4.0-rc.1.tgz#41c5e92c71b8e350cfb529c9b7a29ca672480055"
+  integrity sha512-zF020zFk/YnRtkKo/o4MS2UNh+v2bfdE30HtVNyY9LeK4AA+aVe+gce29/jV4LFWrLlhPZKMrftWAET0VGuO6Q==
+
 "@theme-ui/mdx@^0.4.0-rc.1":
   version "0.4.0-rc.1"
   resolved "https://registry.yarnpkg.com/@theme-ui/mdx/-/mdx-0.4.0-rc.1.tgz#ce9b6a15dde889ba4f3db6051b56f3d4e24488f8"
