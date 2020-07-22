@@ -17,6 +17,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
+    uint constant public minVirtualDebt = 10e18;   // The minumum virtual debt assigned to all troves
 
     // --- Connected contract declarations ---
 
@@ -98,7 +99,8 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         _requireValueIsGreaterThan20Dollars(msg.value, price);
         _requireCDPisNotActive(user);
         
-        uint ICR = Math._computeICR (msg.value, _CLVAmount, price);  
+        uint compositeDebt = _getCompositeDebt(msg.value, _CLVAmount, price);
+        uint ICR = Math._computeCR(msg.value, compositeDebt, price);  
 
         if (_CLVAmount > 0) {
             _requireNotInRecoveryMode();
@@ -389,7 +391,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     // --- ICR and TCR checks ---
 
-    // Compute the new collateral ratio, considering the change in coll and debt. Assumes 0 pending rewards.
+    // Compute the new collateral ratio, considering the change in coll and debt. Assumes 0 pending rewards. 
     function _getNewICRFromTroveChange(uint _coll, uint _debt, int _collChange, int _debtChange, uint _price) 
     pure
     internal 
@@ -410,7 +412,9 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
             newDebt = _debt.sub(Math._intToUint(_debtChange));
         }
 
-        return Math._computeICR (newColl, newDebt, _price);
+        uint compositeDebt = _getCompositeDebt(newColl, newDebt, _price);
+        uint newICR = Math._computeCR(newColl, compositeDebt, _price);
+        return newICR;
     }
 
     function _getNewTCRFromTroveChange(int _collChange, int _debtChange, uint _price) internal view returns (uint) {
@@ -429,7 +433,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
             totalDebt = totalDebt.sub(Math._intToUint(_debtChange));
         }
 
-        uint newTCR = Math._computeICR (totalColl, totalDebt, _price);
+        uint newTCR = Math._computeCR(totalColl, totalDebt, _price);
         return newTCR;
     }
 
@@ -446,12 +450,33 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt); 
 
-        uint TCR = Math._computeICR (totalCollateral, totalDebt, price); 
+        uint TCR = Math._computeCR(totalCollateral, totalDebt, price); 
         
         if (TCR < CCR) {
             return true;
         } else {
             return false;
         }
+    }
+
+    // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
+    function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint flatComp) {
+        flatComp = minVirtualDebt.mul(1e18).div(_price);
+        return flatComp;
+    }
+
+    // Returns the maximum of { $10 worth of ETH,  0.5% of collateral }
+    function _getVirtualDebt(uint _entireColl, uint _price) internal pure returns (uint) {
+        uint minETHComp = _getMinVirtualDebtInETH(_price);
+        uint _0pt5percentOfColl = _entireColl.div(200);
+
+        uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
+        return compensation;
+    }
+
+    // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
+    function _getCompositeDebt(uint _coll, uint _debt, uint _price) internal pure returns (uint) {
+        uint virtualDebt = _getVirtualDebt(_coll, _price);
+        return _debt.add(virtualDebt);
     }
 }

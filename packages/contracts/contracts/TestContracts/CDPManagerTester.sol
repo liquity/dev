@@ -9,7 +9,24 @@ for testing the parent's internal functions. */
 contract CDPManagerTester is CDPManager {
 
     function computeICR(uint _coll, uint _debt, uint _price) external pure returns (uint) {
-        return Math._computeICR(_coll, _debt, _price);
+        return Math._computeCR(_coll, _debt, _price);
     }
+
+    function getCompensationScalingFraction(uint _TCR) external view returns (uint) {
+        return _getCompensationScalingFraction(_TCR);
+    }
+
+    function getMinVirtualDebtInETH(uint _price) external view returns (uint) {
+        return _getMinVirtualDebtInETH(_price);
+    }
+
+     function getGasCompensation(uint _coll, uint _price) external view returns (uint) {
+        return _getGasCompensation(_coll, _price);
+    }
+
+    function getCompositeDebt(uint _coll, uint _debt, uint _price) external view returns (uint) {
+        return _getCompositeDebt(_coll, _debt, _price);
+    }
+
 
 }

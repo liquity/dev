@@ -42,6 +42,8 @@ const MoneyValues = {
   _5e17:  web3.utils.toWei('500', 'finney'),
 
   _1e18: web3.utils.toWei('1', 'ether'),
+  _2e18: web3.utils.toWei('2', 'ether'),
+  _3e18: web3.utils.toWei('3', 'ether'),
   _5e18: web3.utils.toWei('5', 'ether'),
   _10e18: web3.utils.toWei('10', 'ether'),
   _13e18: web3.utils.toWei('13', 'ether'),
@@ -81,12 +83,10 @@ const MoneyValues = {
   _2e23: web3.utils.toWei('200000', 'ether'),
   _1e24: web3.utils.toWei('1000000', 'ether'),
   _2e24: web3.utils.toWei('2000000', 'ether'),
+  _1e26: web3.utils.toWei('100000000', 'ether'),
   _1e27: web3.utils.toWei('1000000000', 'ether'),
   _2e27: web3.utils.toWei('2000000000', 'ether'),
   _5e35: web3.utils.toWei('500000000000000000', 'ether'),
-  _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
-
-  _1e27: web3.utils.toWei('1000000000', 'ether'),
   _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
 
   negative_5e17:  "-" + web3.utils.toWei('500', 'finney'),
@@ -101,10 +101,11 @@ const MoneyValues = {
   _100e18BN: web3.utils.toBN('100000000000000000000'),
   _100BN: web3.utils.toBN('100'),
   _110BN: web3.utils.toBN('110'),
+  _150BN: web3.utils.toBN('110'),
 
   _MCR: web3.utils.toBN('1100000000000000000'),
   _ICR100: web3.utils.toBN('1000000000000000000'),
-  _TCR: web3.utils.toBN('1500000000000000000')
+  _CCR: web3.utils.toBN('1500000000000000000')
 
 }
 
@@ -212,7 +213,7 @@ static logGas(gas, message) {
   )
 }
 
- // --- CDPManager gas functions ---
+ // --- BorrowerOperations gas functions ---
 
  static async openLoan_allAccounts(accounts, borrowerOperations, ETHAmount, CLVAmount){
   const gasCostList = []
@@ -475,6 +476,8 @@ static async  getCurrentICR_allAccounts (accounts, priceFeed, borrowerOperations
   return this.getGasMetrics(gasCostList)
 }
 
+ // --- Redemption functions ---
+ 
 static async redeemCollateral (redeemer, priceFeed, cdpManager, CLVAmount){
   const price = await priceFeed.getPrice()
   const redemptionHints = await cdpManager.getRedemptionHints(CLVAmount, price)

@@ -9,12 +9,17 @@ contract ActivePool is Ownable, IPool {
     using SafeMath for uint256;
 
     address public poolManagerAddress;
+    address public cdpManagerAddress;
     address public stabilityPoolAddress;
     address public defaultPoolAddress;
     uint256 public ETH;  // deposited ether tracker
     uint256 public CLVDebt;
 
-   // --- Modifiers ---
+    // --- Events ---
+
+    event CDPManagerAddressChanged(address _cdpManagerAddress);
+
+    // --- Modifiers ---
    
     modifier onlyPoolManager {
         require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
@@ -30,11 +35,24 @@ contract ActivePool is Ownable, IPool {
         _;
     }
 
+    modifier onlyPoolManagerOrCDPManager {
+        require(
+            _msgSender() == poolManagerAddress || 
+            _msgSender() == cdpManagerAddress, 
+            "ActivePool: Caller is neither the PoolManager nor CDPManager");
+        _;
+    }
+
     // --- Contract setters ---
 
     function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
         poolManagerAddress = _poolManagerAddress;
         emit PoolManagerAddressChanged(_poolManagerAddress);
+    }
+
+     function setCDPManagerAddress(address _cdpManagerAddress) external onlyOwner {
+        cdpManagerAddress = _cdpManagerAddress;
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
     }
 
     function setDefaultPoolAddress(address _defaultPoolAddress) external onlyOwner {
@@ -59,7 +77,7 @@ contract ActivePool is Ownable, IPool {
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) public onlyPoolManager {
+    function sendETH(address _account, uint _amount) public onlyPoolManagerOrCDPManager {
         ETH = ETH.sub(_amount);  
         emit EtherSent(_account, _amount);  
 

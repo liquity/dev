@@ -164,6 +164,7 @@ contract PoolManager is Ownable, IPoolManager {
         return address(this).balance;
     } 
     
+    // TODO:  Remove this, update tests (and now use the CDPManager function getTCR())
     // Return the total collateral ratio (TCR) of the system, based on the most recent ETH:USD price
     function getTCR() external view returns (uint) {
         uint price = priceFeed.getPrice();

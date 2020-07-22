@@ -180,6 +180,14 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(poolManagerAddress, recordedPoolManagerAddress)
   })
 
+  it('sets the correct CDPManager address in ActivePool', async () => {
+    const cdpManagerAddress = cdpManager.address
+
+    const recordedCDPManagerAddress = await activePool.cdpManagerAddress()
+
+    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+  })
+
   it('sets the correct DefaultPool address in ActivePool', async () => {
     const defaultPoolAddress = defaultPool.address
 

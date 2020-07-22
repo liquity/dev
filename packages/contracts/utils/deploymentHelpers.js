@@ -151,6 +151,7 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.stabilityPool.setDefaultPoolAddress(addresses.DefaultPool)
 
   await contracts.activePool.setPoolManagerAddress(addresses.PoolManager)
+  await contracts.activePool.setCDPManagerAddress(addresses.CDPManager)
   await contracts.activePool.setStabilityPoolAddress(addresses.StabilityPool)
   await contracts.activePool.setDefaultPoolAddress(addresses.DefaultPool)
 
