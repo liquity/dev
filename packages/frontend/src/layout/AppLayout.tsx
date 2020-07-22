@@ -85,7 +85,7 @@ export const AppLayout: React.FC = ({ children }) => {
           <ContentInfo sx={{ ...displayOnNonMobile }}>© Liquity.org | 2020</ContentInfo>
         </Flex>
 
-        <Box sx={{ flexGrow: 1, minHeight: ["440px", "605px"] }}>
+        <Box sx={{ flexGrow: 1, minHeight: ["440px", "605px"], maxHeight: ["650px", "unset"] }}>
           <Main
             sx={{
               position: ["unset", "absolute"],

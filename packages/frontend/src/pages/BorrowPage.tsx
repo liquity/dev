@@ -13,7 +13,7 @@ export const BorrowPage: React.FC = () => {
   const { url } = useRouteMatch();
 
   return (
-    <Form sx={{ maxHeight: ["650px", "500px"] }}>
+    <Form sx={{ maxHeight: ["unset", "500px"] }}>
       <BackgroundOverlay>
         <Icon name="lock" />
       </BackgroundOverlay>

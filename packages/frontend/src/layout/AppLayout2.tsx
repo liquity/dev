@@ -73,7 +73,10 @@ export const AppLayout: React.FC = ({ children }) => {
         <Banner
           sx={{
             justifyContent: "space-between",
-            p: baseGap
+            height: "100%",
+            p: baseGap,
+            fontSize: ["32px", "38px"],
+            transitionDuration
           }}
         >
           <Flex sx={{ alignItems: "center" }}>
@@ -129,6 +132,7 @@ export const AppLayout: React.FC = ({ children }) => {
             <WalletDropdownButton
               sx={{
                 px: [3, 4],
+                py: 3,
 
                 boxShadow: "none",
                 bg: "primary",
@@ -237,15 +241,20 @@ export const AppLayout: React.FC = ({ children }) => {
             flexGrow: 1,
             flexDirection: "column",
 
-            minHeight: ["440px", "605px"]
+            minHeight: ["440px", "605px"],
+            maxHeight: ["670px", "750px"],
+
+            pl: ["env(safe-area-inset-left)", null, null, 0]
           }}
         >
           {title &&
             React.cloneElement(title, {
               sx: {
-                ml: 9,
-                mt: 7,
-                fontSize: 6,
+                mt: 5,
+                mb: [-6, 0],
+                mx: [6, 7],
+
+                fontSize: ["38px", 6],
                 fontWeight: "bold",
                 fontFamily: "heading",
                 textTransform: "unset",
@@ -253,7 +262,7 @@ export const AppLayout: React.FC = ({ children }) => {
               }
             })}
 
-          <Main sx={{ flexGrow: 1, justifyContent: "center", mb: 8 }}>{restOfChildren}</Main>
+          <Main sx={{ flexGrow: 1, justifyContent: "center", pt: 0 }}>{restOfChildren}</Main>
         </Flex>
 
         <Box
