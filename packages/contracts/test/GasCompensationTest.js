@@ -498,5 +498,170 @@ contract('Gas compensation tests', async accounts => {
     // Expect Harriet's ICR = (1 * 200) / (174 + 6) = 111.11%
     assert.isAtMost(th.getDifference(harriet_ICR, '1111111111111111111'), 1000)
   })
+
+  // --- Trove ordering by ICR tests ---
+
+  it('Trove ordering: same collateral, decreasing debt. Price successively increases. Troves should maintain ordering by ICR', async () => {
+    const _10_accounts = accounts.slice(1, 11)
+
+    let debt = 100
+    // create 10 troves, constant coll, descending debt 100 to 90 CLV
+    for (account of _10_accounts) {
+
+      const debtString = debt.toString().concat('000000000000000000')
+      await borrowerOperations.openLoan(debtString, account, { from: account, value: mv._1_Ether })
+
+      const squeezedTroveAddr = th.squeezeAddr(account)
+
+      debt -= 1
+    }
+
+    const initialPrice = await priceFeed.getPrice()
+    const firstColl = (await cdpManager.CDPs(_10_accounts[0]))[1]
+    console.log(`initialPrice: ${initialPrice}`)
+    console.log(`firstTroveColl: ${(await cdpManager.CDPs(_10_accounts[0]))[1]}`)
+    console.log(`firstTroveDebt: ${(await cdpManager.CDPs(_10_accounts[0]))[0]}`)
+    console.log(`firstTrove_gasCompensation: ${await cdpManagerTester.getGasCompensation(firstColl, initialPrice)}`)
+    console.log(`firstTrove_ICR: ${await cdpManager.getCurrentICR(_10_accounts[0], initialPrice)}`)
+    
+    // Vary price 200-210
+    let price = 200
+    while (price < 210) {
+
+      const priceString = price.toString().concat('000000000000000000')
+      await priceFeed.setPrice(priceString)
+
+      const ICRList = []
+      const coll_firstTrove = (await cdpManager.CDPs(_10_accounts[0]))[1]
+      const gasComp_firstTrove = (await cdpManagerTester.getGasCompensation(coll_firstTrove, priceString)).toString()
+
+      for (account of _10_accounts) {
+        // Check gas compensation is the same for all troves
+        const coll = (await cdpManager.CDPs(account))[1]
+        const gasCompensation = (await cdpManagerTester.getGasCompensation(coll, priceString)).toString()
+
+        assert.equal(gasCompensation, gasComp_firstTrove)
+
+        const ICR = await cdpManager.getCurrentICR(account, price)
+        ICRList.push(ICR)
+
+        
+        // Check trove ordering by ICR is maintained
+        if (ICRList.length > 1) {
+          const prevICR = ICRList[ICRList.length - 2]
+
+          try {
+            assert.isTrue(ICR.gte(prevICR))
+          } catch (error) {
+            console.log(`ETH price at which trove ordering breaks: ${price}`)
+            logICRs(ICRList)
+          }
+        }
+
+        price += 1
+
+      }
+    }
+  })
+
+  it('Trove ordering: increasing collateral, constant debt. Price successively increases. Troves should maintain ordering by ICR', async () => {
+    const _20_accounts = accounts.slice(1, 21)
+
+    let coll = 5
+    // create 20 troves, increasing collateral, constant debt = 100CLV
+    for (account of _20_accounts) {
+
+      const collString = coll.toString().concat('000000000000000000')
+      await borrowerOperations.openLoan(mv._100e18, account, { from: account, value:collString})
+
+      coll += 5
+    }
+
+    const initialPrice = await priceFeed.getPrice()
+    
+    // Vary price 
+    let price = 1
+    while (price < 300) {
+
+      const priceString = price.toString().concat('000000000000000000')
+      await priceFeed.setPrice(priceString)
+
+      const ICRList = []
+    
+      for (account of _20_accounts) {
+        const ICR = await cdpManager.getCurrentICR(account, price)
+        ICRList.push(ICR)
+
+        // Check trove ordering by ICR is maintained
+        if (ICRList.length > 1) {
+          const prevICR = ICRList[ICRList.length - 2]
+
+          try {
+            assert.isTrue(ICR.gte(prevICR))
+          } catch (error) {
+            console.log(`ETH price at which trove ordering breaks: ${price}`)
+            logICRs(ICRList)
+          }
+        }
+
+        price += 10
+      }
+    }
+  })
+
+  it.only('Trove ordering: Constant raw collateral ratio (excluding virtual debt). Price successively increases. Troves should maintain ordering by ICR', async () => {
+    let collVals = [1,5,10,25,50,100,500,1000,5000,10000,50000,100000,500000, 1000000, 5000000]
+    const accountsList = accounts.slice(1, collVals.length + 1)
+
+    accountIdx = 0
+    for (coll of collVals) {
+
+      const debt = coll*110
+
+      const account = accountsList[accountIdx]
+      const collString = coll.toString().concat('000000000000000000')
+      await borrowerOperations.openLoan(mv._100e18, account, { from: account, value:collString})
+
+      accountIdx += 1
+    }
+
+    const initialPrice = await priceFeed.getPrice()
+    
+    // Vary price
+    let price = 1
+    while (price < 300) {
+
+      const priceString = price.toString().concat('000000000000000000')
+      await priceFeed.setPrice(priceString)
+
+      const ICRList = []
+    
+      for (account of accountsList) {
+        const ICR = await cdpManager.getCurrentICR(account, price)
+        ICRList.push(ICR)
+
+        // Check trove ordering by ICR is maintained
+        if (ICRList.length > 1) {
+          const prevICR = ICRList[ICRList.length - 2]
+
+          try {
+            assert.isTrue(ICR.gte(prevICR))
+          } catch (error) {
+            console.log(error)
+            console.log(`ETH price at which trove ordering breaks: ${price}`)
+            logICRs(ICRList)
+          }
+        }
+
+        price += 10
+      }
+    }
+  })
+
+  const logICRs = (ICRList) => {
+    for (let i = 0; i< ICRList.length; i++ ) {
+      console.log(`account: ${i+1} ICR: ${ICRList[i].toString()}`)
+    }
+  }
 })
 
