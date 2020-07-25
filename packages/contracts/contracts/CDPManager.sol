@@ -19,7 +19,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant public minVirtualDebt = 10e18;   // The minimum virtual debt assigned to all troves
+    uint constant public minVirtualDebt = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
 
     // --- Connected contract declarations ---
 
@@ -431,7 +431,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             // Passing zero as hint will cause sortedCDPs to descend the list from the head, which is the correct insert position.
             sortedCDPs.reInsert(_cdpUser, 2**256 - 1, _price, address(0), address(0)); 
         } else {
-            uint compositeDebt = _getCompositeDebt(newColl, newDebt, _price);
+            uint compositeDebt = _getCompositeDebt(newDebt, _price);
             uint newICR = Math._computeCR(newColl, compositeDebt, _price);
 
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
@@ -568,7 +568,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
                 uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
 
                 uint newDebt = CLVDebt.sub(remainingCLV);
-                uint compositeDebt = _getCompositeDebt(newColl, newDebt, _price);
+                uint compositeDebt = _getCompositeDebt(newDebt, _price);
 
                 partialRedemptionHintICR = Math._computeCR(newColl, compositeDebt, _price);
 
@@ -638,7 +638,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint currentETH = CDPs[_user].coll.add(pendingETHReward); 
         uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward); 
 
-        uint compositeCLVDebt = _getCompositeDebt(currentETH, currentCLVDebt, _price);
+        uint compositeCLVDebt = _getCompositeDebt(currentCLVDebt, _price);
        
         uint ICR = Math._computeCR(currentETH, compositeCLVDebt, _price);  
         return ICR;
@@ -912,14 +912,6 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
          return compensation;
     }
 
-    // *** TODO: perhaps better to rename to getVirtualDebt
-    function _getVirtualDebtInCLV(uint _entireColl, uint _price) internal pure returns (uint) {
-        uint _0pt5percentOfCollinDollars = _entireColl.mul(_price).div(1e18).div(200);
-
-        uint virtualDebt = Math._max(minVirtualDebt, _0pt5percentOfCollinDollars);
-        return virtualDebt;
-    }
-
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
     function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
         minETHComp = minVirtualDebt.mul(1e18).div(_price);
@@ -927,24 +919,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     }
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
-    function _getCompositeDebt(uint _coll, uint _debt, uint _price) internal view returns (uint) {
-        uint virtualDebt = _getVirtualDebtInCLV(_coll, _price);
-      
-        return _debt.add(virtualDebt);
-    }
-
-    /* Returns the fraction of the maximum gas compensation that trove should pay out, 
-    based on the systemic TCR: namely, how close the TCR is to the CCR.
-    */
-    function _getCompensationScalingFraction(uint _TCR) internal pure returns (uint scalingFraction) {
-        uint maxTCR = 3e18; // 300%
-
-        if (_TCR > maxTCR) { return 0; }
-        if (_TCR < CCR) { return 1e18; }
-
-        uint scalingFraction = (maxTCR.sub(_TCR)).mul(1e18).div(maxTCR.sub(CCR));
-
-        return scalingFraction;
+    function _getCompositeDebt(uint _debt, uint _price) internal pure returns (uint) {
+        return _debt.add(minVirtualDebt);
     }
 
     // --- 'require' wrapper functions ---
@@ -1003,5 +979,9 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint newDebt = CDPs[_user].debt.sub(_debtDecrease);
         CDPs[_user].debt = newDebt;
         return newDebt;
+    }
+
+    function () external payable  {
+        require(msg.data.length == 0);
     }
 }

@@ -17,7 +17,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
-    uint constant public minVirtualDebt = 10e18;   // The minumum virtual debt assigned to all troves
+    uint constant public minVirtualDebt = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
 
     // --- Connected contract declarations ---
 
@@ -99,7 +99,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         _requireValueIsGreaterThan20Dollars(msg.value, price);
         _requireCDPisNotActive(user);
         
-        uint compositeDebt = _getCompositeDebt(msg.value, _CLVAmount, price);
+        uint compositeDebt = _getCompositeDebt(_CLVAmount, price);
         uint ICR = Math._computeCR(msg.value, compositeDebt, price);  
 
         if (_CLVAmount > 0) {
@@ -412,7 +412,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
             newDebt = _debt.sub(Math._intToUint(_debtChange));
         }
 
-        uint compositeDebt = _getCompositeDebt(newColl, newDebt, _price);
+        uint compositeDebt = _getCompositeDebt(newDebt, _price);
         uint newICR = Math._computeCR(newColl, compositeDebt, _price);
         return newICR;
     }
@@ -437,7 +437,8 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         return newTCR;
     }
 
-    // --- Common helper functions, duplicated in CDPManager ---
+    // --- Common helper functions, duplicated in CDPManager.  ---
+    // TODO:  Extract to a parent base contract that BorrowerOps and CDPM inherit from 
 
     function _checkRecoveryMode() internal view returns (bool){
         uint price = priceFeed.getPrice();
@@ -460,23 +461,13 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     }
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
-    function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint flatComp) {
-        flatComp = minVirtualDebt.mul(1e18).div(_price);
-        return flatComp;
-    }
-
-    // Returns the maximum of { $10 worth of ETH,  0.5% of collateral }
-    function _getVirtualDebt(uint _entireColl, uint _price) internal pure returns (uint) {
-        uint minETHComp = _getMinVirtualDebtInETH(_price);
-        uint _0pt5percentOfColl = _entireColl.div(200);
-
-        uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
-        return compensation;
+      function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
+        minETHComp = minVirtualDebt.mul(1e18).div(_price);
+        return minETHComp;
     }
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
-    function _getCompositeDebt(uint _coll, uint _debt, uint _price) internal pure returns (uint) {
-        uint virtualDebt = _getVirtualDebt(_coll, _price);
-        return _debt.add(virtualDebt);
+    function _getCompositeDebt(uint _debt, uint _price) internal pure returns (uint) {
+        return _debt.add(minVirtualDebt);
     }
 }

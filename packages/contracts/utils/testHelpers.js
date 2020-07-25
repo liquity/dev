@@ -47,6 +47,7 @@ const MoneyValues = {
   _5e18: web3.utils.toWei('5', 'ether'),
   _10e18: web3.utils.toWei('10', 'ether'),
   _13e18: web3.utils.toWei('13', 'ether'),
+  _15e18: web3.utils.toWei('15', 'ether'),
   _20e18: web3.utils.toWei('20', 'ether'),
   _30e18: web3.utils.toWei('30', 'ether'),
   _40e18: web3.utils.toWei('40', 'ether'),
@@ -78,6 +79,7 @@ const MoneyValues = {
   _1800e18: web3.utils.toWei('1800', 'ether'),
   _2000e18: web3.utils.toWei('2000', 'ether'),
   _5000e18: web3.utils.toWei('5000', 'ether'),
+  _8000e18: web3.utils.toWei('8000', 'ether'),
   _1e22: web3.utils.toWei('10000', 'ether'),
   _1e23: web3.utils.toWei('100000', 'ether'),
   _2e23: web3.utils.toWei('200000', 'ether'),
@@ -98,6 +100,7 @@ const MoneyValues = {
 
   _zeroBN: web3.utils.toBN('0'),
   _1e18BN: web3.utils.toBN('1000000000000000000'),
+  _10e18BN: web3.utils.toBN('10000000000000000000'),
   _100e18BN: web3.utils.toBN('100000000000000000000'),
   _100BN: web3.utils.toBN('100'),
   _110BN: web3.utils.toBN('110'),
@@ -477,7 +480,7 @@ static async  getCurrentICR_allAccounts (accounts, priceFeed, borrowerOperations
 }
 
  // --- Redemption functions ---
- 
+
 static async redeemCollateral (redeemer, priceFeed, cdpManager, CLVAmount){
   const price = await priceFeed.getPrice()
   const redemptionHints = await cdpManager.getRedemptionHints(CLVAmount, price)

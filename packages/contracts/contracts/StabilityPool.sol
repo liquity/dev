@@ -67,7 +67,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         emit EtherSent(_account, _amount);
 
         (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
-        assert(success == true);
+        require(success, "StabilityPool: sending ETH failed");
     }
 
     function increaseCLV(uint _amount) external onlyPoolManager () {
@@ -87,6 +87,7 @@ contract StabilityPool is Ownable, IStabilityPool {
     }
 
     function () external payable onlyPoolManagerOrPool {
+        require(msg.data.length == 0);
         ETH = ETH.add(msg.value);
     }
 }

@@ -64,7 +64,7 @@ contract DefaultPool is Ownable, IPool {
          emit EtherSent(_account, _amount);  
 
         (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
-        assert(success == true);      
+        require(success, "DefaultPool: sending ETH failed");     
     }
 
     function increaseCLVDebt(uint _amount) external onlyPoolManager {
@@ -82,6 +82,7 @@ contract DefaultPool is Ownable, IPool {
     }
 
     function () external payable onlyPoolManagerOrPool {
+        require(msg.data.length == 0);
         ETH = ETH.add(msg.value);
     }
 }

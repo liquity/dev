@@ -24,8 +24,8 @@ contract CDPManagerTester is CDPManager {
         return _getGasCompensation(_coll, _price);
     }
 
-    function getCompositeDebt(uint _coll, uint _debt, uint _price) external view returns (uint) {
-        return _getCompositeDebt(_coll, _debt, _price);
+    function getCompositeDebt(uint _debt, uint _price) external view returns (uint) {
+        return _getCompositeDebt(_debt, _price);
     }
 
 
