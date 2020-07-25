@@ -12,10 +12,6 @@ contract CDPManagerTester is CDPManager {
         return Math._computeCR(_coll, _debt, _price);
     }
 
-    function getCompensationScalingFraction(uint _TCR) external view returns (uint) {
-        return _getCompensationScalingFraction(_TCR);
-    }
-
     function getMinVirtualDebtInETH(uint _price) external view returns (uint) {
         return _getMinVirtualDebtInETH(_price);
     }

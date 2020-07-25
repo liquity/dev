@@ -4,8 +4,6 @@
 */
 const fs = require('fs')
 
-const ABDKMath64x64 = artifacts.require("./ABDKMath64x64.sol")
-const DeciMath = artifacts.require("./DeciMath.sol")
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
@@ -33,13 +31,6 @@ contract('Gas cost tests', async accounts => {
 
   let data = []
 
-  before(async () => {
-    const deciMath = await DeciMath.new()
-    const abdkMath = await ABDKMath64x64.new()
-    DeciMath.setAsDeployed(deciMath)
-    ABDKMath64x64.setAsDeployed(abdkMath)
-  })
-
   beforeEach(async () => {
     const contracts = await deployLiquity()
 
@@ -61,23 +52,43 @@ contract('Gas cost tests', async accounts => {
 
   // --- TESTS ---
 
+
+
   // --- liquidateCDPs() -  pure redistributions ---
 
   // 1 trove
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 1. Pure redistribution'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-    await th.addColl_allAccounts(accounts.slice(2, 12), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(2, 12), borrowerOperations, mv._180e18)
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    //1 acct open CDP with 1 ether and withdraws 180 CLV
-    await th.addColl_allAccounts([accounts[1]], borrowerOperations, mv._1_Ether)
-    await borrowerOperations.withdrawCLV(mv._180e18, accounts[1], { from: accounts[1] })
+    //1 accts open CDP with 1 ether and withdraw 180 CLV
+    const _1_Defaulter = accounts.slice(1, 2)
+    await th.openLoan_allAccounts(_1_Defaulter, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _1_Defaulter) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
     const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check defaulters' troves have been closed
+    for (account of _1_Defaulter) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -85,22 +96,38 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 2 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 2. Pure redistribution'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-    await th.addColl_allAccounts(accounts.slice(3, 13), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(3, 13), borrowerOperations, mv._180e18)
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     //2 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts([accounts[1]], borrowerOperations, mv._1_Ether)
-    await th.addColl_allAccounts([accounts[2]], borrowerOperations, mv._1_Ether)
-    await borrowerOperations.withdrawCLV(mv._180e18, accounts[1], { from: accounts[1] })
-    await borrowerOperations.withdrawCLV(mv._180e18, accounts[2], { from: accounts[2] })
+    const _2_Defaulters = accounts.slice(1, 3)
+    await th.openLoan_allAccounts(_2_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _2_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
-    const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check defaulters' troves have been closed
+    for (account of _2_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -108,20 +135,38 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 3 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 3. Pure redistribution'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-    await th.addColl_allAccounts(accounts.slice(4, 14), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(4, 14), borrowerOperations, mv._180e18)
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     //3 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 4), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 4), borrowerOperations, mv._180e18)
+    const _3_Defaulters = accounts.slice(1, 4)
+    await th.openLoan_allAccounts(_3_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _3_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
-    const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check defaulters' troves have been closed
+    for (account of _3_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -129,20 +174,38 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 5 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 5. Pure redistribution'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     //5 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 6), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 6), borrowerOperations, mv._180e18)
+    const _5_Defaulters = accounts.slice(1, 6)
+    await th.openLoan_allAccounts(_5_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _5_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
-    const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check defaulters' troves have been closed
+    for (account of _5_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -150,54 +213,194 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 10 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 10. Pure redistribution'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-    await th.addColl_allAccounts(accounts.slice(12, 22), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(12, 22), borrowerOperations, mv._180e18)
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     //10 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 12), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 12), borrowerOperations, mv._180e18)
+    const _10_Defaulters = accounts.slice(1, 11)
+    await th.openLoan_allAccounts(_10_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _10_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
-    // // Initial liquidation to make reward terms / Pool quantities non-zero
-    // await cdpManager.liquidate(accounts[11])
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
     const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check defaulters' troves have been closed
+    for (account of _10_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
     th.appendData({ gas: gas }, message, data)
   })
 
-  // 30 troves
-  it("", async () => {
-    const message = 'liquidateCDPs(). n = 30. Pure redistribution'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-    await th.addColl_allAccounts(accounts.slice(31, 61), borrowerOperations, mv._100_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(31, 61), borrowerOperations, mv._180e18)
+  //20 troves
+  it.only("", async () => {
+    const message = 'liquidateCDPs(). n = 20. Pure redistribution'
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    //30 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 31), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 31), borrowerOperations, mv._180e18)
+    //20 accts open CDP with 1 ether and withdraw 180 CLV
+    const _20_Defaulters = accounts.slice(1, 21)
+    await th.openLoan_allAccounts(_20_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _20_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
-    // Check all accounts have CDPs
-    for (account of (accounts.slice(1, 31))) {
-      assert.isTrue(await sortedCDPs.contains(account))
-    }
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check defaulters' troves have been closed
+    for (account of _20_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({ gas: gas }, message, data)
+  })
+
+
+  // 30 troves
+  it.only("", async () => {
+    const message = 'liquidateCDPs(). n = 30. Pure redistribution'
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
+
+    //30 accts open CDP with 1 ether and withdraw 180 CLV
+    const _30_Defaulters = accounts.slice(1, 31)
+    await th.openLoan_allAccounts(_30_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
+
+    // Check all defaulters are active
+    for (account of _30_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
     const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
 
-    // Check all accounts have been closed
-    for (account of (accounts.slice(1, 31))) {
-      assert.isFalse(await sortedCDPs.contains(account))
-    }
+    // Check defaulters' troves have been closed
+    for (account of _30_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({ gas: gas }, message, data)
+  })
+
+  // 40 troves
+  it.only("", async () => {
+    const message = 'liquidateCDPs(). n = 40. Pure redistribution'
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
+
+    //40 accts open CDP with 1 ether and withdraw 180 CLV
+    const _40_Defaulters = accounts.slice(1, 41)
+    await th.openLoan_allAccounts(_40_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
+
+    // Check all defaulters are active
+    for (account of _40_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check defaulters' troves have been closed
+    for (account of _40_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({ gas: gas }, message, data)
+  })
+
+  // 45 troves
+  it.only("", async () => {
+    const message = 'liquidateCDPs(). n = 45. Pure redistribution'
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
+
+    //45 accts open CDP with 1 ether and withdraw 180 CLV
+    const _45_Defaulters = accounts.slice(1, 46)
+    await th.openLoan_allAccounts(_45_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
+
+    // Check all defaulters are active
+    for (account of _45_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    const tx = await cdpManager.liquidateCDPs(45, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check defaulters' troves have been closed
+    for (account of _45_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -206,62 +409,37 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 50 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 50. Pure redistribution'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-    await th.addColl_allAccounts(accounts.slice(52, 102), borrowerOperations, mv._100_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(52, 102), borrowerOperations, mv._180e18)
+   // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+   await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    //30 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 52), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 52), borrowerOperations, mv._180e18)
+    //50 accts open CDP with 1 ether and withdraw 180 CLV
+    const _50_Defaulters = accounts.slice(1, 51)
+    await th.openLoan_allAccounts(_50_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _50_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
-    // Initial liquidation to make reward terms / Pool quantities non-zero
-    await cdpManager.liquidate(accounts[51])
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
-    for (account of (accounts.slice(1, 51))) {
-      assert.isTrue(await sortedCDPs.contains(account))
-    }
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
     const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
 
-    console.log(tx.receipt)
-    for (account of (accounts.slice(1, 51))) {
-      assert.isFalse(await sortedCDPs.contains(account))
-    }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  it("", async () => {
-    const message = 'liquidateCDPs(). n = 90. Pure redistribution'
-    //  accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._100_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
-
-    //30 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 91), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 91), borrowerOperations, mv._180e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    // Initial liquidation to make reward terms / Pool quantities non-zero
-    await cdpManager.liquidate(accounts[51])
-
-    for (account of (accounts.slice(1, 51))) {
-      assert.isTrue(await sortedCDPs.contains(account))
-    }
-    const tx = await cdpManager.liquidateCDPs(90, { from: accounts[0] })
-
-    for (account of (accounts.slice(1, 51))) {
-      assert.isFalse(await sortedCDPs.contains(account))
-    }
+    // Check defaulters' troves have been closed
+    for (account of _50_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -269,60 +447,41 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  // 100 troves
-  it("", async () => {
-    const message = 'liquidateCDPs(). n = 100. Pure redistribution'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
-    await th.addColl_allAccounts(accounts.slice(101, 201), borrowerOperations, mv._100_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 201), borrowerOperations, mv._180e18)
+  
 
-    //30 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 101), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 101), borrowerOperations, mv._180e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    // Check CDPs are active
-    for (account of (accounts.slice(1, 101))) {
-      assert.isTrue(await sortedCDPs.contains(account))
-    }
-
-    const tx = await cdpManager.liquidateCDPs(100, { from: accounts[0] })
-
-    // Check CDPs are now closed
-    for (account of (accounts.slice(1, 101))) {
-      assert.isFalse(await sortedCDPs.contains(account))
-    }
-
-    const gas = th.gasUsed(tx)
-
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
 
   // --- liquidate CDPs - all troves offset by Stability Pool - no pending distribution rewards ---
 
   // 1 trove
   it("", async () => {
     const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(2, 12), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(2, 12), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
-    //1 acct open CDP with 1 ether and withdraws 180 CLV
-    await th.addColl_allAccounts([accounts[1]], borrowerOperations, mv._1_Ether)
-    await borrowerOperations.withdrawCLV(mv._180e18, accounts[1], { from: accounts[1] })
+    //1 acct opens CDP with 1 ether and withdraw 100 CLV
+    const _1_Defaulter = accounts.slice(1, 2)
+    await th.openLoan_allAccounts(_1_Defaulter, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _1_Defaulter) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check CDPs are closed
+    for (account of _1_Defaulter) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -332,24 +491,33 @@ contract('Gas cost tests', async accounts => {
   // 2 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 2. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(3, 13), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(3, 13), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
-    //2 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts([accounts[1]], borrowerOperations, mv._1_Ether)
-    await th.addColl_allAccounts([accounts[2]], borrowerOperations, mv._1_Ether)
-    await borrowerOperations.withdrawCLV(mv._180e18, accounts[1], { from: accounts[1] })
-    await borrowerOperations.withdrawCLV(mv._180e18, accounts[2], { from: accounts[2] })
+    //2 accts open CDP with 1 ether and withdraw 100 CLV
+    const _2_Defaulters = accounts.slice(1, 3)
+    await th.openLoan_allAccounts(_2_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _2_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check CDPs are closed
+    for (account of _2_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -359,22 +527,33 @@ contract('Gas cost tests', async accounts => {
   // 3 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 3. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(4, 14), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(4, 14), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
-    //3 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 4), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 4), borrowerOperations, mv._180e18)
+    //3 accts open CDP with 1 ether and withdraw 100 CLV
+    const _3_Defaulters = accounts.slice(1, 4)
+    await th.openLoan_allAccounts(_3_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _3_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check CDPs are closed
+    for (account of _3_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -384,22 +563,33 @@ contract('Gas cost tests', async accounts => {
   // 5 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 5. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
-    //3 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 6), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 6), borrowerOperations, mv._180e18)
+    //5 accts open CDP with 1 ether and withdraw 100 CLV
+    const _5_Defaulters = accounts.slice(1, 6)
+    await th.openLoan_allAccounts(_5_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _5_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check CDPs are closed
+    for (account of _5_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -409,56 +599,141 @@ contract('Gas cost tests', async accounts => {
   // 10 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 10. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(11, 21), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(11, 21), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
-    //10 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 11), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 11), borrowerOperations, mv._180e18)
+    //10 accts open CDP with 1 ether and withdraw 100 CLV
+    const _10_Defaulters = accounts.slice(1, 11)
+    await th.openLoan_allAccounts(_10_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _10_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check CDPs are closed
+    for (account of _10_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
     th.appendData({ gas: gas }, message, data)
   })
 
-  // 30 troves
+  // 20 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 30. All fully offset with Stability Pool. No pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(31, 61), borrowerOperations, mv._100_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(31, 61), borrowerOperations, mv._180e18)
+    const message = 'liquidateCDPs(). n = 20. All fully offset with Stability Pool. No pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
-    //50 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 31), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 31), borrowerOperations, mv._180e18)
+    //20 accts open CDP with 1 ether and withdraw 100 CLV
+    const _20_Defaulters = accounts.slice(1, 21)
+    await th.openLoan_allAccounts(_20_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _20_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(mv._100e18)
 
-    // Check CDPs are active
-    for (account of (accounts.slice(1, 31))) {
-      assert.isTrue(await sortedCDPs.contains(account))
-    }
-    const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Liquidate troves
+    const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
-    for (account of (accounts.slice(1, 31))) {
-      assert.isFalse(await sortedCDPs.contains(account))
-    }
+    for (account of _20_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({ gas: gas }, message, data)
+  })
+  
+
+  // 30 troves
+  it("", async () => {
+    const message = 'liquidateCDPs(). n = 30. All fully offset with Stability Pool. No pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
+
+    // Whale opens loan and fills SP with 1 billion CLV
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+
+    //30 accts open CDP with 1 ether and withdraw 100 CLV
+    const _30_Defaulters = accounts.slice(1, 31)
+    await th.openLoan_allAccounts(_30_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
+
+    // Check all defaulters are active
+    for (account of _30_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Liquidate troves
+    const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check CDPs are closed
+    for (account of _30_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({ gas: gas }, message, data)
+  })
+
+  // 40 troves
+  it("", async () => {
+    const message = 'liquidateCDPs(). n = 40. All fully offset with Stability Pool. No pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
+
+    // Whale opens loan and fills SP with 1 billion CLV
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+
+    //40 accts open CDP with 1 ether and withdraw 100 CLV
+    const _40_Defaulters = accounts.slice(1, 41)
+    await th.openLoan_allAccounts(_40_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
+
+    // Check all defaulters are active
+    for (account of _40_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Liquidate troves
+    const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check CDPs are closed
+    for (account of _40_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -469,136 +744,167 @@ contract('Gas cost tests', async accounts => {
   // 50 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 50. All fully offset with Stability Pool. No pending distribution rewards.'
-
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(51, 101), borrowerOperations, mv._100_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(51, 101), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
-    //50 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 51), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 51), borrowerOperations, mv._180e18)
+    //50 accts open CDP with 1 ether and withdraw 100 CLV
+    const _50_Defaulters = accounts.slice(1, 51)
+    await th.openLoan_allAccounts(_50_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _50_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(mv._100e18)
 
-    // Check CDPs are active
-    for (account of (accounts.slice(1, 51))) {
-      assert.isTrue(await sortedCDPs.contains(account))
-    }
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
-    for (account of (accounts.slice(1, 51))) {
-      assert.isFalse(await sortedCDPs.contains(account))
-    }
+    for (account of _50_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
     th.appendData({ gas: gas }, message, data)
   })
 
-  // 100 troves
-  it("", async () => {
-    const message = 'liquidateCDPs(). n = 100. All fully offset with Stability Pool. No pending distribution rewards.'
-
-    // 100 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 201), borrowerOperations, mv._100_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 201), borrowerOperations, mv._180e18)
+   // 55 troves
+   it("", async () => {
+    const message = 'liquidateCDPs(). n = 55. All fully offset with Stability Pool. No pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
-    //50 accts open CDP with 1 ether and withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(1, 101), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 101), borrowerOperations, mv._180e18)
+    //50 accts open CDP with 1 ether and withdraw 100 CLV
+    const _55_Defaulters = accounts.slice(1, 56)
+    await th.openLoan_allAccounts(_55_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Check all defaulters are active
+    for (account of _55_Defaulters) {assert.isTrue(await sortedCDPs.contains(account))}
+    
+    // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(mv._100e18)
 
-    // Check CDPs are active
-    for (account of (accounts.slice(1, 101))) {
-      assert.isTrue(await sortedCDPs.contains(account))
-    }
-    const tx = await cdpManager.liquidateCDPs(100, { from: accounts[0] })
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
 
-    // Check CDPs are active
-    for (account of (accounts.slice(1, 101))) {
-      assert.isFalse(await sortedCDPs.contains(account))
-    }
+    // Liquidate troves
+    const tx = await cdpManager.liquidateCDPs(55, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+    // Check CDPs are closed
+    for (account of _55_Defaulters) {assert.isFalse(await sortedCDPs.contains(account))}
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
     th.appendData({ gas: gas }, message, data)
   })
+
+  
 
   // --- liquidate CDPs - all troves offset by Stability Pool - Has pending distribution rewards ---
 
   // 1 trove
   it("", async () => {
-    0
     const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
-    // --- Accounts to be liquidated in the test tx ---
-    await th.addColl_allAccounts([accounts[1]], borrowerOperations, mv._1_Ether)
-    await borrowerOperations.withdrawCLV(mv._180e18, accounts[1], { from: accounts[1] })
+    // --- 1 Accounts to be liquidated in the test tx --
+    const _1_Defaulter = accounts.slice(1, 2)
+    await th.openLoan_allAccounts(_1_Defaulter, borrowerOperations, mv._1_Ether, mv._100e18)
 
+    // Check all defaulters active
+    for (account of _1_Defaulter) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(mv._100e18)
     await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _1_Defaulter) { assert.isFalse(await sortedCDPs.contains(account)) }
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
     th.appendData({ gas: gas }, message, data)
   })
+
   // 2 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 2. All fully offset with Stability Pool. Have pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
+    const message = 'liquidateCDPs(). n = 2. All fully offset with Stability Pool. Has pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 2 Accounts to be liquidated in the test tx --
-    await th.addColl_allAccounts(accounts.slice(1, 3), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 3), borrowerOperations, mv._180e18)
+    const _2_Defaulters = accounts.slice(1, 3)
+    await th.openLoan_allAccounts(_2_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
+    // Check all defaulters active
+    for (account of _2_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(mv._100e18)
     await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _2_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -608,30 +914,44 @@ contract('Gas cost tests', async accounts => {
   // 3 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 3. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 3 Accounts to be liquidated in the test tx --
-    await th.addColl_allAccounts(accounts.slice(1, 4), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 4), borrowerOperations, mv._180e18)
+    const _3_Defaulters = accounts.slice(1, 4)
+    await th.openLoan_allAccounts(_3_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
+    // Check all defaulters active
+    for (account of _3_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(mv._100e18)
     await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _3_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -641,30 +961,44 @@ contract('Gas cost tests', async accounts => {
   // 5 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 5. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 5 Accounts to be liquidated in the test tx --
-    await th.addColl_allAccounts(accounts.slice(1, 6), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 6), borrowerOperations, mv._180e18)
+    const _5_Defaulters = accounts.slice(1, 6)
+    await th.openLoan_allAccounts(_5_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
+    // Check all defaulters active
+    for (account of _5_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(mv._100e18)
     await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
-    // Price drops, defaulters' ICR falls below MCR
+    // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _5_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -674,30 +1008,91 @@ contract('Gas cost tests', async accounts => {
   // 10 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 10. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 10 Accounts to be liquidated in the test tx --
-    await th.addColl_allAccounts(accounts.slice(1, 11), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 11), borrowerOperations, mv._180e18)
+    const _10_Defaulters = accounts.slice(1, 11)
+    await th.openLoan_allAccounts(_10_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
+    // Check all defaulters active
+    for (account of _10_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(mv._100e18)
     await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _10_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({ gas: gas }, message, data)
+  })
+
+  // 20 troves
+  it("", async () => {
+    const message = 'liquidateCDPs(). n = 20. All fully offset with Stability Pool. Has pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // --- 20 Accounts to be liquidated in the test tx --
+    const _20_Defaulters = accounts.slice(1, 21)
+    await th.openLoan_allAccounts(_20_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
+
+    // Check all defaulters active
+    for (account of _20_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await priceFeed.setPrice(mv._100e18)
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    await priceFeed.setPrice(mv._200e18)
+
+    // Whale opens loan and fills SP with 1 billion CLV
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
+
+    // Price drops, defaulters' ICR fall below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
+    const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _20_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -707,30 +1102,139 @@ contract('Gas cost tests', async accounts => {
   // 30 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 30. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
-    // --- 10 Accounts to be liquidated in the test tx --
-    await th.addColl_allAccounts(accounts.slice(1, 31), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 31), borrowerOperations, mv._180e18)
+    // --- 30 Accounts to be liquidated in the test tx --
+    const _30_Defaulters = accounts.slice(1, 31)
+    await th.openLoan_allAccounts(_30_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
+    // Check all defaulters active
+    for (account of _30_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(mv._100e18)
     await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _30_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({ gas: gas }, message, data)
+  })
+
+  // 40 troves
+  it("", async () => {
+    const message = 'liquidateCDPs(). n = 40. All fully offset with Stability Pool. Has pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // --- 40 Accounts to be liquidated in the test tx --
+    const _40_Defaulters = accounts.slice(1, 41)
+    await th.openLoan_allAccounts(_40_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
+
+    // Check all defaulters active
+    for (account of _40_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await priceFeed.setPrice(mv._100e18)
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    await priceFeed.setPrice(mv._200e18)
+
+    // Whale opens loan and fills SP with 1 billion CLV
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
+
+    // Price drops, defaulters' ICR fall below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
+    const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _40_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+
+    const gas = th.gasUsed(tx)
+    th.logGas(gas, message)
+
+    th.appendData({ gas: gas }, message, data)
+  })
+
+
+  // 45 troves
+  it("", async () => {
+    const message = 'liquidateCDPs(). n = 45. All fully offset with Stability Pool. Has pending distribution rewards.'
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
+
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+
+    // --- 50 Accounts to be liquidated in the test tx --
+    const _45_Defaulters = accounts.slice(1, 46)
+    await th.openLoan_allAccounts(_45_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
+
+    // Check all defaulters active
+    for (account of _45_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
+    // Account 500 is liquidated, creates pending distribution rewards for all
+    await priceFeed.setPrice(mv._100e18)
+    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    await priceFeed.setPrice(mv._200e18)
+
+    // Whale opens loan and fills SP with 1 billion CLV
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
+
+    // Price drops, defaulters' ICR fall below MCR
+    await priceFeed.setPrice(mv._100e18)
+
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
+    const tx = await cdpManager.liquidateCDPs(45, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _45_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -740,75 +1244,59 @@ contract('Gas cost tests', async accounts => {
   // 50 troves
   it("", async () => {
     const message = 'liquidateCDPs(). n = 50. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
+    // 10 accts each open CDP with 10 ether, withdraw 100 CLV
+    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    // Account 500 opens with 1 ether and withdraws 100 CLV
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
-    // --- 10 Accounts to be liquidated in the test tx --
-    await th.addColl_allAccounts(accounts.slice(1, 51), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 51), borrowerOperations, mv._180e18)
+    // --- 50 Accounts to be liquidated in the test tx --
+    const _50_Defaulters = accounts.slice(1, 51)
+    await th.openLoan_allAccounts(_50_Defaulters, borrowerOperations, mv._1_Ether, mv._100e18)
 
+    // Check all defaulters active
+    for (account of _50_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+   
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(mv._100e18)
     await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
+    assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
-    // Price drops, account[1]'s ICR falls below MCR
+    // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(mv._100e18)
 
+    // Check Recovery Mode is false
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+    
+    // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
+    assert.isTrue(tx.receipt.status)
+
+     // Check all defaulters liquidated
+     for (account of _50_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
     th.appendData({ gas: gas }, message, data)
   })
 
-  // 100 troves
-  it("", async () => {
-    const message = 'liquidateCDPs(). n = 100. All fully offset with Stability Pool. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-    await th.addColl_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._180e18)
 
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    // --- 10 Accounts to be liquidated in the test tx --
-    await th.addColl_allAccounts(accounts.slice(1, 101), borrowerOperations, mv._1_Ether)
-    await th.withdrawCLV_allAccounts(accounts.slice(1, 101), borrowerOperations, mv._180e18)
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
-    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.liquidateCDPs(100, { from: accounts[0] })
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
+  
 
   // --- BatchLiquidateTroves ---
 
   // --- Pure redistribution, no offset. WITH pending distribution rewards ---
 
   // 2 troves
-  it.only("", async () => {
+  it("", async () => {
     0
     const message = 'batchLiquidateTroves(). n = 2. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
@@ -845,7 +1333,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 3 troves
-  it.only("", async () => {
+  it("", async () => {
     0
     const message = 'batchLiquidateTroves(). n = 3. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
@@ -882,7 +1370,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 5 troves
-  it.only("", async () => {
+  it("", async () => {
     0
     const message = 'batchLiquidateTroves(). n = 5. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
@@ -919,7 +1407,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 10 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 10. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -955,7 +1443,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 20 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 20. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -991,7 +1479,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 30 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 30. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1027,7 +1515,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 40 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 40. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1063,7 +1551,8 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  it.only("", async () => {
+   // 45 troves
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 45. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1099,11 +1588,11 @@ contract('Gas cost tests', async accounts => {
   })
 
 
+
   // --- batchLiquidateTroves - pure offset with Stability Pool ---
 
-  
   // 2 troves
-  it.only("", async () => {
+  it("", async () => {
     0
     const message = 'batchLiquidateTroves(). n = 2. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
@@ -1144,7 +1633,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 3 troves
-  it.only("", async () => {
+  it("", async () => {
     0
     const message = 'batchLiquidateTroves(). n = 3. All troves fully offset. Have pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
@@ -1186,7 +1675,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 5 troves
-  it.only("", async () => {
+  it("", async () => {
     0
     const message = 'batchLiquidateTroves(). n = 5. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
@@ -1228,7 +1717,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 10 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 10. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1269,7 +1758,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 20 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 20. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1310,7 +1799,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 30 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 30. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1351,7 +1840,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 40 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 40. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1392,7 +1881,8 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  it.only("", async () => {
+  // 45 troves
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 45. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
