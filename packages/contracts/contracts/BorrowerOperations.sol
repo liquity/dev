@@ -99,7 +99,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         _requireValueIsGreaterThan20Dollars(msg.value, price);
         _requireCDPisNotActive(user);
         
-        uint compositeDebt = _getCompositeDebt(_CLVAmount, price);
+        uint compositeDebt = _getCompositeDebt(_CLVAmount);
         uint ICR = Math._computeCR(msg.value, compositeDebt, price);  
 
         if (_CLVAmount > 0) {
@@ -412,7 +412,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
             newDebt = _debt.sub(Math._intToUint(_debtChange));
         }
 
-        uint compositeDebt = _getCompositeDebt(newDebt, _price);
+        uint compositeDebt = _getCompositeDebt(newDebt);
         uint newICR = Math._computeCR(newColl, compositeDebt, _price);
         return newICR;
     }
@@ -467,7 +467,9 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     }
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
-    function _getCompositeDebt(uint _debt, uint _price) internal pure returns (uint) {
-        return _debt.add(minVirtualDebt);
+    function _getCompositeDebt(uint _debt) internal pure returns (uint) {
+        // return _debt.add(minVirtualDebt);
+        return _debt;
+
     }
 }

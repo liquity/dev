@@ -88,6 +88,8 @@ const MoneyValues = {
   _1e26: web3.utils.toWei('100000000', 'ether'),
   _1e27: web3.utils.toWei('1000000000', 'ether'),
   _2e27: web3.utils.toWei('2000000000', 'ether'),
+  _9e28: web3.utils.toWei('90000000000', 'ether'),
+  _1e29: web3.utils.toWei('100000000000', 'ether'),
   _5e35: web3.utils.toWei('500000000000000000', 'ether'),
   _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
 

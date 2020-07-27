@@ -7,8 +7,6 @@ const CLVToken = artifacts.require("./CLVToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const DeciMath = artifacts.require("DeciMath")
-const ABDKMath64x64 = artifacts.require("ABDKMath64x64")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const deploymentHelpers = require("./deploymentHelpers.js")
@@ -47,12 +45,6 @@ contractABIs = [
             }
 
 async function main() {
-
-    const deciMath = await DeciMath.new()
-    const abdkMath = await ABDKMath64x64.new()
-    DeciMath.setAsDeployed(deciMath)
-    ABDKMath64x64.setAsDeployed(abdkMath)
-
     const borrowerOperations = await BorrowerOperations.new()
     const priceFeed = await PriceFeed.new()
     const clvToken = await CLVToken.new()

@@ -431,7 +431,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             // Passing zero as hint will cause sortedCDPs to descend the list from the head, which is the correct insert position.
             sortedCDPs.reInsert(_cdpUser, 2**256 - 1, _price, address(0), address(0)); 
         } else {
-            uint compositeDebt = _getCompositeDebt(newDebt, _price);
+            uint compositeDebt = _getCompositeDebt(newDebt);
             uint newICR = Math._computeCR(newColl, compositeDebt, _price);
 
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
@@ -568,7 +568,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
                 uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
 
                 uint newDebt = CLVDebt.sub(remainingCLV);
-                uint compositeDebt = _getCompositeDebt(newDebt, _price);
+                uint compositeDebt = _getCompositeDebt(newDebt);
 
                 partialRedemptionHintICR = Math._computeCR(newColl, compositeDebt, _price);
 
@@ -638,7 +638,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint currentETH = CDPs[_user].coll.add(pendingETHReward); 
         uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward); 
 
-        uint compositeCLVDebt = _getCompositeDebt(currentCLVDebt, _price);
+        uint compositeCLVDebt = _getCompositeDebt(currentCLVDebt);
        
         uint ICR = Math._computeCR(currentETH, compositeCLVDebt, _price);  
         return ICR;
@@ -715,9 +715,16 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         return pendingCLVDebtReward;
     }
 
+    function hasPendingRewards(address _user) public view returns (bool) {
+        require(uint(CDPs[_user].status) == 1, "CDPManager: User does not have an active trove");
+        return _hasPendingRewards(_user);
+    }
+    
     function _hasPendingRewards(address _user) internal view returns (bool) {
-        // A CDP has pending rewards if the current reward sum differs from the CDP's snapshot
-        return (rewardSnapshots[_user].ETH != L_ETH);
+        /* A CDP has pending rewards if its snapshot is less than the current rewards per-unit-staked sum.
+        If so, this indicates that rewards have occured since the snapshot was made, and the user therefore has
+        pending rewards */
+        return (rewardSnapshots[_user].ETH < L_ETH);
     }
 
      /* Computes the CDPs entire debt and coll, including distribution pending rewards. Transfers any rewards 
@@ -909,7 +916,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint _0pt5percentOfColl = _entireColl.div(200);
 
         uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
-         return compensation;
+        return compensation;
+        // return 0;
     }
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
@@ -919,8 +927,9 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     }
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
-    function _getCompositeDebt(uint _debt, uint _price) internal pure returns (uint) {
+    function _getCompositeDebt(uint _debt) internal pure returns (uint) {
         return _debt.add(minVirtualDebt);
+        // return _debt;
     }
 
     // --- 'require' wrapper functions ---
