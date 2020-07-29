@@ -328,7 +328,9 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // close Carol's CDP.  
+    assert.isTrue(await sortedCDPs.contains(carol))
     await cdpManager.liquidate(carol, { from: owner });
+    assert.isFalse(await sortedCDPs.contains(carol))
 
     /* Alice and Bob have the only active stakes. totalStakes in the system is (10 + 10) = 20 ether.
     
@@ -346,10 +348,14 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.withdrawCLV('800000000000000000000', bob, { from: bob })
 
     // price drops to 1ETH:50CLV, reducing Bob's ICR below MCR
-    await priceFeed.setPrice('50000000000000000000');
+    await priceFeed.setPrice(mv._50e18);
+    const price = await priceFeed.getPrice()
 
     // close Bob's CDP 
+    assert.isTrue(await sortedCDPs.contains(bob))
+    console.log(`bob ICR:${await cdpManager.getCurrentICR(bob, price)}`)
     await cdpManager.liquidate(bob, { from: owner });
+    assert.isFalse(await sortedCDPs.contains(bob))
 
     /* Alice now has the only active stake. totalStakes in the system is now 10 ether.
    
@@ -363,6 +369,9 @@ contract('CDPManager', async accounts => {
    L_CLVDebt = (180 / 20) + (890 / 10) = 98 CLV */
     const L_ETH_AfterBobLiquidated = await cdpManager.L_ETH()
     const L_CLVDebt_AfterBobLiquidated = await cdpManager.L_CLVDebt()
+    console.log(` L_ETH_AfterBobLiquidated: ${L_ETH_AfterBobLiquidated} `)
+    console.log(` L_CLVDebt_AfterBobLiquidated: ${L_CLVDebt_AfterBobLiquidated} `)
+
     assert.isAtMost(th.getDifference(L_ETH_AfterBobLiquidated, '1100000000000000000'), 100)
     assert.isAtMost(th.getDifference(L_CLVDebt_AfterBobLiquidated, '98000000000000000000'), 100)
   })
@@ -727,6 +736,8 @@ contract('CDPManager', async accounts => {
 
     // price bounces back - Bob's trove is >110% ICR again
     await priceFeed.setPrice(mv._200e18)
+    const price = await priceFeed.getPrice()
+    assert.isTrue((await cdpManager.getCurrentICR(bob, price)).gt(mv._MCR))
 
     // Check Bob' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
     const bob_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
@@ -1112,8 +1123,12 @@ contract('CDPManager', async accounts => {
     assert.isTrue(bob_ICR_Before.gte(mv._MCR))
     assert.isTrue(carol_ICR_Before.lte(mv._MCR))
 
+    await th.logAccountsArray(accounts.slice(1,4), cdpManager, price)
+
     // Liquidate defaulter. 30 CLV and 0.3 ETH is distributed uniformly between A, B and C. Each receive 10 CLV, 0.1 ETH
     await cdpManager.liquidate(defaulter_1)
+
+    await th.logAccountsArray(accounts.slice(1,4), cdpManager, price)
 
     const alice_ICR_After = await cdpManager.getCurrentICR(alice, price)
     const bob_ICR_After = await cdpManager.getCurrentICR(bob, price)

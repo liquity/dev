@@ -218,6 +218,55 @@ static logGas(gas, message) {
   )
 }
 
+static async logActiveAccounts (cdpManager, sortedCDPs, price, n) {
+  const count = await sortedCDPs.getSize()
+
+  n = (typeof n == 'undefined' ) ? count : n
+
+  let account = await sortedCDPs.getLast()
+  const head = await sortedCDPs.getFirst()
+
+  console.log(`Total active accounts: ${count}`)
+  console.log(`First ${n} accounts, in ascending ICR order:`)
+
+  let i = 0
+  while (i < n) {
+
+    const squeezedAddr = this.squeezeAddr(account)
+    const coll = (await cdpManager.CDPs(account))[1]
+    const debt = (await cdpManager.CDPs(account))[0]
+    const ICR = await cdpManager.getCurrentICR(account, price)
+
+    console.log(`Acct: ${squeezedAddr}  coll:${coll}  debt: ${debt}  ICR: ${ICR}`)
+
+    if (account == head) { break; }
+
+    account = await sortedCDPs.getPrev(account)
+
+    i++
+  }
+}
+
+static async logAccountsArray (accounts, cdpManager, price, n) {
+  const length = accounts.length
+
+  n = (typeof n == 'undefined' ) ? length : n
+
+  console.log(`Number of accounts in array: ${length}`)
+  console.log(`First ${n} accounts of array:`)
+
+  for(let i = 0; i < accounts.length; i++) {
+    const account = accounts[i]
+    
+    const squeezedAddr = this.squeezeAddr(account)
+    const coll = (await cdpManager.CDPs(account))[1]
+    const debt = (await cdpManager.CDPs(account))[0]
+    const ICR = await cdpManager.getCurrentICR(account, price)
+
+    console.log(`Acct: ${squeezedAddr}  coll:${coll}  debt: ${debt}  ICR: ${ICR}`)
+  }
+}
+
  // --- BorrowerOperations gas functions ---
 
  static async openLoan_allAccounts(accounts, borrowerOperations, ETHAmount, CLVAmount){

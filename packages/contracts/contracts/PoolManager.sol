@@ -461,31 +461,20 @@ contract PoolManager is Ownable, IPoolManager {
     and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
     Returns the amount of debt that could not be cancelled, and the corresponding ether.
     Only callable from close() and closeCDPs() functions in CDPManager */
-  function offset(uint _debt, uint _coll,  uint _CLVInPool) 
+  function offset(uint _debtToOffset, uint _collToAdd) 
     external 
     payable 
     onlyCDPManager 
-    returns (uint debtRemainder, uint collRemainder)  {    
+    {    
         uint totalCLVDeposits = stabilityPool.getCLV(); 
-        
-        // If the debt is larger than the deposited CLV, offset an amount of debt corresponding to the latter
-        uint debtToOffset = Math._min(_debt, _CLVInPool);  
-  
-        // Collateral to be added in proportion to the debt that is cancelled 
-        uint collToAdd = _coll.mul(debtToOffset).div(_debt);
+        if (totalCLVDeposits == 0 || _debtToOffset == 0) { return; }
         
         (uint ETHGainPerUnitStaked,
-         uint CLVLossPerUnitStaked) = _computeRewardsPerUnitStaked(collToAdd, debtToOffset, totalCLVDeposits);
+         uint CLVLossPerUnitStaked) = _computeRewardsPerUnitStaked(_collToAdd, _debtToOffset, totalCLVDeposits);
 
         _updateRewardSumAndProduct(ETHGainPerUnitStaked, CLVLossPerUnitStaked);
 
-        _moveOffsetCollAndDebt(collToAdd, debtToOffset);
-
-        // Return the amount of debt & coll that could not be offset against the Stability Pool due to insufficiency
-        debtRemainder = _debt.sub(debtToOffset);
-        collRemainder = _coll.sub(collToAdd);
-
-        return (debtRemainder, collRemainder);
+        _moveOffsetCollAndDebt(_collToAdd, _debtToOffset);
     }
 
     // --- Offset helper functions ---

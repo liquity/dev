@@ -251,7 +251,7 @@ contract('Gas compensation tests', async accounts => {
     debt = 10 CLV
     0.5% of coll = 0.04995 ETH. USD value: $9.99
     -> Expect composite debt = 10 + 10  = 20 CLV*/
-    const compositeDebt_1 = await cdpManagerTester.getCompositeDebt( mv._10e18, price)
+    const compositeDebt_1 = await cdpManagerTester.getCompositeDebt( mv._10e18)
     assert.equal(compositeDebt_1, mv._20e18)
 
     /* ETH:USD price = 200
@@ -259,7 +259,7 @@ contract('Gas compensation tests', async accounts => {
      debt = 0 CLV
      0.5% of coll = 0.000275 ETH. USD value: $0.055
      -> Expect composite debt = 0 + 10 = 10 CLV*/
-    const compositeDebt_2 = await cdpManagerTester.getCompositeDebt( 0, price)
+    const compositeDebt_2 = await cdpManagerTester.getCompositeDebt( 0)
     assert.equal(compositeDebt_2, mv._10e18)
 
     // /* ETH:USD price = 200
@@ -267,7 +267,7 @@ contract('Gas compensation tests', async accounts => {
     // debt = 200 CLV 
     // 0.5% of coll = 0.004995 ETH. USD value: $6.09
     // -> Expect  composite debt =  200 + 10 = 210  CLV */
-    const compositeDebt_3 = await cdpManagerTester.getCompositeDebt( mv._200e18, price)
+    const compositeDebt_3 = await cdpManagerTester.getCompositeDebt( mv._200e18)
     assert.equal(compositeDebt_3, '210000000000000000000')
   })
 
@@ -282,7 +282,7 @@ contract('Gas compensation tests', async accounts => {
     debt = 123.45 CLV
     0.5% of coll = 0.5 ETH. USD value: $10
     -> Expect composite debt = (123.45 + 10) = 133.45 CLV  */
-    const compositeDebt = await cdpManagerTester.getCompositeDebt( '123450000000000000000', price)
+    const compositeDebt = await cdpManagerTester.getCompositeDebt( '123450000000000000000')
     assert.equal(compositeDebt, '133450000000000000000')
   })
 
@@ -298,7 +298,7 @@ contract('Gas compensation tests', async accounts => {
     coll = 100 ETH  
     debt = 2000 CLV
     -> Expect composite debt = (2000 + 100) = 2010 CLV  */
-    const compositeDebt_1 = (await cdpManagerTester.getCompositeDebt(mv._2000e18, price)).toString()
+    const compositeDebt_1 = (await cdpManagerTester.getCompositeDebt(mv._2000e18)).toString()
     assert.equal(compositeDebt_1, '2010000000000000000000')
 
     /* 
@@ -306,7 +306,7 @@ contract('Gas compensation tests', async accounts => {
     coll = 10.001 ETH  
     debt = 200 CLV
     -> Expect composite debt = (200 + 10.001) = 210 CLV  */
-    const compositeDebt_2 = (await cdpManagerTester.getCompositeDebt( mv._200e18, price)).toString()
+    const compositeDebt_2 = (await cdpManagerTester.getCompositeDebt( mv._200e18)).toString()
     assert.equal(compositeDebt_2, '210000000000000000000')
 
     /* 
@@ -314,7 +314,7 @@ contract('Gas compensation tests', async accounts => {
     coll = 37.5 ETH  
     debt = 500 CLV
     -> Expect composite debt = (500 + 10) = 510 CLV  */
-    const compositeDebt_3 = (await cdpManagerTester.getCompositeDebt( mv._500e18, price)).toString()
+    const compositeDebt_3 = (await cdpManagerTester.getCompositeDebt( mv._500e18)).toString()
     assert.equal(compositeDebt_3, '510000000000000000000')
 
     /* 
@@ -324,7 +324,7 @@ contract('Gas compensation tests', async accounts => {
     -> Expect composite debt = (1000000000 + 10) = 1000000010 CLV  */
     await priceFeed.setPrice('45323545420000000000000')
     const price_2 = await priceFeed.getPrice()
-    const compositeDebt_4 = (await cdpManagerTester.getCompositeDebt(mv._1e27, price_2)).toString()
+    const compositeDebt_4 = (await cdpManagerTester.getCompositeDebt(mv._1e27)).toString()
     assert.isAtMost(th.getDifference(compositeDebt_4, '1000000010000000000000000000'), 100000000000)
 
     /* 
@@ -334,7 +334,7 @@ contract('Gas compensation tests', async accounts => {
    -> Expect composite debt = (54321.123456789 + 10) = 54331.123456789 CLV */
     await priceFeed.setPrice(mv._1e24)
     const price_3 = await priceFeed.getPrice()
-    const compositeDebt_5 = (await cdpManagerTester.getCompositeDebt( '54321123456789000000000', price_3)).toString()
+    const compositeDebt_5 = (await cdpManagerTester.getCompositeDebt( '54321123456789000000000')).toString()
     assert.equal(compositeDebt_5, '54331123456789000000000')
   })
 
@@ -997,13 +997,13 @@ contract('Gas compensation tests', async accounts => {
     console.log(`expectedGasComp: ${expectedGasComp}`)
     console.log(`compensationReceived: ${compensationReceived}`)
     
-    /* Allow a wider error margin here, as the final trove actually pays out >0.5% of it's entire coll
-    (which is greater than its initial coll), due to pending rewards accumulated from the previous troves liquidated *within* the same transaction.  */
-    assert.isAtMost(th.getDifference(expectedGasComp, compensationReceived), 10000000000000) 
+    assert.isAtMost(th.getDifference(expectedGasComp, compensationReceived), 1000) 
                                                                 
     // Check ETH in defaultPool now equals the expected liquidated collateral
     const ETHinDefaultPool = (await defaultPool.getETH()).toString()
-    assert.isAtMost(th.getDifference(expectedLiquidatedColl, ETHinDefaultPool), 10000000000000) 
+    console.log(` expectedLiquidatedColl: ${expectedLiquidatedColl}`)
+    console.log(` ETHinDefaultPool: ${ETHinDefaultPool}`)
+    assert.isAtMost(th.getDifference(expectedLiquidatedColl, ETHinDefaultPool), 1000) 
   })
 
   // --- Trove ordering by ICR tests ---
