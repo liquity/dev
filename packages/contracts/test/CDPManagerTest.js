@@ -353,7 +353,6 @@ contract('CDPManager', async accounts => {
 
     // close Bob's CDP 
     assert.isTrue(await sortedCDPs.contains(bob))
-    console.log(`bob ICR:${await cdpManager.getCurrentICR(bob, price)}`)
     await cdpManager.liquidate(bob, { from: owner });
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -369,8 +368,6 @@ contract('CDPManager', async accounts => {
    L_CLVDebt = (180 / 20) + (890 / 10) = 98 CLV */
     const L_ETH_AfterBobLiquidated = await cdpManager.L_ETH()
     const L_CLVDebt_AfterBobLiquidated = await cdpManager.L_CLVDebt()
-    console.log(` L_ETH_AfterBobLiquidated: ${L_ETH_AfterBobLiquidated} `)
-    console.log(` L_CLVDebt_AfterBobLiquidated: ${L_CLVDebt_AfterBobLiquidated} `)
 
     assert.isAtMost(th.getDifference(L_ETH_AfterBobLiquidated, '1100000000000000000'), 100)
     assert.isAtMost(th.getDifference(L_CLVDebt_AfterBobLiquidated, '98000000000000000000'), 100)
@@ -659,26 +656,21 @@ contract('CDPManager', async accounts => {
     assert.isFalse((await sortedCDPs.contains(defaulter_1)))
     const TCR_2 = await poolManager.getTCR()
 
-    console.log(`TCR_1 is ${TCR_1}`)
-    console.log(`TCR_2 is ${TCR_2}`)
     assert.isTrue(TCR_2.gte(TCR_1))
 
     await cdpManager.liquidate(defaulter_2)
     assert.isFalse((await sortedCDPs.contains(defaulter_2)))
     const TCR_3 = await poolManager.getTCR()
-    console.log(`TCR_3 is ${TCR_3}`)
     assert.isTrue(TCR_3.gte(TCR_2))
 
     await cdpManager.liquidate(defaulter_3)
     assert.isFalse((await sortedCDPs.contains(defaulter_3)))
     const TCR_4 = await poolManager.getTCR()
-    console.log(`TCR_4 is ${TCR_4}`)
     assert.isTrue(TCR_4.gte(TCR_4))
 
     await cdpManager.liquidate(defaulter_4)
     assert.isFalse((await sortedCDPs.contains(defaulter_4)))
     const TCR_5 = await poolManager.getTCR()
-    console.log(`TCR_5 is ${TCR_5}`)
     assert.isTrue(TCR_5.gte(TCR_5))
   })
 
@@ -813,7 +805,6 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(mv._300e18, alice, { from: alice, value: mv._3_Ether })
     await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._2_Ether })
     await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
-
     await priceFeed.setPrice(mv._100e18)
 
     // Check token balances 
@@ -828,8 +819,17 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Liquidate A, B and C
+    const activeCLVDebt_0 = await activePool.getCLVDebt() 
+    const defaultCLVDebt_0 = await defaultPool.getCLVDebt()
+   
     await cdpManager.liquidate(alice)
+    const activeCLVDebt_A = await activePool.getCLVDebt() 
+    const defaultCLVDebt_A = await defaultPool.getCLVDebt()
+ 
     await cdpManager.liquidate(bob)
+    const activeCLVDebt_B = await activePool.getCLVDebt() 
+    const defaultCLVDebt_B = await defaultPool.getCLVDebt()
+   
     await cdpManager.liquidate(carol)
 
     // Confirm A, B, C closed
@@ -873,7 +873,6 @@ contract('CDPManager', async accounts => {
     assert.isTrue(carol_ICR_Before.lte(mv._MCR))
 
     // Confirm system is not in Recovery Mode
-    console.log((await poolManager.getTCR()).toString())
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     /* Liquidate defaulter. 30 CLV and 0.3 ETH is distributed between A, B and C.
@@ -900,10 +899,6 @@ contract('CDPManager', async accounts => {
     assert.isTrue(alice_ICR_After.gte(mv._MCR))
     assert.isTrue(bob_ICR_After.lte(mv._MCR))
     assert.isTrue(carol_ICR_After.lte(mv._MCR))
-
-    console.log(`alice_ICR_After: ${alice_ICR_After}`)
-    console.log(`bob_ICR_After: ${bob_ICR_After}`)
-    console.log(`carol_ICR_After: ${carol_ICR_After}`)
 
     /* Though Bob's true ICR (including pending rewards) is below the MCR, 
     check that Bob's raw coll and debt has not changed, and that his "raw" ICR is above the MCR */
@@ -1123,12 +1118,8 @@ contract('CDPManager', async accounts => {
     assert.isTrue(bob_ICR_Before.gte(mv._MCR))
     assert.isTrue(carol_ICR_Before.lte(mv._MCR))
 
-    await th.logAccountsArray(accounts.slice(1,4), cdpManager, price)
-
     // Liquidate defaulter. 30 CLV and 0.3 ETH is distributed uniformly between A, B and C. Each receive 10 CLV, 0.1 ETH
     await cdpManager.liquidate(defaulter_1)
-
-    await th.logAccountsArray(accounts.slice(1,4), cdpManager, price)
 
     const alice_ICR_After = await cdpManager.getCurrentICR(alice, price)
     const bob_ICR_After = await cdpManager.getCurrentICR(bob, price)
@@ -1407,8 +1398,6 @@ contract('CDPManager', async accounts => {
 
     // Check that the liquidation sequence has not reduced the TCR
     const TCR_After = await poolManager.getTCR()
-    console.log(`TCR_Before: ${TCR_Before}`)
-    console.log(`TCR_After: ${TCR_After}`)
     assert.isTrue(TCR_After.gte(TCR_Before))
   })
 

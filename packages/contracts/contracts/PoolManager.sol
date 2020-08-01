@@ -249,7 +249,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Move a CDP's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
-    function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) external onlyCDPManager {
+    function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external onlyCDPManager {
         // Transfer the debt & coll from the Default Pool to the Active Pool
         defaultPool.decreaseCLVDebt(_CLV);  
         activePool.increaseCLVDebt(_CLV); 

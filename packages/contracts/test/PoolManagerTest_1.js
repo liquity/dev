@@ -321,7 +321,7 @@ contract('PoolManager', async accounts => {
     assert.equal(defaultPool_rawEther_After, _1_Ether)
   })
 
-  it('moveDistributionRewardsToActivePool(): increases the CLV, ETH and raw ether of ActivePool by the correct amount', async () => {
+  it('movePendingTroveRewardsToActivePool(): increases the CLV, ETH and raw ether of ActivePool by the correct amount', async () => {
     // --- SETUP ---
     // give defaultPool 1 ether and 200 CLV
     await defaultPool.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
@@ -342,7 +342,7 @@ contract('PoolManager', async accounts => {
     assert.equal(active_Pool_rawEther_Before, 0)
 
     // moveDistributionRewardsToActivePool()
-    await poolManager.moveDistributionRewardsToActivePool(200, _1_Ether, { from: mockCDPManagerAddress })
+    await poolManager.movePendingTroveRewardsToActivePool(200, _1_Ether, { from: mockCDPManagerAddress })
 
     // check activePool CLV, ETH and raw ether after
     const activePool_CLV_After = await activePool.getCLVDebt({ from: poolManager.address })
@@ -354,7 +354,7 @@ contract('PoolManager', async accounts => {
     assert.equal(active_Pool_rawEther_After, _1_Ether)
   })
 
-  it('moveDistributionRewardsToActivePool(): decreases the CLV, ETH and raw ether of DefaultPool by the correct amount', async () => {
+  it('movePendingTroveRewardsToActivePool(): decreases the CLV, ETH and raw ether of DefaultPool by the correct amount', async () => {
     // --- SETUP ---
     // give defaultPool 1 ether and 200 CLV
     await defaultPool.setPoolManagerAddress(mockPoolManagerAddress, { from: owner })
@@ -374,7 +374,7 @@ contract('PoolManager', async accounts => {
     assert.equal(defaultPool_rawEther_Before, _1_Ether)
 
     // moveDistributionRewardsToActivePool()
-    await poolManager.moveDistributionRewardsToActivePool(200, _1_Ether, { from: mockCDPManagerAddress })
+    await poolManager.movePendingTroveRewardsToActivePool(200, _1_Ether, { from: mockCDPManagerAddress })
 
     // check defaultPool CLV, ETH and raw ether after
     const defaultPool_CLV_After = await defaultPool.getCLVDebt({ from: poolManager.address })

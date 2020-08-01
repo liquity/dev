@@ -29,6 +29,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     alice, bob, carol, dennis, erin, freddy, greta, harry, ida, 
     whale, defaulter_1, defaulter_2, defaulter_3, defaulter_4 ] = accounts;
 
+    const defaulters = [defaulter_1, defaulter_2, defaulter_3, defaulter_4]
+
   let priceFeed
   let clvToken
   let poolManager
@@ -1805,19 +1807,25 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._3_Ether })
 
     await borrowerOperations.openLoan('101000000000000000000', defaulter_1, { from: defaulter_1, value: mv._1_Ether })
-    await borrowerOperations.openLoan('257000000000000000000', defaulter_2, { from: defaulter_2, value: mv._2_Ether })
+    await borrowerOperations.openLoan('217000000000000000000', defaulter_2, { from: defaulter_2, value: mv._2_Ether })
     await borrowerOperations.openLoan('328000000000000000000', defaulter_3, { from: defaulter_3, value: mv._3_Ether })
-    await borrowerOperations.openLoan('480000000000000000000', defaulter_4, { from: defaulter_4, value: mv._4_Ether })
+    await borrowerOperations.openLoan('431000000000000000000', defaulter_4, { from: defaulter_4, value: mv._4_Ether })
 
     assert.isTrue((await sortedCDPs.contains(defaulter_1)))
     assert.isTrue((await sortedCDPs.contains(defaulter_2)))
     assert.isTrue((await sortedCDPs.contains(defaulter_3)))
     assert.isTrue((await sortedCDPs.contains(defaulter_4)))
 
+    
     // Price drops
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(mv._110e18)
+    const price = await priceFeed.getPrice()
 
-    console.log(`TCR: ${await poolManager.getTCR()}`)
+    assert.isTrue(await th.ICRbetween100and110(defaulter_1, cdpManager, price))
+    assert.isTrue(await th.ICRbetween100and110(defaulter_2, cdpManager, price))
+    assert.isTrue(await th.ICRbetween100and110(defaulter_3, cdpManager, price))
+    assert.isTrue(await th.ICRbetween100and110(defaulter_4, cdpManager, price))
+
     // Confirm Recovery Mode
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
@@ -1827,15 +1835,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal((await stabilityPool.getCLV()).toString(), mv._500e18)
 
     await cdpManager.liquidateCDPs(8)
+ 
+    // assert.isFalse((await sortedCDPs.contains(defaulter_1)))
+    // assert.isFalse((await sortedCDPs.contains(defaulter_2)))
+    // assert.isFalse((await sortedCDPs.contains(defaulter_3)))
+    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
 
     // Check Stability Pool has been emptied by the liquidations
     assert.equal((await stabilityPool.getCLV()).toString(), '0')
-
-    // Check all defaulters have been liquidated
-    assert.isFalse((await sortedCDPs.contains(defaulter_1)))
-    assert.isFalse((await sortedCDPs.contains(defaulter_2)))
-    assert.isFalse((await sortedCDPs.contains(defaulter_3)))
-    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
 
     // Check that the liquidation sequence has improved the TCR
     const TCR_After = await poolManager.getTCR()
@@ -1880,8 +1887,6 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // Check that the liquidation sequence has not reduced the TCR
     const TCR_After = await poolManager.getTCR()
-    console.log(`TCR_Before: ${TCR_Before}`)
-    console.log(`TCR_After: ${TCR_After}`)
     assert.isTrue(TCR_After.gte(TCR_Before))
   })
 
@@ -1965,8 +1970,6 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await priceFeed.setPrice(mv._100e18)
     const price = await priceFeed.getPrice()
 
-    console.log((await poolManager.getTCR()).toString())
-    
     // Confirm Recovery Mode
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
@@ -2115,8 +2118,6 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     const CLVinSP = (await stabilityPool.getCLV()).toString()
     const ETHinSP = (await stabilityPool.getETH()).toString()
-    console.log(`CLVinSP: ${CLVinSP}`)
-    console.log(`ETHinSP: ${ETHinSP}`)
 
     // Check remaining CLV Deposits and ETH gain, for whale and depositors whose troves were liquidated
     const whale_Deposit_After = (await poolManager.getCompoundedCLVDeposit(whale)).toString()

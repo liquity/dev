@@ -468,7 +468,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        return _debt.add(minVirtualDebt);
-        // return _debt;
+        // return _debt.add(minVirtualDebt);
+        return _debt;
     }
 }

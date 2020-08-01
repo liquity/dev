@@ -110,7 +110,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _nextId Id of next node for the insert position
      */
 
-    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external onlyBorrowerOperations {
+    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external onlyBOorCDPM {
         _insert (_id, _ICR, _price, _prevId, _nextId);
     }
     

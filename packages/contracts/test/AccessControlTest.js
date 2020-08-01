@@ -196,8 +196,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
       }
     })
 
-    // moveDistributionRewardsToActivePool
-    it("moveDistributionRewardsToActivePool(): reverts when called by an account that is not CDPManager", async () => {
+    // movePendingTroveRewardsToActivePool
+    it("movePendingTroveRewardsToActivePool(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
         txAlice = await poolManager.moveDistributionRewardsToActivePool(100, 10, { from: alice })
@@ -224,7 +224,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("offset(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.offset(100, 10, 1000, { from: alice })
+        txAlice = await poolManager.offset(100, 10, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
@@ -574,14 +574,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
   describe('SortedCDPs', async accounts => {
     // --- onlyBorrowerOperations ---
     //     insert
-    it("insert(): reverts when called by an account that is not BorrowerOperations", async () => {
+    it("insert(): reverts when called by an account that is not BorrowerOps or CDPM", async () => {
       // Attempt call from alice
       try {
         txAlice = await sortedCDPs.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, " Caller is neither BO nor CDPM")
       }
     })
 

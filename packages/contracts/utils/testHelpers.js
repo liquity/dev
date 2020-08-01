@@ -60,6 +60,7 @@ const MoneyValues = {
   _101e18: web3.utils.toWei('101', 'ether'),
   _105e18: web3.utils.toWei('105', 'ether'),
   _110e18: web3.utils.toWei('110', 'ether'),
+  _120e18: web3.utils.toWei('120', 'ether'),
   _125e18: web3.utils.toWei('125', 'ether'),
   _150e18: web3.utils.toWei('150', 'ether'),
   _180e18: web3.utils.toWei('180', 'ether'),
@@ -189,6 +190,11 @@ static computeICR (coll, debt, price) {
   const ICR = collBN.mul(priceBN).div(debtBN)
 
   return ICR
+}
+
+static async ICRbetween100and110(account, cdpManager, price) {
+  const ICR = await cdpManager.getCurrentICR(account, price)
+  return (ICR.gt(MoneyValues._ICR100)) && (ICR.lt(MoneyValues._MCR))
 }
 
 static gasUsed(tx) {
