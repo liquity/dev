@@ -335,13 +335,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             _applyPendingRewards(_user);
             _removeStake(_user);
 
-            (V.debtToOffset,
-            V.collToSendToSP,
-            V.debtToRedistribute,
-            V.collToRedistribute,
-            V.partialAddr,
-            V.partialNewDebt,
-            V.partialNewColl) = _getPartialOffsetVals(_user, L.entireCDPDebt, L.collToLiquidate, _CLVInPool);
+            V = _getPartialOffsetVals(_user, L.entireCDPDebt, L.entireCDPColl, _price, _CLVInPool);
 
             _closeCDP(_user);
         }
@@ -353,7 +347,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     }
 
     function _getOffsetAndRedistributionVals(uint _debt, uint _coll, uint _CLVInPool) internal pure
-    returns ( uint debtToOffset, uint collToSendToSP, uint debtToRedistribute, uint collToRedistribute)
+    returns (uint debtToOffset, uint collToSendToSP, uint debtToRedistribute, uint collToRedistribute)
     {
          // Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder
         if (_CLVInPool > 0) {
@@ -371,38 +365,35 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         }
     }
 
-    function _getPartialOffsetVals(address _user, uint _entireCDPDebt, uint _collToLiquidate, uint _CLVInPool) internal
+    function _getPartialOffsetVals(address _user, uint _entireCDPDebt, uint _entireCDPColl, uint _price, uint _CLVInPool) internal
     returns
-    (
-    uint debtToOffset,
-    uint collToSendToSP,
-    uint debtToRedistribute,
-    uint collToRedistribute,
-    address partialAddress,
-    uint partialNewDebt,
-    uint partialNewColl
-    ) {
+    (LiquidationValues memory V) {
         // When Pool can fully absorb the trove's debt, perform a full offset
         if (_entireCDPDebt < _CLVInPool) {
-            debtToOffset = _entireCDPDebt;
-            collToSendToSP = _collToLiquidate;
-            debtToRedistribute = 0;
-            collToRedistribute = 0;
+            V.gasCompensation = _getGasCompensation(_entireCDPColl, _price);
+
+            V.debtToOffset = _entireCDPDebt;
+            V.collToSendToSP = _entireCDPColl.sub(V.gasCompensation);
+            V.debtToRedistribute = 0;
+            V.collToRedistribute = 0;
 
             emit CDPUpdated(_user, 0, 0, 0);
         }
-
         /* When trove's debt is greater than the Pool, perform a partial liquidation:
-         offset as much as possible, and do not redistribute the remainder */
+        offset as much as possible, and do not redistribute the remainder.
+        Gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. */
         else if (_entireCDPDebt > _CLVInPool) {
-            debtToOffset = _CLVInPool;
-            collToSendToSP = _collToLiquidate.mul(debtToOffset).div(_entireCDPDebt);
-            collToRedistribute = 0;
-            debtToRedistribute = 0;
+            V.debtToOffset = _CLVInPool;
+            uint collFraction = _entireCDPColl.mul(V.debtToOffset).div(_entireCDPDebt);
+            V.gasCompensation = _getGasCompensation(collFraction, _price);
+            
+            V.collToSendToSP = collFraction.sub(V.gasCompensation);
+            V.collToRedistribute = 0;
+            V.debtToRedistribute = 0;
 
-            partialAddress = _user;
-            partialNewDebt = _entireCDPDebt.sub(debtToOffset);
-            partialNewColl = _collToLiquidate.sub(collToSendToSP);
+            V.partialAddr = _user;
+            V.partialNewDebt = _entireCDPDebt.sub(V.debtToOffset);
+            V.partialNewColl = _entireCDPColl.sub(collFraction);
         }
     }
 
@@ -1072,15 +1063,15 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
     Given by the maximum of { $10 worth of ETH,  dollar value of 0.5% of collateral } */
     function _getGasCompensation(uint _entireColl, uint _price) internal view returns (uint) {
-        // uint minETHComp = _getMinVirtualDebtInETH(_price);
+        uint minETHComp = _getMinVirtualDebtInETH(_price);
 
-        // if (_entireColl <= minETHComp) { return _entireColl; }
+        if (_entireColl <= minETHComp) { return _entireColl; }
 
-        // uint _0pt5percentOfColl = _entireColl.div(200);
+        uint _0pt5percentOfColl = _entireColl.div(200);
 
-        // uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
-        // return compensation;
-        return 0;
+        uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
+        return compensation;
+        // return 0;
     }
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
@@ -1091,8 +1082,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        // return _debt.add(minVirtualDebt);
-        return _debt;
+        return _debt.add(minVirtualDebt);
+        // return _debt;
     }
 
     // --- 'require' wrapper functions ---

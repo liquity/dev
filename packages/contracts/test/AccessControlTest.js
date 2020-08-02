@@ -200,7 +200,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("movePendingTroveRewardsToActivePool(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.moveDistributionRewardsToActivePool(100, 10, { from: alice })
+        txAlice = await poolManager.movePendingTroveRewardsToActivePool(100, 10, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
