@@ -1,6 +1,18 @@
-type Trove @entity {
-  "Owner's address as a hex-string"
+type Owner @entity {
+  "Owner's Ethereum address as a hex-string"
   id: ID!
+
+  currentTrove: Trove
+  troveCount: Int!
+
+  troves: [Trove!]! @derivedFrom(field: "owner")
+}
+
+type Trove @entity {
+  "Owner's ID + '-' + an incremented integer"
+  id: ID!
+
+  owner: Owner!
 
   collateral: BigDecimal!
   debt: BigDecimal!

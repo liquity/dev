@@ -5,7 +5,7 @@ import {
 } from "../../generated/CDPManager/CDPManager";
 import { BorrowerOperations } from "../../generated/templates";
 
-import { updateTrove } from "./Trove";
+import { updateTrove } from "../entities/Trove";
 
 export function handleBorrowerOperationsAddressChanged(
   event: BorrowerOperationsAddressChanged
