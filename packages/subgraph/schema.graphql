@@ -1,0 +1,14 @@
+type Trove @entity {
+  "Owner's address as a hex-string"
+  id: ID!
+
+  collateral: BigDecimal!
+  debt: BigDecimal!
+  stake: BigDecimal!
+
+  "The value of total redistributed per-stake collateral the last time rewards were applied"
+  snapshotOfTotalRedistributedCollateral: BigDecimal!
+
+  "The value of total redistributed per-stake debt the last time rewards were applied"
+  snapshotOfTotalRedistributedDebt: BigDecimal!
+}
