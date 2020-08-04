@@ -4,7 +4,7 @@ import {
   CDPUpdated
 } from "../../generated/templates/BorrowerOperations/BorrowerOperations";
 
-import { updateTrove } from "./Trove";
+import { updateTrove } from "../entities/Trove";
 
 export function handleCDPUpdated(event: CDPUpdated): void {
   let borrowerOperations = BorrowerOperations.bind(event.address);
