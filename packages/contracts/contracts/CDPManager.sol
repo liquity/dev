@@ -1,5 +1,4 @@
 pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -44,11 +43,33 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     IStabilityPool public stabilityPool;
     address public stabilityPoolAddress;
 
-    // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
+    // A sorted doubly linked list of all CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
     address public sortedCDPsAddress;
 
+    // Sorted doubly-linked lists of CDPs for given collateral ranges
+
+    address public sizeList_18orLess_address;
+    address public sizeList_19orGreater_address;
+
+    // Arrays that hold addresses of CDPs within a given size array
+    uint[] public sizeArray_18orLess;
+    uint[] public sizeArray_19orGreater;
+
     // --- Data structures ---
+
+    /* Maps a size range to the interface for the corresponding sorted list of CDPs, 
+    with collateral in the size range. */
+    mapping (uint => ISortedCDPs) public rangeToSizeList;
+
+    // Maps a size range to the address of the corresponding sorted list of CDPs with collateral in the size range.
+    mapping (uint => address) public rangeToSizeListAddress;
+
+    // Maps a size range to the array that holds addresses of all CDPs with collateral in the given size range.
+    mapping (uint => address[]) public rangeToSizeArray;
+
+    // Array of the valid collateral size range brackets
+    uint[] public validSizeRanges;
 
     enum Status { nonExistent, active, closed }
 
@@ -59,6 +80,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint stake;
         Status status;
         uint arrayIndex;
+        uint sizeRange;
+        uint sizeArrayIndex;
     }
 
     mapping (address => CDP) public CDPs;
@@ -87,12 +110,11 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     struct RewardSnapshot { uint ETH; uint CLVDebt;}
 
     // Array of all active CDP addresses - used to compute “approx hint” for list insertion
-    address[] public CDPOwners;
+    address[] public allTrovesArray;
 
     // Error trackers for the trove redistribution calculation
     uint public lastETHError_Redistribution;
     uint public lastCLVDebtError_Redistribution;
-
 
     /* --- LocalVariable Structs ---
 
@@ -157,6 +179,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
+    event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
+
     event CDPCreated(address indexed _user, uint arrayIndex);
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
 
@@ -165,6 +189,12 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     modifier onlyBorrowerOperations() {
         require(_msgSender() == borrowerOperationsAddress, "CDPManager: Caller is not the BorrowerOperations contract");
         _;
+    }
+
+    // --- Constructor ---
+
+    constructor() public {
+        validSizeRanges = [18, 19];
     }
 
     // --- Dependency setters ---
@@ -216,10 +246,43 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
     }
 
+    function setSizeList(uint _sizeRange, address _sizeListAddress) external onlyOwner {
+        rangeToSizeListAddress[_sizeRange] = _sizeListAddress;
+        rangeToSizeList[_sizeRange] = ISortedCDPs(_sizeListAddress);
+        emit SizeListAddressChanged(_sizeRange, _sizeListAddress);
+    } 
+
     // --- Getters ---
 
-    function getCDPOwnersCount() external view returns (uint) {
-        return CDPOwners.length;
+    function getallTrovesArrayCount() external view returns (uint) {
+        return allTrovesArray.length;
+    }
+
+      function getSizeList(uint _sizeRange) external view returns (ISortedCDPs) {
+        return _getSizeList(_sizeRange);
+    }
+
+    function _getSizeList(uint _sizeRange) internal view returns (ISortedCDPs) {
+        return rangeToSizeList[_sizeRange];
+    }
+
+     function _getSizeArray(uint _sizeRange) internal view returns (address[] storage) {
+        return rangeToSizeArray[_sizeRange];
+    }
+
+    function getSizeListFromColl(uint _coll) external view returns (ISortedCDPs) {
+        uint newSizeRange = _getSizeRange(_coll);
+        ISortedCDPs newSizeList = _getSizeList(newSizeRange);
+
+        return newSizeList;
+    }
+ 
+    function _getSizeRange(uint _coll) internal pure returns (uint) {
+        if (_coll < 1e18) { 
+            return 18;
+        } else if (_coll >= 1e18) {
+            return 19;
+        }
     }
 
     // --- CDP Liquidation functions ---
@@ -260,7 +323,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         LocalVariables_InnerSingleLiquidateFunction memory L;
 
         // If ICR >= MCR, or is last trove, don't liquidate
-        if (_ICR >= MCR || CDPOwners.length <= 1) {return V;}
+        if (_ICR >= MCR || allTrovesArray.length <= 1) {return V;}
 
         (L.entireCDPDebt,
         L.entireCDPColl,
@@ -292,7 +355,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     {
         LocalVariables_InnerSingleLiquidateFunction memory L;
         // If is last trove, don't liquidate
-        if (CDPOwners.length <= 1) {return V;}
+        if (allTrovesArray.length <= 1) {return V;}
 
         (L.entireCDPDebt,
         L.entireCDPColl,
@@ -397,8 +460,20 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         }
     }
 
-    // Closes a maximum number of n multiple under-collateralized CDPs, starting from the one with the lowest collateral ratio
+    /* Closes a maximum number of n multiple under-collateralized CDPs, 
+    starting from the one with the lowest collateral ratio */
     function liquidateCDPs(uint _n) external {
+        liquidateTrovesInSequence(_n, sortedCDPs);
+    }
+
+    function liquidateTrovesInRange(uint _n, uint sizeRange) external {
+        _requireIsValidSizeRange(sizeRange);
+        ISortedCDPs sizeList = _getSizeList(sizeRange);
+
+        liquidateTrovesInSequence( _n, sizeList);
+    }
+    
+    function liquidateTrovesInSequence(uint _n, ISortedCDPs _sortedTroveList) internal {
         LocalVariables_OuterLiquidationFunction memory L;
 
         LiquidationTotals memory T;
@@ -407,12 +482,11 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         L.CLVInPool = stabilityPool.getCLV();
         L.recoveryModeAtStart = _checkRecoveryMode();
      
-        
         // Perform the appropriate liquidation sequence - tally values and obtain their totals
         if (L.recoveryModeAtStart == true) {
-           T = _getTotalFromLiquidationSequence_RecoveryMode(L.price, L.CLVInPool, _n);
+           T = _getTotalFromLiquidationSequence_RecoveryMode(L.price, L.CLVInPool, _n, _sortedTroveList);
         } else if (L.recoveryModeAtStart == false) {
-            T = _getTotalsFromLiquidationSequence_NormalMode(L.price, L.CLVInPool, _n);
+            T = _getTotalsFromLiquidationSequence_NormalMode(L.price, L.CLVInPool, _n, _sortedTroveList);
         }
 
         // Move liquidated ETH and CLV to the appropriate pools
@@ -430,7 +504,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         _msgSender().call.value(T.totalGasCompensation)("");
     }
 
-    function _getTotalFromLiquidationSequence_RecoveryMode(uint _price, uint _CLVInPool, uint _n) internal 
+    function _getTotalFromLiquidationSequence_RecoveryMode(uint _price, uint _CLVInPool, uint _n, ISortedCDPs _sortedTroveList) internal 
     returns(LiquidationTotals memory T)
     {
         LocalVariables_LiquidationSequence memory L;
@@ -443,7 +517,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
         L.i = 0;
         while (L.i < _n) {
-            L.user = sortedCDPs.getLast();
+            L.user = _sortedTroveList.getLast();
             L.ICR = _getCurrentICR(L.user, _price);
 
             // Attempt to close CDP
@@ -496,7 +570,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         }
     }
 
-    function _getTotalsFromLiquidationSequence_NormalMode(uint _price, uint _CLVInPool, uint _n) internal 
+    function _getTotalsFromLiquidationSequence_NormalMode(uint _price, uint _CLVInPool, uint _n,  ISortedCDPs _sortedTroveList) internal 
     returns(LiquidationTotals memory T)
     {
         LocalVariables_LiquidationSequence memory L;
@@ -506,7 +580,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         L.remainingCLVInPool = _CLVInPool;
         L.i = 0;
         while (L.i < _n) {
-            L.user = sortedCDPs.getLast();
+            L.user = _sortedTroveList.getLast();
             L.ICR = _getCurrentICR(L.user, _price);
             
             if (L.ICR < MCR) {
@@ -532,19 +606,27 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     }
 
     // Update coll, debt, stake and snapshot of partially liquidated trove, and insert it back to the list
-    function _updatePartiallyLiquidatedTrove(address _user, uint _newDebt, uint _newColl, uint price) internal {
+    function _updatePartiallyLiquidatedTrove(address _user, uint _newDebt, uint _newColl, uint _price) internal {
         if ( _user == address(0)) { return; }
 
         CDPs[_user].debt = _newDebt;
         CDPs[_user].coll = _newColl;
         CDPs[_user].status = Status.active;
-         uint arrayIndex = _addCDPOwnerToArray(_user);
-
+        
         _updateCDPRewardSnapshots(_user);
         _updateStakeAndTotalStakes(_user);
 
-        uint ICR = _getCurrentICR(_user, price);
-        sortedCDPs.insert(_user, ICR, price, _user, _user);
+        uint ICR = _getCurrentICR(_user, _price);
+
+        // Insert to full sorted list
+        sortedCDPs.insert(_user, ICR, _price, _user, _user);
+        _addToAllTrovesArray(_user);
+
+        // Insert to size range list
+        // TODO: Handle / provide hint for size list, in case trove has changed lists ?
+        uint sizeRange = _getSizeRange(_newColl);
+        _insertToSizeList(_user, ICR, _price, sizeRange, _user);
+
         emit CDPUpdated(_user, _newDebt, _newColl, CDPs[_user].stake);
     }
 
@@ -739,7 +821,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     there is no profitable exploit.
     */
     function getApproxHint(uint _CR, uint _numTrials) external view returns (address) {
-        require (CDPOwners.length >= 1, "CDPManager: sortedList must not be empty");
+        require (allTrovesArray.length >= 1, "CDPManager: sortedList must not be empty");
         uint price = priceFeed.getPrice();
         address hintAddress = sortedCDPs.getLast();
         uint closestICR = _getCurrentICR(hintAddress, price);
@@ -747,8 +829,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint i = 1;
 
         while (i < _numTrials) {
-            uint arrayIndex = _getRandomArrayIndex(block.timestamp.add(i), CDPOwners.length);
-            address currentAddress = CDPOwners[arrayIndex];
+            uint arrayIndex = _getRandomArrayIndex(block.timestamp.add(i), allTrovesArray.length);
+            address currentAddress = allTrovesArray[arrayIndex];
             uint currentICR = _getCurrentICR(currentAddress, price);
 
             // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
@@ -761,8 +843,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             }
             i++;
         }
-    return hintAddress;
-}
+        return hintAddress;
+    }
 
     // Convert input to pseudo-random uint in range [0, arrayLength - 1]
     function _getRandomArrayIndex(uint _input, uint _arrayLength) internal pure returns (uint) {
@@ -781,6 +863,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         
         uint currentETH = CDPs[_user].coll.add(pendingETHReward); 
         uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward); 
+
+        if (currentCLVDebt == 0) {return 2**256 - 1;}
 
         uint compositeCLVDebt = _getCompositeDebt(currentCLVDebt);
        
@@ -958,8 +1042,15 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         rewardSnapshots[_user].ETH = 0;
         rewardSnapshots[_user].CLVDebt = 0;
  
-        _removeCDPOwner(_user);
+        // Remove from full sorted list and array
         sortedCDPs.remove(_user);
+        _removeFromAllTrovesArray(_user);
+        
+        // Remove from size range list and array
+        uint sizeRange = CDPs[_user].sizeRange;
+        ISortedCDPs sizeList = _getSizeList(CDPs[_user].sizeRange);
+        sizeList.remove(_user);
+        _removeFromSizeArray(_user, sizeRange);
     }
 
     // Update the snapshots of system stakes & system collateral
@@ -982,37 +1073,110 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         totalCollateralSnapshot = activeColl.sub(_collRemainder).add(liquidatedColl);
     }
   
-    // Push the owner's address to the CDP owners list, and record the corresponding array index on the CDP struct
-    function addCDPOwnerToArray(address _user) external onlyBorrowerOperations returns (uint index) {
-        return _addCDPOwnerToArray(_user);
+   // ---- Trove sorted list functions ---
+
+
+    function insertToFullSortedList(address _user, uint _ICR, uint _price, address _hint) external onlyBorrowerOperations returns (uint) {
+        // insert to sorted list
+        sortedCDPs.insert(_user, _ICR, _price, _hint, _hint); 
+        
+        uint index = _addToAllTrovesArray(_user);
+        return index;
     }
 
-    function _addCDPOwnerToArray(address _user) internal returns (uint index) {
-        index = CDPOwners.push(_user).sub(1);
+    function reInsertToSizeList(address _user, uint _newICR, uint _price, uint _newColl, address _hint) external onlyBorrowerOperations {
+        _reinsertToSizeList(_user, _newICR, _price, _newColl, _hint);
+    }
+
+    function _reinsertToSizeList(address _user, uint _newICR, uint _price, uint _newColl, address _hint) internal {
+        uint currentSizeRange = CDPs[_user].sizeRange;
+        ISortedCDPs currentSizeList = _getSizeList(currentSizeRange);
+        uint newSizeRange = _getSizeRange(_newColl);
+       
+        // If still within the same size range, just re-insert
+        if (newSizeRange == currentSizeRange) {
+            currentSizeList.reInsert(_user, _newICR, _price, _hint, _hint);
+        
+        // If trove has changed size ranges, remove it from current sizeList and insert to the new one
+        } else if (newSizeRange != currentSizeRange) {
+
+            // Remove from current sizeList, and delete from size array
+            currentSizeList.remove(_user);
+            _removeFromSizeArray(_user, newSizeRange);
+
+           _insertToSizeList(_user, _newICR, _price, newSizeRange, _hint);
+        }
+    }
+
+    function insertToSizeList(address _user, uint _newICR, uint _price, uint _coll, address _hint) external onlyBorrowerOperations {
+        uint sizeRange = _getSizeRange(_coll);
+        _insertToSizeList(_user, _newICR, _price, sizeRange, _hint);
+    }
+
+    function _insertToSizeList(address _user, uint _newICR, uint _price, uint _sizeRange, address _hint) internal {
+        ISortedCDPs newSizeList = _getSizeList(_sizeRange);
+        address[] storage newSizeArray = _getSizeArray(_sizeRange);
+
+        // Insert to new sizeList, push to new array, and record new size array index on trove struct
+        newSizeList.insert(_user, _newICR, _price, _hint, _hint);
+        CDPs[_user].sizeArrayIndex = newSizeArray.push(_user).sub(1);
+    }
+
+
+    // --- Trove array functions ---
+
+    function _addToAllTrovesArray(address _user) internal returns (uint) {
+        uint index = allTrovesArray.push(_user).sub(1);
         CDPs[_user].arrayIndex = index;
 
         return index;
     }
 
-     /* Remove a CDP owner from the CDPOwners array, not preserving order. Removing owner 'B' does the following: 
+    function _addToSizeArray(address _user, uint _sizeRange) internal returns (uint) {
+        address[] storage sizeArray = rangeToSizeArray[_sizeRange];
+        uint index = allTrovesArray.push(_user).sub(1);
+        CDPs[_user].arrayIndex = index;
+
+        return index;
+    }
+
+    /* Remove an address from the allTrovesArray array, not preserving order. Removing owner 'B' does the following: 
     [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. */
-    function _removeCDPOwner(address _user) internal {
+    function _removeFromAllTrovesArray(address _user) internal {
         require(CDPs[_user].status == Status.closed, "CDPManager: CDP is still active");
 
         uint index = CDPs[_user].arrayIndex;   
-        uint length = CDPOwners.length;
+        uint length = allTrovesArray.length;
         uint idxLast = length.sub(1);
 
         assert(length >= 1);  // Encapsulating function should only be reachable when there are >0 troves in the system
         assert(index <= idxLast); 
 
-        address addressToMove = CDPOwners[idxLast];
+        address addressToMove = allTrovesArray[idxLast];
        
-        CDPOwners[index] = addressToMove;   
+        allTrovesArray[index] = addressToMove;   
         CDPs[addressToMove].arrayIndex = index;   
-        CDPOwners.length--;  
+        allTrovesArray.length--;  
     }
-  
+
+    function _removeFromSizeArray(address _user, uint _sizeRange) internal {
+        address[] storage sizeArray = rangeToSizeArray[_sizeRange];
+
+        uint index = CDPs[_user].sizeArrayIndex;   
+        uint length = sizeArray.length;
+        uint idxLast = length.sub(1);
+
+        assert(index <= idxLast); 
+
+        address addressToMove = sizeArray[idxLast];
+        // Confirm the address to move to empty slot is in the same size range
+        assert(CDPs[addressToMove].sizeRange == _sizeRange);  
+
+        sizeArray[index] = addressToMove;
+        CDPs[addressToMove].sizeArrayIndex = index;   
+        sizeArray.length--;  
+    }
+
     function checkRecoveryMode() external view returns (bool) {
         return _checkRecoveryMode();
     }
@@ -1063,15 +1227,15 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
     Given by the maximum of { $10 worth of ETH,  dollar value of 0.5% of collateral } */
     function _getGasCompensation(uint _entireColl, uint _price) internal view returns (uint) {
-        uint minETHComp = _getMinVirtualDebtInETH(_price);
+        // uint minETHComp = _getMinVirtualDebtInETH(_price);
 
-        if (_entireColl <= minETHComp) { return _entireColl; }
+        // if (_entireColl <= minETHComp) { return _entireColl; }
 
-        uint _0pt5percentOfColl = _entireColl.div(200);
+        // uint _0pt5percentOfColl = _entireColl.div(200);
 
-        uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
-        return compensation;
-        // return 0;
+        // uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
+        // return compensation;
+        return 0;
     }
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
@@ -1082,11 +1246,20 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        return _debt.add(minVirtualDebt);
-        // return _debt;
+        // return _debt.add(minVirtualDebt);
+        return _debt;
     }
 
     // --- 'require' wrapper functions ---
+
+     function _requireIsValidSizeRange(uint _sizeRange) internal {
+        bool isValidSizeRange = false;
+
+        for (uint i = 0; i < validSizeRanges.length; i++) {
+            if (_sizeRange == validSizeRanges[i]) {isValidSizeRange = true;}
+        }
+        require(isValidSizeRange, "CDPManager: Not a valid size range");
+    }
 
     function _requireCDPisActive(address _user) internal view {
         require(CDPs[_user].status == Status.active, "CDPManager: Trove does not exist or is closed");

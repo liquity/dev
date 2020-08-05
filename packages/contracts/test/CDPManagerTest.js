@@ -81,8 +81,9 @@ contract('CDPManager', async accounts => {
     const MCR = (await cdpManager.MCR()).toString()
     assert.equal(MCR.toString(), '1100000000000000000')
 
-    // Alice withdraws 180 CLV, lowering her ICR to 1.11
-    await borrowerOperations.withdrawCLV('180000000000000000000', alice, { from: alice })
+    // Alice withdraws to 180 CLV, lowering her ICR to 1.11
+    const withdrawal = th.getDebtMinusVirtual(mv._180e18)
+    await borrowerOperations.withdrawCLV(withdrawal, alice, { from: alice })
     const ICR_AfterWithdrawal = await cdpManager.getCurrentICR(alice, price)
     assert.isAtMost(th.getDifference(ICR_AfterWithdrawal, '1111111111111111111'), 100)
 
@@ -107,8 +108,12 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
     // Alice withdraws 100CLV, Bob withdraws 180CLV
-    await borrowerOperations.withdrawCLV('100000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
+    const withdrawalA = th.getDebtMinusVirtual('100000000000000000000')
+    const CLVWithdrawal_B = th.getDebtMinusVirtual('180000000000000000000')
+    const totalWithdrawn = withdrawalA.add(CLVWithdrawal_B)
+
+    await borrowerOperations.withdrawCLV(withdrawalA, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(CLVWithdrawal_B, bob, { from: bob })
 
     // --- TEST ---
 
@@ -119,7 +124,8 @@ contract('CDPManager', async accounts => {
 
     assert.equal(activePool_ETH_Before, _11_Ether)
     assert.equal(activePool_RawEther_Before, _11_Ether)
-    assert.equal(activePool_CLVDebt_Before, '280000000000000000000')
+
+    assert.equal(activePool_CLVDebt_Before, totalWithdrawn)
 
     // price drops to 1ETH:100CLV, reducing Bob's ICR below MCR
     await priceFeed.setPrice('100000000000000000000');
@@ -127,7 +133,7 @@ contract('CDPManager', async accounts => {
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
-    /* close Bob's CDP. Should liquidate his 1 ether and 180CLV, 
+    /* close Bob's CDP. Should liquidate his 1 ether and 170CLV, 
     leaving 10 ether and 100 CLV debt in the ActivePool. */
     await cdpManager.liquidate(bob, { from: owner });
 
@@ -138,7 +144,7 @@ contract('CDPManager', async accounts => {
 
     assert.equal(activePool_ETH_After, _10_Ether)
     assert.equal(activePool_RawEther_After, _10_Ether)
-    assert.equal(activePool_CLVDebt_After, '100000000000000000000')
+    assert.equal(activePool_CLVDebt_After, withdrawalA)
   })
 
   it("liquidate(): increases DefaultPool ETH and CLV debt by correct amounts", async () => {
@@ -146,8 +152,13 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
 
-    await borrowerOperations.withdrawCLV('1000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
+    // A withdraws to 100 CLV, B withdraws to 180 CLV
+    const withdrawalA = th.getDebtMinusVirtual('100000000000000000000')
+    const CLVWithdrawal_B = th.getDebtMinusVirtual('180000000000000000000')
+    const totalWithdrawn = withdrawalA.add(CLVWithdrawal_B)
+
+    await borrowerOperations.withdrawCLV(withdrawalA, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(CLVWithdrawal_B, bob, { from: bob })
 
     // --- TEST ---
 
@@ -167,6 +178,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // close Bob's CDP
+    const expectedLiquidatedColl_B = await th.getCollMinusGasComp([bob], cdpManager, priceFeed)
     await cdpManager.liquidate(bob, { from: owner });
 
     // check after
@@ -174,9 +186,9 @@ contract('CDPManager', async accounts => {
     const defaultPool_RawEther_After = (await web3.eth.getBalance(defaultPool.address)).toString()
     const defaultPool_CLVDebt_After = (await defaultPool.getCLVDebt()).toString()
 
-    assert.equal(defaultPool_ETH_After, _1_Ether)
-    assert.equal(defaultPool_RawEther_After, _1_Ether)
-    assert.equal(defaultPool_CLVDebt_After, '180000000000000000000')
+    assert.equal(defaultPool_ETH_After, expectedLiquidatedColl_B)
+    assert.equal(defaultPool_RawEther_After, expectedLiquidatedColl_B)
+    assert.equal(defaultPool_CLVDebt_After, CLVWithdrawal_B)
   })
 
   it("liquidate(): removes the CDP's stake from the total stakes", async () => {
@@ -184,8 +196,10 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
 
-    await borrowerOperations.withdrawCLV('1000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
+    const withdrawalA = th.getDebtMinusVirtual('100000000000000000000')
+    const CLVWithdrawal_B = th.getDebtMinusVirtual('180000000000000000000')
+    await borrowerOperations.withdrawCLV(withdrawalA, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(CLVWithdrawal_B, bob, { from: bob })
 
     // --- TEST ---
 
@@ -278,8 +292,10 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
 
-    await borrowerOperations.withdrawCLV('1000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
+    const withdrawalA = th.getDebtMinusVirtual('100000000000000000000')
+    const CLVWithdrawal_B = th.getDebtMinusVirtual('180000000000000000000')
+    await borrowerOperations.withdrawCLV(withdrawalA, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(CLVWithdrawal_B, bob, { from: bob })
 
     // --- TEST ---
 
@@ -296,18 +312,22 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // close Bob's CDP.  His 1 ether and 180 CLV should be added to the DefaultPool.
+    const expectedLiquidatedColl_B = await th.getCollMinusGasComp([bob], cdpManager, priceFeed)
     await cdpManager.liquidate(bob, { from: owner });
 
     /* check snapshots after. Total stakes should be equal to the only remaining stake then the system: 
     10 ether, Alice's stake.
      
-    Total collateral should be equal to Alice's collateral (10 ether) plus her pending ETH reward (1 ether), earned
+    Total collateral should be equal to Alice's collateral (10 ether) plus her pending ETH reward (0.9 ether), earned
     from the liquidation of Bob's CDP */
+
     const totalStakesSnapshot_After = (await cdpManager.totalStakesSnapshot()).toString()
     const totalCollateralSnapshot_After = (await cdpManager.totalCollateralSnapshot()).toString()
 
+    const expectedTotalColl = web3.utils.toBN(_10_Ether).add(expectedLiquidatedColl_B)
+
     assert.equal(totalStakesSnapshot_After, _10_Ether)
-    assert.equal(totalCollateralSnapshot_After, _11_Ether)
+    assert.equal(totalCollateralSnapshot_After, expectedTotalColl)
   })
 
   it("liquidate(): updates the L_ETH and L_CLVDebt reward-per-unit-staked totals", async () => {
@@ -316,8 +336,9 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _10_Ether })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _1_Ether })
 
-    // Carol withdraws 180CLV, lowering her ICR to 1.11
-    await borrowerOperations.withdrawCLV('180000000000000000000', carol, { from: carol })
+    // Carol withdraws to 180CLV, lowering her ICR to 1.11
+    const CLVWithdrawal_C = th.getDebtMinusVirtual('180000000000000000000')
+    await borrowerOperations.withdrawCLV(CLVWithdrawal_C, carol, { from: carol })
 
     // --- TEST ---
 
@@ -327,6 +348,8 @@ contract('CDPManager', async accounts => {
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
+    const expectedLiquidateColl_C = await th.getCollMinusGasComp([carol], cdpManager, priceFeed)
+    const totalExpectedLiquidatedColl = await th.getCollMinusGasComp([bob, carol], cdpManager, priceFeed)
     // close Carol's CDP.  
     assert.isTrue(await sortedCDPs.contains(carol))
     await cdpManager.liquidate(carol, { from: owner });
@@ -334,50 +357,61 @@ contract('CDPManager', async accounts => {
 
     /* Alice and Bob have the only active stakes. totalStakes in the system is (10 + 10) = 20 ether.
     
-    Carol's 1 ether and 180 CLV should be added to the DefaultPool. The system rewards-per-unit-staked should now be:
-    
-    L_ETH = (1 / 20) = 0.05 ETH
-    L_CLVDebt = (180 / 20) = 9 CLV */
+    Carol's 1 ether and 170 CLV should be added to the DefaultPool. */
     const L_ETH_AfterCarolLiquidated = await cdpManager.L_ETH()
     const L_CLVDebt_AfterCarolLiquidated = await cdpManager.L_CLVDebt()
 
-    assert.isAtMost(th.getDifference(L_ETH_AfterCarolLiquidated, '50000000000000000'), 100)
-    assert.isAtMost(th.getDifference(L_CLVDebt_AfterCarolLiquidated, '9000000000000000000'), 100)
+    // With 20 ETH in activePool, expect reward-per-unit-staked  = (liquidated collateral) / 20
+    const expected_L_ETH_after_C = expectedLiquidateColl_C.div(th.toBN('20'))
+    const expected_L_CLVDebt_after_C = CLVWithdrawal_C.div(th.toBN('20'))
+  
+    assert.isAtMost(th.getDifference(L_ETH_AfterCarolLiquidated, expected_L_ETH_after_C), 100)
+    assert.isAtMost(th.getDifference(L_CLVDebt_AfterCarolLiquidated, expected_L_CLVDebt_after_C), 100)
 
-    // Bob now withdraws 800 CLV, bringing his ICR to 1.11
-    await borrowerOperations.withdrawCLV('800000000000000000000', bob, { from: bob })
+     // price rises to 200 CLV
+     await priceFeed.setPrice(mv._200e18);
 
-    // price drops to 1ETH:50CLV, reducing Bob's ICR below MCR
-    await priceFeed.setPrice(mv._50e18);
+    // Bob now withdraws to 900 CLV
+    const CLVWithdrawal_B = th.getDebtMinusVirtual('900000000000000000000')
+    await borrowerOperations.withdrawCLV(CLVWithdrawal_B, bob, { from: bob })
+
+    // price drops to 1ETH:100CLV, reducing Bob's ICR below MCR
+    await priceFeed.setPrice(mv._100e18);
     const price = await priceFeed.getPrice()
+    
+    console.log(`ICR: ${await cdpManager.getCurrentICR(bob, price)}`)
+    assert.isTrue((await cdpManager.getCurrentICR(bob, price)).lt(mv._MCR))
 
     // close Bob's CDP 
+
+    // Confirm system is not in Recovery Mode
+    assert.isFalse(await cdpManager.checkRecoveryMode());
+
     assert.isTrue(await sortedCDPs.contains(bob))
     await cdpManager.liquidate(bob, { from: owner });
     assert.isFalse(await sortedCDPs.contains(bob))
 
     /* Alice now has the only active stake. totalStakes in the system is now 10 ether.
    
-   Bob's pending collateral reward (10 * 0.05 = 0.5 ETH) and debt reward (10 * 9 = 90 CLV) are applied to his CDP
-   before his liquidation.
-   His total collateral (10 + 0.5 = 10.5 ETH) and debt (800 + 90 = 890 CLV) are then added to the DefaultPool. 
-   
-   The system rewards-per-unit-staked should now be:
-   
-   L_ETH = (1 / 20) + (10.5  / 10) = 1.10 ETH
-   L_CLVDebt = (180 / 20) + (890 / 10) = 98 CLV */
+   Bob's debt (debt + pending debt reward) plus his liquidated collateral (coll + pending coll reward - gasComp)
+   should now hit the Default Pool, and change the reward sums */
     const L_ETH_AfterBobLiquidated = await cdpManager.L_ETH()
     const L_CLVDebt_AfterBobLiquidated = await cdpManager.L_CLVDebt()
 
-    assert.isAtMost(th.getDifference(L_ETH_AfterBobLiquidated, '1100000000000000000'), 100)
-    assert.isAtMost(th.getDifference(L_CLVDebt_AfterBobLiquidated, '98000000000000000000'), 100)
+    const expected_L_ETH_after_B = totalExpectedLiquidatedColl.div(th.toBN('10'))
+    const expected_L_CLVDebt_after_B = (CLVWithdrawal_B.add(CLVWithdrawal_C)).div(th.toBN('10'))
+               
+    console.log(`expected_L_Eth: ${expected_L_ETH_after_B}`)
+    assert.isAtMost(th.getDifference(expected_L_ETH_after_B, L_ETH_AfterBobLiquidated), 100)
+    assert.isAtMost(th.getDifference(expected_L_CLVDebt_after_B, L_CLVDebt_AfterBobLiquidated), 100)
   })
 
-  it("liquidate(): Liquidates undercollateralized trove if there are two troves in the system", async () => {
+  it.only("liquidate(): Liquidates undercollateralized trove if there are two troves in the system", async () => {
     await borrowerOperations.openLoan(mv._50e18, bob, { from: bob, value: mv._100_Ether })
 
     // Alice creates a single trove with 0.5 ETH and a debt of 50 LQTY,  and provides 10 CLV to SP
-    await borrowerOperations.openLoan(mv._50e18, alice, { from: alice, value: mv._5e17 })
+    const withdrawalA = th.getDebtMinusVirtual(mv._50e18)
+    await borrowerOperations.openLoan(withdrawalA, alice, { from: alice, value: mv._5e17 })
     await poolManager.provideToSP(mv._10e18, { from: alice })
 
     // Alice proves 10 CLV to SP

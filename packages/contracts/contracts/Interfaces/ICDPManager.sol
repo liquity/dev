@@ -1,5 +1,5 @@
 pragma solidity >=0.5.16;
-
+import "./ISortedCDPs.sol";
 // Common interface for the CDP Manager.
 interface ICDPManager {
     // --- Events ---
@@ -24,6 +24,8 @@ interface ICDPManager {
 
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
 
+    event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
+
     // --- Functions ---
 
     function setBorrowerOperations(address _borrowerOperationsAddress) external;
@@ -42,7 +44,7 @@ interface ICDPManager {
 
     function setSortedCDPs(address _sortedCDPsAddress) external;
 
-    function getCDPOwnersCount() external view returns (uint);
+    function getallTrovesArrayCount() external view returns (uint);
 
     function getCurrentICR(address _user, uint _price) external view returns (uint);
 
@@ -67,8 +69,6 @@ interface ICDPManager {
 
     function updateCDPRewardSnapshots(address _user) external;
 
-    function addCDPOwnerToArray(address _user) external returns (uint index);
-
     function applyPendingRewards(address _user) external;
 
     function closeCDP(address _user) external;
@@ -92,4 +92,14 @@ interface ICDPManager {
     function increaseCDPDebt(address _user, uint _debtIncrease) external returns (uint); 
 
     function decreaseCDPDebt(address _user, uint _collDecrease) external returns (uint); 
+
+    function getSizeListFromColl(uint _coll) external view returns (ISortedCDPs);
+
+    function getSizeList(uint _sizeRange) external view returns (ISortedCDPs);
+
+    function insertToFullSortedList(address _user, uint _ICR, uint _price, address _hint) external returns (uint);
+
+    function insertToSizeList(address _user, uint _ICR, uint _price, uint _coll, address _hint) external;
+
+    function reInsertToSizeList(address _user, uint _newICR, uint _price, uint _newColl, address _hint) external;
 }
