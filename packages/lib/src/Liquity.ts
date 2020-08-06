@@ -25,10 +25,6 @@ interface Trovish {
   readonly debt?: Decimalish;
 }
 
-const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
-  return collateral.mulDiv(price, debt);
-};
-
 type TroveChange = {
   collateralDifference?: Difference;
   debtDifference?: Difference;
@@ -48,7 +44,7 @@ export class Trove {
   }
 
   collateralRatio(price: Decimalish): Decimal {
-    return calculateCollateralRatio(this.collateral, this.debt, price);
+    return this.collateral.mulDiv(price, this.debt.add(Liquity.VIRTUAL_DEBT));
   }
 
   collateralRatioIsBelowMinimum(price: Decimalish) {
@@ -313,6 +309,7 @@ const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
 export class Liquity {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
+  public static readonly VIRTUAL_DEBT: Decimal = Decimal.from(10);
 
   public static useHint = true;
 
