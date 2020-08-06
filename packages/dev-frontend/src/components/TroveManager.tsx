@@ -48,23 +48,17 @@ const TroveAction: React.FC<TroveActionProps> = ({
   }
 
   const [actionName, send, extraRequirements] = original.isEmpty
-    ? edited.debt.nonZero
-      ? ([
-          "Open new Trove",
-          liquity.openTrove.bind(liquity, edited, price),
+    ? ([
+        "Open new Trove",
+        liquity.openTrove.bind(liquity, edited, { price, numberOfTroves }),
+        [
+          [!total.collateralRatioIsBelowCritical(price), "Can't borrow LQTY during recovery mode"],
           [
-            [!total.collateralRatioIsBelowCritical(price), "Can't borrow LQTY during recovery mode"],
-            [
-              !total.add(edited).collateralRatioIsBelowCritical(price),
-              `Total collateral ratio would fall below ${ccrPercent}`
-            ]
+            !total.add(edited).collateralRatioIsBelowCritical(price),
+            `Total collateral ratio would fall below ${ccrPercent}`
           ]
-        ] as const)
-      : ([
-          "Open new Trove",
-          liquity.depositEther.bind(liquity, original, edited.collateral, price),
-          []
-        ] as const)
+        ]
+      ] as const)
     : edited.isEmpty
     ? ([
         "Close Trove",
@@ -129,7 +123,10 @@ const TroveAction: React.FC<TroveActionProps> = ({
                   "Can't borrow LQTY during recovery mode"
                 ],
                 [
-                  !total.subtract(original).add(edited).collateralRatioIsBelowCritical(price),
+                  !total
+                    .subtract(original)
+                    .add(edited)
+                    .collateralRatioIsBelowCritical(price),
                   `Total collateral ratio would fall below ${ccrPercent}`
                 ]
               ] as const)
