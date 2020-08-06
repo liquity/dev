@@ -130,8 +130,17 @@ describe("Liquity", () => {
       expect(trove).to.deep.equal(troveWithOnlyCollateral);
     });
 
-    it("should close the Trove after withdrawing all the collateral", async () => {
-      await liquity.withdrawEther(trove, trove.collateral, price);
+    it("should withdraw some of the collateral", async () => {
+      const troveWithHalfOfTheCollateral = new Trove({ collateral: 0.5 });
+
+      await liquity.withdrawEther(0.5);
+      trove = await liquity.getTrove();
+
+      expect(trove).to.deep.equal(troveWithHalfOfTheCollateral);
+    });
+
+    it("should close the Trove after withdrawing the remaining collateral", async () => {
+      await liquity.closeTrove();
       trove = await liquity.getTrove();
 
       expect(trove.isEmpty).to.be.true;
@@ -215,7 +224,7 @@ describe("Liquity", () => {
     });
 
     it("other user should make a Trove with very low ICR", async () => {
-      await otherLiquities[0].openTrove(new Trove({ collateral: 0.2233, debt: 39 }), price);
+      await otherLiquities[0].openTrove(new Trove({ collateral: 0.2233, debt: 29 }));
       const otherTrove = await otherLiquities[0].getTrove();
 
       expect(otherTrove.collateralRatio(price).toString()).to.equal("1.145128205128205128");
@@ -242,7 +251,7 @@ describe("Liquity", () => {
         new StabilityDeposit({
           deposit: 10,
           depositAfterLoss: 0,
-          pendingCollateralGain: "0.05725641025641025"
+          pendingCollateralGain: "0.05885117967332123"
         })
       );
     });
@@ -252,8 +261,8 @@ describe("Liquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: "2.166043589743589744",
-          debt: 139
+          collateral: "2.111817241379310344",
+          debt: 129
         })
       );
     });
@@ -265,8 +274,8 @@ describe("Liquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: "2.223299999999999994",
-          debt: 139
+          collateral: "2.170668421052631574",
+          debt: 129
         })
       );
 
@@ -324,7 +333,7 @@ describe("Liquity", () => {
       });
 
       // Currently failing due to a problem with the backend
-      it.skip("should still be able to withdraw remaining deposit", async () => {
+      it("should still be able to withdraw remaining deposit", async () => {
         for (const l of [otherLiquities[0], otherLiquities[1], otherLiquities[2]]) {
           const stabilityDeposit = await l.getStabilityDeposit();
           await l.withdrawQuiFromStabilityPool(stabilityDeposit.depositAfterLoss);
@@ -362,7 +371,7 @@ describe("Liquity", () => {
       expect(redemptionHints).to.deep.equal([
         otherLiquities[2].userAddress!,
         liquity.userAddress!,
-        Decimal.from("39")
+        Decimal.from("13")
       ]);
     });
 
