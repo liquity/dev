@@ -16,11 +16,17 @@ type Trove @entity {
 
   collateral: BigDecimal!
   debt: BigDecimal!
-  stake: BigDecimal!
+
+  rawCollateral: BigInt!
+  rawDebt: BigInt!
+  rawStake: BigInt!
+
+  "Collateral divided by debt. Multiply by price to get the actual collateral ratio."
+  rawCollateralPerDebt: BigInt!
 
   "The value of total redistributed per-stake collateral the last time rewards were applied"
-  snapshotOfTotalRedistributedCollateral: BigDecimal!
+  rawSnapshotOfTotalRedistributedCollateral: BigInt!
 
   "The value of total redistributed per-stake debt the last time rewards were applied"
-  snapshotOfTotalRedistributedDebt: BigDecimal!
+  rawSnapshotOfTotalRedistributedDebt: BigInt!
 }
