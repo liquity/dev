@@ -63,7 +63,10 @@ describe("Liquity", () => {
     if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
       await funder.sendTransaction({
         to: user.getAddress(),
-        value: targetBalance.add(txCost).sub(balance).add(1),
+        value: targetBalance
+          .add(txCost)
+          .sub(balance)
+          .add(1),
         gasLimit
       });
 
