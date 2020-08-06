@@ -16,6 +16,7 @@ type TroveActionProps = {
   price: Decimal;
   total: Trove;
   quiBalance: Decimal;
+  numberOfTroves: number;
 };
 
 const mcrPercent = new Percent(Liquity.MINIMUM_COLLATERAL_RATIO).toString(0);
@@ -29,7 +30,8 @@ const TroveAction: React.FC<TroveActionProps> = ({
   setChangePending,
   price,
   total,
-  quiBalance
+  quiBalance,
+  numberOfTroves
 }) => {
   const myTransactionId = "trove";
   const myTransactionState = useMyTransactionState(myTransactionId);
@@ -51,7 +53,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
     ? edited.debt.nonZero
       ? ([
           "Open new Trove",
-          liquity.openTrove.bind(liquity, edited, price),
+          liquity.openTrove.bind(liquity, edited, { price, numberOfTroves }),
           [
             [!total.collateralRatioIsBelowCritical(price), "Can't borrow LQTY during recovery mode"],
             [
@@ -62,7 +64,11 @@ const TroveAction: React.FC<TroveActionProps> = ({
         ] as const)
       : ([
           "Open new Trove",
-          liquity.depositEther.bind(liquity, original, edited.collateral, price),
+          liquity.depositEther.bind(liquity, edited.collateral, {
+            trove: original,
+            price,
+            numberOfTroves
+          }),
           []
         ] as const)
     : edited.isEmpty
@@ -96,9 +102,8 @@ const TroveAction: React.FC<TroveActionProps> = ({
         collateralDifference && debtDifference
           ? liquity.changeTrove.bind(
               liquity,
-              original,
               { collateralDifference, debtDifference },
-              price
+              { trove: original, price, numberOfTroves }
             )
           : (collateralDifference
               ? collateralDifference.positive
@@ -107,12 +112,11 @@ const TroveAction: React.FC<TroveActionProps> = ({
               : debtDifference!.positive
               ? liquity.borrowQui
               : liquity.repayQui
-            ).bind(
-              liquity,
-              original,
-              (collateralDifference || debtDifference)!.absoluteValue!,
-              price
-            ),
+            ).bind(liquity, (collateralDifference ?? debtDifference)!.absoluteValue!, {
+              trove: original,
+              price,
+              numberOfTroves
+            }),
         [
           ...(collateralDifference?.negative
             ? ([
@@ -179,6 +183,7 @@ type TroveManagerProps = {
   price: Decimal;
   total: Trove;
   quiBalance: Decimal;
+  numberOfTroves: number;
 };
 
 export const TroveManager: React.FC<TroveManagerProps> = ({
@@ -187,7 +192,8 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
   trove,
   price,
   total,
-  quiBalance
+  quiBalance,
+  numberOfTroves
 }) => {
   const previousTroveWithoutRewards = usePrevious(troveWithoutRewards);
   const [original, setOriginal] = useState(trove);
@@ -233,7 +239,8 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
           setChangePending,
           price,
           total,
-          quiBalance
+          quiBalance,
+          numberOfTroves
         }}
       />
     </>

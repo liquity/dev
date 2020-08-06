@@ -1,0 +1,32 @@
+type Owner @entity {
+  "Owner's Ethereum address as a hex-string"
+  id: ID!
+
+  currentTrove: Trove
+  troveCount: Int!
+
+  troves: [Trove!]! @derivedFrom(field: "owner")
+}
+
+type Trove @entity {
+  "Owner's ID + '-' + an incremented integer"
+  id: ID!
+
+  owner: Owner!
+
+  collateral: BigDecimal!
+  debt: BigDecimal!
+
+  rawCollateral: BigInt!
+  rawDebt: BigInt!
+  rawStake: BigInt!
+
+  "Collateral divided by debt. Multiply by price to get the actual collateral ratio."
+  rawCollateralPerDebt: BigInt!
+
+  "The value of total redistributed per-stake collateral the last time rewards were applied"
+  rawSnapshotOfTotalRedistributedCollateral: BigInt!
+
+  "The value of total redistributed per-stake debt the last time rewards were applied"
+  rawSnapshotOfTotalRedistributedDebt: BigInt!
+}
