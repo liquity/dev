@@ -23,6 +23,7 @@ import { LiquityContracts, LiquityContractAddresses, connectToContracts } from "
 interface Trovish {
   readonly collateral?: Decimalish;
   readonly debt?: Decimalish;
+  readonly virtualDebt?: Decimalish;
 }
 
 type TroveChange = {
@@ -34,17 +35,35 @@ export class Trove {
   readonly collateral: Decimal;
   readonly debt: Decimal;
 
-  constructor({ collateral = 0, debt = 0 }: Trovish = {}) {
+  /**
+   * Imaginary debt that doesn't need to be repaid, but counts towards collateral ratio (lowers it).
+   *
+   * When performing arithmetic on Troves (addition or subtraction of 2 Troves, multiplication by a
+   * scalar), the virtual debt of the Trove on the left side of the operation will be copied to the
+   * resulting Trove.
+   */
+  readonly virtualDebt: Decimal;
+
+  constructor({
+    collateral = 0,
+    debt = 0,
+    virtualDebt = Liquity.DEFAULT_VIRTUAL_DEBT
+  }: Trovish = {}) {
     this.collateral = Decimal.from(collateral);
     this.debt = Decimal.from(debt);
+    this.virtualDebt = Decimal.from(virtualDebt);
   }
 
   get isEmpty() {
     return this.collateral.isZero && this.debt.isZero;
   }
 
+  get compositeDebt() {
+    return this.debt.add(this.virtualDebt);
+  }
+
   collateralRatio(price: Decimalish): Decimal {
-    return this.collateral.mulDiv(price, this.debt.add(Liquity.VIRTUAL_DEBT));
+    return this.collateral.mulDiv(price, this.compositeDebt);
   }
 
   collateralRatioIsBelowMinimum(price: Decimalish) {
@@ -56,7 +75,14 @@ export class Trove {
   }
 
   toString() {
-    return `{ collateral: ${this.collateral}, debt: ${this.debt} }`;
+    return (
+      `{ collateral: ${this.collateral}` +
+      `, debt: ${this.debt}` +
+      (this.collateral.nonZero && this.virtualDebt.nonZero
+        ? `, virtualDebt: ${this.virtualDebt}`
+        : "") +
+      " }"
+    );
   }
 
   equals(that: Trove) {
@@ -66,7 +92,8 @@ export class Trove {
   add({ collateral = 0, debt = 0 }: Trovish) {
     return new Trove({
       collateral: this.collateral.add(collateral),
-      debt: this.debt.add(debt)
+      debt: this.debt.add(debt),
+      virtualDebt: this.virtualDebt
     });
   }
 
@@ -81,7 +108,8 @@ export class Trove {
   subtract({ collateral = 0, debt = 0 }: Trovish) {
     return new Trove({
       collateral: this.collateral.sub(collateral),
-      debt: this.debt.sub(debt)
+      debt: this.debt.sub(debt),
+      virtualDebt: this.virtualDebt
     });
   }
 
@@ -96,21 +124,24 @@ export class Trove {
   multiply(multiplier: Decimalish) {
     return new Trove({
       collateral: this.collateral.mul(multiplier),
-      debt: this.debt.mul(multiplier)
+      debt: this.debt.mul(multiplier),
+      virtualDebt: this.virtualDebt
     });
   }
 
   setCollateral(collateral: Decimalish) {
     return new Trove({
       collateral,
-      debt: this.debt
+      debt: this.debt,
+      virtualDebt: this.virtualDebt
     });
   }
 
   setDebt(debt: Decimalish) {
     return new Trove({
       collateral: this.collateral,
-      debt
+      debt,
+      virtualDebt: this.virtualDebt
     });
   }
 
@@ -179,7 +210,10 @@ export class TroveWithPendingRewards extends Trove {
     super({ collateral, debt });
 
     this.stake = Decimal.from(stake);
-    this.snapshotOfTotalRedistributed = new Trove(snapshotOfTotalRedistributed);
+    this.snapshotOfTotalRedistributed = new Trove({
+      ...snapshotOfTotalRedistributed,
+      virtualDebt: 0
+    });
   }
 
   applyRewards(totalRedistributed: Trove) {
@@ -309,7 +343,7 @@ const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
 export class Liquity {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
-  public static readonly VIRTUAL_DEBT: Decimal = Decimal.from(10);
+  public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(10);
 
   public static useHint = true;
 
@@ -363,7 +397,7 @@ export class Liquity {
       this.cdpManager.L_CLVDebt({ ...overrides }).then(decimalify)
     ]);
 
-    return new Trove({ collateral, debt });
+    return new Trove({ collateral, debt, virtualDebt: 0 });
   }
 
   watchTotalRedistributed(onTotalRedistributedChanged: (totalRedistributed: Trove) => void) {
@@ -630,7 +664,8 @@ export class Liquity {
 
     return new Trove({
       collateral: activeCollateral.add(liquidatedCollateral),
-      debt: activeDebt.add(closedDebt)
+      debt: activeDebt.add(closedDebt),
+      virtualDebt: 0
     });
   }
 
