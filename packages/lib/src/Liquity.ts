@@ -910,34 +910,36 @@ export class Liquity {
       ...overrides
     });
 
-    return cdps.map(
-      ({ owner, coll, debt, stake, snapshotCLVDebt, snapshotETH }) =>
-        [
-          owner,
-
-          new TroveWithPendingRewards({
-            collateral: new Decimal(coll),
-            debt: new Decimal(debt),
-            stake: new Decimal(stake),
-
-            snapshotOfTotalRedistributed: {
-              collateral: new Decimal(snapshotETH),
-              debt: new Decimal(snapshotCLVDebt)
-            }
-          })
-        ] as const
-    );
+    return mapMultipleSortedCDPsToTroves(cdps);
   }
 
-  async _getFirstTroveAddress() {
-    const first = await this.sortedCDPs.getFirst();
+  async getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: LiquityCallOverrides) {
+    const cdps = await this.multiCDPgetter.getMultipleSortedCDPs(startIdx, numberOfTroves, {
+      ...overrides
+    });
 
-    return first !== AddressZero ? first : undefined;
-  }
-
-  async _getNextTroveAddress(address: string) {
-    const next = await this.sortedCDPs.getNext(address);
-
-    return next !== AddressZero ? next : undefined;
+    return mapMultipleSortedCDPsToTroves(cdps);
   }
 }
+
+type Resolved<T> = T extends Promise<infer U> ? U : T;
+type MultipleSortedCDPs = Resolved<ReturnType<MultiCDPGetter["getMultipleSortedCDPs"]>>;
+
+const mapMultipleSortedCDPsToTroves = (cdps: MultipleSortedCDPs) =>
+  cdps.map(
+    ({ owner, coll, debt, stake, snapshotCLVDebt, snapshotETH }) =>
+      [
+        owner,
+
+        new TroveWithPendingRewards({
+          collateral: new Decimal(coll),
+          debt: new Decimal(debt),
+          stake: new Decimal(stake),
+
+          snapshotOfTotalRedistributed: {
+            collateral: new Decimal(snapshotETH),
+            debt: new Decimal(snapshotCLVDebt)
+          }
+        })
+      ] as const
+  );
