@@ -408,6 +408,8 @@ task(
       //   console.log(`// Liquidated ${numberOfLiquidations} Trove(s)`);
       // }
 
+      let previousListOfTroves: (readonly [string, TroveWithPendingRewards])[];
+
       for (const liquity of randomLiquities) {
         if (Math.random() < 0.5) {
           const trove = await liquity.getTrove();
@@ -491,13 +493,18 @@ task(
         const quiBalance = await liquity.getQuiBalance();
         await liquity.sendQui(funderLiquity.userAddress!, quiBalance, { gasPrice: 0 });
 
-        // const listOfTroves = await getListOfTroves(deployerLiquity);
-        // if (!(await sortedByICR(deployerLiquity, listOfTroves, price))) {
-        //   console.log();
-        //   console.log("// List of Troves:");
-        //   await dumpTroves(deployerLiquity, listOfTroves, price);
-        //   throw new Error("last operation broke sorting");
-        // }
+        const listOfTroves = await getListOfTroves(deployerLiquity);
+        if (!(await sortedByICR(deployerLiquity, listOfTroves, price))) {
+          console.log();
+          console.log("// List of Troves before:");
+          await dumpTroves(deployerLiquity, previousListOfTroves!, price);
+          console.log();
+          console.log("// List of Troves after:");
+          await dumpTroves(deployerLiquity, listOfTroves, price);
+          throw new Error("last operation broke sorting");
+        }
+
+        previousListOfTroves = listOfTroves;
       }
     }
 
