@@ -103,7 +103,10 @@ task("deploy", "Deploys the contracts to the network")
 
     const deployment: LiquityDeployment = {
       addresses: addressesOf(contracts),
-      version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim(),
+      version: fs
+        .readFileSync(path.join(bre.config.paths.artifacts, "version"))
+        .toString()
+        .trim(),
       deploymentDate: new Date().getTime(),
       abiHash: sha1(abi)
     };
@@ -239,34 +242,28 @@ task(
   }
 );
 
-const getListOfTroves = async (liquity: Liquity) => {
-  let list: string[] = [];
-  let current = await liquity._getFirstTroveAddress();
+const getListOfTroves = async (liquity: Liquity) =>
+  liquity.getFirstTroves(0, await liquity.getNumberOfTroves());
 
-  while (current) {
-    list.push(current);
-    current = await liquity._getNextTroveAddress(current);
-  }
-
-  return list;
-};
+const getListOfTroveOwners = async (liquity: Liquity) =>
+  getListOfTroves(liquity).then(troves => troves.map(([owner]) => owner));
 
 const tinyDifference = Decimal.from("0.000000001");
 
-const sortedByICR = async (liquity: Liquity, listOfTroves: string[], price: Decimalish) => {
+const sortedByICR = async (
+  liquity: Liquity,
+  listOfTroves: (readonly [string, TroveWithPendingRewards])[],
+  price: Decimalish
+) => {
   if (listOfTroves.length < 2) {
     return true;
   }
 
   const totalRedistributed = await liquity.getTotalRedistributed();
-  let currentTrove = (await liquity.getTroveWithoutRewards(listOfTroves[0])).applyRewards(
-    totalRedistributed
-  );
+  let currentTrove = listOfTroves[0][1].applyRewards(totalRedistributed);
 
   for (let i = 1; i < listOfTroves.length; ++i) {
-    const nextTrove = (await liquity.getTroveWithoutRewards(listOfTroves[i])).applyRewards(
-      totalRedistributed
-    );
+    const nextTrove = listOfTroves[i][1].applyRewards(totalRedistributed);
 
     if (
       nextTrove.collateralRatio(price).gt(currentTrove.collateralRatio(price).add(tinyDifference))
@@ -308,17 +305,21 @@ const troveToString = (
   );
 };
 
-const dumpTroves = async (liquity: Liquity, listOfTroves: string[], price: Decimalish) => {
+const dumpTroves = async (
+  liquity: Liquity,
+  listOfTroves: (readonly [string, TroveWithPendingRewards])[],
+  price: Decimalish
+) => {
   if (listOfTroves.length === 0) {
     return;
   }
 
   const totalRedistributed = await liquity.getTotalRedistributed();
-  let currentTrove = await liquity.getTroveWithoutRewards(listOfTroves[0]);
-  console.log(`   ${troveToString(listOfTroves[0], currentTrove, totalRedistributed, price)}`);
+  let [currentOwner, currentTrove] = listOfTroves[0];
+  console.log(`   ${troveToString(currentOwner, currentTrove, totalRedistributed, price)}`);
 
   for (let i = 1; i < listOfTroves.length; ++i) {
-    const nextTrove = await liquity.getTroveWithoutRewards(listOfTroves[i]);
+    const [nextOwner, nextTrove] = listOfTroves[i];
 
     if (
       nextTrove
@@ -326,12 +327,12 @@ const dumpTroves = async (liquity: Liquity, listOfTroves: string[], price: Decim
         .collateralRatio(price)
         .gt(currentTrove.applyRewards(totalRedistributed).collateralRatio(price))
     ) {
-      console.log(`!! ${troveToString(listOfTroves[i], nextTrove, totalRedistributed, price)}`.red);
+      console.log(`!! ${troveToString(nextOwner, nextTrove, totalRedistributed, price)}`.red);
     } else {
-      console.log(`   ${troveToString(listOfTroves[i], nextTrove, totalRedistributed, price)}`);
+      console.log(`   ${troveToString(nextOwner, nextTrove, totalRedistributed, price)}`);
     }
 
-    currentTrove = nextTrove;
+    [currentOwner, currentTrove] = [nextOwner, nextTrove];
   }
 };
 
@@ -386,13 +387,12 @@ task(
       await deployerLiquity.setPrice(price);
       price = await deployerLiquity.getPrice();
 
-      const trovesBefore = await getListOfTroves(deployerLiquity);
-      //const numberOfTrovesBefore = (await deployerLiquity.getNumberOfTroves()).toNumber();
+      const trovesBefore = await getListOfTroveOwners(deployerLiquity);
 
       console.log(`[deployer] liquidateUpTo(30)`);
       await deployerLiquity.liquidateUpTo(30); // Anything higher may run out of gas
 
-      const trovesAfter = await getListOfTroves(deployerLiquity);
+      const trovesAfter = await getListOfTroveOwners(deployerLiquity);
       const liquidatedTroves = listDifference(trovesBefore, trovesAfter);
       // const numberOfTrovesAfter = (await deployerLiquity.getNumberOfTroves()).toNumber();
 
@@ -423,7 +423,12 @@ task(
               if (Math.random() < 0.5) {
                 collateral = Decimal.from(randomValue);
 
-                const maxDebt = parseInt(price.mul(collateral).div(1.1).toString(0));
+                const maxDebt = parseInt(
+                  price
+                    .mul(collateral)
+                    .div(1.1)
+                    .toString(0)
+                );
 
                 debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
               } else {
@@ -527,8 +532,17 @@ task(
 
     const priceBefore = await deployerLiquity.getPrice();
 
-    if ((await funderLiquity._getFirstTroveAddress()) !== funderLiquity.userAddress) {
-      let funderTrove = await funderLiquity.getTrove();
+    let [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
+
+    if (firstTroveOwner !== funderLiquity.userAddress) {
+      let trove = await funderLiquity.getTrove();
+
+      if (trove.debt.isZero) {
+        await funderLiquity.borrowQui(1, {
+          trove,
+          price: initialPrice,
+          numberOfTroves: initialNumberOfTroves
+        });
 
       if (funderTrove.debt.isZero) {
         await funderLiquity.borrowQui(funderTrove, 1, priceBefore);
@@ -538,7 +552,9 @@ task(
       await funderLiquity.repayQui(funderTrove, funderTrove.debt, priceBefore);
     }
 
-    if ((await funderLiquity._getFirstTroveAddress()) !== funderLiquity.userAddress) {
+    [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
+
+    if (firstTroveOwner !== funderLiquity.userAddress) {
       throw new Error("didn't manage to hoist Funder's Trove to head of SortedCDPs");
     }
 
