@@ -59,7 +59,7 @@ export class Trove {
   }
 
   get compositeDebt() {
-    return this.debt.add(this.virtualDebt);
+    return this.debt.nonZero?.add(this.virtualDebt) ?? this.debt;
   }
 
   collateralRatio(price: Decimalish): Decimal {
