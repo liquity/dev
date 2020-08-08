@@ -91,36 +91,45 @@ const connectContracts = async (
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce => clvToken.setPoolManagerAddress(poolManager.address, { ...overrides, nonce }),
+
     nonce => poolManager.setBorrowerOperations(borrowerOperations.address, { ...overrides, nonce }),
-    nonce => poolManager.setCDPManagerAddress(cdpManager.address, { ...overrides, nonce }),
+    nonce => poolManager.setCDPManager(cdpManager.address, { ...overrides, nonce }),
     nonce => poolManager.setCLVToken(clvToken.address, { ...overrides, nonce }),
     nonce => poolManager.setPriceFeed(priceFeed.address, { ...overrides, nonce }),
     nonce => poolManager.setStabilityPool(stabilityPool.address, { ...overrides, nonce }),
     nonce => poolManager.setActivePool(activePool.address, { ...overrides, nonce }),
     nonce => poolManager.setDefaultPool(defaultPool.address, { ...overrides, nonce }),
+
     nonce => sortedCDPs.setCDPManager(cdpManager.address, { ...overrides, nonce }),
     nonce => sortedCDPs.setBorrowerOperations(borrowerOperations.address, { ...overrides, nonce }),
+
     nonce => priceFeed.setCDPManagerAddress(cdpManager.address, { ...overrides, nonce }),
-    nonce => cdpManager.setCLVToken(clvToken.address, { ...overrides, nonce }),
+
     nonce => cdpManager.setSortedCDPs(sortedCDPs.address, { ...overrides, nonce }),
     nonce => cdpManager.setPoolManager(poolManager.address, { ...overrides, nonce }),
     nonce => cdpManager.setPriceFeed(priceFeed.address, { ...overrides, nonce }),
+    nonce => cdpManager.setCLVToken(clvToken.address, { ...overrides, nonce }),
     nonce => cdpManager.setActivePool(activePool.address, { ...overrides, nonce }),
     nonce => cdpManager.setDefaultPool(defaultPool.address, { ...overrides, nonce }),
     nonce => cdpManager.setStabilityPool(stabilityPool.address, { ...overrides, nonce }),
     nonce => cdpManager.setBorrowerOperations(borrowerOperations.address, { ...overrides, nonce }),
+
     nonce => borrowerOperations.setSortedCDPs(sortedCDPs.address, { ...overrides, nonce }),
     nonce => borrowerOperations.setPoolManager(poolManager.address, { ...overrides, nonce }),
     nonce => borrowerOperations.setPriceFeed(priceFeed.address, { ...overrides, nonce }),
     nonce => borrowerOperations.setActivePool(activePool.address, { ...overrides, nonce }),
     nonce => borrowerOperations.setDefaultPool(defaultPool.address, { ...overrides, nonce }),
     nonce => borrowerOperations.setCDPManager(cdpManager.address, { ...overrides, nonce }),
+
     nonce => stabilityPool.setPoolManagerAddress(poolManager.address, { ...overrides, nonce }),
     nonce => stabilityPool.setActivePoolAddress(activePool.address, { ...overrides, nonce }),
     nonce => stabilityPool.setDefaultPoolAddress(defaultPool.address, { ...overrides, nonce }),
+
     nonce => activePool.setPoolManagerAddress(poolManager.address, { ...overrides, nonce }),
+    nonce => activePool.setCDPManagerAddress(cdpManager.address, { ...overrides, nonce }),
     nonce => activePool.setStabilityPoolAddress(stabilityPool.address, { ...overrides, nonce }),
     nonce => activePool.setDefaultPoolAddress(defaultPool.address, { ...overrides, nonce }),
+
     nonce => defaultPool.setPoolManagerAddress(poolManager.address, { ...overrides, nonce }),
     nonce => defaultPool.setStabilityPoolAddress(stabilityPool.address, { ...overrides, nonce }),
     nonce => defaultPool.setActivePoolAddress(activePool.address, { ...overrides, nonce })

@@ -1,0 +1,50 @@
+specVersion: 0.0.2
+description: Liquity Decentralized Borrowing Protocol
+repository: https://github.com/liquity/subgraph
+schema:
+  file: ./schema.graphql
+dataSources:
+  - name: CDPManager
+    kind: ethereum/contract
+    network: ropsten
+    source:
+      #address: "0x56fcdA0436E5C7a33ee5bfe292f11AC66429Eb5c"
+      address: "0x6645E03DA2a711f780af7cCE1019Cb9a9135C898"
+      abi: CDPManager
+      # startBlock: 8110721
+    mapping:
+      file: ./src/mappings/CDPManager.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Trove
+      abis:
+        - name: CDPManager
+          file: ../lib/abi/CDPManager.json
+      eventHandlers:
+        - event: BorrowerOperationsAddressChanged(address)
+          handler: handleBorrowerOperationsAddressChanged
+        - event: CDPUpdated(indexed address,uint256,uint256,uint256)
+          handler: handleCDPUpdated
+templates:
+  - name: BorrowerOperations
+    kind: ethereum/contract
+    network: ropsten
+    source:
+      abi: BorrowerOperations
+    mapping:
+      file: ./src/mappings/BorrowerOperations.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Trove
+      abis:
+        - name: BorrowerOperations
+          file: ../lib/abi/BorrowerOperations.json
+        - name: CDPManager
+          file: ../lib/abi/CDPManager.json
+      eventHandlers:
+        - event: CDPUpdated(indexed address,uint256,uint256,uint256)
+          handler: handleCDPUpdated

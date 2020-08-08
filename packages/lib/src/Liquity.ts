@@ -23,11 +23,8 @@ import { LiquityContracts, LiquityContractAddresses, connectToContracts } from "
 interface Trovish {
   readonly collateral?: Decimalish;
   readonly debt?: Decimalish;
+  readonly virtualDebt?: Decimalish;
 }
-
-const calculateCollateralRatio = (collateral: Decimal, debt: Decimal, price: Decimalish) => {
-  return collateral.mulDiv(price, debt);
-};
 
 type TroveChange = {
   collateralDifference?: Difference;
@@ -38,17 +35,35 @@ export class Trove {
   readonly collateral: Decimal;
   readonly debt: Decimal;
 
-  constructor({ collateral = 0, debt = 0 }: Trovish = {}) {
+  /**
+   * Imaginary debt that doesn't need to be repaid, but counts towards collateral ratio (lowers it).
+   *
+   * When performing arithmetic on Troves (addition or subtraction of 2 Troves, multiplication by a
+   * scalar), the virtual debt of the Trove on the left side of the operation will be copied to the
+   * resulting Trove.
+   */
+  readonly virtualDebt: Decimal;
+
+  constructor({
+    collateral = 0,
+    debt = 0,
+    virtualDebt = Liquity.DEFAULT_VIRTUAL_DEBT
+  }: Trovish = {}) {
     this.collateral = Decimal.from(collateral);
     this.debt = Decimal.from(debt);
+    this.virtualDebt = Decimal.from(virtualDebt);
   }
 
   get isEmpty() {
     return this.collateral.isZero && this.debt.isZero;
   }
 
+  get compositeDebt() {
+    return this.debt.nonZero?.add(this.virtualDebt) ?? this.debt;
+  }
+
   collateralRatio(price: Decimalish): Decimal {
-    return calculateCollateralRatio(this.collateral, this.debt, price);
+    return this.collateral.mulDiv(price, this.compositeDebt);
   }
 
   collateralRatioIsBelowMinimum(price: Decimalish) {
@@ -60,7 +75,14 @@ export class Trove {
   }
 
   toString() {
-    return `{ collateral: ${this.collateral}, debt: ${this.debt} }`;
+    return (
+      `{ collateral: ${this.collateral}` +
+      `, debt: ${this.debt}` +
+      (this.collateral.nonZero && this.virtualDebt.nonZero
+        ? `, virtualDebt: ${this.virtualDebt}`
+        : "") +
+      " }"
+    );
   }
 
   equals(that: Trove) {
@@ -70,7 +92,8 @@ export class Trove {
   add({ collateral = 0, debt = 0 }: Trovish) {
     return new Trove({
       collateral: this.collateral.add(collateral),
-      debt: this.debt.add(debt)
+      debt: this.debt.add(debt),
+      virtualDebt: this.virtualDebt
     });
   }
 
@@ -85,7 +108,8 @@ export class Trove {
   subtract({ collateral = 0, debt = 0 }: Trovish) {
     return new Trove({
       collateral: this.collateral.sub(collateral),
-      debt: this.debt.sub(debt)
+      debt: this.debt.sub(debt),
+      virtualDebt: this.virtualDebt
     });
   }
 
@@ -100,21 +124,24 @@ export class Trove {
   multiply(multiplier: Decimalish) {
     return new Trove({
       collateral: this.collateral.mul(multiplier),
-      debt: this.debt.mul(multiplier)
+      debt: this.debt.mul(multiplier),
+      virtualDebt: this.virtualDebt
     });
   }
 
   setCollateral(collateral: Decimalish) {
     return new Trove({
       collateral,
-      debt: this.debt
+      debt: this.debt,
+      virtualDebt: this.virtualDebt
     });
   }
 
   setDebt(debt: Decimalish) {
     return new Trove({
       collateral: this.collateral,
-      debt
+      debt,
+      virtualDebt: this.virtualDebt
     });
   }
 
@@ -183,7 +210,10 @@ export class TroveWithPendingRewards extends Trove {
     super({ collateral, debt });
 
     this.stake = Decimal.from(stake);
-    this.snapshotOfTotalRedistributed = new Trove(snapshotOfTotalRedistributed);
+    this.snapshotOfTotalRedistributed = new Trove({
+      ...snapshotOfTotalRedistributed,
+      virtualDebt: 0
+    });
   }
 
   applyRewards(totalRedistributed: Trove) {
@@ -310,9 +340,23 @@ const debounce = (listener: (latestBlock: number) => void) => {
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
 
+type HintedMethodOptionalParams = {
+  price?: Decimal;
+  numberOfTroves?: number;
+};
+
+type TroveChangeOptionalParams = HintedMethodOptionalParams & {
+  trove?: Trove;
+};
+
+type StabilityDepositTransferOptionalParams = TroveChangeOptionalParams & {
+  deposit?: StabilityDeposit;
+};
+
 export class Liquity {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
+  public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(10);
 
   public static useHint = true;
 
@@ -366,7 +410,7 @@ export class Liquity {
       this.cdpManager.L_CLVDebt({ ...overrides }).then(decimalify)
     ]);
 
-    return new Trove({ collateral, debt });
+    return new Trove({ collateral, debt, virtualDebt: 0 });
   }
 
   watchTotalRedistributed(onTotalRedistributedChanged: (totalRedistributed: Trove) => void) {
@@ -438,18 +482,25 @@ export class Liquity {
     return trove.applyRewards(totalRedistributed);
   }
 
-  async _findHintForCollateralRatio(collateralRatio: Decimal, price: Decimal, address: string) {
+  async _findHintForCollateralRatio(
+    collateralRatio: Decimal,
+    optionalParams: HintedMethodOptionalParams,
+    fallbackAddress: string
+  ) {
     if (!Liquity.useHint) {
-      return address;
+      return fallbackAddress;
     }
 
-    const numberOfTroves = await this.getNumberOfTroves();
+    const [price, numberOfTroves] = await Promise.all([
+      optionalParams.price ?? this.getPrice(),
+      optionalParams.numberOfTroves ?? this.getNumberOfTroves()
+    ]);
 
     if (!numberOfTroves || collateralRatio.infinite) {
       return AddressZero;
     }
 
-    const numberOfTrials = BigNumber.from(Math.ceil(Math.sqrt(numberOfTroves))); // XXX not multiplying by 10 here
+    const numberOfTrials = BigNumber.from(Math.ceil(10 * Math.sqrt(numberOfTroves)));
 
     const approxHint = await this.cdpManager.getApproxHint(
       collateralRatio.bigNumber,
@@ -466,20 +517,34 @@ export class Liquity {
     return hint;
   }
 
-  _findHint(trove: Trove, price: Decimal, address: string) {
+  async _findHint(
+    trove: Trove,
+    { price, ...rest }: HintedMethodOptionalParams = {},
+    address: string
+  ) {
     if (trove instanceof TroveWithPendingRewards) {
       throw new Error("Rewards must be applied to this Trove");
     }
 
-    return this._findHintForCollateralRatio(trove.collateralRatio(price), price, address);
+    price = price ?? (await this.getPrice());
+
+    return this._findHintForCollateralRatio(
+      trove.collateralRatio(price),
+      { price, ...rest },
+      address
+    );
   }
 
-  async openTrove(trove: Trove, price: Decimalish, overrides?: LiquityTransactionOverrides) {
+  async openTrove(
+    trove: Trove,
+    optionalParams?: HintedMethodOptionalParams,
+    overrides?: LiquityTransactionOverrides
+  ) {
     const address = this.requireAddress();
 
     return this.borrowerOperations.openLoan(
       trove.debt.bigNumber,
-      await this._findHint(trove, Decimal.from(price), address),
+      await this._findHint(trove, optionalParams, address),
       { value: trove.collateral.bigNumber, ...overrides }
     );
   }
@@ -489,17 +554,17 @@ export class Liquity {
   }
 
   async depositEther(
-    initialTrove: Trove,
     depositedEther: Decimalish,
-    price: Decimalish,
+    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: LiquityTransactionOverrides,
     address = this.requireAddress()
   ) {
+    const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.addCollateral(depositedEther);
 
     return this.borrowerOperations.addColl(
       address,
-      await this._findHint(finalTrove, Decimal.from(price), address),
+      await this._findHint(finalTrove, hintOptionalParams, address),
       {
         value: Decimal.from(depositedEther).bigNumber,
         ...overrides
@@ -508,66 +573,66 @@ export class Liquity {
   }
 
   async withdrawEther(
-    initialTrove: Trove,
     withdrawnEther: Decimalish,
-    price: Decimalish,
+    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: LiquityTransactionOverrides
   ) {
     const address = this.requireAddress();
+    const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.subtractCollateral(withdrawnEther);
 
     return this.borrowerOperations.withdrawColl(
       Decimal.from(withdrawnEther).bigNumber,
-      await this._findHint(finalTrove, Decimal.from(price), address),
+      await this._findHint(finalTrove, hintOptionalParams, address),
       { ...overrides }
     );
   }
 
   async borrowQui(
-    initialTrove: Trove,
     borrowedQui: Decimalish,
-    price: Decimalish,
+    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: LiquityTransactionOverrides
   ) {
     const address = this.requireAddress();
+    const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.addDebt(borrowedQui);
 
     return this.borrowerOperations.withdrawCLV(
       Decimal.from(borrowedQui).bigNumber,
-      await this._findHint(finalTrove, Decimal.from(price), address),
+      await this._findHint(finalTrove, hintOptionalParams, address),
       { ...overrides }
     );
   }
 
   async repayQui(
-    initialTrove: Trove,
     repaidQui: Decimalish,
-    price: Decimalish,
+    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: LiquityTransactionOverrides
   ) {
     const address = this.requireAddress();
+    const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.subtractDebt(repaidQui);
 
     return this.borrowerOperations.repayCLV(
       Decimal.from(repaidQui).bigNumber,
-      await this._findHint(finalTrove, Decimal.from(price), address),
+      await this._findHint(finalTrove, hintOptionalParams, address),
       { ...overrides }
     );
   }
 
   async changeTrove(
-    initialTrove: Trove,
     change: TroveChange,
-    price: Decimalish,
+    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: LiquityTransactionOverrides
   ) {
     const address = this.requireAddress();
+    const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.apply(change);
 
     return this.borrowerOperations.adjustLoan(
       change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
       change.debtDifference?.bigNumber || 0,
-      await this._findHint(finalTrove, Decimal.from(price), address),
+      await this._findHint(finalTrove, hintOptionalParams, address),
       {
         ...overrides,
         value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
@@ -633,7 +698,8 @@ export class Liquity {
 
     return new Trove({
       collateral: activeCollateral.add(liquidatedCollateral),
-      debt: activeDebt.add(closedDebt)
+      debt: activeDebt.add(closedDebt),
+      virtualDebt: 0
     });
   }
 
@@ -722,17 +788,18 @@ export class Liquity {
   }
 
   async transferCollateralGainToTrove(
-    deposit: StabilityDeposit,
-    initialTrove: Trove,
-    price: Decimalish,
+    { deposit, trove, ...hintOptionalParams }: StabilityDepositTransferOptionalParams = {},
     overrides?: LiquityTransactionOverrides
   ) {
     const address = this.requireAddress();
-    const finalTrove = initialTrove.addCollateral(deposit.pendingCollateralGain);
+    const initialTrove = trove ?? (await this.getTrove());
+    const finalTrove = initialTrove.addCollateral(
+      (deposit ?? (await this.getStabilityDeposit())).pendingCollateralGain
+    );
 
     return this.poolManager.withdrawFromSPtoCDP(
       address,
-      await this._findHint(finalTrove, Decimal.from(price), address),
+      await this._findHint(finalTrove, hintOptionalParams, address),
       { ...overrides }
     );
   }
@@ -790,11 +857,13 @@ export class Liquity {
 
   async _findRedemptionHints(
     exchangedQui: Decimal,
-    price: Decimal
+    { price, ...rest }: HintedMethodOptionalParams = {}
   ): Promise<[string, string, Decimal]> {
     if (!Liquity.useHint) {
       return [AddressZero, AddressZero, Decimal.INFINITY];
     }
+
+    price = price ?? (await this.getPrice());
 
     const {
       firstRedemptionHint,
@@ -806,7 +875,7 @@ export class Liquity {
     return [
       firstRedemptionHint,
       collateralRatio.nonZero
-        ? await this._findHintForCollateralRatio(collateralRatio, price, AddressZero)
+        ? await this._findHintForCollateralRatio(collateralRatio, { price, ...rest }, AddressZero)
         : AddressZero,
       collateralRatio
     ];
@@ -814,17 +883,16 @@ export class Liquity {
 
   async redeemCollateral(
     exchangedQui: Decimalish,
-    price: Decimalish,
+    optionalParams: HintedMethodOptionalParams = {},
     overrides?: LiquityTransactionOverrides
   ) {
     exchangedQui = Decimal.from(exchangedQui);
-    price = Decimal.from(price);
 
     const [
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR
-    ] = await this._findRedemptionHints(exchangedQui, price);
+    ] = await this._findRedemptionHints(exchangedQui, optionalParams);
 
     return this.cdpManager.redeemCollateral(
       exchangedQui.bigNumber,
@@ -842,34 +910,36 @@ export class Liquity {
       ...overrides
     });
 
-    return cdps.map(
-      ({ owner, coll, debt, stake, snapshotCLVDebt, snapshotETH }) =>
-        [
-          owner,
-
-          new TroveWithPendingRewards({
-            collateral: new Decimal(coll),
-            debt: new Decimal(debt),
-            stake: new Decimal(stake),
-
-            snapshotOfTotalRedistributed: {
-              collateral: new Decimal(snapshotETH),
-              debt: new Decimal(snapshotCLVDebt)
-            }
-          })
-        ] as const
-    );
+    return mapMultipleSortedCDPsToTroves(cdps);
   }
 
-  async _getFirstTroveAddress() {
-    const first = await this.sortedCDPs.getFirst();
+  async getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: LiquityCallOverrides) {
+    const cdps = await this.multiCDPgetter.getMultipleSortedCDPs(startIdx, numberOfTroves, {
+      ...overrides
+    });
 
-    return first !== AddressZero ? first : undefined;
-  }
-
-  async _getNextTroveAddress(address: string) {
-    const next = await this.sortedCDPs.getNext(address);
-
-    return next !== AddressZero ? next : undefined;
+    return mapMultipleSortedCDPsToTroves(cdps);
   }
 }
+
+type Resolved<T> = T extends Promise<infer U> ? U : T;
+type MultipleSortedCDPs = Resolved<ReturnType<MultiCDPGetter["getMultipleSortedCDPs"]>>;
+
+const mapMultipleSortedCDPsToTroves = (cdps: MultipleSortedCDPs) =>
+  cdps.map(
+    ({ owner, coll, debt, stake, snapshotCLVDebt, snapshotETH }) =>
+      [
+        owner,
+
+        new TroveWithPendingRewards({
+          collateral: new Decimal(coll),
+          debt: new Decimal(debt),
+          stake: new Decimal(stake),
+
+          snapshotOfTotalRedistributed: {
+            collateral: new Decimal(snapshotETH),
+            debt: new Decimal(snapshotCLVDebt)
+          }
+        })
+      ] as const
+  );

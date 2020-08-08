@@ -17,5 +17,5 @@ test("there's no smoke", async () => {
 
   expect(queryByText(/open new trove/i)).not.toBeInTheDocument();
   expect(await findByText(/my liquity trove/i)).toBeInTheDocument();
-  expect(await findByText(/1\-1 of 1/i)).toBeInTheDocument();
+  expect(await findByText(/1-1 of 1/i)).toBeInTheDocument();
 });
