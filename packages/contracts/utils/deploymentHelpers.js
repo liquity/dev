@@ -33,6 +33,9 @@ const deployLiquityBuidler = async () => {
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
 
+  const sizeList_18orLess = await SortedCDPs.new()
+  const sizeList_19orGreater = await SortedCDPs.new()
+
   DefaultPool.setAsDeployed(defaultPool)
   PriceFeed.setAsDeployed(priceFeed)
   CLVToken.setAsDeployed(clvToken)
@@ -44,6 +47,9 @@ const deployLiquityBuidler = async () => {
   FunctionCaller.setAsDeployed(functionCaller)
   BorrowerOperations.setAsDeployed(borrowerOperations)
 
+  SortedCDPs.setAsDeployed(sizeList_18orLess)
+  SortedCDPs.setAsDeployed(sizeList_19orGreater)
+
   const contracts = {
     priceFeed,
     clvToken,
@@ -54,7 +60,10 @@ const deployLiquityBuidler = async () => {
     stabilityPool,
     defaultPool,
     functionCaller,
-    borrowerOperations
+    borrowerOperations,
+
+    sizeList_18orLess,
+    sizeList_19orGreater
   }
   return contracts
 }
@@ -71,6 +80,9 @@ const deployLiquityTruffle = async () => {
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
 
+  SortedCDPs.setAsDeployed(sizeList_18orLess)
+  SortedCDPs.setAsDeployed(sizeList_19orGreater)
+
   const contracts = {
     priceFeed,
     clvToken,
@@ -81,7 +93,10 @@ const deployLiquityTruffle = async () => {
     stabilityPool,
     defaultPool,
     functionCaller,
-    borrowerOperations
+    borrowerOperations,
+
+    sizeList_18orLess,
+    sizeList_19orGreater
   }
 
   return contracts
@@ -98,7 +113,9 @@ const getAddresses = (contracts) => {
     StabilityPool: contracts.stabilityPool.address,
     ActivePool: contracts.activePool.address,
     DefaultPool: contracts.defaultPool.address,
-    FunctionCaller: contracts.functionCaller.address
+    FunctionCaller: contracts.functionCaller.address,
+    SizeList_18orLess: contracts.sizeList_18orLess.address,
+    SizeList_19orGreater: contracts.sizeList_19orGreater.address
   }
 }
 
@@ -116,9 +133,16 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.poolManager.setActivePool(addresses.ActivePool)
   await contracts.poolManager.setDefaultPool(addresses.DefaultPool)
 
-  // set CDPManager addr in SortedCDPs
+  // Set CDPManager and Borrower addr in full sorted list
   await contracts.sortedCDPs.setCDPManager(addresses.CDPManager)
   await contracts.sortedCDPs.setBorrowerOperations(addresses.BorrowerOperations)
+
+   // Set CDPManager and Borrower addr in the size range lists
+  await contracts.sizeList_18orLess.setCDPManager(addresses.CDPManager)
+  await contracts.sizeList_18orLess.setBorrowerOperations(addresses.BorrowerOperations)
+  await contracts.sizeList_19orGreater.setCDPManager(addresses.CDPManager)
+  await contracts.sizeList_19orGreater.setBorrowerOperations(addresses.BorrowerOperations)
+
 
   // set contract addresses in the FunctionCaller 
   await contracts.functionCaller.setCDPManagerAddress(addresses.CDPManager)
@@ -136,6 +160,9 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.cdpManager.setDefaultPool(addresses.DefaultPool)
   await contracts.cdpManager.setStabilityPool(addresses.StabilityPool)
   await contracts.cdpManager.setBorrowerOperations(addresses.BorrowerOperations)
+
+  await contracts.cdpManager.setSizeList(18, addresses.SizeList_18orLess)
+  await contracts.cdpManager.setSizeList(19, addresses.SizeList_19orGreater)
 
   // set contracts in BorrowerOperations 
   await contracts.borrowerOperations.setSortedCDPs(addresses.SortedCDPs)

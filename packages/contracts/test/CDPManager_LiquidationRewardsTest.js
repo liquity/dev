@@ -48,8 +48,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
   it("redistribution: A, B Open. B Liquidated. C, D Open. D Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {
     // A, B open trove
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, bob, { from: bob, value: mv._1_Ether })
 
     // Price drops t0 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -66,8 +66,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // C, D open troves
-    await borrowerOperations.openLoan(0, carol, { from: carol, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, carol, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, dennis, dennis, { from: dennis, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -107,9 +107,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
   it("redistribution: A, B, C Open. C Liquidated. D, E, F Open. F Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {
     // A, B C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, carol, { from: carol, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -126,9 +126,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // D, E, F open troves
-    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, erin, { from: erin, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, freddy, { from: freddy, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, dennis, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, erin, erin, { from: erin, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, freddy, freddy, { from: freddy, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -180,8 +180,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
   it("redistribution: Sequence of alternate opening/liquidation: final surviving trove has ETH from all previously liquidated troves", async () => {
     // A, B  open troves
-    await borrowerOperations.openLoan(mv._1e18, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._1e18, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._1e18, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._1e18, bob, bob, { from: bob, value: mv._1_Ether })
 
     // Price drops to 1 $/E
     await priceFeed.setPrice(mv._1e18)
@@ -194,7 +194,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     // Price bounces back to 200 $/E
     await priceFeed.setPrice(mv._200e18)
     // C, opens trove
-    await borrowerOperations.openLoan(mv._1e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._1e18, carol, carol, { from: carol, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._1e18)
@@ -207,7 +207,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     // Price bounces back to 200 $/E
     await priceFeed.setPrice(mv._200e18)
     // D opens trove
-    await borrowerOperations.openLoan(mv._1e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._1e18, dennis, dennis, { from: dennis, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._1e18)
@@ -220,7 +220,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     // Price bounces back to 200 $/E
     await priceFeed.setPrice(mv._200e18)
     // E opens trove
-    await borrowerOperations.openLoan(mv._1e18, erin, { from: erin, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._1e18, erin, erin, { from: erin, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._1e18)
@@ -233,7 +233,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     // Price bounces back to 200 $/E
     await priceFeed.setPrice(mv._200e18)
     // F opens trove
-    await borrowerOperations.openLoan(mv._1e18, freddy, { from: freddy, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._1e18, freddy, freddy, { from: freddy, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._1e18)
@@ -284,9 +284,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
   it("redistribution: A,B,C Open. Liq(C). B adds coll. Liq(A). B acquires all coll and debt", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, carol, { from: carol, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -300,10 +300,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     //Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, bob, { from: bob, value: mv._1_Ether })
 
     // Alice withdraws 100 CLV
-    await borrowerOperations.withdrawCLV(mv._100e18, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(mv._100e18, alice, alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -328,9 +328,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
   it("redistribution: A,B,C Open. Liq(C). B tops up coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, carol, { from: carol, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -344,10 +344,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     //Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, bob, { from: bob, value: mv._1_Ether })
 
     // D opens trove
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, dennis, dennis, { from: dennis, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -400,10 +400,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). C tops up. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, carol, carol, { from: carol, value: _998_Ether })
+    await borrowerOperations.openLoan(mv._1e23, dennis, dennis, { from: dennis, value: mv._1000_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -430,14 +430,14 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.equal(carol_ETHReward_1.toString(), _998_Ether)
 
     //Carol adds 1 ETH to her trove, brings it to 1997 total coll
-    await borrowerOperations.addColl(carol, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.addColl(carol, carol, carol, { from: carol, value: mv._1_Ether })
 
     //Expect 2001 ETH in system now
     const entireSystemColl_2 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_2, '2001000000000000000000')
 
     // E opens with another 2001 ETH
-    await borrowerOperations.openLoan(mv._2e23, erin, { from: erin, value: '2001000000000000000000' })
+    await borrowerOperations.openLoan(mv._2e23, erin, erin, { from: erin, value: '2001000000000000000000' })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -486,10 +486,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). A, B, C top up. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, carol, carol, { from: carol, value: _998_Ether })
+    await borrowerOperations.openLoan(mv._1e23, dennis, dennis, { from: dennis, value: mv._1000_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -518,16 +518,16 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     /* Alice, Bob, Carol each adds 1 ETH to their troves, 
     bringing them to 3,3, 1997 total coll each. */
 
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.addColl(carol, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.addColl(alice, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.addColl(carol, carol, carol, { from: carol, value: mv._1_Ether })
 
     //Expect 2003 ETH in system now
     const entireSystemColl_2 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_2, '2003000000000000000000')
 
     // E opens with another 2003 ETH
-    await borrowerOperations.openLoan(mv._2e23, erin, { from: erin, value: '2003000000000000000000' })
+    await borrowerOperations.openLoan(mv._2e23, erin, erin, { from: erin, value: '2003000000000000000000' })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -576,9 +576,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
   it("redistribution: A,B,C Open. Liq(C). B withdraws coll. Liq(A). B acquires all coll and debt", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, carol, { from: carol, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -592,10 +592,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     //Bob withdraws 0.5 ETH from his trove
-    await borrowerOperations.withdrawColl(mv._5e17, bob, { from: bob })
+    await borrowerOperations.withdrawColl(mv._5e17, bob, bob, { from: bob })
 
     // Alice withdraws 100 CLV
-    await borrowerOperations.withdrawCLV(mv._100e18, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(mv._100e18, alice, alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -620,9 +620,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
   it("redistribution: A,B,C Open. Liq(C). B withdraws coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, carol, { from: carol, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -636,10 +636,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     //Bob  withdraws 0.5 ETH from his trove
-    await borrowerOperations.withdrawColl(mv._5e17, bob, { from: bob })
+    await borrowerOperations.withdrawColl(mv._5e17, bob, bob, { from: bob })
 
     // D opens trove
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, dennis, dennis, { from: dennis, value: mv._1_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -692,10 +692,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). C withdraws some coll. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, carol, carol, { from: carol, value: _998_Ether })
+    await borrowerOperations.openLoan(mv._1e23, dennis, dennis, { from: dennis, value: mv._1000_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -722,14 +722,14 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.equal(carol_ETHReward_1.toString(), _998_Ether)
 
     //Carol wthdraws 1 ETH from her trove, brings it to 1995 total coll
-    await borrowerOperations.withdrawColl(mv._1_Ether, carol, { from: carol })
+    await borrowerOperations.withdrawColl(mv._1_Ether, carol, carol, { from: carol })
 
     //Expect 1999 ETH in system now
     const entireSystemColl_2 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_2, '1999000000000000000000')
 
     // E opens with another 1999 ETH
-    await borrowerOperations.openLoan(mv._2e23, erin, { from: erin, value: '1999000000000000000000' })
+    await borrowerOperations.openLoan(mv._2e23, erin, erin, { from: erin, value: '1999000000000000000000' })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -779,10 +779,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). A, B, C withdraw. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, carol, carol, { from: carol, value: _998_Ether })
+    await borrowerOperations.openLoan(mv._1e23, dennis, dennis, { from: dennis, value: mv._1000_Ether })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -810,9 +810,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
     /* Alice, Bob, Carol each withdraw 0.5 ETH to their troves, 
     bringing them to 1.5, 1.5, 1995.5 total coll each. */
-    await borrowerOperations.withdrawColl(mv._5e17, alice, { from: alice })
-    await borrowerOperations.withdrawColl(mv._5e17, bob, { from: bob })
-    await borrowerOperations.withdrawColl(mv._5e17, carol, { from: carol })
+    await borrowerOperations.withdrawColl(mv._5e17, alice, alice, { from: alice })
+    await borrowerOperations.withdrawColl(mv._5e17, bob, bob, { from: bob })
+    await borrowerOperations.withdrawColl(mv._5e17, carol, carol, { from: carol })
 
     const alice_Coll_1 = ((await cdpManager.CDPs(alice))[1]
       .add(await cdpManager.getPendingETHReward(alice)))
@@ -835,7 +835,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.equal(entireSystemColl_2, '1998500000000000000000')
 
     // E opens with another 1998.5 ETH
-    await borrowerOperations.openLoan(mv._2e23, erin, { from: erin, value: '1998500000000000000000' })
+    await borrowerOperations.openLoan(mv._2e23, erin, erin, { from: erin, value: '1998500000000000000000' })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(mv._100e18)
@@ -884,9 +884,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
  // https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
   it("redistribution, all operations: A,B,C open. Liq(A). D opens. B adds, C withdraws. Liq(B). E & F open. D adds. Liq(F). All 1 ETH operations. Distributes correct rewards", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, carol, { from: carol, value: mv._1_Ether })
 
     // Price drops to 1 $/E
     await priceFeed.setPrice(mv._1e18)
@@ -900,13 +900,13 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(mv._1000e18)
 
     // D opens trove
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, dennis, dennis, { from: dennis, value: mv._1_Ether })
 
     //Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, bob, { from: bob, value: mv._1_Ether })
 
     //Carol  withdraws 1 ETH from her trove
-    await borrowerOperations.withdrawColl(mv._1_Ether, carol, { from: carol })
+    await borrowerOperations.withdrawColl(mv._1_Ether, carol, carol, { from: carol })
 
     // Price drops
     await priceFeed.setPrice(mv._1e18)
@@ -920,11 +920,11 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(mv._1000e18)
 
     // E and F open troves
-    await borrowerOperations.openLoan(mv._100e18, erin, { from: erin, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, freddy, { from: freddy, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, erin, erin, { from: erin, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, freddy, freddy, { from: freddy, value: mv._1_Ether })
 
     // D tops up
-    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.addColl(dennis, dennis, dennis, { from: dennis, value: mv._1_Ether })
 
     // Price drops to 1
     await priceFeed.setPrice(mv._1e18)
@@ -974,9 +974,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     B: 8901 ETH
     C: 23.902 ETH
     */
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: '450000000000000000000' })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: '8901000000000000000000' })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: '23902000000000000000' })
+    await borrowerOperations.openLoan(mv._100e18, alice, alice, { from: alice, value: '450000000000000000000' })
+    await borrowerOperations.openLoan(mv._100e18, bob, bob, { from: bob, value: '8901000000000000000000' })
+    await borrowerOperations.openLoan(mv._100e18, carol, carol, { from: carol, value: '23902000000000000000' })
 
     // Price drops 
     await priceFeed.setPrice('1')
@@ -994,13 +994,13 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(mv._1e27)
 
     // D opens trove: 0.035 ETH
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: '35000000000000000' })
+    await borrowerOperations.openLoan(mv._100e18, dennis, dennis, { from: dennis, value: '35000000000000000' })
    
     // Bob adds 11.33909 ETH to his trove
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: '11339090000000000000' })
+    await borrowerOperations.addColl(bob, bob, bob, { from: bob, value: '11339090000000000000' })
 
     // Carol withdraws 15 ETH from her trove
-    await borrowerOperations.withdrawColl(mv._15_Ether, carol, { from: carol })
+    await borrowerOperations.withdrawColl(mv._15_Ether, carol, carol, { from: carol })
 
     // Price drops
     await priceFeed.setPrice('1')
@@ -1021,11 +1021,11 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     E: 10000 ETH
     F: 0.0007 ETH
     */
-    await borrowerOperations.openLoan(mv._100e18, erin, { from: erin, value: mv._1e22 })
-    await borrowerOperations.openLoan(mv._100e18, freddy, { from: freddy, value: '700000000000000' })
+    await borrowerOperations.openLoan(mv._100e18, erin, erin, { from: erin, value: mv._1e22 })
+    await borrowerOperations.openLoan(mv._100e18, freddy, freddy, { from: freddy, value: '700000000000000' })
 
     // D tops up
-    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.addColl(dennis, dennis, dennis, { from: dennis, value: mv._1_Ether })
 
     // Price drops 
     await priceFeed.setPrice('1')

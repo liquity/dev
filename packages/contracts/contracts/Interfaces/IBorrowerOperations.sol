@@ -35,15 +35,15 @@ interface IBorrowerOperations {
 
     function openLoan(uint _CLVAmount, address _hint,  address _sizeListHint) external payable;
 
-    function addColl(address _user, address _hint) external payable;
+    function addColl(address _user, address _hint, address _sizeListHint) external payable;
 
-    function withdrawColl(uint _amount, address _hint) external;
+    function withdrawColl(uint _amount, address _hint, address _sizeListHint) external;
 
-    function withdrawCLV(uint _amount, address _hint) external;
+    function withdrawCLV(uint _amount, address _hint, address _sizeListHint) external;
 
-    function repayCLV(uint _amount, address _hint) external;
+    function repayCLV(uint _amount, address _hint, address _sizeListHint) external;
 
     function closeLoan() external;
 
-    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable;
+    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint, address _sizeListHint) external payable;
 }

@@ -106,20 +106,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
       }
     })
 
-
-    // addCDPOwnerToArray
-    it("addCDPOwnerToArray(): reverts when called by an account that is not BorrowerOperations", async () => {
-      // Attempt call from alice
-      try {
-        txAlice = await cdpManager.addCDPOwnerToArray(bob, { from: alice })
-        assert.fail(txAlice)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the BorrowerOperations contract")
-      }
-    })
-
-
     // setCDPStatus
     it("setCDPStatus(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice

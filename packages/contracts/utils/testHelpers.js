@@ -84,6 +84,7 @@ const MoneyValues = {
   _5000e18: web3.utils.toWei('5000', 'ether'),
   _8000e18: web3.utils.toWei('8000', 'ether'),
   _1e22: web3.utils.toWei('10000', 'ether'),
+  _2e22: web3.utils.toWei('20000', 'ether'),
   _1e23: web3.utils.toWei('100000', 'ether'),
   _2e23: web3.utils.toWei('200000', 'ether'),
   _1e24: web3.utils.toWei('1000000', 'ether'),
@@ -330,7 +331,7 @@ class TestHelper {
   static async openLoan_allAccounts(accounts, borrowerOperations, ETHAmount, CLVAmount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await borrowerOperations.openLoan(CLVAmount, account, { from: account, value: ETHAmount })
+      const tx = await borrowerOperations.openLoan(CLVAmount, account, account, { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -341,7 +342,7 @@ class TestHelper {
     const gasCostList = []
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
-      const tx = await borrowerOperations.openLoan(CLVAmount, account, { from: account, value: randCollAmount })
+      const tx = await borrowerOperations.openLoan(CLVAmount, account, account, { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -353,7 +354,7 @@ class TestHelper {
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
       const proportionalCLV = (web3.utils.toBN(proportion)).mul(web3.utils.toBN(randCollAmount))
-      const tx = await borrowerOperations.openLoan(proportionalCLV, account, { from: account, value: randCollAmount })
+      const tx = await borrowerOperations.openLoan(proportionalCLV, account, account, { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -371,7 +372,7 @@ class TestHelper {
       const randCLVProportion = this.randAmountInWei(minCLVProportion, maxCLVProportion)
       const proportionalCLV = (web3.utils.toBN(randCLVProportion)).mul(web3.utils.toBN(randCollAmount).div(_1e18))
 
-      const tx = await borrowerOperations.openLoan(proportionalCLV, account, { from: account, value: randCollAmount })
+      const tx = await borrowerOperations.openLoan(proportionalCLV, account, account, { from: account, value: randCollAmount })
 
       if (logging === true && tx.receipt.status) {
         i++
@@ -388,7 +389,7 @@ class TestHelper {
     const gasCostList = []
     for (const account of accounts) {
       const randCLVAmount = this.randAmountInWei(minCLV, maxCLV)
-      const tx = await borrowerOperations.openLoan(randCLVAmount, account, { from: account, value: ETHAmount })
+      const tx = await borrowerOperations.openLoan(randCLVAmount, account, account, { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -411,7 +412,7 @@ class TestHelper {
     for (const account of accounts) {
       const CLVAmount = (maxCLVAmount - i).toString()
       const CLVAmountWei = web3.utils.toWei(CLVAmount, 'ether')
-      const tx = await borrowerOperations.openLoan(CLVAmountWei, account, { from: account, value: ETHAmount })
+      const tx = await borrowerOperations.openLoan(CLVAmountWei, account, account, { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
       i += 1
@@ -490,7 +491,7 @@ class TestHelper {
   static async addColl_allAccounts(accounts, borrowerOperations, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await borrowerOperations.addColl(account, account, { from: account, value: amount })
+      const tx = await borrowerOperations.addColl(account, account, account, { from: account, value: amount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -501,7 +502,7 @@ class TestHelper {
     const gasCostList = []
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(min, max)
-      const tx = await borrowerOperations.addColl(account, account, { from: account, value: randCollAmount })
+      const tx = await borrowerOperations.addColl(account, account, account, { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -512,7 +513,7 @@ class TestHelper {
   static async withdrawColl_allAccounts(accounts, borrowerOperations, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await borrowerOperations.withdrawColl(amount, account, { from: account })
+      const tx = await borrowerOperations.withdrawColl(amount, account, account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -523,7 +524,7 @@ class TestHelper {
     const gasCostList = []
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(min, max)
-      const tx = await borrowerOperations.withdrawColl(randCollAmount, account, { from: account })
+      const tx = await borrowerOperations.withdrawColl(randCollAmount, account, account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
       // console.log("gasCostlist length is " + gasCostList.length)
@@ -534,7 +535,7 @@ class TestHelper {
   static async withdrawCLV_allAccounts(accounts, borrowerOperations, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await borrowerOperations.withdrawCLV(amount, account, { from: account })
+      const tx = await borrowerOperations.withdrawCLV(amount, account, account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -546,7 +547,7 @@ class TestHelper {
     for (const account of accounts) {
       const randCLVAmount = this.randAmountInWei(min, max)
 
-      const tx = await borrowerOperations.withdrawCLV(randCLVAmount, account, { from: account })
+      const tx = await borrowerOperations.withdrawCLV(randCLVAmount, account, account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -556,7 +557,7 @@ class TestHelper {
   static async repayCLV_allAccounts(accounts, borrowerOperations, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await borrowerOperations.repayCLV(amount, account, { from: account })
+      const tx = await borrowerOperations.repayCLV(amount, account, account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -568,7 +569,7 @@ class TestHelper {
     for (const account of accounts) {
       const randCLVAmount = this.randAmountInWei(min, max)
 
-      const tx = await borrowerOperations.repayCLV(randCLVAmount, account, { from: account })
+      const tx = await borrowerOperations.repayCLV(randCLVAmount, account, account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -646,8 +647,8 @@ class TestHelper {
     for (const account of accounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
 
-      await borrowerOperations.addColl(account, account, { from: account, value: coll })
-      await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
+      await borrowerOperations.addColl(account, account, account, { from: account, value: coll })
+      await borrowerOperations.withdrawCLV('200000000000000000000', account, account, { from: account })
 
       amountFinney += 10
     }
@@ -701,7 +702,7 @@ class TestHelper {
     const gasCostList = []
     for (const account of accounts) {
 
-      const tx = await poolManager.withdrawFromSPtoCDP(account, account, { from: account })
+      const tx = await poolManager.withdrawFromSPtoCDP(account, account, account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }

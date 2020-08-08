@@ -53,6 +53,21 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     event CDPCreated(address indexed _user, uint arrayIndex);
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
 
+     /* --- LocalVariable Structs ---
+
+    This struct is used to hold local memory variables inside the Borrower Operations functions,
+    in order to avoid the error: "CompilerError: Stack too deep". */
+    struct LocalVariables_BorrowerOps {
+        address user;
+        uint price;
+        uint coll;
+        uint debt;
+        uint stake;
+        uint newColl;
+        uint newDebt;
+        uint newICR;
+    }
+
     // --- Dependency setters --- 
 
     function setCDPManager(address _cdpManagerAddress) external onlyOwner {
@@ -275,45 +290,47 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     /* If ether is sent, the operation is considered as an increase in ether, and the first parameter 
     _collWithdrawal is ignored  */
     function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint, address _sizeListHint) external payable {
-        address user = _msgSender();
-        _requireCDPisActive(user);
+        LocalVariables_BorrowerOps memory L;
+        
+        L.user = _msgSender();
+        _requireCDPisActive(L.user);
         _requireNotInRecoveryMode();
         
-        uint price = priceFeed.getPrice();
+        L.price = priceFeed.getPrice();
      
-        cdpManager.applyPendingRewards(user);
+        cdpManager.applyPendingRewards(L.user);
 
         // If Ether is sent, grab the amount. Otherwise, grab the specified collateral withdrawal
         int collChange = (msg.value != 0) ? int(msg.value) : -int(_collWithdrawal);
 
-        uint debt = cdpManager.getCDPDebt(user);
-        uint coll = cdpManager.getCDPColl(user);
+        L.debt = cdpManager.getCDPDebt(L.user);
+        L.coll = cdpManager.getCDPColl(L.user);
        
-        uint newICR = _getNewICRFromTroveChange(coll, debt, collChange, _debtChange, price);
+        L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, collChange, _debtChange, L.price);
        
         // --- Checks --- 
-        _requireICRisAboveMCR(newICR);
-        _requireNewTCRisAboveCCR(collChange, _debtChange, price);
-        _requireCLVRepaymentAllowed(debt, _debtChange);
-        _requireCollAmountIsWithdrawable(coll, _collWithdrawal, price);
+        _requireICRisAboveMCR(L.newICR);
+        _requireNewTCRisAboveCCR(collChange, _debtChange, L.price);
+        _requireCLVRepaymentAllowed(L.debt, _debtChange);
+        _requireCollAmountIsWithdrawable(L.coll, _collWithdrawal, L.price);
 
         //  --- Effects --- 
-        (uint newColl, uint newDebt) = _updateTroveFromAdjustment(user, collChange, _debtChange);
+        (L.newColl, L.newDebt) = _updateTroveFromAdjustment(L.user, collChange, _debtChange);
         
-        uint stake = cdpManager.updateStakeAndTotalStakes(user);
+        L.stake = cdpManager.updateStakeAndTotalStakes(L.user);
        
         // Close a CDP if it is empty, otherwise, re-insert it in the sorted list
-        if (newDebt == 0 && newColl == 0) {
-            cdpManager.closeCDP(user);
+        if (L.newDebt == 0 && L.newColl == 0) {
+            cdpManager.closeCDP(L.user);
         } else {
-            sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
-            cdpManager.reInsertToSizeList(user, newICR, price, newColl, _sizeListHint);
+            sortedCDPs.reInsert(L.user, L.newICR, L.price, _hint, _hint);
+            cdpManager.reInsertToSizeList(L.user, L.newICR, L.price, L.newColl, _sizeListHint);
         }
 
-        //  --- Interactions ---
-        _moveTokensAndETHfromAdjustment(user, collChange, _debtChange);   
+        //  --- Move ETH/Tokens ---
+        _moveTokensAndETHfromAdjustment(L.user, collChange, _debtChange);   
     
-        emit CDPUpdated(user, newDebt, newColl, stake); 
+        emit CDPUpdated(L.user, L.newDebt, L.newColl, L.stake); 
     }
 
     // --- Helper functions --- 

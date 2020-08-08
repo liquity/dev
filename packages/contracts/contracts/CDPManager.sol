@@ -80,8 +80,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint stake;
         Status status;
         uint arrayIndex;
-        uint sizeRange;
         uint sizeArrayIndex;
+        uint sizeRange;
     }
 
     mapping (address => CDP) public CDPs;
@@ -258,6 +258,11 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         return allTrovesArray.length;
     }
 
+    function getSizeArrayCount(uint _sizeRange) external view returns (uint) {
+        address[] storage sizeArray =  _getSizeArray( _sizeRange);
+        return sizeArray.length;
+    }
+
       function getSizeList(uint _sizeRange) external view returns (ISortedCDPs) {
         return _getSizeList(_sizeRange);
     }
@@ -278,9 +283,10 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     }
  
     function _getSizeRange(uint _coll) internal pure returns (uint) {
-        if (_coll < 1e18) { 
+
+        if (_coll < 1e19) {  // 
             return 18;
-        } else if (_coll >= 1e18) {
+        } else if (_coll >= 1e19) {
             return 19;
         }
     }
@@ -460,20 +466,20 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         }
     }
 
-    /* Closes a maximum number of n multiple under-collateralized CDPs, 
+    /* Closes a maximum number of n multiple under-collateralized CDPs,
     starting from the one with the lowest collateral ratio */
     function liquidateCDPs(uint _n) external {
-        liquidateTrovesInSequence(_n, sortedCDPs);
+        _liquidateTrovesInSequence(_n, sortedCDPs);
     }
 
-    function liquidateTrovesInRange(uint _n, uint sizeRange) external {
-        _requireIsValidSizeRange(sizeRange);
-        ISortedCDPs sizeList = _getSizeList(sizeRange);
+    function liquidateTrovesInRange(uint _n, uint _sizeRange) external {
+        _requireIsValidSizeRange(_sizeRange);
+        ISortedCDPs sizeList = _getSizeList(_sizeRange);
 
-        liquidateTrovesInSequence( _n, sizeList);
+        _liquidateTrovesInSequence(_n, sizeList);
     }
     
-    function liquidateTrovesInSequence(uint _n, ISortedCDPs _sortedTroveList) internal {
+    function _liquidateTrovesInSequence(uint _n, ISortedCDPs _sortedTroveList) internal {
         LocalVariables_OuterLiquidationFunction memory L;
 
         LiquidationTotals memory T;
@@ -530,14 +536,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
                 L.entireSystemDebt = L.entireSystemDebt.sub(V.debtToOffset);
                 L.entireSystemColl = L.entireSystemColl.sub(V.collToSendToSP);
 
-                // Tally gas compensation
-                T.totalGasCompensation = T.totalGasCompensation.add(V.gasCompensation);
-
-                // Tally the debt and coll to offset and redistribute
-                T.totalDebtToOffset = T.totalDebtToOffset.add(V.debtToOffset);
-                T.totalCollToSendToSP = T.totalCollToSendToSP.add(V.collToSendToSP);
-                T.totalDebtToRedistribute = T.totalDebtToRedistribute.add(V.debtToRedistribute);
-                T.totalCollToRedistribute = T.totalCollToRedistribute.add(V.collToRedistribute);
+                // Add liquidation values to their respective running totals
+                T = _addLiquidationValuesToTotals(T, V);
 
                 if (V.partialAddr != address(0)) {
                     T.partialAddr = V.partialAddr;
@@ -548,20 +548,13 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
-                
                 V = _liquidateNormalMode(L.user, L.ICR, _price, L.remainingCLVInPool);
 
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
 
-                // Tally gas compensation
-                T.totalGasCompensation = T.totalGasCompensation.add(V.gasCompensation);
+                // Add liquidation values to their respective running totals
+                T = _addLiquidationValuesToTotals(T, V);
 
-                // Tally the debt and coll to offset and redistribute
-                T.totalDebtToOffset = T.totalDebtToOffset.add(V.debtToOffset);
-                T.totalCollToSendToSP = T.totalCollToSendToSP.add(V.collToSendToSP);
-                T.totalDebtToRedistribute = T.totalDebtToRedistribute.add(V.debtToRedistribute);
-                T.totalCollToRedistribute = T.totalCollToRedistribute.add(V.collToRedistribute);
-                
             }  else break;  // break if the loop reaches a CDP with ICR >= MCR
 
             // Break the loop if it has reached the first CDP in the sorted list
@@ -574,10 +567,10 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     returns(LiquidationTotals memory T)
     {
         LocalVariables_LiquidationSequence memory L;
-
         LiquidationValues memory V;
 
         L.remainingCLVInPool = _CLVInPool;
+
         L.i = 0;
         while (L.i < _n) {
             L.user = _sortedTroveList.getLast();
@@ -588,14 +581,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
 
-                // Tally gas compensation
-                T.totalGasCompensation = T.totalGasCompensation.add(V.gasCompensation);
-
-                // Tally the debt and coll to offset and redistribute
-                T.totalDebtToOffset = T.totalDebtToOffset.add(V.debtToOffset);
-                T.totalCollToSendToSP = T.totalCollToSendToSP.add(V.collToSendToSP);
-                T.totalDebtToRedistribute = T.totalDebtToRedistribute.add(V.debtToRedistribute);
-                T.totalCollToRedistribute =T.totalCollToRedistribute .add(V.collToRedistribute);
+                // Add liquidation values to their respective running totals
+                T = _addLiquidationValuesToTotals(T, V);
 
             } else break;  // break if the loop reaches a CDP with ICR >= MCR
             
@@ -603,6 +590,21 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             if (L.user == sortedCDPs.getFirst()) {break;}
             L.i++;
         }
+    }
+
+    function _addLiquidationValuesToTotals(LiquidationTotals memory T1, LiquidationValues memory V) 
+    internal pure returns(LiquidationTotals memory T2) {
+
+        // Tally gas compensation
+        T2.totalGasCompensation = T1.totalGasCompensation.add(V.gasCompensation);
+
+        // Tally the debt and coll to offset and redistribute
+        T2.totalDebtToOffset = T1.totalDebtToOffset.add(V.debtToOffset);
+        T2.totalCollToSendToSP = T1.totalCollToSendToSP.add(V.collToSendToSP);
+        T2.totalDebtToRedistribute = T1.totalDebtToRedistribute.add(V.debtToRedistribute);
+        T2.totalCollToRedistribute =T1.totalCollToRedistribute .add(V.collToRedistribute);
+
+        return T2;
     }
 
     // Update coll, debt, stake and snapshot of partially liquidated trove, and insert it back to the list
@@ -1036,12 +1038,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     function _closeCDP(address _user) internal {
         CDPs[_user].status = Status.closed;
-        CDPs[_user].coll = 0;
-        CDPs[_user].debt = 0;
-        
-        rewardSnapshots[_user].ETH = 0;
-        rewardSnapshots[_user].CLVDebt = 0;
- 
+      
         // Remove from full sorted list and array
         sortedCDPs.remove(_user);
         _removeFromAllTrovesArray(_user);
@@ -1051,6 +1048,17 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         ISortedCDPs sizeList = _getSizeList(CDPs[_user].sizeRange);
         sizeList.remove(_user);
         _removeFromSizeArray(_user, sizeRange);
+
+        // Zero the trove's properties
+        CDPs[_user].coll = 0;
+        CDPs[_user].debt = 0;
+        CDPs[_user].sizeRange = 0;
+        CDPs[_user].arrayIndex = 0;
+        CDPs[_user].sizeArrayIndex = 0;
+
+        // Zero the trove's reward snapshots
+        rewardSnapshots[_user].ETH = 0;
+        rewardSnapshots[_user].CLVDebt = 0;
     }
 
     // Update the snapshots of system stakes & system collateral
@@ -1102,7 +1110,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
             // Remove from current sizeList, and delete from size array
             currentSizeList.remove(_user);
-            _removeFromSizeArray(_user, newSizeRange);
+            _removeFromSizeArray(_user, currentSizeRange);
 
            _insertToSizeList(_user, _newICR, _price, newSizeRange, _hint);
         }
@@ -1115,11 +1123,13 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     function _insertToSizeList(address _user, uint _newICR, uint _price, uint _sizeRange, address _hint) internal {
         ISortedCDPs newSizeList = _getSizeList(_sizeRange);
-        address[] storage newSizeArray = _getSizeArray(_sizeRange);
+    
+        // Record the sizeRange on the trove's struct
+        CDPs[_user].sizeRange = _sizeRange;
 
-        // Insert to new sizeList, push to new array, and record new size array index on trove struct
+        // Insert to new sizeList, push address to new array, and record new size array index on the trove's struct
         newSizeList.insert(_user, _newICR, _price, _hint, _hint);
-        CDPs[_user].sizeArrayIndex = newSizeArray.push(_user).sub(1);
+       _addToSizeArray(_user, _sizeRange);
     }
 
 
@@ -1133,9 +1143,9 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     }
 
     function _addToSizeArray(address _user, uint _sizeRange) internal returns (uint) {
-        address[] storage sizeArray = rangeToSizeArray[_sizeRange];
-        uint index = allTrovesArray.push(_user).sub(1);
-        CDPs[_user].arrayIndex = index;
+        address[] storage sizeArray = _getSizeArray(_sizeRange);
+        uint index = sizeArray.push(_user).sub(1);
+        CDPs[_user].sizeArrayIndex = index;
 
         return index;
     }
@@ -1166,6 +1176,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint length = sizeArray.length;
         uint idxLast = length.sub(1);
 
+        assert(length >= 1);
         assert(index <= idxLast); 
 
         address addressToMove = sizeArray[idxLast];
