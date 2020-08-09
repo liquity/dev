@@ -8,6 +8,7 @@ const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
+const HintHelpers = artifacts.require("./HintHelpers.sol")
 
 const deployLiquity = async ()=> {
   const cmdLineArgs = process.argv
@@ -187,18 +188,23 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.defaultPool.setActivePoolAddress(addresses.ActivePool)
 }
 
-const connectEchidnaProxy = async (echidnaProxy, addresses) => {
-  echidnaProxy.setCDPManager(addresses.CDPManager)
-  echidnaProxy.setBorrowerOperations(addresses.BorrowerOperations)
-  echidnaProxy.setPoolManager(addresses.PoolManager)
+const deployAndConnectHintHelpers = async (addresses) => {
+  const hintHelpers = await HintHelpers.new()
+  HintHelpers.setAsDeployed(hintHelpers)
+
+  hintHelpers.setPriceFeed(addresses.PriceFeed)
+  hintHelpers.setCDPManager(addresses.CDPManager)
+  hintHelpers.setSortedCDPs(addresses.SortedCDPs)
+
+  return hintHelpers
 }
 
 module.exports = {
-  connectEchidnaProxy: connectEchidnaProxy,
   getAddresses: getAddresses,
   deployLiquityBuidler: deployLiquityBuidler,
   deployLiquityTruffle: deployLiquityTruffle,
   deployLiquity: deployLiquity,
+  deployAndConnectHintHelpers: deployAndConnectHintHelpers,
   connectContracts: connectContracts
 }
 

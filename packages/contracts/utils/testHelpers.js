@@ -576,12 +576,12 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async getCurrentICR_allAccounts(accounts, priceFeed, borrowerOperations) {
+  static async getCurrentICR_allAccounts(accounts, contracts, borrowerOperations) {
     const gasCostList = []
-    const price = await priceFeed.getPrice()
+    const price = await contracts.priceFeed.getPrice()
 
     for (const account of accounts) {
-      const tx = await functionCaller.cdpManager_getCurrentICR(account, price)
+      const tx = await contracts.cdpManager.getCurrentICR(account, price)
       const gas = this.gasUsed(tx) - 21000
       gasCostList.push(gas)
     }

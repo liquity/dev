@@ -2,6 +2,7 @@ const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 
+const deployAndConnectHintHelpers = deploymentHelpers.deployAndConnectHintHelpers
 const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
@@ -45,6 +46,8 @@ contract('CDPManager', async accounts => {
   let functionCaller
   let borrowerOperations
 
+  let contractAddresses
+
   let cdpManagerTester
   let sizeList_18orLess
   let sizeList_19orGreater
@@ -52,6 +55,8 @@ contract('CDPManager', async accounts => {
   before(async () => {
     cdpManagerTester = await CDPManagerTester.new()
     CDPManagerTester.setAsDeployed(cdpManagerTester)
+
+    
   })
 
   beforeEach(async () => {
@@ -71,7 +76,7 @@ contract('CDPManager', async accounts => {
     sizeList_18orLess = contracts.sizeList_18orLess
     sizeList_19orGreater = contracts.sizeList_19orGreater
 
-    const contractAddresses = getAddresses(contracts)
+    contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
   })
 
@@ -1532,6 +1537,8 @@ contract('CDPManager', async accounts => {
 
   it('getRedemptionHints(): gets the address of the first CDP and the final ICR of the last CDP involved in a redemption', async () => {
     // --- SETUP ---
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
+
     await borrowerOperations.openLoan('10' + _18_zeros, alice, alice, { from: alice, value: _1_Ether })
     await borrowerOperations.openLoan('20' + _18_zeros, bob, bob, { from: bob, value: _1_Ether })
     await borrowerOperations.openLoan('30' + _18_zeros, carol, carol, { from: carol, value: _1_Ether })
@@ -1546,7 +1553,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints('55' + _18_zeros, price)
+    } = await hintHelpers.getRedemptionHints('55' + _18_zeros, price)
 
     assert.equal(firstRedemptionHint, carol)
     assert.equal(partialRedemptionHintICR, '19' + _18_zeros)
@@ -1554,6 +1561,7 @@ contract('CDPManager', async accounts => {
 
   it('redeemCollateral(): cancels the provided CLV with debt from CDPs with the lowest ICRs and sends an equivalent amount of Ether', async () => {
     // --- SETUP ---
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
 
     await borrowerOperations.openLoan('5' + _18_zeros, alice, alice, { from: alice, value: _1_Ether })
     await borrowerOperations.openLoan('8' + _18_zeros, bob, bob, { from: bob, value: _1_Ether })
@@ -1575,7 +1583,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints('20' + _18_zeros, price)
+    } = await hintHelpers.getRedemptionHints('20' + _18_zeros, price)
 
     // We don't need to use getApproxHint for this test, since it's not the subject of this
     // test case, and the list is very small, so the correct position is quickly found
@@ -1593,6 +1601,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
+      dennis,
       {
         from: dennis,
         gasPrice: 0
@@ -1624,6 +1633,8 @@ contract('CDPManager', async accounts => {
 
   it('redeemCollateral(): ends the redemption sequence when the token redemption request has been filled', async () => {
     // --- SETUP --- 
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
+
     const price = await priceFeed.getPrice()
     await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._100_Ether })
 
@@ -1640,7 +1651,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(mv._100e18, flyn, flyn, { from: flyn, value: mv._100_Ether })
 
     // Flyn redeems collateral
-    await cdpManager.redeemCollateral(mv._60e18, alice, alice, 0, { from: flyn })
+    await cdpManager.redeemCollateral(mv._60e18, alice, alice, 0, alice, { from: flyn })
 
     // Check Flyn's redemption has reduced his balance from 100 to (100-60) = 40 CLV
     const flynBalance = (await clvToken.balanceOf(flyn)).toString()
@@ -1682,6 +1693,7 @@ contract('CDPManager', async accounts => {
 
   it('redeemCollateral(): doesnt perform the final partial redemption in the sequence if the hint is out-of-date', async () => {
     // --- SETUP ---
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
 
     await borrowerOperations.openLoan('5' + _18_zeros, alice, alice, { from: alice, value: _1_Ether })
     await borrowerOperations.openLoan('8' + _18_zeros, bob, bob, { from: bob, value: _1_Ether })
@@ -1701,7 +1713,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints('20' + _18_zeros, price)
+    } = await hintHelpers.getRedemptionHints('20' + _18_zeros, price)
 
     const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -1715,7 +1727,7 @@ contract('CDPManager', async accounts => {
       const {
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints('1' + _18_zeros, price)
+      } = await hintHelpers.getRedemptionHints('1' + _18_zeros, price)
 
       const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -1730,6 +1742,7 @@ contract('CDPManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintICR,
+        alice,
         { from: alice }
       )
     }
@@ -1740,6 +1753,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
+      dennis,
       {
         from: dennis,
         gasPrice: 0
@@ -1765,6 +1779,7 @@ contract('CDPManager', async accounts => {
 
   it("redeemCollateral(): can redeem if there is zero active debt but non-zero debt in DefaultPool", async () => {
     // --- SETUP ---
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
 
     await borrowerOperations.openLoan('0', alice, alice, { from: alice, value: _10_Ether })
     await borrowerOperations.openLoan('100' + _18_zeros, bob, bob, { from: bob, value: _1_Ether })
@@ -1786,6 +1801,7 @@ contract('CDPManager', async accounts => {
       alice,
       '0x0000000000000000000000000000000000000000',
       0,
+      alice,
       {
         from: carol,
         gasPrice: 0
@@ -1802,6 +1818,7 @@ contract('CDPManager', async accounts => {
 
   it("redeemCollateral(): doesn't touch CDPs with ICR < 110%", async () => {
     // --- SETUP ---
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
 
     await borrowerOperations.openLoan('100' + _18_zeros, alice, alice, { from: alice, value: _10_Ether })
     await borrowerOperations.openLoan('100' + _18_zeros, bob, bob, { from: bob, value: _1_Ether })
@@ -1819,6 +1836,7 @@ contract('CDPManager', async accounts => {
       bob,
       '0x0000000000000000000000000000000000000000',
       0,
+      bob,
       { from: carol }
     );
 
@@ -1833,6 +1851,7 @@ contract('CDPManager', async accounts => {
 
   it("redeemCollateral(): finds the last CDP with ICR == 110% even if there is more than one", async () => {
     // --- SETUP ---
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
 
     await borrowerOperations.openLoan('100' + _18_zeros, alice, alice, { from: alice, value: _1_Ether })
     await borrowerOperations.openLoan('100' + _18_zeros, bob, bob, { from: bob, value: _1_Ether })
@@ -1865,6 +1884,7 @@ contract('CDPManager', async accounts => {
       // last CDP with ICR == 110% (which would be Alice's)
       '0x0000000000000000000000000000000000000000',
       0,
+      carol,
       { from: dennis }
     );
 
@@ -1882,6 +1902,7 @@ contract('CDPManager', async accounts => {
   });
 
   it("redeemCollateral(): does nothing when argument _amount = 0 ", async () => {
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
     await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._100_Ether })
 
     // Alice opens loan and transfers 500CLV to Erin, the would-be redeemer
@@ -1915,7 +1936,7 @@ contract('CDPManager', async accounts => {
     const erin_CLVBalance_before = (await clvToken.balanceOf(erin)).toString()
 
     // Erin redeems with _amount = 0
-    await cdpManager.redeemCollateral(0, erin, erin, 0, { from: erin })
+    await cdpManager.redeemCollateral(0, erin, erin, 0, erin, { from: erin })
 
     // Get coll, debt and ICR of B, C, D
     const whale_coll_after = (await cdpManager.CDPs(whale))[1].toString()
@@ -1963,6 +1984,8 @@ contract('CDPManager', async accounts => {
 
 
   it("redeemCollateral(): doesn't affect the Stability Pool deposits or ETH gain of redeemed-from troves", async () => {
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
+
     await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._100_Ether })
 
     // Alice opens loan and transfers 400CLV to Erin, the would-be redeemer
@@ -2012,7 +2035,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(ETHinSP.gte(mv._zeroBN))
 
     // Erin redeems 400 CLV
-    await cdpManager.redeemCollateral(mv._400e18, erin, erin, 0, { from: erin })
+    await cdpManager.redeemCollateral(mv._400e18, erin, erin, 0, erin, { from: erin })
 
     price = await priceFeed.getPrice()
     const bob_ICR_after = await cdpManager.getCurrentICR(bob, price)
@@ -2043,6 +2066,7 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): caller can redeem their entire CLVToken balance", async () => {
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
     await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._100_Ether })
 
     // Alice opens loan and transfers 400 CLV to Erin, the would-be redeemer
@@ -2070,7 +2094,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(mv._400e18, price)
+    } = await hintHelpers.getRedemptionHints(mv._400e18, price)
 
     const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2084,6 +2108,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
+      erin,
       { from: erin })
 
     // Check activePool debt reduced by only 400 CLV
@@ -2102,6 +2127,7 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts when requested redemption amount exceeds caller's CLV token balance", async () => {
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
     await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._100_Ether })
 
     // Alice opens loan and transfers 400 CLV to Erin, the would-be redeemer
@@ -2134,7 +2160,7 @@ contract('CDPManager', async accounts => {
       ({
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints(mv._1000e18, price))
+      } = await hintHelpers.getRedemptionHints(mv._1000e18, price))
 
       const { 0: partialRedemptionHint_1 } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -2148,6 +2174,7 @@ contract('CDPManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint_1,
         partialRedemptionHintICR,
+        erin,
         { from: erin })
 
       assert.isFalse(redemptionTx.receipt.status)
@@ -2161,7 +2188,7 @@ contract('CDPManager', async accounts => {
       ({
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints('401000000000000000000', price))
+      } = await hintHelpers.getRedemptionHints('401000000000000000000', price))
 
       const { 0: partialRedemptionHint_2 } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -2174,6 +2201,7 @@ contract('CDPManager', async accounts => {
         '401000000000000000000', firstRedemptionHint,
         partialRedemptionHint_2,
         partialRedemptionHintICR,
+        erin,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2186,7 +2214,7 @@ contract('CDPManager', async accounts => {
       ({
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints('239482309000000000000000000', price))
+      } = await hintHelpers.getRedemptionHints('239482309000000000000000000', price))
 
       const { 0: partialRedemptionHint_3 } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -2199,6 +2227,7 @@ contract('CDPManager', async accounts => {
         '239482309000000000000000000', firstRedemptionHint,
         partialRedemptionHint_3,
         partialRedemptionHintICR,
+        erin,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2213,7 +2242,7 @@ contract('CDPManager', async accounts => {
       ({
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints('239482309000000000000000000', price))
+      } = await hintHelpers.getRedemptionHints('239482309000000000000000000', price))
 
       const { 0: partialRedemptionHint_4 } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -2226,6 +2255,7 @@ contract('CDPManager', async accounts => {
         maxBytes32, firstRedemptionHint,
         partialRedemptionHint_4,
         partialRedemptionHintICR,
+        erin,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2235,6 +2265,7 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): value of issued ETH == face value of redeemed CLV (assuming 1 CLV has value of $1)", async () => {
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
     await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._100_Ether })
 
     // Alice opens loan and transfers 1000 CLV each to Erin, Flyn, Graham
@@ -2266,7 +2297,7 @@ contract('CDPManager', async accounts => {
     ({
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(_120_CLV, price))
+    } = await hintHelpers.getRedemptionHints(_120_CLV, price))
 
     const { 0: partialRedemptionHint_1 } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2280,6 +2311,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint_1,
       partialRedemptionHintICR,
+      erin,
       { from: erin })
 
     assert.isTrue(redemption_1.receipt.status);
@@ -2295,7 +2327,7 @@ contract('CDPManager', async accounts => {
     ({
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(_373_CLV, price))
+    } = await hintHelpers.getRedemptionHints(_373_CLV, price))
 
     const { 0: partialRedemptionHint_2 } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2309,6 +2341,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint_2,
       partialRedemptionHintICR,
+      flyn,
       { from: flyn })
 
     assert.isTrue(redemption_2.receipt.status);
@@ -2323,7 +2356,7 @@ contract('CDPManager', async accounts => {
     ({
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(_950_CLV, price))
+    } = await hintHelpers.getRedemptionHints(_950_CLV, price))
 
     const { 0: partialRedemptionHint_3 } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2337,6 +2370,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint_3,
       partialRedemptionHintICR,
+      graham,
       { from: graham })
 
     assert.isTrue(redemption_3.receipt.status);
@@ -2349,6 +2383,7 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if there is zero outstanding system debt", async () => {
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
     // --- SETUP --- mock Alice as poolManager address in CLVTokenContract to ilegally mint CLV to Bob
     await clvToken.setPoolManagerAddress(alice)
     await clvToken.mint(bob, mv._100e18, { from: alice })
@@ -2367,7 +2402,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(mv._100e18, price)
+    } = await hintHelpers.getRedemptionHints(mv._100e18, price)
 
     const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2383,6 +2418,7 @@ contract('CDPManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintICR,
+        bob,
         { from: bob })
       assert.isFalse(redemptionTx.receipt.status);
     } catch (error) {
@@ -2391,6 +2427,7 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if caller's tries to redeem more than the outstanding system debt", async () => {
+    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
     // --- SETUP --- mock Alice as poolManager address in CLVTokenContract to ilegally mint CLV to Bob
     await clvToken.setPoolManagerAddress(alice)
     await clvToken.mint(bob, '101000000000000000000', { from: alice })
@@ -2409,7 +2446,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints('101000000000000000000', price)
+    } = await hintHelpers.getRedemptionHints('101000000000000000000', price)
 
     const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2425,6 +2462,7 @@ contract('CDPManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintICR,
+        bob,
         { from: bob })
       assert.isFalse(redemptionTx.receipt.status);
     } catch (error) {

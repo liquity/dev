@@ -1117,7 +1117,6 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(harriet_ETHWithdrawn, moneyVals._1_Ether), 1000)
     })
 
-
     // --- Scale factor tests ---
 
     // A deposits 100
