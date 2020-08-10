@@ -16,7 +16,8 @@ import {
   DefaultPool,
   StabilityPool,
   CLVToken,
-  MultiCDPGetter
+  MultiCDPGetter,
+  HintHelpers
 } from "../types";
 import { LiquityContracts, LiquityContractAddresses, connectToContracts } from "./contracts";
 
@@ -343,6 +344,8 @@ const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
 type HintedMethodOptionalParams = {
   price?: Decimal;
   numberOfTroves?: number;
+  numberOfSmallTroves?: number;
+  numberOfLargeTroves?: number;
 };
 
 type TroveChangeOptionalParams = HintedMethodOptionalParams & {
@@ -356,7 +359,9 @@ type StabilityDepositTransferOptionalParams = TroveChangeOptionalParams & {
 export class Liquity {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
-  public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(10);
+  // public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(10);
+  public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(0);
+  public static readonly LARGE_TROVE_MIN_COLLATERAL: Decimal = Decimal.from(10);
 
   public static useHint = true;
 
@@ -365,6 +370,8 @@ export class Liquity {
   private readonly cdpManager: CDPManager;
   private readonly borrowerOperations: BorrowerOperations;
   private readonly priceFeed: PriceFeed;
+  private readonly sizeList_18orLess: SortedCDPs;
+  private readonly sizeList_19orGreater: SortedCDPs;
   private readonly sortedCDPs: SortedCDPs;
   private readonly clvToken: CLVToken;
   private readonly poolManager: PoolManager;
@@ -372,11 +379,14 @@ export class Liquity {
   private readonly defaultPool: DefaultPool;
   private readonly stabilityPool: StabilityPool;
   private readonly multiCDPgetter: MultiCDPGetter;
+  private readonly hintHelpers: HintHelpers;
 
   constructor(contracts: LiquityContracts, userAddress?: string) {
     this.cdpManager = contracts.cdpManager;
     this.borrowerOperations = contracts.borrowerOperations;
     this.priceFeed = contracts.priceFeed;
+    this.sizeList_18orLess = contracts.sizeList_18orLess;
+    this.sizeList_19orGreater = contracts.sizeList_19orGreater;
     this.sortedCDPs = contracts.sortedCDPs;
     this.clvToken = contracts.clvToken;
     this.poolManager = contracts.poolManager;
@@ -384,6 +394,7 @@ export class Liquity {
     this.defaultPool = contracts.defaultPool;
     this.stabilityPool = contracts.stabilityPool;
     this.multiCDPgetter = contracts.multiCDPgetter;
+    this.hintHelpers = contracts.hintHelpers;
     this.userAddress = userAddress;
   }
 
@@ -483,29 +494,28 @@ export class Liquity {
   }
 
   async _findHintForCollateralRatio(
+    list: SortedCDPs,
+    getApproxHint: (collateralRatio: BigNumber, numberOfTrials: BigNumber) => Promise<string>,
     collateralRatio: Decimal,
-    optionalParams: HintedMethodOptionalParams,
-    fallbackAddress: string
+    fallbackAddress: string,
+    price?: Decimal,
+    listSize?: number
   ) {
     if (!Liquity.useHint) {
       return fallbackAddress;
     }
 
-    const [price, numberOfTroves] = await Promise.all([
-      optionalParams.price ?? this.getPrice(),
-      optionalParams.numberOfTroves ?? this.getNumberOfTroves()
+    [price, listSize] = await Promise.all([
+      price ?? this.getPrice(),
+      listSize ?? list.getSize().then(numberify)
     ]);
 
-    if (!numberOfTroves || collateralRatio.infinite) {
+    if (!listSize || collateralRatio.infinite) {
       return AddressZero;
     }
 
-    const numberOfTrials = BigNumber.from(Math.ceil(10 * Math.sqrt(numberOfTroves)));
-
-    const approxHint = await this.cdpManager.getApproxHint(
-      collateralRatio.bigNumber,
-      numberOfTrials
-    );
+    const numberOfTrials = BigNumber.from(Math.ceil(10 * Math.sqrt(listSize)));
+    const approxHint = await getApproxHint(collateralRatio.bigNumber, numberOfTrials);
 
     const { 0: hint } = await this.sortedCDPs.findInsertPosition(
       collateralRatio.bigNumber,
@@ -517,9 +527,9 @@ export class Liquity {
     return hint;
   }
 
-  async _findHint(
+  async _findGlobalHint(
     trove: Trove,
-    { price, ...rest }: HintedMethodOptionalParams = {},
+    { price, numberOfTroves }: HintedMethodOptionalParams = {},
     address: string
   ) {
     if (trove instanceof TroveWithPendingRewards) {
@@ -529,9 +539,37 @@ export class Liquity {
     price = price ?? (await this.getPrice());
 
     return this._findHintForCollateralRatio(
+      this.sortedCDPs,
+      this.hintHelpers.getApproxHint.bind(this.hintHelpers),
       trove.collateralRatio(price),
-      { price, ...rest },
-      address
+      address,
+      price,
+      numberOfTroves
+    );
+  }
+
+  async _findSizeRangeHint(
+    trove: Trove,
+    { price, numberOfSmallTroves, numberOfLargeTroves }: HintedMethodOptionalParams = {},
+    address: string
+  ) {
+    if (trove instanceof TroveWithPendingRewards) {
+      throw new Error("Rewards must be applied to this Trove");
+    }
+
+    price = price ?? (await this.getPrice());
+
+    const [sizeRange, list, listSize] = trove.collateral.lt(Liquity.LARGE_TROVE_MIN_COLLATERAL)
+      ? [18, this.sizeList_18orLess, numberOfSmallTroves]
+      : [19, this.sizeList_19orGreater, numberOfLargeTroves];
+
+    return this._findHintForCollateralRatio(
+      list,
+      this.hintHelpers.getApproxHintForSizeRange.bind(this.hintHelpers, sizeRange),
+      trove.collateralRatio(price),
+      address,
+      price,
+      listSize
     );
   }
 
@@ -542,11 +580,15 @@ export class Liquity {
   ) {
     const address = this.requireAddress();
 
-    return this.borrowerOperations.openLoan(
-      trove.debt.bigNumber,
-      await this._findHint(trove, optionalParams, address),
-      { value: trove.collateral.bigNumber, ...overrides }
-    );
+    const [globalHint, sizeRangeHint] = await Promise.all([
+      this._findGlobalHint(trove, optionalParams, address),
+      this._findSizeRangeHint(trove, optionalParams, address)
+    ]);
+
+    return this.borrowerOperations.openLoan(trove.debt.bigNumber, globalHint, sizeRangeHint, {
+      value: trove.collateral.bigNumber,
+      ...overrides
+    });
   }
 
   async closeTrove(overrides?: LiquityTransactionOverrides) {
@@ -562,14 +604,15 @@ export class Liquity {
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.addCollateral(depositedEther);
 
-    return this.borrowerOperations.addColl(
-      address,
-      await this._findHint(finalTrove, hintOptionalParams, address),
-      {
-        value: Decimal.from(depositedEther).bigNumber,
-        ...overrides
-      }
-    );
+    const [globalHint, sizeRangeHint] = await Promise.all([
+      this._findGlobalHint(finalTrove, hintOptionalParams, address),
+      this._findSizeRangeHint(finalTrove, hintOptionalParams, address)
+    ]);
+
+    return this.borrowerOperations.addColl(address, globalHint, sizeRangeHint, {
+      value: Decimal.from(depositedEther).bigNumber,
+      ...overrides
+    });
   }
 
   async withdrawEther(
@@ -581,9 +624,15 @@ export class Liquity {
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.subtractCollateral(withdrawnEther);
 
+    const [globalHint, sizeRangeHint] = await Promise.all([
+      this._findGlobalHint(finalTrove, hintOptionalParams, address),
+      this._findSizeRangeHint(finalTrove, hintOptionalParams, address)
+    ]);
+
     return this.borrowerOperations.withdrawColl(
       Decimal.from(withdrawnEther).bigNumber,
-      await this._findHint(finalTrove, hintOptionalParams, address),
+      globalHint,
+      sizeRangeHint,
       { ...overrides }
     );
   }
@@ -597,9 +646,15 @@ export class Liquity {
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.addDebt(borrowedQui);
 
+    const [globalHint, sizeRangeHint] = await Promise.all([
+      this._findGlobalHint(finalTrove, hintOptionalParams, address),
+      this._findSizeRangeHint(finalTrove, hintOptionalParams, address)
+    ]);
+
     return this.borrowerOperations.withdrawCLV(
       Decimal.from(borrowedQui).bigNumber,
-      await this._findHint(finalTrove, hintOptionalParams, address),
+      globalHint,
+      sizeRangeHint,
       { ...overrides }
     );
   }
@@ -613,9 +668,15 @@ export class Liquity {
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.subtractDebt(repaidQui);
 
+    const [globalHint, sizeRangeHint] = await Promise.all([
+      this._findGlobalHint(finalTrove, hintOptionalParams, address),
+      this._findSizeRangeHint(finalTrove, hintOptionalParams, address)
+    ]);
+
     return this.borrowerOperations.repayCLV(
       Decimal.from(repaidQui).bigNumber,
-      await this._findHint(finalTrove, hintOptionalParams, address),
+      globalHint,
+      sizeRangeHint,
       { ...overrides }
     );
   }
@@ -629,10 +690,16 @@ export class Liquity {
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.apply(change);
 
+    const [globalHint, sizeRangeHint] = await Promise.all([
+      this._findGlobalHint(finalTrove, hintOptionalParams, address),
+      this._findSizeRangeHint(finalTrove, hintOptionalParams, address)
+    ]);
+
     return this.borrowerOperations.adjustLoan(
       change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
       change.debtDifference?.bigNumber || 0,
-      await this._findHint(finalTrove, hintOptionalParams, address),
+      globalHint,
+      sizeRangeHint,
       {
         ...overrides,
         value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
@@ -641,7 +708,7 @@ export class Liquity {
   }
 
   getNumberOfTroves(overrides?: LiquityCallOverrides) {
-    return this.cdpManager.getCDPOwnersCount({ ...overrides }).then(numberify);
+    return this.sortedCDPs.getSize({ ...overrides }).then(numberify);
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void) {
@@ -650,6 +717,44 @@ export class Liquity {
 
     const cdpUpdatedListener = debounce((blockTag: number) => {
       this.getNumberOfTroves({ blockTag }).then(onNumberOfTrovesChanged);
+    });
+
+    this.cdpManager.on(cdpUpdated, cdpUpdatedListener);
+
+    return () => {
+      this.cdpManager.removeListener(cdpUpdated, cdpUpdatedListener);
+    };
+  }
+
+  getNumberOfSmallTroves(overrides?: LiquityCallOverrides) {
+    return this.sizeList_18orLess.getSize({ ...overrides }).then(numberify);
+  }
+
+  watchNumberOfSmallTroves(onNumberOfSmallTrovesChanged: (numberOfSmallTroves: number) => void) {
+    const { CDPUpdated } = this.cdpManager.filters;
+    const cdpUpdated = CDPUpdated();
+
+    const cdpUpdatedListener = debounce((blockTag: number) => {
+      this.getNumberOfSmallTroves({ blockTag }).then(onNumberOfSmallTrovesChanged);
+    });
+
+    this.cdpManager.on(cdpUpdated, cdpUpdatedListener);
+
+    return () => {
+      this.cdpManager.removeListener(cdpUpdated, cdpUpdatedListener);
+    };
+  }
+
+  getNumberOfLargeTroves(overrides?: LiquityCallOverrides) {
+    return this.sizeList_19orGreater.getSize({ ...overrides }).then(numberify);
+  }
+
+  watchNumberOfLargeTroves(onNumberOfLargeTrovesChanged: (numberOfLargeTroves: number) => void) {
+    const { CDPUpdated } = this.cdpManager.filters;
+    const cdpUpdated = CDPUpdated();
+
+    const cdpUpdatedListener = debounce((blockTag: number) => {
+      this.getNumberOfLargeTroves({ blockTag }).then(onNumberOfLargeTrovesChanged);
     });
 
     this.cdpManager.on(cdpUpdated, cdpUpdatedListener);
@@ -797,11 +902,14 @@ export class Liquity {
       (deposit ?? (await this.getStabilityDeposit())).pendingCollateralGain
     );
 
-    return this.poolManager.withdrawFromSPtoCDP(
-      address,
-      await this._findHint(finalTrove, hintOptionalParams, address),
-      { ...overrides }
-    );
+    const [globalHint, sizeRangeHint] = await Promise.all([
+      this._findGlobalHint(finalTrove, hintOptionalParams, address),
+      this._findSizeRangeHint(finalTrove, hintOptionalParams, address)
+    ]);
+
+    return this.poolManager.withdrawFromSPtoCDP(address, globalHint, sizeRangeHint, {
+      ...overrides
+    });
   }
 
   async getQuiInStabilityPool(overrides?: LiquityCallOverrides) {
@@ -858,27 +966,30 @@ export class Liquity {
   async _findRedemptionHints(
     exchangedQui: Decimal,
     { price, ...rest }: HintedMethodOptionalParams = {}
-  ): Promise<[string, string, Decimal]> {
+  ): Promise<[string, string, Decimal, string]> {
     if (!Liquity.useHint) {
-      return [AddressZero, AddressZero, Decimal.INFINITY];
+      return [AddressZero, AddressZero, Decimal.INFINITY, AddressZero];
     }
 
     price = price ?? (await this.getPrice());
 
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
-    } = await this.cdpManager.getRedemptionHints(exchangedQui.bigNumber, price.bigNumber);
+      partialRedemptionNewColl,
+      partialRedemptionNewDebt
+    } = await this.hintHelpers.getRedemptionHints(exchangedQui.bigNumber, price.bigNumber);
 
-    const collateralRatio = new Decimal(partialRedemptionHintICR);
+    const partiallyRedeemedTrove = new Trove({
+      collateral: new Decimal(partialRedemptionNewColl),
+      debt: new Decimal(partialRedemptionNewDebt)
+    });
 
-    return [
+    return Promise.all([
       firstRedemptionHint,
-      collateralRatio.nonZero
-        ? await this._findHintForCollateralRatio(collateralRatio, { price, ...rest }, AddressZero)
-        : AddressZero,
-      collateralRatio
-    ];
+      this._findGlobalHint(partiallyRedeemedTrove, { price, ...rest }, AddressZero),
+      partiallyRedeemedTrove.collateralRatio(price),
+      this._findSizeRangeHint(partiallyRedeemedTrove, { price, ...rest }, AddressZero)
+    ]);
   }
 
   async redeemCollateral(
@@ -891,7 +1002,8 @@ export class Liquity {
     const [
       firstRedemptionHint,
       partialRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintICR,
+      partialRedemptionSizeListHint
     ] = await this._findRedemptionHints(exchangedQui, optionalParams);
 
     return this.cdpManager.redeemCollateral(
@@ -899,6 +1011,7 @@ export class Liquity {
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR.bigNumber,
+      partialRedemptionSizeListHint,
       {
         ...overrides
       }

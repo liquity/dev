@@ -58,7 +58,7 @@ contract HintHelpers is Ownable {
     function getRedemptionHints(uint _CLVamount, uint _price)
         external
         view
-        returns (address firstRedemptionHint, uint partialRedemptionHintICR)
+        returns (address firstRedemptionHint, uint partialRedemptionNewColl, uint partialRedemptionNewDebt)
     {
         uint remainingCLV = _CLVamount;
         address currentCDPuser = sortedCDPs.getLast();
@@ -76,13 +76,9 @@ contract HintHelpers is Ownable {
             if (CLVDebt > remainingCLV) {
                 uint ETH = cdpManager.getCDPColl(currentCDPuser)
                                      .add(cdpManager.getPendingETHReward(currentCDPuser));
-                uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
 
-                uint newDebt = CLVDebt.sub(remainingCLV);
-                uint compositeDebt = _getCompositeDebt(newDebt);
-
-                partialRedemptionHintICR = Math._computeCR(newColl, compositeDebt, _price);
-
+                partialRedemptionNewColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
+                partialRedemptionNewDebt = CLVDebt.sub(remainingCLV);
                 break;
             } else {
                 remainingCLV = remainingCLV.sub(CLVDebt);
@@ -117,6 +113,37 @@ contract HintHelpers is Ownable {
         while (i < _numTrials) {
             uint arrayIndex = _getRandomArrayIndex(block.timestamp.add(i), arrayLength);
             address currentAddress = cdpManager.getTroveFromAllTrovesArray(arrayIndex);
+            uint currentICR = cdpManager.getCurrentICR(currentAddress, price);
+
+            // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
+            uint currentDiff = Math._getAbsoluteDifference(currentICR, _CR);
+
+            if (currentDiff < diff) {
+                closestICR = currentICR;
+                diff = currentDiff;
+                hintAddress = currentAddress;
+            }
+            i++;
+        }
+        return hintAddress;
+    }
+
+    function getApproxHintForSizeRange(uint _sizeRange, uint _CR, uint _numTrials)
+        external
+        view
+        returns (address)
+    {
+        uint arrayLength = cdpManager.getSizeArrayCount(_sizeRange);
+        require(arrayLength >= 1, "CDPManager: sortedList must not be empty");
+        uint price = priceFeed.getPrice();
+        address hintAddress = cdpManager.getSizeList(_sizeRange).getLast();
+        uint closestICR = cdpManager.getCurrentICR(hintAddress, price);
+        uint diff = Math._getAbsoluteDifference(_CR, closestICR);
+        uint i = 1;
+
+        while (i < _numTrials) {
+            uint arrayIndex = _getRandomArrayIndex(block.timestamp.add(i), arrayLength);
+            address currentAddress = cdpManager.getTroveFromSizeArray(arrayIndex, _sizeRange);
             uint currentICR = cdpManager.getCurrentICR(currentAddress, price);
 
             // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
