@@ -343,7 +343,9 @@ const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
 export class Liquity {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
-  public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(10);
+  // public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(10);
+  public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(0);
+  public static readonly LARGE_TROVE_MIN_COLLATERAL: Decimal = Decimal.from(10);
 
   public static useHint = true;
 
