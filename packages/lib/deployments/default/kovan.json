@@ -5,9 +5,12 @@
     "cdpManager": "0x219e6419EC9E184c0432f07b8dfC0b6273E51E4f",
     "clvToken": "0x10b30c2b3c253A78bA2Dd240d801D470eb44b4E9",
     "defaultPool": "0x184aD93a9598941b6D24deCff93F97F2622102F0",
+    "hintHelpers": "",
     "multiCDPgetter": "0x09625c0BaD0d6D711CcC28f4F394a8C2653B03fE",
     "poolManager": "0xC81a5873EADCB37ba732f29308d98Fe26743Db7d",
     "priceFeed": "0x2aFb07CB997B39E9e157069B9886cfb160Fa5b41",
+    "sizeList_18orLess": "",
+    "sizeList_19orGreater": "",
     "sortedCDPs": "0xC8F6a2455AADA40Afb671c48B3A5fE41B191029D",
     "stabilityPool": "0x5461AB4b8d297A311BC4026b91f5Ec7173BE1cBc"
   },

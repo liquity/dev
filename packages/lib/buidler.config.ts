@@ -490,7 +490,10 @@ task(
           } else {
             while (total.collateralRatioIsBelowCritical(price)) {
               // Cannot close Trove during recovery mode
-              await funderLiquity.depositEther(benford(50000), { price, numberOfTroves });
+              await funderLiquity.depositEther(benford(50000), {
+                price,
+                numberOfTroves
+              });
 
               total = await liquity.getTotal();
             }
