@@ -33,6 +33,7 @@ const deployLiquityBuidler = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
+  const hintHelpers = await HintHelpers.new()
 
   const sizeList_18orLess = await SortedCDPs.new()
   const sizeList_19orGreater = await SortedCDPs.new()
@@ -47,6 +48,7 @@ const deployLiquityBuidler = async () => {
   StabilityPool.setAsDeployed(stabilityPool)
   FunctionCaller.setAsDeployed(functionCaller)
   BorrowerOperations.setAsDeployed(borrowerOperations)
+  HintHelpers.setAsDeployed(hintHelpers)
 
   SortedCDPs.setAsDeployed(sizeList_18orLess)
   SortedCDPs.setAsDeployed(sizeList_19orGreater)
@@ -62,6 +64,7 @@ const deployLiquityBuidler = async () => {
     defaultPool,
     functionCaller,
     borrowerOperations,
+    hintHelpers,
 
     sizeList_18orLess,
     sizeList_19orGreater
@@ -95,6 +98,7 @@ const deployLiquityTruffle = async () => {
     defaultPool,
     functionCaller,
     borrowerOperations,
+    hintHelpers,
 
     sizeList_18orLess,
     sizeList_19orGreater
@@ -116,7 +120,8 @@ const getAddresses = (contracts) => {
     DefaultPool: contracts.defaultPool.address,
     FunctionCaller: contracts.functionCaller.address,
     SizeList_18orLess: contracts.sizeList_18orLess.address,
-    SizeList_19orGreater: contracts.sizeList_19orGreater.address
+    SizeList_19orGreater: contracts.sizeList_19orGreater.address,
+    HintHelpers: contracts.hintHelpers.address
   }
 }
 
@@ -186,6 +191,11 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.defaultPool.setPoolManagerAddress(addresses.PoolManager)
   await contracts.defaultPool.setStabilityPoolAddress(addresses.StabilityPool)
   await contracts.defaultPool.setActivePoolAddress(addresses.ActivePool)
+
+  // set contracts in hintHelpers
+  await contracts.hintHelpers.setPriceFeed(addresses.PriceFeed)
+  await contracts.hintHelpers.setCDPManager(addresses.CDPManager)
+  await contracts.hintHelpers.setSortedCDPs(addresses.SortedCDPs)
 }
 
 const deployAndConnectHintHelpers = async (addresses) => {

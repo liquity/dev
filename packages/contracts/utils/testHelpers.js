@@ -437,7 +437,7 @@ class TestHelper {
       const newColl = coll.add(ETHAmountBN)
 
       const newICR = this.computeICR(newColl, newDebt, price)
-      const approxHint = await contracts.cdpManager.getApproxHint(newICR, 50)
+      const approxHint = await contracts.hintHelpers.getApproxHint(newICR, 50)
       const insertAddr = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxHint, approxHint))[0]
 
       if (ETHAmountBN.gt(zero)) {
@@ -472,7 +472,7 @@ class TestHelper {
       const newColl = coll.add(ETHAmountBN)
 
       const newICR = this.computeICR(newColl, newDebt, price)
-      const approxHint = await contracts.cdpManager.getApproxHint(newICR, 50)
+      const approxHint = await contracts.hintHelpers.getApproxHint(newICR, 50)
       const insertAddr = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxHint, approxHint))[0]
 
       if (ETHAmountBN.gt(zero)) {
@@ -576,12 +576,12 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async getCurrentICR_allAccounts(accounts, contracts, borrowerOperations) {
+  static async getCurrentICR_allAccounts(accounts, contracts, functionCaller) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
 
     for (const account of accounts) {
-      const tx = await contracts.cdpManager.getCurrentICR(account, price)
+      const tx = await functionCaller.cdpManager_getCurrentICR(account, price)
       const gas = this.gasUsed(tx) - 21000
       gasCostList.push(gas)
     }
@@ -592,11 +592,11 @@ class TestHelper {
 
   static async redeemCollateral(redeemer, contracts, CLVAmount) {
     const price = await contracts.priceFeed.getPrice()
-    const redemptionHints = await contracts.cdpManager.getRedemptionHints(CLVAmount, price)
+    const redemptionHints = await contracts.hintHelpers.getRedemptionHints(CLVAmount, price)
     const firstRedemptionHint = redemptionHints[0]
     const partialRedemptionHintICR = redemptionHints[1]
 
-    const approxPartialRedemptionHint = await contracts.cdpManager.getApproxHint(partialRedemptionHintICR, 50)
+    const approxPartialRedemptionHint = await contracts.hintHelpers.getApproxHint(partialRedemptionHintICR, 50)
     const exactPartialRedemptionHint = (await contracts.sortedCDPs.findInsertPosition(partialRedemptionHintICR,
       price,
       approxPartialRedemptionHint,
@@ -617,11 +617,11 @@ class TestHelper {
 
     for (const redeemer of accounts) {
       const randCLVAmount = this.randAmountInWei(min, max)
-      const redemptionHints = await contracts.cdpManager.getRedemptionHints(randCLVAmount, price)
+      const redemptionHints = await contracts.hintHelpers.getRedemptionHints(randCLVAmount, price)
       const firstRedemptionHint = redemptionHints[0]
       const partialRedemptionHintICR = redemptionHints[1]
 
-      const approxPartialRedemptionHint = await contracts.cdpManager.getApproxHint(partialRedemptionHintICR, 50)
+      const approxPartialRedemptionHint = await contracts.hintHelpers.getApproxHint(partialRedemptionHintICR, 50)
       const exactPartialRedemptionHint = (await contracts.sortedCDPs.findInsertPosition(partialRedemptionHintICR,
         price,
         approxPartialRedemptionHint,
@@ -647,8 +647,7 @@ class TestHelper {
     for (const account of accounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
 
-      await borrowerOperations.addColl(account, account, account, { from: account, value: coll })
-      await borrowerOperations.withdrawCLV('200000000000000000000', account, account, { from: account })
+      await borrowerOperations.openLoan('200000000000000000000', account, account, { from: account, value: amountFinney })
 
       amountFinney += 10
     }

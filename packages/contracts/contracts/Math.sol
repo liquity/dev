@@ -39,5 +39,8 @@ library Math {
         }
     }
 
+    function computeCR(uint _coll, uint _debt, uint _price) external pure returns (uint) {
+        return _computeCR(_coll, _debt, _price);
+    }
 }
 
