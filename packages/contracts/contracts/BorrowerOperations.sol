@@ -49,8 +49,18 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
+    enum BorrowerOperation {
+        openLoan,
+        closeLoan,
+        addColl,
+        withdrawColl,
+        withdrawCLV,
+        repayCLV,
+        adjustLoan
+    }
+
     event CDPCreated(address indexed _user, uint arrayIndex);
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
 
     // --- Dependency setters --- 
 
@@ -125,7 +135,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         poolManager.addColl.value(msg.value)(); 
         poolManager.withdrawCLV(user, _CLVAmount); 
        
-        emit CDPUpdated(user, _CLVAmount, msg.value, stake); 
+        emit CDPUpdated(user, _CLVAmount, msg.value, stake, BorrowerOperation.openLoan);
     }
 
     // Send ETH as collateral to a CDP
@@ -147,7 +157,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         poolManager.addColl.value(msg.value)();
   
         uint debt = cdpManager.getCDPDebt(_user);
-        emit CDPUpdated(_user, debt, newColl, stake);
+        emit CDPUpdated(_user, debt, newColl, stake, BorrowerOperation.addColl);
     }
     
     // Withdraw ETH collateral from a CDP
@@ -180,7 +190,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         // Remove _amount ETH from ActivePool and send it to the user
         poolManager.withdrawColl(user, _amount);
 
-        emit CDPUpdated(user, debt, newColl, stake); 
+        emit CDPUpdated(user, debt, newColl, stake, BorrowerOperation.withdrawColl);
     }
     
     // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
@@ -211,7 +221,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         poolManager.withdrawCLV(user, _amount);
         
         uint stake = cdpManager.getCDPStake(user);
-        emit CDPUpdated(user, newDebt, coll, stake); 
+        emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.withdrawCLV);
     }
     
     // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the debt accordingly
@@ -238,7 +248,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         
         uint coll = cdpManager.getCDPColl(user);
         uint stake = cdpManager.getCDPStake(user);
-        emit CDPUpdated(user, newDebt, coll, stake); 
+        emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.repayCLV);
     }
 
     function closeLoan() external {
@@ -258,7 +268,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         poolManager.repayCLV(user, debt);
         poolManager.withdrawColl(user, coll);
 
-        emit CDPUpdated(user, 0, 0, 0);
+        emit CDPUpdated(user, 0, 0, 0, BorrowerOperation.closeLoan);
     }
 
     /* If ether is sent, the operation is considered as an increase in ether, and the first parameter 
@@ -301,7 +311,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         //  --- Interactions ---
         _moveTokensAndETHfromAdjustment(user, collChange, _debtChange);   
     
-        emit CDPUpdated(user, newDebt, newColl, stake); 
+        emit CDPUpdated(L.user, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
     }
 
     // --- Helper functions --- 

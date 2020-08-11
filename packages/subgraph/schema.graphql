@@ -17,6 +17,8 @@ type Trove @entity {
   collateral: BigDecimal!
   debt: BigDecimal!
 
+  changes: [TroveChange!]! @derivedFrom(field: "trove")
+
   rawCollateral: BigInt!
   rawDebt: BigInt!
   rawStake: BigInt!
@@ -29,4 +31,27 @@ type Trove @entity {
 
   "The value of total redistributed per-stake debt the last time rewards were applied"
   rawSnapshotOfTotalRedistributedDebt: BigInt!
+}
+
+enum TroveOperation {
+  openLoan
+  closeLoan
+  depositCollateral
+  withdrawCollateral
+  mint
+  repay
+  adjustLoan
+  liquidateInNormalMode
+  liquidateInRecoveryMode
+  partiallyLiquidateInRecoveryMode
+  redeemCollateral
+}
+
+type TroveChange @entity {
+  "Transaction hash + '-' + log index"
+  id: ID!
+
+  trove: Trove!
+
+  operation: TroveOperation!
 }
