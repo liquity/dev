@@ -1,5 +1,7 @@
 import { Bytes, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
+import { TroveChange } from "../../generated/schema";
+
 import { getCurrentTroveOfOwner, closeCurrentTroveOfOwner } from "./Owner";
 
 // E.g. 1.5 is represented as 1.5 * 10^18, where 10^18 is called the scaling factor
@@ -12,6 +14,9 @@ let MAX_UINT256 = BigInt.fromUnsignedBytes(
 );
 
 export function updateTrove(
+  txHash: Bytes,
+  logIndex: BigInt,
+  operation: string,
   _user: Address,
   _coll: BigInt,
   _debt: BigInt,
@@ -20,6 +25,11 @@ export function updateTrove(
   snapshotCLVDebt: BigInt
 ): void {
   let trove = getCurrentTroveOfOwner(_user);
+
+  let troveChange = new TroveChange(txHash.toHex() + "-" + logIndex.toString());
+  troveChange.trove = trove.id;
+  troveChange.operation = operation;
+  troveChange.save();
 
   trove.collateral = _coll.divDecimal(DECIMAL_SCALING_FACTOR);
   trove.debt = _debt.divDecimal(DECIMAL_SCALING_FACTOR);
