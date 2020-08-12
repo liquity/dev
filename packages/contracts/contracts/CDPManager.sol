@@ -190,8 +190,15 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
     event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
 
+    enum CDPManagerOperation {
+        liquidateInNormalMode,
+        liquidateInRecoveryMode,
+        partiallyLiquidateInRecoveryMode,
+        redeemCollateral
+    }
+
     event CDPCreated(address indexed _user, uint arrayIndex);
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, CDPManagerOperation operation);
 
     // --- Modifiers ---
 
@@ -373,7 +380,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         activePool.sendETH(address(this), V.gasCompensation);
 
         _closeCDP(_user);
-        emit CDPUpdated(_user, 0, 0, 0);
+        emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInNormalMode);
 
         return V;
     }
@@ -404,7 +411,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             V.collToRedistribute = L.collToLiquidate;
 
             _closeCDP(_user);
-            emit CDPUpdated(_user, 0, 0, 0);
+            emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInRecoveryMode);
 
         // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > 1000000000000000000) && (_ICR < MCR)) {
@@ -417,7 +424,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             V.collToRedistribute) = _getOffsetAndRedistributionVals(L.entireCDPDebt, L.collToLiquidate, _CLVInPool);
 
             _closeCDP(_user);
-            emit CDPUpdated(_user, 0, 0, 0);
+            emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInRecoveryMode);
 
         // If CDP has the lowest ICR and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution)
         } else if (_user == sortedCDPs.getLast()) {
@@ -468,7 +475,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             V.debtToRedistribute = 0;
             V.collToRedistribute = 0;
 
-            emit CDPUpdated(_user, 0, 0, 0);
+            emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInRecoveryMode);
         }
         /* When trove's debt is greater than the Pool, perform a partial liquidation:
         offset as much as possible, and do not redistribute the remainder.
@@ -651,7 +658,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint sizeRange = _getSizeRange(_newColl);
         _insertToSizeList(_user, ICR, _price, sizeRange, _user);
 
-        emit CDPUpdated(_user, _newDebt, _newColl, CDPs[_user].stake);
+        emit CDPUpdated(_user, _newDebt, _newColl, CDPs[_user].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
     }
 
     // --- Redemption functions ---
@@ -707,7 +714,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
                         _cdpUser,
                         L.newDebt,
                         L.newColl,
-                        CDPs[_cdpUser].stake
+                        CDPs[_cdpUser].stake,
+                        CDPManagerOperation.redeemCollateral
                         ); 
 
         return L.CLVLot;
