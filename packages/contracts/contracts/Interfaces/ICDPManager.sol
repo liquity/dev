@@ -44,17 +44,15 @@ interface ICDPManager {
 
     function getCDPOwnersCount() external view returns (uint);
 
-    function getCurrentICR(address _user, uint _price) external view returns (uint);
+    function getTroveFromCDPOwnersArray(uint _index) external view returns (address);
 
-    function getApproxHint(uint CR, uint numTrials) external view returns (address);
+    function getCurrentICR(address _user, uint _price) external view returns (uint);
 
     function liquidate(address _user) external;
 
     function liquidateCDPs(uint _n) external;
 
     function checkRecoveryMode() external view returns (bool);
-
-    function getRedemptionHints(uint _CLVamount, uint _price) external view returns (address, uint);
 
     function redeemCollateral(
         uint _CLVAmount,
@@ -70,6 +68,10 @@ interface ICDPManager {
     function addCDPOwnerToArray(address _user) external returns (uint index);
 
     function applyPendingRewards(address _user) external;
+
+    function getPendingETHReward(address _user) external view returns (uint);
+
+    function getPendingCLVDebtReward(address _user) external view returns (uint);
 
     function closeCDP(address _user) external;
 

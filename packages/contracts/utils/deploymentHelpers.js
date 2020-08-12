@@ -8,6 +8,7 @@ const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
+const HintHelpers = artifacts.require("./HintHelpers.sol")
 
 const deployLiquity = async ()=> {
   const cmdLineArgs = process.argv
@@ -32,6 +33,7 @@ const deployLiquityBuidler = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
+  const hintHelpers = await HintHelpers.new()
 
   DefaultPool.setAsDeployed(defaultPool)
   PriceFeed.setAsDeployed(priceFeed)
@@ -43,6 +45,7 @@ const deployLiquityBuidler = async () => {
   StabilityPool.setAsDeployed(stabilityPool)
   FunctionCaller.setAsDeployed(functionCaller)
   BorrowerOperations.setAsDeployed(borrowerOperations)
+  HintHelpers.setAsDeployed(hintHelpers)
 
   const contracts = {
     priceFeed,
@@ -54,7 +57,8 @@ const deployLiquityBuidler = async () => {
     stabilityPool,
     defaultPool,
     functionCaller,
-    borrowerOperations
+    borrowerOperations,
+    hintHelpers
   }
   return contracts
 }
@@ -70,6 +74,7 @@ const deployLiquityTruffle = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
+  const hintHelpers = await HintHelpers.new()
 
   const contracts = {
     priceFeed,
@@ -81,7 +86,8 @@ const deployLiquityTruffle = async () => {
     stabilityPool,
     defaultPool,
     functionCaller,
-    borrowerOperations
+    borrowerOperations,
+    hintHelpers
   }
 
   return contracts
@@ -98,7 +104,8 @@ const getAddresses = (contracts) => {
     StabilityPool: contracts.stabilityPool.address,
     ActivePool: contracts.activePool.address,
     DefaultPool: contracts.defaultPool.address,
-    FunctionCaller: contracts.functionCaller.address
+    FunctionCaller: contracts.functionCaller.address,
+    HintHelpers: contracts.hintHelpers.address
   }
 }
 
@@ -158,16 +165,14 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.defaultPool.setPoolManagerAddress(addresses.PoolManager)
   await contracts.defaultPool.setStabilityPoolAddress(addresses.StabilityPool)
   await contracts.defaultPool.setActivePoolAddress(addresses.ActivePool)
-}
 
-const connectEchidnaProxy = async (echidnaProxy, addresses) => {
-  echidnaProxy.setCDPManager(addresses.CDPManager)
-  echidnaProxy.setBorrowerOperations(addresses.BorrowerOperations)
-  echidnaProxy.setPoolManager(addresses.PoolManager)
+  // set contracts in HintHelpers
+  await contracts.hintHelpers.setPriceFeed(addresses.PriceFeed)
+  await contracts.hintHelpers.setCDPManager(addresses.CDPManager)
+  await contracts.hintHelpers.setSortedCDPs(addresses.SortedCDPs)
 }
 
 module.exports = {
-  connectEchidnaProxy: connectEchidnaProxy,
   getAddresses: getAddresses,
   deployLiquityBuidler: deployLiquityBuidler,
   deployLiquityTruffle: deployLiquityTruffle,

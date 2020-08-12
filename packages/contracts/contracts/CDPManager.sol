@@ -1,5 +1,4 @@
 pragma solidity 0.5.16;
-pragma experimental ABIEncoderV2;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -231,6 +230,10 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         return CDPOwners.length;
     }
 
+    function getTroveFromCDPOwnersArray(uint _index) external view returns (address) {
+        return CDPOwners[_index];
+    }
+
     // --- CDP Liquidation functions ---
 
     // Closes the CDP of the specified user if its individual collateral ratio is lower than the minimum collateral ratio.
@@ -416,7 +419,6 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         L.CLVInPool = stabilityPool.getCLV();
         L.recoveryModeAtStart = _checkRecoveryMode();
      
-        
         // Perform the appropriate liquidation sequence - tally values and obtain their totals
         if (L.recoveryModeAtStart == true) {
            T = _getTotalFromLiquidationSequence_RecoveryMode(L.price, L.CLVInPool, _n);
@@ -541,14 +543,13 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     }
 
     // Update coll, debt, stake and snapshot of partially liquidated trove, and insert it back to the list
-    function _updatePartiallyLiquidatedTrove(address _user, uint _newDebt, uint _newColl, uint price) internal {
+    function _updatePartiallyLiquidatedTrove(address _user, uint _newDebt, uint _newColl, uint _price) internal {
         if ( _user == address(0)) { return; }
 
         CDPs[_user].debt = _newDebt;
         CDPs[_user].coll = _newColl;
         CDPs[_user].status = Status.active;
-         uint arrayIndex = _addCDPOwnerToArray(_user);
-
+    
         _updateCDPRewardSnapshots(_user);
         _updateStakeAndTotalStakes(_user);
 
@@ -556,13 +557,6 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
         // Insert to full sorted list
         sortedCDPs.insert(_user, ICR, _price, _user, _user);
-        _addToAllTrovesArray(_user);
-
-        // Insert to size range list
-        // TODO: Handle / provide hint for size list, in case trove has changed lists ?
-        uint sizeRange = _getSizeRange(_newColl);
-        _insertToSizeList(_user, ICR, _price, sizeRange, _user);
-
         emit CDPUpdated(_user, _newDebt, _newColl, CDPs[_user].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
     }
 
@@ -612,8 +606,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
         emit CDPUpdated(
                         _cdpUser,
-                        L.newDebt,
-                        L.newColl,
+                        newDebt,
+                        newColl,
                         CDPs[_cdpUser].stake,
                         CDPManagerOperation.redeemCollateral
                         ); 
@@ -702,92 +696,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         }
     }
 
-    /* getRedemptionHints() - Helper function for redeemCollateral().
-     *
-     * Find the first and last CDPs that will modified by calling redeemCollateral() with the same _CLVamount and _price,
-     * and return the address of the first one and the final ICR of the last one.
-     */
-    function getRedemptionHints(uint _CLVamount, uint _price)
-        external
-        view
-        returns (address firstRedemptionHint, uint partialRedemptionHintICR)
-    {
-        uint remainingCLV = _CLVamount;
-        address currentCDPuser = sortedCDPs.getLast();
-
-        while (currentCDPuser != address(0) && _getCurrentICR(currentCDPuser, _price) < MCR) {
-            currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
-        }
-
-        firstRedemptionHint = currentCDPuser;
-
-        while (currentCDPuser != address(0) && remainingCLV > 0) {
-            uint CLVDebt = CDPs[currentCDPuser].debt.add(_computePendingCLVDebtReward(currentCDPuser));
-
-            if (CLVDebt > remainingCLV) {
-                uint ETH = CDPs[currentCDPuser].coll.add(_computePendingETHReward(currentCDPuser));
-                uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
-
-                uint newDebt = CLVDebt.sub(remainingCLV);
-                uint compositeDebt = _getCompositeDebt(newDebt);
-
-                partialRedemptionHintICR = Math._computeCR(newColl, compositeDebt, _price);
-
-                break;
-            } else {
-                remainingCLV = remainingCLV.sub(CLVDebt);
-            }
-
-            currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
-        }
-    }
-
     // --- Helper functions ---
-
-    /* getApproxHint() - return address of a CDP that is, on average, (length / numTrials) positions away in the 
-    sortedCDPs list from the correct insert position of the CDP to be inserted. 
-    
-    Note: The output address is worst-case O(n) positions away from the correct insert position, however, the function 
-    is probabilistic. Input can be tuned to guarantee results to a high degree of confidence, e.g:
-
-    Submitting numTrials = k * sqrt(length), with k = 15 makes it very, very likely that the ouput address will 
-    be <= sqrt(length) positions away from the correct insert position.
-   
-    Note on the use of block.timestamp for random number generation: it is known to be gameable by miners. However, no value 
-    transmission depends on getApproxHint() - it is only used to generate hints for efficient list traversal. In this case, 
-    there is no profitable exploit.
-    */
-    function getApproxHint(uint _CR, uint _numTrials) external view returns (address) {
-        require (CDPOwners.length >= 1, "CDPManager: sortedList must not be empty");
-        uint price = priceFeed.getPrice();
-        address hintAddress = sortedCDPs.getLast();
-        uint closestICR = _getCurrentICR(hintAddress, price);
-        uint diff = Math._getAbsoluteDifference(_CR, closestICR);
-        uint i = 1;
-
-        while (i < _numTrials) {
-            uint arrayIndex = _getRandomArrayIndex(block.timestamp.add(i), CDPOwners.length);
-            address currentAddress = CDPOwners[arrayIndex];
-            uint currentICR = _getCurrentICR(currentAddress, price);
-
-            // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
-            uint currentDiff = Math._getAbsoluteDifference(currentICR, _CR);
-
-            if (currentDiff < diff) {
-                closestICR = currentICR;
-                diff = currentDiff;
-                hintAddress = currentAddress;
-            }
-            i++;
-        }
-    return hintAddress;
-}
-
-    // Convert input to pseudo-random uint in range [0, arrayLength - 1]
-    function _getRandomArrayIndex(uint _input, uint _arrayLength) internal pure returns (uint) {
-        uint randomIndex = uint256(keccak256(abi.encodePacked(_input))) % (_arrayLength);
-        return randomIndex;
-   }
 
     function getCurrentICR(address _user, uint _price) external view returns (uint) {
         return _getCurrentICR(_user, _price);
@@ -892,7 +801,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
      // Returns the CDPs entire debt and coll, including distribution pending rewards.
     function _getEntireDebtAndColl(address _user) 
-    internal 
+    internal view
     returns (uint debt, uint coll, uint pendingCLVDebtReward, uint pendingETHReward)
     {
         debt = CDPs[_user].debt;
@@ -1082,15 +991,15 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
     Given by the maximum of { $10 worth of ETH,  dollar value of 0.5% of collateral } */
     function _getGasCompensation(uint _entireColl, uint _price) internal view returns (uint) {
-        uint minETHComp = _getMinVirtualDebtInETH(_price);
+        // uint minETHComp = _getMinVirtualDebtInETH(_price);
 
-        if (_entireColl <= minETHComp) { return _entireColl; }
+        // if (_entireColl <= minETHComp) { return _entireColl; }
 
-        uint _0pt5percentOfColl = _entireColl.div(200);
+        // uint _0pt5percentOfColl = _entireColl.div(200);
 
-        uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
-        return compensation;
-        // return 0;
+        // uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
+        // return compensation;
+        return 0;
     }
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
@@ -1101,8 +1010,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        return _debt.add(minVirtualDebt);
-        // return _debt;
+        // return _debt.add(minVirtualDebt);
+        return _debt;
     }
 
     // --- 'require' wrapper functions ---

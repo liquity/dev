@@ -48,10 +48,6 @@ contract FunctionCaller {
         return cdpManager.getCurrentICR(_address, _price);  
     }
 
-    function cdpManager_getApproxHint (uint _CR, uint _numTrials) external returns (address) {
-        return cdpManager.getApproxHint(_CR, _numTrials);
-    }
-
     // --- SortedCDPs functions -  non-view wrappers ---
 
     function sortedCDPs_findInsertPosition(uint _ICR, uint _price, address _prevId, address _nextId) external returns (address, address) {

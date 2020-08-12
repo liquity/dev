@@ -51,14 +51,14 @@ contract HintHelpers is Ownable {
     // --- Functions ---
 
     /* getRedemptionHints() - Helper function for redeemCollateral().
-    *
-    * Find the first and last CDPs that will modified by calling redeemCollateral() with the same _CLVamount and _price,
-    * and return the address of the first one and the final ICR of the last one.
-    */
+     *
+     * Find the first and last CDPs that will modified by calling redeemCollateral() with the same _CLVamount and _price,
+     * and return the address of the first one and the final ICR of the last one.
+     */
     function getRedemptionHints(uint _CLVamount, uint _price)
         external
         view
-        returns (address firstRedemptionHint, uint partialRedemptionNewColl, uint partialRedemptionNewDebt)
+        returns (address firstRedemptionHint, uint partialRedemptionHintICR)
     {
         uint remainingCLV = _CLVamount;
         address currentCDPuser = sortedCDPs.getLast();
@@ -76,9 +76,13 @@ contract HintHelpers is Ownable {
             if (CLVDebt > remainingCLV) {
                 uint ETH = cdpManager.getCDPColl(currentCDPuser)
                                      .add(cdpManager.getPendingETHReward(currentCDPuser));
+                uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
 
-                partialRedemptionNewColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
-                partialRedemptionNewDebt = CLVDebt.sub(remainingCLV);
+                uint newDebt = CLVDebt.sub(remainingCLV);
+                uint compositeDebt = _getCompositeDebt(newDebt);
+
+                partialRedemptionHintICR = Math._computeCR(newColl, compositeDebt, _price);
+
                 break;
             } else {
                 remainingCLV = remainingCLV.sub(CLVDebt);
@@ -102,7 +106,7 @@ contract HintHelpers is Ownable {
     there is no profitable exploit.
     */
     function getApproxHint(uint _CR, uint _numTrials) external view returns (address) {
-        uint arrayLength = cdpManager.getallTrovesArrayCount();
+        uint arrayLength = cdpManager.getCDPOwnersCount();
         if (arrayLength == 0 ) { return address(0); } 
 
         uint price = priceFeed.getPrice();
@@ -113,39 +117,7 @@ contract HintHelpers is Ownable {
 
         while (i < _numTrials) {
             uint arrayIndex = _getRandomArrayIndex(block.timestamp.add(i), arrayLength);
-            address currentAddress = cdpManager.getTroveFromAllTrovesArray(arrayIndex);
-            uint currentICR = cdpManager.getCurrentICR(currentAddress, price);
-
-            // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
-            uint currentDiff = Math._getAbsoluteDifference(currentICR, _CR);
-
-            if (currentDiff < diff) {
-                closestICR = currentICR;
-                diff = currentDiff;
-                hintAddress = currentAddress;
-            }
-            i++;
-        }
-        return hintAddress;
-    }
-
-    function getApproxHintForSizeRange(uint _sizeRange, uint _CR, uint _numTrials)
-        external
-        view
-        returns (address)
-    {
-        uint arrayLength = cdpManager.getSizeArrayCount(_sizeRange);
-        if (arrayLength == 0 ) { return address(0); }  
-
-        uint price = priceFeed.getPrice();
-        address hintAddress = cdpManager.getSizeList(_sizeRange).getLast();
-        uint closestICR = cdpManager.getCurrentICR(hintAddress, price);
-        uint diff = Math._getAbsoluteDifference(_CR, closestICR);
-        uint i = 1;
-
-        while (i < _numTrials) {
-            uint arrayIndex = _getRandomArrayIndex(block.timestamp.add(i), arrayLength);
-            address currentAddress = cdpManager.getTroveFromSizeArray(arrayIndex, _sizeRange);
+            address currentAddress = cdpManager.getTroveFromCDPOwnersArray(arrayIndex);
             uint currentICR = cdpManager.getCurrentICR(currentAddress, price);
 
             // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer

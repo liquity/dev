@@ -44,4 +44,6 @@ interface IBorrowerOperations {
     function closeLoan() external;
 
     function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable;
+
+    function getCompositeDebt(uint _debt) external pure returns (uint);
 }

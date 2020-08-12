@@ -42,6 +42,7 @@ contract('CDPManager', async accounts => {
   let defaultPool
   let functionCaller
   let borrowerOperations
+  let hintHelpers
 
   let cdpManagerTester
 
@@ -64,6 +65,7 @@ contract('CDPManager', async accounts => {
     defaultPool = contracts.defaultPool
     functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
+    hintHelpers = contracts.hintHelpers
 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
@@ -1506,7 +1508,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints('55' + _18_zeros, price)
+    } = await hintHelpers.getRedemptionHints('55' + _18_zeros, price)
 
     assert.equal(firstRedemptionHint, carol)
     assert.equal(partialRedemptionHintICR, '19' + _18_zeros)
@@ -1535,7 +1537,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints('20' + _18_zeros, price)
+    } = await hintHelpers.getRedemptionHints('20' + _18_zeros, price)
 
     // We don't need to use getApproxHint for this test, since it's not the subject of this
     // test case, and the list is very small, so the correct position is quickly found
@@ -1661,7 +1663,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints('20' + _18_zeros, price)
+    } = await hintHelpers.getRedemptionHints('20' + _18_zeros, price)
 
     const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -1675,7 +1677,7 @@ contract('CDPManager', async accounts => {
       const {
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints('1' + _18_zeros, price)
+      } = await hintHelpers.getRedemptionHints('1' + _18_zeros, price)
 
       const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -2030,7 +2032,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(mv._400e18, price)
+    } = await hintHelpers.getRedemptionHints(mv._400e18, price)
 
     const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2094,7 +2096,7 @@ contract('CDPManager', async accounts => {
       ({
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints(mv._1000e18, price))
+      } = await hintHelpers.getRedemptionHints(mv._1000e18, price))
 
       const { 0: partialRedemptionHint_1 } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -2121,7 +2123,7 @@ contract('CDPManager', async accounts => {
       ({
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints('401000000000000000000', price))
+      } = await hintHelpers.getRedemptionHints('401000000000000000000', price))
 
       const { 0: partialRedemptionHint_2 } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -2146,7 +2148,7 @@ contract('CDPManager', async accounts => {
       ({
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints('239482309000000000000000000', price))
+      } = await hintHelpers.getRedemptionHints('239482309000000000000000000', price))
 
       const { 0: partialRedemptionHint_3 } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -2173,7 +2175,7 @@ contract('CDPManager', async accounts => {
       ({
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await cdpManager.getRedemptionHints('239482309000000000000000000', price))
+      } = await hintHelpers.getRedemptionHints('239482309000000000000000000', price))
 
       const { 0: partialRedemptionHint_4 } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -2226,7 +2228,7 @@ contract('CDPManager', async accounts => {
     ({
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(_120_CLV, price))
+    } = await hintHelpers.getRedemptionHints(_120_CLV, price))
 
     const { 0: partialRedemptionHint_1 } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2255,7 +2257,7 @@ contract('CDPManager', async accounts => {
     ({
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(_373_CLV, price))
+    } = await hintHelpers.getRedemptionHints(_373_CLV, price))
 
     const { 0: partialRedemptionHint_2 } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2283,7 +2285,7 @@ contract('CDPManager', async accounts => {
     ({
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(_950_CLV, price))
+    } = await hintHelpers.getRedemptionHints(_950_CLV, price))
 
     const { 0: partialRedemptionHint_3 } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2327,7 +2329,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints(mv._100e18, price)
+    } = await hintHelpers.getRedemptionHints(mv._100e18, price)
 
     const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -2369,7 +2371,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await cdpManager.getRedemptionHints('101000000000000000000', price)
+    } = await hintHelpers.getRedemptionHints('101000000000000000000', price)
 
     const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
