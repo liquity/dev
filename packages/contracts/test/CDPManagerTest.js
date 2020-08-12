@@ -1535,7 +1535,11 @@ contract('CDPManager', async accounts => {
   })
 
 
-  it('getRedemptionHints(): gets the address of the first CDP and the final ICR of the last CDP involved in a redemption', async () => {
+  // --- redeemCollateral() and hints ---
+
+  // TODO: Fix redemptions tests to accomodate new return values from hint helpers
+
+  it.only('getRedemptionHints(): gets the address of the first CDP and the final ICR of the last CDP involved in a redemption', async () => {
     // --- SETUP ---
     hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
 
@@ -1552,7 +1556,7 @@ contract('CDPManager', async accounts => {
     // --- TEST ---
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintICR,
     } = await hintHelpers.getRedemptionHints('55' + _18_zeros, price)
 
     assert.equal(firstRedemptionHint, carol)
@@ -1582,7 +1586,7 @@ contract('CDPManager', async accounts => {
     // Find hints for redeeming 20 CLV
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintICR, 
     } = await hintHelpers.getRedemptionHints('20' + _18_zeros, price)
 
     // We don't need to use getApproxHint for this test, since it's not the subject of this

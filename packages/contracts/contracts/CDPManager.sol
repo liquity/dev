@@ -336,7 +336,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         LiquidationValues memory V;
 
         V = (L.recoveryModeAtStart == true)
-            ? _liquidateRecoveryMode(_user, ICR, L.price, L.CLVInPool)
+            ? _liquidateRecoveryMode(_user, ICR, L.price, L.CLVInPool, sortedCDPs)
             : _liquidateNormalMode(_user, ICR, L.price, L.CLVInPool);
 
         poolManager.offset(V.debtToOffset, V.collToSendToSP);
@@ -385,7 +385,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         return V;
     }
 
-    function _liquidateRecoveryMode(address _user, uint _ICR, uint _price, uint _CLVInPool) internal
+    function _liquidateRecoveryMode(address _user, uint _ICR, uint _price, uint _CLVInPool, ISortedCDPs _sortedTroveList) internal
     returns (LiquidationValues memory V)
     {
         LocalVariables_InnerSingleLiquidateFunction memory L;
@@ -426,8 +426,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             _closeCDP(_user);
             emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInRecoveryMode);
 
-        // If CDP has the lowest ICR and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution)
-        } else if (_user == sortedCDPs.getLast()) {
+        // If CDP has the lowest ICR in the list and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution)
+        } else if (_user == _sortedTroveList.getLast()) {
 
             if (_CLVInPool == 0) {return V;}
             _applyPendingRewards(_user);
@@ -558,7 +558,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             // Attempt to close CDP
             if (L.backToNormalMode == false) {
 
-                V = _liquidateRecoveryMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+                V = _liquidateRecoveryMode(L.user, L.ICR, _price, L.remainingCLVInPool, _sortedTroveList);
 
                 // Update aggregate trackers
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
@@ -1190,15 +1190,15 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
     Given by the maximum of { $10 worth of ETH,  dollar value of 0.5% of collateral } */
     function _getGasCompensation(uint _entireColl, uint _price) internal view returns (uint) {
-        uint minETHComp = _getMinVirtualDebtInETH(_price);
+        // uint minETHComp = _getMinVirtualDebtInETH(_price);
 
-        if (_entireColl <= minETHComp) { return _entireColl; }
+        // if (_entireColl <= minETHComp) { return _entireColl; }
 
-        uint _0pt5percentOfColl = _entireColl.div(200);
+        // uint _0pt5percentOfColl = _entireColl.div(200);
 
-        uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
-        return compensation;
-        // return 0;
+        // uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
+        // return compensation;
+        return 0;
     }
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
@@ -1209,8 +1209,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        return _debt.add(MIN_VIRTUAL_DEBT);
-        // return _debt;
+        // return _debt.add(MIN_VIRTUAL_DEBT);
+        return _debt;
     }
 
     // --- 'require' wrapper functions ---
