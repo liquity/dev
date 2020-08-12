@@ -67,7 +67,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _1_Defaulter) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -114,7 +114,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _2_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -160,7 +160,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _3_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -206,7 +206,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _5_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -252,7 +252,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _10_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -298,7 +298,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _20_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -344,7 +344,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _30_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -390,7 +390,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _40_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -436,7 +436,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _45_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -478,7 +478,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -536,7 +536,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -595,7 +595,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -654,7 +654,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -714,7 +714,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -773,7 +773,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -832,7 +832,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -890,7 +890,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -948,7 +948,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1014,7 +1014,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _1_Defaulter) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1028,7 +1028,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1085,7 +1085,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _2_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1099,7 +1099,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1157,7 +1157,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _3_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1171,7 +1171,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1229,7 +1229,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _5_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1243,7 +1243,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1302,7 +1302,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _10_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1316,7 +1316,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1374,7 +1374,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _20_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1388,7 +1388,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1446,7 +1446,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _30_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1460,7 +1460,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1517,7 +1517,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _40_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1531,7 +1531,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1588,7 +1588,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _45_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1602,7 +1602,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
-    await borrowerOperations.openLoan(mv._9e28, whale, { from: whale, value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._9e28, whale, whale, { from: whale, value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._9e28, { from: whale })
 
     // Check SP has 9e28 CLV
@@ -1643,642 +1643,6 @@ contract('Gas cost tests', async accounts => {
 
     th.appendData({ gas: gas }, message, data)
   })
-
-
-
-
-  // --- BatchLiquidateTroves ---
-
-  // --- Pure redistribution, no offset. WITH pending distribution rewards ---
-
-  // 2 troves
-  it("", async () => {
-    0
-    const message = 'batchLiquidateTroves(). n = 2. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _2_defaulters = accounts.slice(1, 3)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_2_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _2_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_2_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _2_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 3 troves
-  it("", async () => {
-    0
-    const message = 'batchLiquidateTroves(). n = 3. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _3_defaulters = accounts.slice(1, 4)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_3_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _3_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_3_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _3_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 5 troves
-  it("", async () => {
-    0
-    const message = 'batchLiquidateTroves(). n = 5. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _5_defaulters = accounts.slice(1, 6)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_5_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _5_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_5_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _5_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 10 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 10. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _10_defaulters = accounts.slice(1, 11)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_10_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _10_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_10_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _10_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 20 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 20. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _20_defaulters = accounts.slice(1, 21)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_20_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _20_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_20_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _20_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 30 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 30. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    // --- Accounts to be liquidated in the test tx ---
-    const _30_defaulters = accounts.slice(1, 31)
-    await th.openLoan_allAccounts(_30_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _30_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_30_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _30_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 40 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 40. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-
-    // --- Accounts to be liquidated in the test tx ---
-    const _40_defaulters = accounts.slice(1, 41)
-    await th.openLoan_allAccounts(_40_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _40_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_40_defaulters, { from: accounts[0] })
-
-    // check all defaulters liquidated
-    for (account of _40_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 45 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 45. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    // --- Accounts to be liquidated in the test tx ---
-    const _45_defaulters = accounts.slice(1, 46)
-    await th.openLoan_allAccounts(_45_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // check all defaulters active
-    for (account of _45_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_45_defaulters, { from: accounts[0] })
-
-    // check all defaulters liquidated
-    for (account of _45_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-
-
-  // --- batchLiquidateTroves - pure offset with Stability Pool ---
-
-  // 2 troves
-  it("", async () => {
-    0
-    const message = 'batchLiquidateTroves(). n = 2. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _2_defaulters = accounts.slice(1, 3)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_2_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _2_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
-    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_2_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _2_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 3 troves
-  it("", async () => {
-    0
-    const message = 'batchLiquidateTroves(). n = 3. All troves fully offset. Have pending distribution rewards.'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _3_defaulters = accounts.slice(1, 4)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_3_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _3_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
-    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
-
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_3_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _3_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 5 troves
-  it("", async () => {
-    0
-    const message = 'batchLiquidateTroves(). n = 5. All troves fully offset. Have pending distribution rewards'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _5_defaulters = accounts.slice(1, 6)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_5_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _5_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
-    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
-
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_5_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _5_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 10 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 10. All troves fully offset. Have pending distribution rewards'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _10_defaulters = accounts.slice(1, 11)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_10_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _10_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
-    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
-
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_10_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _10_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 20 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 20. All troves fully offset. Have pending distribution rewards'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    const _20_defaulters = accounts.slice(1, 21)
-    // --- Accounts to be liquidated in the test tx ---
-    await th.openLoan_allAccounts(_20_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _20_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
-    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
-
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_20_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _20_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 30 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 30. All troves fully offset. Have pending distribution rewards'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    // --- Accounts to be liquidated in the test tx ---
-    const _30_defaulters = accounts.slice(1, 31)
-    await th.openLoan_allAccounts(_30_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _30_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
-    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
-
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_30_defaulters, { from: accounts[0] })
-
-    // Check all defaulters liquidated
-    for (account of _30_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 40 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 40. All troves fully offset. Have pending distribution rewards'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-
-    // --- Accounts to be liquidated in the test tx ---
-    const _40_defaulters = accounts.slice(1, 41)
-    await th.openLoan_allAccounts(_40_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // Check all defaulters active
-    for (account of _40_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
-    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
-
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_40_defaulters, { from: accounts[0] })
-
-    // check all defaulters liquidated
-    for (account of _40_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-  // 45 troves
-  it("", async () => {
-    const message = 'batchLiquidateTroves(). n = 45. All troves fully offset. Have pending distribution rewards'
-    // 10 accts each open CDP with 10 ether, withdraw 180 CLV
-
-    await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._180e18)
-
-    // Account 500 opens with 1 ether and withdraws 180 CLV
-    await borrowerOperations.openLoan(mv._180e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
-
-    // --- Accounts to be liquidated in the test tx ---
-    const _45_defaulters = accounts.slice(1, 46)
-    await th.openLoan_allAccounts(_45_defaulters, borrowerOperations, mv._1_Ether, mv._180e18)
-
-    // check all defaulters active
-    for (account of _45_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
-
-    // Account 500 is liquidated, creates pending distribution rewards for all
-    await priceFeed.setPrice(mv._100e18)
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
-    await priceFeed.setPrice(mv._200e18)
-
-    // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
-    await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
-
-
-    // Price drops, account[1]'s ICR falls below MCR
-    await priceFeed.setPrice(mv._100e18)
-
-    const tx = await cdpManager.batchLiquidateTroves(_45_defaulters, { from: accounts[0] })
-
-    // check all defaulters liquidated
-    for (account of _45_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
-
-    const gas = th.gasUsed(tx)
-    th.logGas(gas, message)
-
-    th.appendData({ gas: gas }, message, data)
-  })
-
-
 
   it("Export test data", async () => {
     fs.writeFile('gasTest/outputs/liquidateCDPsGasData.csv', data, (err) => {

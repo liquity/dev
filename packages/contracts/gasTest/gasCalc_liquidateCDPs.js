@@ -69,7 +69,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _1_Defaulter) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -111,7 +111,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _2_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 CLV
-    await borrowerOperations.openLoan(mv._110e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._110e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -150,7 +150,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _3_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -189,7 +189,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _5_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -228,7 +228,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _10_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -267,7 +267,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _20_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -306,7 +306,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _30_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -345,7 +345,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _40_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -384,7 +384,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _45_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -423,7 +423,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _50_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -461,7 +461,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _60_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -500,7 +500,7 @@ contract('Gas cost tests', async accounts => {
     for (account of _65_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -536,7 +536,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //1 acct opens CDP with 1 ether and withdraw 100 CLV
@@ -572,7 +572,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //2 accts open CDP with 1 ether and withdraw 100 CLV
@@ -608,7 +608,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //3 accts open CDP with 1 ether and withdraw 100 CLV
@@ -644,7 +644,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //5 accts open CDP with 1 ether and withdraw 100 CLV
@@ -680,7 +680,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //10 accts open CDP with 1 ether and withdraw 100 CLV
@@ -716,7 +716,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //20 accts open CDP with 1 ether and withdraw 100 CLV
@@ -753,7 +753,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //30 accts open CDP with 1 ether and withdraw 100 CLV
@@ -789,7 +789,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //40 accts open CDP with 1 ether and withdraw 100 CLV
@@ -825,7 +825,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //50 accts open CDP with 1 ether and withdraw 100 CLV
@@ -861,7 +861,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
 
     //50 accts open CDP with 1 ether and withdraw 100 CLV
@@ -900,7 +900,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 1 Accounts to be liquidated in the test tx --
@@ -917,7 +917,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
@@ -947,7 +947,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 2 Accounts to be liquidated in the test tx --
@@ -964,7 +964,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
@@ -994,7 +994,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 3 Accounts to be liquidated in the test tx --
@@ -1011,7 +1011,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
@@ -1041,7 +1041,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 5 Accounts to be liquidated in the test tx --
@@ -1058,7 +1058,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
@@ -1088,7 +1088,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 10 Accounts to be liquidated in the test tx --
@@ -1105,7 +1105,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
@@ -1135,7 +1135,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 20 Accounts to be liquidated in the test tx --
@@ -1152,7 +1152,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
@@ -1182,7 +1182,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 30 Accounts to be liquidated in the test tx --
@@ -1199,7 +1199,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
@@ -1229,7 +1229,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 40 Accounts to be liquidated in the test tx --
@@ -1246,7 +1246,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
@@ -1277,7 +1277,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 50 Accounts to be liquidated in the test tx --
@@ -1294,7 +1294,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 
@@ -1324,7 +1324,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), borrowerOperations, mv._10_Ether, mv._100e18)
 
     // Account 500 opens with 1 ether and withdraws 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, accounts[500], { from: accounts[500], value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, accounts[500], accounts[500], { from: accounts[500], value: mv._1_Ether })
     assert.isTrue(await sortedCDPs.contains(accounts[500]))
 
     // --- 50 Accounts to be liquidated in the test tx --
@@ -1341,7 +1341,7 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(mv._200e18)
 
     // Whale opens loan and fills SP with 1 billion CLV
-    await borrowerOperations.openLoan(mv._1e27, accounts[999], { from: accounts[999], value: mv._1billion_Ether })
+    await borrowerOperations.openLoan(mv._1e27, accounts[999], accounts[999], { from: accounts[999], value: mv._1billion_Ether })
     await poolManager.provideToSP(mv._1e27, { from: accounts[999] })
     assert.equal((await stabilityPool.getCLV()), mv._1e27)
 

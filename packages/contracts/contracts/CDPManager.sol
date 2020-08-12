@@ -281,7 +281,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         return sizeArray[_index];
     }
 
-      function getSizeList(uint _sizeRange) external view returns (ISortedCDPs) {
+    function getSizeList(uint _sizeRange) external view returns (ISortedCDPs) {
         return _getSizeList(_sizeRange);
     }
 
@@ -300,6 +300,10 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         return newSizeList;
     }
  
+    function getSizeRange(uint _coll) external pure returns (uint) {
+        return _getSizeRange(_coll);
+    }
+
     function _getSizeRange(uint _coll) internal pure returns (uint) {
 
         if (_coll < 1e19) {  // 
@@ -1178,15 +1182,15 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
     Given by the maximum of { $10 worth of ETH,  dollar value of 0.5% of collateral } */
     function _getGasCompensation(uint _entireColl, uint _price) internal view returns (uint) {
-        // uint minETHComp = _getMinVirtualDebtInETH(_price);
+        uint minETHComp = _getMinVirtualDebtInETH(_price);
 
-        // if (_entireColl <= minETHComp) { return _entireColl; }
+        if (_entireColl <= minETHComp) { return _entireColl; }
 
-        // uint _0pt5percentOfColl = _entireColl.div(200);
+        uint _0pt5percentOfColl = _entireColl.div(200);
 
-        // uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
-        // return compensation;
-        return 0;
+        uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
+        return compensation;
+        // return 0;
     }
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
@@ -1197,8 +1201,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        // return _debt.add(minVirtualDebt);
-        return _debt;
+        return _debt.add(MIN_VIRTUAL_DEBT);
+        // return _debt;
     }
 
     // --- 'require' wrapper functions ---

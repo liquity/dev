@@ -103,7 +103,8 @@ contract HintHelpers is Ownable {
     */
     function getApproxHint(uint _CR, uint _numTrials) external view returns (address) {
         uint arrayLength = cdpManager.getallTrovesArrayCount();
-        require(arrayLength >= 1, "CDPManager: sortedList must not be empty");
+        if (arrayLength == 0 ) { return address(0); } 
+
         uint price = priceFeed.getPrice();
         address hintAddress = sortedCDPs.getLast();
         uint closestICR = cdpManager.getCurrentICR(hintAddress, price);
@@ -134,7 +135,8 @@ contract HintHelpers is Ownable {
         returns (address)
     {
         uint arrayLength = cdpManager.getSizeArrayCount(_sizeRange);
-        require(arrayLength >= 1, "CDPManager: sortedList must not be empty");
+        if (arrayLength == 0 ) { return address(0); }  
+
         uint price = priceFeed.getPrice();
         address hintAddress = cdpManager.getSizeList(_sizeRange).getLast();
         uint closestICR = cdpManager.getCurrentICR(hintAddress, price);
@@ -165,7 +167,12 @@ contract HintHelpers is Ownable {
         return randomIndex;
    }
 
+    function computeCR(uint _coll, uint _debt, uint _price) external pure returns (uint) {
+        return Math._computeCR(_coll, _debt, _price);
+    }
+
     // TODO: extract to common base contract
+
    // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
     function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
         minETHComp = MIN_VIRTUAL_DEBT.mul(1e18).div(_price);

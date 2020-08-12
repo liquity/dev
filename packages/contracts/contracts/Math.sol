@@ -38,9 +38,5 @@ library Math {
             return 2**256 - 1; 
         }
     }
-
-    function computeCR(uint _coll, uint _debt, uint _price) external pure returns (uint) {
-        return _computeCR(_coll, _debt, _price);
-    }
 }
 

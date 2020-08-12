@@ -1,5 +1,6 @@
 const web3 = require('web3')
 const BN = require('bn.js')
+const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 
 const MoneyValues = {
   _1_Ether: web3.utils.toWei('1', 'ether'),
@@ -10,6 +11,7 @@ const MoneyValues = {
   _6_Ether: web3.utils.toWei('6', 'ether'),
   _7_Ether: web3.utils.toWei('7', 'ether'),
   _8_Ether: web3.utils.toWei('8', 'ether'),
+  _9_Ether: web3.utils.toWei('9', 'ether'),
   _10_Ether: web3.utils.toWei('10', 'ether'),
   _11_Ether: web3.utils.toWei('11', 'ether'),
   _15_Ether: web3.utils.toWei('15', 'ether'),
@@ -145,7 +147,8 @@ class TestHelper {
     meanGas = sum / gasCostList.Length
 
     // median is the middle element (for odd list size) or element adjacent-right of middle (for even list size)
-    const medianGas = (gasCostList[Math.floor(gasCostList.length / 2)])
+    const sortedGasCostList = [...gasCostList].sort()
+    const medianGas = (sortedGasCostList[Math.floor(sortedGasCostList.length / 2)])
     return { gasCostList, minGas, maxGas, meanGas, medianGas }
   }
 
@@ -326,57 +329,158 @@ class TestHelper {
     return totalCollRemainder
   }
 
+  static async getCompositeDebt(contracts, debt) {
+    const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
+    return compositeDebt
+  }
+  
+  static async getBorrowerOpsListHints(contracts, newColl, newDebt, price) {
+    const compositeDebt = await this.getCompositeDebt(contracts, newDebt)
+    const newICR = await contracts.hintHelpers.computeCR(newColl, compositeDebt, price)
+
+    const sizeRange = await contracts.cdpManager.getSizeRange(newColl)
+    const sizeRangeListAddress = await contracts.cdpManager.getSizeList(sizeRange)
+    const sizeRangeList = await SortedCDPs.at(sizeRangeListAddress)
+
+    const approxfullListHint = await contracts.hintHelpers.getApproxHint(newICR, 50)
+    const approxsizeListHint = await contracts.hintHelpers.getApproxHintForSizeRange(sizeRange, newICR, 50)
+
+    const exactFullListHint  = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
+    const exactSizeListHint = (await sizeRangeList.findInsertPosition(newICR, price, approxsizeListHint, approxsizeListHint))[0]
+
+    return [exactFullListHint, exactSizeListHint]
+  }
+
+  static async getEntireCollAndDebt (contracts, account) {
+    // console.log(`account: ${account}`)
+    const rawColl = (await contracts.cdpManager.CDPs(account))[1]
+    const rawDebt = (await contracts.cdpManager.CDPs(account))[0]
+    const pendingETHReward = await contracts.cdpManager.getPendingETHReward(account)
+    const pendingCLVDebtReward = await contracts.cdpManager.getPendingCLVDebtReward(account)
+    const entireColl = rawColl.add(pendingETHReward)
+    const entireDebt = rawDebt.add(pendingCLVDebtReward)
+
+    return { entireColl, entireDebt }
+  }
+
+  static async getCollAndDebtFromAddColl(contracts,  account, amount) {
+    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+   
+    const newColl = entireColl.add(this.toBN(amount))
+    const newDebt = entireDebt
+    return { newColl, newDebt }
+  }
+
+  static async getCollAndDebtFromWithdrawColl(contracts, account, amount) {
+    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+    // console.log(`entireColl  ${entireColl}`)
+    // console.log(`entireDebt  ${entireDebt}`)
+
+    const newColl = entireColl.sub(this.toBN(amount))
+    const newDebt = entireDebt
+    return { newColl, newDebt }
+  }
+
+  static async getCollAndDebtFromWithdrawCLV(contracts, account, amount) {
+    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+
+    const newColl = entireColl
+    const newDebt = entireDebt.add(this.toBN(amount))
+  
+    return { newColl, newDebt }
+  }
+
+  static async getCollAndDebtFromRepayCLV(contracts, account, amount) {
+    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+
+    const newColl = entireColl
+    const newDebt = entireDebt.sub(this.toBN(amount))
+  
+    return { newColl, newDebt }
+  }
+
+  static async getCollAndDebtFromAdjustment(contracts, account, ETHChange, CLVChange) {
+    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+
+    const coll = (await contracts.cdpManager.CDPs(account))[1]
+    const debt = (await contracts.cdpManager.CDPs(account))[0]
+   
+    const newColl = entireColl.add(ETHChange)
+    const newDebt = entireDebt.add(CLVChange)
+  
+    return { newColl, newDebt }
+  }
+  
+
+
   // --- BorrowerOperations gas functions ---
 
-  static async openLoan_allAccounts(accounts, borrowerOperations, ETHAmount, CLVAmount) {
+  static async openLoan_allAccounts(accounts, contracts, ETHAmount, CLVAmount) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+    
     for (const account of accounts) {
-      const tx = await borrowerOperations.openLoan(CLVAmount, account, account, { from: account, value: ETHAmount })
+      const hints = await this.getBorrowerOpsListHints(contracts, ETHAmount, CLVAmount, price)
+
+      const tx = await contracts.borrowerOperations.openLoan(CLVAmount, hints[0], hints[1], { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async openLoan_allAccounts_randomETH(minETH, maxETH, accounts, borrowerOperations, CLVAmount) {
+  static async openLoan_allAccounts_randomETH(minETH, maxETH, accounts, contracts, CLVAmount) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+    
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
-      const tx = await borrowerOperations.openLoan(CLVAmount, account, account, { from: account, value: randCollAmount })
+      const hints = await this.getBorrowerOpsListHints(contracts, randCollAmount, CLVAmount, price)
+
+      const tx = await contracts.borrowerOperations.openLoan(CLVAmount, hints[0], hints[1], { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async openLoan_allAccounts_randomETH_ProportionalCLV(minETH, maxETH, accounts, borrowerOperations, proportion) {
+  static async openLoan_allAccounts_randomETH_ProportionalCLV(minETH, maxETH, accounts, contracts, proportion) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
       const proportionalCLV = (web3.utils.toBN(proportion)).mul(web3.utils.toBN(randCollAmount))
-      const tx = await borrowerOperations.openLoan(proportionalCLV, account, account, { from: account, value: randCollAmount })
+      const hints = await this.getBorrowerOpsListHints(contracts, randCollAmount, proportionalCLV, price)
+
+      const tx = await contracts.borrowerOperations.openLoan(proportionalCLV, hints[0], hints[1], { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
-
-  static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, borrowerOperations, minCLVProportion, maxCLVProportion, logging) {
+  
+  static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, contracts, minCLVProportion, maxCLVProportion, logging=false) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
     const _1e18 = web3.utils.toBN('1000000000000000000')
 
     let i = 0
     for (const account of accounts) {
 
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
+      // console.log(`randCollAmount ${randCollAmount }`)
       const randCLVProportion = this.randAmountInWei(minCLVProportion, maxCLVProportion)
       const proportionalCLV = (web3.utils.toBN(randCLVProportion)).mul(web3.utils.toBN(randCollAmount).div(_1e18))
 
-      const tx = await borrowerOperations.openLoan(proportionalCLV, account, account, { from: account, value: randCollAmount })
+      const hints = await this.getBorrowerOpsListHints(contracts, randCollAmount, proportionalCLV, price)
+
+      const tx = await contracts.borrowerOperations.openLoan(proportionalCLV, hints[0], hints[1], { from: account, value: randCollAmount })
 
       if (logging === true && tx.receipt.status) {
         i++
-        console.log(`${i}. Loan opened. addr: ${this.squeezeAddr(account)} coll: ${randCollAmount} debt: ${proportionalCLV}`)
+        const ICR = await contracts.cdpManager.getCurrentICR(account, price)
+        // console.log(`${i}. Loan opened. addr: ${this.squeezeAddr(account)} coll: ${randCollAmount} debt: ${proportionalCLV} ICR: ${ICR}`)
       }
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
@@ -385,34 +489,44 @@ class TestHelper {
   }
 
 
-  static async openLoan_allAccounts_randomCLV(minCLV, maxCLV, accounts, borrowerOperations, ETHAmount) {
+  static async openLoan_allAccounts_randomCLV(minCLV, maxCLV, accounts, contracts, ETHAmount) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
       const randCLVAmount = this.randAmountInWei(minCLV, maxCLV)
-      const tx = await borrowerOperations.openLoan(randCLVAmount, account, account, { from: account, value: ETHAmount })
+      const hints = await this.getBorrowerOpsListHints(contracts, ETHAmount, randCLVAmount, price)
+
+      const tx = await contracts.borrowerOperations.openLoan(randCLVAmount, hints[0], hints[1], { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async closeLoan_allAccounts(accounts, borrowerOperations) {
+  static async closeLoan_allAccounts(accounts, contracts) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
-      const tx = await borrowerOperations.closeLoan({ from: account })
+      const tx = await contracts.borrowerOperations.closeLoan({ from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async openLoan_allAccounts_decreasingCLVAmounts(accounts, borrowerOperations, ETHAmount, maxCLVAmount) {
+  static async openLoan_allAccounts_decreasingCLVAmounts(accounts, contracts, ETHAmount, maxCLVAmount) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+
     let i = 0
     for (const account of accounts) {
       const CLVAmount = (maxCLVAmount - i).toString()
       const CLVAmountWei = web3.utils.toWei(CLVAmount, 'ether')
-      const tx = await borrowerOperations.openLoan(CLVAmountWei, account, account, { from: account, value: ETHAmount })
+      const hints = await this.getBorrowerOpsListHints(contracts, ETHAmount, CLVAmountWei, price)
+
+      const tx = await contracts.borrowerOperations.openLoan(CLVAmountWei, hints[0], hints[1], { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
       i += 1
@@ -423,29 +537,24 @@ class TestHelper {
   static async adjustLoan_allAccounts(accounts, contracts, ETHAmount, CLVAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
       let tx;
 
-      let CLVAmountBN = web3.utils.toBN(CLVAmount)
-      let ETHAmountBN = web3.utils.toBN(ETHAmount)
-      const zero = web3.utils.toBN('0')
+      let ETHChangeBN = this.toBN(ETHAmount)
+      const CLVChangeBN = this.toBN(CLVAmount)
 
-      const debt = (await contracts.cdpManager.CDPs(account))[0]
-      const coll = (await contracts.cdpManager.CDPs(account))[1]
+      const { newColl, newDebt } = await this.getCollAndDebtFromAdjustment(contracts, account, ETHChangeBN, CLVChangeBN)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
 
-      const newDebt = debt.add(CLVAmountBN)
-      const newColl = coll.add(ETHAmountBN)
+      const zero = this.toBN('0')
 
-      const newICR = this.computeICR(newColl, newDebt, price)
-      const approxHint = await contracts.hintHelpers.getApproxHint(newICR, 50)
-      const insertAddr = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxHint, approxHint))[0]
-
-      if (ETHAmountBN.gt(zero)) {
-        tx = await contracts.borrowerOperations.adjustLoan(0, CLVAmountBN, insertAddr, { from: account, value: ETHAmountBN })
-      } else if (ETHAmountBN.lt(zero)) {
-        ETHAmountBN = ETHAmountBN.neg()
+      if (ETHChangeBN.gt(zero)) {
+        tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, hints[0], hints[1], { from: account, value: ETHChangeBN })
+      } else if (ETHChangeBN.lt(zero)) {
+        ETHChangeBN = ETHChangeBN.neg()
         // console.log(`ETHAmountBN: ${ETHAmountBN}`)
-        tx = await contracts.borrowerOperations.adjustLoan(ETHAmountBN, CLVAmountBN, insertAddr, { from: account })
+        tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, hints[0], hints[1], { from: account })
       }
 
       const gas = this.gasUsed(tx)
@@ -457,29 +566,23 @@ class TestHelper {
   static async adjustLoan_allAccounts_randomAmount(accounts, contracts, ETHMin, ETHMax, CLVMin, CLVMax) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
       let tx;
 
-      let CLVAmountBN = web3.utils.toBN(this.randAmountInGWei(CLVMin, CLVMax))
-      let ETHAmountBN = web3.utils.toBN(this.randAmountInGWei(ETHMin, ETHMax))
+      let ETHAmountBN = this.toBN(this.randAmountInWei(ETHMin, ETHMax))
+      let CLVAmountBN = this.toBN(this.randAmountInWei(CLVMin, CLVMax))
 
-      const zero = web3.utils.toBN('0')
+      const { newColl, newDebt } = await this.getCollAndDebtFromAdjustment(contracts, account, ETHAmountBN, CLVAmountBN)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
 
-      const debt = (await contracts.cdpManager.CDPs(account))[0]
-      const coll = (await contracts.cdpManager.CDPs(account))[1]
-
-      const newDebt = debt.add(CLVAmountBN)
-      const newColl = coll.add(ETHAmountBN)
-
-      const newICR = this.computeICR(newColl, newDebt, price)
-      const approxHint = await contracts.hintHelpers.getApproxHint(newICR, 50)
-      const insertAddr = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxHint, approxHint))[0]
+      const zero = this.toBN('0')
 
       if (ETHAmountBN.gt(zero)) {
-        tx = await contracts.borrowerOperations.adjustLoan(0, CLVAmountBN, insertAddr, { from: account, value: ETHAmountBN })
+        tx = await contracts.borrowerOperations.adjustLoan(0, CLVAmountBN, hints[0], hints[1], { from: account, value: ETHAmountBN })
       } else if (ETHAmountBN.lt(zero)) {
         ETHAmountBN = ETHAmountBN.neg()
-        tx = await contracts.borrowerOperations.adjustLoan(ETHAmountBN, CLVAmountBN, insertAddr, { from: account })
+        tx = await contracts.borrowerOperations.adjustLoan(ETHAmountBN, CLVAmountBN, hints[0], hints[1], { from: account })
       }
 
       const gas = this.gasUsed(tx)
@@ -488,21 +591,33 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async addColl_allAccounts(accounts, borrowerOperations, amount) {
+  static async addColl_allAccounts(accounts, contracts, amount) {
+    const price = await contracts.priceFeed.getPrice()
+
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await borrowerOperations.addColl(account, account, account, { from: account, value: amount })
+
+      const { newColl, newDebt } = await this.getCollAndDebtFromAddColl(contracts, account, amount)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
+      
+      const tx = await contracts.borrowerOperations.addColl(account, hints[0], hints[1], { from: account, value: amount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async addColl_allAccounts_randomAmount(min, max, accounts, borrowerOperations) {
+  static async addColl_allAccounts_randomAmount(min, max, accounts, contracts) {
+    const price = await contracts.priceFeed.getPrice()
+
     const gasCostList = []
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(min, max)
-      const tx = await borrowerOperations.addColl(account, account, account, { from: account, value: randCollAmount })
+
+      const { newColl, newDebt } = await this.getCollAndDebtFromAddColl(contracts, account, randCollAmount)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
+
+      const tx = await contracts.borrowerOperations.addColl(account, hints[0], hints[1], { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -510,21 +625,34 @@ class TestHelper {
   }
 
   // 
-  static async withdrawColl_allAccounts(accounts, borrowerOperations, amount) {
+  static async withdrawColl_allAccounts(accounts, contracts, amount) {
+    const price = await contracts.priceFeed.getPrice()
+
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await borrowerOperations.withdrawColl(amount, account, account, { from: account })
+      const { newColl, newDebt } = await this.getCollAndDebtFromWithdrawColl(contracts, account, amount)
+      // console.log(`newColl: ${newColl} `)
+      // console.log(`newDebt: ${newDebt} `)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
+
+      const tx = await contracts.borrowerOperations.withdrawColl(amount, hints[0], hints[1], { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawColl_allAccounts_randomAmount(min, max, accounts, borrowerOperations) {
+  static async withdrawColl_allAccounts_randomAmount(min, max, accounts, contracts) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(min, max)
-      const tx = await borrowerOperations.withdrawColl(randCollAmount, account, account, { from: account })
+
+      const { newColl, newDebt } = await this.getCollAndDebtFromWithdrawColl(contracts, account, randCollAmount)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
+
+      const tx = await contracts.borrowerOperations.withdrawColl(randCollAmount, hints[0], hints[1], { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
       // console.log("gasCostlist length is " + gasCostList.length)
@@ -532,44 +660,64 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawCLV_allAccounts(accounts, borrowerOperations, amount) {
+  static async withdrawCLV_allAccounts(accounts, contracts, amount) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
-      const tx = await borrowerOperations.withdrawCLV(amount, account, account, { from: account })
+      const { newColl, newDebt } = await this.getCollAndDebtFromWithdrawCLV(contracts, account, amount)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
+
+      const tx = await contracts.borrowerOperations.withdrawCLV(amount, hints[0], hints[1], { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawCLV_allAccounts_randomAmount(min, max, accounts, borrowerOperations) {
+  static async withdrawCLV_allAccounts_randomAmount(min, max, accounts, contracts) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
       const randCLVAmount = this.randAmountInWei(min, max)
 
-      const tx = await borrowerOperations.withdrawCLV(randCLVAmount, account, account, { from: account })
+      const { newColl, newDebt } = await this.getCollAndDebtFromWithdrawCLV(contracts, account, randCLVAmount)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
+
+      const tx = await contracts.borrowerOperations.withdrawCLV(randCLVAmount, hints[0], hints[1], { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async repayCLV_allAccounts(accounts, borrowerOperations, amount) {
+  static async repayCLV_allAccounts(accounts, contracts, amount) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
-      const tx = await borrowerOperations.repayCLV(amount, account, account, { from: account })
+      const { newColl, newDebt } = await this.getCollAndDebtFromRepayCLV(contracts, account, amount)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
+
+      const tx = await contracts.borrowerOperations.repayCLV(amount, hints[0], hints[1], { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async repayCLV_allAccounts_randomAmount(min, max, accounts, borrowerOperations) {
+  static async repayCLV_allAccounts_randomAmount(min, max, accounts, contracts) {
     const gasCostList = []
+    const price = await contracts.priceFeed.getPrice()
+
     for (const account of accounts) {
       const randCLVAmount = this.randAmountInWei(min, max)
 
-      const tx = await borrowerOperations.repayCLV(randCLVAmount, account, account, { from: account })
+      const { newColl, newDebt } = await this.getCollAndDebtFromRepayCLV(contracts, account, randCLVAmount)
+      const hints = await this.getBorrowerOpsListHints(contracts, newColl, newDebt, price)
+
+      const tx = await contracts.borrowerOperations.repayCLV(randCLVAmount, hints[0], hints[1], { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -592,21 +740,7 @@ class TestHelper {
 
   static async redeemCollateral(redeemer, contracts, CLVAmount) {
     const price = await contracts.priceFeed.getPrice()
-    const redemptionHints = await contracts.hintHelpers.getRedemptionHints(CLVAmount, price)
-    const firstRedemptionHint = redemptionHints[0]
-    const partialRedemptionHintICR = redemptionHints[1]
-
-    const approxPartialRedemptionHint = await contracts.hintHelpers.getApproxHint(partialRedemptionHintICR, 50)
-    const exactPartialRedemptionHint = (await contracts.sortedCDPs.findInsertPosition(partialRedemptionHintICR,
-      price,
-      approxPartialRedemptionHint,
-      approxPartialRedemptionHint))[0]
-
-    const tx = await contracts.cdpManager.redeemCollateral(CLVAmount,
-      firstRedemptionHint,
-      exactPartialRedemptionHint,
-      partialRedemptionHintICR,
-      { from: redeemer })
+    const tx = await this.performRedemptionTx(redeemer, price, contracts, CLVAmount)
     const gas = await this.gasUsed(tx)
     return gas
   }
@@ -617,37 +751,60 @@ class TestHelper {
 
     for (const redeemer of accounts) {
       const randCLVAmount = this.randAmountInWei(min, max)
-      const redemptionHints = await contracts.hintHelpers.getRedemptionHints(randCLVAmount, price)
-      const firstRedemptionHint = redemptionHints[0]
-      const partialRedemptionHintICR = redemptionHints[1]
 
-      const approxPartialRedemptionHint = await contracts.hintHelpers.getApproxHint(partialRedemptionHintICR, 50)
-      const exactPartialRedemptionHint = (await contracts.sortedCDPs.findInsertPosition(partialRedemptionHintICR,
-        price,
-        approxPartialRedemptionHint,
-        approxPartialRedemptionHint))[0]
-
-      const tx = await contracts.cdpManager.redeemCollateral(randCLVAmount,
-        firstRedemptionHint,
-        exactPartialRedemptionHint,
-        partialRedemptionHintICR,
-        { from: redeemer })
+      await this.performRedemptionTx(redeemer, price, contracts, randCLVAmount)
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
+  static async performRedemptionTx(redeemer, price, contracts, CLVAmount) {
+    const redemptionHints = await contracts.hintHelpers.getRedemptionHints(CLVAmount, price)
+    
+    const firstRedemptionHint = redemptionHints[0]
+    const partialRedemptionNewColl = redemptionHints[1]
+    const partialRedemptionHintNewDebt = redemptionHints[2]
+
+    const partialRedemptionNewICR = await contracts.hintHelpers.computeCR(partialRedemptionNewColl, partialRedemptionHintNewDebt, price)
+   
+    const approxPartialRedemptionHint = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50)
+    const exactPartialRedemptionHint = (await contracts.sortedCDPs.findInsertPosition(partialRedemptionNewICR,
+      price,
+      approxPartialRedemptionHint,
+      approxPartialRedemptionHint))[0]
+
+    const sizeRange = await contracts.cdpManager.getSizeRange(partialRedemptionNewColl)
+    const sizeRangeListAddress = await contracts.cdpManager.getSizeList(sizeRange) 
+    const sizeRangeList = await SortedCDPs.at(sizeRangeListAddress)
+
+    const approxSizeListHint = await contracts.hintHelpers.getApproxHintForSizeRange(sizeRange, partialRedemptionNewICR, 50)
+    const exactSizeListHint = (await sizeRangeList.findInsertPosition(partialRedemptionNewICR,
+      price,
+      approxSizeListHint,
+      approxSizeListHint))[0]
+
+    const tx = await contracts.cdpManager.redeemCollateral(CLVAmount,
+      firstRedemptionHint,
+      exactPartialRedemptionHint,
+      partialRedemptionNewICR,
+      exactSizeListHint,
+      { from: redeemer })
+    
+    return tx
+  }
+
   // --- Composite functions ---
 
-  static async makeCDPsIncreasingICR(accounts, borrowerOperations) {
+  static async makeCDPsIncreasingICR(accounts, contracts) {
+    const price = await contracts.priceFeed.getPrice()
 
     let amountFinney = 2000
 
     for (const account of accounts) {
-      const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
+      const coll = web3.utils.toWei(amountFinney.toString(), 'finney')
 
-      await borrowerOperations.openLoan('200000000000000000000', account, account, { from: account, value: amountFinney })
+      await contracts.borrowerOperations.openLoan('200000000000000000000', account, account, { from: account, value: coll })
 
       amountFinney += 10
     }
