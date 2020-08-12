@@ -467,14 +467,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
                 L.entireSystemDebt = L.entireSystemDebt.sub(V.debtToOffset);
                 L.entireSystemColl = L.entireSystemColl.sub(V.collToSendToSP);
 
-                // Tally gas compensation
-                T.totalGasCompensation = T.totalGasCompensation.add(V.gasCompensation);
-
-                // Tally the debt and coll to offset and redistribute
-                T.totalDebtToOffset = T.totalDebtToOffset.add(V.debtToOffset);
-                T.totalCollToSendToSP = T.totalCollToSendToSP.add(V.collToSendToSP);
-                T.totalDebtToRedistribute = T.totalDebtToRedistribute.add(V.debtToRedistribute);
-                T.totalCollToRedistribute = T.totalCollToRedistribute.add(V.collToRedistribute);
+                // Add liquidation values to their respective running totals
+                T = _addLiquidationValuesToTotals(T, V);
 
                 if (V.partialAddr != address(0)) {
                     T.partialAddr = V.partialAddr;
@@ -485,20 +479,13 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
-                
                 V = _liquidateNormalMode(L.user, L.ICR, _price, L.remainingCLVInPool);
 
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
 
-                // Tally gas compensation
-                T.totalGasCompensation = T.totalGasCompensation.add(V.gasCompensation);
+                // Add liquidation values to their respective running totals
+                T = _addLiquidationValuesToTotals(T, V);
 
-                // Tally the debt and coll to offset and redistribute
-                T.totalDebtToOffset = T.totalDebtToOffset.add(V.debtToOffset);
-                T.totalCollToSendToSP = T.totalCollToSendToSP.add(V.collToSendToSP);
-                T.totalDebtToRedistribute = T.totalDebtToRedistribute.add(V.debtToRedistribute);
-                T.totalCollToRedistribute = T.totalCollToRedistribute.add(V.collToRedistribute);
-                
             }  else break;  // break if the loop reaches a CDP with ICR >= MCR
 
             // Break the loop if it has reached the first CDP in the sorted list
@@ -511,10 +498,10 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     returns(LiquidationTotals memory T)
     {
         LocalVariables_LiquidationSequence memory L;
-
         LiquidationValues memory V;
 
         L.remainingCLVInPool = _CLVInPool;
+
         L.i = 0;
         while (L.i < _n) {
             L.user = sortedCDPs.getLast();
@@ -525,14 +512,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
 
-                // Tally gas compensation
-                T.totalGasCompensation = T.totalGasCompensation.add(V.gasCompensation);
-
-                // Tally the debt and coll to offset and redistribute
-                T.totalDebtToOffset = T.totalDebtToOffset.add(V.debtToOffset);
-                T.totalCollToSendToSP = T.totalCollToSendToSP.add(V.collToSendToSP);
-                T.totalDebtToRedistribute = T.totalDebtToRedistribute.add(V.debtToRedistribute);
-                T.totalCollToRedistribute =T.totalCollToRedistribute .add(V.collToRedistribute);
+                // Add liquidation values to their respective running totals
+                T = _addLiquidationValuesToTotals(T, V);
 
             } else break;  // break if the loop reaches a CDP with ICR >= MCR
             
@@ -540,6 +521,21 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             if (L.user == sortedCDPs.getFirst()) {break;}
             L.i++;
         }
+    }
+
+    function _addLiquidationValuesToTotals(LiquidationTotals memory T1, LiquidationValues memory V) 
+    internal pure returns(LiquidationTotals memory T2) {
+
+        // Tally gas compensation
+        T2.totalGasCompensation = T1.totalGasCompensation.add(V.gasCompensation);
+
+        // Tally the debt and coll to offset and redistribute
+        T2.totalDebtToOffset = T1.totalDebtToOffset.add(V.debtToOffset);
+        T2.totalCollToSendToSP = T1.totalCollToSendToSP.add(V.collToSendToSP);
+        T2.totalDebtToRedistribute = T1.totalDebtToRedistribute.add(V.debtToRedistribute);
+        T2.totalCollToRedistribute =T1.totalCollToRedistribute .add(V.collToRedistribute);
+
+        return T2;
     }
 
     // Update coll, debt, stake and snapshot of partially liquidated trove, and insert it back to the list
