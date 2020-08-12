@@ -17,7 +17,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
-    uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.  TODO: extract to base contract
+    uint constant public minVirtualDebt = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
 
     // --- Connected contract declarations ---
 
@@ -48,35 +48,9 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     event DefaultPoolAddressChanged(address _defaultPoolAddress);
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
-    event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
-
-    enum BorrowerOperation {
-        openLoan,
-        closeLoan,
-        addColl,
-        withdrawColl,
-        withdrawCLV,
-        repayCLV,
-        adjustLoan
-    }
 
     event CDPCreated(address indexed _user, uint arrayIndex);
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
-
-     /* --- LocalVariable Structs ---
-
-    This struct is used to hold local memory variables inside the Borrower Operations functions,
-    in order to avoid the error: "CompilerError: Stack too deep". */
-    struct LocalVariables_BorrowerOps {
-        address user;
-        uint price;
-        uint coll;
-        uint debt;
-        uint stake;
-        uint newColl;
-        uint newDebt;
-        uint newICR;
-    }
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
 
     // --- Dependency setters --- 
 
@@ -118,7 +92,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     // --- Borrower Trove Operations ---
 
-    function openLoan(uint _CLVAmount, address _hint, address _sizeListHint) external payable {
+    function openLoan(uint _CLVAmount, address _hint) external payable {
         address user = _msgSender(); 
         uint price = priceFeed.getPrice(); 
 
@@ -143,24 +117,19 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         cdpManager.updateCDPRewardSnapshots(user); 
         uint stake = cdpManager.updateStakeAndTotalStakes(user); 
         
-        // Insert to full sorted list and grab the returned array index
-        uint arrayIndex = cdpManager.insertToFullSortedList(user, ICR, price, _hint);
-    
-        // Insert to size range sorted list
-        cdpManager.insertToSizeList(user, ICR, price, msg.value, _sizeListHint);
-
-       
+        sortedCDPs.insert(user, ICR, price, _hint, _hint); 
+        uint arrayIndex = cdpManager.addCDPOwnerToArray(user);
         emit CDPCreated(user, arrayIndex);
         
         // Tell PM to move the ether to the Active Pool, and mint CLV to the borrower
         poolManager.addColl.value(msg.value)(); 
         poolManager.withdrawCLV(user, _CLVAmount); 
        
-        emit CDPUpdated(user, _CLVAmount, msg.value, stake, BorrowerOperation.openLoan);
+        emit CDPUpdated(user, _CLVAmount, msg.value, stake); 
     }
 
     // Send ETH as collateral to a CDP
-    function addColl(address _user, address _hint, address _sizeListHint) external payable {
+    function addColl(address _user, address _hint) external payable {
         _requireCDPisActive(_user);
 
         uint price = priceFeed.getPrice();
@@ -173,17 +142,16 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         uint newICR = cdpManager.getCurrentICR(_user, price);
    
         sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);  
-        cdpManager.reInsertToSizeList(_user, newICR, price, newColl, _sizeListHint);
        
         // Tell PM to move the ether to the Active Pool
         poolManager.addColl.value(msg.value)();
   
         uint debt = cdpManager.getCDPDebt(_user);
-        emit CDPUpdated(_user, debt, newColl, stake, BorrowerOperation.addColl);
+        emit CDPUpdated(_user, debt, newColl, stake);
     }
     
     // Withdraw ETH collateral from a CDP
-    function withdrawColl(uint _amount, address _hint, address _sizeListHint) external {
+    function withdrawColl(uint _amount, address _hint) external {
         address user = _msgSender();
         _requireCDPisActive(user);
         _requireNotInRecoveryMode();
@@ -207,17 +175,16 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
             cdpManager.closeCDP(user);  
         }  else { 
             sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
-            cdpManager.reInsertToSizeList(user, newICR, price, newColl, _sizeListHint);
         }
 
         // Remove _amount ETH from ActivePool and send it to the user
         poolManager.withdrawColl(user, _amount);
 
-        emit CDPUpdated(user, debt, newColl, stake, BorrowerOperation.withdrawColl);
+        emit CDPUpdated(user, debt, newColl, stake); 
     }
     
     // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
-    function withdrawCLV(uint _amount, address _hint, address _sizeListHint) external {
+    function withdrawCLV(uint _amount, address _hint) external {
         address user = _msgSender();
         _requireCDPisActive(user);
         _requireNonZeroAmount(_amount); 
@@ -237,19 +204,18 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         // Increase the CDP's debt
         uint newDebt = cdpManager.increaseCDPDebt(user, _amount);
        
-        // Update CDP's position in full sorted list and size range list
+        // Update CDP's position in sortedCDPs
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
-        cdpManager.reInsertToSizeList(user, newICR, price, coll, _sizeListHint);
 
         // Mint the given amount of CLV to the owner's address and add them to the ActivePool
         poolManager.withdrawCLV(user, _amount);
         
         uint stake = cdpManager.getCDPStake(user);
-        emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.withdrawCLV);
+        emit CDPUpdated(user, newDebt, coll, stake); 
     }
     
     // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the debt accordingly
-    function repayCLV(uint _amount, address _hint,  address _sizeListHint) external {
+    function repayCLV(uint _amount, address _hint) external {
         address user = _msgSender();
         _requireCDPisActive(user);
 
@@ -257,7 +223,6 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         cdpManager.applyPendingRewards(user);
 
         uint debt = cdpManager.getCDPDebt(user);
-        uint coll = cdpManager.getCDPColl(user);
         _requireCLVRepaymentAllowed(debt, -int(_amount));
         
         // Update the CDP's debt
@@ -267,14 +232,13 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         
         // Update CDP's position in sortedCDPs
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
-        cdpManager.reInsertToSizeList(user, newICR, price, coll, _sizeListHint);
 
         // Burn the received amount of CLV from the user's balance, and remove it from the ActivePool
         poolManager.repayCLV(user, _amount);
         
-       
+        uint coll = cdpManager.getCDPColl(user);
         uint stake = cdpManager.getCDPStake(user);
-        emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.repayCLV);
+        emit CDPUpdated(user, newDebt, coll, stake); 
     }
 
     function closeLoan() external {
@@ -294,53 +258,50 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         poolManager.repayCLV(user, debt);
         poolManager.withdrawColl(user, coll);
 
-        emit CDPUpdated(user, 0, 0, 0, BorrowerOperation.closeLoan);
+        emit CDPUpdated(user, 0, 0, 0);
     }
 
     /* If ether is sent, the operation is considered as an increase in ether, and the first parameter 
     _collWithdrawal is ignored  */
-    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint, address _sizeListHint) external payable {
-        LocalVariables_BorrowerOps memory L;
-        
-        L.user = _msgSender();
-        _requireCDPisActive(L.user);
+    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable {
+        address user = _msgSender();
+        _requireCDPisActive(user);
         _requireNotInRecoveryMode();
         
-        L.price = priceFeed.getPrice();
+        uint price = priceFeed.getPrice();
      
-        cdpManager.applyPendingRewards(L.user);
+        cdpManager.applyPendingRewards(user);
 
         // If Ether is sent, grab the amount. Otherwise, grab the specified collateral withdrawal
         int collChange = (msg.value != 0) ? int(msg.value) : -int(_collWithdrawal);
 
-        L.debt = cdpManager.getCDPDebt(L.user);
-        L.coll = cdpManager.getCDPColl(L.user);
+        uint debt = cdpManager.getCDPDebt(user);
+        uint coll = cdpManager.getCDPColl(user);
        
-        L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, collChange, _debtChange, L.price);
+        uint newICR = _getNewICRFromTroveChange(coll, debt, collChange, _debtChange, price);
        
         // --- Checks --- 
-        _requireICRisAboveMCR(L.newICR);
-        _requireNewTCRisAboveCCR(collChange, _debtChange, L.price);
-        _requireCLVRepaymentAllowed(L.debt, _debtChange);
-        _requireCollAmountIsWithdrawable(L.coll, _collWithdrawal, L.price);
+        _requireICRisAboveMCR(newICR);
+        _requireNewTCRisAboveCCR(collChange, _debtChange, price);
+        _requireCLVRepaymentAllowed(debt, _debtChange);
+        _requireCollAmountIsWithdrawable(coll, _collWithdrawal, price);
 
         //  --- Effects --- 
-        (L.newColl, L.newDebt) = _updateTroveFromAdjustment(L.user, collChange, _debtChange);
+        (uint newColl, uint newDebt) = _updateTroveFromAdjustment(user, collChange, _debtChange);
         
-        L.stake = cdpManager.updateStakeAndTotalStakes(L.user);
+        uint stake = cdpManager.updateStakeAndTotalStakes(user);
        
         // Close a CDP if it is empty, otherwise, re-insert it in the sorted list
-        if (L.newDebt == 0 && L.newColl == 0) {
-            cdpManager.closeCDP(L.user);
+        if (newDebt == 0 && newColl == 0) {
+            cdpManager.closeCDP(user);
         } else {
-            sortedCDPs.reInsert(L.user, L.newICR, L.price, _hint, _hint);
-            cdpManager.reInsertToSizeList(L.user, L.newICR, L.price, L.newColl, _sizeListHint);
+            sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
         }
 
-        //  --- Move ETH/Tokens ---
-        _moveTokensAndETHfromAdjustment(L.user, collChange, _debtChange);   
+        //  --- Interactions ---
+        _moveTokensAndETHfromAdjustment(user, collChange, _debtChange);   
     
-        emit CDPUpdated(L.user, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
+        emit CDPUpdated(user, newDebt, newColl, stake); 
     }
 
     // --- Helper functions --- 
@@ -501,18 +462,13 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
       function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
-        minETHComp = MIN_VIRTUAL_DEBT.mul(1e18).div(_price);
+        minETHComp = minVirtualDebt.mul(1e18).div(_price);
         return minETHComp;
     }
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        // return _debt.add(MIN_VIRTUAL_DEBT);
-        return _debt;
-    }
-
-    function getCompositeDebt(uint _debt) external pure returns (uint) {
-        // return _getCompositeDebt(_debt);
-        return _debt;
+        return _debt.add(minVirtualDebt);
+        // return _debt;
     }
 }

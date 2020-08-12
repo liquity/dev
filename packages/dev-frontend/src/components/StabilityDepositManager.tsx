@@ -15,7 +15,6 @@ type StabilityDepositActionProps = {
   trove: Trove;
   price: Decimal;
   quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
 const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
@@ -26,8 +25,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   setChangePending,
   trove,
   price,
-  quiBalance,
-  numberOfTroves
+  quiBalance
 }) => {
   const myTransactionId = "stability-deposit";
   const myTransactionState = useMyTransactionState(/^stability-deposit-/);
@@ -80,12 +78,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
             ? ([
                 [
                   `Transfer ${originalDeposit.pendingCollateralGain.prettify(4)} ETH to Trove`,
-                  liquity.transferCollateralGainToTrove.bind(liquity, {
-                    deposit: originalDeposit,
-                    trove,
-                    price,
-                    numberOfTroves
-                  }),
+                  liquity.transferCollateralGainToTrove.bind(liquity, originalDeposit, trove, price),
                   []
                 ]
               ] as const)
@@ -125,7 +118,6 @@ type StabilityDepositManagerProps = {
   trove: Trove;
   price: Decimal;
   quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
 export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = ({
@@ -133,8 +125,7 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
   deposit,
   trove,
   price,
-  quiBalance,
-  numberOfTroves
+  quiBalance
 }) => {
   const [originalDeposit, setOriginalDeposit] = useState(deposit);
   const [editedDeposit, setEditedDeposit] = useState(deposit);
@@ -173,8 +164,7 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
           setChangePending,
           trove,
           price,
-          quiBalance,
-          numberOfTroves
+          quiBalance
         }}
       />
     </>

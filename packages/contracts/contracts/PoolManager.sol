@@ -348,9 +348,9 @@ contract PoolManager is Ownable, IPoolManager {
     }
     
     // Send ETHGain to CDP. Send in two steps: StabilityPool -> PoolManager -> user's CDP
-    function _sendETHGainToCDP(address _address, uint _ETHGain, address _hint, address _sizeListHint) internal {
+    function _sendETHGainToCDP(address _address, uint _ETHGain, address _hint) internal {
         stabilityPool.sendETH(address(this), _ETHGain); 
-        borrowerOperations.addColl.value(_ETHGain)(_address, _hint, _sizeListHint); 
+        borrowerOperations.addColl.value(_ETHGain)(_address, _hint); 
     }
 
     // Send CLV to user and decrease CLV in Pool
@@ -440,7 +440,7 @@ contract PoolManager is Ownable, IPoolManager {
     their compounded deposit in the Stability Pool.
     
     TODO: Remove _user param and just use _msgSender(). */
-    function withdrawFromSPtoCDP(address _user, address _hint, address _sizeListHint) external {
+    function withdrawFromSPtoCDP(address _user, address _hint) external {
         require(_user == _msgSender(), "PoolManager: A user may only withdraw ETH gains to their own trove" );
         _requireUserHasDeposit(_user); 
         _requireUserHasTrove(_user);
@@ -451,7 +451,7 @@ contract PoolManager is Ownable, IPoolManager {
         // Update the recorded deposit value, and deposit snapshots
         _updateDeposit(_user, compoundedCLVDeposit);
 
-        _sendETHGainToCDP(_user, ETHGain, _hint, _sizeListHint);
+        _sendETHGainToCDP(_user, ETHGain, _hint);
 
         emit UserDepositChanged(_user, compoundedCLVDeposit); 
         emit ETHGainWithdrawn(_user, ETHGain);

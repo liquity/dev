@@ -104,13 +104,9 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
       <Container variant="main">
         <Container variant="columns">
           <Container variant="left">
-            <TroveManager
-              {...{ liquity, troveWithoutRewards, trove, price, total, quiBalance, numberOfTroves }}
-            />
-            <StabilityDepositManager
-              {...{ liquity, deposit, trove, price, quiBalance, numberOfTroves }}
-            />
-            <RedemptionManager {...{ liquity, price, quiBalance, numberOfTroves }} />
+            <TroveManager {...{ liquity, troveWithoutRewards, trove, price, total, quiBalance }} />
+            <StabilityDepositManager {...{ liquity, deposit, trove, price, quiBalance }} />
+            <RedemptionManager {...{ liquity, price, quiBalance }} />
           </Container>
 
           <Container variant="right">

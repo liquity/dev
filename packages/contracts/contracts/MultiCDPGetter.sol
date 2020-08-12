@@ -75,9 +75,7 @@ contract MultiCDPGetter {
                 _cdps[idx].coll,
                 _cdps[idx].stake,
                 /* status */,
-                /* arrayIndex */,
-                /* sizeRange */,
-                /* sizeArrayIndex */
+                /* arrayIndex */
             ) = cdpManager.CDPs(currentCDPowner);
             (
                 _cdps[idx].snapshotETH,
@@ -105,10 +103,8 @@ contract MultiCDPGetter {
                 _cdps[idx].debt,
                 _cdps[idx].coll,
                 _cdps[idx].stake,
-                 /* status */,
-                /* arrayIndex */,
-                /* sizeRange */,
-                /* sizeArrayIndex */
+                /* status */,
+                /* arrayIndex */
             ) = cdpManager.CDPs(currentCDPowner);
             (
                 _cdps[idx].snapshotETH,

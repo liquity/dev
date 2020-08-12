@@ -17,8 +17,6 @@ interface IBorrowerOperations {
     
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
-    event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
-
     // --- Functions ---
 
     function setCDPManager(address _CDPManagerAddress) external;
@@ -33,17 +31,17 @@ interface IBorrowerOperations {
 
     function setDefaultPool(address _defaultPoolAddress) external;
 
-    function openLoan(uint _CLVAmount, address _hint,  address _sizeListHint) external payable;
+    function openLoan(uint _CLVAmount, address _hint) external payable;
 
-    function addColl(address _user, address _hint, address _sizeListHint) external payable;
+    function addColl(address _user, address _hint) external payable;
 
-    function withdrawColl(uint _amount, address _hint, address _sizeListHint) external;
+    function withdrawColl(uint _amount, address _hint) external;
 
-    function withdrawCLV(uint _amount, address _hint, address _sizeListHint) external;
+    function withdrawCLV(uint _amount, address _hint) external;
 
-    function repayCLV(uint _amount, address _hint, address _sizeListHint) external;
+    function repayCLV(uint _amount, address _hint) external;
 
     function closeLoan() external;
 
-    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint, address _sizeListHint) external payable;
+    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable;
 }

@@ -16,7 +16,6 @@ type TroveActionProps = {
   price: Decimal;
   total: Trove;
   quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
 const mcrPercent = new Percent(Liquity.MINIMUM_COLLATERAL_RATIO).toString(0);
@@ -30,8 +29,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
   setChangePending,
   price,
   total,
-  quiBalance,
-  numberOfTroves
+  quiBalance
 }) => {
   const myTransactionId = "trove";
   const myTransactionState = useMyTransactionState(myTransactionId);
@@ -50,22 +48,23 @@ const TroveAction: React.FC<TroveActionProps> = ({
   }
 
   const [actionName, send, extraRequirements] = original.isEmpty
-    ? ([
-        "Open new Trove",
-        liquity.openTrove.bind(liquity, edited, { price, numberOfTroves }),
-        edited.debt.nonZero
-          ? ([
-              [
-                !total.collateralRatioIsBelowCritical(price),
-                "Can't borrow LQTY during recovery mode"
-              ],
-              [
-                !total.add(edited).collateralRatioIsBelowCritical(price),
-                `Total collateral ratio would fall below ${ccrPercent}`
-              ]
-            ] as const)
-          : []
-      ] as const)
+    ? edited.debt.nonZero
+      ? ([
+          "Open new Trove",
+          liquity.openTrove.bind(liquity, edited, price),
+          [
+            [!total.collateralRatioIsBelowCritical(price), "Can't borrow LQTY during recovery mode"],
+            [
+              !total.add(edited).collateralRatioIsBelowCritical(price),
+              `Total collateral ratio would fall below ${ccrPercent}`
+            ]
+          ]
+        ] as const)
+      : ([
+          "Open new Trove",
+          liquity.depositEther.bind(liquity, original, edited.collateral, price),
+          []
+        ] as const)
     : edited.isEmpty
     ? ([
         "Close Trove",
@@ -97,8 +96,9 @@ const TroveAction: React.FC<TroveActionProps> = ({
         collateralDifference && debtDifference
           ? liquity.changeTrove.bind(
               liquity,
+              original,
               { collateralDifference, debtDifference },
-              { trove: original, price, numberOfTroves }
+              price
             )
           : (collateralDifference
               ? collateralDifference.positive
@@ -107,11 +107,12 @@ const TroveAction: React.FC<TroveActionProps> = ({
               : debtDifference!.positive
               ? liquity.borrowQui
               : liquity.repayQui
-            ).bind(liquity, (collateralDifference ?? debtDifference)!.absoluteValue!, {
-              trove: original,
-              price,
-              numberOfTroves
-            }),
+            ).bind(
+              liquity,
+              original,
+              (collateralDifference || debtDifference)!.absoluteValue!,
+              price
+            ),
         [
           ...(collateralDifference?.negative
             ? ([
@@ -128,10 +129,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
                   "Can't borrow LQTY during recovery mode"
                 ],
                 [
-                  !total
-                    .subtract(original)
-                    .add(edited)
-                    .collateralRatioIsBelowCritical(price),
+                  !total.subtract(original).add(edited).collateralRatioIsBelowCritical(price),
                   `Total collateral ratio would fall below ${ccrPercent}`
                 ]
               ] as const)
@@ -181,7 +179,6 @@ type TroveManagerProps = {
   price: Decimal;
   total: Trove;
   quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
 export const TroveManager: React.FC<TroveManagerProps> = ({
@@ -190,8 +187,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
   trove,
   price,
   total,
-  quiBalance,
-  numberOfTroves
+  quiBalance
 }) => {
   const previousTroveWithoutRewards = usePrevious(troveWithoutRewards);
   const [original, setOriginal] = useState(trove);
@@ -237,8 +233,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
           setChangePending,
           price,
           total,
-          quiBalance,
-          numberOfTroves
+          quiBalance
         }}
       />
     </>

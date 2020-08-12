@@ -120,6 +120,7 @@ contract('Gas compensation tests', async accounts => {
     await priceFeed.setPrice(mv._1e18)
     const price_1 = await priceFeed.getPrice()
     const gasCompensation_1 = await cdpManagerTester.getGasCompensation(mv._1_Ether, price_1)
+    console.log(`gasCompensation_1: ${gasCompensation_1}`)
     assert.equal(gasCompensation_1, mv._1_Ether)
 
     /* 
@@ -129,6 +130,7 @@ contract('Gas compensation tests', async accounts => {
     await priceFeed.setPrice('28400000000000000000')
     const price_2 = await priceFeed.getPrice()
     const gasCompensation_2 = await cdpManagerTester.getGasCompensation(mv._1e17, price_2)
+    console.log(`gasCompensation_2: ${gasCompensation_2}`)
     assert.equal(gasCompensation_2, mv._1e17)
 
     /* 
@@ -138,6 +140,7 @@ contract('Gas compensation tests', async accounts => {
     await priceFeed.setPrice(mv._1e27)
     const price_3 = await priceFeed.getPrice()
     const gasCompensation_3 = await cdpManagerTester.getGasCompensation('5000000000', price_3)
+    console.log(`gasCompensation_3: ${gasCompensation_3}`)
     assert.equal(gasCompensation_3, '5000000000')
   })
 
@@ -152,6 +155,7 @@ contract('Gas compensation tests', async accounts => {
     0.5% of coll = 0.04995 ETH. USD value: $9.99
     -> Expect $10 gas compensation i.e. 0.05 ETH */
     const gasCompensation_1 = await cdpManagerTester.getGasCompensation('9999000000000000000', price)
+    console.log(`gasCompensation_1: ${gasCompensation_1}`)
     assert.equal(gasCompensation_1, '50000000000000000')
 
     /* ETH:USD price = 200
@@ -159,6 +163,7 @@ contract('Gas compensation tests', async accounts => {
      0.5% of coll = 0.000275 ETH. USD value: $0.055
      -> Expect $10 gas compensation i.e. 0.005 ETH */
     const gasCompensation_2 = await cdpManagerTester.getGasCompensation('55000000000000000', price)
+    console.log(`gasCompensation_2: ${gasCompensation_2}`)
     assert.equal(gasCompensation_2, '50000000000000000')
 
     /* ETH:USD price = 200
@@ -336,40 +341,41 @@ contract('Gas compensation tests', async accounts => {
   // --- Test ICRs with virtual debt ---
   it('getCurrentICR(): Incorporates virtual debt, and returns the correct ICR for new loans', async () => {
     const price = await priceFeed.getPrice()
-    await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._100_Ether })
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._100_Ether })
 
     // A opens with 1 ETH, 100 CLV
-    await borrowerOperations.openLoan(mv._100e18, alice, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
     const alice_ICR = (await cdpManager.getCurrentICR(alice, price)).toString()
     // Expect aliceICR = (1 * 200) / (100+10) = 181.81%
     assert.isAtMost(th.getDifference(alice_ICR, '1818181818181818181'), 1000)
 
     // B opens with 0.5 ETH, 40 CLV
-    await borrowerOperations.openLoan(mv._40e18, bob, alice, { from: bob, value: '500000000000000000' })
+    await borrowerOperations.openLoan(mv._40e18, bob, { from: bob, value: '500000000000000000' })
     const bob_ICR = (await cdpManager.getCurrentICR(bob, price)).toString()
+    console.log(`bob_ICR: ${bob_ICR}`)
     // Expect Bob's ICR = (0.55 * 200) / (100+10) = 200%
     assert.isAtMost(th.getDifference(bob_ICR, mv._2e18), 1000)
 
     // F opens with 1 ETH, 90 CLV
-    await borrowerOperations.openLoan(mv._90e18, flyn, flyn, { from: flyn, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._90e18, flyn, { from: flyn, value: mv._1_Ether })
     const flyn_ICR = (await cdpManager.getCurrentICR(flyn, price)).toString()
     // Expect Flyn's ICR = (1 * 200) / (90+10) = 200%
     assert.isAtMost(th.getDifference(flyn_ICR, mv._2e18), 1000)
 
     // C opens with 2.5 ETH, 150 CLV
-    await borrowerOperations.openLoan(mv._150e18, carol, carol, { from: carol, value: '2500000000000000000' })
+    await borrowerOperations.openLoan(mv._150e18, carol, { from: carol, value: '2500000000000000000' })
     const carol_ICR = (await cdpManager.getCurrentICR(carol, price)).toString()
     // Expect Carol's ICR = (2.5 * 200) / (150+10) = 312.50%
     assert.isAtMost(th.getDifference(carol_ICR, '3125000000000000000'), 1000)
 
     // D opens with 1 ETH, 0 CLV
-    await borrowerOperations.openLoan(0, dennis, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._1_Ether })
     const dennis_ICR = (await cdpManager.getCurrentICR(dennis, price)).toString()
     // Expect Dennis's ICR = (1 * 200) / (10) = 2000.00%
     assert.isAtMost(th.getDifference(dennis_ICR, mv._20e18), 1000)
 
     // E opens with 4405.45 ETH, 32588.35 CLV
-    await borrowerOperations.openLoan('32588350000000000000000', erin, erin, { from: erin, value: '4405450000000000000000' })
+    await borrowerOperations.openLoan('32588350000000000000000', erin, { from: erin, value: '4405450000000000000000' })
     const erin_ICR = (await cdpManager.getCurrentICR(erin, price)).toString()
     // Expect Erin's ICR = (4405.45 * 200) / (32598.35) = 2702.87%
     assert.isAtMost(th.getDifference(erin_ICR, '27028668628933700000'), 100000)
@@ -384,14 +390,14 @@ contract('Gas compensation tests', async accounts => {
   // Test compensation amounts and liquidation amounts
 
   it('Gas compensation from pool-offset liquidations: collateral < $10 in value. All collateral paid as compensation', async () => {
-    await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._1million_Ether })
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._1million_Ether })
 
     // A-E open loans
-    await borrowerOperations.openLoan(mv._100e18, alice, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._200e18, bob, alice, { from: bob, value: mv._2_Ether })
-    await borrowerOperations.openLoan(mv._300e18, carol, carol, { from: carol, value: mv._3_Ether })
-    await borrowerOperations.openLoan(mv._1000e18, dennis, dennis, { from: dennis, value: mv._100_Ether })
-    await borrowerOperations.openLoan(mv._1000e18, erin, erin, { from: erin, value: mv._100_Ether })
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._2_Ether })
+    await borrowerOperations.openLoan(mv._300e18, carol, { from: carol, value: mv._3_Ether })
+    await borrowerOperations.openLoan(mv._1000e18, dennis, { from: dennis, value: mv._100_Ether })
+    await borrowerOperations.openLoan(mv._1000e18, erin, { from: erin, value: mv._100_Ether })
 
     // D, E each provide 1000 CLV to SP
     await poolManager.provideToSP(mv._1000e18, {from: dennis})
@@ -501,14 +507,14 @@ contract('Gas compensation tests', async accounts => {
   it('gas compensation from pool-offset liquidations: 0.5% collateral < $10 in value. Compensates $10 worth of collateral, liquidates the remainder', async () => {
     
     await priceFeed.setPrice(mv._400e18)
-    await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._1million_Ether })
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._1million_Ether })
 
     // A-E open loans
-    await borrowerOperations.openLoan(mv._200e18, alice, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._5000e18, bob, alice, { from: bob, value: mv._15_Ether })
-    await borrowerOperations.openLoan(mv._600e18, carol, carol, { from: carol, value: mv._3_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, dennis, { from: dennis, value: mv._1000_Ether })
-    await borrowerOperations.openLoan(mv._1e23, erin, erin, { from: erin, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(mv._200e18, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._5000e18, bob, { from: bob, value: mv._15_Ether })
+    await borrowerOperations.openLoan(mv._600e18, carol, { from: carol, value: mv._3_Ether })
+    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(mv._1e23, erin, { from: erin, value: mv._1000_Ether })
 
     // D, E each provide 10000 CLV to SP
     await poolManager.provideToSP(mv._1e23, {from: dennis})
@@ -542,6 +548,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
   
     const aliceICR = await cdpManager.getCurrentICR(alice, price_1)
+    console.log(`aliceICR: ${aliceICR}`)
     assert.isTrue(aliceICR.lt(mv._MCR))
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
@@ -550,6 +557,7 @@ contract('Gas compensation tests', async accounts => {
     const liquidatorBalance_after_A =  web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     let _$10_worthOfETH = await cdpManagerTester.getMinVirtualDebtInETH(price_1)
+    console.log(`10_worthOfETH: ${_$10_worthOfETH}`)
     assert.isAtMost(th.getDifference(_$10_worthOfETH, '50000250001250010'), 1000)
 
     // Check liquidator's balance increases by $10 worth of coll
@@ -566,6 +574,9 @@ contract('Gas compensation tests', async accounts => {
 
     const SPETHIncrease_A = ETHinSP_A.sub(ETHinSP_0)
 
+    console.log(`SPETHIncrease_A: ${SPETHIncrease_A}`)
+    console.log(`ETHinSP_A: ${ETHinSP_A}`)
+    console.log(`collRemainder_A: ${collRemainder_A}`)
 
     assert.isAtMost(th.getDifference(SPETHIncrease_A, collRemainder_A), 1000) 
 
@@ -594,6 +605,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
   
     const bobICR = await cdpManager.getCurrentICR(bob, price_2)
+    console.log(`bobICR: ${bobICR}`)
     assert.isTrue(bobICR.lte(mv._MCR))
 
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
@@ -602,6 +614,7 @@ contract('Gas compensation tests', async accounts => {
     const liquidatorBalance_after_B =  web3.utils.toBN(await web3.eth.getBalance(liquidator))
     
     _$10_worthOfETH = await cdpManagerTester.getMinVirtualDebtInETH(price_2)
+    console.log(`10_worthOfETH: ${_$10_worthOfETH}`)
     assert.isAtMost(th.getDifference(_$10_worthOfETH, '666666666666666666'), 1000)
 
     // Check liquidator's balance increases by $10 worth of coll
@@ -610,6 +623,7 @@ contract('Gas compensation tests', async accounts => {
 
     // Check SP CLV has decreased due to the liquidation of B
     const CLVinSP_B = await stabilityPool.getCLV()
+    console.log(`CLVinSP_B:${CLVinSP_B}`)
     assert.isTrue(CLVinSP_B.lt(CLVinSP_A))
 
     // Check ETH in SP has increased by the remainder of B's coll
@@ -618,20 +632,24 @@ contract('Gas compensation tests', async accounts => {
 
     const SPETHIncrease_B = ETHinSP_B.sub(ETHinSP_A)
 
+    console.log(`SPETHIncrease_B: ${SPETHIncrease_B}`)
+    console.log(`ETHinSP_B: ${ETHinSP_B}`)
+    console.log(`collRemainder_B: ${collRemainder_B}`)
+
     assert.isAtMost(th.getDifference(SPETHIncrease_B, collRemainder_B), 1000) 
   })
   
   it('gas compensation from pool-offset liquidations: 0.5% collateral > $10 in value. Compensates 0.5% of  collateral, liquidates the remainder', async () => {
     // open loans
     await priceFeed.setPrice(mv._400e18)
-    await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._1million_Ether })
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._1million_Ether })
 
     // A-E open loans
-    await borrowerOperations.openLoan(mv._2000e18, alice, alice, { from: alice, value: '10001000000000000000' })
-    await borrowerOperations.openLoan(mv._8000e18, bob, alice, { from: bob, value: '37500000000000000000' })
-    await borrowerOperations.openLoan(mv._600e18, carol, carol, { from: carol, value: mv._3_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, dennis, { from: dennis, value: mv._1000_Ether })
-    await borrowerOperations.openLoan(mv._1e23, erin, erin, { from: erin, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(mv._2000e18, alice, { from: alice, value: '10001000000000000000' })
+    await borrowerOperations.openLoan(mv._8000e18, bob, { from: bob, value: '37500000000000000000' })
+    await borrowerOperations.openLoan(mv._600e18, carol, { from: carol, value: mv._3_Ether })
+    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(mv._1e23, erin, { from: erin, value: mv._1000_Ether })
 
     // D, E each provide 10000 CLV to SP
     await poolManager.provideToSP(mv._1e23, {from: dennis})
@@ -662,6 +680,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
   
     const aliceICR = await cdpManager.getCurrentICR(alice, price_1)
+    console.log(`aliceICR: ${aliceICR}`)
     assert.isTrue(aliceICR.lt(mv._MCR))
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
@@ -675,6 +694,7 @@ contract('Gas compensation tests', async accounts => {
 
     // Check SP CLV has decreased due to the liquidation of A 
     const CLVinSP_A = await stabilityPool.getCLV()
+    console.log(`CLVinSP_A: ${CLVinSP_A}`)
     assert.isTrue(CLVinSP_A.lt(CLVinSP_0))
 
     // Check ETH in SP has increased by the remainder of A's coll
@@ -682,6 +702,10 @@ contract('Gas compensation tests', async accounts => {
     const ETHinSP_A = await stabilityPool.getETH()
 
     const SPETHIncrease_A = ETHinSP_A.sub(ETHinSP_0)
+
+    console.log(`SPETHIncrease_A: ${SPETHIncrease_A}`)
+    console.log(`ETHinSP_A: ${ETHinSP_A}`)
+    console.log(`collRemainder_A: ${collRemainder_A}`)
 
     assert.isAtMost(th.getDifference(SPETHIncrease_A, collRemainder_A), 1000) 
 
@@ -705,6 +729,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
   
     const bobICR = await cdpManager.getCurrentICR(bob, price_1)
+    console.log(`bobICR: ${bobICR}`)
     assert.isTrue(bobICR.lt(mv._MCR))
 
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
@@ -718,6 +743,7 @@ contract('Gas compensation tests', async accounts => {
 
     // Check SP CLV has decreased due to the liquidation of B
     const CLVinSP_B = await stabilityPool.getCLV()
+    console.log(`CLVinSP_B: ${CLVinSP_B}`)
     assert.isTrue(CLVinSP_B.lt(CLVinSP_A))
 
     // Check ETH in SP has increased by the remainder of B's coll
@@ -725,6 +751,11 @@ contract('Gas compensation tests', async accounts => {
     const ETHinSP_B = await stabilityPool.getETH()
 
     const SPETHIncrease_B = ETHinSP_B.sub(ETHinSP_A)
+
+    console.log(`SPETHIncrease_B: ${SPETHIncrease_B}`)
+    console.log(`ETHinSP_B: ${ETHinSP_B}`)
+    console.log(`collRemainder_B: ${collRemainder_B}`)
+
     assert.isAtMost(th.getDifference(SPETHIncrease_B, collRemainder_B), 1000) 
 
   })
@@ -733,16 +764,16 @@ contract('Gas compensation tests', async accounts => {
   it('liquidateCDPs(): full offset.  Compensates the correct amount, and liquidates the remainder', async () => {
     await priceFeed.setPrice(mv._1000e18)
 
-    await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._1million_Ether })
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._1million_Ether })
 
     // A-E open loans. A: 0.04 ETH, 1 CLV.  B: 1ETH, 180 CLV.  C: 5 ETH, 925 CLV.  D: 73.632 ETH, 13500 CLV.
-    await borrowerOperations.openLoan(mv._1e18, alice, alice, { from: alice, value: '40000000000000000' })
-    await borrowerOperations.openLoan(mv._180e18, bob, alice, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan('925000000000000000000', carol, carol, { from: carol, value:mv._5_Ether  })
-    await borrowerOperations.openLoan('13500000000000000000000', dennis, dennis, { from: dennis, value: '73632000000000000000'})
+    await borrowerOperations.openLoan(mv._1e18, alice, { from: alice, value: '40000000000000000' })
+    await borrowerOperations.openLoan(mv._180e18, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value:mv._5_Ether  })
+    await borrowerOperations.openLoan('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000'})
 
-    await borrowerOperations.openLoan(mv._1e23, erin, erin, { from: erin, value: mv._1000_Ether })
-    await borrowerOperations.openLoan(mv._1e23, flyn, flyn, { from: flyn, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(mv._1e23, erin, { from: erin, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(mv._1e23, flyn, { from: flyn, value: mv._1000_Ether })
 
     // D, E each provide 10000 CLV to SP
     await poolManager.provideToSP(mv._1e23, {from: erin})
@@ -819,6 +850,7 @@ contract('Gas compensation tests', async accounts => {
                             .add(_$10_worthOfETH)
                             .add(_0pt5percent_dennisColl)
     
+    console.log(`expectedGasComp: ${expectedGasComp}`)
     assert.isAtMost(th.getDifference(expectedGasComp, '508160000000000000' ), 1000)
 
     /* Expect liquidated coll = 
@@ -838,12 +870,17 @@ contract('Gas compensation tests', async accounts => {
     await cdpManager.liquidateCDPs( 4, {from: liquidator, gasPrice: 0})
     const liquidatorBalance_after =  web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
+    console.log(`liquidatorBalance_before: ${liquidatorBalance_before}`)
+    console.log(`liquidatorBalance_after: ${liquidatorBalance_after}`)
+
     // Check CLV in SP has decreased
     const CLVinSP_1 = await stabilityPool.getCLV()
     assert.isTrue(CLVinSP_1.lt(CLVinSP_0))
 
     // Check liquidator's balance has increased by the expected compensation amount
     const compensationReceived = (liquidatorBalance_after.sub(liquidatorBalance_before)).toString()
+    console.log(`expectedGasComp: ${expectedGasComp}`)
+    console.log(`compensationReceived: ${compensationReceived}`)
     assert.equal(expectedGasComp, compensationReceived)
 
     // Check ETH in stability pool now equals the expected liquidated collateral
@@ -855,13 +892,13 @@ contract('Gas compensation tests', async accounts => {
   it('liquidateCDPs(): full redistribution. Compensates the correct amount, and liquidates the remainder', async () => {
     await priceFeed.setPrice(mv._1000e18)
 
-    await borrowerOperations.openLoan(0, whale, whale, { from: whale, value: mv._1million_Ether })
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._1million_Ether })
 
     // A-E open loans. A: 0.04 ETH, 1 CLV.  B: 1ETH, 180 CLV.  C: 5 ETH, 925 CLV.  D: 73.632 ETH, 13500 CLV.
-    await borrowerOperations.openLoan(mv._1e18, alice, alice, { from: alice, value: '40000000000000000' })
-    await borrowerOperations.openLoan(mv._180e18, bob, alice, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan('925000000000000000000', carol, carol, { from: carol, value:mv._5_Ether  })
-    await borrowerOperations.openLoan('13500000000000000000000', dennis, dennis, { from: dennis, value: '73632000000000000000'})
+    await borrowerOperations.openLoan(mv._1e18, alice, { from: alice, value: '40000000000000000' })
+    await borrowerOperations.openLoan(mv._180e18, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value:mv._5_Ether  })
+    await borrowerOperations.openLoan('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000'})
 
     const CLVinDefaultPool_0 = await defaultPool.getCLVDebt()
 
@@ -929,6 +966,7 @@ contract('Gas compensation tests', async accounts => {
                             .add(_$10_worthOfETH)
                             .add(_0pt5percent_dennisColl).toString()
     
+    console.log(`expectedGasComp: ${expectedGasComp}`)
     assert.isAtMost(th.getDifference(expectedGasComp, '508160000000000000' ), 1000)
 
     /* Expect liquidated coll = 
@@ -947,16 +985,24 @@ contract('Gas compensation tests', async accounts => {
     await cdpManager.liquidateCDPs( 4, {from: liquidator, gasPrice: 0})
     const liquidatorBalance_after =  web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
+    console.log(`liquidatorBalance_before: ${liquidatorBalance_before}`)
+    console.log(`liquidatorBalance_after: ${liquidatorBalance_after}`)
+
     // Check CLV in DefaultPool has decreased
     const CLVinDefaultPool_1 = await defaultPool.getCLVDebt()
     assert.isTrue(CLVinDefaultPool_1.gt(CLVinDefaultPool_0))
 
     // Check liquidator's balance has increased by the expected compensation amount
     const compensationReceived = (liquidatorBalance_after.sub(liquidatorBalance_before)).toString()
+    console.log(`expectedGasComp: ${expectedGasComp}`)
+    console.log(`compensationReceived: ${compensationReceived}`)
+    
     assert.isAtMost(th.getDifference(expectedGasComp, compensationReceived), 1000) 
                                                                 
     // Check ETH in defaultPool now equals the expected liquidated collateral
     const ETHinDefaultPool = (await defaultPool.getETH()).toString()
+    console.log(` expectedLiquidatedColl: ${expectedLiquidatedColl}`)
+    console.log(` ETHinDefaultPool: ${ETHinDefaultPool}`)
     assert.isAtMost(th.getDifference(expectedLiquidatedColl, ETHinDefaultPool), 1000) 
   })
 
@@ -970,7 +1016,7 @@ contract('Gas compensation tests', async accounts => {
     for (account of _10_accounts) {
 
       const debtString = debt.toString().concat('000000000000000000')
-      await borrowerOperations.openLoan(debtString, account, account, { from: account, value: mv._1_Ether })
+      await borrowerOperations.openLoan(debtString, account, { from: account, value: mv._1_Ether })
 
       const squeezedTroveAddr = th.squeezeAddr(account)
 
@@ -979,6 +1025,11 @@ contract('Gas compensation tests', async accounts => {
 
     const initialPrice = await priceFeed.getPrice()
     const firstColl = (await cdpManager.CDPs(_10_accounts[0]))[1]
+    console.log(`initialPrice: ${initialPrice}`)
+    console.log(`firstTroveColl: ${(await cdpManager.CDPs(_10_accounts[0]))[1]}`)
+    console.log(`firstTroveDebt: ${(await cdpManager.CDPs(_10_accounts[0]))[0]}`)
+    console.log(`firstTrove_gasCompensation: ${await cdpManagerTester.getGasCompensation(firstColl, initialPrice)}`)
+    console.log(`firstTrove_ICR: ${await cdpManager.getCurrentICR(_10_accounts[0], initialPrice)}`)
     
     // Vary price 200-210
     let price = 200
@@ -1009,7 +1060,6 @@ contract('Gas compensation tests', async accounts => {
           try {
             assert.isTrue(ICR.gte(prevICR))
           } catch (error) {
-            console.log(error.message)
             console.log(`ETH price at which trove ordering breaks: ${price}`)
             logICRs(ICRList)
           }
@@ -1028,7 +1078,7 @@ contract('Gas compensation tests', async accounts => {
     for (account of _20_accounts) {
 
       const collString = coll.toString().concat('000000000000000000')
-      await borrowerOperations.openLoan(mv._100e18, account, account, { from: account, value:collString})
+      await borrowerOperations.openLoan(mv._100e18, account, { from: account, value:collString})
 
       coll += 5
     }
@@ -1055,7 +1105,6 @@ contract('Gas compensation tests', async accounts => {
           try {
             assert.isTrue(ICR.gte(prevICR))
           } catch (error) {
-            console.log(error.message)
             console.log(`ETH price at which trove ordering breaks: ${price}`)
             logICRs(ICRList)
           }
@@ -1077,7 +1126,7 @@ contract('Gas compensation tests', async accounts => {
 
       const account = accountsList[accountIdx]
       const collString = coll.toString().concat('000000000000000000')
-      await borrowerOperations.openLoan(mv._100e18, account, account, { from: account, value:collString})
+      await borrowerOperations.openLoan(mv._100e18, account, { from: account, value:collString})
 
       accountIdx += 1
     }
@@ -1104,7 +1153,7 @@ contract('Gas compensation tests', async accounts => {
           try {
             assert.isTrue(ICR.gte(prevICR))
           } catch (error) {
-            console.log(error.message)
+            console.log(error)
             console.log(`ETH price at which trove ordering breaks: ${price}`)
             logICRs(ICRList)
           }

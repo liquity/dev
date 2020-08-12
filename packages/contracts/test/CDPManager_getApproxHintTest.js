@@ -1,7 +1,6 @@
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
-const deployAndConnectHintHelpers = deploymentHelpers.deployAndConnectHintHelpers
 const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
@@ -22,11 +21,9 @@ contract('CDPManager', async accounts => {
   let defaultPool;
   let functionCaller;
   let borrowerOperations;
-  let hintHelpers;
 
   let numAccounts;
   let price;
- 
 
   /* Open a CDP for each account. CLV debt is 200 CLV each, with collateral beginning at 
   1.5 ether, and rising by 0.01 ether per CDP.  Hence, the ICR of account (i + 1) is always 1% greater than the ICR of account i. 
@@ -47,11 +44,11 @@ contract('CDPManager', async accounts => {
  const openCDP = async (account, index) => {
    const amountFinney = 2000 + index * 10
    const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-   await borrowerOperations.openLoan(0, account, account, { from: account, value: coll })
+   await borrowerOperations.openLoan(0, account, { from: account, value: coll })
  }
 
  const withdrawCLVfromCDP = async (account) => {
-  await borrowerOperations.withdrawCLV('200000000000000000000', account, account, { from: account })
+  await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
  }
 
  // Sequentially add coll and withdraw CLV, 1 account at a time
@@ -64,8 +61,8 @@ contract('CDPManager', async accounts => {
     console.time('makeCDPsInSequence')
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-      await borrowerOperations.openLoan(0, account, account, { from: account, value: coll })
-      await borrowerOperations.withdrawCLV('200000000000000000000', account, account, { from: account })
+      await borrowerOperations.openLoan(0, account, { from: account, value: coll })
+      await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
   
       amountFinney += 10
     }
@@ -89,9 +86,6 @@ contract('CDPManager', async accounts => {
 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
-
-    hintHelpers = await deployAndConnectHintHelpers(contractAddresses)
-   
 
     numAccounts = 10
     price = await priceFeed.getPrice()
@@ -137,7 +131,7 @@ contract('CDPManager', async accounts => {
     const CRPercent_250 = Number(web3.utils.fromWei(CR_250, 'ether')) * 100
 
     // const hintAddress_250 = await functionCaller.cdpManager_getApproxHint(CR_250, sqrtLength * 10)
-    const hintAddress_250 = await hintHelpers.getApproxHint(CR_250, sqrtLength * 10)
+    const hintAddress_250 = await cdpManager.getApproxHint(CR_250, sqrtLength * 10)
     const ICR_hintAddress_250 = await cdpManager.getCurrentICR(hintAddress_250, price)
     const ICRPercent_hintAddress_250 = Number(web3.utils.fromWei(ICR_hintAddress_250, 'ether')) * 100
 
@@ -150,7 +144,7 @@ contract('CDPManager', async accounts => {
     const CRPercent_287 = Number(web3.utils.fromWei(CR_287, 'ether')) * 100
 
     // const hintAddress_287 = await functionCaller.cdpManager_getApproxHint(CR_287, sqrtLength * 10)
-    const hintAddress_287 = await hintHelpers.getApproxHint(CR_287, sqrtLength * 10)
+    const hintAddress_287 = await cdpManager.getApproxHint(CR_287, sqrtLength * 10)
     const ICR_hintAddress_287 = await cdpManager.getCurrentICR(hintAddress_287, price)
     const ICRPercent_hintAddress_287 = Number(web3.utils.fromWei(ICR_hintAddress_287, 'ether')) * 100
     
@@ -163,7 +157,7 @@ contract('CDPManager', async accounts => {
     const CRPercent_213 = Number(web3.utils.fromWei(CR_213, 'ether')) * 100
 
     // const hintAddress_213 = await functionCaller.cdpManager_getApproxHint(CR_213, sqrtLength * 10)
-    const hintAddress_213 = await hintHelpers.getApproxHint(CR_213, sqrtLength * 10)
+    const hintAddress_213 = await cdpManager.getApproxHint(CR_213, sqrtLength * 10)
     const ICR_hintAddress_213 = await cdpManager.getCurrentICR(hintAddress_213, price)
     const ICRPercent_hintAddress_213 = Number(web3.utils.fromWei(ICR_hintAddress_213, 'ether')) * 100
     
@@ -176,7 +170,7 @@ contract('CDPManager', async accounts => {
      const CRPercent_201 = Number(web3.utils.fromWei(CR_201, 'ether')) * 100
  
     //  const hintAddress_201 = await functionCaller.cdpManager_getApproxHint(CR_201, sqrtLength * 10)
-     const hintAddress_201 = await hintHelpers.getApproxHint(CR_201, sqrtLength * 10)
+     const hintAddress_201 = await cdpManager.getApproxHint(CR_201, sqrtLength * 10)
      const ICR_hintAddress_201 = await cdpManager.getCurrentICR(hintAddress_201, price)
      const ICRPercent_hintAddress_201 = Number(web3.utils.fromWei(ICR_hintAddress_201, 'ether')) * 100
      
@@ -199,7 +193,7 @@ contract('CDPManager', async accounts => {
   //     // Convert ICR to a duint
   //     const ICR = web3.utils.toWei((ICR_Percent * 10).toString(), 'finney') 
   
-  //     const hintAddress = await hintHelpers.getApproxHint(ICR, sqrtLength * 10)
+  //     const hintAddress = await cdpManager.getApproxHint(ICR, sqrtLength * 10)
   //     const ICR_hintAddress = await cdpManager.getCurrentICR(hintAddress, price)
   //     const ICRPercent_hintAddress = Number(web3.utils.fromWei(ICR_hintAddress, 'ether')) * 100
       
@@ -216,7 +210,7 @@ contract('CDPManager', async accounts => {
     const CR_Max = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
 
     // const hintAddress_Max = await functionCaller.cdpManager_getApproxHint(CR_Max, sqrtLength * 10)
-    const hintAddress_Max = await hintHelpers.getApproxHint(CR_Max, sqrtLength * 10)
+    const hintAddress_Max = await cdpManager.getApproxHint(CR_Max, sqrtLength * 10)
 
     const ICR_hintAddress_Max = await cdpManager.getCurrentICR(hintAddress_Max, price)
     const ICRPercent_hintAddress_Max = Number(web3.utils.fromWei(ICR_hintAddress_Max, 'ether')) * 100
@@ -237,7 +231,7 @@ contract('CDPManager', async accounts => {
      const CR_Min = '1100000000000000000'
 
     //  const hintAddress_Min = await functionCaller.cdpManager_getApproxHint(CR_Min, sqrtLength * 10)
-    const hintAddress_Min = await hintHelpers.getApproxHint(CR_Min, sqrtLength * 10)
+    const hintAddress_Min = await cdpManager.getApproxHint(CR_Min, sqrtLength * 10)
     const ICR_hintAddress_Min = await cdpManager.getCurrentICR(hintAddress_Min, price)
     const ICRPercent_hintAddress_Min = Number(web3.utils.fromWei(ICR_hintAddress_Min, 'ether')) * 100
 

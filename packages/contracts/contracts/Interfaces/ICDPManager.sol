@@ -1,5 +1,5 @@
 pragma solidity >=0.5.16;
-import "./ISortedCDPs.sol";
+
 // Common interface for the CDP Manager.
 interface ICDPManager {
     // --- Events ---
@@ -24,8 +24,6 @@ interface ICDPManager {
 
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
 
-    event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
-
     // --- Functions ---
 
     function setBorrowerOperations(address _borrowerOperationsAddress) external;
@@ -44,15 +42,11 @@ interface ICDPManager {
 
     function setSortedCDPs(address _sortedCDPsAddress) external;
 
-    function getallTrovesArrayCount() external view returns (uint);
-
-    function getSizeArrayCount(uint _sizeRange) external view returns (uint);
-
-    function getTroveFromAllTrovesArray(uint _index) external view returns (address);
-
-    function getTroveFromSizeArray(uint _index, uint _sizeRange) external view returns (address);
+    function getCDPOwnersCount() external view returns (uint);
 
     function getCurrentICR(address _user, uint _price) external view returns (uint);
+
+    function getApproxHint(uint CR, uint numTrials) external view returns (address);
 
     function liquidate(address _user) external;
 
@@ -60,23 +54,22 @@ interface ICDPManager {
 
     function checkRecoveryMode() external view returns (bool);
 
+    function getRedemptionHints(uint _CLVamount, uint _price) external view returns (address, uint);
+
     function redeemCollateral(
         uint _CLVAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
-        uint _partialRedemptionHintICR,
-        address _partialRedemptionSizeListHint
+        uint _partialRedemptionHintICR
     ) external; 
 
     function updateStakeAndTotalStakes(address _user) external returns (uint);
 
     function updateCDPRewardSnapshots(address _user) external;
 
+    function addCDPOwnerToArray(address _user) external returns (uint index);
+
     function applyPendingRewards(address _user) external;
-
-    function getPendingCLVDebtReward(address _user) external view returns (uint);
-
-    function getPendingETHReward(address _user) external view returns (uint);
 
     function closeCDP(address _user) external;
 
@@ -99,14 +92,4 @@ interface ICDPManager {
     function increaseCDPDebt(address _user, uint _debtIncrease) external returns (uint); 
 
     function decreaseCDPDebt(address _user, uint _collDecrease) external returns (uint); 
-
-    function getSizeListFromColl(uint _coll) external view returns (ISortedCDPs);
-
-    function getSizeList(uint _sizeRange) external view returns (ISortedCDPs);
-
-    function insertToFullSortedList(address _user, uint _ICR, uint _price, address _hint) external returns (uint);
-
-    function insertToSizeList(address _user, uint _ICR, uint _price, uint _coll, address _hint) external;
-
-    function reInsertToSizeList(address _user, uint _newICR, uint _price, uint _newColl, address _hint) external;
 }

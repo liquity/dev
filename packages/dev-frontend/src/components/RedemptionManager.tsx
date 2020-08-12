@@ -16,7 +16,6 @@ type RedemptionActionProps = {
   changePending: boolean;
   setChangePending: (isPending: boolean) => void;
   quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
 const RedemptionAction: React.FC<RedemptionActionProps> = ({
@@ -26,8 +25,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   setExchangedQui,
   changePending,
   setChangePending,
-  quiBalance,
-  numberOfTroves
+  quiBalance
 }) => {
   const myTransactionId = "redemption";
   const myTransactionState = useMyTransactionState(myTransactionId);
@@ -51,7 +49,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     return null;
   }
 
-  const send = liquity.redeemCollateral.bind(liquity, exchangedQui, { price, numberOfTroves });
+  const send = liquity.redeemCollateral.bind(liquity, exchangedQui, price);
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex variant="layout.actions">
@@ -77,14 +75,12 @@ type RedemptionManagerProps = {
   liquity: Liquity;
   price: Decimal;
   quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
 export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
   liquity,
   price,
-  quiBalance,
-  numberOfTroves
+  quiBalance
 }) => {
   const zero = Decimal.from(0);
   const [exchangedQui, setExchangedQui] = useState(zero);
@@ -143,8 +139,7 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
           setExchangedQui,
           changePending,
           setChangePending,
-          quiBalance,
-          numberOfTroves
+          quiBalance
         }}
       />
     </>

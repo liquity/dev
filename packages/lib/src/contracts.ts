@@ -8,7 +8,6 @@ import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import cdpManagerAbi from "../abi/CDPManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
-import hintHelpersAbi from "../abi/HintHelpers.json";
 import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
 import poolManagerAbi from "../abi/PoolManager.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
@@ -27,7 +26,6 @@ import type {
   CDPManager,
   CLVToken,
   DefaultPool,
-  HintHelpers,
   MultiCDPGetter,
   PoolManager,
   PriceFeed,
@@ -41,7 +39,6 @@ export const abi: { [name: string]: JsonFragment[] } = {
   cdpManager: cdpManagerAbi,
   clvToken: clvTokenAbi,
   defaultPool: defaultPoolAbi,
-  hintHelpers: hintHelpersAbi,
   multiCDPgetter: multiCDPgetterAbi,
   poolManager: poolManagerAbi,
   priceFeed: priceFeedAbi,
@@ -55,12 +52,9 @@ export interface LiquityContractAddresses {
   cdpManager: string;
   clvToken: string;
   defaultPool: string;
-  hintHelpers: string;
   multiCDPgetter: string;
   poolManager: string;
   priceFeed: string;
-  sizeList_18orLess: string;
-  sizeList_19orGreater: string;
   sortedCDPs: string;
   stabilityPool: string;
 }
@@ -73,12 +67,9 @@ export interface LiquityContracts {
   cdpManager: CDPManager;
   clvToken: CLVToken;
   defaultPool: DefaultPool;
-  hintHelpers: HintHelpers;
   multiCDPgetter: MultiCDPGetter;
   poolManager: PoolManager;
   priceFeed: PriceFeed;
-  sizeList_18orLess: SortedCDPs;
-  sizeList_19orGreater: SortedCDPs;
   sortedCDPs: SortedCDPs;
   stabilityPool: StabilityPool;
 }
@@ -89,12 +80,9 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   cdpManager: contracts.cdpManager.address,
   clvToken: contracts.clvToken.address,
   defaultPool: contracts.defaultPool.address,
-  hintHelpers: contracts.hintHelpers.address,
   multiCDPgetter: contracts.multiCDPgetter.address,
   poolManager: contracts.poolManager.address,
   priceFeed: contracts.priceFeed.address,
-  sizeList_18orLess: contracts.sizeList_18orLess.address,
-  sizeList_19orGreater: contracts.sizeList_19orGreater.address,
   sortedCDPs: contracts.sortedCDPs.address,
   stabilityPool: contracts.stabilityPool.address
 });
@@ -112,7 +100,6 @@ export const connectToContracts = (
   cdpManager: new Contract(addresses.cdpManager, cdpManagerAbi, signerOrProvider) as CDPManager,
   clvToken: new Contract(addresses.clvToken, clvTokenAbi, signerOrProvider) as CLVToken,
   defaultPool: new Contract(addresses.defaultPool, defaultPoolAbi, signerOrProvider) as DefaultPool,
-  hintHelpers: new Contract(addresses.hintHelpers, hintHelpersAbi, signerOrProvider) as HintHelpers,
   multiCDPgetter: new Contract(
     addresses.multiCDPgetter,
     multiCDPgetterAbi,
@@ -120,8 +107,6 @@ export const connectToContracts = (
   ) as MultiCDPGetter,
   poolManager: new Contract(addresses.poolManager, poolManagerAbi, signerOrProvider) as PoolManager,
   priceFeed: new Contract(addresses.priceFeed, priceFeedAbi, signerOrProvider) as PriceFeed,
-  sizeList_18orLess: new Contract(addresses.sizeList_18orLess, sortedCDPsAbi, signerOrProvider) as SortedCDPs,
-  sizeList_19orGreater: new Contract(addresses.sizeList_19orGreater, sortedCDPsAbi, signerOrProvider) as SortedCDPs,
   sortedCDPs: new Contract(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider) as SortedCDPs,
   stabilityPool: new Contract(
     addresses.stabilityPool,

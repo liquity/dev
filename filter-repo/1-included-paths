@@ -4,7 +4,6 @@ packages/decimal/
 packages/frontend/
 packages/dev-frontend/
 packages/providers/
-packages/subgraph/
 .dockerignore
 .gitignore
 Dockerfile

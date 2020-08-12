@@ -48,14 +48,14 @@ contract('CLVToken', async accounts => {
       await connectContracts(contracts, contractAddresses)
       
       // add CDPs for three test users
-      await borrowerOperations.openLoan(0, alice, alice, { from: alice, value: _1_Ether })
-      await borrowerOperations.openLoan(0, bob, bob, { from: bob, value: _1_Ether })
-      await borrowerOperations.openLoan(0, carol, carol, { from: carol, value: _1_Ether })
+      await borrowerOperations.openLoan(0, alice, { from: alice, value: _1_Ether })
+      await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
+      await borrowerOperations.openLoan(0, carol, { from: carol, value: _1_Ether })
 
       // Three test users withdraw CLV
-      await borrowerOperations.withdrawCLV(150, alice, alice, { from: alice }) 
-      await borrowerOperations.withdrawCLV(100, bob, bob, { from: bob })
-      await borrowerOperations.withdrawCLV(50, carol, carol, { from: carol })
+      await borrowerOperations.withdrawCLV(150, alice, { from: alice }) 
+      await borrowerOperations.withdrawCLV(100, alice, { from: bob })
+      await borrowerOperations.withdrawCLV(50, alice, { from: carol })
     })
 
     it('balanceOf: gets the balance of the account', async () => {

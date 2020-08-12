@@ -32,7 +32,7 @@ contract FunctionCaller {
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
     }
 
-    function setPriceFeedAddress(address _priceFeedAddress) external {
+     function setPriceFeedAddress(address _priceFeedAddress) external {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(_priceFeedAddress);
     }
@@ -46,6 +46,10 @@ contract FunctionCaller {
     // --- CDPManager functions - non-view wrappers ---
     function cdpManager_getCurrentICR (address _address, uint _price) external returns (uint) {
         return cdpManager.getCurrentICR(_address, _price);  
+    }
+
+    function cdpManager_getApproxHint (uint _CR, uint _numTrials) external returns (address) {
+        return cdpManager.getApproxHint(_CR, _numTrials);
     }
 
     // --- SortedCDPs functions -  non-view wrappers ---
