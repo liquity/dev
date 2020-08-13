@@ -1368,7 +1368,7 @@ contract('Gas cost tests', async accounts => {
   // --- batchLiquidateTroves ---
 
   // ---batchLiquidateTroves(): Pure redistribution ---
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 10. Pure redistribution'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, mv._10_Ether, mv._100e18)
@@ -1406,7 +1406,7 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 50. Pure redistribution'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, mv._10_Ether, mv._100e18)
@@ -1447,7 +1447,7 @@ contract('Gas cost tests', async accounts => {
   // ---batchLiquidateTroves(): Full SP offset, no pending rewards ---
 
   // 10 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 10. All fully offset with Stability Pool. No pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, mv._10_Ether, mv._100e18)
@@ -1482,7 +1482,7 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 50. All fully offset with Stability Pool. No pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, mv._10_Ether, mv._100e18)
@@ -1520,7 +1520,7 @@ contract('Gas cost tests', async accounts => {
 
   // ---batchLiquidateTroves(): Full SP offset, HAS pending rewards ---
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 10. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, mv._10_Ether, mv._100e18)
@@ -1566,7 +1566,7 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 50. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, mv._10_Ether, mv._100e18)

@@ -1491,7 +1491,7 @@ contract('CDPManager', async accounts => {
     assert.isAtMost(th.getDifference(total_ETHinSP, mv._5_Ether), 1000)
   })
 
-  it.only('batchLiquidateTroves(): closes every trove with ICR < MCR in the given array', async () => {
+  it('batchLiquidateTroves(): closes every trove with ICR < MCR in the given array', async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(mv._500e18, whale, { from: whale, value: mv._100_Ether })
 
@@ -1545,7 +1545,7 @@ contract('CDPManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '3')
   })
 
-  it.only('batchLiquidateTroves(): does not liquidate troves that are not in the given array', async () => {
+  it('batchLiquidateTroves(): does not liquidate troves that are not in the given array', async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(mv._500e18, whale, { from: whale, value: mv._100_Ether })
 
@@ -1602,7 +1602,7 @@ contract('CDPManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
   })
 
-  it.only('batchLiquidateTroves(): does not close troves with ICR >= MCR in the given array', async () => {
+  it('batchLiquidateTroves(): does not close troves with ICR >= MCR in the given array', async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(mv._500e18, whale, { from: whale, value: mv._100_Ether })
 
@@ -1657,7 +1657,7 @@ contract('CDPManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '3')
   })
 
-  it.only('batchLiquidateTroves(): reverts if array is empty', async () => {
+  it('batchLiquidateTroves(): reverts if array is empty', async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(mv._500e18, whale, { from: whale, value: mv._100_Ether })
 

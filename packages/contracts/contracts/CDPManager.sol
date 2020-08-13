@@ -19,7 +19,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant public minVirtualDebt = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
+    uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
 
     // --- Connected contract declarations ---
 
@@ -57,7 +57,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint coll;
         uint stake;
         Status status;
-        uint arrayIndex;
+        uint16 arrayIndex;
     }
 
     mapping (address => CDP) public CDPs;
@@ -91,7 +91,6 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     // Error trackers for the trove redistribution calculation
     uint public lastETHError_Redistribution;
     uint public lastCLVDebtError_Redistribution;
-
 
     /* --- LocalVariable Structs ---
 
@@ -479,12 +478,6 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
 
-                if (V.partialAddr != address(0)) {
-                    T.partialAddr = V.partialAddr;
-                    T.partialNewDebt = V.partialNewDebt;
-                    T.partialNewColl = V.partialNewColl;
-                }
-
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
@@ -593,12 +586,6 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
 
-                if (V.partialAddr != address(0)) {
-                    T.partialAddr = V.partialAddr;
-                    T.partialNewDebt = V.partialNewDebt;
-                    T.partialNewColl = V.partialNewColl;
-                }
-
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
@@ -645,6 +632,11 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         T2.totalCollToSendToSP = T1.totalCollToSendToSP.add(V.collToSendToSP);
         T2.totalDebtToRedistribute = T1.totalDebtToRedistribute.add(V.debtToRedistribute);
         T2.totalCollToRedistribute =T1.totalCollToRedistribute .add(V.collToRedistribute);
+
+        // Assign the address of the ppartially liquidated trove and debt/coll values
+        T2.partialAddr = V.partialAddr;
+        T2.partialNewDebt = V.partialNewDebt;
+        T2.partialNewColl = V.partialNewColl;
 
         return T2;
     }
@@ -1024,8 +1016,9 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         return _addCDPOwnerToArray(_user);
     }
 
-    function _addCDPOwnerToArray(address _user) internal returns (uint index) {
-        index = CDPOwners.push(_user).sub(1);
+    function _addCDPOwnerToArray(address _user) internal returns (uint16 index) {
+        require(CDPOwners.length < 2**128 - 1, "CDPManager: CDPOwners array has maximum size of 2^128 - 1");
+        index = uint16(CDPOwners.push(_user).sub(1));
         CDPs[_user].arrayIndex = index;
 
         return index;
@@ -1036,7 +1029,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     function _removeCDPOwner(address _user) internal {
         require(CDPs[_user].status == Status.closed, "CDPManager: CDP is still active");
 
-        uint index = CDPs[_user].arrayIndex;   
+        uint16 index = CDPs[_user].arrayIndex;   
         uint length = CDPOwners.length;
         uint idxLast = length.sub(1);
 
@@ -1100,27 +1093,27 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
     Given by the maximum of { $10 worth of ETH,  dollar value of 0.5% of collateral } */
     function _getGasCompensation(uint _entireColl, uint _price) internal view returns (uint) {
-        uint minETHComp = _getMinVirtualDebtInETH(_price);
+        // uint minETHComp = _getMinVirtualDebtInETH(_price);
 
-        if (_entireColl <= minETHComp) { return _entireColl; }
+        // if (_entireColl <= minETHComp) { return _entireColl; }
 
-        uint _0pt5percentOfColl = _entireColl.div(200);
+        // uint _0pt5percentOfColl = _entireColl.div(200);
 
-        uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
-        return compensation;
-        // return 0;
+        // uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
+        // return compensation;
+        return 0;
     }
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
     function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
-        minETHComp = minVirtualDebt.mul(1e18).div(_price);
+        minETHComp = MIN_VIRTUAL_DEBT.mul(1e18).div(_price);
         return minETHComp;
     }
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        return _debt.add(minVirtualDebt);
-        // return _debt;
+        // return _debt.add(MIN_VIRTUAL_DEBT);
+        return _debt;
     }
 
     // --- 'require' wrapper functions ---

@@ -118,7 +118,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         // List must not be full
         require(!isFull());  
         // List must not already contain node
-        require(!contains(_id));  
+        require(!_contains(_id));  
         // Node id must not be null
         require(_id != address(0));  
         // ICR must be non-zero
@@ -127,10 +127,10 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address prevId = _prevId; 
         address nextId = _nextId; 
 
-        if (!validInsertPosition(_ICR, _price, prevId, nextId)) {
+        if (!_validInsertPosition(_ICR, _price, prevId, nextId)) {
             // Sender's hint was not a valid insert position
             // Use sender's hint to find a valid insert position
-            (prevId, nextId) = findInsertPosition(_ICR, _price, prevId, nextId);   
+            (prevId, nextId) = _findInsertPosition(_ICR, _price, prevId, nextId);   
         }
         
          data.nodes[_id].exists = true;  
@@ -170,7 +170,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      */
     function _remove(address _id) internal {
         // List must contain the node
-        require(contains(_id)); 
+        require(_contains(_id)); 
 
         if (data.size > 1) { 
             // List contains more than a single node
@@ -213,7 +213,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      */
     function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external onlyBOorCDPM {
         // List must contain the node
-        require(contains(_id));
+        require(_contains(_id));
 
         // Remove node from the list
         _remove(_id);
@@ -228,7 +228,11 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @dev Checks if the list contains a node
      * @param _transcoder Address of transcoder
      */
-    function contains(address _id) public view returns (bool) {
+    function contains(address _id) external view returns (bool) {
+       return _contains(_id);
+    }
+
+    function _contains(address _id) internal view returns (bool) {
         return data.nodes[_id].exists;
     }
 
@@ -296,7 +300,12 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view returns (bool) {
+    
+    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) external view returns (bool) {
+        return _validInsertPosition(_ICR, _price, _prevId, _nextId);
+    }
+
+    function _validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) internal view returns (bool) {
         if (_prevId == address(0) && _nextId == address(0)) {
             // `(null, null)` is a valid insert position if the list is empty
             return isEmpty();
@@ -329,7 +338,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address nextId = data.nodes[prevId].nextId;
 
         // Descend the list until we reach the end or until we find a valid insert position
-        while (prevId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
+        while (prevId != address(0) && !_validInsertPosition(_ICR, _price, prevId, nextId)) {
             prevId = data.nodes[prevId].nextId;
             nextId = data.nodes[prevId].nextId;
         }
@@ -352,7 +361,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address prevId = data.nodes[nextId].prevId;
 
         // Ascend the list until we reach the end or until we find a valid insertion point
-        while (nextId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
+        while (nextId != address(0) && !_validInsertPosition(_ICR, _price, prevId, nextId)) {
             nextId = data.nodes[nextId].prevId;
             prevId = data.nodes[nextId].prevId;
         }
@@ -366,19 +375,23 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view returns (address, address) {
+    function findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) external view returns (address, address) {
+        return _findInsertPosition(_ICR, _price, _prevId, _nextId);
+    }
+
+    function _findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) internal view returns (address, address) {
         address prevId = _prevId;
         address nextId = _nextId;
 
         if (prevId != address(0)) {
-            if (!contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId, _price)) {
+            if (!_contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId, _price)) {
                 // `prevId` does not exist anymore or now has a smaller ICR than the given ICR
                 prevId = address(0);
             }
         }
 
         if (nextId != address(0)) {
-            if (!contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId, _price)) {
+            if (!_contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId, _price)) {
                 // `nextId` does not exist anymore or now has a larger ICR than the given ICR
                 nextId = address(0);
             }

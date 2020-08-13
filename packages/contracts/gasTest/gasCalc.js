@@ -133,7 +133,6 @@ contract('Gas cost tests', async accounts => {
 
   it("", async () => {
     const message = 'openLoan(), 30 accounts, each account adds random ether and random CLV'
-
     const amountETH = mv._10_Ether
     const amountCLV = 0
     const gasResults = await th.openLoan_allAccounts_randomETH_randomCLV(1, 9, _30_Accounts, contracts, 2, 100, true)
@@ -676,7 +675,7 @@ contract('Gas cost tests', async accounts => {
     // 3 accounts add coll
     await th.openLoan_allAccounts(accounts.slice(0,3), contracts, mv._10_Ether, 0 )
     // 3 accounts withdraw successively less CLV
-    await borrowerOperations.withdrawCLV(mv._100e18, accounts[0], accounts[0], { from: accounts[0] })
+    await borrowerOperations.withdrawCLV(mv._100e18, accounts[0], { from: accounts[0] })
     await borrowerOperations.withdrawCLV(mv._90e18, accounts[1], { from: accounts[1] })
     await borrowerOperations.withdrawCLV(mv._80e18, accounts[2], { from: accounts[2] })
 
@@ -820,7 +819,7 @@ contract('Gas cost tests', async accounts => {
     // 3 accounts add coll
     await th.openLoan_allAccounts(accounts.slice(0,3), contracts, mv._10_Ether, 0 )
     // 3 accounts withdraw successively less CLV
-    await borrowerOperations.withdrawCLV(mv._100e18, accounts[0], accounts[0], { from: accounts[0] })
+    await borrowerOperations.withdrawCLV(mv._100e18, accounts[0], { from: accounts[0] })
     await borrowerOperations.withdrawCLV(mv._90e18, accounts[1], { from: accounts[1] })
     await borrowerOperations.withdrawCLV(mv._80e18, accounts[2], { from: accounts[2] })
 
@@ -1877,7 +1876,6 @@ contract('Gas cost tests', async accounts => {
 
     th.appendData({ gas: gas }, message, data)
   })
-
 
   it("", async () => {
     const message = 'findInsertPosition(), 50 CDPs with ICRs 200-249%, ICR <  tail ICR, no hint, 50 traversals'

@@ -17,7 +17,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
-    uint constant public minVirtualDebt = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
+    uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
 
     // --- Connected contract declarations ---
 
@@ -472,14 +472,14 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
       function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
-        minETHComp = minVirtualDebt.mul(1e18).div(_price);
+        minETHComp = MIN_VIRTUAL_DEBT.mul(1e18).div(_price);
         return minETHComp;
     }
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        return _debt.add(minVirtualDebt);
-        // return _debt;
+        // return _debt.add(MIN_VIRTUAL_DEBT);
+        return _debt;
     }
 
     function getCompositeDebt(uint _debt) external pure returns (uint) {
