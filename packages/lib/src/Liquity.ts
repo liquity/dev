@@ -16,7 +16,8 @@ import {
   DefaultPool,
   StabilityPool,
   CLVToken,
-  MultiCDPGetter
+  MultiCDPGetter,
+  HintHelpers
 } from "../types";
 import { LiquityContracts, LiquityContractAddresses, connectToContracts } from "./contracts";
 
@@ -374,6 +375,7 @@ export class Liquity {
   private readonly defaultPool: DefaultPool;
   private readonly stabilityPool: StabilityPool;
   private readonly multiCDPgetter: MultiCDPGetter;
+  private readonly hintHelpers: HintHelpers;
 
   constructor(contracts: LiquityContracts, userAddress?: string) {
     this.cdpManager = contracts.cdpManager;
@@ -386,6 +388,7 @@ export class Liquity {
     this.defaultPool = contracts.defaultPool;
     this.stabilityPool = contracts.stabilityPool;
     this.multiCDPgetter = contracts.multiCDPgetter;
+    this.hintHelpers = contracts.hintHelpers;
     this.userAddress = userAddress;
   }
 
@@ -504,7 +507,7 @@ export class Liquity {
 
     const numberOfTrials = BigNumber.from(Math.ceil(10 * Math.sqrt(numberOfTroves)));
 
-    const approxHint = await this.cdpManager.getApproxHint(
+    const approxHint = await this.hintHelpers.getApproxHint(
       collateralRatio.bigNumber,
       numberOfTrials
     );
@@ -870,7 +873,7 @@ export class Liquity {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await this.cdpManager.getRedemptionHints(exchangedQui.bigNumber, price.bigNumber);
+    } = await this.hintHelpers.getRedemptionHints(exchangedQui.bigNumber, price.bigNumber);
 
     const collateralRatio = new Decimal(partialRedemptionHintICR);
 

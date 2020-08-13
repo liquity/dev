@@ -5,6 +5,7 @@
     "cdpManager": "0x75E7F939AEc5CA455E4e32CD4b6567B70323bd4A",
     "clvToken": "0xFa5a57d35EcB2DfF4bc7d3Be09eb5018Ccc0D723",
     "defaultPool": "0x22d435A31A5cACd0077DCA72317CB253683B3551",
+    "hintHelpers": "",
     "multiCDPgetter": "0xC7Abc4A513D7b6CE0743ab2DC1A69FbF7F07A346",
     "poolManager": "0x43bDa5817362abcbD900484ccdC2201120367B3B",
     "priceFeed": "0xF8Ac0B7A9dda5b46692139f3cA0B24d3d600B722",

@@ -8,6 +8,7 @@ import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import cdpManagerAbi from "../abi/CDPManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
+import hintHelpersAbi from "../abi/HintHelpers.json";
 import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
 import poolManagerAbi from "../abi/PoolManager.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
@@ -26,6 +27,7 @@ import type {
   CDPManager,
   CLVToken,
   DefaultPool,
+  HintHelpers,
   MultiCDPGetter,
   PoolManager,
   PriceFeed,
@@ -39,6 +41,7 @@ export const abi: { [name: string]: JsonFragment[] } = {
   cdpManager: cdpManagerAbi,
   clvToken: clvTokenAbi,
   defaultPool: defaultPoolAbi,
+  hintHelpers: hintHelpersAbi,
   multiCDPgetter: multiCDPgetterAbi,
   poolManager: poolManagerAbi,
   priceFeed: priceFeedAbi,
@@ -52,6 +55,7 @@ export interface LiquityContractAddresses {
   cdpManager: string;
   clvToken: string;
   defaultPool: string;
+  hintHelpers: string;
   multiCDPgetter: string;
   poolManager: string;
   priceFeed: string;
@@ -67,6 +71,7 @@ export interface LiquityContracts {
   cdpManager: CDPManager;
   clvToken: CLVToken;
   defaultPool: DefaultPool;
+  hintHelpers: HintHelpers;
   multiCDPgetter: MultiCDPGetter;
   poolManager: PoolManager;
   priceFeed: PriceFeed;
@@ -80,6 +85,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   cdpManager: contracts.cdpManager.address,
   clvToken: contracts.clvToken.address,
   defaultPool: contracts.defaultPool.address,
+  hintHelpers: contracts.hintHelpers.address,
   multiCDPgetter: contracts.multiCDPgetter.address,
   poolManager: contracts.poolManager.address,
   priceFeed: contracts.priceFeed.address,
@@ -100,6 +106,7 @@ export const connectToContracts = (
   cdpManager: new Contract(addresses.cdpManager, cdpManagerAbi, signerOrProvider) as CDPManager,
   clvToken: new Contract(addresses.clvToken, clvTokenAbi, signerOrProvider) as CLVToken,
   defaultPool: new Contract(addresses.defaultPool, defaultPoolAbi, signerOrProvider) as DefaultPool,
+  hintHelpers: new Contract(addresses.hintHelpers, hintHelpersAbi, signerOrProvider) as HintHelpers,
   multiCDPgetter: new Contract(
     addresses.multiCDPgetter,
     multiCDPgetterAbi,
