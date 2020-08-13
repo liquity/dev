@@ -9,6 +9,7 @@ const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
+const HintHelpers = artifacts.require("./HintHelpers.sol")
 const deploymentHelpers = require("./deploymentHelpers.js")
 
 const getAddresses = deploymentHelpers.getAddresses
@@ -25,7 +26,8 @@ contractABIs = [
     ActivePool,
     StabilityPool, 
     DefaultPool,
-    FunctionCaller 
+    FunctionCaller,
+    HintHelpers
 ]
 
     const getGasFromContractDeployment = async (contractObject, name) => {
@@ -55,6 +57,7 @@ async function main() {
     const stabilityPool = await StabilityPool.new()
     const defaultPool = await DefaultPool.new()
     const functionCaller = await FunctionCaller.new()
+    const hintHelpers = await HintHelpers.new()
 
     contracts = {
         borrowerOperations: borrowerOperations,
@@ -66,7 +69,8 @@ async function main() {
         activePool: activePool,
         stabilityPool: stabilityPool,
         defaultPool: defaultPool,
-        functionCaller: functionCaller
+        functionCaller: functionCaller,
+        hintHelpers: hintHelpers
       }
 
     const contractAddresses = getAddresses(contracts)

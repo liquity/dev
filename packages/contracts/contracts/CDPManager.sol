@@ -122,6 +122,14 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
         uint entireSystemColl;
     }
 
+    struct LocalVariables_BatchLiquidation {
+        uint price;
+        uint remainingCLVInPool;
+        uint ICR;
+        bool recoveryModeAtStart;
+        bool backToNormalMode;
+    }
+
     // --- Structs returned from liquidation functions ---
 
     struct LiquidationValues {
@@ -522,6 +530,108 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             L.i++;
         }
     }
+
+    function batchLiquidateTroves(address[] calldata _troveArray) external {
+        require(_troveArray.length != 0, "CDPManager: Calldata address array must not be empty");
+        
+        LocalVariables_OuterLiquidationFunction memory L;
+        LiquidationTotals memory T;
+
+        L.price = priceFeed.getPrice();
+        L.CLVInPool = stabilityPool.getCLV();
+        L.recoveryModeAtStart = _checkRecoveryMode();
+        
+        // Perform the appropriate liquidation sequence - tally values and obtain their totals
+        if (L.recoveryModeAtStart == true) {
+           T = _getTotalFromBatchLiquidate_RecoveryMode(L.price, L.CLVInPool, _troveArray);
+        } else if (L.recoveryModeAtStart == false) {
+            T = _getTotalsFromBatchLiquidate_NormalMode(L.price, L.CLVInPool, _troveArray);
+        }
+
+        // Move liquidated ETH and CLV to the appropriate pools
+        poolManager.offset(T.totalDebtToOffset, T.totalCollToSendToSP);
+        _redistributeDebtAndColl(T.totalDebtToRedistribute, T.totalCollToRedistribute);
+
+        // Update system snapshots and the final partially liquidated trove, if there is one
+        _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl);
+        _updatePartiallyLiquidatedTrove(T.partialAddr,
+                                        T.partialNewDebt,
+                                        T.partialNewColl,
+                                        L.price);
+
+        // Send gas compensation ETH to caller
+        _msgSender().call.value(T.totalGasCompensation)("");
+    }
+
+    function _getTotalFromBatchLiquidate_RecoveryMode(uint _price, uint _CLVInPool, address[] memory _troveArray) internal 
+    returns(LiquidationTotals memory T)
+    {
+        LocalVariables_LiquidationSequence memory L;
+        LiquidationValues memory V;
+        uint troveArrayLength = _troveArray.length;
+
+        L.remainingCLVInPool = _CLVInPool;
+        L.backToNormalMode = false;
+        L.entireSystemDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());
+        L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
+
+        L.i = 0;
+         for (L.i = 0; L.i < troveArrayLength; L.i++) {
+             L.user = _troveArray[L.i];
+            L.ICR = _getCurrentICR(L.user, _price);
+
+            // Attempt to close CDP
+            if (L.backToNormalMode == false) {
+                V = _liquidateRecoveryMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+
+                // Update aggregate trackers
+                L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
+                L.entireSystemDebt = L.entireSystemDebt.sub(V.debtToOffset);
+                L.entireSystemColl = L.entireSystemColl.sub(V.collToSendToSP);
+
+                // Add liquidation values to their respective running totals
+                T = _addLiquidationValuesToTotals(T, V);
+
+                if (V.partialAddr != address(0)) {
+                    T.partialAddr = V.partialAddr;
+                    T.partialNewDebt = V.partialNewDebt;
+                    T.partialNewColl = V.partialNewColl;
+                }
+
+                L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
+            }
+            else if (L.backToNormalMode == true && L.ICR < MCR) {
+                V = _liquidateNormalMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+                L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
+
+                // Add liquidation values to their respective running totals
+                T = _addLiquidationValuesToTotals(T, V);
+            }  
+        }
+    }
+
+    function _getTotalsFromBatchLiquidate_NormalMode(uint _price, uint _CLVInPool, address[] memory _troveArray) internal 
+    returns(LiquidationTotals memory T)
+    {
+        LocalVariables_LiquidationSequence memory L;
+        LiquidationValues memory V;
+        uint troveArrayLength = _troveArray.length;
+
+        L.remainingCLVInPool = _CLVInPool;
+        
+        for (L.i = 0; L.i < troveArrayLength; L.i++) {
+            L.user = _troveArray[L.i];
+            L.ICR = _getCurrentICR(L.user, _price);
+            
+            if (L.ICR < MCR) {
+                V = _liquidateNormalMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+                L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
+
+                // Add liquidation values to their respective running totals
+                T = _addLiquidationValuesToTotals(T, V);
+            }
+        }
+    } 
 
     function _addLiquidationValuesToTotals(LiquidationTotals memory T1, LiquidationValues memory V) 
     internal pure returns(LiquidationTotals memory T2) {
@@ -987,15 +1097,15 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
     Given by the maximum of { $10 worth of ETH,  dollar value of 0.5% of collateral } */
     function _getGasCompensation(uint _entireColl, uint _price) internal view returns (uint) {
-        // uint minETHComp = _getMinVirtualDebtInETH(_price);
+        uint minETHComp = _getMinVirtualDebtInETH(_price);
 
-        // if (_entireColl <= minETHComp) { return _entireColl; }
+        if (_entireColl <= minETHComp) { return _entireColl; }
 
-        // uint _0pt5percentOfColl = _entireColl.div(200);
+        uint _0pt5percentOfColl = _entireColl.div(200);
 
-        // uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
-        // return compensation;
-        return 0;
+        uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
+        return compensation;
+        // return 0;
     }
 
     // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
@@ -1006,8 +1116,8 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        // return _debt.add(minVirtualDebt);
-        return _debt;
+        return _debt.add(minVirtualDebt);
+        // return _debt;
     }
 
     // --- 'require' wrapper functions ---
