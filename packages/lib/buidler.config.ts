@@ -26,7 +26,7 @@ dotenv.config();
 usePlugin("buidler-ethers-v5");
 
 const useLiveVersionEnv = (process.env.USE_LIVE_VERSION ?? "false").toLowerCase();
-const useLiveVersion = !["false", "no", "0"].some(falsyValue => useLiveVersionEnv === falsyValue);
+const useLiveVersion = !["false", "no", "0"].includes(useLiveVersionEnv);
 
 if (useLiveVersion) {
   console.log("Using live version of contracts.".cyan);
@@ -167,6 +167,8 @@ task(
     const price = await deployerLiquity.getPrice();
     const priceAsNumber = parseFloat(price.toString(4));
 
+    let numberOfTroves = await deployerLiquity.getNumberOfTroves();
+
     let i = 0;
     for (const user of randomUsers) {
       const userAddress = await user.getAddress();
@@ -180,7 +182,14 @@ task(
         value: Decimal.from(collateral).bigNumber
       });
 
-      await liquity.openTrove(new Trove({ collateral, debt }), price, { gasPrice: 0 });
+      await liquity.openTrove(
+        new Trove({ collateral, debt }),
+        { price, numberOfTroves },
+        { gasPrice: 0 }
+      );
+
+      numberOfTroves++;
+
       if (i % 4 === 0) {
         await liquity.depositQuiInStabilityPool(debt);
       }
@@ -210,8 +219,15 @@ task(
 
     const price = await deployerLiquity.getPrice();
 
+    let numberOfTroves = 0;
+
     // Create a whale Trove that will keep the system in normal mode
-    await funderLiquity.openTrove(new Trove({ collateral: collateral.mul(1000) }), price);
+    await funderLiquity.openTrove(new Trove({ collateral: collateral.mul(1000) }), {
+      price,
+      numberOfTroves
+    });
+
+    numberOfTroves++;
 
     for (let i = 1; i < randomUsers.length; ++i) {
       for (const user of randomUsers.slice(0, i)) {
@@ -224,9 +240,11 @@ task(
 
         await liquity.openTrove(
           new Trove({ collateral, debt: collateral.mul(price).div(1.11) }),
-          price,
+          { price, numberOfTroves },
           { gasPrice: 0 }
         );
+
+        numberOfTroves++;
       }
 
       await deployerLiquity.setPrice(price.mul(0.95));
@@ -370,10 +388,16 @@ task(
     ]);
 
     let price = await deployerLiquity.getPrice();
+    let numberOfTroves = await deployerLiquity.getNumberOfTroves();
 
     let funderTrove = await funderLiquity.getTrove();
     if (funderTrove.isEmpty) {
-      await funderLiquity.openTrove(new Trove({ collateral: 10000, debt: 1000000 }), price);
+      await funderLiquity.openTrove(new Trove({ collateral: 10000, debt: 1000000 }), {
+        price,
+        numberOfTroves
+      });
+
+      numberOfTroves++;
     }
 
     let totalNumberOfLiquidations = 0;
@@ -394,19 +418,14 @@ task(
 
       const trovesAfter = await getListOfTroveOwners(deployerLiquity);
       const liquidatedTroves = listDifference(trovesBefore, trovesAfter);
-      // const numberOfTrovesAfter = (await deployerLiquity.getNumberOfTroves()).toNumber();
 
       if (liquidatedTroves.length > 0) {
         totalNumberOfLiquidations += liquidatedTroves.length;
+        numberOfTroves -= liquidatedTroves.length;
         for (const liquidatedTrove of liquidatedTroves) {
           console.log(`// Liquidated ${shortenAddress(liquidatedTrove)}`);
         }
       }
-      // if (numberOfTrovesAfter < numberOfTrovesBefore) {
-      //   const numberOfLiquidations = numberOfTrovesBefore - numberOfTrovesAfter;
-      //   totalNumberOfLiquidations += numberOfLiquidations;
-      //   console.log(`// Liquidated ${numberOfLiquidations} Trove(s)`);
-      // }
 
       let previousListOfTroves: (readonly [string, TroveWithPendingRewards])[];
 
@@ -466,12 +485,12 @@ task(
                 `debt: ${newTrove.debt} })`
             );
 
-            await liquity.openTrove(newTrove, price, { gasPrice: 0 });
+            await liquity.openTrove(newTrove, { price, numberOfTroves }, { gasPrice: 0 });
+            numberOfTroves++;
           } else {
             while (total.collateralRatioIsBelowCritical(price)) {
               // Cannot close Trove during recovery mode
-              const funderTrove = await funderLiquity.getTrove();
-              await funderLiquity.depositEther(funderTrove, benford(50000), price);
+              await funderLiquity.depositEther(benford(50000), { price, numberOfTroves });
 
               total = await liquity.getTotal();
             }
@@ -480,6 +499,7 @@ task(
 
             console.log(`[${shortenAddress(liquity.userAddress!)}] closeTrove()`);
             await liquity.closeTrove({ gasPrice: 0 });
+            numberOfTroves--;
           }
         } else {
           const exchangedQui = benford(5000);
@@ -487,7 +507,7 @@ task(
           await funderLiquity.sendQui(liquity.userAddress!, exchangedQui);
 
           console.log(`[${shortenAddress(liquity.userAddress!)}] redeemCollateral(${exchangedQui})`);
-          await liquity.redeemCollateral(exchangedQui, price, { gasPrice: 0 });
+          await liquity.redeemCollateral(exchangedQui, { price, numberOfTroves }, { gasPrice: 0 });
         }
 
         const quiBalance = await liquity.getQuiBalance();
@@ -509,7 +529,7 @@ task(
     }
 
     const total = await funderLiquity.getTotal();
-    const numberOfTroves = await funderLiquity.getNumberOfTroves();
+    numberOfTroves = await funderLiquity.getNumberOfTroves();
 
     console.log();
     console.log(`Number of Troves: ${numberOfTroves}`);
@@ -537,7 +557,8 @@ task(
 
     const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder]);
 
-    const priceBefore = await deployerLiquity.getPrice();
+    const initialPrice = await deployerLiquity.getPrice();
+    const initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
 
     let [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
 
@@ -551,12 +572,14 @@ task(
           numberOfTroves: initialNumberOfTroves
         });
 
-      if (funderTrove.debt.isZero) {
-        await funderLiquity.borrowQui(funderTrove, 1, priceBefore);
-        funderTrove = await funderLiquity.getTrove();
+        trove = await funderLiquity.getTrove();
       }
 
-      await funderLiquity.repayQui(funderTrove, funderTrove.debt, priceBefore);
+      await funderLiquity.repayQui(trove.debt, {
+        trove,
+        price: initialPrice,
+        numberOfTroves: initialNumberOfTroves
+      });
     }
 
     [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
@@ -567,8 +590,6 @@ task(
 
     await deployerLiquity.setPrice(0.001);
 
-    const initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
-
     let numberOfTroves: number;
     while ((numberOfTroves = await funderLiquity.getNumberOfTroves()) > 1) {
       const numberOfTrovesToLiquidate = numberOfTroves > 10 ? 10 : numberOfTroves - 1;
@@ -577,7 +598,7 @@ task(
       await funderLiquity.liquidateUpTo(numberOfTrovesToLiquidate);
     }
 
-    await deployerLiquity.setPrice(priceBefore);
+    await deployerLiquity.setPrice(initialPrice);
 
     if ((await funderLiquity.getNumberOfTroves()) !== 1) {
       throw new Error("didn't manage to liquidate every Trove");

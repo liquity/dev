@@ -45,6 +45,7 @@ export function handleCDPUpdated(event: CDPUpdated): void {
   let snapshots = cdpManager.rewardSnapshots(event.params._user);
 
   updateTrove(
+    event.block.timestamp,
     event.transaction.hash,
     event.logIndex,
     getTroveOperation(event.params.operation),

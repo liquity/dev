@@ -1,6 +1,8 @@
-import { Address } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal } from "@graphprotocol/graph-ts";
 
 import { Owner, Trove } from "../../generated/schema";
+
+let DECIMAL_ZERO = BigDecimal.fromString("0");
 
 function getOwner(_user: Address): Owner {
   let id = _user.toHexString();
@@ -25,6 +27,8 @@ export function getCurrentTroveOfOwner(_user: Address): Trove {
 
     currentTrove = new Trove(_user.toHexString() + "-" + troveSubId.toString());
     currentTrove.owner = owner.id;
+    currentTrove.collateral = DECIMAL_ZERO;
+    currentTrove.debt = DECIMAL_ZERO;
     owner.currentTrove = currentTrove.id;
     owner.save();
   } else {

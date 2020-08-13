@@ -8,6 +8,7 @@ import { BorrowerOperations } from "../../generated/templates";
 import { updateTrove } from "../entities/Trove";
 
 enum CDPManagerOperation {
+  applyPendingRewards,
   liquidateInNormalMode,
   liquidateInRecoveryMode,
   partiallyLiquidateInRecoveryMode,
@@ -16,6 +17,8 @@ enum CDPManagerOperation {
 
 function getTroveOperation(operation: CDPManagerOperation): string {
   switch (operation) {
+    case CDPManagerOperation.applyPendingRewards:
+      return "accrueRewards";
     case CDPManagerOperation.liquidateInNormalMode:
       return "liquidateInNormalMode";
     case CDPManagerOperation.liquidateInRecoveryMode:
@@ -41,6 +44,7 @@ export function handleCDPUpdated(event: CDPUpdated): void {
   let snapshots = cdpManager.rewardSnapshots(event.params._user);
 
   updateTrove(
+    event.block.timestamp,
     event.transaction.hash,
     event.logIndex,
     getTroveOperation(event.params.operation),

@@ -1,6 +1,6 @@
 import { Theme } from "theme-ui";
 
-const colors = {
+const baseColors = {
   blue: "#1542cd",
   purple: "#745ddf",
   cyan: "#2eb6ea",
@@ -8,6 +8,23 @@ const colors = {
   yellow: "#fd9d28",
   red: "#dc2c10",
   lightRed: "#ff755f"
+};
+
+const colors = {
+  primary: baseColors.blue,
+  secondary: baseColors.purple,
+  accent: baseColors.cyan,
+
+  success: baseColors.green,
+  warning: baseColors.yellow,
+  danger: baseColors.red,
+  dangerHover: baseColors.lightRed,
+  info: baseColors.blue,
+  invalid: "pink",
+
+  text: "#293147",
+  background: "white",
+  muted: "#eaebed"
 };
 
 const buttonBase = {
@@ -44,7 +61,7 @@ const iconButton = {
 
   ":disabled": {
     color: "text",
-    opacity: 0.33
+    opacity: 0.25
   }
 } as const;
 
@@ -66,7 +83,7 @@ const infoCard = {
   padding: 3,
 
   borderColor: "rgba(122,199,240,0.4)",
-  background: "linear-gradient(200deg, rgba(212,217,252,1) 0%, rgba(202,233,249,1) 100%)",
+  background: "linear-gradient(200deg, #d4d9fc, #cae9f9)",
 
   h2: {
     mb: 2,
@@ -85,7 +102,7 @@ const formBase = {
 const formCell = {
   ...formBase,
 
-  backgroundColor: "background",
+  bg: "background",
   border: 1,
   borderColor: "muted",
   borderRadius: 0,
@@ -146,29 +163,11 @@ const theme: Theme = {
     heading: 1.25
   },
 
-  colors: {
-    primary: colors.blue,
-    secondary: colors.purple,
-    accent: colors.cyan,
-
-    success: colors.green,
-    warning: colors.yellow,
-    danger: colors.red,
-    dangerHover: colors.lightRed,
-    info: colors.blue,
-    invalid: "pink",
-
-    text: "#333",
-    background: "white",
-    muted: "#f0f1f2",
-
-    "moon-gray": "#ccc",
-    "light-gray": "#d7d8d9"
-  },
+  colors,
 
   borders: [0, "1px solid"],
 
-  shadows: ["0", "0px 4px 8px rgba(0, 0, 0, 0.1)", "0px 8px 16px rgba(0, 0, 0, 0.1)"],
+  shadows: ["0", "0px 4px 8px rgba(41, 49, 71, 0.1)", "0px 8px 16px rgba(41, 49, 71, 0.1)"],
 
   text: {
     address: {
@@ -180,19 +179,14 @@ const theme: Theme = {
   buttons: {
     primary: {
       ...button,
-      backgroundColor: "primary",
-      ":enabled:hover": { backgroundColor: "secondary" }
-    },
-
-    success: {
-      ...button,
-      backgroundColor: "success"
+      bg: "primary",
+      ":enabled:hover": { bg: "secondary" }
     },
 
     danger: {
       ...button,
-      backgroundColor: "danger",
-      ":enabled:hover": { backgroundColor: "dangerHover" }
+      bg: "danger",
+      ":enabled:hover": { bg: "dangerHover" }
     },
 
     icon: {
@@ -220,8 +214,8 @@ const theme: Theme = {
 
       padding: 0,
 
-      borderColor: "light-gray",
-      backgroundColor: "background",
+      borderColor: "muted",
+      bg: "background",
 
       "> h2": {
         display: "flex",
@@ -234,7 +228,7 @@ const theme: Theme = {
         py: 2,
         pr: 2,
 
-        bg: "light-gray",
+        bg: "muted",
 
         fontSize: cardHeadingFontSize
       },
@@ -264,9 +258,9 @@ const theme: Theme = {
       padding: 2,
 
       border: 1,
-      borderColor: "light-gray",
+      borderColor: "muted",
       borderRadius: "4px",
-      backgroundColor: "muted",
+      bg: "background",
       boxShadow: 2,
 
       fontSize: 1,
@@ -284,7 +278,7 @@ const theme: Theme = {
       ...formCell,
 
       textAlign: "center",
-      backgroundColor: "muted"
+      bg: "muted"
     },
 
     input: {
@@ -308,8 +302,7 @@ const theme: Theme = {
       px: [2, "12px", "12px", 5],
       py: [2, "12px", "12px"],
 
-      backgroundColor: "muted",
-      borderBottom: "1px solid lightgrey",
+      background: `linear-gradient(90deg, ${colors.background}, ${colors.muted})`,
       boxShadow: [1, "none"]
     },
 
@@ -322,7 +315,7 @@ const theme: Theme = {
       px: 3,
       height: "72px",
 
-      backgroundColor: "muted"
+      bg: "muted"
     },
 
     main: {
@@ -356,13 +349,13 @@ const theme: Theme = {
     loadingOverlay: {
       ...overlay,
 
-      backgroundColor: "rgba(255, 255, 255, 0.5)"
+      bg: "rgba(255, 255, 255, 0.5)"
     },
 
     modalOverlay: {
       ...modalOverlay,
 
-      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      bg: "rgba(0, 0, 0, 0.8)",
 
       display: "flex",
       justifyContent: "center",
@@ -379,7 +372,7 @@ const theme: Theme = {
 
       display: ["block", "none"],
 
-      backgroundColor: "rgba(255, 255, 255, 0.8)"
+      bg: "rgba(255, 255, 255, 0.8)"
     }
   },
 

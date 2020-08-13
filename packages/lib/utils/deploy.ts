@@ -46,6 +46,7 @@ const deployContracts = async (
     cdpManager: await deployContract(deployer, getContractFactory, "CDPManager", { ...overrides }),
     clvToken: await deployContract(deployer, getContractFactory, "CLVToken", { ...overrides }),
     defaultPool: await deployContract(deployer, getContractFactory, "DefaultPool", { ...overrides }),
+    hintHelpers: await deployContract(deployer, getContractFactory, "HintHelpers", { ...overrides }),
     poolManager: await deployContract(deployer, getContractFactory, "PoolManager", { ...overrides }),
     priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
     sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs", { ...overrides }),
@@ -75,6 +76,7 @@ const connectContracts = async (
     cdpManager,
     clvToken,
     defaultPool,
+    hintHelpers,
     poolManager,
     priceFeed,
     sortedCDPs,
@@ -132,7 +134,11 @@ const connectContracts = async (
 
     nonce => defaultPool.setPoolManagerAddress(poolManager.address, { ...overrides, nonce }),
     nonce => defaultPool.setStabilityPoolAddress(stabilityPool.address, { ...overrides, nonce }),
-    nonce => defaultPool.setActivePoolAddress(activePool.address, { ...overrides, nonce })
+    nonce => defaultPool.setActivePoolAddress(activePool.address, { ...overrides, nonce }),
+
+    nonce => hintHelpers.setPriceFeed(priceFeed.address, { ...overrides, nonce }),
+    nonce => hintHelpers.setCDPManager(cdpManager.address, { ...overrides, nonce }),
+    nonce => hintHelpers.setSortedCDPs(sortedCDPs.address, { ...overrides, nonce })
   ];
 
   const txs = await Promise.all(connections.map((connect, i) => connect(txCount + i)));
