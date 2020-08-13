@@ -41,7 +41,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
 
-    th.openLoan_allAccounts(accounts.slice(0, 10), borrowerOperations, mv._10_Ether, mv._100e18)
+    th.openLoan_allAccounts(accounts.slice(0, 10), contracts, mv._10_Ether, mv._100e18)
   })
 
   describe('CDPManager', async accounts => {

@@ -4,11 +4,10 @@ import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Math.sol";
-import "./Dependencies/SafeMath.sol";
+import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
 
-contract HintHelpers is Ownable {
-    using SafeMath for uint;
+contract HintHelpers is LiquityBase, Ownable {
 
     uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.  TODO: extract to base contract
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
@@ -141,19 +140,5 @@ contract HintHelpers is Ownable {
 
     function computeCR(uint _coll, uint _debt, uint _price) external pure returns (uint) {
         return Math._computeCR(_coll, _debt, _price);
-    }
-
-    // TODO: extract to common base contract
-
-   // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
-    function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
-        minETHComp = MIN_VIRTUAL_DEBT.mul(1e18).div(_price);
-        return minETHComp;
-    }
-
-    // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
-    function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        // return _debt.add(MIN_VIRTUAL_DEBT);
-        return _debt;
     }
 }
