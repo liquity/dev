@@ -1,3 +1,10 @@
+type System @entity {
+  "There should be only one System entity with an ID of 'only'"
+  id: ID!
+
+  troveChangeCount: Int!
+}
+
 type Owner @entity {
   "Owner's Ethereum address as a hex-string"
   id: ID!
@@ -41,6 +48,7 @@ enum TroveOperation {
   mint
   repay
   adjustLoan
+  accrueRewards
   liquidateInNormalMode
   liquidateInRecoveryMode
   partiallyLiquidateInRecoveryMode
@@ -51,7 +59,21 @@ type TroveChange @entity {
   "Transaction hash + '-' + log index"
   id: ID!
 
+  "Can be used to correctly sort changes even if some of their timestamps are the same"
+  sequenceNumber: Int!
+
+  "Timestamp of block that included this change (seconds since epoch)"
+  timestamp: Int!
+
   trove: Trove!
 
   operation: TroveOperation!
+
+  collateralBefore: BigDecimal!
+  collateralChange: BigDecimal!
+  collateralAfter: BigDecimal!
+
+  debtBefore: BigDecimal!
+  debtChange: BigDecimal!
+  debtAfter: BigDecimal!
 }

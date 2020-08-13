@@ -159,6 +159,7 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
     event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
 
     enum CDPManagerOperation {
+        applyPendingRewards,
         liquidateInNormalMode,
         liquidateInRecoveryMode,
         partiallyLiquidateInRecoveryMode,
@@ -737,7 +738,9 @@ contract CDPManager is ReentrancyGuard, Ownable, ICDPManager {
             _updateCDPRewardSnapshots(_user);
 
             // Tell PM to transfer from DefaultPool to ActivePool
-            poolManager.movePendingTroveRewardsToActivePool(pendingCLVDebtReward, pendingETHReward); 
+            poolManager.movePendingTroveRewardsToActivePool(pendingCLVDebtReward, pendingETHReward);
+
+            emit CDPUpdated(_user, CDPs[_user].debt, CDPs[_user].coll, CDPs[_user].stake, CDPManagerOperation.applyPendingRewards);
         }
     }
 
