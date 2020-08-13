@@ -52,6 +52,8 @@ interface ICDPManager {
 
     function liquidateCDPs(uint _n) external;
 
+    function batchLiquidateTroves(address[] calldata _troveArray) external;
+
     function checkRecoveryMode() external view returns (bool);
 
     function redeemCollateral(
