@@ -300,7 +300,7 @@ contract('CDPManager', async accounts => {
     // close Bob's CDP.  His 1 ether and 180 CLV should be added to the DefaultPool.
     await cdpManager.liquidate(bob, { from: owner });
 
-    /* check snapshots after. Total stakes should be equal to the only remaining stake then the system: 
+    /* check snapshots after. Total stakes should be equal to the  remaining stake then the system: 
     10 ether, Alice's stake.
      
     Total collateral should be equal to Alice's collateral (10 ether) plus her pending ETH reward (1 ether), earned
@@ -334,7 +334,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(carol, { from: owner });
     assert.isFalse(await sortedCDPs.contains(carol))
 
-    /* Alice and Bob have the only active stakes. totalStakes in the system is (10 + 10) = 20 ether.
+    /* Alice and Bob have the  active stakes. totalStakes in the system is (10 + 10) = 20 ether.
     
     Carol's 1 ether and 180 CLV should be added to the DefaultPool. The system rewards-per-unit-staked should now be:
     
@@ -358,7 +358,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(bob, { from: owner });
     assert.isFalse(await sortedCDPs.contains(bob))
 
-    /* Alice now has the only active stake. totalStakes in the system is now 10 ether.
+    /* Alice now has the  active stake. totalStakes in the system is now 10 ether.
    
    Bob's pending collateral reward (10 * 0.05 = 0.5 ETH) and debt reward (10 * 9 = 90 CLV) are applied to his CDP
    before his liquidation.
@@ -995,7 +995,7 @@ contract('CDPManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
   })
 
-  it('liquidateCDPs(): liquidates only up to the requested number of undercollateralized troves', async () => {
+  it('liquidateCDPs(): liquidates  up to the requested number of undercollateralized troves', async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._100_Ether })
 
     // --- SETUP --- 
@@ -1202,7 +1202,7 @@ contract('CDPManager', async accounts => {
     assert.equal(TCR_Before, TCR_After)
   })
 
-  it("liquidateCDPs(): only liquidates troves with ICR < MCR", async () => {
+  it("liquidateCDPs():  liquidates troves with ICR < MCR", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._10_Ether })
 
     // A, B, C open loans that will remain active when price drops to 100
@@ -1914,7 +1914,7 @@ contract('CDPManager', async accounts => {
       }
     )
 
-    // Since Alice already redeemed 1 CLV from Carol's CDP, Dennis was only able to redeem:
+    // Since Alice already redeemed 1 CLV from Carol's CDP, Dennis was  able to redeem:
     //  - 9 CLV from Carol's
     //  - 8 CLV from Bob's
     // for a total of 17 CLV.
@@ -2129,7 +2129,6 @@ contract('CDPManager', async accounts => {
     assert.equal(erin_CLVBalance_before, erin_CLVBalance_after)
   })
 
-
   it("redeemCollateral(): doesn't affect the Stability Pool deposits or ETH gain of redeemed-from troves", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._100_Ether })
 
@@ -2254,7 +2253,7 @@ contract('CDPManager', async accounts => {
       partialRedemptionHintICR,
       { from: erin })
 
-    // Check activePool debt reduced by only 400 CLV
+    // Check activePool debt reduced by  400 CLV
     const activePool_debt_after = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_debt_after, '4600000000000000000000')
 
@@ -2586,7 +2585,7 @@ contract('CDPManager', async accounts => {
       bob
     )
 
-    // Bob attempts to redeem his ill-gotten 101 CLV, from a system that only has 100 CLV outstanding debt
+    // Bob attempts to redeem his ill-gotten 101 CLV, from a system that  has 100 CLV outstanding debt
     try {
       const redemptionTx = await cdpManager.redeemCollateral(
         mv._100e18,

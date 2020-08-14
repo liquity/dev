@@ -91,9 +91,9 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
     uint public lastETHError_Redistribution;
     uint public lastCLVDebtError_Redistribution;
 
-    /* --- LocalVariable Structs ---
+    /* --- Variable container structs for liquidations ---
 
-    These structs are used to hold local memory variables inside the liquidation functions,
+    These structs are used to hold, return and assign variables inside the liquidation functions,
     in order to avoid the error: "CompilerError: Stack too deep". */
 
     struct LocalVariables_OuterLiquidationFunction {
@@ -128,8 +128,6 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         bool backToNormalMode;
     }
 
-    // --- Structs returned from liquidation functions ---
-
     struct LiquidationValues {
         uint gasCompensation;
         uint debtToOffset;
@@ -150,6 +148,18 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         address partialAddr;
         uint partialNewDebt;
         uint partialNewColl;
+    }
+
+    // --- Variable container structs for redemptions ---
+
+    struct RedemptionTotals {
+        uint totalCLVtoRedeem;
+        uint totalETHtoSend;
+    }
+
+    struct SingleRedemptionValues {
+        uint CLVLot;
+        uint ETHLot;
     }
 
     // --- Events ---
@@ -668,17 +678,17 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         address _partialRedemptionHint,
         uint _partialRedemptionHintICR
     )
-        internal returns (uint)
+        internal returns (SingleRedemptionValues memory V)
     {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP
-        uint CLVLot = Math._min(_maxCLVamount, CDPs[_cdpUser].debt);
+        V.CLVLot = Math._min(_maxCLVamount, CDPs[_cdpUser].debt);
         
-        // Pure division to integer
-        uint ETHLot = CLVLot.mul(1e18).div(_price);
+        // Get the ETHLot of equivalent value in USD
+        V.ETHLot = V.CLVLot.mul(1e18).div(_price);
         
-        // Decrease the debt and collateral of the current CDP according to the lot and corresponding ETH to send
-        uint newDebt = (CDPs[_cdpUser].debt).sub(CLVLot);
-        uint newColl = (CDPs[_cdpUser].coll).sub(ETHLot);
+        // Decrease the debt and collateral of the current CDP according to the CLV lot and corresponding ETH to send
+        uint newDebt = (CDPs[_cdpUser].debt).sub(V.CLVLot);
+        uint newColl = (CDPs[_cdpUser].coll).sub(V.ETHLot);
 
         if (newDebt == 0) {
             // No debt left in the CDP, therefore new ICR must be "infinite".
@@ -690,7 +700,11 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
 
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
             // certainly result in running out of gas.
-            if (newICR != _partialRedemptionHintICR) return 0;
+            if (newICR != _partialRedemptionHintICR) {
+                V.CLVLot = 0;
+                V.ETHLot = 0;
+                return V;
+            }
 
             sortedCDPs.reInsert(_cdpUser, newICR, _price, _partialRedemptionHint, _partialRedemptionHint);
         }
@@ -700,7 +714,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         _updateStakeAndTotalStakes(_cdpUser);
 
         // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()
-        poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); 
+        // poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); 
 
         emit CDPUpdated(
                         _cdpUser,
@@ -710,7 +724,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
                         CDPManagerOperation.redeemCollateral
                         ); 
 
-        return CLVLot;
+        return V;
     }
 
     function _isValidFirstRedemptionHint(address _firstRedemptionHint, uint _price) internal view returns (bool) {
@@ -753,6 +767,8 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         uint activeDebt = activePool.getCLVDebt();
         uint defaultedDebt = defaultPool.getCLVDebt();
 
+        RedemptionTotals memory T;
+
         _requireCLVBalanceCoversRedemption(redeemer, _CLVamount);
         
         // Confirm redeemer's balance is less than total systemic debt
@@ -779,7 +795,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
 
             _applyPendingRewards(currentCDPuser);
 
-            uint CLVLot = _redeemCollateralFromCDP(
+            SingleRedemptionValues memory V = _redeemCollateralFromCDP(
                 currentCDPuser,
                 remainingCLV,
                 price,
@@ -787,11 +803,17 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
                 _partialRedemptionHintICR
             );
 
-            if (CLVLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last CDP
+            if (V.CLVLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last CDP
 
-            remainingCLV = remainingCLV.sub(CLVLot);
+            T.totalCLVtoRedeem  = T.totalCLVtoRedeem.add(V.CLVLot);
+            T.totalETHtoSend = T.totalETHtoSend.add(V.ETHLot);
+            
+            remainingCLV = remainingCLV.sub(V.CLVLot);
             currentCDPuser = nextUserToCheck;
         }
+
+        // Burn the total CLV redeemed from troves, and send the corresponding ETH to _msgSender()
+        poolManager.redeemCollateral(_msgSender(), T.totalCLVtoRedeem, T.totalETHtoSend); 
     }
 
     // --- Helper functions ---
@@ -1017,6 +1039,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
 
     function _addCDPOwnerToArray(address _user) internal returns (uint128 index) {
         require(CDPOwners.length < 2**128 - 1, "CDPManager: CDPOwners array has maximum size of 2^128 - 1");
+        
         // Push the user to the array, and convert the returned length to index of the new element, as a uint128
         index = uint128(CDPOwners.push(_user).sub(1));
         CDPs[_user].arrayIndex = index;
