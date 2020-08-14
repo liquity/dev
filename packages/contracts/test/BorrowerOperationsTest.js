@@ -483,7 +483,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -805,7 +805,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(aliceICR.eq(web3.utils.toBN('1500000000000000000')))
     assert.isTrue(bobICR.eq(web3.utils.toBN('1500000000000000000')))
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // Bob attempts to withdraw 1 CLV.
@@ -848,7 +848,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    // const TCR = (await poolManager.getTCR()).toString()
+    // const TCR = (await cdpManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -1048,7 +1048,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._3_Ether })
 
     // Check TCR and Recovery Mode
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
@@ -1817,7 +1817,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -1840,7 +1840,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -1887,7 +1887,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // price drops to 1ETH:100CLV, reducing TCR below 150%

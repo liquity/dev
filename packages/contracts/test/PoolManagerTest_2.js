@@ -412,7 +412,7 @@ contract('PoolManager', async accounts => {
       const defaultedDebt_Before = (await defaultPool.getCLVDebt()).toString()
       const activeColl_Before = (await activePool.getETH()).toString()
       const defaultedColl_Before = (await defaultPool.getETH()).toString()
-      const TCR_Before = (await poolManager.getTCR()).toString()
+      const TCR_Before = (await cdpManager.getTCR()).toString()
 
       // D makes an SP deposit
       await poolManager.provideToSP(mv._100e18, { from: dennis })
@@ -422,7 +422,7 @@ contract('PoolManager', async accounts => {
       const defaultedDebt_After = (await defaultPool.getCLVDebt()).toString()
       const activeColl_After = (await activePool.getETH()).toString()
       const defaultedColl_After = (await defaultPool.getETH()).toString()
-      const TCR_After = (await poolManager.getTCR()).toString()
+      const TCR_After = (await cdpManager.getTCR()).toString()
 
       // Check total system debt, collateral and TCR have not changed after a Stability deposit is made
       assert.equal(activeDebt_Before, activeDebt_After)
@@ -1041,7 +1041,7 @@ contract('PoolManager', async accounts => {
       const defaultedDebt_Before = (await defaultPool.getCLVDebt()).toString()
       const activeColl_Before = (await activePool.getETH()).toString()
       const defaultedColl_Before = (await defaultPool.getETH()).toString()
-      const TCR_Before = (await poolManager.getTCR()).toString()
+      const TCR_Before = (await cdpManager.getTCR()).toString()
 
       // Carol withdraws her Stability deposit 
       assert.equal((await poolManager.initialDeposits(carol)).toString(), mv._300e18)
@@ -1052,7 +1052,7 @@ contract('PoolManager', async accounts => {
       const defaultedDebt_After = (await defaultPool.getCLVDebt()).toString()
       const activeColl_After = (await activePool.getETH()).toString()
       const defaultedColl_After = (await defaultPool.getETH()).toString()
-      const TCR_After = (await poolManager.getTCR()).toString()
+      const TCR_After = (await cdpManager.getTCR()).toString()
 
       // Check total system debt, collateral and TCR have not changed after a Stability deposit is made
       assert.equal(activeDebt_Before, activeDebt_After)

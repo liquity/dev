@@ -166,31 +166,6 @@ contract PoolManager is Ownable, IPoolManager {
         return address(this).balance;
     } 
     
-    // TODO:  Remove this, update tests (and now use the CDPManager function getTCR())
-    // Return the total collateral ratio (TCR) of the system, based on the most recent ETH:USD price
-    function getTCR() external view returns (uint) {
-        uint price = priceFeed.getPrice();
-
-        uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getCLVDebt();
-        uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getCLVDebt();
-
-        uint totalCollateral = activeColl.add(liquidatedColl);
-        uint totalDebt = activeDebt.add(closedDebt); 
-
-        // Handle edge cases of div-by-0
-        if(totalCollateral == 0 && totalDebt == 0 ) {
-            return 1;
-        }  else if (totalCollateral != 0 && totalDebt == 0 ) {
-            return 2**256 - 1; // TCR is technically infinite
-        }
-
-        // Calculate TCR
-        uint TCR = totalCollateral.mul(price).div(totalDebt);
-        return TCR;
-    }
-
     // Return the total active debt (in CLV) in the system
     function getActiveDebt() external view returns (uint) {
         return activePool.getCLVDebt();

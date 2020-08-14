@@ -23,8 +23,15 @@ Nodes need only be re-inserted upon a CDP operation - when the owner adds or rem
 The list is a modification of the following audited SortedDoublyLinkedList:
 https://github.com/livepeer/protocol/blob/master/contracts/libraries/SortedDoublyLL.sol
 
-In our variant, keys have been removed, and all ICR checks in functions now compare an ICR argument to the current ICR, 
-calculated at runtime. Data is stored in the 'data' state variable.
+
+Changes made in the Liquity implementation:
+
+- Keys have been removed from nodes
+
+- Ordering checks for insertion are performed by comparing an ICR argument to the current ICR, calculated at runtime. 
+The list relies on the property that ordering by ICR is maintained as the ETH:USD price varies.
+
+- Public functions with parameters have been made internal to save gas, and given an external wrapper function for external access
 */
 contract SortedCDPs is Ownable, ISortedCDPs {
     using SafeMath for uint256;

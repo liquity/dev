@@ -5,9 +5,9 @@ import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IPool.sol";
 import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICLVToken.sol";
-import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPoolManager.sol";
+import "./Interfaces/IPriceFeed.sol";
 import "./Math.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
@@ -1033,7 +1033,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         uint length = CDPOwners.length;
         uint idxLast = length.sub(1);
 
-        assert(length >= 1);  // Encapsulating function should only be reachable when there are >0 troves in the system
+        assert(length >= 1);  // Encapsulating function should only be reachable when there are > 0 troves in the system
         assert(index <= idxLast); 
 
         address addressToMove = CDPOwners[idxLast];
@@ -1043,22 +1043,13 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         CDPOwners.length--;  
     }
   
+    // --- Recovery Mode and TCR functions ---
+
     function checkRecoveryMode() external view returns (bool) {
         return _checkRecoveryMode();
     }
 
-    function _checkRecoveryMode() internal view returns (bool) {
-        uint price = priceFeed.getPrice();
-        uint TCR = _getTCR(price);
-        
-        if (TCR < CCR) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    // Check whether or not the system *would be* in Recovery Mode, given a price and the total system coll and debt.
+    // Check whether or not the system *would be* in Recovery Mode, given an ETH:USD price and the total system coll and debt.
     function _checkPotentialRecoveryMode(uint _entireSystemColl, uint _entireSystemDebt, uint _price) internal pure returns (bool) {
         uint TCR = Math._computeCR(_entireSystemColl, _entireSystemDebt, _price); 
         if (TCR < CCR) {
@@ -1073,6 +1064,16 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         return _getTCR(price);
     }
 
+    function _checkRecoveryMode() internal view returns (bool) {
+        uint price = priceFeed.getPrice();
+        uint TCR = _getTCR(price);
+        
+        if (TCR < CCR) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     
     function _getTCR(uint _price) internal view returns (uint TCR) { 
         uint activeColl = activePool.getETH();
@@ -1087,8 +1088,6 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
 
         return TCR;
     }
-
-    
 
     // --- 'require' wrapper functions ---
 

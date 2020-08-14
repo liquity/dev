@@ -71,7 +71,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     const recoveryMode_Before = await cdpManager.checkRecoveryMode();
@@ -98,7 +98,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -142,7 +142,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -169,7 +169,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
 
@@ -212,7 +212,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
     await borrowerOperations.withdrawCLV('400000000000000000000', dennis, { from: dennis })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -251,7 +251,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
 
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     const bob_CDPStatus_Before = (await cdpManager.CDPs(bob))[3]
@@ -303,7 +303,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(P_Before, '1000000000000000000')
 
 
-    // const TCR = (await poolManager.getTCR()).toString()
+    // const TCR = (await cdpManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -333,7 +333,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.withdrawCLV('2000000000000000000000', bob, { from: bob })
 
     // Total TCR = 24*200/2000 = 240%
-    const TCR = (await poolManager.getTCR()).toString()
+    const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '2400000000000000000')
 
     const bob_Stake_Before = (await cdpManager.CDPs(bob))[2]
@@ -1132,7 +1132,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await priceFeed.setPrice('0')
     const price = await priceFeed.getPrice()
 
-    const TCR_Before = (await poolManager.getTCR()).toString()
+    const TCR_Before = (await cdpManager.getTCR()).toString()
     const listSize_Before = (await sortedCDPs.getSize()).toString()
 
     assert.isTrue(await cdpManager.checkRecoveryMode())
@@ -1149,7 +1149,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await sortedCDPs.contains(bob)))
     assert.isTrue((await sortedCDPs.contains(alice)))
 
-    const TCR_After = (await poolManager.getTCR()).toString()
+    const TCR_After = (await cdpManager.getTCR()).toString()
     const listSize_After = (await sortedCDPs.getSize()).toString()
 
     assert.equal(TCR_Before, TCR_After)
@@ -1164,7 +1164,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await priceFeed.setPrice(mv._100e18)
     const price = await priceFeed.getPrice()
 
-    const TCR_Before = (await poolManager.getTCR()).toString()
+    const TCR_Before = (await cdpManager.getTCR()).toString()
     const listSize_Before = (await sortedCDPs.getSize()).toString()
 
     // Confirm Recovery Mode
@@ -1186,7 +1186,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await sortedCDPs.contains(alice)))
     assert.isTrue((await sortedCDPs.contains(carol)))
 
-    const TCR_After = (await poolManager.getTCR()).toString()
+    const TCR_After = (await cdpManager.getTCR()).toString()
     const listSize_After = (await sortedCDPs.getSize()).toString()
     
     // Check TCR and list size have not changed
@@ -1440,7 +1440,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // check TCR < 150%
     const _150percent = web3.utils.toBN('1500000000000000000')
-    const TCR_Before = await poolManager.getTCR()
+    const TCR_Before = await cdpManager.getTCR()
     assert.isTrue(TCR_Before.lt(_150percent))
 
     /* 
@@ -1505,7 +1505,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse(recoveryMode_After)
 
     // After liquidation, TCR should rise to above 150%. 
-    const TCR_After = await poolManager.getTCR()
+    const TCR_After = await cdpManager.getTCR()
     assert.isTrue(TCR_After.gt(_150percent))
 
     // get all CDPs
@@ -1572,7 +1572,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // check TCR < 150%
     const _150percent = web3.utils.toBN('1500000000000000000')
-    const TCR_Before = await poolManager.getTCR()
+    const TCR_Before = await cdpManager.getTCR()
     assert.isTrue(TCR_Before.lt(_150percent))
 
     /* 
@@ -1618,7 +1618,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse(recoveryMode_After)
 
     // After liquidation, TCR should rise to above 150%. 
-    const TCR_After = await poolManager.getTCR()
+    const TCR_After = await cdpManager.getTCR()
     assert.isTrue(TCR_After.gt(_150percent))
 
     // get all CDPs
@@ -1660,7 +1660,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     await priceFeed.setPrice(mv._100e18)
 
-    const TCR = await poolManager.getTCR()
+    const TCR = await cdpManager.getTCR()
 
     assert.isTrue(TCR.lte(web3.utils.toBN(mv._150e18)))
     assert.isTrue(await cdpManager.checkRecoveryMode())
@@ -1719,7 +1719,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await priceFeed.setPrice(mv._100e18)
     const price = await priceFeed.getPrice()
 
-    const TCR_Before = (await poolManager.getTCR()).toString()
+    const TCR_Before = (await cdpManager.getTCR()).toString()
 
     // Confirm A, B, C ICRs are below 110%
 
@@ -1740,7 +1740,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await sortedCDPs.contains(bob))
     assert.isTrue(await sortedCDPs.contains(carol))
 
-    const TCR_After = (await poolManager.getTCR()).toString()
+    const TCR_After = (await cdpManager.getTCR()).toString()
 
     // Check TCR has not changed after liquidation
     assert.equal(TCR_Before, TCR_After)
@@ -1829,7 +1829,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Confirm Recovery Mode
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    const TCR_Before = await poolManager.getTCR()
+    const TCR_Before = await cdpManager.getTCR()
 
     // Check Stability Pool has 500 CLV
     assert.equal((await stabilityPool.getCLV()).toString(), mv._500e18)
@@ -1845,7 +1845,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal((await stabilityPool.getCLV()).toString(), '0')
 
     // Check that the liquidation sequence has improved the TCR
-    const TCR_After = await poolManager.getTCR()
+    const TCR_After = await cdpManager.getTCR()
     assert.isTrue(TCR_After.gte(TCR_Before))
   })
 
@@ -1871,7 +1871,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Confirm Recovery Mode
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    const TCR_Before = await poolManager.getTCR()
+    const TCR_Before = await cdpManager.getTCR()
 
     // Check pool is empty before liquidation
     assert.equal((await stabilityPool.getCLV()).toString(), '0')
@@ -1886,7 +1886,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse((await sortedCDPs.contains(defaulter_4)))
 
     // Check that the liquidation sequence has not reduced the TCR
-    const TCR_After = await poolManager.getTCR()
+    const TCR_After = await cdpManager.getTCR()
     assert.isTrue(TCR_After.gte(TCR_Before))
   })
 
@@ -1977,7 +1977,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await sortedCDPs.contains(bob)))
     assert.isTrue((await sortedCDPs.contains(carol)))
 
-    const TCR_Before = (await poolManager.getTCR()).toString()
+    const TCR_Before = (await cdpManager.getTCR()).toString()
     const listSize_Before = (await sortedCDPs.getSize()).toString()
 
 
@@ -1996,7 +1996,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await sortedCDPs.contains(bob)))
     assert.isTrue((await sortedCDPs.contains(carol)))
 
-    const TCR_After = (await poolManager.getTCR()).toString()
+    const TCR_After = (await cdpManager.getTCR()).toString()
     const listSize_After = (await sortedCDPs.getSize()).toString()
 
     assert.equal(TCR_Before, TCR_After)

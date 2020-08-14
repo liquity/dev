@@ -446,12 +446,24 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         return newTCR;
     }
 
-    // --- Common helper functions, duplicated in CDPManager.  ---
-    // TODO:  Extract to a parent base contract that BorrowerOps and CDPM inherit from 
+    function getCompositeDebt(uint _debt) external pure returns (uint) {
+        return _getCompositeDebt(_debt);
+    }
 
-    function _checkRecoveryMode() internal view returns (bool){
+    // --- Recovery Mode and TCR functions ---
+
+    function _checkRecoveryMode() internal view returns (bool) {
         uint price = priceFeed.getPrice();
-
+        uint TCR = _getTCR(price);
+        
+        if (TCR < CCR) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    function _getTCR(uint _price) internal view returns (uint TCR) { 
         uint activeColl = activePool.getETH();
         uint activeDebt = activePool.getCLVDebt();
         uint liquidatedColl = defaultPool.getETH();
@@ -460,16 +472,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt); 
 
-        uint TCR = Math._computeCR(totalCollateral, totalDebt, price); 
-        
-        if (TCR < CCR) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+        TCR = Math._computeCR(totalCollateral, totalDebt, _price); 
 
-    function getCompositeDebt(uint _debt) external pure returns (uint) {
-        return _getCompositeDebt(_debt);
+        return TCR;
     }
 }

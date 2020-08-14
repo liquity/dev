@@ -60,56 +60,6 @@ contract('PoolManager', async accounts => {
     assert.equal(mockCDPManagerAddress, recordedCDPMAddress)
   })
 
-  it('getTCR(): with 0 ActivePool ETH and 0 ActivePool CLV, returns a TCR of 1', async () => {
-    const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
-    const activePoolCLV = await activePool.getCLVDebt({ from: mockPoolManagerAddress })
-    assert.equal(activePoolETH, 0)
-    assert.equal(activePoolCLV, 0)
-
-    const expectedTCR = 1
-    const TCR = await poolManager.getTCR()
-    assert.equal(expectedTCR, TCR)
-  })
-
-  it('getTCR(): with non-zero ActivePool ETH and 0 ActivePool CLV, returns the correct TCR', async () => {
-    // setup: add ETH to ActivePool
-    await activePool.setPoolManagerAddress(mockPoolManagerAddress)
-    await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })
-    const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
-    const activePoolCLV = await activePool.getCLVDebt({ from: mockPoolManagerAddress })
-    assert.equal(activePoolETH, _1_Ether)
-    assert.equal(activePoolCLV, 0)
-
-    //2**256 - 1
-    const expectedTCR = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-
-    const TCR = await poolManager.getTCR()
-    const hexTCR = web3.utils.toHex(TCR)
-    assert.deepEqual(expectedTCR, hexTCR)
-  })
-
-  // This test should pass after math rounding errors in contracts are fixed
-
-  it('getTCR: with ActivePool ETH and ActivePool CLV, returns the correct TCR', async () => {
-   // setup: add ETH and CLV to ActivePool
-    await activePool.setPoolManagerAddress(mockPoolManagerAddress)
-    await web3.eth.sendTransaction( {to: activePool.address, from: mockPoolManagerAddress, value: _1_Ether })
-    _600_CLV = web3.utils.toWei('3', 'ether')  // assume a price of 1ETH: 200CLV
-    await activePool.increaseCLVDebt(_600_CLV, { from: mockPoolManagerAddress })
-
-    // get recorded values from contracts
-    const activePoolETH = await activePool.getETH({ from: mockPoolManagerAddress })
-    const activePoolCLV = await activePool.getCLVDebt({ from: mockPoolManagerAddress })
-    const price = await priceFeed.getPrice()  // use the actual pool manager contract to get the price
-    
-    const expectedTCR = web3.utils.toBN('66666666666666666666')
-    const TCR = (await poolManager.getTCR())
-    
-    // check expected is within 100 wei of actual
-    const diff = Number(expectedTCR.sub(TCR).abs())
-    assert.isAtMost(diff, 100)
-  })
-
   it('getActiveDebt(): returns the total CLV balance of the ActivePool', async () => {
     const actualActiveDebt = await activePool.getCLVDebt({ from: poolManager.address })
     const returnedActiveDebt = await poolManager.getActiveDebt()
