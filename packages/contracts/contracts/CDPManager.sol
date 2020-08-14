@@ -448,7 +448,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         poolManager.offset(T.totalDebtToOffset, T.totalCollToSendToSP);
         _redistributeDebtAndColl(T.totalDebtToRedistribute, T.totalCollToRedistribute);
 
-        // Update system snapshots and the final partially liquidatedtrove, if there is one
+        // Update system snapshots and the final partially liquidated trove, if there is one
         _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl);
         _updatePartiallyLiquidatedTrove(T.partialAddr,
                                         T.partialNewDebt,
@@ -1004,6 +1004,9 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
     }
 
     function _closeCDP(address _user) internal {
+        uint CDPOwnersArrayLength = CDPOwners.length;
+        _requireMoreThanOneTroveInSystem(CDPOwnersArrayLength);
+        
         CDPs[_user].status = Status.closed;
         CDPs[_user].coll = 0;
         CDPs[_user].debt = 0;
@@ -1011,7 +1014,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         rewardSnapshots[_user].ETH = 0;
         rewardSnapshots[_user].CLVDebt = 0;
  
-        _removeCDPOwner(_user);
+        _removeCDPOwner(_user, CDPOwnersArrayLength);
         sortedCDPs.remove(_user);
     }
 
@@ -1050,16 +1053,15 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         return index;
     }
 
-     /* Remove a CDP owner from the CDPOwners array, not preserving order. Removing owner 'B' does the following: 
+    /* Remove a CDP owner from the CDPOwners array, not preserving order. Removing owner 'B' does the following: 
     [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. */
-    function _removeCDPOwner(address _user) internal {
+    function _removeCDPOwner(address _user, uint CDPOwnersArrayLength) internal {
         require(CDPs[_user].status == Status.closed, "CDPManager: CDP is still active");
 
         uint128 index = CDPs[_user].arrayIndex;   
-        uint length = CDPOwners.length;
+        uint length = CDPOwnersArrayLength;
         uint idxLast = length.sub(1);
 
-        assert(length >= 1);  // Encapsulating function should only be reachable when there are > 0 troves in the system
         assert(index <= idxLast); 
 
         address addressToMove = CDPOwners[idxLast];
@@ -1127,6 +1129,10 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
 
     function _requireETHSentSuccessfully(bool _success) internal pure {
         require(_success, "CDPManager: Failed to send ETH to msg.sender");
+    }
+
+    function _requireMoreThanOneTroveInSystem(uint CDPOwnersArrayLength) internal view {
+        require (CDPOwnersArrayLength > 1 && sortedCDPs.getSize() > 1, "CDPManager: Only one trove in the system");
     }
 
     // --- Trove property getters ---
