@@ -1491,6 +1491,9 @@ contract('CDPManager', async accounts => {
     assert.isAtMost(th.getDifference(total_ETHinSP, mv._5_Ether), 1000)
   })
 
+
+  // --- batchLiquidateTroves() ---
+  
   it('batchLiquidateTroves(): closes every trove with ICR < MCR in the given array', async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(mv._500e18, whale, { from: whale, value: mv._100_Ether })

@@ -56,7 +56,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         uint coll;
         uint stake;
         Status status;
-        uint16 arrayIndex;
+        uint128 arrayIndex;
     }
 
     mapping (address => CDP) public CDPs;
@@ -1015,9 +1015,10 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         return _addCDPOwnerToArray(_user);
     }
 
-    function _addCDPOwnerToArray(address _user) internal returns (uint16 index) {
+    function _addCDPOwnerToArray(address _user) internal returns (uint128 index) {
         require(CDPOwners.length < 2**128 - 1, "CDPManager: CDPOwners array has maximum size of 2^128 - 1");
-        index = uint16(CDPOwners.push(_user).sub(1));
+        // Push the user to the array, and convert the returned length to index of the new element, as a uint128
+        index = uint128(CDPOwners.push(_user).sub(1));
         CDPs[_user].arrayIndex = index;
 
         return index;
@@ -1028,7 +1029,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
     function _removeCDPOwner(address _user) internal {
         require(CDPs[_user].status == Status.closed, "CDPManager: CDP is still active");
 
-        uint16 index = CDPs[_user].arrayIndex;   
+        uint128 index = CDPs[_user].arrayIndex;   
         uint length = CDPOwners.length;
         uint idxLast = length.sub(1);
 

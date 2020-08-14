@@ -9,12 +9,14 @@ import './Interfaces/IPriceFeed.sol';
 import './Interfaces/ICLVToken.sol';
 import './Math.sol';
 import './Dependencies/SafeMath.sol';
+import './Dependencies/SafeMath128.sol';
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
 // PoolManager maintains all pools 
 contract PoolManager is Ownable, IPoolManager {
     using SafeMath for uint;
+    using SafeMath128 for uint128;
 
     // --- Connected contract declarations ---
 
@@ -46,8 +48,8 @@ contract PoolManager is Ownable, IPoolManager {
     struct Snapshot {
         uint S;
         uint P;
-        uint scale;
-        uint epoch;
+        uint128 scale;
+        uint128 epoch;
     }
 
     /* Product 'P': Running product by which to multiply an initial deposit, in order to find the current compounded deposit, 
@@ -57,9 +59,9 @@ contract PoolManager is Ownable, IPoolManager {
     is the snapshot of P taken at the instant the deposit was made. 18 DP decimal.  */
     uint public P = 1e18;
 
-    uint public currentScale;  // Each time the scale of P shifts by 1e18, the scale is incremented by 1
+    uint128 public currentScale;  // Each time the scale of P shifts by 1e18, the scale is incremented by 1
 
-    uint public currentEpoch;  // With each offset that fully empties the Pool, the epoch is incremented by 1
+    uint128 public currentEpoch;  // With each offset that fully empties the Pool, the epoch is incremented by 1
 
     /* ETH Gain sum 'S': During it's lifetime, each deposit d(0) earns an ETH gain of ( d(0) * [S - S(0)] )/P(0), where S(0) 
     is the snapshot of S taken at the instant the deposit was made.
@@ -315,14 +317,14 @@ contract PoolManager is Ownable, IPoolManager {
         if (initialDeposit == 0) { return 0; }
 
         uint snapshot_P = snapshot[_user].P; 
-        uint scaleSnapshot = snapshot[_user].scale;
-        uint epochSnapshot = snapshot[_user].epoch;
+        uint128 scaleSnapshot = snapshot[_user].scale;
+        uint128 epochSnapshot = snapshot[_user].epoch;
         
         // If deposit was made before a pool-emptying event, then it has been fully cancelled with debt -- so, return 0
         if (epochSnapshot < currentEpoch) { return 0; }
 
         uint compoundedDeposit;
-        uint scaleDiff = currentScale.sub(scaleSnapshot);
+        uint128 scaleDiff = currentScale.sub(scaleSnapshot);
     
         /* Compute the compounded deposit. If a scale change in P was made during the deposit's lifetime, 
         account for it.  If more than one scale change was made, then the deposit has decreased by a factor of 

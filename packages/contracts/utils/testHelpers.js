@@ -837,7 +837,7 @@ class TestHelper {
     const gasCostList = []
     for (const account of accounts) {
 
-      const tx = await poolManager.withdrawFromSPtoCDP(account, account, account, { from: account })
+      const tx = await poolManager.withdrawFromSPtoCDP(account, account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
