@@ -280,7 +280,8 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
                                         L.price);
 
         // Send gas compensation ETH to caller
-        _msgSender().call.value(V.gasCompensation)("");
+        (bool success, ) = _msgSender().call.value(V.gasCompensation)("");
+        _requireETHSentSuccessfully(success);
     }
 
     function _liquidateNormalMode(address _user, uint _ICR, uint _price, uint _CLVInPool) internal
@@ -455,7 +456,8 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
                                         L.price);
 
         // Send gas compensation ETH to caller
-        _msgSender().call.value(T.totalGasCompensation)("");
+        (bool success, ) = _msgSender().call.value(T.totalGasCompensation)("");
+        _requireETHSentSuccessfully(success);
     }
 
     function _getTotalFromLiquidationSequence_RecoveryMode(uint _price, uint _CLVInPool, uint _n) internal 
@@ -563,7 +565,8 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
                                         L.price);
 
         // Send gas compensation ETH to caller
-        _msgSender().call.value(T.totalGasCompensation)("");
+        (bool success, ) = _msgSender().call.value(T.totalGasCompensation)("");
+        _requireETHSentSuccessfully(success);
     }
 
     function _getTotalFromBatchLiquidate_RecoveryMode(uint _price, uint _CLVInPool, address[] memory _troveArray) internal 
@@ -1120,6 +1123,10 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
 
     function _requireCLVBalanceCoversRedemption(address _user, uint _amount) internal view {
         require(clvToken.balanceOf(_user) >= _amount, "CDPManager: Requested redemption amount must be >= user's CLV token balance");
+    }
+
+    function _requireETHSentSuccessfully(bool _success) internal pure {
+        require(_success, "CDPManager: Failed to send ETH to msg.sender");
     }
 
     // --- Trove property getters ---
