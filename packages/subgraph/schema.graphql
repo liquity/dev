@@ -2,7 +2,8 @@ type System @entity {
   "There should be only one System entity with an ID of 'only'"
   id: ID!
 
-  troveChangeCount: Int!
+  transactionCount: Int!
+  changeCount: Int!
 }
 
 type Owner @entity {
@@ -30,7 +31,7 @@ type Trove @entity {
   rawDebt: BigInt!
   rawStake: BigInt!
 
-  "Collateral divided by debt. Multiply by price to get the actual collateral ratio."
+  "Collateral divided by debt. Can be used to sort by collateral ratio."
   rawCollateralPerDebt: BigInt!
 
   "The value of total redistributed per-stake collateral the last time rewards were applied"
@@ -55,18 +56,38 @@ enum TroveOperation {
   redeemCollateral
 }
 
-type TroveChange @entity {
+type Transaction @entity {
+  "Transaction hash"
+  id: ID!
+
+  "Can be used to correctly sort transactions even if they were mined in the same block"
+  sequenceNumber: Int!
+
+  blockNumber: Int!
+
+  "Timestamp of block that included this transaction (seconds since epoch)"
+  timestamp: Int!
+
+  changes: [Change!]! @derivedFrom(field: "transaction")
+}
+
+interface Change {
   "Transaction hash + '-' + log index"
   id: ID!
 
-  "Can be used to correctly sort changes even if some of their timestamps are the same"
+  "Can be used to correctly sort changes even if they were made by the same transaction"
   sequenceNumber: Int!
 
-  "Timestamp of block that included this change (seconds since epoch)"
-  timestamp: Int!
+  "Transaction that made this change"
+  transaction: Transaction!
+}
+
+type TroveChange implements Change @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
 
   trove: Trove!
-
   operation: TroveOperation!
 
   collateralBefore: BigDecimal!
