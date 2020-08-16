@@ -1,6 +1,8 @@
-import { Bytes, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { ethereum, Bytes, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
-import { createTroveChange } from "./System";
+import { TroveChange } from "../../generated/schema";
+
+import { getChangeId, initChange } from "./System";
 import { getCurrentTroveOfOwner, closeCurrentTroveOfOwner } from "./Owner";
 
 // E.g. 1.5 is represented as 1.5 * 10^18, where 10^18 is called the scaling factor
@@ -12,10 +14,15 @@ let MAX_UINT256 = BigInt.fromUnsignedBytes(
   Bytes.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF") as Bytes
 );
 
+function createTroveChange(event: ethereum.Event): TroveChange {
+  let troveChange = new TroveChange(getChangeId(event));
+  initChange(troveChange, event);
+
+  return troveChange;
+}
+
 export function updateTrove(
-  timestamp: BigInt,
-  txHash: Bytes,
-  logIndex: BigInt,
+  event: ethereum.Event,
   operation: string,
   _user: Address,
   _coll: BigInt,
@@ -26,8 +33,7 @@ export function updateTrove(
 ): void {
   let trove = getCurrentTroveOfOwner(_user);
 
-  let troveChange = createTroveChange(txHash.toHex() + "-" + logIndex.toString());
-  troveChange.timestamp = timestamp.toI32();
+  let troveChange = createTroveChange(event);
   troveChange.trove = trove.id;
   troveChange.operation = operation;
 
