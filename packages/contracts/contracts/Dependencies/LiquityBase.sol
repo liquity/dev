@@ -1,6 +1,6 @@
 pragma solidity 0.5.16;
 
-import "./SafeMath.sol";
+import "./Math.sol";
 
 contract LiquityBase {
     using SafeMath for uint;

@@ -293,7 +293,7 @@ class TestHelper {
 
   // Given a composite debt, returns the actual debt  - i.e. subtracts the virtual debt.
   // Virtual debt = 10 CLV.
-  static getDebtMinusVirtual(compositeDebt) {
+  static getActualDebtFromComposite(compositeDebt) {
     const virtualDebt = MoneyValues._10e18BN
 
     const issuedDebt = web3.utils.toBN(compositeDebt).sub(virtualDebt)
@@ -304,30 +304,35 @@ class TestHelper {
   }
 
   // Get's total collateral minus total gas comp, for a series of troves.
-  // Gas comp given by max{ $10 worth of ETH, 0.5% of collateral}
-  static async getCollMinusGasComp(troveList, cdpManager, priceFeed) {
-    const price = await priceFeed.getPrice()
-    const _$10WorthOfETH = MoneyValues._10e18BN.mul(MoneyValues._1e18BN).div(web3.utils.toBN(price))
-
+  static async getTotalCollMinusTotalGasComp(troveList, contracts) {
     let totalCollRemainder = web3.utils.toBN('0')
 
-    for (const account of troveList) {
-      const coll = (await cdpManager.CDPs(account))[1]
-      const pendingCollReward = await cdpManager.getPendingETHReward(account)
-      const entireColl = coll.add(pendingCollReward)
-
-      const _0pt5PercentColl = entireColl.div(web3.utils.toBN('200'))
-
-      // const gasComp = BN.max(_$10WorthOfETH, _0pt5PercentColl)
-      
-      // alternatively, for 0 gas comp: 
-      const gasComp = this.toBN('0')
-
-      const remainingColl = entireColl.sub(gasComp)
+    for (const trove of troveList) {
+      const remainingColl = this.getCollMinusGasComp(trove, contracts)
       totalCollRemainder = totalCollRemainder.add(remainingColl)
     }
 
     return totalCollRemainder
+  }
+
+    // Gas comp for a trove given by max{ $10WorthOfETH, 0.5%OfCollateral }
+  static async getCollMinusGasComp (trove, contracts) {
+    const price = await contracts.priceFeed.getPrice()
+    const _$10WorthOfETH = MoneyValues._10e18BN.mul(MoneyValues._1e18BN).div(web3.utils.toBN(price))
+
+    const coll = (await contracts.cdpManager.CDPs(account))[1]
+    const pendingCollReward = await contracts.cdpManager.getPendingETHReward(account)
+    const entireColl = coll.add(pendingCollReward)
+
+    const _0pt5PercentColl = entireColl.div(web3.utils.toBN('200'))
+    // const gasComp = BN.max(_$10WorthOfETH, _0pt5PercentColl)
+    
+    // Alternatively, for 0 gas comp: 
+    const gasComp = this.toBN('0')
+
+    const remainingColl = entireColl.sub(gasComp)
+
+    return remainingColl
   }
 
   static async getCompositeDebt(contracts, debt) {

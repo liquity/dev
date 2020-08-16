@@ -349,6 +349,9 @@ contract('CDPManager', async accounts => {
     // Bob now withdraws 800 CLV, bringing his ICR to 1.11
     await borrowerOperations.withdrawCLV('800000000000000000000', bob, { from: bob })
 
+     // Confirm system is in Recovery Mode
+     assert.isFalse(await cdpManager.checkRecoveryMode());
+
     // price drops to 1ETH:50CLV, reducing Bob's ICR below MCR
     await priceFeed.setPrice(mv._50e18);
     const price = await priceFeed.getPrice()

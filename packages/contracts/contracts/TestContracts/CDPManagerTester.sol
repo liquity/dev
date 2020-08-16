@@ -1,7 +1,7 @@
 pragma solidity 0.5.16;
 
 import "../CDPManager.sol";
-import "../Math.sol";
+import "../Dependencies/Math.sol";
 
 /* Tester contract inherits from CDPManager, and provides external functions 
 for testing the parent's internal functions. */

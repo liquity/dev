@@ -7,7 +7,7 @@ import './Interfaces/ICDPManager.sol';
 import './Interfaces/IStabilityPool.sol';
 import './Interfaces/IPriceFeed.sol';
 import './Interfaces/ICLVToken.sol';
-import './Math.sol';
+import './Dependencies/Math.sol';
 import './Dependencies/SafeMath.sol';
 import './Dependencies/SafeMath128.sol';
 import "./Dependencies/Ownable.sol";

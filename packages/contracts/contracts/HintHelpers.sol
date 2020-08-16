@@ -3,7 +3,6 @@ pragma solidity 0.5.16;
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
-import "./Math.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
 

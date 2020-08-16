@@ -1,7 +1,7 @@
 pragma solidity 0.5.16;
 
-import "./Dependencies/SafeMath.sol";
-import "./Dependencies/console.sol";
+import "./SafeMath.sol";
+import "./console.sol";
 
 library Math {
     using SafeMath for uint;

@@ -8,13 +8,11 @@ import "./Interfaces/ICLVToken.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPoolManager.sol";
 import "./Interfaces/IPriceFeed.sol";
-import "./Math.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
-import "./Dependencies/ReentrancyGuard.sol";
 import "./Dependencies/console.sol";
 
-contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
+contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
     uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
@@ -100,11 +98,11 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         uint price;
         uint CLVInPool; 
         bool recoveryModeAtStart;
+        uint liquidatedDebt;
+        uint liquidatedColl;
     }
 
     struct LocalVariables_InnerSingleLiquidateFunction {
-        uint entireCDPDebt;
-        uint entireCDPColl;
         uint collToLiquidate;
         uint pendingDebtReward;
         uint pendingCollReward;
@@ -129,6 +127,8 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
     }
 
     struct LiquidationValues {
+        uint entireCDPDebt;
+        uint entireCDPColl;
         uint gasCompensation;
         uint debtToOffset;
         uint collToSendToSP;
@@ -140,6 +140,8 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
     }
 
     struct LiquidationTotals {
+        uint totalCollInSequence;
+        uint totalDebtInSequence;
         uint totalGasCompensation;
         uint totalDebtToOffset;
         uint totalCollToSendToSP;
@@ -148,6 +150,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         address partialAddr;
         uint partialNewDebt;
         uint partialNewColl;
+        
     }
 
     // --- Variable container structs for redemptions ---
@@ -173,6 +176,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
     event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
+    event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _gasCompensation);
 
     enum CDPManagerOperation {
         applyPendingRewards,
@@ -279,6 +283,11 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
                                         V.partialNewColl,
                                         L.price);
 
+
+        L.liquidatedDebt = V.entireCDPDebt.sub(V.partialNewDebt);
+        L.liquidatedColl = V.entireCDPColl.sub(V.gasCompensation).sub(V.partialNewColl);
+        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, V.gasCompensation);
+
         // Send gas compensation ETH to caller
         (bool success, ) = _msgSender().call.value(V.gasCompensation)("");
         _requireETHSentSuccessfully(success);
@@ -292,21 +301,21 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         // If ICR >= MCR, or is last trove, don't liquidate
         if (_ICR >= MCR || CDPOwners.length <= 1) {return V;}
 
-        (L.entireCDPDebt,
-        L.entireCDPColl,
+        (V.entireCDPDebt,
+        V.entireCDPColl,
         L.pendingDebtReward,
         L.pendingCollReward) = _getEntireDebtAndColl(_user);
 
         poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
         _removeStake(_user);
 
-        V.gasCompensation = _getGasCompensation(L.entireCDPColl, _price);
-        uint collToLiquidate = L.entireCDPColl.sub(V.gasCompensation);
+        V.gasCompensation = _getGasCompensation(V.entireCDPColl, _price);
+        uint collToLiquidate = V.entireCDPColl.sub(V.gasCompensation);
 
         (V.debtToOffset,
         V.collToSendToSP,
         V.debtToRedistribute,
-        V.collToRedistribute) = _getOffsetAndRedistributionVals(L.entireCDPDebt, collToLiquidate, _CLVInPool);
+        V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, collToLiquidate, _CLVInPool);
 
         // Move the gas compensation ETH to the CDPManager
         activePool.sendETH(address(this), V.gasCompensation);
@@ -324,13 +333,13 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         // If is last trove, don't liquidate
         if (CDPOwners.length <= 1) {return V;}
 
-        (L.entireCDPDebt,
-        L.entireCDPColl,
+        (V.entireCDPDebt,
+        V.entireCDPColl,
         L.pendingDebtReward,
         L.pendingCollReward) = _getEntireDebtAndColl(_user);
 
-        V.gasCompensation = _getGasCompensation(L.entireCDPColl, _price);
-        L.collToLiquidate = L.entireCDPColl.sub(V.gasCompensation);
+        V.gasCompensation = _getGasCompensation(V.entireCDPColl, _price);
+        L.collToLiquidate = V.entireCDPColl.sub(V.gasCompensation);
 
         // If ICR <= 100%, purely redistribute the CDP across all active CDPs
         if (_ICR <= 1000000000000000000) {
@@ -339,7 +348,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
 
             V.debtToOffset = 0;
             V.collToSendToSP = 0;
-            V.debtToRedistribute = L.entireCDPDebt;
+            V.debtToRedistribute = V.entireCDPDebt;
             V.collToRedistribute = L.collToLiquidate;
 
             _closeCDP(_user);
@@ -353,7 +362,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
             (V.debtToOffset,
             V.collToSendToSP,
             V.debtToRedistribute,
-            V.collToRedistribute) = _getOffsetAndRedistributionVals(L.entireCDPDebt, L.collToLiquidate, _CLVInPool);
+            V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, L.collToLiquidate, _CLVInPool);
 
             _closeCDP(_user);
             emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInRecoveryMode);
@@ -365,7 +374,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
             _applyPendingRewards(_user);
             _removeStake(_user);
 
-            V = _getPartialOffsetVals(_user, L.entireCDPDebt, L.entireCDPColl, _price, _CLVInPool);
+            V = _getPartialOffsetVals(_user, V.entireCDPDebt, V.entireCDPColl, _price, _CLVInPool);
 
             _closeCDP(_user);
         }
@@ -398,6 +407,10 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
     function _getPartialOffsetVals(address _user, uint _entireCDPDebt, uint _entireCDPColl, uint _price, uint _CLVInPool) internal
     returns
     (LiquidationValues memory V) {
+
+        V.entireCDPDebt = _entireCDPDebt;
+        V.entireCDPColl = _entireCDPColl;
+
         // When Pool can fully absorb the trove's debt, perform a full offset
         if (_entireCDPDebt < _CLVInPool) {
             V.gasCompensation = _getGasCompensation(_entireCDPColl, _price);
@@ -454,6 +467,10 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
                                         T.partialNewDebt,
                                         T.partialNewColl,
                                         L.price);
+
+        L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
+        L.liquidatedColl = T.totalCollInSequence.sub(T.totalGasCompensation).sub(T.partialNewColl);
+        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalGasCompensation);
 
         // Send gas compensation ETH to caller
         (bool success, ) = _msgSender().call.value(T.totalGasCompensation)("");
@@ -564,6 +581,10 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
                                         T.partialNewColl,
                                         L.price);
 
+        L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
+        L.liquidatedColl = T.totalCollInSequence.sub(T.totalGasCompensation).sub(T.partialNewColl);
+        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalGasCompensation);
+
         // Send gas compensation ETH to caller
         (bool success, ) = _msgSender().call.value(T.totalGasCompensation)("");
         _requireETHSentSuccessfully(success);
@@ -638,6 +659,10 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
 
         // Tally gas compensation
         T2.totalGasCompensation = T1.totalGasCompensation.add(V.gasCompensation);
+
+        // Tally the total initial debt and coll of troves impacted by the sequence
+        T2.totalDebtInSequence = T1.totalDebtInSequence.add(V.entireCDPDebt);
+        T2.totalCollInSequence = T1.totalCollInSequence.add(V.entireCDPColl);
 
         // Tally the debt and coll to offset and redistribute
         T2.totalDebtToOffset = T1.totalDebtToOffset.add(V.debtToOffset);
@@ -764,7 +789,7 @@ contract CDPManager is LiquityBase, ReentrancyGuard, Ownable, ICDPManager {
         address _partialRedemptionHint,
         uint _partialRedemptionHintICR
     )
-    nonReentrant external
+    external
     {
         address redeemer = _msgSender();
         uint activeDebt = activePool.getCLVDebt();

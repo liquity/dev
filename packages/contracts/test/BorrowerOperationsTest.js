@@ -144,9 +144,12 @@ contract('BorrowerOperations', async accounts => {
   it("addColl(), active CDP: applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
     // --- SETUP ---
     // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether.  Withdraw 100/100/180 CLV
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._15_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._5_Ether })
-    await borrowerOperations.openLoan(mv._180e18, carol, { from: carol, value: mv._1_Ether })
+    const withdrawal_A = th.getCompositeDebt(mv._100e18)
+    const withdrawal_B = th.getCompositeDebt(mv._100e18)
+    const withdrawal_C = th.getCompositeDebt(mv._180e18)
+    await borrowerOperations.openLoan(withdrawal_A, alice, { from: alice, value: mv._15_Ether })
+    await borrowerOperations.openLoan(withdrawal_B, bob, { from: bob, value: mv._5_Ether })
+    await borrowerOperations.openLoan(withdrawal_C, carol, { from: carol, value: mv._1_Ether })
 
     // --- TEST ---
 
@@ -154,6 +157,7 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
+    const liquidatedColl_C = th.getCollMinusGasComp(carol)
     await cdpManager.liquidate(carol, { from: owner });
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -176,19 +180,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.addColl(bob, bob, { from: bob, value: _1_Ether })
 
     /* check that both alice and Bob have had pending rewards applied in addition to their top-ups. When Carol defaulted, 
-    the reward-per-unit-staked due to her CDP liquidation was (1/20) ETH and (180/20) CLV Debt.
-
-    Alice, with a stake of 15 ether, should have earned (15 * 1/20)  = 0.75 ETH, and (15 *180/20) = 135 CLV Debt.
     
-    After her top-up of 5 ether:
-    - Her collateral should be (15 + 0.75 + 5) = 20.75 ETH.
-    - Her CLV debt should be (100 + 135) = 235 CLV.
 
-    Bob, with a stake of 5 ether, should have earned (5 * 1/20)  = 0.25 ETH, and (5 *180/20) = 45 CLV.
-     
-    After his top-up of 1 ether:
-    - His collateral should be (5 + 0.25 + 1) = 6.25 ETH.
-    - His CLV debt should be (100 + 45) = 145 CLV.   */
+    */
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const alice_CLVDebt_After = alice_CDP_After[0]
     const alice_Coll_After = alice_CDP_After[1]
@@ -1489,6 +1483,21 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
+  it("closeLoan(): reverts when trove is the only one in the system", async () => {
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: _1_Ether })
+
+    // check recovery mode 
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    // Alice attempts to close her loan
+    try {
+      const txCarol = await borrowerOperations.closeLoan({ from: alice })
+      assert.fail(txAlice)
+    } catch (err) {
+      assert.include(err.message, "revert")
+      assert.include(err.message, "CDPManager: Only one trove in the system")
+    }
+  })
 
   it("closeLoan(): reduces a CDP's collateral to zero", async () => {
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._10_Ether })
