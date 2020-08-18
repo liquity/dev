@@ -24,7 +24,7 @@ function updateStabilityDepositByOperation(
   let stabilityDepositChange = createStabilityDepositChange(event);
 
   stabilityDepositChange.stabilityDeposit = stabilityDeposit.id;
-  stabilityDepositChange.operation = operation;
+  stabilityDepositChange.stabilityDepositOperation = operation;
   stabilityDepositChange.depositedAmountBefore = stabilityDeposit.depositedAmount;
 
   stabilityDeposit.depositedAmount = newDepositedAmount;

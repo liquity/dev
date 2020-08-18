@@ -103,7 +103,7 @@ type TroveChange implements Change @entity {
   transaction: Transaction!
 
   trove: Trove!
-  operation: TroveOperation!
+  troveOperation: TroveOperation!
 
   collateralBefore: BigDecimal!
   collateralChange: BigDecimal!
@@ -126,7 +126,7 @@ type StabilityDepositChange implements Change @entity {
   transaction: Transaction!
 
   stabilityDeposit: StabilityDeposit!
-  operation: StabilityDepositOperation!
+  stabilityDepositOperation: StabilityDepositOperation!
 
   depositedAmountBefore: BigDecimal!
   depositedAmountChange: BigDecimal!

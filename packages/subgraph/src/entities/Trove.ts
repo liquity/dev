@@ -33,7 +33,7 @@ export function updateTrove(
 
   let troveChange = createTroveChange(event);
   troveChange.trove = trove.id;
-  troveChange.operation = operation;
+  troveChange.troveOperation = operation;
 
   troveChange.collateralBefore = trove.collateral;
   troveChange.debtBefore = trove.debt;
