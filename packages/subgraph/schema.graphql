@@ -17,6 +17,7 @@ type Owner @entity {
   stabilityDepositCount: Int!
 
   troves: [Trove!]! @derivedFrom(field: "owner")
+  stabilityDeposits: [StabilityDeposit!]! @derivedFrom(field: "owner")
 }
 
 type Trove @entity {
