@@ -13,6 +13,9 @@ type Owner @entity {
   currentTrove: Trove
   troveCount: Int!
 
+  currentStabilityDeposit: StabilityDeposit
+  stabilityDepositCount: Int!
+
   troves: [Trove!]! @derivedFrom(field: "owner")
 }
 
@@ -41,19 +44,15 @@ type Trove @entity {
   rawSnapshotOfTotalRedistributedDebt: BigInt!
 }
 
-enum TroveOperation {
-  openLoan
-  closeLoan
-  depositCollateral
-  withdrawCollateral
-  mint
-  repay
-  adjustLoan
-  accrueRewards
-  liquidateInNormalMode
-  liquidateInRecoveryMode
-  partiallyLiquidateInRecoveryMode
-  redeemCollateral
+type StabilityDeposit @entity {
+  "Owner's ID + '-' + an incremented integer"
+  id: ID!
+
+  owner: Owner!
+
+  depositedAmount: BigDecimal!
+
+  changes: [StabilityDepositChange!]! @derivedFrom(field: "stabilityDeposit")
 }
 
 type Transaction @entity {
@@ -82,6 +81,21 @@ interface Change {
   transaction: Transaction!
 }
 
+enum TroveOperation {
+  openLoan
+  closeLoan
+  depositCollateral
+  withdrawCollateral
+  mint
+  repay
+  adjustLoan
+  accrueRewards
+  liquidateInNormalMode
+  liquidateInRecoveryMode
+  partiallyLiquidateInRecoveryMode
+  redeemCollateral
+}
+
 type TroveChange implements Change @entity {
   id: ID!
   sequenceNumber: Int!
@@ -97,4 +111,25 @@ type TroveChange implements Change @entity {
   debtBefore: BigDecimal!
   debtChange: BigDecimal!
   debtAfter: BigDecimal!
+}
+
+enum StabilityDepositOperation {
+  depositTokens
+  withdrawTokens
+  withdrawCollateralGain
+}
+
+type StabilityDepositChange implements Change @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+
+  stabilityDeposit: StabilityDeposit!
+  operation: StabilityDepositOperation!
+
+  depositedAmountBefore: BigDecimal!
+  depositedAmountChange: BigDecimal!
+  depositedAmountAfter: BigDecimal!
+
+  collateralGain: BigDecimal
 }

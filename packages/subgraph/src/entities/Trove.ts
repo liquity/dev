@@ -1,18 +1,16 @@
-import { ethereum, Bytes, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { ethereum, Address, BigInt } from "@graphprotocol/graph-ts";
 
 import { TroveChange } from "../../generated/schema";
 
+import {
+  BIGINT_SCALING_FACTOR,
+  DECIMAL_SCALING_FACTOR,
+  BIGINT_ZERO,
+  BIGINT_MAX_UINT256
+} from "../utils/bignumbers";
+
 import { getChangeId, initChange } from "./System";
 import { getCurrentTroveOfOwner, closeCurrentTroveOfOwner } from "./Owner";
-
-// E.g. 1.5 is represented as 1.5 * 10^18, where 10^18 is called the scaling factor
-let DECIMAL_SCALING_FACTOR = BigDecimal.fromString("1000000000000000000");
-let BIGINT_SCALING_FACTOR = BigInt.fromI32(10).pow(18);
-
-let ZERO = BigInt.fromI32(0);
-let MAX_UINT256 = BigInt.fromUnsignedBytes(
-  Bytes.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF") as Bytes
-);
 
 function createTroveChange(event: ethereum.Event): TroveChange {
   let troveChange = new TroveChange(getChangeId(event));
@@ -55,13 +53,13 @@ export function updateTrove(
   trove.rawSnapshotOfTotalRedistributedCollateral = snapshotETH;
   trove.rawSnapshotOfTotalRedistributedDebt = snapshotCLVDebt;
 
-  if (!_debt.equals(ZERO)) {
+  if (!_debt.equals(BIGINT_ZERO)) {
     trove.rawCollateralPerDebt = _coll.times(BIGINT_SCALING_FACTOR).div(_debt);
   } else {
-    trove.rawCollateralPerDebt = MAX_UINT256;
+    trove.rawCollateralPerDebt = BIGINT_MAX_UINT256;
   }
 
-  if (_coll.equals(ZERO)) {
+  if (_coll.equals(BIGINT_ZERO)) {
     closeCurrentTroveOfOwner(_user);
   }
 
