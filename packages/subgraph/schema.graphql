@@ -106,6 +106,7 @@ type TroveChange implements Change @entity {
 
   trove: Trove!
   troveOperation: TroveOperation!
+  price: BigDecimal!
 
   collateralBefore: BigDecimal!
   collateralChange: BigDecimal!
@@ -114,6 +115,9 @@ type TroveChange implements Change @entity {
   debtBefore: BigDecimal!
   debtChange: BigDecimal!
   debtAfter: BigDecimal!
+
+  collateralRatioBefore: BigDecimal
+  collateralRatioAfter: BigDecimal
 }
 
 enum StabilityDepositOperation {
