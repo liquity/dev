@@ -10,3 +10,5 @@ export let BIGINT_ZERO = BigInt.fromI32(0);
 export let BIGINT_MAX_UINT256 = BigInt.fromUnsignedBytes(
   Bytes.fromHexString("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF") as Bytes
 );
+
+export let DECIMAL_INITIAL_PRICE = BigDecimal.fromString("200");

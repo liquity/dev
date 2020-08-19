@@ -4,6 +4,8 @@ type System @entity {
 
   transactionCount: Int!
   changeCount: Int!
+
+  currentPrice: BigDecimal!
 }
 
 type Owner @entity {
@@ -133,4 +135,14 @@ type StabilityDepositChange implements Change @entity {
   depositedAmountAfter: BigDecimal!
 
   collateralGain: BigDecimal
+}
+
+type PriceChange implements Change @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+
+  priceBefore: BigDecimal!
+  priceChange: BigDecimal!
+  priceAfter: BigDecimal!
 }

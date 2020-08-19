@@ -2,9 +2,10 @@ import {
   CDPManager,
   CDPUpdated,
   BorrowerOperationsAddressChanged,
-  PoolManagerAddressChanged
+  PoolManagerAddressChanged,
+  PriceFeedAddressChanged
 } from "../../generated/CDPManager/CDPManager";
-import { BorrowerOperations, PoolManager } from "../../generated/templates";
+import { BorrowerOperations, PoolManager, PriceFeed } from "../../generated/templates";
 
 import { updateTrove } from "../entities/Trove";
 
@@ -42,6 +43,10 @@ export function handleBorrowerOperationsAddressChanged(
 
 export function handlePoolManagerAddressChanged(event: PoolManagerAddressChanged): void {
   PoolManager.create(event.params._newPoolManagerAddress);
+}
+
+export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): void {
+  PriceFeed.create(event.params._newPriceFeedAddress);
 }
 
 export function handleCDPUpdated(event: CDPUpdated): void {

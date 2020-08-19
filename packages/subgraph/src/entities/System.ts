@@ -1,6 +1,8 @@
-import { ethereum, Entity, Value } from "@graphprotocol/graph-ts";
+import { ethereum, Entity, Value, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
-import { System, Transaction } from "../../generated/schema";
+import { System, Transaction, PriceChange } from "../../generated/schema";
+
+import { DECIMAL_INITIAL_PRICE, DECIMAL_SCALING_FACTOR } from "../utils/bignumbers";
 
 const onlySystemId = "only";
 
@@ -14,6 +16,7 @@ function getSystem(): System {
 
     newSystem.transactionCount = 0;
     newSystem.changeCount = 0;
+    newSystem.currentPrice = DECIMAL_INITIAL_PRICE;
 
     return newSystem;
   }
@@ -57,4 +60,30 @@ export function initChange(change: Entity, event: ethereum.Event): void {
   change.set("transaction", Value.fromString(transaction.id));
 
   transaction.save();
+}
+
+export function getCurrentPrice(): BigDecimal {
+  let system = getSystem();
+
+  return system.currentPrice;
+}
+
+function createPriceChange(event: ethereum.Event): PriceChange {
+  let priceChange = new PriceChange(getChangeId(event));
+  initChange(priceChange, event);
+
+  return priceChange;
+}
+
+export function updatePrice(event: ethereum.Event, _newPrice: BigInt): void {
+  let priceChange = createPriceChange(event);
+
+  let system = getSystem();
+  priceChange.priceBefore = system.currentPrice;
+  system.currentPrice = _newPrice.divDecimal(DECIMAL_SCALING_FACTOR);
+  priceChange.priceAfter = system.currentPrice;
+  priceChange.priceChange = priceChange.priceAfter.minus(priceChange.priceBefore);
+  system.save();
+
+  priceChange.save();
 }
