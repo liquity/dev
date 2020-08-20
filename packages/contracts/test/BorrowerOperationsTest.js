@@ -270,17 +270,6 @@ contract('BorrowerOperations', async accounts => {
   //   assert.isAtMost(th.getDifference(dennis_Stake), 100)
   // })
 
-  it("addColl(): allows a user to top up an active CDP with additional collateral of value < $20 USD", async () => {
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1e17 })
-
-    // Tops up with only one wei
-    const txData = await borrowerOperations.addColl(alice, alice, { from: alice, value: '1' })
-
-    // check top-up was successful
-    txStatus = txData.receipt.status
-    assert.isTrue(txStatus)
-  })
-
   it("addColl(): non-trove owner can add collateral to another user's trove", async () => {
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._2_Ether })
     await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._3_Ether})
@@ -382,19 +371,6 @@ contract('BorrowerOperations', async accounts => {
   })
 
   // --- withdrawColl() ---
-
-  it("withdrawColl(): reverts if dollar value of remaining collateral in CDP would be < $20 USD", async () => {
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: _100_Finney })
-
-    // Alice attempts to withdraw 1 wei. Check tx reverts
-    try {
-      const txData = await borrowerOperations.withdrawColl('1', alice, { from: alice })
-      assert.fail(txData)
-    } catch (err) {
-      assert.include(err.message, "revert")
-      assert.include(err.message, "Remaining collateral must have $USD value >= 20, or be zero")
-    }
-  })
 
   // reverts when calling address does not have active trove  
   it("withdrawColl(): reverts when calling address does not have active trove", async () => {
@@ -1106,27 +1082,6 @@ contract('BorrowerOperations', async accounts => {
       assert.include(err.message, "revert")
     }
   })
-
-  it("adjustLoan(): reverts when ETH is withdrawn and the remaining collateral in the loan is non-zero but value < $20 USD", async () => {
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, carol, { from: carol, value: mv._1_Ether })
-
-    // Check Bob can make an adjustment that leaves $20 USD worth of ETH in his trove.
-    // 1ETH = 200 USD.  Bob withdraws 0.9 ETH, leaving (0.1 * 200) = 20 USD worth of ETH.
-    const txBob = await borrowerOperations.adjustLoan('900000000000000000', mv._1e18, bob, { from: bob })
-    assert.isTrue(txBob.receipt.status)
-
-    // Carol attempts an adjustment that leaves < $20 USD worth of ETH in her trove.
-    // 1ETH = 200 USD. Carol tries to withdraw 0.91 ETH, leaving (0.09 * 200) = 18 USD worth of ETH.
-    try {
-      const txCarol = await borrowerOperations.adjustLoan('910000000000000000', mv._1e18, carol, { from: carol })
-      assert.fail(txCarol)
-    } catch (err) {
-      assert.include(err.message, "revert")
-    }
-  })
-
 
   it("adjustLoan(): reverts when change would cause the ICR of the loan to fall below the MCR", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._100_Ether })
@@ -2057,20 +2012,6 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isAtMost(th.getDifference(bob_ETHrewardSnapshot, L_ETH), 100)
     assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot, L_CLV), 100)
-  })
-
-  it("openLoan(): reverts if user tries to open a new CDP with collateral of value < $20 USD", async () => {
-    /* Alice adds 0.0999 ether. At a price of 200 USD per ETH, 
-    her collateral value is < $20 USD.  So her tx should revert */
-    const coll = '99999999999999999'
-
-    try {
-      const txData = await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: coll })
-      assert.fail(txData)
-    } catch (err) {
-      assert.include(err.message, "revert")
-      assert.include(err.message, "BorrowerOps: Collateral must have $USD value >= 20")
-    }
   })
 
   it("openLoan(): allows a user to open a CDP, then close it, then re-open it", async () => {

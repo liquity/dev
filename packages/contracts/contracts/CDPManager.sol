@@ -14,10 +14,6 @@ import "./Dependencies/console.sol";
 
 contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
-    uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
-    uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
-
     // --- Connected contract declarations ---
 
     address public borrowerOperationsAddress;

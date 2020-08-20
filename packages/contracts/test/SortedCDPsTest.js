@@ -13,7 +13,7 @@ contract('CDPManager', async accounts => {
 
   const _18_zeros = '000000000000000000'
 
-  const [owner, alice, bob, carol, dennis, erin] = accounts;
+  const [owner, alice, bob, carol, dennis, erin, whale] = accounts;
 
   let priceFeed
   let clvToken

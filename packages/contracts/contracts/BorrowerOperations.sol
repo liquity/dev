@@ -12,11 +12,8 @@ import "./Dependencies/console.sol";
 
 contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
-    uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
-    uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
-    uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
-
+   
     // --- Connected contract declarations ---
 
     ICDPManager public cdpManager;
@@ -390,10 +387,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     {
         if (_collWithdrawal > 0) {
             require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
-            
-            uint newColl = _currentColl.sub(_collWithdrawal);
-            require(_getUSDValue(newColl, _price) >= MIN_COLL_IN_USD || newColl == 0,
-                "BorrowerOps: Remaining collateral must have $USD value >= 20, or be zero");
         }
     }
 
