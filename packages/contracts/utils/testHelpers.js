@@ -299,12 +299,12 @@ class TestHelper {
     const issuedDebt = web3.utils.toBN(compositeDebt).sub(virtualDebt)
     // return issuedDebt
 
-    // alternatively, for 0 gas comp:
+    // Alternatively, for 0 gas comp:
     return this.toBN(compositeDebt)
   }
 
   // Get's total collateral minus total gas comp, for a series of troves.
-  static async getTotalCollMinusTotalGasComp(troveList, contracts) {
+  static async getExpectedTotalCollMinusTotalGasComp(troveList, contracts) {
     let totalCollRemainder = web3.utils.toBN('0')
 
     for (const trove of troveList) {
@@ -315,8 +315,8 @@ class TestHelper {
     return totalCollRemainder
   }
 
-    // Gas comp for a trove given by max{ $10WorthOfETH, 0.5%OfCollateral }
-  static async getCollMinusGasComp (trove, contracts) {
+  // Gas comp for a trove given by max{ $10WorthOfETH, 0.5%OfCollateral }
+  static async getExpectedCollMinusGasComp(account, contracts) {
     const price = await contracts.priceFeed.getPrice()
     const _$10WorthOfETH = MoneyValues._10e18BN.mul(MoneyValues._1e18BN).div(web3.utils.toBN(price))
 
@@ -334,6 +334,32 @@ class TestHelper {
 
     return remainingColl
   }
+
+  static getEmittedLiquidatedDebt(liquidationTx) {
+    return this.getLiquidationEventArg(liquidationTx, 0)  // LiquidatedDebt is position 0 in the Liquidation event
+  }
+    
+  static  getEmittedLiquidatedColl(liquidationTx) {
+    return this.getLiquidationEventArg(liquidationTx, 1) // LiquidatedColl is position 1 in the Liquidation event
+  }
+
+  static getEmittedGasComp(liquidationTx) {
+    return this.getLiquidationEventArg(liquidationTx, 2) // GasComp is position 2 in the Liquidation event
+  }
+
+  static getLiquidationEventArg(liquidationTx, arg) {
+    for (let i = 0; i< liquidationTx.logs.length; i++) {
+      if (liquidationTx.logs[i].event === "Liquidation") { 
+        // console.log(liquidationTx.logs[i].args[0].toString())
+        // console.log(liquidationTx.logs[i].args[1].toString())
+        return liquidationTx.logs[i].args[arg] 
+      }
+    }
+
+    throw("The transaction logs do not contain a liquidation event")
+  }
+
+
 
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
