@@ -24,6 +24,10 @@ contract LiquityBase {
     /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
     Given by the maximum of { $10 worth of ETH,  dollar value of 0.5% of collateral } */
     function _getGasCompensation(uint _entireColl, uint _price) internal view returns (uint) {
+        
+        // --- Enable gas compensation --- 
+        // *******************************
+
         // uint minETHComp = _getMinVirtualDebtInETH(_price);
 
         // if (_entireColl <= minETHComp) { return _entireColl; }
@@ -32,13 +36,16 @@ contract LiquityBase {
 
         // uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
         // return compensation;
-        return 0;
-    }
 
-    // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
-    function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
-        minETHComp = MIN_VIRTUAL_DEBT.mul(1e18).div(_price);
-        return minETHComp;
+        // *******************************
+        
+
+        // --- Disable gas compensation ----
+        // *******************************
+
+        return 0;
+
+        // *******************************
     }
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
@@ -47,7 +54,37 @@ contract LiquityBase {
         and should have no virtual debt */
         if (_debt == 0) {return 0;}  
 
+        // --- Enable virtual debt ---
+        // *******************************
+
         // return _debt.add(MIN_VIRTUAL_DEBT);
+
+        // *******************************
+
+
+        // --- Disable virtual debt ---
+        // *******************************
+
         return _debt;
+
+        // *******************************
+    }
+
+      // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
+    function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
+        minETHComp = MIN_VIRTUAL_DEBT.mul(1e18).div(_price);
+        return minETHComp;
+    }
+
+    // Used only in tests. TODO: Move to CDPManagerTester
+    function getActualDebtFromComposite(uint _debtVal) external pure returns (uint) {
+        uint debtValMinusVirtual = _debtVal.sub(MIN_VIRTUAL_DEBT);
+        uint compositeDebt = _getCompositeDebt(debtValMinusVirtual);
+
+        // If gas comp is on, the actual debt is the debt value sans the virtual debt
+        if (compositeDebt == _debtVal) {return debtValMinusVirtual;}
+        
+        // if gas comp if off, the actual debt is the original debt value
+        if (compositeDebt == debtValMinusVirtual) {return _debtVal;}
     }
 }

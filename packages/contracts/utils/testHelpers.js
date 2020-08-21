@@ -293,14 +293,9 @@ class TestHelper {
 
   // Given a composite debt, returns the actual debt  - i.e. subtracts the virtual debt.
   // Virtual debt = 10 CLV.
-  static getActualDebtFromComposite(compositeDebt) {
-    const virtualDebt = MoneyValues._10e18BN
-
-    const issuedDebt = web3.utils.toBN(compositeDebt).sub(virtualDebt)
-    // return issuedDebt
-
-    // Alternatively, for 0 gas comp:
-    return this.toBN(compositeDebt)
+  static async getActualDebtFromComposite(compositeDebt, contracts) {
+    const issuedDebt = await contracts.cdpManager.getActualDebtFromComposite(compositeDebt)
+    return issuedDebt
   }
 
   // Get's total collateral minus total gas comp, for a series of troves.
@@ -313,26 +308,6 @@ class TestHelper {
     }
 
     return totalCollRemainder
-  }
-
-  // Gas comp for a trove given by max{ $10WorthOfETH, 0.5%OfCollateral }
-  static async getExpectedCollMinusGasComp(account, contracts) {
-    const price = await contracts.priceFeed.getPrice()
-    const _$10WorthOfETH = MoneyValues._10e18BN.mul(MoneyValues._1e18BN).div(web3.utils.toBN(price))
-
-    const coll = (await contracts.cdpManager.CDPs(account))[1]
-    const pendingCollReward = await contracts.cdpManager.getPendingETHReward(account)
-    const entireColl = coll.add(pendingCollReward)
-
-    const _0pt5PercentColl = entireColl.div(web3.utils.toBN('200'))
-    // const gasComp = BN.max(_$10WorthOfETH, _0pt5PercentColl)
-    
-    // Alternatively, for 0 gas comp: 
-    const gasComp = this.toBN('0')
-
-    const remainingColl = entireColl.sub(gasComp)
-
-    return remainingColl
   }
 
   static getEmittedLiquidationValues(liquidationTx) {

@@ -145,9 +145,11 @@ contract('BorrowerOperations', async accounts => {
   it("addColl(), active CDP: applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
     // --- SETUP ---
     // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether.  Withdraw 100/100/180 CLV
-    const CLVwithdrawal_A = th.getActualDebtFromComposite(mv._100e18)
-    const CLVwithdrawal_B = th.getActualDebtFromComposite(mv._100e18)
-    const CLVwithdrawal_C = th.getActualDebtFromComposite(mv._180e18)
+    const CLVwithdrawal_A = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_B = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_C = await th.getActualDebtFromComposite(mv._180e18, contracts)
+
+    console.log(`CLVwithdrawal_C ${CLVwithdrawal_C}`)
     await borrowerOperations.openLoan(CLVwithdrawal_A, alice, { from: alice, value: mv._15_Ether })
     await borrowerOperations.openLoan(CLVwithdrawal_B, bob, { from: bob, value: mv._5_Ether })
     await borrowerOperations.openLoan(CLVwithdrawal_C, carol, { from: carol, value: mv._1_Ether })
@@ -441,8 +443,8 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
 
-    const CLVwithdrawal_A = await th.getActualDebtFromComposite(mv._50e18)
-    const CLVwithdrawal_B = await th.getActualDebtFromComposite(mv._50e18)
+    const CLVwithdrawal_A = await await th.getActualDebtFromComposite(mv._50e18, contracts)
+    const CLVwithdrawal_B = await await th.getActualDebtFromComposite(mv._50e18, contracts)
     await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
     await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
 
@@ -618,9 +620,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: carol, value: mv._1_Ether })
 
     // Alice and Bob withdraw 100CLV, Carol withdraws 180CLV
-    const CLVwithdrawal_A = await th.getActualDebtFromComposite(mv._100e18)
-    const CLVwithdrawal_B = await th.getActualDebtFromComposite(mv._100e18)
-    const CLVwithdrawal_C = await th.getActualDebtFromComposite(mv._180e18)
+    const CLVwithdrawal_A = await await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_B = await await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_C = await await th.getActualDebtFromComposite(mv._180e18, contracts)
 
     await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
     await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
@@ -762,7 +764,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
 
     // Alice withdraws to a composite debt of 181 CLV
-    const CLVwithdrawal_A = await th.getActualDebtFromComposite("181000000000000000000")
+    const CLVwithdrawal_A = await await th.getActualDebtFromComposite("181000000000000000000", contracts)
     const txAlice = await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
     assert.isTrue(txAlice.receipt.status)
 
@@ -1703,9 +1705,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _1_Ether })
 
     // Alice and Bob withdraw 100CLV, Carol withdraws 180CLV
-    const CLVwithdrawal_A = th.getActualDebtFromComposite(mv._100e18)
-    const CLVwithdrawal_B = th.getActualDebtFromComposite(mv._100e18)
-    const CLVwithdrawal_C = th.getActualDebtFromComposite(mv._180e18)
+    const CLVwithdrawal_A = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_B = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_C = await th.getActualDebtFromComposite(mv._180e18, contracts)
     await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
     await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
     await borrowerOperations.withdrawCLV(CLVwithdrawal_C, carol, { from: carol })
@@ -1722,7 +1724,7 @@ contract('BorrowerOperations', async accounts => {
     // Dennis opens a new CDP with 10 Ether, withdraws CLV and sends 135 CLV to Alice, and 45 CLV to Bob.
 
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._100_Ether })
-    const CLVwithdrawal_D = await th.getActualDebtFromComposite(mv._200e18)
+    const CLVwithdrawal_D = await await th.getActualDebtFromComposite(mv._200e18, contracts)
     await borrowerOperations.withdrawCLV(CLVwithdrawal_D, dennis, { from: dennis })
     await clvToken.transfer(alice, '135000000000000000000', { from: dennis })
     await clvToken.transfer(bob, '45000000000000000000', { from: dennis })
@@ -2033,8 +2035,8 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _1_Ether })
 
     // Alice withdraws 100CLV, Carol withdraws 180CLV
-    const A_CLVWithdrawal = th.getActualDebtFromComposite(mv._100e18)
-    const C_CLVWithdrawal = th.getActualDebtFromComposite(mv._180e18)
+    const A_CLVWithdrawal = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const C_CLVWithdrawal = await th.getActualDebtFromComposite(mv._180e18, contracts)
     await borrowerOperations.withdrawCLV(A_CLVWithdrawal, alice, { from: alice })
     await borrowerOperations.withdrawCLV(C_CLVWithdrawal, carol, { from: carol })
 
@@ -2147,7 +2149,7 @@ contract('BorrowerOperations', async accounts => {
     it("collChange = 0, debtChange = 0", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt =  th.getActualDebtFromComposite(mv._100e18)
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = 0
       const debtChange = 0
 
@@ -2159,7 +2161,7 @@ contract('BorrowerOperations', async accounts => {
     it("collChange = 0, debtChange is positive", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt =  th.getActualDebtFromComposite(mv._100e18)
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = 0
       const debtChange = mv._50e18
 
@@ -2171,7 +2173,7 @@ contract('BorrowerOperations', async accounts => {
     it("collChange = 0, debtChange is negative", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = th.getActualDebtFromComposite(mv._100e18)
+      const initialDebt = await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = 0
       const debtChange = mv.negative_50e18
 
@@ -2183,7 +2185,7 @@ contract('BorrowerOperations', async accounts => {
     it("collChange is positive, debtChange is 0", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = th.getActualDebtFromComposite(mv._100e18)
+      const initialDebt = await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv._1_Ether
       const debtChange = 0
 
@@ -2195,7 +2197,7 @@ contract('BorrowerOperations', async accounts => {
     it("collChange is negative, debtChange is 0", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = th.getActualDebtFromComposite(mv._100e18)
+      const initialDebt = await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv.negative_5e17
       const debtChange = 0
 
@@ -2207,7 +2209,7 @@ contract('BorrowerOperations', async accounts => {
     it("collChange is negative, debtChange is negative", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt =  th.getActualDebtFromComposite(mv._100e18)
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv.negative_5e17
       const debtChange = mv.negative_50e18
 
@@ -2219,7 +2221,7 @@ contract('BorrowerOperations', async accounts => {
     it("collChange is positive, debtChange is positive", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt =  th.getActualDebtFromComposite(mv._100e18)
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv._1_Ether
       const debtChange = mv._100e18
 
@@ -2231,7 +2233,7 @@ contract('BorrowerOperations', async accounts => {
     it("collChange is positive, debtChange is negative", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt =  th.getActualDebtFromComposite(mv._100e18)
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv._1_Ether
       const debtChange = mv.negative_50e18
 
@@ -2243,7 +2245,7 @@ contract('BorrowerOperations', async accounts => {
     it("collChange is negative, debtChange is positive", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = th.getActualDebtFromComposite(mv._100e18)
+      const initialDebt = await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv.negative_5e17
       const debtChange = mv._100e18
 
