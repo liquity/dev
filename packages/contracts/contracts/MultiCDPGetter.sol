@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "./CDPManager.sol";
 import "./SortedCDPs.sol";
 
+/*  Helper contract for grabbing CDP data for the front end. Not part of the core Liquity system. */
 contract MultiCDPGetter {
     struct CombinedCDPData {
         address owner;

@@ -2,6 +2,8 @@ pragma solidity 0.5.16;
 
 import "./Math.sol";
 
+/* Base contract for CDPManager and BorrowerOperations. Contains global system constants and
+common functions. */
 contract LiquityBase {
     using SafeMath for uint;
 

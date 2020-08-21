@@ -59,9 +59,11 @@ contract PoolManager is Ownable, IPoolManager {
     is the snapshot of P taken at the instant the deposit was made. 18 DP decimal.  */
     uint public P = 1e18;
 
-    uint128 public currentScale;  // Each time the scale of P shifts by 1e18, the scale is incremented by 1
+     // Each time the scale of P shifts by 1e18, the scale is incremented by 1
+    uint128 public currentScale; 
 
-    uint128 public currentEpoch;  // With each offset that fully empties the Pool, the epoch is incremented by 1
+    // With each offset that fully empties the Pool, the epoch is incremented by 1
+    uint128 public currentEpoch;  
 
     /* ETH Gain sum 'S': During it's lifetime, each deposit d(0) earns an ETH gain of ( d(0) * [S - S(0)] )/P(0), where S(0) 
     is the snapshot of S taken at the instant the deposit was made.
@@ -254,7 +256,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     /* Return the ETH gain earned by the deposit. Given by the formula:  E = d0 * (S - S(0))/P(0)
-    where S(0), P(0) are the depositor's snapshots of the sum S and product P, respectively. */
+    where S(0) and P(0) are the depositor's snapshots of the sum S and product P, respectively. */
     function _getCurrentETHGain(address _user) internal view returns (uint) {
         uint initialDeposit = initialDeposits[_user];
 
@@ -301,7 +303,7 @@ contract PoolManager is Ownable, IPoolManager {
         uint128 scaleDiff = currentScale.sub(scaleSnapshot);
     
         /* Compute the compounded deposit. If a scale change in P was made during the deposit's lifetime, 
-        account for it.  If more than one scale change was made, then the deposit has decreased by a factor of 
+        account for it. If more than one scale change was made, then the deposit has decreased by a factor of 
         at least 1e-18 -- so return 0.*/
         if (scaleDiff == 0) { 
             compoundedDeposit = initialDeposit.mul(P).div(snapshot_P);
@@ -435,9 +437,9 @@ contract PoolManager is Ownable, IPoolManager {
         // Update the recorded deposit value, and deposit snapshots
         _updateDeposit(_user, compoundedCLVDeposit);
 
-        // Emit events before transferring ETH gain to CDP.
-        // This lets the event log make more sense (i.e. first the ETH gain is withdrawn and then
-        // it is deposited into the CDP, not the other way around).
+        /* Emit events before transferring ETH gain to CDP.
+         This lets the event log make more sense (i.e. so it appears that first the ETH gain is withdrawn 
+        and then it is deposited into the CDP, not the other way around). */
         emit ETHGainWithdrawn(_user, ETHGain, CLVLoss);
         emit UserDepositChanged(_user, compoundedCLVDeposit); 
 
@@ -446,9 +448,8 @@ contract PoolManager is Ownable, IPoolManager {
 
      /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
     and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
-    Returns the amount of debt that could not be cancelled, and the corresponding ether.
-    Only callable from close() and closeCDPs() functions in CDPManager */
-  function offset(uint _debtToOffset, uint _collToAdd) 
+    Only called from liquidation functions in CDPManager. */
+    function offset(uint _debtToOffset, uint _collToAdd) 
     external 
     payable 
     onlyCDPManager 
