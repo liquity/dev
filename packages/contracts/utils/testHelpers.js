@@ -335,6 +335,21 @@ class TestHelper {
     return remainingColl
   }
 
+  static getEmittedLiquidationValues(liquidationTx) {
+    for (let i = 0; i< liquidationTx.logs.length; i++) {
+      if (liquidationTx.logs[i].event === "Liquidation") { 
+        const liquidatedDebt = liquidationTx.logs[i].args[0]
+        const liquidatedColl = liquidationTx.logs[i].args[1]
+        const gasComp = liquidationTx.logs[i].args[2]
+
+        return [ liquidatedDebt, liquidatedColl, gasComp ]
+      }
+    }
+
+    throw("The transaction logs do not contain a liquidation event")
+  }
+
+
   static getEmittedLiquidatedDebt(liquidationTx) {
     return this.getLiquidationEventArg(liquidationTx, 0)  // LiquidatedDebt is position 0 in the Liquidation event
   }
@@ -350,8 +365,6 @@ class TestHelper {
   static getLiquidationEventArg(liquidationTx, arg) {
     for (let i = 0; i< liquidationTx.logs.length; i++) {
       if (liquidationTx.logs[i].event === "Liquidation") { 
-        // console.log(liquidationTx.logs[i].args[0].toString())
-        // console.log(liquidationTx.logs[i].args[1].toString())
         return liquidationTx.logs[i].args[arg] 
       }
     }

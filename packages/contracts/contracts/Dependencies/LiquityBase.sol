@@ -41,6 +41,10 @@ contract LiquityBase {
 
     // Returns the composite debt (actual debt + virtual debt) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
+        /* If trove has no actual outstanding debt, then it is unliquidateable, 
+        and should have no virtual debt */
+        if (_debt == 0) {return 0;}  
+
         // return _debt.add(MIN_VIRTUAL_DEBT);
         return _debt;
     }
