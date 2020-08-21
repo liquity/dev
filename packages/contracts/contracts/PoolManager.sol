@@ -93,8 +93,7 @@ contract PoolManager is Ownable, IPoolManager {
     event P_Updated(uint _P);
     event S_Updated(uint _S);
     event UserDepositChanged(address indexed _user, uint _amount);
-    event ETHGainWithdrawn(address indexed _user, uint _ETH);
-    event ETHGainWithdrawnToCDP(address indexed _CDPOwner, uint _ETH);
+    event ETHGainWithdrawn(address indexed _user, uint _ETH, uint _CLVLoss);
 
     // --- Modifiers ---
 
@@ -366,13 +365,17 @@ contract PoolManager is Ownable, IPoolManager {
     setting newDeposit = compounded deposit + amount. */
     function provideToSP(uint _amount) external {
         address user = _msgSender();
+        uint initialDeposit = initialDeposits[user];
 
-        if (initialDeposits[user] == 0) {
+        if (initialDeposit == 0) {
             _sendCLVtoStabilityPool(user, _amount);
             _updateDeposit(user, _amount);
         
+            emit UserDepositChanged(user, _amount);
+
         } else { // If user already has a deposit, make a new composite deposit and retrieve their ETH gain
             uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
+            uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
             uint ETHGain = _getCurrentETHGain(user);
 
             uint newDeposit = compoundedCLVDeposit.add(_amount);
@@ -382,8 +385,8 @@ contract PoolManager is Ownable, IPoolManager {
 
             _sendETHGainToUser(user, ETHGain);
             
+            emit ETHGainWithdrawn(user, ETHGain, CLVLoss);
             emit UserDepositChanged(user, newDeposit); 
-            emit ETHGainWithdrawn(user, ETHGain);
         }
     }
 
@@ -397,8 +400,10 @@ contract PoolManager is Ownable, IPoolManager {
     function withdrawFromSP(uint _amount) external {
         address user = _msgSender();
         _requireUserHasDeposit(user); 
-       
+
+        uint initialDeposit = initialDeposits[user];
         uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
+        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
         uint ETHGain = _getCurrentETHGain(user);
 
         uint CLVtoWithdraw = Math._min(_amount, compoundedCLVDeposit);
@@ -409,8 +414,8 @@ contract PoolManager is Ownable, IPoolManager {
       
         _sendETHGainToUser(user, ETHGain);
 
+        emit ETHGainWithdrawn(user, ETHGain, CLVLoss);
         emit UserDepositChanged(user, CLVremainder); 
-        emit ETHGainWithdrawn(user, ETHGain);
     }
 
     /* Transfer the caller's entire ETH gain from the Stability Pool to the caller's CDP, and leaves
@@ -421,17 +426,22 @@ contract PoolManager is Ownable, IPoolManager {
         require(_user == _msgSender(), "PoolManager: A user may only withdraw ETH gains to their own trove" );
         _requireUserHasDeposit(_user); 
         _requireUserHasTrove(_user);
-       
+
+        uint initialDeposit = initialDeposits[_user];
         uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_user);
+        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
         uint ETHGain = _getCurrentETHGain(_user);
        
         // Update the recorded deposit value, and deposit snapshots
         _updateDeposit(_user, compoundedCLVDeposit);
 
-        _sendETHGainToCDP(_user, ETHGain, _hint);
-
+        // Emit events before transferring ETH gain to CDP.
+        // This lets the event log make more sense (i.e. first the ETH gain is withdrawn and then
+        // it is deposited into the CDP, not the other way around).
+        emit ETHGainWithdrawn(_user, ETHGain, CLVLoss);
         emit UserDepositChanged(_user, compoundedCLVDeposit); 
-        emit ETHGainWithdrawn(_user, ETHGain);
+
+        _sendETHGainToCDP(_user, ETHGain, _hint);
     }
 
      /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  

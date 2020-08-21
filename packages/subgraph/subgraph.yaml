@@ -18,13 +18,21 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.4
       entities:
+        - System
+        - Owner
         - Trove
+        - TroveChange
+        - Transaction
       abis:
         - name: CDPManager
           file: ../lib/abi/CDPManager.json
       eventHandlers:
         - event: BorrowerOperationsAddressChanged(address)
           handler: handleBorrowerOperationsAddressChanged
+        - event: PoolManagerAddressChanged(address)
+          handler: handlePoolManagerAddressChanged
+        - event: PriceFeedAddressChanged(address)
+          handler: handlePriceFeedAddressChanged
         - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleCDPUpdated
 templates:
@@ -39,7 +47,11 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.4
       entities:
+        - System
+        - Owner
         - Trove
+        - TroveChange
+        - Transaction
       abis:
         - name: BorrowerOperations
           file: ../lib/abi/BorrowerOperations.json
@@ -48,3 +60,47 @@ templates:
       eventHandlers:
         - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleCDPUpdated
+  - name: PoolManager
+    kind: ethereum/contract
+    network: ropsten
+    source:
+      abi: PoolManager
+    mapping:
+      file: ./src/mappings/PoolManager.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - System
+        - Owner
+        - StabilityDeposit
+        - StabilityDepositChange
+        - Transaction
+      abis:
+        - name: PoolManager
+          file: ../lib/abi/PoolManager.json
+      eventHandlers:
+        - event: UserDepositChanged(indexed address,uint256)
+          handler: handleUserDepositChanged
+        - event: ETHGainWithdrawn(indexed address,uint256,uint256)
+          handler: handleETHGainWithdrawn
+  - name: PriceFeed
+    kind: ethereum/contract
+    network: ropsten
+    source:
+      abi: PriceFeed
+    mapping:
+      file: ./src/mappings/PriceFeed.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - System
+        - PriceChange
+        - Transaction
+      abis:
+        - name: PriceFeed
+          file: ../lib/abi/PriceFeed.json
+      eventHandlers:
+        - event: PriceUpdated(uint256)
+          handler: handlePriceUpdated

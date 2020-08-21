@@ -4,6 +4,8 @@ type System @entity {
 
   transactionCount: Int!
   changeCount: Int!
+
+  currentPrice: BigDecimal!
 }
 
 type Owner @entity {
@@ -13,7 +15,11 @@ type Owner @entity {
   currentTrove: Trove
   troveCount: Int!
 
+  currentStabilityDeposit: StabilityDeposit
+  stabilityDepositCount: Int!
+
   troves: [Trove!]! @derivedFrom(field: "owner")
+  stabilityDeposits: [StabilityDeposit!]! @derivedFrom(field: "owner")
 }
 
 type Trove @entity {
@@ -41,19 +47,15 @@ type Trove @entity {
   rawSnapshotOfTotalRedistributedDebt: BigInt!
 }
 
-enum TroveOperation {
-  openLoan
-  closeLoan
-  depositCollateral
-  withdrawCollateral
-  mint
-  repay
-  adjustLoan
-  accrueRewards
-  liquidateInNormalMode
-  liquidateInRecoveryMode
-  partiallyLiquidateInRecoveryMode
-  redeemCollateral
+type StabilityDeposit @entity {
+  "Owner's ID + '-' + an incremented integer"
+  id: ID!
+
+  owner: Owner!
+
+  depositedAmount: BigDecimal!
+
+  changes: [StabilityDepositChange!]! @derivedFrom(field: "stabilityDeposit")
 }
 
 type Transaction @entity {
@@ -82,13 +84,29 @@ interface Change {
   transaction: Transaction!
 }
 
+enum TroveOperation {
+  openLoan
+  closeLoan
+  depositCollateral
+  withdrawCollateral
+  mint
+  repay
+  adjustLoan
+  accrueRewards
+  liquidateInNormalMode
+  liquidateInRecoveryMode
+  partiallyLiquidateInRecoveryMode
+  redeemCollateral
+}
+
 type TroveChange implements Change @entity {
   id: ID!
   sequenceNumber: Int!
   transaction: Transaction!
 
   trove: Trove!
-  operation: TroveOperation!
+  troveOperation: TroveOperation!
+  price: BigDecimal!
 
   collateralBefore: BigDecimal!
   collateralChange: BigDecimal!
@@ -97,4 +115,38 @@ type TroveChange implements Change @entity {
   debtBefore: BigDecimal!
   debtChange: BigDecimal!
   debtAfter: BigDecimal!
+
+  collateralRatioBefore: BigDecimal
+  collateralRatioAfter: BigDecimal
+}
+
+enum StabilityDepositOperation {
+  depositTokens
+  withdrawTokens
+  withdrawCollateralGain
+}
+
+type StabilityDepositChange implements Change @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+
+  stabilityDeposit: StabilityDeposit!
+  stabilityDepositOperation: StabilityDepositOperation!
+
+  depositedAmountBefore: BigDecimal!
+  depositedAmountChange: BigDecimal!
+  depositedAmountAfter: BigDecimal!
+
+  collateralGain: BigDecimal
+}
+
+type PriceChange implements Change @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+
+  priceBefore: BigDecimal!
+  priceChange: BigDecimal!
+  priceAfter: BigDecimal!
 }
