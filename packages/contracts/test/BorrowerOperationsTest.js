@@ -29,6 +29,7 @@ contract('BorrowerOperations', async accounts => {
   let functionCaller
   let borrowerOperations
 
+  let contracts
   let borrowerOpsTester
 
   before(async () => {
@@ -37,8 +38,8 @@ contract('BorrowerOperations', async accounts => {
   })
 
   beforeEach(async () => {
-    const contracts = await deployLiquity()
-    
+    contracts = await deployLiquity()
+
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManager = contracts.poolManager
@@ -59,7 +60,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
   it("addColl(): Increases the activePool ETH and raw ether balance by correct amount", async () => {
-  
+
     await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
 
     const activePool_ETH_Before = await activePool.getETH()
@@ -144,25 +145,32 @@ contract('BorrowerOperations', async accounts => {
   it("addColl(), active CDP: applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
     // --- SETUP ---
     // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether.  Withdraw 100/100/180 CLV
-    const withdrawal_A = th.getCompositeDebt(mv._100e18)
-    const withdrawal_B = th.getCompositeDebt(mv._100e18)
-    const withdrawal_C = th.getCompositeDebt(mv._180e18)
-    await borrowerOperations.openLoan(withdrawal_A, alice, { from: alice, value: mv._15_Ether })
-    await borrowerOperations.openLoan(withdrawal_B, bob, { from: bob, value: mv._5_Ether })
-    await borrowerOperations.openLoan(withdrawal_C, carol, { from: carol, value: mv._1_Ether })
+    const CLVwithdrawal_A = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_B = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_C = await th.getActualDebtFromComposite(mv._180e18, contracts)
+
+    console.log(`CLVwithdrawal_C ${CLVwithdrawal_C}`)
+    await borrowerOperations.openLoan(CLVwithdrawal_A, alice, { from: alice, value: mv._15_Ether })
+    await borrowerOperations.openLoan(CLVwithdrawal_B, bob, { from: bob, value: mv._5_Ether })
+    await borrowerOperations.openLoan(CLVwithdrawal_C, carol, { from: carol, value: mv._1_Ether })
 
     // --- TEST ---
 
     // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
     await priceFeed.setPrice('100000000000000000000');
 
-    // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    const liquidatedColl_C = th.getCollMinusGasComp(carol)
-    await cdpManager.liquidate(carol, { from: owner });
+    // Close Carol's CDP, liquidating her 1 ether and 180CLV.
+    const tx = await cdpManager.liquidate(carol, { from: owner });
+    const liquidatedDebt_C = th.getEmittedLiquidatedDebt(tx)
+    const liquidatedColl_C = th.getEmittedLiquidatedColl(tx)
+
     assert.isFalse(await sortedCDPs.contains(carol))
 
+    const L_ETH = await cdpManager.L_ETH()
+    const L_CLVDebt = await cdpManager.L_CLVDebt()
+
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
-    alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
+    const alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_Before = alice_rewardSnapshot_Before[0]
     const alice_CLVDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
 
@@ -179,10 +187,16 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.addColl(alice, alice, { from: alice, value: _5_Ether })
     await borrowerOperations.addColl(bob, bob, { from: bob, value: _1_Ether })
 
-    /* check that both alice and Bob have had pending rewards applied in addition to their top-ups. When Carol defaulted, 
+    /* Check that both alice and Bob have had pending rewards applied in addition to their top-ups. 
     
-
+    When Carol defaulted, her liquidated debt and coll was distributed to A and B in proportion to their 
+    collateral shares.  
     */
+    const expectedCollReward_A = liquidatedColl_C.mul(th.toBN(mv._15_Ether)).div(th.toBN(mv._20_Ether))
+    const expectedDebtReward_A = liquidatedDebt_C.mul(th.toBN(mv._15_Ether)).div(th.toBN(mv._20_Ether))
+    const expectedCollReward_B = liquidatedColl_C.mul(th.toBN(mv._5_Ether)).div(th.toBN(mv._20_Ether))
+    const expectedDebtReward_B = liquidatedDebt_C.mul(th.toBN(mv._5_Ether)).div(th.toBN(mv._20_Ether))
+
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const alice_CLVDebt_After = alice_CDP_After[0]
     const alice_Coll_After = alice_CDP_After[1]
@@ -191,16 +205,18 @@ contract('BorrowerOperations', async accounts => {
     const bob_CLVDebt_After = bob_CDP_After[0]
     const bob_Coll_After = bob_CDP_After[1]
 
-    // check coll and debt are within 1e-16 of expected values
-    assert.isAtMost(th.getDifference(alice_CLVDebt_After, '235000000000000000000'), 100)
-    assert.isAtMost(th.getDifference(alice_Coll_After, '20750000000000000000'), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebt_After, '145000000000000000000'), 100)
-    assert.isAtMost(th.getDifference(bob_Coll_After, '6250000000000000000'), 100)
 
-    /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be:
 
-    L_ETH(0): 0.05
-    L_CLVDebt(0): 9   */
+    // Expect Alice coll = 15 + 5  + reward
+    // Expect Bob coll = 5 + 1 + reward
+    assert.isAtMost(th.getDifference(alice_Coll_After, th.toBN(mv._20_Ether).add(expectedCollReward_A)), 100)
+    assert.isAtMost(th.getDifference(alice_CLVDebt_After, CLVwithdrawal_A.add(expectedDebtReward_A)), 100)
+
+    assert.isAtMost(th.getDifference(bob_Coll_After, th.toBN(mv._6_Ether).add(expectedCollReward_B)), 100)
+    assert.isAtMost(th.getDifference(bob_CLVDebt_After, CLVwithdrawal_B.add(expectedDebtReward_B)), 100)
+
+    /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be updated
+    to the latest values of L_ETH and L_CLVDebt */
     alice_rewardSnapshot_After = await cdpManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0]
     const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
@@ -209,10 +225,10 @@ contract('BorrowerOperations', async accounts => {
     const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0]
     const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
 
-    assert.isAtMost(th.getDifference(alice_ETHrewardSnapshot_After, '50000000000000000'), 100)
-    assert.isAtMost(th.getDifference(alice_CLVDebtRewardSnapshot_After, '9000000000000000000'), 100)
-    assert.isAtMost(th.getDifference(bob_ETHrewardSnapshot_After, '50000000000000000'), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot_After, '9000000000000000000'), 100)
+    assert.isAtMost(th.getDifference(alice_ETHrewardSnapshot_After, L_ETH), 100)
+    assert.isAtMost(th.getDifference(alice_CLVDebtRewardSnapshot_After, L_CLVDebt), 100)
+    assert.isAtMost(th.getDifference(bob_ETHrewardSnapshot_After, L_ETH), 100)
+    assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot_After, L_CLVDebt), 100)
   })
 
   // it("addColl(), active CDP: adds the right corrected stake after liquidations have occured", async () => {
@@ -238,9 +254,9 @@ contract('BorrowerOperations', async accounts => {
 
   //   /* Check that Dennis's recorded stake is the right corrected stake, less than his collateral. A corrected 
   //   stake is given by the formula: 
-    
+
   //   s = totalStakesSnapshot / totalCollateralSnapshot 
-    
+
   //   where snapshots are the values immediately after the last liquidation.  After Carol's liquidation, 
   //   the ETH from her CDP has now become the totalPendingETHReward. So:
 
@@ -249,43 +265,32 @@ contract('BorrowerOperations', async accounts => {
 
   //   Therefore, as Dennis adds 1 ether collateral, his corrected stake should be:  s = 2 * (20 / 25 ) = 1.6 ETH */
   //   const dennis_CDP = await cdpManager.CDPs(dennis)
-   
+
   //   const dennis_Stake = dennis_CDP[2]
   //   console.log(dennis_Stake.toString())
 
   //   assert.isAtMost(th.getDifference(dennis_Stake), 100)
   // })
 
-  it("addColl(): allows a user to top up an active CDP with additional collateral of value < $20 USD", async () => {
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1e17 })
-
-    // Tops up with only one wei
-    const txData = await borrowerOperations.addColl(alice, alice, { from: alice, value: '1' })
-
-    // check top-up was successful
-    txStatus = txData.receipt.status
-    assert.isTrue(txStatus)
-  })
-
   it("addColl(): non-trove owner can add collateral to another user's trove", async () => {
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._2_Ether })
-    await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._3_Ether})
+    await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._3_Ether })
     await borrowerOperations.openLoan(mv._300e18, carol, { from: carol, value: mv._5_Ether })
 
     const activeETH_Before = await activePool.getETH()
     assert.equal(activeETH_Before, mv._10_Ether)
 
     // Dennis adds collateral to Bob's trove
-    const tx = await borrowerOperations.addColl(bob, bob, {from: dennis, value: _5_Ether})
+    const tx = await borrowerOperations.addColl(bob, bob, { from: dennis, value: _5_Ether })
     assert.isTrue(tx.receipt.status)
 
     // Check Bob's collateral
     const bob_collateral = (await cdpManager.CDPs(bob))[1].toString()
-    assert.equal(bob_collateral, mv._8_Ether )
+    assert.equal(bob_collateral, mv._8_Ether)
 
     // Check Bob's stake
     const bob_Stake = (await cdpManager.CDPs(bob))[2].toString()
-    assert.equal(bob_Stake, mv._8_Ether )
+    assert.equal(bob_Stake, mv._8_Ether)
 
     // Check activePool ETH increased to 15 ETH
     const activeETH_After = await activePool.getETH()
@@ -294,23 +299,23 @@ contract('BorrowerOperations', async accounts => {
 
   it("addColl(): non-trove owner can add collateral to another user's trove", async () => {
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._2_Ether })
-    await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._3_Ether})
+    await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._3_Ether })
     await borrowerOperations.openLoan(mv._300e18, carol, { from: carol, value: mv._5_Ether })
 
     const activeETH_Before = await activePool.getETH()
     assert.equal(activeETH_Before, mv._10_Ether)
 
     // Carol adds collateral to Bob's trove
-    const tx = await borrowerOperations.addColl(bob, bob, {from: carol, value: _5_Ether})
+    const tx = await borrowerOperations.addColl(bob, bob, { from: carol, value: _5_Ether })
     assert.isTrue(tx.receipt.status)
 
     // Check Bob's collateral
     const bob_collateral = (await cdpManager.CDPs(bob))[1].toString()
-    assert.equal(bob_collateral, mv._8_Ether )
+    assert.equal(bob_collateral, mv._8_Ether)
 
     // Check Bob's stake
     const bob_Stake = (await cdpManager.CDPs(bob))[2].toString()
-    assert.equal(bob_Stake, mv._8_Ether )
+    assert.equal(bob_Stake, mv._8_Ether)
 
     // Check activePool ETH increased to 15 ETH
     const activeETH_After = await activePool.getETH()
@@ -319,12 +324,12 @@ contract('BorrowerOperations', async accounts => {
 
   it("addColl(), reverts if trove is non-existent or closed", async () => {
     // A, B open troves
-    await borrowerOperations.openLoan(0, alice, {from: alice, value: mv._1_Ether})
-    await borrowerOperations.openLoan(mv._100e18, bob, {from: bob, value: mv._1_Ether})
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
 
     // Carol attempts to add collateral to her non-existent trove
     try {
-      const txCarol = await borrowerOperations.addColl(carol, carol, {from: carol, value: mv._1_Ether})
+      const txCarol = await borrowerOperations.addColl(carol, carol, { from: carol, value: mv._1_Ether })
       assert.isFalse(txCarol.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
@@ -333,7 +338,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Alice attempts to add colalteral to Carol's non-existent trove
     try {
-      const txCarol_fromAlice = await borrowerOperations.addColl(carol, carol, {from: alice, value: mv._1_Ether})
+      const txCarol_fromAlice = await borrowerOperations.addColl(carol, carol, { from: alice, value: mv._1_Ether })
       assert.isFalse(txCarol_fromAlice.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
@@ -350,16 +355,16 @@ contract('BorrowerOperations', async accounts => {
 
     // Bob attempts to add collateral to his closed trove
     try {
-      const txBob = await borrowerOperations.addColl(bob, bob, {value: mv._1_Ether})
+      const txBob = await borrowerOperations.addColl(bob, bob, { value: mv._1_Ether })
       assert.isFalse(txBob.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
       assert.include(error.message, "CDP does not exist or is closed")
     }
 
-     // Alice attempts to add colalteral to Bob's closed trove
-     try {
-      const txBob_fromAlice = await borrowerOperations.addColl(bob, bob, {from: alice, value: mv._1_Ether})
+    // Alice attempts to add colalteral to Bob's closed trove
+    try {
+      const txBob_fromAlice = await borrowerOperations.addColl(bob, bob, { from: alice, value: mv._1_Ether })
       assert.isFalse(txBob_fromAlice.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
@@ -369,26 +374,13 @@ contract('BorrowerOperations', async accounts => {
 
   // --- withdrawColl() ---
 
-  it("withdrawColl(): reverts if dollar value of remaining collateral in CDP would be < $20 USD", async () => {
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: _100_Finney })
-
-    // Alice attempts to withdraw 1 wei. Check tx reverts
-    try {
-      const txData = await borrowerOperations.withdrawColl('1', alice, { from: alice })
-      assert.fail(txData)
-    } catch (err) {
-      assert.include(err.message, "revert")
-      assert.include(err.message, "Remaining collateral must have $USD value >= 20, or be zero")
-    }
-  })
-
   // reverts when calling address does not have active trove  
   it("withdrawColl(): reverts when calling address does not have active trove", async () => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
 
-    // Bob successfully withdraws
-    const txBob = await borrowerOperations.withdrawColl(mv._1_Ether, bob, { from: bob })
+    // Bob successfully withdraws some coll
+    const txBob = await borrowerOperations.withdrawColl(mv._1e17, bob, { from: bob })
     assert.isTrue(txBob.receipt.status)
 
     // Carol with no active trove attempts to withdraw
@@ -451,10 +443,12 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
 
-    await borrowerOperations.withdrawCLV(mv._50e18, alice, { from: alice })
-    await borrowerOperations.withdrawCLV(mv._50e18, bob, { from: bob })
+    const CLVwithdrawal_A = await await th.getActualDebtFromComposite(mv._50e18, contracts)
+    const CLVwithdrawal_B = await await th.getActualDebtFromComposite(mv._50e18, contracts)
+    await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
 
-    
+
     // Alice withdraws 0.45 ether, leaving 0.55 remaining. Her ICR = (0.55*100)/50 = 110%.
     const txAlice = await borrowerOperations.withdrawColl('450000000000000000', alice, { from: alice })
     assert.isTrue(txAlice.receipt.status)
@@ -495,6 +489,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
   it("withdrawColl(): allows a user to completely withdraw all collateral from their CDP", async () => {
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._100_Ether })
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _100_Finney })
 
     // Alice attempts to withdraw all collateral
@@ -506,7 +501,8 @@ contract('BorrowerOperations', async accounts => {
   })
 
   it("withdrawColl(): closes the CDP when the user withdraws all collateral", async () => {
-    // Open CDP 
+    // Open CDPs
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._100_Ether })
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _1_Ether })
 
     // Check CDP is active
@@ -619,14 +615,18 @@ contract('BorrowerOperations', async accounts => {
   it("withdrawColl(): applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
     // --- SETUP ---
     // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: _15_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: _5_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: carol, value: _1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._15_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._5_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: carol, value: mv._1_Ether })
 
     // Alice and Bob withdraw 100CLV, Carol withdraws 180CLV
-    await borrowerOperations.withdrawCLV('100000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('100000000000000000000', bob, { from: bob })
-    await borrowerOperations.withdrawCLV('180000000000000000000', carol, { from: carol })
+    const CLVwithdrawal_A = await await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_B = await await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_C = await await th.getActualDebtFromComposite(mv._180e18, contracts)
+
+    await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
+    await borrowerOperations.withdrawCLV(CLVwithdrawal_C, carol, { from: carol })
 
     // --- TEST ---
 
@@ -634,10 +634,14 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    await cdpManager.liquidate(carol, { from: owner });
+    const liquidationTx_C = await cdpManager.liquidate(carol, { from: owner });
+    const [liquidatedDebt_C, liquidatedColl_C, gasComp_C] = th.getEmittedLiquidationValues(liquidationTx_C)
+
+    const L_ETH = await cdpManager.L_ETH()
+    const L_CLVDebt = await cdpManager.L_CLVDebt()
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
-    alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
+    const alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_Before = alice_rewardSnapshot_Before[0]
     const alice_CLVDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
 
@@ -653,21 +657,16 @@ contract('BorrowerOperations', async accounts => {
     // Alice and Bob withdraw from their CDPs
     await borrowerOperations.withdrawColl(_5_Ether, alice, { from: alice })
     await borrowerOperations.withdrawColl(_1_Ether, bob, { from: bob })
-
-    /* check that both alice and Bob have had pending rewards applied in addition to their top-ups. When Carol defaulted, 
-    the reward-per-unit-staked due to her CDP liquidation was (1/20) ETH and (180/20) CLV Debt.
- 
-    Alice, with a stake of 15 ether, should have earned (15 * 1/20)  = 0.75 ETH, and (15 *180/20) = 135 CLV Debt.
+    /* Check that both alice and Bob have had pending rewards applied in addition to their top-ups. 
     
-    After her withdrawal of 5 ether:
-    - Her collateral should be (15 + 0.75 - 5) = 10.75 ETH.
-    - Her CLV debt should be (100 + 135) = 235 CLV.
- 
-    Bob, with a stake of 5 ether, should have earned (5 * 1/20)  = 0.25 ETH, and (5 *180/20) = 45 CLV.
-     
-    After his withdrawal of 1 ether:
-    - His collateral should be (5 + 0.25 - 1) = 4.25 ETH.
-    - His CLV debt should be (100 + 45) = 145 CLV.   */
+    When Carol defaulted, her liquidated debt and coll was distributed to A and B in proportion to their 
+    collateral shares.  
+    */
+    const expectedCollReward_A = liquidatedColl_C.mul(th.toBN(mv._15_Ether)).div(th.toBN(mv._20_Ether))
+    const expectedDebtReward_A = liquidatedDebt_C.mul(th.toBN(mv._15_Ether)).div(th.toBN(mv._20_Ether))
+    const expectedCollReward_B = liquidatedColl_C.mul(th.toBN(mv._5_Ether)).div(th.toBN(mv._20_Ether))
+    const expectedDebtReward_B = liquidatedDebt_C.mul(th.toBN(mv._5_Ether)).div(th.toBN(mv._20_Ether))
+
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const alice_CLVDebt_After = alice_CDP_After[0]
     const alice_Coll_After = alice_CDP_After[1]
@@ -676,16 +675,16 @@ contract('BorrowerOperations', async accounts => {
     const bob_CLVDebt_After = bob_CDP_After[0]
     const bob_Coll_After = bob_CDP_After[1]
 
-    assert.isAtMost(th.getDifference(alice_CLVDebt_After, '235000000000000000000'), 100)
-    assert.isAtMost(th.getDifference(alice_Coll_After, '10750000000000000000'), 100)
+    // Expect Alice coll = 15 - 5  + reward
+    // Expect Bob coll = 5 - 1 + reward
+    assert.isAtMost(th.getDifference(alice_Coll_After, th.toBN(mv._10_Ether).add(expectedCollReward_A)), 100)
+    assert.isAtMost(th.getDifference(alice_CLVDebt_After, CLVwithdrawal_A.add(expectedDebtReward_A)), 100)
 
-    assert.isAtMost(th.getDifference(bob_CLVDebt_After, '145000000000000000000'), 100)
-    assert.isAtMost(th.getDifference(bob_Coll_After, '4250000000000000000'), 100)
+    assert.isAtMost(th.getDifference(bob_Coll_After, th.toBN(mv._4_Ether).add(expectedCollReward_B)), 100)
+    assert.isAtMost(th.getDifference(bob_CLVDebt_After, CLVwithdrawal_B.add(expectedDebtReward_B)), 100)
 
-    /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be:
- 
-    L_ETH(0): 0.05
-    L_CLVDebt(0): 9   */
+    /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be updated
+    to the latest values of L_ETH and L_CLVDebt */
     alice_rewardSnapshot_After = await cdpManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0]
     const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
@@ -694,12 +693,11 @@ contract('BorrowerOperations', async accounts => {
     const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0]
     const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
 
-    assert.isAtMost(th.getDifference(alice_ETHrewardSnapshot_After, '50000000000000000'), 100)
-    assert.isAtMost(th.getDifference(alice_CLVDebtRewardSnapshot_After, '9000000000000000000'), 100)
-    assert.isAtMost(th.getDifference(bob_ETHrewardSnapshot_After, '50000000000000000'), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot_After, '9000000000000000000'), 100)
+    assert.isAtMost(th.getDifference(alice_ETHrewardSnapshot_After, L_ETH), 100)
+    assert.isAtMost(th.getDifference(alice_CLVDebtRewardSnapshot_After, L_CLVDebt), 100)
+    assert.isAtMost(th.getDifference(bob_ETHrewardSnapshot_After, L_ETH), 100)
+    assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot_After, L_CLVDebt), 100)
   })
-
 
   // --- withdrawCLV() ---
 
@@ -765,7 +763,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
 
-    const txAlice = await borrowerOperations.withdrawCLV("181000000000000000000", alice, { from: alice })
+    // Alice withdraws to a composite debt of 181 CLV
+    const CLVwithdrawal_A = await await th.getActualDebtFromComposite("181000000000000000000", contracts)
+    const txAlice = await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
     assert.isTrue(txAlice.receipt.status)
 
     const price = await priceFeed.getPrice()
@@ -793,11 +793,6 @@ contract('BorrowerOperations', async accounts => {
 
     const txBob = await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._3_Ether })
     const bobICR = await cdpManager.getCurrentICR(bob, price)
-
-    assert.isTrue(txAlice.receipt.status)
-    assert.isTrue(txBob.receipt.status)
-    assert.isTrue(aliceICR.eq(web3.utils.toBN('1500000000000000000')))
-    assert.isTrue(bobICR.eq(web3.utils.toBN('1500000000000000000')))
 
     const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -1091,27 +1086,6 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("adjustLoan(): reverts when ETH is withdrawn and the remaining collateral in the loan is non-zero but value < $20 USD", async () => {
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, carol, { from: carol, value: mv._1_Ether })
-
-    // Check Bob can make an adjustment that leaves $20 USD worth of ETH in his trove.
-    // 1ETH = 200 USD.  Bob withdraws 0.9 ETH, leaving (0.1 * 200) = 20 USD worth of ETH.
-    const txBob = await borrowerOperations.adjustLoan('900000000000000000', mv._1e18, bob, { from: bob })
-    assert.isTrue(txBob.receipt.status)
-
-    // Carol attempts an adjustment that leaves < $20 USD worth of ETH in her trove.
-    // 1ETH = 200 USD. Carol tries to withdraw 0.91 ETH, leaving (0.09 * 200) = 18 USD worth of ETH.
-    try {
-      const txCarol = await borrowerOperations.adjustLoan('910000000000000000', mv._1e18, carol, { from: carol })
-      assert.fail(txCarol)
-    } catch (err) {
-      assert.include(err.message, "revert")
-    }
-  })
-
-
   it("adjustLoan(): reverts when change would cause the ICR of the loan to fall below the MCR", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: mv._100_Ether })
 
@@ -1144,7 +1118,7 @@ contract('BorrowerOperations', async accounts => {
     const activePoolCollBefore = (await activePool.getETH()).toString()
 
     assert.equal(collBefore, mv._10_Ether)
-    assert.equal(activePoolCollBefore, '110000000000000000000' )
+    assert.equal(activePoolCollBefore, '110000000000000000000')
 
     // Alice adjusts loan. No coll change, and a debt increase (+50CLV)
     await borrowerOperations.adjustLoan(0, mv._50e18, alice, { from: alice, value: 0 })
@@ -1164,8 +1138,8 @@ contract('BorrowerOperations', async accounts => {
     const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
     const activePoolDebtBefore = (await activePool.getCLVDebt()).toString()
 
-    assert.equal(debtBefore, mv._100e18 )
-    assert.equal(activePoolDebtBefore, mv._100e18 )
+    assert.equal(debtBefore, mv._100e18)
+    assert.equal(activePoolDebtBefore, mv._100e18)
 
     // Alice adjusts loan. No coll change, and a debt increase (+50CLV)
     await borrowerOperations.adjustLoan(0, 0, alice, { from: alice, value: mv._1_Ether })
@@ -1551,6 +1525,59 @@ contract('BorrowerOperations', async accounts => {
     // check withdrawal was successful
   })
 
+  it("closeLoan(): zero's the troves reward snapshots", async () => {
+
+    // Dennis opens loan and transfers tokens to alice
+    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: mv._10_Ether })
+    await clvToken.transfer(alice, mv._100e18, {from: dennis})
+
+    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+
+    // Price drops
+    await priceFeed.setPrice(mv._100e18)
+
+    // Liquidate Bob
+    await cdpManager.liquidate(bob)
+    assert.isFalse(await sortedCDPs.contains(bob))
+
+    // Price bounces back
+    await priceFeed.setPrice(mv._200e18)
+
+    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+
+    // Price drops ...again
+    await priceFeed.setPrice(mv._100e18)
+   
+    // Get Alice's pending reward snapshots 
+    const L_ETH_A_Snapshot = (await cdpManager.rewardSnapshots(alice))[0]
+    const L_CLVDebt_A_Snapshot = (await cdpManager.rewardSnapshots(alice))[1]
+  
+    assert.isTrue(L_ETH_A_Snapshot.gt(th.toBN('0')))
+    assert.isTrue(L_CLVDebt_A_Snapshot.gt(th.toBN('0')))
+
+    // Liquidate Carol
+    await cdpManager.liquidate(carol)
+    assert.isFalse(await sortedCDPs.contains(carol))
+
+    // Get Alice's pending reward snapshots after Carol's liquidation. Check above 0
+    const L_ETH_Snapshot_A_AfterLiquidation = (await cdpManager.rewardSnapshots(alice))[0]
+    const L_CLVDebt_Snapshot_A_AfterLiquidation  = (await cdpManager.rewardSnapshots(alice))[1]
+  
+    assert.isTrue(L_ETH_Snapshot_A_AfterLiquidation.gt(th.toBN('0')))
+    assert.isTrue(L_CLVDebt_Snapshot_A_AfterLiquidation.gt(th.toBN('0')))
+
+    // Alice closes loan
+    await borrowerOperations.closeLoan({ from: alice })
+
+    // Check Alice's pending reward snapshots are zero
+    const L_ETH_Snapshot_A_afterAliceCloses = (await cdpManager.rewardSnapshots(alice))[0]
+    const L_CLVDebt_Snapshot_A_afterAliceCloses  = (await cdpManager.rewardSnapshots(alice))[1]
+
+    assert.equal(L_ETH_Snapshot_A_afterAliceCloses, '0')
+    assert.equal(L_CLVDebt_Snapshot_A_afterAliceCloses, '0')
+  })
+
   it("closeLoan(): closes the CDP", async () => {
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._10_Ether })
 
@@ -1670,7 +1697,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(alice_CLVBalance_After, 0)
   })
 
-  it("closeLoan(): applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
+  it("closeLoan(): applies pending rewards", async () => {
     // --- SETUP ---
     // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _15_Ether })
@@ -1678,9 +1705,12 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _1_Ether })
 
     // Alice and Bob withdraw 100CLV, Carol withdraws 180CLV
-    await borrowerOperations.withdrawCLV('100000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('100000000000000000000', bob, { from: bob })
-    await borrowerOperations.withdrawCLV('180000000000000000000', carol, { from: carol })
+    const CLVwithdrawal_A = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_B = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const CLVwithdrawal_C = await th.getActualDebtFromComposite(mv._180e18, contracts)
+    await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
+    await borrowerOperations.withdrawCLV(CLVwithdrawal_C, carol, { from: carol })
 
     // --- TEST ---
 
@@ -1689,12 +1719,13 @@ contract('BorrowerOperations', async accounts => {
     const price = await priceFeed.getPrice()
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV. Alice and Bob earn rewards.
-    await cdpManager.liquidate(carol, { from: owner });
-
+    const liquidationTx = await cdpManager.liquidate(carol, { from: owner });
+    const [liquidatedDebt_C, liquidatedColl_C, gasComp_C] = th.getEmittedLiquidationValues(liquidationTx)
     // Dennis opens a new CDP with 10 Ether, withdraws CLV and sends 135 CLV to Alice, and 45 CLV to Bob.
 
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._100_Ether })
-    await borrowerOperations.withdrawCLV(mv._200e18, dennis, { from: dennis })
+    const CLVwithdrawal_D = await await th.getActualDebtFromComposite(mv._200e18, contracts)
+    await borrowerOperations.withdrawCLV(CLVwithdrawal_D, dennis, { from: dennis })
     await clvToken.transfer(alice, '135000000000000000000', { from: dennis })
     await clvToken.transfer(bob, '45000000000000000000', { from: dennis })
 
@@ -1712,41 +1743,35 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(bob_ETHrewardSnapshot_Before, 0)
     assert.equal(bob_CLVDebtRewardSnapshot_Before, 0)
 
-    /* Check that system rewards-per-unit-staked are correct. When Carol defaulted, 
-    the reward-per-unit-staked due to her CDP liquidation was (1/20) = 0.05 ETH and (180/20) = 9 CLV Debt. */
     const L_ETH = await cdpManager.L_ETH()
     const L_CLVDebt = await cdpManager.L_CLVDebt()
-
-    assert.isAtMost(th.getDifference(L_ETH, '50000000000000000'), 100)
-    assert.isAtMost(th.getDifference(L_CLVDebt, '9000000000000000000'), 100)
 
     const defaultPool_ETH = await defaultPool.getETH()
     const defaultPool_CLVDebt = await defaultPool.getCLVDebt()
 
-    // Carol's liquidated coll (1 ETH) and debt (180 CLV) should have entered the Default Pool
-    assert.isAtMost(th.getDifference(defaultPool_ETH, _1_Ether), 100)
-    assert.isAtMost(th.getDifference(defaultPool_CLVDebt, mv._180e18), 100)
+    console.log(`defaultPool_ETH: ${defaultPool_ETH}`)
+    console.log(`defaultPool_CLVDebt: ${defaultPool_CLVDebt}`)
+    console.log(`CLVwithdrawal_C: ${CLVwithdrawal_C}`)
 
-    /* Close Alice's loan.
-    
-    Alice, with a stake of 15 ether, should have earned (15 * 1/20)  = 0.75 ETH, and (15 *180/20) = 135 CLV Debt.
-    These rewards are applied when she closes her loan. 
-    
-    Default Pool coll should be (1-0.75) = 0.25 ETH, and DefaultPool debt should be (180-135) = 45 CLV.
-    // check L_ETH and L_CLV reduce by Alice's reward */
+    // Carol's liquidated coll (1 ETH) and drawn debt should have entered the Default Pool
+    assert.isAtMost(th.getDifference(defaultPool_ETH, liquidatedColl_C), 100)
+    assert.isAtMost(th.getDifference(defaultPool_CLVDebt, liquidatedDebt_C), 100)
+
+    // Close Alice's loan. Alice's pending rewards should be removed from the DefaultPool when she close.
     await borrowerOperations.closeLoan({ from: alice })
+
+    const expectedCollReward_A = liquidatedColl_C.mul(th.toBN(mv._15_Ether)).div(th.toBN(mv._20_Ether))
+    const expectedDebtReward_A = liquidatedDebt_C.mul(th.toBN(mv._15_Ether)).div(th.toBN(mv._20_Ether))
 
     const defaultPool_ETH_afterAliceCloses = await defaultPool.getETH()
     const defaultPool_CLVDebt_afterAliceCloses = await defaultPool.getCLVDebt()
 
-    assert.isAtMost(th.getDifference(defaultPool_ETH_afterAliceCloses, 250000000000000000), 100)
-    assert.isAtMost(th.getDifference(defaultPool_CLVDebt_afterAliceCloses, 45000000000000000000), 100)
+    assert.isAtMost(th.getDifference(defaultPool_ETH_afterAliceCloses, 
+                                    defaultPool_ETH.sub(expectedCollReward_A)), 100)
+    assert.isAtMost(th.getDifference(defaultPool_CLVDebt_afterAliceCloses, 
+                                    defaultPool_CLVDebt.sub(expectedDebtReward_A)), 100)
 
-    /* Close Bob's loan.
-
-    Bob, with a stake of 5 ether, should have earned (5 * 1/20)  = 0.25 ETH, and (5 *180/20) = 45 CLV.
-    DefaultPool coll should reduce by 0.25 ETH to 0, and DefaultPool debt should reduce by 45, to 0. */
-
+    // Close Bob's loan. Expect DefaultPool coll and debt to drop to 0, since closing pulls his rewards out.
     await borrowerOperations.closeLoan({ from: bob })
 
     const defaultPool_ETH_afterBobCloses = await defaultPool.getETH()
@@ -1801,12 +1826,11 @@ contract('BorrowerOperations', async accounts => {
     // Alice creates trove with 3 ETH / 200 CLV, and 150% ICR.  System TCR = 150%.
     const txAlice = await borrowerOperations.openLoan(mv._200e18, alice, { from: alice, value: mv._3_Ether })
     const price = await priceFeed.getPrice()
-    const aliceICR = await cdpManager.getCurrentICR(alice, price)
 
-    assert.isTrue(txAlice.receipt.status)
-    assert.isTrue(aliceICR.eq(web3.utils.toBN('1500000000000000000')))
+    const TCR = await cdpManager.getTCR()
+    assert.equal(TCR, '1500000000000000000')
 
-    // Bob attempts to open a loan with coll = 1 ETH, debt = 201 CLV. At ETH:USD price = 1, his ICR = 300 / 201 =   149.25%`
+    // Bob attempts to open a loan with coll = 1 ETH, actual debt = 201 CLV. At ETH:USD price = 1, his ICR = 300 / 201 =   149.25%`
 
     // System TCR would be: ((3+3) * 100 ) / (200+201) = 600/401 = 149.62%, i.e. below CCR of 150%.
     try {
@@ -1883,7 +1907,7 @@ contract('BorrowerOperations', async accounts => {
       assert.isFalse(txB_2.receipt.status)
     } catch (err) {
       assert.include(err.message, 'revert')
-    } 
+    }
   })
 
 
@@ -2011,16 +2035,19 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _1_Ether })
 
     // Alice withdraws 100CLV, Carol withdraws 180CLV
-    await borrowerOperations.withdrawCLV('100000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('180000000000000000000', carol, { from: carol })
+    const A_CLVWithdrawal = await th.getActualDebtFromComposite(mv._100e18, contracts)
+    const C_CLVWithdrawal = await th.getActualDebtFromComposite(mv._180e18, contracts)
+    await borrowerOperations.withdrawCLV(A_CLVWithdrawal, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(C_CLVWithdrawal, carol, { from: carol })
 
     // --- TEST ---
 
     // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
-    await priceFeed.setPrice('100000000000000000000');
+    await priceFeed.setPrice(mv._100e18);
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    await cdpManager.liquidate(carol, { from: owner });
+    const liquidationTx = await cdpManager.liquidate(carol, { from: owner });
+    const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
     /* with total stakes = 10 ether, after liquidation, L_ETH should equal 1/10 ether per-ether-staked,
      and L_CLV should equal 18 CLV per-ether-staked. */
@@ -2028,8 +2055,8 @@ contract('BorrowerOperations', async accounts => {
     const L_ETH = await cdpManager.L_ETH()
     const L_CLV = await cdpManager.L_CLVDebt()
 
-    assert.isAtMost(th.getDifference(L_ETH, '100000000000000000'), 100)
-    assert.isAtMost(th.getDifference(L_CLV, '18000000000000000000'), 100)
+    assert.isAtMost(th.getDifference(L_ETH, liquidatedColl.div(th.toBN('10'))), 100)
+    assert.isAtMost(th.getDifference(L_CLV, liquidatedDebt.div(th.toBN('10'))), 100)
 
     // Bob opens loan
     await borrowerOperations.openLoan('50000000000000000000', bob, { from: bob, value: _1_Ether })
@@ -2043,22 +2070,9 @@ contract('BorrowerOperations', async accounts => {
     assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot, L_CLV), 100)
   })
 
-  it("openLoan(): reverts if user tries to open a new CDP with collateral of value < $20 USD", async () => {
-    /* Alice adds 0.0999 ether. At a price of 200 USD per ETH, 
-    her collateral value is < $20 USD.  So her tx should revert */
-    const coll = '99999999999999999'
-
-    try {
-      const txData = await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: coll })
-      assert.fail(txData)
-    } catch (err) {
-      assert.include(err.message, "revert")
-      assert.include(err.message, "BorrowerOps: Collateral must have $USD value >= 20")
-    }
-  })
-
   it("openLoan(): allows a user to open a CDP, then close it, then re-open it", async () => {
-    // Open CDP 
+    // Open CDPs
+    await borrowerOperations.openLoan('0', whale, { from: whale, value: mv._100_Ether })
     await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: _1_Ether })
 
     // Check CDP is active
@@ -2129,293 +2143,384 @@ contract('BorrowerOperations', async accounts => {
   //  --- getNewICRFromTroveChange ---
 
   describe("getNewICRFromTroveChange() returns the correct ICR", async () => {
-    
+
 
     // 0, 0
-    it("collChange = 0, debtChange = 0", async () => { 
+    it("collChange = 0, debtChange = 0", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = mv._100e18
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = 0
       const debtChange = 0
-    
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
     // 0, +ve
-    it("collChange = 0, debtChange is positive", async () => { 
+    it("collChange = 0, debtChange is positive", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = mv._100e18
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = 0
       const debtChange = mv._50e18
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.isAtMost(th.getDifference(newICR, '1333333333333333333'), 100)
     })
 
     // 0, -ve
-    it("collChange = 0, debtChange is negative", async () => { 
+    it("collChange = 0, debtChange is negative", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = mv._100e18
+      const initialDebt = await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = 0
       const debtChange = mv.negative_50e18
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '4000000000000000000')
     })
 
     // +ve, 0
-    it("collChange is positive, debtChange is 0", async () => { 
+    it("collChange is positive, debtChange is 0", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = mv._100e18
+      const initialDebt = await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv._1_Ether
       const debtChange = 0
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '4000000000000000000')
     })
 
     // -ve, 0
-    it("collChange is negative, debtChange is 0", async () => { 
+    it("collChange is negative, debtChange is 0", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = mv._100e18
+      const initialDebt = await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv.negative_5e17
       const debtChange = 0
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '1000000000000000000')
     })
 
     // -ve, -ve
-    it("collChange is negative, debtChange is negative", async () => { 
+    it("collChange is negative, debtChange is negative", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = mv._100e18
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv.negative_5e17
       const debtChange = mv.negative_50e18
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
     // +ve, +ve 
-    it("collChange is positive, debtChange is positive", async () => { 
+    it("collChange is positive, debtChange is positive", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = mv._100e18
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv._1_Ether
       const debtChange = mv._100e18
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
     // +ve, -ve
-    it("collChange is positive, debtChange is negative", async () => { 
+    it("collChange is positive, debtChange is negative", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = mv._100e18
+      const initialDebt =  await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv._1_Ether
       const debtChange = mv.negative_50e18
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '8000000000000000000')
     })
 
     // -ve, +ve
-    it("collChange is negative, debtChange is positive", async () => { 
+    it("collChange is negative, debtChange is positive", async () => {
       price = await priceFeed.getPrice()
       const initialColl = mv._1_Ether
-      const initialDebt = mv._100e18
+      const initialDebt = await th.getActualDebtFromComposite(mv._100e18, contracts)
       const collChange = mv.negative_5e17
       const debtChange = mv._100e18
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price )).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '500000000000000000')
     })
   })
 
-   //  --- getNewICRFromTroveChange ---
+  //  --- getNewICRFromTroveChange ---
 
-   describe("getNewTCRFromTroveChange() returns the correct TCR", async () => {
+  describe("getNewTCRFromTroveChange() returns the correct TCR", async () => {
 
     // 0, 0
-    it("collChange = 0, debtChange = 0", async () => { 
+    it("collChange = 0, debtChange = 0", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      const troveColl = th.toBN(mv._1_Ether)
+      const troveDebt = th.toBN(mv._100e18)
+      await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
+      await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
       await priceFeed.setPrice(mv._100e18)
-      await cdpManager.liquidate(bob)
+
+      const liquidationTx = await cdpManager.liquidate(bob)
+      assert.isFalse(await sortedCDPs.contains(bob))
+
+      const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+      
       await priceFeed.setPrice(mv._200e18)
       const price = await priceFeed.getPrice()
+
 
       // --- TEST ---
       const collChange = 0
       const debtChange = 0
       const newTCR = await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)
 
-     assert.equal(newTCR, '2000000000000000000')
+      const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
+                          .div(troveDebt.add(liquidatedDebt))
+
+      console.log(`newTCR: ${newTCR}`)
+      console.log(`expectedTCR: ${expectedTCR}`)
+
+      assert.isTrue(newTCR.eq(expectedTCR))
     })
 
     // 0, +ve
-    it("collChange = 0, debtChange is positive", async () => { 
+    it("collChange = 0, debtChange is positive", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      const troveColl = th.toBN(mv._1_Ether)
+      const troveDebt = th.toBN(mv._100e18)
+      await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
+      await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
       await priceFeed.setPrice(mv._100e18)
-      await cdpManager.liquidate(bob)
+
+      const liquidationTx = await cdpManager.liquidate(bob)
+      assert.isFalse(await sortedCDPs.contains(bob))
+
+      const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+      
       await priceFeed.setPrice(mv._200e18)
       const price = await priceFeed.getPrice()
 
       // --- TEST ---
       const collChange = 0
       const debtChange = mv._200e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
 
-     assert.equal(newTCR, '1000000000000000000')
+      const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
+      .div(troveDebt.add(liquidatedDebt).add(th.toBN(debtChange)))
+
+      assert.isTrue(newTCR.eq(expectedTCR))
     })
 
     // 0, -ve
-    it("collChange = 0, debtChange is negative", async () => { 
+    it("collChange = 0, debtChange is negative", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      const troveColl = th.toBN(mv._1_Ether)
+      const troveDebt = th.toBN(mv._100e18)
+      await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
+      await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
       await priceFeed.setPrice(mv._100e18)
-      await cdpManager.liquidate(bob)
+
+      const liquidationTx = await cdpManager.liquidate(bob)
+      assert.isFalse(await sortedCDPs.contains(bob))
+
+      const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+      
       await priceFeed.setPrice(mv._200e18)
       const price = await priceFeed.getPrice()
-
       // --- TEST ---
       const collChange = 0
       const debtChange = mv.negative_100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
 
-     assert.equal(newTCR, '4000000000000000000')
+      const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
+      .div(troveDebt.add(liquidatedDebt).sub(th.toBN(mv._100e18)))
+
+      assert.isTrue(newTCR.eq(expectedTCR))
     })
 
     // +ve, 0
-    it("collChange is positive, debtChange is 0", async () => { 
+    it("collChange is positive, debtChange is 0", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      const troveColl = th.toBN(mv._1_Ether)
+      const troveDebt = th.toBN(mv._100e18)
+      await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
+      await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
       await priceFeed.setPrice(mv._100e18)
-      await cdpManager.liquidate(bob)
+
+      const liquidationTx = await cdpManager.liquidate(bob)
+      assert.isFalse(await sortedCDPs.contains(bob))
+
+      const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+      
       await priceFeed.setPrice(mv._200e18)
       const price = await priceFeed.getPrice()
-
       // --- TEST ---
       const collChange = mv._2_Ether
       const debtChange = 0
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
 
-     assert.equal(newTCR, '4000000000000000000')
+      const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(collChange))).mul(price)
+      .div(troveDebt.add(liquidatedDebt))
+
+      assert.isTrue(newTCR.eq(expectedTCR))
     })
 
     // -ve, 0
-    it("collChange is negative, debtChange is 0", async () => { 
+    it("collChange is negative, debtChange is 0", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      const troveColl = th.toBN(mv._1_Ether)
+      const troveDebt = th.toBN(mv._100e18)
+      await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
+      await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
       await priceFeed.setPrice(mv._100e18)
-      await cdpManager.liquidate(bob)
+
+      const liquidationTx = await cdpManager.liquidate(bob)
+      assert.isFalse(await sortedCDPs.contains(bob))
+
+      const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+      
       await priceFeed.setPrice(mv._200e18)
       const price = await priceFeed.getPrice()
 
       // --- TEST ---
       const collChange = mv.negative_1e18
       const debtChange = 0
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
 
-     assert.equal(newTCR, '1000000000000000000')
+      const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(mv._1_Ether))).mul(price)
+                          .div(troveDebt.add(liquidatedDebt))
+
+      assert.isTrue(newTCR.eq(expectedTCR))
     })
 
     // -ve, -ve
-    it("collChange is negative, debtChange is negative", async () => { 
+    it("collChange is negative, debtChange is negative", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      const troveColl = th.toBN(mv._1_Ether)
+      const troveDebt = th.toBN(mv._100e18)
+      await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
+      await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
       await priceFeed.setPrice(mv._100e18)
-      await cdpManager.liquidate(bob)
+
+      const liquidationTx = await cdpManager.liquidate(bob)
+      assert.isFalse(await sortedCDPs.contains(bob))
+
+      const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+      
       await priceFeed.setPrice(mv._200e18)
       const price = await priceFeed.getPrice()
 
       // --- TEST ---
       const collChange = mv.negative_1e18
       const debtChange = mv.negative_100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
 
-     assert.equal(newTCR, '2000000000000000000')
+      const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(mv._1_Ether))).mul(price)
+      .div(troveDebt.add(liquidatedDebt).sub(th.toBN(mv._100e18))) 
+
+      assert.isTrue(newTCR.eq(expectedTCR))
     })
 
     // +ve, +ve 
-    it("collChange is positive, debtChange is positive", async () => { 
+    it("collChange is positive, debtChange is positive", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      const troveColl = th.toBN(mv._1_Ether)
+      const troveDebt = th.toBN(mv._100e18)
+      await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
+      await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
       await priceFeed.setPrice(mv._100e18)
-      await cdpManager.liquidate(bob)
+
+      const liquidationTx = await cdpManager.liquidate(bob)
+      assert.isFalse(await sortedCDPs.contains(bob))
+
+      const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+      
       await priceFeed.setPrice(mv._200e18)
       const price = await priceFeed.getPrice()
 
       // --- TEST ---
       const collChange = mv._1_Ether
       const debtChange = mv._100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
 
-      assert.equal(newTCR, '2000000000000000000')
+      const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(mv._1_Ether))).mul(price)
+                          .div(troveDebt.add(liquidatedDebt).add(th.toBN(mv._100e18))) 
+
+      assert.isTrue(newTCR.eq(expectedTCR))
     })
 
     // +ve, -ve
-    it("collChange is positive, debtChange is negative", async () => { 
+    it("collChange is positive, debtChange is negative", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      const troveColl = th.toBN(mv._1_Ether)
+      const troveDebt = th.toBN(mv._100e18)
+      await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
+      await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
       await priceFeed.setPrice(mv._100e18)
-      await cdpManager.liquidate(bob)
+
+      const liquidationTx = await cdpManager.liquidate(bob)
+      assert.isFalse(await sortedCDPs.contains(bob))
+
+      const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+      
       await priceFeed.setPrice(mv._200e18)
       const price = await priceFeed.getPrice()
 
       // --- TEST ---
       const collChange = mv._1_Ether
       const debtChange = mv.negative_100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
 
-      assert.equal(newTCR, '6000000000000000000')
+      const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(mv._1_Ether))).mul(price)
+                          .div(troveDebt.add(liquidatedDebt).sub(th.toBN(mv._100e18))) 
+
+      assert.isTrue(newTCR.eq(expectedTCR))
     })
 
     // -ve, +ve
-    it("collChange is negative, debtChange is positive", async () => { 
+    it("collChange is negative, debtChange is positive", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-      await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+      const troveColl = th.toBN(mv._1_Ether)
+      const troveDebt = th.toBN(mv._100e18)
+      await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
+      await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
       await priceFeed.setPrice(mv._100e18)
-      await cdpManager.liquidate(bob)
+
+      const liquidationTx = await cdpManager.liquidate(bob)
+      assert.isFalse(await sortedCDPs.contains(bob))
+
+      const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+      
       await priceFeed.setPrice(mv._200e18)
       const price = await priceFeed.getPrice()
 
       // --- TEST ---
       const collChange = mv.negative_1e18
       const debtChange = mv._200e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)).toString()
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
 
-      assert.equal(newTCR, '500000000000000000')
+      const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(mv._1e18))).mul(price)
+                          .div(troveDebt.add(liquidatedDebt).add(th.toBN(debtChange)))  
+  
+      assert.isTrue(newTCR.eq(expectedTCR))
     })
-   })
-
+  })
 })
 
 

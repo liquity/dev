@@ -13,7 +13,7 @@ contract('CDPManager', async accounts => {
 
   const _18_zeros = '000000000000000000'
 
-  const [owner, alice, bob, carol, dennis, erin] = accounts;
+  const [owner, alice, bob, carol, dennis, erin, whale] = accounts;
 
   let priceFeed
   let clvToken
@@ -55,7 +55,6 @@ contract('CDPManager', async accounts => {
     await connectContracts(contracts, contractAddresses)
   })
 
-  // true for addresses added returns true
   it('contains(): returns true for addresses that have opened troves', async () => {
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._5_Ether })
@@ -87,6 +86,8 @@ contract('CDPManager', async accounts => {
   })
 
   it('contains(): returns false for addresses that opened and then closed a trove', async () => {
+    await borrowerOperations.openLoan('0', whale, { from: whale, value: mv._100_Ether })
+    
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._5_Ether })
     await borrowerOperations.openLoan('98908089089', carol, { from: carol, value: '23082308092385098009809' })
@@ -108,7 +109,9 @@ contract('CDPManager', async accounts => {
   })
 
   // true for addresses that opened -> closed -> opened a trove
-  it('contains(): returns false for addresses that opened, closed and then re-opened a trove', async () => {
+  it('contains(): returns true for addresses that opened, closed and then re-opened a trove', async () => {
+    await borrowerOperations.openLoan('0', whale, { from: whale, value: mv._100_Ether })
+    
     await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._5_Ether })
     await borrowerOperations.openLoan('98908089089', carol, { from: carol, value: '23082308092385098009809' })

@@ -293,18 +293,13 @@ class TestHelper {
 
   // Given a composite debt, returns the actual debt  - i.e. subtracts the virtual debt.
   // Virtual debt = 10 CLV.
-  static getActualDebtFromComposite(compositeDebt) {
-    const virtualDebt = MoneyValues._10e18BN
-
-    const issuedDebt = web3.utils.toBN(compositeDebt).sub(virtualDebt)
-    // return issuedDebt
-
-    // alternatively, for 0 gas comp:
-    return this.toBN(compositeDebt)
+  static async getActualDebtFromComposite(compositeDebt, contracts) {
+    const issuedDebt = await contracts.cdpManager.getActualDebtFromComposite(compositeDebt)
+    return issuedDebt
   }
 
   // Get's total collateral minus total gas comp, for a series of troves.
-  static async getTotalCollMinusTotalGasComp(troveList, contracts) {
+  static async getExpectedTotalCollMinusTotalGasComp(troveList, contracts) {
     let totalCollRemainder = web3.utils.toBN('0')
 
     for (const trove of troveList) {
@@ -315,25 +310,44 @@ class TestHelper {
     return totalCollRemainder
   }
 
-    // Gas comp for a trove given by max{ $10WorthOfETH, 0.5%OfCollateral }
-  static async getCollMinusGasComp (trove, contracts) {
-    const price = await contracts.priceFeed.getPrice()
-    const _$10WorthOfETH = MoneyValues._10e18BN.mul(MoneyValues._1e18BN).div(web3.utils.toBN(price))
+  static getEmittedLiquidationValues(liquidationTx) {
+    for (let i = 0; i< liquidationTx.logs.length; i++) {
+      if (liquidationTx.logs[i].event === "Liquidation") { 
+        const liquidatedDebt = liquidationTx.logs[i].args[0]
+        const liquidatedColl = liquidationTx.logs[i].args[1]
+        const gasComp = liquidationTx.logs[i].args[2]
 
-    const coll = (await contracts.cdpManager.CDPs(account))[1]
-    const pendingCollReward = await contracts.cdpManager.getPendingETHReward(account)
-    const entireColl = coll.add(pendingCollReward)
+        return [ liquidatedDebt, liquidatedColl, gasComp ]
+      }
+    }
 
-    const _0pt5PercentColl = entireColl.div(web3.utils.toBN('200'))
-    // const gasComp = BN.max(_$10WorthOfETH, _0pt5PercentColl)
-    
-    // Alternatively, for 0 gas comp: 
-    const gasComp = this.toBN('0')
-
-    const remainingColl = entireColl.sub(gasComp)
-
-    return remainingColl
+    throw("The transaction logs do not contain a liquidation event")
   }
+
+
+  static getEmittedLiquidatedDebt(liquidationTx) {
+    return this.getLiquidationEventArg(liquidationTx, 0)  // LiquidatedDebt is position 0 in the Liquidation event
+  }
+    
+  static  getEmittedLiquidatedColl(liquidationTx) {
+    return this.getLiquidationEventArg(liquidationTx, 1) // LiquidatedColl is position 1 in the Liquidation event
+  }
+
+  static getEmittedGasComp(liquidationTx) {
+    return this.getLiquidationEventArg(liquidationTx, 2) // GasComp is position 2 in the Liquidation event
+  }
+
+  static getLiquidationEventArg(liquidationTx, arg) {
+    for (let i = 0; i< liquidationTx.logs.length; i++) {
+      if (liquidationTx.logs[i].event === "Liquidation") { 
+        return liquidationTx.logs[i].args[arg] 
+      }
+    }
+
+    throw("The transaction logs do not contain a liquidation event")
+  }
+
+
 
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)

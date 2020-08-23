@@ -14,10 +14,6 @@ import "./Dependencies/console.sol";
 
 contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
-    uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
-    uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.
-
     // --- Connected contract declarations ---
 
     address public borrowerOperationsAddress;
@@ -257,7 +253,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- CDP Liquidation functions ---
 
-    // Closes the CDP of the specified user if its individual collateral ratio is lower than the minimum collateral ratio.
+    /* Single liquidation function. Closes the CDP of the specified user if its individual 
+    collateral ratio is lower than the minimum collateral ratio. */
     function liquidate(address _user) external {
         _requireCDPisActive(_user);
 
@@ -292,6 +289,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         (bool success, ) = _msgSender().call.value(V.gasCompensation)("");
         _requireETHSentSuccessfully(success);
     }
+
+    // --- Inner liquidation functions ---
 
     function _liquidateNormalMode(address _user, uint _ICR, uint _price, uint _CLVInPool) internal
     returns (LiquidationValues memory V)
@@ -440,7 +439,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    // Closes a maximum number of n multiple under-collateralized CDPs, starting from the one with the lowest collateral ratio
+    /* Liquidate a sequence of troves. Closes a maximum number of n under-collateralized CDPs, 
+    starting from the one with the lowest collateral ratio in the system */
     function liquidateCDPs(uint _n) external {
         LocalVariables_OuterLiquidationFunction memory L;
 
@@ -553,6 +553,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
+    // Attempt to liquidate a custom set of troves provided by the caller 
     function batchLiquidateTroves(address[] calldata _troveArray) external {
         require(_troveArray.length != 0, "CDPManager: Calldata address array must not be empty");
         
@@ -653,6 +654,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             }
         }
     } 
+
+    // --- Liquidation helper functions ---
 
     function _addLiquidationValuesToTotals(LiquidationTotals memory T1, LiquidationValues memory V) 
     internal pure returns(LiquidationTotals memory T2) {
@@ -943,8 +946,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
     
     function _hasPendingRewards(address _user) internal view returns (bool) {
-        /* A CDP has pending rewards if its snapshot is less than the current rewards per-unit-staked sum.
-        If so, this indicates that rewards have occured since the snapshot was made, and the user therefore has
+        /* A CDP has pending rewards if its snapshot is less than the current rewards per-unit-staked sum:
+        this indicates that rewards have occured since the snapshot was made, and the user therefore has
         pending rewards */
         return (rewardSnapshots[_user].ETH < L_ETH);
     }
@@ -957,13 +960,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         debt = CDPs[_user].debt;
         coll = CDPs[_user].coll;
 
-        if (_hasPendingRewards(_user)) {
-            pendingCLVDebtReward = _computePendingCLVDebtReward(_user);
-            pendingETHReward = _computePendingETHReward(_user);
+        pendingCLVDebtReward = _computePendingCLVDebtReward(_user);
+        pendingETHReward = _computePendingETHReward(_user);
 
-            debt = debt.add(pendingCLVDebtReward);
-            coll = coll.add(pendingETHReward);
-        }
+        debt = debt.add(pendingCLVDebtReward);
+        coll = coll.add(pendingETHReward);
     }
 
     function removeStake(address _user) external onlyBorrowerOperations {
@@ -991,6 +992,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return newStake;
     }
 
+    /* Calculate a new stake based on the snapshots of the totalStakes and totalCollateral  
+    taken at the last liquidation */
     function _computeNewStake(uint _coll) internal view returns (uint) {
         uint stake;
         if (totalCollateralSnapshot == 0) {
@@ -1005,9 +1008,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (_debt == 0) { return; }
         
         if (totalStakes > 0) {
-            // Add distributed coll and debt rewards-per-unit-staked to the running totals.
-            
-            // Division with correction
+            /* Add distributed coll and debt rewards-per-unit-staked to the running totals. 
+            Division uses error correction. */
             uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
             uint CLVDebtNumerator = _debt.mul(1e18).add(lastCLVDebtError_Redistribution);
 
@@ -1102,8 +1104,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return _checkRecoveryMode();
     }
 
-    // Check whether or not the system *would be* in Recovery Mode, given an ETH:USD price and the total system coll and debt.
-    function _checkPotentialRecoveryMode(uint _entireSystemColl, uint _entireSystemDebt, uint _price) internal pure returns (bool) {
+    /* Check whether or not the system *would be* in Recovery Mode, 
+    given an ETH:USD price, and total system coll and debt. */
+    function _checkPotentialRecoveryMode(uint _entireSystemColl, uint _entireSystemDebt, uint _price) 
+    internal 
+    pure returns (bool) 
+    {
         uint TCR = Math._computeCR(_entireSystemColl, _entireSystemDebt, _price); 
         if (TCR < CCR) {
             return true;

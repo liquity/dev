@@ -4,8 +4,9 @@ import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
-/* Stores the CLV user data: token balances and spending allowances.Functions are setters, 
-addition and subtraction. Actual token logic resides in CLVToken.sol */
+/* Stores the CLV user data: token balances and spending allowances. 
+The functions only get/set balances and allowances, and increase/decrease balances.
+The bulk of the token logic resides in CLVToken.sol */
 
 contract CLVTokenData is Ownable {
     using SafeMath for uint;

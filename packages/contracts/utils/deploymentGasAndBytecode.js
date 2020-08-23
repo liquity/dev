@@ -11,10 +11,11 @@ const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
 const deploymentHelpers = require("./deploymentHelpers.js")
+const testHelpers =  require("./testHelpers.js")
 
+const th = testHelpers.TestHelper
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
-
 
 contractABIs = [
     BorrowerOperations,
@@ -45,6 +46,11 @@ contractABIs = [
             console.log(`${contractABI.contractName}: ${bytecodeLength}`)
             // console.log(`${contractABI.contractName} deployed bytecode length: ${deployedBytecodeLength}`)
             }
+    
+    const getUSDCostFromGasCost = (deploymentGasTotal, gasPriceInGwei, ETHPrice) => {
+      const dollarCost = (deploymentGasTotal * gasPriceInGwei * ETHPrice) / 1e9
+      console.log(`At gas price ${gasPriceInGwei} GWei, and ETH Price $${ETHPrice} per ETH, the total cost of deployment in USD is: $${dollarCost}`)
+      }
 
 async function main() {
     const borrowerOperations = await BorrowerOperations.new()
@@ -77,9 +83,14 @@ async function main() {
     await connectContracts(contracts, contractAddresses)
 
     console.log(`Gas costs for deployments: `)
+    let totalGasCost = 0
     for (contractName of Object.keys(contracts)) {
-        await getGasFromContractDeployment(contracts[contractName], contractName);
+        const gasCost  = await getGasFromContractDeployment(contracts[contractName], contractName);
+        totalGasCost = totalGasCost + Number(gasCost)
     }
+    console.log(`Total deployment gas costs: ${totalGasCost}`)
+    getUSDCostFromGasCost(totalGasCost, 200, 400)
+   
     console.log(`\n`)
 
     console.log(`Contract bytecode lengths:`)
