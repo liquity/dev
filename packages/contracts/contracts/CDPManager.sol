@@ -1136,17 +1136,34 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
     
     function _getTCR(uint _price) internal view returns (uint TCR) { 
-        uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getCLVDebt();
-        uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getCLVDebt();
+        uint entireSystemColl = _getEntireSystemColl();
+        uint entireSystemDebt = _getEntireSystemDebt();
 
-        uint totalCollateral = activeColl.add(liquidatedColl);
-        uint totalDebt = activeDebt.add(closedDebt); 
-
-        TCR = Math._computeCR(totalCollateral, totalDebt, _price); 
+        TCR = Math._computeCR(entireSystemColl, entireSystemDebt, _price); 
 
         return TCR;
+    }
+
+    function getEntireSystemColl() external view returns (uint entireSystemColl) {
+        return _getEntireSystemColl();
+    }
+
+    function _getEntireSystemColl() internal view returns (uint entireSystemColl) {
+        uint activeColl = activePool.getETH();
+        uint liquidatedColl = defaultPool.getETH();
+
+        return activeColl.add(liquidatedColl);  
+    }
+
+    function getEntireSystemDebt() external view returns (uint entireSystemDebt) {
+        return _getEntireSystemDebt();
+    }
+
+    function _getEntireSystemDebt() internal view returns (uint entireSystemDebt) {
+        uint activeDebt = activePool.getCLVDebt();
+        uint closedDebt = defaultPool.getCLVDebt();
+
+        return activeDebt.add(closedDebt);
     }
 
     // --- 'require' wrapper functions ---
