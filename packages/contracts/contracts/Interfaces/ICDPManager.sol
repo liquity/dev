@@ -24,6 +24,8 @@ interface ICDPManager {
 
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, uint8 operation);
 
+    event CDPLiquidated(address indexed _user, uint _debt, uint _coll, uint8 operation);
+
     // --- Functions ---
 
     function setBorrowerOperations(address _borrowerOperationsAddress) external;

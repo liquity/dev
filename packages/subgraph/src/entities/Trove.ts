@@ -10,12 +10,13 @@ import {
   DECIMAL_ZERO
 } from "../utils/bignumbers";
 
-import { getChangeId, initChange, getCurrentPrice } from "./System";
+import { getChangeSequenceNumber, initChange, getCurrentPrice } from "./System";
 import { getCurrentTroveOfOwner, closeCurrentTroveOfOwner } from "./Owner";
 
 function createTroveChange(event: ethereum.Event): TroveChange {
-  let troveChange = new TroveChange(getChangeId(event));
-  initChange(troveChange, event);
+  let sequenceNumber = getChangeSequenceNumber();
+  let troveChange = new TroveChange(sequenceNumber.toString());
+  initChange(troveChange, event, sequenceNumber);
 
   return troveChange;
 }
@@ -43,6 +44,13 @@ export function updateTrove(
   snapshotCLVDebt: BigInt
 ): void {
   let trove = getCurrentTroveOfOwner(_user);
+  let newCollateral = _coll.divDecimal(DECIMAL_SCALING_FACTOR);
+  let newDebt = _debt.divDecimal(DECIMAL_SCALING_FACTOR);
+
+  if (newCollateral == trove.collateral && newDebt == trove.debt) {
+    return;
+  }
+
   let price = getCurrentPrice();
   let troveChange = createTroveChange(event);
 
@@ -54,8 +62,8 @@ export function updateTrove(
   troveChange.debtBefore = trove.debt;
   troveChange.collateralRatioBefore = calculateCollateralRatio(trove.collateral, trove.debt, price);
 
-  trove.collateral = _coll.divDecimal(DECIMAL_SCALING_FACTOR);
-  trove.debt = _debt.divDecimal(DECIMAL_SCALING_FACTOR);
+  trove.collateral = newCollateral;
+  trove.debt = newDebt;
 
   troveChange.collateralAfter = trove.collateral;
   troveChange.debtAfter = trove.debt;

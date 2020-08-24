@@ -184,6 +184,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     event CDPCreated(address indexed _user, uint arrayIndex);
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, CDPManagerOperation operation);
+    event CDPLiquidated(address indexed _user, uint _debt, uint _coll, CDPManagerOperation operation);
 
     // --- Modifiers ---
 
@@ -320,7 +321,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         activePool.sendETH(address(this), V.gasCompensation);
 
         _closeCDP(_user);
-        emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInNormalMode);
+        emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInNormalMode);
 
         return V;
     }
@@ -351,7 +352,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V.collToRedistribute = L.collToLiquidate;
 
             _closeCDP(_user);
-            emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInRecoveryMode);
+            emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
         // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > 1000000000000000000) && (_ICR < MCR)) {
@@ -364,7 +365,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, L.collToLiquidate, _CLVInPool);
 
             _closeCDP(_user);
-            emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInRecoveryMode);
+            emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
         // If CDP has the lowest ICR and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution)
         } else if (_user == sortedCDPs.getLast()) {
@@ -419,7 +420,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V.debtToRedistribute = 0;
             V.collToRedistribute = 0;
 
-            emit CDPUpdated(_user, 0, 0, 0, CDPManagerOperation.liquidateInRecoveryMode);
+            emit CDPLiquidated(_user, _entireCDPDebt, _entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
         }
         /* When trove's debt is greater than the Pool, perform a partial liquidation:
         offset as much as possible, and do not redistribute the remainder.
