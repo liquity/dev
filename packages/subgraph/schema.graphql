@@ -74,7 +74,7 @@ type Transaction @entity {
 }
 
 interface Change {
-  "Transaction hash + '-' + log index"
+  "Same as sequence number, but as an ID (string)"
   id: ID!
 
   "Can be used to correctly sort changes even if they were made by the same transaction"

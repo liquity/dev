@@ -1,6 +1,7 @@
 import {
   CDPManager,
   CDPUpdated,
+  CDPLiquidated,
   BorrowerOperationsAddressChanged,
   PoolManagerAddressChanged,
   PriceFeedAddressChanged
@@ -8,6 +9,7 @@ import {
 import { BorrowerOperations, PoolManager, PriceFeed } from "../../generated/templates";
 
 import { updateTrove } from "../entities/Trove";
+import { BIGINT_ZERO } from "../utils/bignumbers";
 
 enum CDPManagerOperation {
   applyPendingRewards,
@@ -62,5 +64,29 @@ export function handleCDPUpdated(event: CDPUpdated): void {
     event.params.stake,
     snapshots.value0,
     snapshots.value1
+  );
+}
+
+export function handleCDPLiquidated(event: CDPLiquidated): void {
+  updateTrove(
+    event,
+    "accrueRewards",
+    event.params._user,
+    event.params._coll,
+    event.params._debt,
+    BIGINT_ZERO,
+    BIGINT_ZERO,
+    BIGINT_ZERO
+  );
+
+  updateTrove(
+    event,
+    getTroveOperation(event.params.operation),
+    event.params._user,
+    BIGINT_ZERO,
+    BIGINT_ZERO,
+    BIGINT_ZERO,
+    BIGINT_ZERO,
+    BIGINT_ZERO
   );
 }

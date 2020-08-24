@@ -49,14 +49,14 @@ function getTransaction(ethTransaction: ethereum.Transaction, block: ethereum.Bl
   }
 }
 
-export function getChangeId(event: ethereum.Event): string {
-  return event.transaction.hash.toHex() + "-" + event.logIndex.toString();
+export function getChangeSequenceNumber(): i32 {
+  return increaseCounter("changeCount");
 }
 
-export function initChange(change: Entity, event: ethereum.Event): void {
+export function initChange(change: Entity, event: ethereum.Event, sequenceNumber: i32): void {
   let transaction = getTransaction(event.transaction, event.block);
 
-  change.set("sequenceNumber", Value.fromI32(increaseCounter("changeCount")));
+  change.set("sequenceNumber", Value.fromI32(sequenceNumber));
   change.set("transaction", Value.fromString(transaction.id));
 
   transaction.save();
@@ -69,8 +69,9 @@ export function getCurrentPrice(): BigDecimal {
 }
 
 function createPriceChange(event: ethereum.Event): PriceChange {
-  let priceChange = new PriceChange(getChangeId(event));
-  initChange(priceChange, event);
+  let sequenceNumber = getChangeSequenceNumber();
+  let priceChange = new PriceChange(sequenceNumber.toString());
+  initChange(priceChange, event, sequenceNumber);
 
   return priceChange;
 }
@@ -82,7 +83,7 @@ export function updatePrice(event: ethereum.Event, _newPrice: BigInt): void {
   priceChange.priceBefore = system.currentPrice;
   system.currentPrice = _newPrice.divDecimal(DECIMAL_SCALING_FACTOR);
   priceChange.priceAfter = system.currentPrice;
-  priceChange.priceChange = priceChange.priceAfter.minus(priceChange.priceBefore);
+  priceChange.priceChange = priceChange.priceAfter - priceChange.priceBefore;
   system.save();
 
   priceChange.save();

@@ -2,14 +2,15 @@ import { ethereum, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
 import { StabilityDepositChange, StabilityDeposit } from "../../generated/schema";
 
-import { DECIMAL_SCALING_FACTOR, DECIMAL_ZERO } from "../utils/bignumbers";
+import { DECIMAL_SCALING_FACTOR, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
 
-import { getChangeId, initChange } from "./System";
+import { getChangeSequenceNumber, initChange } from "./System";
 import { getCurrentStabilityDepositOfOwner, closeCurrentStabilityDepositOfOwner } from "./Owner";
 
 function createStabilityDepositChange(event: ethereum.Event): StabilityDepositChange {
-  let stabilityDepositChange = new StabilityDepositChange(getChangeId(event));
-  initChange(stabilityDepositChange, event);
+  let sequenceNumber = getChangeSequenceNumber();
+  let stabilityDepositChange = new StabilityDepositChange(sequenceNumber.toString());
+  initChange(stabilityDepositChange, event, sequenceNumber);
 
   return stabilityDepositChange;
 }
@@ -62,7 +63,7 @@ export function updateStabilityDeposit(
     newDepositedAmount
   );
 
-  if (newDepositedAmount.equals(DECIMAL_ZERO)) {
+  if (newDepositedAmount == DECIMAL_ZERO) {
     closeCurrentStabilityDepositOfOwner(_user);
   }
 
@@ -75,10 +76,14 @@ export function withdrawCollateralGainFromStabilityDeposit(
   _ETH: BigInt,
   _CLVLoss: BigInt
 ): void {
+  if (_ETH == BIGINT_ZERO && _CLVLoss == BIGINT_ZERO) {
+    // Ignore "NOP" event
+    return;
+  }
+
   let stabilityDeposit = getCurrentStabilityDepositOfOwner(_user);
-  let newDepositedAmount = stabilityDeposit.depositedAmount.minus(
-    _CLVLoss.divDecimal(DECIMAL_SCALING_FACTOR)
-  );
+  let depositLoss = _CLVLoss.divDecimal(DECIMAL_SCALING_FACTOR);
+  let newDepositedAmount = stabilityDeposit.depositedAmount - depositLoss;
 
   updateStabilityDepositByOperation(
     event,
@@ -88,7 +93,7 @@ export function withdrawCollateralGainFromStabilityDeposit(
     _ETH.divDecimal(DECIMAL_SCALING_FACTOR)
   );
 
-  if (newDepositedAmount.equals(DECIMAL_ZERO)) {
+  if (newDepositedAmount == DECIMAL_ZERO) {
     closeCurrentStabilityDepositOfOwner(_user);
   }
 

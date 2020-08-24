@@ -10,12 +10,13 @@ import {
   DECIMAL_ZERO
 } from "../utils/bignumbers";
 
-import { getChangeId, initChange, getCurrentPrice } from "./System";
+import { getChangeSequenceNumber, initChange, getCurrentPrice } from "./System";
 import { getCurrentTroveOfOwner, closeCurrentTroveOfOwner } from "./Owner";
 
 function createTroveChange(event: ethereum.Event): TroveChange {
-  let troveChange = new TroveChange(getChangeId(event));
-  initChange(troveChange, event);
+  let sequenceNumber = getChangeSequenceNumber();
+  let troveChange = new TroveChange(sequenceNumber.toString());
+  initChange(troveChange, event, sequenceNumber);
 
   return troveChange;
 }
@@ -25,11 +26,11 @@ function calculateCollateralRatio(
   debt: BigDecimal,
   price: BigDecimal
 ): BigDecimal | null {
-  if (debt.equals(DECIMAL_ZERO)) {
+  if (debt == DECIMAL_ZERO) {
     return null;
   }
 
-  return collateral.times(price).div(debt);
+  return collateral * price / debt;
 }
 
 export function updateTrove(
@@ -43,6 +44,13 @@ export function updateTrove(
   snapshotCLVDebt: BigInt
 ): void {
   let trove = getCurrentTroveOfOwner(_user);
+  let newCollateral = _coll.divDecimal(DECIMAL_SCALING_FACTOR);
+  let newDebt = _debt.divDecimal(DECIMAL_SCALING_FACTOR);
+
+  if (newCollateral == trove.collateral && newDebt == trove.debt) {
+    return;
+  }
+
   let price = getCurrentPrice();
   let troveChange = createTroveChange(event);
 
@@ -54,15 +62,15 @@ export function updateTrove(
   troveChange.debtBefore = trove.debt;
   troveChange.collateralRatioBefore = calculateCollateralRatio(trove.collateral, trove.debt, price);
 
-  trove.collateral = _coll.divDecimal(DECIMAL_SCALING_FACTOR);
-  trove.debt = _debt.divDecimal(DECIMAL_SCALING_FACTOR);
+  trove.collateral = newCollateral;
+  trove.debt = newDebt;
 
   troveChange.collateralAfter = trove.collateral;
   troveChange.debtAfter = trove.debt;
   troveChange.collateralRatioAfter = calculateCollateralRatio(trove.collateral, trove.debt, price);
 
-  troveChange.collateralChange = troveChange.collateralAfter.minus(troveChange.collateralBefore);
-  troveChange.debtChange = troveChange.debtAfter.minus(troveChange.debtBefore);
+  troveChange.collateralChange = troveChange.collateralAfter - troveChange.collateralBefore;
+  troveChange.debtChange = troveChange.debtAfter - troveChange.debtBefore;
 
   troveChange.save();
 
@@ -72,13 +80,13 @@ export function updateTrove(
   trove.rawSnapshotOfTotalRedistributedCollateral = snapshotETH;
   trove.rawSnapshotOfTotalRedistributedDebt = snapshotCLVDebt;
 
-  if (!_debt.equals(BIGINT_ZERO)) {
-    trove.rawCollateralPerDebt = _coll.times(BIGINT_SCALING_FACTOR).div(_debt);
+  if (_debt != BIGINT_ZERO) {
+    trove.rawCollateralPerDebt = _coll * BIGINT_SCALING_FACTOR / _debt;
   } else {
     trove.rawCollateralPerDebt = BIGINT_MAX_UINT256;
   }
 
-  if (_coll.equals(BIGINT_ZERO)) {
+  if (_coll == BIGINT_ZERO) {
     closeCurrentTroveOfOwner(_user);
   }
 

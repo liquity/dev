@@ -35,6 +35,8 @@ dataSources:
           handler: handlePriceFeedAddressChanged
         - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleCDPUpdated
+        - event: CDPLiquidated(indexed address,uint256,uint256,uint8)
+          handler: handleCDPLiquidated
 templates:
   - name: BorrowerOperations
     kind: ethereum/contract
