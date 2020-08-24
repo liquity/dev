@@ -83,7 +83,7 @@ export function updatePrice(event: ethereum.Event, _newPrice: BigInt): void {
   priceChange.priceBefore = system.currentPrice;
   system.currentPrice = _newPrice.divDecimal(DECIMAL_SCALING_FACTOR);
   priceChange.priceAfter = system.currentPrice;
-  priceChange.priceChange = priceChange.priceAfter.minus(priceChange.priceBefore);
+  priceChange.priceChange = priceChange.priceAfter - priceChange.priceBefore;
   system.save();
 
   priceChange.save();

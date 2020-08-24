@@ -63,7 +63,7 @@ export function updateStabilityDeposit(
     newDepositedAmount
   );
 
-  if (newDepositedAmount.equals(DECIMAL_ZERO)) {
+  if (newDepositedAmount == DECIMAL_ZERO) {
     closeCurrentStabilityDepositOfOwner(_user);
   }
 
@@ -76,15 +76,14 @@ export function withdrawCollateralGainFromStabilityDeposit(
   _ETH: BigInt,
   _CLVLoss: BigInt
 ): void {
-  if (_ETH.equals(BIGINT_ZERO) && _CLVLoss.equals(BIGINT_ZERO)) {
+  if (_ETH == BIGINT_ZERO && _CLVLoss == BIGINT_ZERO) {
     // Ignore "NOP" event
     return;
   }
 
   let stabilityDeposit = getCurrentStabilityDepositOfOwner(_user);
-  let newDepositedAmount = stabilityDeposit.depositedAmount.minus(
-    _CLVLoss.divDecimal(DECIMAL_SCALING_FACTOR)
-  );
+  let depositLoss = _CLVLoss.divDecimal(DECIMAL_SCALING_FACTOR);
+  let newDepositedAmount = stabilityDeposit.depositedAmount - depositLoss;
 
   updateStabilityDepositByOperation(
     event,
@@ -94,7 +93,7 @@ export function withdrawCollateralGainFromStabilityDeposit(
     _ETH.divDecimal(DECIMAL_SCALING_FACTOR)
   );
 
-  if (newDepositedAmount.equals(DECIMAL_ZERO)) {
+  if (newDepositedAmount == DECIMAL_ZERO) {
     closeCurrentStabilityDepositOfOwner(_user);
   }
 
