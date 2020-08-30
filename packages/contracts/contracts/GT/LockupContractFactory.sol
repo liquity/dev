@@ -68,6 +68,7 @@ contract LockupContractFactory {
         deployedCustomDurationLockupContracts[address(lockupContract)] = msg.sender;
     }
 
+    // Simultaneously lock a set of OYLCs that were originally deployed by the caller, through this Factory.
     function lockOneYearContracts(address[] addresses) public {
         for (uint i = 0; i < addresses.length; i++ ) {
             address addr = addresses[i];
@@ -81,8 +82,8 @@ contract LockupContractFactory {
         }
     }
 
-    function isOneYearLockup(address _addr) external view returns (bool) {
-        _isOneYearLockup(_addr);
+    function isRegisteredOneYearLockup(address _addr) external view returns (bool) {
+        _isRegisteredOneYearLockup(_addr);
     }
 
     function _isRegisteredOneYearLockup(address addr) internal view returns (bool) {
