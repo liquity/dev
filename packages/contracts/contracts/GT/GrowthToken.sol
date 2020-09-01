@@ -29,7 +29,9 @@ contract GrowthToken is IERC20 {
     using SafeMath for uint256;
 
     // --- Data ---
-    const ONE_YEAR_IN_SECONDS = 31536000;
+    uint public constant ONE_YEAR_IN_SECONDS = 31536000;
+
+    uint public _100_MILLION = 1e26;  // uint, for use with SafeMath
 
     mapping (address => uint256) private _balances;
 
@@ -59,19 +61,18 @@ contract GrowthToken is IERC20 {
 
     // --- Functions ---
 
-    constructor(address _communityIssuanceAddress, address _lockupContractFactoryAddress) public {
+    constructor(address _communityIssuanceAddress, address _lockupFactoryAddress) public {
         communityIssuanceAddress = _communityIssuanceAddress;
         lockupFactoryAddress = _lockupFactoryAddress;
-        lockupContractFactory = ILockupContractFactory(_lockupContractFactoryAddress);
+        lockupContractFactory = ILockupContractFactory(_lockupFactoryAddress);
         
         // mint 2/3 to deployer
-        uint deployerEntitlement = 1e26.mul(2).div(3);
+        uint deployerEntitlement = _100_MILLION.mul(2).div(3);
         _mint(msg.sender, deployerEntitlement);
 
         // mint 1/3 to CommunityIssuance
-        uint communityEntitlement = 1e26.mul(1).div(3);
+        uint communityEntitlement = _100_MILLION.mul(1).div(3);
         _mint(communityIssuanceAddress, communityEntitlement);
-
     }
 
     // --- Public functions ---
@@ -91,7 +92,7 @@ contract GrowthToken is IERC20 {
         }
 
         // Otherwise, standard transfer functionality
-        _transfer(_msgSender(), recipient, amount);
+        _transfer(msg.sender, recipient, amount);
         return true;
     }
 
@@ -102,7 +103,7 @@ contract GrowthToken is IERC20 {
     function approve(address spender, uint256 amount) public returns (bool) {
         if (isFirstYear()) {_requireCallerIsNotDeployer();}
 
-        _approve(_msgSender(), spender, amount);
+        _approve(msg.sender, spender, amount);
         return true;
     }
 
@@ -110,21 +111,21 @@ contract GrowthToken is IERC20 {
         if (isFirstYear()) {_requireRecipientIsNotDeployer(recipient);}
         
         _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;
     }
 
     function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
         if (isFirstYear()) {_requireCallerIsNotDeployer();}
         
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+        _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
         if (isFirstYear()) {_requireCallerIsNotDeployer();}
         
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
     }
 
@@ -165,7 +166,7 @@ contract GrowthToken is IERC20 {
 
     function _burnFrom(address account, uint256 amount) internal {
         _burn(account, amount);
-        _approve(account, _msgSender(), _allowances[account][_msgSender()].sub(amount, "ERC20: burn amount exceeds allowance"));
+        _approve(account, msg.sender, _allowances[account][msg.sender].sub(amount, "ERC20: burn amount exceeds allowance"));
     }
 
     // --- Helper functions ---
@@ -181,7 +182,7 @@ contract GrowthToken is IERC20 {
     // --- 'require' functions ---
 
     function _requireRecipientIsOYLC(address _recipient) internal view {
-        require(lockupContractFactory.isOneYearLockup(_recipient), "GrowthToken: recipient must be a OYLC");
+        require(lockupContractFactory.isRegisteredOneYearLockup(_recipient), "GrowthToken: recipient must be a OYLC");
     }
 
     function _requireRecipientIsNotDeployer(address _recipient) internal view {

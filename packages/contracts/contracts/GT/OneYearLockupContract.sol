@@ -1,8 +1,10 @@
 pragma solidity 0.5.16;
 
+import "../Dependencies/SafeMath.sol";
 import "../Interfaces/IGrowthToken.sol";
 
 contract OneYearLockupContract {
+    using SafeMath for uint;
 
     // --- Data ---
 
@@ -60,10 +62,10 @@ contract OneYearLockupContract {
 
     function lockContract() public onlyLockupDeployer {
         _requireContractIsNotActive();
-        _requireGTBalanceAtLeastEqualEntitlement();
+        _requireGTBalanceAtLeastEqualsEntitlement();
 
-        lockupStartTime = block.timestamp;
         active = true; 
+        lockupStartTime = block.timestamp;
         emit OYLCLocked(lockupStartTime);
     }
 
@@ -71,10 +73,10 @@ contract OneYearLockupContract {
         _requireContractIsActive();
         _requireOneYearPassedSinceLockup();
         
-        uint GTBalance = growthToken.balanceOf(address(this));
-        growthToken.transfer(caller, GTBalance);
-        
         active = false;
+
+        uint GTBalance = growthToken.balanceOf(address(this));
+        growthToken.transfer(beneficiary, GTBalance);
         emit OYLCUnlockedAndEmptied(block.timestamp);
     }
 

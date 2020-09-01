@@ -9,6 +9,10 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./TestContracts/FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
+const GTStaking = artifacts.require("./GT/GTStaking.sol")
+const LockupContractFactory = artifacts.require("./GT/LockupContractFactory.sol")
+const CommunityIssuance = artifacts.require("./GT/CommunityIssuance.sol")
+
 
 const deployLiquity = async ()=> {
   const cmdLineArgs = process.argv
@@ -47,7 +51,7 @@ const deployLiquityBuidler = async () => {
   BorrowerOperations.setAsDeployed(borrowerOperations)
   HintHelpers.setAsDeployed(hintHelpers)
 
-  const contracts = {
+  const coreContracts = {
     priceFeed,
     clvToken,
     poolManager,
@@ -60,8 +64,21 @@ const deployLiquityBuidler = async () => {
     borrowerOperations,
     hintHelpers
   }
-  return contracts
+  return coreContracts
 }
+
+const deployGTContractsBuidler = async () => {
+  const gTStaking = await GTStaking.new()
+  const lockupContractFactory = await LockupContractFactory.new()
+  const communityIssuance = await CommunityIssuance.new()
+
+  GTStaking.setAsDeployed(gTStaking)
+  LockupContractFactory.setAsDeployed(lockupContractFactory)
+  CommunityIssuance.setAsDeployed(communityIssuance)
+
+  const growthToken = await GrowthToken.new(communityIssuance.address, lockupContractFactory.address)
+}
+
 
 const deployLiquityTruffle = async () => {
   const priceFeed = await PriceFeed.new()
@@ -76,7 +93,7 @@ const deployLiquityTruffle = async () => {
   const borrowerOperations = await BorrowerOperations.new()
   const hintHelpers = await HintHelpers.new()
 
-  const contracts = {
+  const coreContracts = {
     priceFeed,
     clvToken,
     poolManager,
@@ -90,8 +107,10 @@ const deployLiquityTruffle = async () => {
     hintHelpers
   }
 
-  return contracts
+  return coreContracts
 }
+
+
 
 const getAddresses = (contracts) => {
   return {
@@ -109,8 +128,8 @@ const getAddresses = (contracts) => {
   }
 }
 
-// Connect contracts to their dependencies
-const connectContracts = async (contracts, addresses) => {
+// Connect core contracts to their dependencies
+const connectCoreContracts = async (coreContracts, addresses) => {
   // set PoolManager address in the CLVToken contract
   await contracts.clvToken.setPoolManagerAddress(addresses.PoolManager)
 
