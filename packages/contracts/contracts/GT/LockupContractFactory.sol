@@ -7,8 +7,10 @@ import "./CustomDurationLockupContract.sol";
 
 contract LockupContractFactory {
     using SafeMath for uint;
+     
 
     // --- Data ---
+    const ONE_YEAR_IN_SECONDS = 31536000;
 
     uint factoryDeploymentTimestamp;
     address factoryDeployer;
@@ -98,7 +100,7 @@ contract LockupContractFactory {
     }
 
     function _requireFactoryIsAtLeastOneYearOld() internal view {
-        require(block.timestamp.sub(factoryDeploymentTimestamp)) >= 31536000;
+        require(block.timestamp.sub(factoryDeploymentTimestamp)) >= ONE_YEAR_IN_SECONDS;
     }
 
     function _requireIsRegisteredOneYearLockup(address _addr) internal view {

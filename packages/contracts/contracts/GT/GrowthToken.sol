@@ -29,6 +29,8 @@ contract GrowthToken is IERC20 {
     using SafeMath for uint256;
 
     // --- Data ---
+    const ONE_YEAR_IN_SECONDS = 31536000;
+
     mapping (address => uint256) private _balances;
 
     mapping (address => mapping (address => uint256)) private _allowances;
@@ -182,11 +184,11 @@ contract GrowthToken is IERC20 {
     // --- Helper functions ---
 
     function _callerIsDeployer() internal view returns (bool) {
-        return (msg.sender == deployer);
+        return (msg.sender == growthTokenDeployer);
     }
 
     function isFirstYear() internal view returns (bool) {
-        return (block.timestamp.sub(deploymentStartTime) < 31536000);
+        return (block.timestamp.sub(deploymentStartTime) < ONE_YEAR_IN_SECONDS);
     }
 
     // --- 'require' functions ---
@@ -200,6 +202,6 @@ contract GrowthToken is IERC20 {
     }
 
     function _requireCallerIsNotDeployer() internal view {
-        require(msg.sender != growthTokenDeployer, "GrowthToken: caller must not be the deployer");
+        require(!_callerIsDeployer(), "GrowthToken: caller must not be the deployer");
     }
 }
