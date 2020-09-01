@@ -9,10 +9,10 @@ contract GTStaking {
     // --- Data ---
 
     mapping( address => uint) stakes;
-    uint totalGTStaked;
+    uint public totalGTStaked;
 
-    uint F_ETH;  // Running sum of ETH fees per-GT-staked
-    uint F_LQTY; // Running sum of GT fees per-GT-staked
+    uint public F_ETH;  // Running sum of ETH fees per-GT-staked
+    uint public F_LQTY; // Running sum of GT fees per-GT-staked
 
     // User snapshots of F_ETH and F_LQTY, taken at the point at which their latest deposit was made
     mapping (uint => Snapshot) snapshots; 
@@ -22,10 +22,10 @@ contract GTStaking {
         uint F_LQTY_Snapshot;
     }
     
-    address growthTokenAddress;
+    address public growthTokenAddress;
     IGrowthToken growthToken;
 
-    address clvTokenAddress;
+    address public clvTokenAddress;
     ICLVToken clvToken;
 
     // --- Events ---

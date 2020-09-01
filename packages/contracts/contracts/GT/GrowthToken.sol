@@ -10,7 +10,7 @@ https://github.com/OpenZeppelin/openzeppelin-contracts/blob/54ee1c7ff59462bc300c
 
 Functionality added specific to the GrowthToken:
 
--Supply hard-capped at 100million
+-Supply hard-capped at 100 million
 -CommunityIssuance and LockupContractFactory addresses set at deployment
 -2/3 of supply is minted to deployer at deployment
 -1/3 of supply minted to CommunityIssuance contract at deployment
@@ -57,20 +57,7 @@ contract GrowthToken is IERC20 {
     event CommunityIssuanceAddressSet(address _communityIssuanceAddress);
     event LockupContractFactoryAddressSet(address _lockupContractFactoryAddress);
 
-
     // --- Functions ---
-
-    function setLockupContractFactoryAddress(_lockupFactoryAddress) {
-        _lockupFactoryAddress = _lockupFactoryAddress;
-        lockupContractFactory = ILockupContractFactory(_lockupFactoryAddress);
-        emit LockupContractFactorySet(_lockupFactoryAddress);
-    }
-
-     function setLockupContractFactoryAddress(_lockupFactoryAddress) {
-        _lockupFactoryAddress = _lockupFactoryAddress;
-        lockupContractFactory = ILockupContractFactory(_lockupFactoryAddress);
-        emit LockupContractFactorySet(_lockupFactoryAddress);
-    }
 
     constructor(address _communityIssuanceAddress, address _lockupContractFactoryAddress) public {
         communityIssuanceAddress = _communityIssuanceAddress;

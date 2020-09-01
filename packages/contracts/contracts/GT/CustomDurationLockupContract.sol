@@ -1,13 +1,12 @@
 pragma solidity 0.5.16;
 
+import "../Dependencies/SafeMath.sol";
 import "../Interfaces/IGrowthToken.sol";
 
-contract OneYearLockupContract {
+contract CustomDurationLockupContract {
+    using SafeMath for uint;
 
     // --- Data ---
-
-    uint constant public ONE_YEAR_IN_SECONDS = 31536000; 
-
     address public lockupDeployer;
     address public beneficiary;
 
@@ -17,6 +16,7 @@ contract OneYearLockupContract {
     uint public initialEntitlement;
 
     uint public lockupStartTime;
+    uint public lockupDurationInSeconds;
 
     // TODO: use an enum for {inactive, active, ended} ? Make a lockup contract non-reusable after
     // full withdrawal.
@@ -24,8 +24,8 @@ contract OneYearLockupContract {
 
     // --- Events ---
 
-    event OYLCLocked(uint lockupStartTime);
-    event OYLCUnlockedAndEmptied(uint unlockTime);
+    event CDLCLocked(uint lockupStartTime);
+    event CDLCUnlockedAndEmptied(uint unlockTime);
 
     // --- Modifiers ---
 
@@ -45,7 +45,8 @@ contract OneYearLockupContract {
     (
     address _growthTokenAddress, 
     address _beneficiary, 
-    uint _initialEntitlement
+    uint _initialEntitlement,
+    uint _lockupDurationInSeconds
     )
     public 
     {
@@ -56,44 +57,45 @@ contract OneYearLockupContract {
 
     beneficiary =  _beneficiary;
     initialEntitlement = _initialEntitlement;
+    lockupDurationInSeconds = _lockupDurationInSeconds;
     }
 
     function lockContract() public onlyLockupDeployer {
         _requireContractIsNotActive();
-        _requireGTBalanceAtLeastEqualEntitlement();
+        _requireGTBalanceAtLeastEqualsEntitlement();
 
         lockupStartTime = block.timestamp;
         active = true; 
-        emit OYLCLocked(lockupStartTime);
+        emit CDLCLocked(lockupStartTime);
     }
 
     function withdrawLockedGT() public onlyBeneficiary {
         _requireContractIsActive();
-        _requireOneYearPassedSinceLockup();
+        _requireLockupDurationHasPassed();
         
         uint GTBalance = growthToken.balanceOf(address(this));
-        growthToken.transfer(caller, GTBalance);
+        growthToken.transfer(msg.sender, GTBalance);
         
         active = false;
-        emit OYLCUnlockedAndEmptied(block.timestamp);
+        emit CDLCUnlockedAndEmptied(block.timestamp);
     }
 
     // --- 'require' functions ---
 
     function _requireContractIsActive() internal view returns (bool) {
-        require(active == true, "OYLC: Contract must be inactive");
+        require(active == true, "CDLC: Contract must be inactive");
     }
 
     function _requireContractIsNotActive() internal view returns (bool) {
-        require(active == false, "OYLC: Contract must not be active");
+        require(active == false, "CDLC: Contract must not be active");
     }
 
-    function _requireOneYearPassedSinceLockup() internal view returns (bool) {
-        require(block.timestamp.sub(lockupStartTime) >= ONE_YEAR_IN_SECONDS, "OYLC: At least one year since lockup must have passed");
+    function _requireLockupDurationHasPassed() internal view returns (bool) {
+        require(block.timestamp.sub(lockupStartTime) >= lockupDurationInSeconds, "CDLC: The lockup duration must have passed");
     }
 
     function _requireGTBalanceAtLeastEqualsEntitlement() internal view returns (bool) {
         uint GTBalance = growthToken.balanceOf(address(this));
-        require(GTBalance >= initialEntitlement, "OYLC: GT balance of this OYLC must cover the initial entitlement");
+        require(GTBalance >= initialEntitlement, "CDLC: GT balance of this CDLC must cover the initial entitlement");
     }
 }

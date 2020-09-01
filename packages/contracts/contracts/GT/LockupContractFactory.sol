@@ -1,21 +1,18 @@
 pragma solidity 0.5.16;
 import "../Dependencies/SafeMath.sol";
-import "../Interfaces/IGrowthToken.sol";
 import "./OneYearLockupContract.sol";
 import "./CustomDurationLockupContract.sol";
-
 
 contract LockupContractFactory {
     using SafeMath for uint;
      
-
     // --- Data ---
-    const ONE_YEAR_IN_SECONDS = 31536000;
+    uint constant public ONE_YEAR_IN_SECONDS = 31536000;
 
-    uint factoryDeploymentTimestamp;
-    address factoryDeployer;
+    uint public factoryDeploymentTimestamp;
+    address public factoryDeployer;
 
-    address growthTokenAddress;
+    address public growthTokenAddress;
     IGrowthToken GrowthToken;
     
     mapping (address => address) oneYearLockupContractToDeployer;
@@ -45,7 +42,7 @@ contract LockupContractFactory {
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 
-    function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) public  {
+    function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external  {
         _requireGTAddressIsSet();
         OneYearLockupContract oneYearLockupContract = new OneYearLockupContract(
                                                         liquityAG, 
@@ -56,7 +53,7 @@ contract LockupContractFactory {
         deployedOneYearLockupContracts[address(oneYearLockupContract)] = msg.sender;
     }
 
-    function deployCustomDurationLockupContract(address beneficiary, uint entitlement, uint lockupDuration) public {
+    function deployCustomDurationLockupContract(address beneficiary, uint entitlement, uint lockupDuration) external {
         _requireGTAddressIsSet();
         _requireFactoryIsAtLeastOneYearOld();
     
@@ -71,7 +68,7 @@ contract LockupContractFactory {
     }
 
     // Simultaneously lock a set of OYLCs that were originally deployed by the caller, through this Factory.
-    function lockOneYearContracts(address[] addresses) public {
+    function lockOneYearContracts(address[] calldata addresses) external {
         for (uint i = 0; i < addresses.length; i++ ) {
             address addr = addresses[i];
             OneYearLockupContract oneYearlockupContract = OneYearLockupContract(addr);
