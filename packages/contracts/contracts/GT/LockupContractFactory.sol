@@ -33,7 +33,7 @@ contract LockupContractFactory {
 
     constructor () public {
         factoryDeploymentTimestamp = block.timestamp;
-        deployer = msg.sender;
+        factoryDeployer = msg.sender;
     }
 
     function setGrowthTokenAddress(address _growthTokenAddress) external onlyFactoryDeployer {
@@ -45,26 +45,24 @@ contract LockupContractFactory {
     function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external  {
         _requireGTAddressIsSet();
         OneYearLockupContract oneYearLockupContract = new OneYearLockupContract(
-                                                        liquityAG, 
                                                         growthTokenAddress, 
                                                         beneficiary, 
                                                         initialEntitlement);
 
-        deployedOneYearLockupContracts[address(oneYearLockupContract)] = msg.sender;
+        oneYearLockupContractToDeployer[address(oneYearLockupContract)] = msg.sender;
     }
 
-    function deployCustomDurationLockupContract(address beneficiary, uint entitlement, uint lockupDuration) external {
+    function deployCustomDurationLockupContract(address beneficiary, uint initialEntitlement, uint lockupDuration) external {
         _requireGTAddressIsSet();
         _requireFactoryIsAtLeastOneYearOld();
     
-        CustomDurationLockupContract customDurationLockupContract = new CustomDurationLockupContract(
-                                                                        liquityAG, 
+        CustomDurationLockupContract customDurationLockupContract = new CustomDurationLockupContract( 
                                                                         growthTokenAddress, 
                                                                         beneficiary, 
                                                                         initialEntitlement, 
-                                                                        duration);
+                                                                        lockupDuration);
 
-        deployedCustomDurationLockupContracts[address(lockupContract)] = msg.sender;
+        customDurationLockupContractToDeployer[address(customDurationLockupContract)] = msg.sender;
     }
 
     // Simultaneously lock a set of OYLCs that were originally deployed by the caller, through this Factory.
@@ -76,7 +74,7 @@ contract LockupContractFactory {
             _requireIsRegisteredOneYearLockup(addr);
             _requireCallerIsOriginalDeployer(addr);
 
-            (bool success, ) = oneYearlockupContract.lockContract();
+            bool success = oneYearlockupContract.lockContract();
             require(success, "LockupContractFactory: Failed to lock the contract");
         }
     }
@@ -86,7 +84,7 @@ contract LockupContractFactory {
     }
 
     function _isRegisteredOneYearLockup(address addr) internal view returns (bool) {
-        bool isRegistered = oneYearLockupContractsToDeployer[addr] != address(0);
+        bool isRegistered = oneYearLockupContractToDeployer[addr] != address(0);
         return isRegistered;
     }
 
@@ -97,7 +95,8 @@ contract LockupContractFactory {
     }
 
     function _requireFactoryIsAtLeastOneYearOld() internal view {
-        require(block.timestamp.sub(factoryDeploymentTimestamp)) >= ONE_YEAR_IN_SECONDS;
+        require(block.timestamp.sub(factoryDeploymentTimestamp) >= ONE_YEAR_IN_SECONDS,
+        "Factory must be less than one year old");
     }
 
     function _requireIsRegisteredOneYearLockup(address _addr) internal view {
@@ -106,7 +105,7 @@ contract LockupContractFactory {
     }
 
     function _requireCallerIsOriginalDeployer(address _addr) internal view {
-        address deployerAddress = oneYearLockupContractsToDeployer[_addr];
+        address deployerAddress = oneYearLockupContractToDeployer[_addr];
         require(deployerAddress == msg.sender,
         "LockupContractFactory: OneYearLockupContract was not deployed by the caller");
     }

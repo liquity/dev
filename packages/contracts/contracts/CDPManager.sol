@@ -8,6 +8,7 @@ import "./Interfaces/ICLVToken.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPoolManager.sol";
 import "./Interfaces/IPriceFeed.sol";
+import "./Interfaces/IGTStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -35,6 +36,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     IStabilityPool public stabilityPool;
     address public stabilityPoolAddress;
+
+    IGTStaking public gtStaking;
+    address public gtStakingAddress;
 
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
@@ -171,7 +175,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
-    event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
+    event GTStakingAddressChanged(address _gtStakingAddress);
     event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _gasCompensation);
 
     enum CDPManagerOperation {
@@ -182,9 +186,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         redeemCollateral
     }
 
-    event CDPCreated(address indexed _user, uint arrayIndex);
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, CDPManagerOperation operation);
-    event CDPLiquidated(address indexed _user, uint _debt, uint _coll, CDPManagerOperation operation);
+    event CDPCreated(address indexed _user, uint _arrayIndex);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint _stake, CDPManagerOperation _operation);
+    event CDPLiquidated(address indexed _user, uint _debt, uint _coll, CDPManagerOperation _operation);
 
     // --- Modifiers ---
 
@@ -240,6 +244,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         sortedCDPsAddress = _sortedCDPsAddress;
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
+    }
+
+    function setGTStaking(address _gtStakingAddress) external onlyOwner {
+        gtStakingAddress = _gtStakingAddress;
+        gtStaking = IGTStaking(_gtStakingAddress);
+        emit GTStakingAddressChanged(_gtStakingAddress);
     }
 
     // --- Getters ---

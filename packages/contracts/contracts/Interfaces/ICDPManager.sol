@@ -40,9 +40,11 @@ interface ICDPManager {
 
     function setCLVToken(address _clvTokenAddress) external;
 
-     function setPriceFeed(address _priceFeedAddress) external;
+    function setPriceFeed(address _priceFeedAddress) external;
 
     function setSortedCDPs(address _sortedCDPsAddress) external;
+
+    function setGTStaking(address _gtStakingAddress) external;
 
     function getCDPOwnersCount() external view returns (uint);
 

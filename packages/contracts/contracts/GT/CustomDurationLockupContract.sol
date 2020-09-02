@@ -60,13 +60,14 @@ contract CustomDurationLockupContract {
     lockupDurationInSeconds = _lockupDurationInSeconds;
     }
 
-    function lockContract() public onlyLockupDeployer {
+    function lockContract() public onlyLockupDeployer returns (bool) {
         _requireContractIsNotActive();
         _requireGTBalanceAtLeastEqualsEntitlement();
 
         lockupStartTime = block.timestamp;
         active = true; 
         emit CDLCLocked(lockupStartTime);
+        return true;
     }
 
     function withdrawLockedGT() public onlyBeneficiary {

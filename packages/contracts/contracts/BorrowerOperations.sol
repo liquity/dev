@@ -6,6 +6,7 @@ import "./Interfaces/IPool.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPoolManager.sol";
+import "./Interfaces/IGTStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -31,6 +32,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     IPriceFeed public priceFeed;
     address public priceFeedAddress;
 
+    IGTStaking public gtStaking;
+    address public gtStakingAddress;
+
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
     address public sortedCDPsAddress;
@@ -43,6 +47,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     event DefaultPoolAddressChanged(address _defaultPoolAddress);
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
+    event GTStakingAddressChanged(address _gtStakingAddress);
 
     enum BorrowerOperation {
         openLoan,
@@ -93,6 +98,12 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         sortedCDPsAddress = _sortedCDPsAddress;
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
+    }
+
+    function setGTStaking(address _gtStakingAddress) external onlyOwner {
+        gtStakingAddress = _gtStakingAddress;
+        gtStaking = IGTStaking(_gtStakingAddress);
+        emit GTStakingAddressChanged(_gtStakingAddress);
     }
 
     // --- Borrower Trove Operations ---

@@ -148,8 +148,8 @@ contract GTStaking {
         F_ETH = F_ETH.add(ETHFeePerGTStaked);
     }
 
-    function addLQTYFee(uint LQTYFee) public  onlyBorrowerOperations {
-        uint LQTYFeePerGTStaked = LQTYFee.mul(1e18).div(totalGTStaked);
+    function addLQTYFee(uint _LQTYFee) public  onlyBorrowerOperations {
+        uint LQTYFeePerGTStaked = _LQTYFee.mul(1e18).div(totalGTStaked);
         F_LQTY = F_LQTY.add(LQTYFeePerGTStaked);
     }
 

@@ -23,13 +23,15 @@ interface IBorrowerOperations {
 
     function setPoolManager(address _poolManagerAddress) external;
 
+     function setActivePool(address _activePoolAddress) external; 
+
+    function setDefaultPool(address _defaultPoolAddress) external;
+
     function setPriceFeed(address _priceFeedAddress) external;
 
     function setSortedCDPs(address _sortedCDPsAddress) external;
 
-    function setActivePool(address _activePoolAddress) external; 
-
-    function setDefaultPool(address _defaultPoolAddress) external;
+    function setGTStaking(address _gtStakingAddress) external;
 
     function openLoan(uint _CLVAmount, address _hint) external payable;
 

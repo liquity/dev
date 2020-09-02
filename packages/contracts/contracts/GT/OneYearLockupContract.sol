@@ -60,13 +60,14 @@ contract OneYearLockupContract {
     initialEntitlement = _initialEntitlement;
     }
 
-    function lockContract() public onlyLockupDeployer {
+    function lockContract() public onlyLockupDeployer returns (bool) {
         _requireContractIsNotActive();
         _requireGTBalanceAtLeastEqualsEntitlement();
 
         active = true; 
         lockupStartTime = block.timestamp;
         emit OYLCLocked(lockupStartTime);
+        return true;
     }
 
     function withdrawLockedGT() public onlyBeneficiary {
