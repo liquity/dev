@@ -4,12 +4,16 @@ type System @entity {
 
   transactionCount: Int!
   changeCount: Int!
+  liquidationCount: Int!
 
   currentPrice: BigDecimal!
+
+  "Only used internally as temporary storage. Will always be null in queries"
+  currentLiquidation: Liquidation
 }
 
-type Owner @entity {
-  "Owner's Ethereum address as a hex-string"
+type User @entity {
+  "User's Ethereum address as a hex-string"
   id: ID!
 
   currentTrove: Trove
@@ -20,13 +24,14 @@ type Owner @entity {
 
   troves: [Trove!]! @derivedFrom(field: "owner")
   stabilityDeposits: [StabilityDeposit!]! @derivedFrom(field: "owner")
+  liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
 }
 
 type Trove @entity {
   "Owner's ID + '-' + an incremented integer"
   id: ID!
 
-  owner: Owner!
+  owner: User!
 
   collateral: BigDecimal!
   debt: BigDecimal!
@@ -51,7 +56,7 @@ type StabilityDeposit @entity {
   "Owner's ID + '-' + an incremented integer"
   id: ID!
 
-  owner: Owner!
+  owner: User!
 
   depositedAmount: BigDecimal!
 
@@ -118,6 +123,8 @@ type TroveChange implements Change @entity {
 
   collateralRatioBefore: BigDecimal
   collateralRatioAfter: BigDecimal
+
+  liquidation: Liquidation
 }
 
 enum StabilityDepositOperation {
@@ -149,4 +156,17 @@ type PriceChange implements Change @entity {
   priceBefore: BigDecimal!
   priceChange: BigDecimal!
   priceAfter: BigDecimal!
+}
+
+type Liquidation @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+  liquidator: User!
+
+  liquidatedDebt: BigDecimal!
+  liquidatedCollateral: BigDecimal!
+  gasCompensation: BigDecimal!
+
+  troveChanges: [TroveChange!]! @derivedFrom(field: "liquidation")
 }

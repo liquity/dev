@@ -37,6 +37,8 @@ dataSources:
           handler: handleCDPUpdated
         - event: CDPLiquidated(indexed address,uint256,uint256,uint8)
           handler: handleCDPLiquidated
+        - event: Liquidation(uint256,uint256,uint256)
+          handler: handleLiquidation
 templates:
   - name: BorrowerOperations
     kind: ethereum/contract

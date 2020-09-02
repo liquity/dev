@@ -5,7 +5,7 @@ import { StabilityDepositChange, StabilityDeposit } from "../../generated/schema
 import { DECIMAL_SCALING_FACTOR, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
 
 import { getChangeSequenceNumber, initChange } from "./System";
-import { getCurrentStabilityDepositOfOwner, closeCurrentStabilityDepositOfOwner } from "./Owner";
+import { getCurrentStabilityDepositOfOwner, closeCurrentStabilityDepositOfOwner } from "./User";
 
 function createStabilityDepositChange(event: ethereum.Event): StabilityDepositChange {
   let sequenceNumber = getChangeSequenceNumber();

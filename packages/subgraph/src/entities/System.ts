@@ -1,8 +1,10 @@
 import { ethereum, Entity, Value, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
-import { System, Transaction, PriceChange } from "../../generated/schema";
+import { System, Transaction, PriceChange, Liquidation } from "../../generated/schema";
 
-import { DECIMAL_INITIAL_PRICE, DECIMAL_SCALING_FACTOR } from "../utils/bignumbers";
+import { DECIMAL_INITIAL_PRICE, DECIMAL_SCALING_FACTOR, DECIMAL_ZERO } from "../utils/bignumbers";
+
+import { getUser } from "./User";
 
 const onlySystemId = "only";
 
@@ -16,6 +18,7 @@ function getSystem(): System {
 
     newSystem.transactionCount = 0;
     newSystem.changeCount = 0;
+    newSystem.liquidationCount = 0;
     newSystem.currentPrice = DECIMAL_INITIAL_PRICE;
 
     return newSystem;
@@ -44,6 +47,7 @@ function getTransaction(ethTransaction: ethereum.Transaction, block: ethereum.Bl
     newTransaction.sequenceNumber = increaseCounter("transactionCount");
     newTransaction.blockNumber = block.number.toI32();
     newTransaction.timestamp = block.timestamp.toI32();
+    newTransaction.save();
 
     return newTransaction;
   }
@@ -54,12 +58,10 @@ export function getChangeSequenceNumber(): i32 {
 }
 
 export function initChange(change: Entity, event: ethereum.Event, sequenceNumber: i32): void {
-  let transaction = getTransaction(event.transaction, event.block);
+  let transactionId = getTransaction(event.transaction, event.block).id;
 
   change.set("sequenceNumber", Value.fromI32(sequenceNumber));
-  change.set("transaction", Value.fromString(transaction.id));
-
-  transaction.save();
+  change.set("transaction", Value.fromString(transactionId));
 }
 
 export function getCurrentPrice(): BigDecimal {
@@ -87,4 +89,52 @@ export function updatePrice(event: ethereum.Event, _newPrice: BigInt): void {
   system.save();
 
   priceChange.save();
+}
+
+function getLiquidationSequenceNumber(): i32 {
+  return increaseCounter("liquidationCount");
+}
+
+export function getCurrentLiquidation(event: ethereum.Event): Liquidation {
+  let currentLiquidationId = getSystem().currentLiquidation;
+  let currentLiquidationOrNull = Liquidation.load(currentLiquidationId);
+
+  if (currentLiquidationOrNull == null) {
+    let sequenceNumber = getLiquidationSequenceNumber();
+    let newLiquidation = new Liquidation(sequenceNumber.toString());
+
+    newLiquidation.sequenceNumber = sequenceNumber;
+    newLiquidation.transaction = getTransaction(event.transaction, event.block).id;
+    newLiquidation.liquidator = getUser(event.transaction.from).id;
+    newLiquidation.liquidatedCollateral = DECIMAL_ZERO;
+    newLiquidation.liquidatedDebt = DECIMAL_ZERO;
+    newLiquidation.gasCompensation = DECIMAL_ZERO;
+    newLiquidation.save();
+
+    let system = getSystem();
+    system.currentLiquidation = newLiquidation.id;
+    system.save();
+
+    currentLiquidationOrNull = newLiquidation;
+  }
+
+  return currentLiquidationOrNull as Liquidation;
+}
+
+export function finishCurrentLiquidation(
+  event: ethereum.Event,
+  _liquidatedColl: BigInt,
+  _liquidatedDebt: BigInt,
+  _gasCompensation: BigInt
+): void {
+  let system = getSystem();
+  let currentLiquidation = getCurrentLiquidation(event);
+
+  currentLiquidation.liquidatedCollateral = _liquidatedColl.divDecimal(DECIMAL_SCALING_FACTOR);
+  currentLiquidation.liquidatedDebt = _liquidatedDebt.divDecimal(DECIMAL_SCALING_FACTOR);
+  currentLiquidation.gasCompensation = _gasCompensation.divDecimal(DECIMAL_SCALING_FACTOR);
+  currentLiquidation.save();
+
+  system.currentLiquidation = null;
+  system.save();
 }

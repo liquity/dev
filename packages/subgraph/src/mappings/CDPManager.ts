@@ -2,12 +2,14 @@ import {
   CDPManager,
   CDPUpdated,
   CDPLiquidated,
+  Liquidation,
   BorrowerOperationsAddressChanged,
   PoolManagerAddressChanged,
   PriceFeedAddressChanged
 } from "../../generated/CDPManager/CDPManager";
 import { BorrowerOperations, PoolManager, PriceFeed } from "../../generated/templates";
 
+import { getCurrentLiquidation, finishCurrentLiquidation } from "../entities/System";
 import { updateTrove } from "../entities/Trove";
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
@@ -88,5 +90,14 @@ export function handleCDPLiquidated(event: CDPLiquidated): void {
     BIGINT_ZERO,
     BIGINT_ZERO,
     BIGINT_ZERO
+  );
+}
+
+export function handleLiquidation(event: Liquidation): void {
+  finishCurrentLiquidation(
+    event,
+    event.params._liquidatedColl,
+    event.params._liquidatedDebt,
+    event.params._gasCompensation
   );
 }

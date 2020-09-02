@@ -1,26 +1,28 @@
 import { Address } from "@graphprotocol/graph-ts";
 
-import { Owner, Trove, StabilityDeposit } from "../../generated/schema";
+import { User, Trove, StabilityDeposit } from "../../generated/schema";
 
 import { DECIMAL_ZERO } from "../utils/bignumbers";
 
-function getOwner(_user: Address): Owner {
+export function getUser(_user: Address): User {
   let id = _user.toHexString();
-  let ownerOrNull = Owner.load(id);
+  let userOrNull = User.load(id);
 
-  if (ownerOrNull != null) {
-    return ownerOrNull as Owner;
+  if (userOrNull != null) {
+    return userOrNull as User;
   } else {
-    let newOwner = new Owner(id);
+    let newUser = new User(id);
 
-    newOwner.troveCount = 0;
-    newOwner.stabilityDepositCount = 0;
-    return newOwner;
+    newUser.troveCount = 0;
+    newUser.stabilityDepositCount = 0;
+    newUser.save();
+
+    return newUser;
   }
 }
 
 export function getCurrentTroveOfOwner(_user: Address): Trove {
-  let owner = getOwner(_user);
+  let owner = getUser(_user);
   let currentTrove: Trove;
 
   if (owner.currentTrove == null) {
@@ -40,14 +42,14 @@ export function getCurrentTroveOfOwner(_user: Address): Trove {
 }
 
 export function closeCurrentTroveOfOwner(_user: Address): void {
-  let owner = getOwner(_user);
+  let owner = getUser(_user);
 
   owner.currentTrove = null;
   owner.save();
 }
 
 export function getCurrentStabilityDepositOfOwner(_user: Address): StabilityDeposit {
-  let owner = getOwner(_user);
+  let owner = getUser(_user);
   let currentStabilityDeposit: StabilityDeposit;
 
   if (owner.currentStabilityDeposit == null) {
@@ -70,7 +72,7 @@ export function getCurrentStabilityDepositOfOwner(_user: Address): StabilityDepo
 }
 
 export function closeCurrentStabilityDepositOfOwner(_user: Address): void {
-  let owner = getOwner(_user);
+  let owner = getUser(_user);
 
   owner.currentStabilityDeposit = null;
   owner.save();
