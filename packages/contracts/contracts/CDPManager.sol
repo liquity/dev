@@ -190,13 +190,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint _stake, CDPManagerOperation _operation);
     event CDPLiquidated(address indexed _user, uint _debt, uint _coll, CDPManagerOperation _operation);
 
-    // --- Modifiers ---
-
-    modifier onlyBorrowerOperations() {
-        require(_msgSender() == borrowerOperationsAddress, "CDPManager: Caller is not the BorrowerOperations contract");
-        _;
-    }
-
     // --- Dependency setters ---
 
     function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
@@ -878,7 +871,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return ICR;
     }
 
-    function applyPendingRewards(address _user) external onlyBorrowerOperations {
+    function applyPendingRewards(address _user) external {
+        _requireOnlyBorrowerOperations();
         return _applyPendingRewards(_user);
     }
 
@@ -906,8 +900,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     // Update user's snapshots of L_ETH and L_CLVDebt to reflect the current values
-    function updateCDPRewardSnapshots(address _user) external onlyBorrowerOperations {
-       return  _updateCDPRewardSnapshots(_user);
+    function updateCDPRewardSnapshots(address _user) external {
+        _requireOnlyBorrowerOperations();
+       return _updateCDPRewardSnapshots(_user);
     }
 
     function _updateCDPRewardSnapshots(address _user) internal {
@@ -978,7 +973,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         coll = coll.add(pendingETHReward);
     }
 
-    function removeStake(address _user) external onlyBorrowerOperations {
+    function removeStake(address _user) external {
+        _requireOnlyBorrowerOperations();
         return _removeStake(_user);
     }
 
@@ -989,7 +985,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         CDPs[_user].stake = 0;
     }
 
-    function updateStakeAndTotalStakes(address _user) external onlyBorrowerOperations returns (uint) {
+    function updateStakeAndTotalStakes(address _user) external returns (uint) {
+        _requireOnlyBorrowerOperations();
         return _updateStakeAndTotalStakes(_user);
     }
 
@@ -1037,7 +1034,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         poolManager.liquidate(_debt, _coll);
     }
 
-    function closeCDP(address _user) external onlyBorrowerOperations {
+    function closeCDP(address _user) external {
+        _requireOnlyBorrowerOperations();
         return _closeCDP(_user);
     }
 
@@ -1077,7 +1075,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
   
     // Push the owner's address to the CDP owners list, and record the corresponding array index on the CDP struct
-    function addCDPOwnerToArray(address _user) external onlyBorrowerOperations returns (uint index) {
+    function addCDPOwnerToArray(address _user) external returns (uint index) {
+        _requireOnlyBorrowerOperations();
         return _addCDPOwnerToArray(_user);
     }
 
@@ -1178,6 +1177,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- 'require' wrapper functions ---
 
+    function _requireOnlyBorrowerOperations() internal view {
+        require(_msgSender() == borrowerOperationsAddress, "CDPManager: Caller is not the BorrowerOperations contract");
+    }
+
     function _requireCDPisActive(address _user) internal view {
         require(CDPs[_user].status == Status.active, "CDPManager: Trove does not exist or is closed");
     }
@@ -1214,29 +1217,34 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Trove property setters --- 
 
-    function setCDPStatus(address _user, uint _num) external onlyBorrowerOperations {
+    function setCDPStatus(address _user, uint _num) external {
+        _requireOnlyBorrowerOperations();
         CDPs[_user].status = Status(_num);
     }
 
-    function increaseCDPColl(address _user, uint _collIncrease) external onlyBorrowerOperations returns (uint) {
+    function increaseCDPColl(address _user, uint _collIncrease) external returns (uint) {
+        _requireOnlyBorrowerOperations();
         uint newColl = CDPs[_user].coll.add(_collIncrease);
         CDPs[_user].coll = newColl;
         return newColl;
     }
 
-    function decreaseCDPColl(address _user, uint _collDecrease) external onlyBorrowerOperations returns (uint) {
+    function decreaseCDPColl(address _user, uint _collDecrease) external returns (uint) {
+        _requireOnlyBorrowerOperations();
         uint newColl = CDPs[_user].coll.sub(_collDecrease);
         CDPs[_user].coll = newColl;
         return newColl;
     }
 
-    function increaseCDPDebt(address _user, uint _debtIncrease) external onlyBorrowerOperations returns (uint) {
+    function increaseCDPDebt(address _user, uint _debtIncrease) external returns (uint) {
+        _requireOnlyBorrowerOperations();
         uint newDebt = CDPs[_user].debt.add(_debtIncrease);
         CDPs[_user].debt = newDebt;
         return newDebt;
     }
 
-    function decreaseCDPDebt(address _user, uint _debtDecrease) external onlyBorrowerOperations returns (uint) {
+    function decreaseCDPDebt(address _user, uint _debtDecrease) external returns (uint) {
+        _requireOnlyBorrowerOperations();
         uint newDebt = CDPs[_user].debt.sub(_debtDecrease);
         CDPs[_user].debt = newDebt;
         return newDebt;
