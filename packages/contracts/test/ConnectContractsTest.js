@@ -1,12 +1,5 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
-const testHelpers = require("../utils/testHelpers.js")
 
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
-
-const getDifference = testHelpers.getDifference
-const moneyVals = testHelpers.MoneyValues
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 
 contract('Deployment script - Sets correct contract addresses dependencies after deployment', async accounts => {
   const [owner] = accounts;
@@ -20,24 +13,35 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   let defaultPool
   let functionCaller
   let borrowerOperations
+  let gtStaking
+  let growthToken
+  let communityIssuance
+  let lockupContractFactory
 
   before(async () => {
-    const contracts = await deployLiquity()
+    const coreContracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
-    priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
-    sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
-    nameRegistry = contracts.nameRegistry
-    activePool = contracts.activePool
-    stabilityPool = contracts.stabilityPool
-    defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
-    borrowerOperations = contracts.borrowerOperations
+    priceFeed = coreContracts.priceFeed
+    clvToken = coreContracts.clvToken
+    poolManager = coreContracts.poolManager
+    sortedCDPs = coreContracts.sortedCDPs
+    cdpManager = coreContracts.cdpManager
+    nameRegistry = coreContracts.nameRegistry
+    activePool = coreContracts.activePool
+    stabilityPool = coreContracts.stabilityPool
+    defaultPool = coreContracts.defaultPool
+    functionCaller = coreContracts.functionCaller
+    borrowerOperations = coreContracts.borrowerOperations
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    gtStaking = GTContracts.gtStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
+
+    await deploymentHelper.connectCoreContracts(coreContracts)
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
   })
 
   it('sets the correct PriceFeed address in CDPManager', async () => {
@@ -80,8 +84,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  // ActivePool in CDPM
-  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+  it('sets the correct ActivePool address in CDPManager', async () => {
     const activePoolAddress = activePool.address
 
     const recordedActivePoolAddresss = await cdpManager.activePoolAddress()
@@ -89,8 +92,8 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(activePoolAddress, recordedActivePoolAddresss)
   })
 
-  // DefaultPool in CDPM
-  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+  
+  it('sets the correct DefaultPool address in CDPManager', async () => {
     const defaultPoolAddress = defaultPool.address
 
     const recordedDefaultPoolAddresss = await cdpManager.defaultPoolAddress()
@@ -98,8 +101,8 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(defaultPoolAddress, recordedDefaultPoolAddresss)
   })
 
-  // StabilityPool in CDPM
-  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+  
+  it('sets the correct StabilityPool address in CDPManager', async () => {
     const stabilityPoolAddress = stabilityPool.address
 
     const recordedStabilityPoolAddresss = await cdpManager.stabilityPoolAddress()
@@ -107,6 +110,13 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(stabilityPoolAddress, recordedStabilityPoolAddresss)
   })
 
+  // GT Staking in CDPM
+  it('sets the correct GTStaking address in CDPManager', async () => {
+    const gtStakingAddress = gtStaking.address
+
+    const recordedGTStakingAddress = await cdpManager.gtStakingAddress()
+    assert.equal(gtStakingAddress, recordedGTStakingAddress)
+  })
 
   it('sets the correct PriceFeed address  in PoolManager', async () => {
     const priceFeedAddress = priceFeed.address
@@ -309,6 +319,37 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
   })
 
+   // GT Staking in BO
+  it('sets the correct GTStaking address in BorrowerOperations', async () => {
+    const gtStakingAddress = gtStaking.address
+
+    const recordedGTStakingAddress = await borrowerOperations.gtStakingAddress()
+    assert.equal(gtStakingAddress, recordedGTStakingAddress)
+  })
+
+  // sets GrowthToken in GTStaking
+  it('sets the correct GrowthToken address in GTStaking', async () => {
+    const growthTokenAddress = growthToken.address
+
+    const recordedGrowthTokenAddress = await gtStaking.growthTokenAddress()
+    assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+  })
+
+  // sets GrowthToken in LockupContractFactory
+  it('sets the correct GrowthToken address in LockupContractFactory', async () => {
+    const growthTokenAddress = growthToken.address
+
+    const recordedGrowthTokenAddress = await lockupContractFactory.growthTokenAddress()
+    assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+  })
+
+  // sets GrowthToken in CommunityIssuance
+  it('sets the correct GrowthToken address in LockupContractFactory', async () => {
+    const growthTokenAddress = growthToken.address
+
+    const recordedGrowthTokenAddress = await communityIssuance.growthTokenAddress()
+    assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+  })
 
 })
 

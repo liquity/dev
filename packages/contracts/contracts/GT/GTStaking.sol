@@ -89,7 +89,7 @@ contract GTStaking {
     /* Staking expects that this StakingContract is allowed to spend at least _amount of 
     the caller's GT tokens.
     If caller has a pre-existing stake, send any accumulated ETH and LQTY gains to them. */
-    function stake(uint _amount) public {
+    function stake(uint _amount) external {
 
         uint currentStake = stakes[msg.sender];
 
@@ -115,7 +115,7 @@ contract GTStaking {
         _sendETHGainToUser(msg.sender, ETHGain);
     }
 
-    function unstake(uint _amount) public {
+    function unstake(uint _amount) external {
         uint currentStake = stakes[msg.sender];
 
         uint ETHGain;

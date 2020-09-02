@@ -347,8 +347,6 @@ class TestHelper {
     throw("The transaction logs do not contain a liquidation event")
   }
 
-
-
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
     return compositeDebt
@@ -499,7 +497,6 @@ class TestHelper {
     }
     return this.getGasMetrics(gasCostList)
   }
-
 
   static async openLoan_allAccounts_randomCLV(minCLV, maxCLV, accounts, contracts, ETHAmount) {
     const gasCostList = []

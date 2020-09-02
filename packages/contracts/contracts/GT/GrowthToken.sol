@@ -31,7 +31,7 @@ contract GrowthToken is IERC20 {
     // --- Data ---
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;
 
-    uint public _100_MILLION = 1e26;  // uint, for use with SafeMath
+    uint public _100_MILLION = 1e26;  // non-constant, for use with SafeMath
 
     mapping (address => uint256) private _balances;
 
@@ -46,13 +46,6 @@ contract GrowthToken is IERC20 {
 
     address lockupFactoryAddress;
     ILockupContractFactory lockupContractFactory;
-
-    // --- Modifiers ---
-
-    modifier onlyGrowthTokenDeployer () {
-        require(msg.sender == growthTokenDeployer, "GrowthToken: caller is not GrowthToken deployer");
-        _;
-    }
 
     // --- Events ---
 

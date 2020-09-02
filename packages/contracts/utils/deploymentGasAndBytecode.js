@@ -14,16 +14,13 @@ const GTStaking = artifacts.require("./GT/GTStaking.sol")
 const GrowthToken = artifacts.require("./GT/GrowthToken.sol")
 const LockupContractFactory = artifacts.require("./GT/LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./GT/CommunityIssuance.sol")
-
 const HintHelpers = artifacts.require("./HintHelpers.sol")
-const deploymentHelpers = require("./deploymentHelpers.js")
-const testHelpers = require("./testHelpers.js")
+const dh = require("./deploymentHelpers.js")
 
-const th = testHelpers.TestHelper
-const deployLiquityCoreBuidler = deploymentHelpers.deployLiquityCoreBuidler
-const deployGTContractsBuidler = deploymentHelpers.deployGTContractsBuidler
-const connectCoreContracts = deploymentHelpers.connectCoreContracts
-const connectGTContractsToCore = deploymentHelpers.connectGTContractsToCore
+// const deployLiquityCoreBuidler = deploymentHelpers.deployLiquityCoreBuidler
+// const deployGTContractsBuidler = deploymentHelpers.deployGTContractsBuidler
+// const connectCoreContracts = deploymentHelpers.connectCoreContracts
+// const connectGTContractsToCore = deploymentHelpers.connectGTContractsToCore
 
 const coreContractABIs = [
   BorrowerOperations,
@@ -86,11 +83,12 @@ const logContractBytecodeLengths = (contractABIs) => {
 }
 
 async function main() {
-  const coreContracts = await deployLiquityCoreBuidler()
-  const GTContracts = await deployGTContractsBuidler()
+  const coreContracts = await dh.deployLiquityCoreBuidler()
+  const GTContracts = await dh.deployGTContractsBuidler()
 
-  await connectCoreContracts(coreContracts)
-  await connectGTContractsToCore(GTContracts, coreContracts)
+  await dh.connectCoreContracts(coreContracts)
+  await dh.connectGTContracts(GTContracts)
+  await dh.connectGTContractsToCore(GTContracts, coreContracts)
 
   await logContractDeploymentCosts(coreContracts)
 
