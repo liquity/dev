@@ -3,8 +3,8 @@ import { ethereum, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 import { TroveChange } from "../../generated/schema";
 
 import {
+  decimalize,
   BIGINT_SCALING_FACTOR,
-  DECIMAL_SCALING_FACTOR,
   BIGINT_ZERO,
   BIGINT_MAX_UINT256,
   DECIMAL_ZERO
@@ -57,8 +57,8 @@ export function updateTrove(
   snapshotCLVDebt: BigInt
 ): void {
   let trove = getCurrentTroveOfOwner(_user);
-  let newCollateral = _coll.divDecimal(DECIMAL_SCALING_FACTOR);
-  let newDebt = _debt.divDecimal(DECIMAL_SCALING_FACTOR);
+  let newCollateral = decimalize(_coll);
+  let newDebt = decimalize(_debt);
 
   if (newCollateral == trove.collateral && newDebt == trove.debt) {
     return;

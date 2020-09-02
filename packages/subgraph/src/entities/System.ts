@@ -2,7 +2,7 @@ import { ethereum, Entity, Value, BigInt, BigDecimal } from "@graphprotocol/grap
 
 import { System, Transaction, PriceChange, Liquidation } from "../../generated/schema";
 
-import { DECIMAL_INITIAL_PRICE, DECIMAL_SCALING_FACTOR, DECIMAL_ZERO } from "../utils/bignumbers";
+import { decimalize, DECIMAL_INITIAL_PRICE, DECIMAL_ZERO } from "../utils/bignumbers";
 
 import { getUser } from "./User";
 
@@ -83,7 +83,7 @@ export function updatePrice(event: ethereum.Event, _newPrice: BigInt): void {
 
   let system = getSystem();
   priceChange.priceBefore = system.currentPrice;
-  system.currentPrice = _newPrice.divDecimal(DECIMAL_SCALING_FACTOR);
+  system.currentPrice = decimalize(_newPrice);
   priceChange.priceAfter = system.currentPrice;
   priceChange.priceChange = priceChange.priceAfter - priceChange.priceBefore;
   system.save();
@@ -130,9 +130,9 @@ export function finishCurrentLiquidation(
   let system = getSystem();
   let currentLiquidation = getCurrentLiquidation(event);
 
-  currentLiquidation.liquidatedCollateral = _liquidatedColl.divDecimal(DECIMAL_SCALING_FACTOR);
-  currentLiquidation.liquidatedDebt = _liquidatedDebt.divDecimal(DECIMAL_SCALING_FACTOR);
-  currentLiquidation.gasCompensation = _gasCompensation.divDecimal(DECIMAL_SCALING_FACTOR);
+  currentLiquidation.liquidatedCollateral = decimalize(_liquidatedColl);
+  currentLiquidation.liquidatedDebt = decimalize(_liquidatedDebt);
+  currentLiquidation.gasCompensation = decimalize(_gasCompensation);
   currentLiquidation.save();
 
   system.currentLiquidation = null;

@@ -2,7 +2,7 @@ import { ethereum, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
 import { StabilityDepositChange, StabilityDeposit } from "../../generated/schema";
 
-import { DECIMAL_SCALING_FACTOR, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
+import { decimalize, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
 
 import { getChangeSequenceNumber, initChange } from "./System";
 import { getCurrentStabilityDepositOfOwner, closeCurrentStabilityDepositOfOwner } from "./User";
@@ -48,7 +48,7 @@ export function updateStabilityDeposit(
   _amount: BigInt
 ): void {
   let stabilityDeposit = getCurrentStabilityDepositOfOwner(_user);
-  let newDepositedAmount = _amount.divDecimal(DECIMAL_SCALING_FACTOR);
+  let newDepositedAmount = decimalize(_amount);
 
   if (newDepositedAmount == stabilityDeposit.depositedAmount) {
     // Don't create a StabilityDepositChange when there's no change... duh.
@@ -82,7 +82,7 @@ export function withdrawCollateralGainFromStabilityDeposit(
   }
 
   let stabilityDeposit = getCurrentStabilityDepositOfOwner(_user);
-  let depositLoss = _CLVLoss.divDecimal(DECIMAL_SCALING_FACTOR);
+  let depositLoss = decimalize(_CLVLoss);
   let newDepositedAmount = stabilityDeposit.depositedAmount - depositLoss;
 
   updateStabilityDepositByOperation(
@@ -90,7 +90,7 @@ export function withdrawCollateralGainFromStabilityDeposit(
     stabilityDeposit,
     "withdrawCollateralGain",
     newDepositedAmount,
-    _ETH.divDecimal(DECIMAL_SCALING_FACTOR)
+    decimalize(_ETH)
   );
 
   if (newDepositedAmount == DECIMAL_ZERO) {
