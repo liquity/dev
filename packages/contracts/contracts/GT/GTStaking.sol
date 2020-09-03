@@ -40,48 +40,34 @@ contract GTStaking {
     event CDPManagerAddressSet(address _cdpManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
 
-    
-    // --- Modifiers ---
-
-    modifier onlyStakingContractDeployer() {
-        require(msg.sender == stakingContractDeployer, "GTStaking: caller is not deployer");
-        _;
-    }
-
-    modifier onlyCDPManager() {
-        require(msg.sender == cdpManagerAddress, "GTStaking: caller is not CDPM");
-        _;
-    }
-
-    modifier onlyBorrowerOperations() {
-        require(msg.sender == borrowerOperationsAddress, "GTStaking: caller is not BorrowerOps");
-        _;
-    }
-
     // --- Functions ---
 
      constructor() public {
         stakingContractDeployer = msg.sender;
     }
 
-    function setGrowthTokenAddress(address _growthTokenAddress) external onlyStakingContractDeployer {
+    function setGrowthTokenAddress(address _growthTokenAddress) external {
+        _requireCallerIsStakingContractDeployer();
         growthTokenAddress = _growthTokenAddress;
         growthToken = IGrowthToken(growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 
-    function setCLVTokenAddress(address _clvTokenAddress) external onlyStakingContractDeployer {
+    function setCLVTokenAddress(address _clvTokenAddress) external {
+        _requireCallerIsStakingContractDeployer();
         clvTokenAddress = _clvTokenAddress;
         clvToken = ICLVToken(_clvTokenAddress);
         emit GrowthTokenAddressSet(_clvTokenAddress);
     }
 
-    function setCDPManagerAddress(address _cdpManagerAddress) external onlyStakingContractDeployer {
+    function setCDPManagerAddress(address _cdpManagerAddress) external {
+        _requireCallerIsStakingContractDeployer();
         cdpManagerAddress = _cdpManagerAddress;
         emit CDPManagerAddressSet(_cdpManagerAddress);
     }
 
-    function setBorrowerOperationsAddress(address _borrowerOperationsAddress) external onlyStakingContractDeployer {
+    function setBorrowerOperationsAddress(address _borrowerOperationsAddress) external {
+        _requireCallerIsStakingContractDeployer();
         borrowerOperationsAddress = _borrowerOperationsAddress;
         emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
     }
@@ -143,12 +129,14 @@ contract GTStaking {
 
     // --- Fee adding functions - called by Liquity core contracts ---
 
-    function addETHFee() public payable onlyCDPManager {
+    function addETHFee() public payable {
+        _requireCallerIsCDPManager();
         uint ETHFeePerGTStaked = msg.value.mul(1e18).div(totalGTStaked);
         F_ETH = F_ETH.add(ETHFeePerGTStaked);
     }
 
-    function addLQTYFee(uint _LQTYFee) public  onlyBorrowerOperations {
+    function addLQTYFee(uint _LQTYFee) public {
+        _requireCallerIsBorrowerOperations();
         uint LQTYFeePerGTStaked = _LQTYFee.mul(1e18).div(totalGTStaked);
         F_LQTY = F_LQTY.add(LQTYFeePerGTStaked);
     }
@@ -185,5 +173,19 @@ contract GTStaking {
     function _sendETHGainToUser(address _user, uint ETHGain) internal returns (bool) {
         (bool success, ) = _user.call.value(ETHGain)("");
         require(success, "GTStaking: Failed to send accumulated ETHGain");
+    }
+
+    // --- 'require' functions ---
+
+    function  _requireCallerIsStakingContractDeployer() internal view {
+        require(msg.sender == stakingContractDeployer, "GTStaking: caller is not deployer");
+    }
+
+    function _requireCallerIsCDPManager() internal view {
+        require(msg.sender == cdpManagerAddress, "GTStaking: caller is not CDPM");
+    }
+
+    function _requireCallerIsBorrowerOperations() internal view {
+        require(msg.sender == borrowerOperationsAddress, "GTStaking: caller is not BorrowerOps");
     }
 }

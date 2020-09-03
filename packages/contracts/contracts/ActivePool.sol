@@ -19,30 +19,6 @@ contract ActivePool is Ownable, IPool {
 
     event CDPManagerAddressChanged(address _cdpManagerAddress);
 
-    // --- Modifiers ---
-   
-    modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
-        _;
-    }
-
-    modifier onlyPoolManagerOrPool {
-        require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == stabilityPoolAddress || 
-            _msgSender() == defaultPoolAddress, 
-            "ActivePool: Caller is neither the PoolManager nor a Pool");
-        _;
-    }
-
-    modifier onlyPoolManagerOrCDPManager {
-        require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == cdpManagerAddress, 
-            "ActivePool: Caller is neither the PoolManager nor CDPManager");
-        _;
-    }
-
     // --- Contract setters ---
 
     function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
@@ -77,7 +53,8 @@ contract ActivePool is Ownable, IPool {
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) public onlyPoolManagerOrCDPManager {
+    function sendETH(address _account, uint _amount) external {
+        _requireCallerIsPoolManagerOrCDPManager();
         ETH = ETH.sub(_amount);  
         emit EtherSent(_account, _amount);  
 
@@ -85,11 +62,13 @@ contract ActivePool is Ownable, IPool {
         require(success, "ActivePool: sending ETH failed");
     }
 
-    function increaseCLVDebt(uint _amount) external onlyPoolManager () {
+    function increaseCLVDebt(uint _amount) external {
+        _requireCallerIsPoolManager();
         CLVDebt  = CLVDebt.add(_amount); 
     }
 
-    function decreaseCLVDebt(uint _amount) external onlyPoolManager () {
+    function decreaseCLVDebt(uint _amount) external {
+        _requireCallerIsPoolManager();
         CLVDebt = CLVDebt.sub(_amount); 
     }
 
@@ -99,7 +78,31 @@ contract ActivePool is Ownable, IPool {
         return address(this).balance;
     }
 
-    function () external payable onlyPoolManagerOrPool {
+    // --- 'require' functions ---
+
+    function _requireCallerIsPoolManager() internal view {
+        require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
+    }
+
+     function _requireCallerIsPoolManagerOrPool() internal view {
+        require(
+            _msgSender() == poolManagerAddress || 
+            _msgSender() == stabilityPoolAddress || 
+            _msgSender() == defaultPoolAddress, 
+            "ActivePool: Caller is neither the PoolManager nor a Pool");
+    }
+
+    function _requireCallerIsPoolManagerOrCDPManager() internal view {
+        require(
+            _msgSender() == poolManagerAddress || 
+            _msgSender() == cdpManagerAddress, 
+            "ActivePool: Caller is neither the PoolManager nor CDPManager");
+    }
+
+    // --- Fallback function ---
+
+    function () external payable {
+        _requireCallerIsPoolManagerOrPool();
         require(msg.data.length == 0);
         ETH = ETH.add(msg.value);
     }

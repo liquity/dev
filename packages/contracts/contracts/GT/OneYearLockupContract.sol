@@ -29,18 +29,6 @@ contract OneYearLockupContract {
     event OYLCLocked(uint lockupStartTime);
     event OYLCUnlockedAndEmptied(uint unlockTime);
 
-    // --- Modifiers ---
-
-    modifier onlyLockupDeployer () {
-        require(msg.sender == lockupDeployer, "OYLC: caller is not OYLC deployer");
-        _;
-    }
-
-    modifier onlyBeneficiary () {
-        require(msg.sender == beneficiary, "OYLC: caller is not the beneficiary");
-        _;
-    }
-
     // --- Functions ---
 
     constructor 
@@ -60,7 +48,8 @@ contract OneYearLockupContract {
     initialEntitlement = _initialEntitlement;
     }
 
-    function lockContract() public onlyLockupDeployer returns (bool) {
+    function lockContract() external returns (bool) {
+        _requireCallerIsLockupDeployer();
         _requireContractIsNotActive();
         _requireGTBalanceAtLeastEqualsEntitlement();
 
@@ -70,7 +59,8 @@ contract OneYearLockupContract {
         return true;
     }
 
-    function withdrawLockedGT() public onlyBeneficiary {
+    function withdrawGT() external {
+        _requireCallerIsBeneficiary();
         _requireContractIsActive();
         _requireOneYearPassedSinceLockup();
         
@@ -82,6 +72,14 @@ contract OneYearLockupContract {
     }
 
     // --- 'require' functions ---
+
+    function _requireCallerIsLockupDeployer() internal view {
+        require(msg.sender == lockupDeployer, "OYLC: caller is not OYLC deployer");
+    }
+
+    function _requireCallerIsBeneficiary() internal view {
+        require(msg.sender == beneficiary, "OYLC: caller is not the beneficiary");
+    }
 
     function _requireContractIsActive() internal view returns (bool) {
         require(active == true, "OYLC: Contract must be inactive");

@@ -97,25 +97,6 @@ contract PoolManager is Ownable, IPoolManager {
     event UserDepositChanged(address indexed _user, uint _amount);
     event ETHGainWithdrawn(address indexed _user, uint _ETH, uint _CLVLoss);
 
-    // --- Modifiers ---
-
-    modifier onlyCDPManager() {
-        require(_msgSender() == cdpManagerAddress, "PoolManager: Caller is not the CDPManager");
-        _;
-    }
-
-     modifier onlyBorrowerOperations() {
-        require(_msgSender() == borrowerOperationsAddress, "PoolManager: Caller is not the BorrowerOperations contract");
-        _;
-    }
-
-    modifier onlyStabilityPoolorActivePool {
-        require(
-            _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, 
-            "PoolManager: Caller is neither StabilityPool nor ActivePool");
-        _;
-    }
-
     // --- Dependency setters ---
 
     function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
@@ -195,51 +176,57 @@ contract PoolManager is Ownable, IPoolManager {
     // --- Pool interaction functions ---
 
     // Add the received ETH to the total active collateral
-    function addColl() external payable onlyBorrowerOperations {
-        // Send ETH to Active Pool and increase its recorded ETH balance
-       (bool success, ) = activePoolAddress.call.value(msg.value)("");
-       assert(success == true);
+    function addColl() external payable {
+        _requireCallerIsBorrowerOperations();
+    
+        (bool success, ) = activePoolAddress.call.value(msg.value)("");
+        assert(success == true);
     }
     
     // Transfer the specified amount of ETH to _account and updates the total active collateral
-    function withdrawColl(address _account, uint _ETH) external onlyBorrowerOperations {
+    function withdrawColl(address _account, uint _ETH) external {
+        _requireCallerIsBorrowerOperations();
         activePool.sendETH(_account, _ETH);
     }
     
     // Issue the specified amount of CLV to _account and increases the total active debt
-    function withdrawCLV(address _account, uint _CLV) external onlyBorrowerOperations {
+    function withdrawCLV(address _account, uint _CLV) external {
+        _requireCallerIsBorrowerOperations();
         activePool.increaseCLVDebt(_CLV);  
         CLV.mint(_account, _CLV);  
     }
     
     // Burn the specified amount of CLV from _account and decreases the total active debt
-    function repayCLV(address _account, uint _CLV) external onlyBorrowerOperations {
+    function repayCLV(address _account, uint _CLV) external {
+        _requireCallerIsBorrowerOperations();
         activePool.decreaseCLVDebt(_CLV);
         CLV.burn(_account, _CLV);
     }           
     
     // Update the Active Pool and the Default Pool when a CDP gets closed
-    function liquidate(uint _CLV, uint _ETH) external onlyCDPManager {
-        // Transfer the debt & coll from the Active Pool to the Default Pool
+    function liquidate(uint _CLV, uint _ETH) external {
+        _requireCallerIsCDPManager();
+
         defaultPool.increaseCLVDebt(_CLV);
         activePool.decreaseCLVDebt(_CLV);
         activePool.sendETH(defaultPoolAddress, _ETH);
     }
 
     // Move a CDP's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
-    function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external onlyCDPManager {
-        // Transfer the debt & coll from the Default Pool to the Active Pool
+    function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external {
+        _requireCallerIsCDPManager();
+
         defaultPool.decreaseCLVDebt(_CLV);  
         activePool.increaseCLVDebt(_CLV); 
         defaultPool.sendETH(activePoolAddress, _ETH); 
     }
 
-    // Burn the received CLV, transfers the redeemed ETH to _account and updates the Active Pool
-    function redeemCollateral(address _account, uint _CLV, uint _ETH) external onlyCDPManager {
-        // Update Active Pool CLV, and send ETH to account
+    // Burn the received CLV, transfer the redeemed ETH to _account and updates the Active Pool
+    function redeemCollateral(address _account, uint _CLV, uint _ETH) external {
+        _requireCallerIsCDPManager();
+       
         CLV.burn(_account, _CLV); 
         activePool.decreaseCLVDebt(_CLV);  
-
         activePool.sendETH(_account, _ETH); 
     }
 
@@ -452,8 +439,9 @@ contract PoolManager is Ownable, IPoolManager {
     function offset(uint _debtToOffset, uint _collToAdd) 
     external 
     payable 
-    onlyCDPManager 
+     
     {    
+        _requireCallerIsCDPManager();
         uint totalCLVDeposits = stabilityPool.getCLV(); 
         if (totalCLVDeposits == 0 || _debtToOffset == 0) { return; }
         
@@ -530,6 +518,20 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- 'require' wrapper functions ---
 
+    function _onlyStabilityPoolorActivePool() internal view {
+        require(
+            _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, 
+            "PoolManager: Caller is neither StabilityPool nor ActivePool");
+    }
+
+    function _requireCallerIsBorrowerOperations() internal view {
+        require(_msgSender() == borrowerOperationsAddress, "PoolManager: Caller is not the BorrowerOperations contract");
+    }
+
+    function _requireCallerIsCDPManager() internal view {
+        require(_msgSender() == cdpManagerAddress, "PoolManager: Caller is not the CDPManager");
+    }
+
     function _requireUserHasDeposit(address _address) internal view {
         uint initialDeposit = initialDeposits[_address];  
         require(initialDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
@@ -539,5 +541,9 @@ contract PoolManager is Ownable, IPoolManager {
         require(cdpManager.getCDPStatus(_user) == 1, "CDPManager: caller must have an active trove to withdraw ETHGain to");
     }
 
-    function () external payable onlyStabilityPoolorActivePool {}
+    // --- Fallback function ---
+    
+    function() external payable {
+        _onlyStabilityPoolorActivePool();
+    }
 }    

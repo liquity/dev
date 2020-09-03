@@ -1,9 +1,7 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CLVTokenData = artifacts.require("./CLVTokenData.sol")
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
+
 
 const th = testHelpers.TestHelper
 const mv = testHelpers.MoneyValues
@@ -24,24 +22,31 @@ contract('All Liquity functions with intra-system access control restrictions', 
   let borrowerOperations
 
   before(async () => {
-    const contracts = await deployLiquity()
+    const coreContracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
-    priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
-    sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
-    nameRegistry = contracts.nameRegistry
-    activePool = contracts.activePool
-    stabilityPool = contracts.stabilityPool
-    defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
-    borrowerOperations = contracts.borrowerOperations
+    priceFeed = coreContracts.priceFeed
+    clvToken = coreContracts.clvToken
+    poolManager = coreContracts.poolManager
+    sortedCDPs = coreContracts.sortedCDPs
+    cdpManager = coreContracts.cdpManager
+    nameRegistry = coreContracts.nameRegistry
+    activePool = coreContracts.activePool
+    stabilityPool = coreContracts.stabilityPool
+    defaultPool = coreContracts.defaultPool
+    functionCaller = coreContracts.functionCaller
+    borrowerOperations = coreContracts.borrowerOperations
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    gtStaking = GTContracts.gtStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
 
-    th.openLoan_allAccounts(accounts.slice(0, 10), contracts, mv._10_Ether, mv._100e18)
+    await deploymentHelper.connectCoreContracts(coreContracts)
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
+
+    th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, mv._10_Ether, mv._100e18)
   })
 
   describe('CDPManager', async accounts => {
@@ -537,7 +542,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CLVToken contract")
       }
     })
 
@@ -552,7 +556,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CLVToken contract")
       }
     })
 

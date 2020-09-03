@@ -15,22 +15,24 @@ contract CommunityIssuance {
 
     event GrowthTokenAddressSet(address _growthTokenAddress);
 
-    // --- Modifiers ---
-
-    modifier onlyCommunityIssuanceDeployer() {
-        require(msg.sender == communityIssuanceDeployer, "GTStaking: caller is not deployer");
-        _;
-    }
-
     // --- Functions ---
 
     constructor() public {
         communityIssuanceDeployer = msg.sender;
     }
 
-    function setGrowthTokenAddress(address _growthTokenAddress) external onlyCommunityIssuanceDeployer {
+    function setGrowthTokenAddress(address _growthTokenAddress) external {
+        _requireCallerIsCommunityIssuanceDeployer();
+        
         growthTokenAddress = _growthTokenAddress;
         growthToken = IGrowthToken(growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
+
+    // --- 'require' functions ---
+
+    function _requireCallerIsCommunityIssuanceDeployer() internal view {
+        require(msg.sender == communityIssuanceDeployer, "CommunityIssuance: caller is not deployer");
+    }
+
 }

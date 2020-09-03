@@ -22,28 +22,24 @@ contract CLVTokenData is Ownable {
         clvTokenAddress = _msgSender();
     }
 
-    // --- Modifiers ---
-    
-    modifier onlyCLVTokenAddress {
-        require(_msgSender() == clvTokenAddress, "CLVTokenData: Caller is not the CLVToken contract");
-        _;
-    }
-
     // --- Balance functions --- 
 
     function getBalance(address _account) external view returns (uint) { 
         return balances[_account];
     }
 
-    function setBalance(address _account, uint256 _newBalance) external onlyCLVTokenAddress {
+    function setBalance(address _account, uint256 _newBalance) external {
+        _requireCallerIsCLVToken();
         balances[_account] = _newBalance;
     }
 
-    function addToBalance(address _account, uint256 _value) external onlyCLVTokenAddress {
+    function addToBalance(address _account, uint256 _value) external {
+        _requireCallerIsCLVToken();
         balances[_account] = balances[_account].add(_value);
     }
 
-    function subFromBalance(address _account, uint256 _value) external onlyCLVTokenAddress {
+    function subFromBalance(address _account, uint256 _value) external {
+        _requireCallerIsCLVToken();
         balances[_account] = balances[_account].sub(_value, 'ERC20: subtracted amount exceeds balance'); 
     }
 
@@ -53,7 +49,14 @@ contract CLVTokenData is Ownable {
         return allowances[_owner][_spender];
     }
 
-    function setAllowance(address _owner, address _spender, uint256 _allowance) external onlyCLVTokenAddress {
+    function setAllowance(address _owner, address _spender, uint256 _allowance) external {
+        _requireCallerIsCLVToken();
         allowances[_owner][_spender] = _allowance;
+    }
+
+    // --- 'require' functions ---
+
+    function _requireCallerIsCLVToken() internal view {
+        require(_msgSender() == clvTokenAddress, "CLVTokenData: Caller is not the CLVToken contract");
     }
 }
