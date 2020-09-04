@@ -859,7 +859,46 @@ class TestHelper {
     }
     return this.getGasMetrics(gasCostList)
   }
+
+  // --- Time functions ---
+
+  static async increaseBlockTimestamp (seconds, currentWeb3Provider) {
+    await currentWeb3Provider.send({
+      id: 0, 
+      jsonrpc: '2.0', 
+      method: 'evm_increaseTime', 
+      params : [seconds]
+    }, 
+    (err) => {if (err) console.log(err)})
+
+    await currentWeb3Provider.send({
+      id: 0, 
+      jsonrpc: '2.0', 
+      method: 'evm_mine'
+    }, 
+    (err) => {if (err) console.log(err)})
+  }
+
+  static async getBlockTimestamp(web3Instance) {
+    const blockNumber = await web3Instance.eth.getBlockNumber()
+    const block =  await web3Instance.eth.getBlock(blockNumber)
+
+    console.log(block.timestamp);
+    return block.timestamp
+  }
+
+  static secondsToDays(seconds) {
+    return Number(seconds) / (60 * 60 * 24)
+  }
+
+  static daysToSeconds(days) {
+    return Number(days) * (60 * 60 * 24)
+  }
 }
+
+
+
+
 
 module.exports = {
   TestHelper: TestHelper,

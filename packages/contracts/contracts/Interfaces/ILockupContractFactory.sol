@@ -12,9 +12,11 @@ interface ILockupContractFactory {
 
     function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external;
 
-     function deployCustomDurationLockupContract(address beneficiary, uint entitlement, uint lockupDuration) external;
+    function deployCustomDurationLockupContract(address beneficiary, uint entitlement, uint lockupDuration) external;
 
     function lockOneYearContracts(address[] calldata addresses) external;
+
+    function lockCustomDurationContracts(address[] calldata addresses) external;
 
     function isRegisteredOneYearLockup(address _addr) external view returns (bool);
 }

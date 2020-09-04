@@ -21,6 +21,8 @@ contract LockupContractFactory {
     // --- Events ---
 
     event GrowthTokenAddressSet(address _growthTokenAddress);
+    event OYLCDeployed(address _OYLCAddress, address _beneficiary, uint _entitlement);
+    event CDLCDeployed(address _CDLCAddress, address _beneficiary, uint _initialEntitlement);
     
     // --- Modifiers ---
 
@@ -50,6 +52,7 @@ contract LockupContractFactory {
                                                         initialEntitlement);
 
         oneYearLockupContractToDeployer[address(oneYearLockupContract)] = msg.sender;
+        emit OYLCDeployed(address(oneYearLockupContract), beneficiary, initialEntitlement);
     }
 
     function deployCustomDurationLockupContract(address beneficiary, uint initialEntitlement, uint lockupDuration) external {
@@ -63,6 +66,7 @@ contract LockupContractFactory {
                                                                         lockupDuration);
 
         customDurationLockupContractToDeployer[address(customDurationLockupContract)] = msg.sender;
+        emit CDLCDeployed(address(customDurationLockupContract),  beneficiary, initialEntitlement);
     }
 
     // Simultaneously lock a set of OYLCs that were originally deployed by the caller, through this Factory.
@@ -72,9 +76,23 @@ contract LockupContractFactory {
             OneYearLockupContract oneYearlockupContract = OneYearLockupContract(addr);
             
             _requireIsRegisteredOneYearLockup(addr);
-            _requireCallerIsOriginalDeployer(addr);
+            _requireCallerIsOriginalDeployerofOYLC(addr);
 
             bool success = oneYearlockupContract.lockContract();
+            require(success, "LockupContractFactory: Failed to lock the contract");
+        }
+    }
+
+    // Simultaneously lock a set of CDLCs that were originally deployed by the caller, through this Factory.
+    function lockCustomDurationContracts(address[] calldata addresses) external {
+        for (uint i = 0; i < addresses.length; i++ ) {
+            address addr = addresses[i];
+            CustomDurationLockupContract customDurationLockupContract = CustomDurationLockupContract(addr);
+            
+            _requireIsRegisteredCustomDurationLockup(addr);
+            _requireCallerIsOriginalDeployerofCDLC(addr);
+
+            bool success = customDurationLockupContract.lockContract();
             require(success, "LockupContractFactory: Failed to lock the contract");
         }
     }
@@ -88,6 +106,15 @@ contract LockupContractFactory {
         return isRegistered;
     }
 
+    function isRegisteredCustomDurationLockup(address _addr) external view returns (bool) {
+        _isRegisteredCustomDurationLockup(_addr);
+    }
+
+    function _isRegisteredCustomDurationLockup(address addr) internal view returns (bool) {
+        bool isRegistered = customDurationLockupContractToDeployer[addr] != address(0);
+        return isRegistered;
+    }
+
     // --- 'require'  functions ---
 
     function _requireGTAddressIsSet() internal view {
@@ -96,17 +123,28 @@ contract LockupContractFactory {
 
     function _requireFactoryIsAtLeastOneYearOld() internal view {
         require(block.timestamp.sub(factoryDeploymentTimestamp) >= ONE_YEAR_IN_SECONDS,
-        "Factory must be less than one year old");
+        "Factory must be at least one year old");
     }
 
-    function _requireIsRegisteredOneYearLockup(address _addr) internal view {
-        require(_isRegisteredOneYearLockup(_addr), 
+    function _requireIsRegisteredOneYearLockup(address _contractAddress) internal view {
+        require(_isRegisteredOneYearLockup(_contractAddress), 
         "LockupContractFactory: is not the address of a registered OneYearLockupContract");
     }
 
-    function _requireCallerIsOriginalDeployer(address _addr) internal view {
-        address deployerAddress = oneYearLockupContractToDeployer[_addr];
+    function _requireIsRegisteredCustomDurationLockup(address _contractAddress) internal view {
+        require(_isRegisteredCustomDurationLockup(_contractAddress), 
+        "LockupContractFactory: is not the address of a registered CustomDurationLockupContract");
+    }
+
+    function _requireCallerIsOriginalDeployerofOYLC(address _contractAddress) internal view {
+        address deployerAddress = oneYearLockupContractToDeployer[_contractAddress];
         require(deployerAddress == msg.sender,
         "LockupContractFactory: OneYearLockupContract was not deployed by the caller");
+    }
+
+     function _requireCallerIsOriginalDeployerofCDLC(address _contractAddress) internal view {
+        address deployerAddress = customDurationLockupContractToDeployer[_contractAddress];
+        require(deployerAddress == msg.sender,
+        "LockupContractFactory: customDurationLockupContract was not deployed by the caller");
     }
 }

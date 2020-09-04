@@ -82,7 +82,7 @@ contract OneYearLockupContract {
     }
 
     function _requireContractIsActive() internal view returns (bool) {
-        require(active == true, "OYLC: Contract must be inactive");
+        require(active == true, "OYLC: Contract must be active");
     }
 
     function _requireContractIsNotActive() internal view returns (bool) {
