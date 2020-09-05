@@ -1,6 +1,6 @@
 import { ethereum, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
-import { TroveChange } from "../../generated/schema";
+import { Trove, TroveChange } from "../../generated/schema";
 
 import {
   decimalize,
@@ -17,7 +17,35 @@ import {
   getCurrentLiquidation,
   getCurrentRedemption
 } from "./System";
-import { getCurrentTroveOfOwner, closeCurrentTroveOfOwner } from "./User";
+import { getUser } from "./User";
+
+export function getCurrentTroveOfOwner(_user: Address): Trove {
+  let owner = getUser(_user);
+  let currentTrove: Trove;
+
+  if (owner.currentTrove == null) {
+    let troveSubId = owner.troveCount++;
+
+    currentTrove = new Trove(_user.toHexString() + "-" + troveSubId.toString());
+    currentTrove.owner = owner.id;
+    currentTrove.status = "open";
+    currentTrove.collateral = DECIMAL_ZERO;
+    currentTrove.debt = DECIMAL_ZERO;
+    owner.currentTrove = currentTrove.id;
+    owner.save();
+  } else {
+    currentTrove = Trove.load(owner.currentTrove) as Trove;
+  }
+
+  return currentTrove;
+}
+
+export function closeCurrentTroveOfOwner(_user: Address): void {
+  let owner = getUser(_user);
+
+  owner.currentTrove = null;
+  owner.save();
+}
 
 function createTroveChange(event: ethereum.Event): TroveChange {
   let sequenceNumber = getChangeSequenceNumber();
@@ -116,6 +144,12 @@ export function updateTrove(
 
   if (_coll == BIGINT_ZERO) {
     closeCurrentTroveOfOwner(_user);
+
+    if (isLiquidation(operation)) {
+      trove.status = "closedByLiquidation";
+    } else {
+      trove.status = "closedByOwner";
+    }
   }
 
   trove.save();

@@ -5,7 +5,37 @@ import { StabilityDepositChange, StabilityDeposit } from "../../generated/schema
 import { decimalize, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
 
 import { getChangeSequenceNumber, initChange } from "./System";
-import { getCurrentStabilityDepositOfOwner, closeCurrentStabilityDepositOfOwner } from "./User";
+import { getUser } from "./User";
+
+export function getCurrentStabilityDepositOfOwner(_user: Address): StabilityDeposit {
+  let owner = getUser(_user);
+  let currentStabilityDeposit: StabilityDeposit;
+
+  if (owner.currentStabilityDeposit == null) {
+    let stabilityDepositSubId = owner.stabilityDepositCount++;
+
+    currentStabilityDeposit = new StabilityDeposit(
+      _user.toHexString() + "-" + stabilityDepositSubId.toString()
+    );
+    currentStabilityDeposit.owner = owner.id;
+    currentStabilityDeposit.depositedAmount = DECIMAL_ZERO;
+    owner.currentStabilityDeposit = currentStabilityDeposit.id;
+    owner.save();
+  } else {
+    currentStabilityDeposit = StabilityDeposit.load(
+      owner.currentStabilityDeposit
+    ) as StabilityDeposit;
+  }
+
+  return currentStabilityDeposit;
+}
+
+export function closeCurrentStabilityDepositOfOwner(_user: Address): void {
+  let owner = getUser(_user);
+
+  owner.currentStabilityDeposit = null;
+  owner.save();
+}
 
 function createStabilityDepositChange(event: ethereum.Event): StabilityDepositChange {
   let sequenceNumber = getChangeSequenceNumber();

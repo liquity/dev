@@ -31,11 +31,18 @@ type User @entity {
   liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
 }
 
+enum TroveStatus {
+  open
+  closedByOwner
+  closedByLiquidation
+}
+
 type Trove @entity {
   "Owner's ID + '-' + an incremented integer"
   id: ID!
 
   owner: User!
+  status: TroveStatus!
 
   collateral: BigDecimal!
   debt: BigDecimal!
