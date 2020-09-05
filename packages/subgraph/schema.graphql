@@ -5,11 +5,15 @@ type System @entity {
   transactionCount: Int!
   changeCount: Int!
   liquidationCount: Int!
+  redemptionCount: Int!
 
   currentPrice: BigDecimal!
 
   "Only used internally as temporary storage. Will always be null in queries"
   currentLiquidation: Liquidation
+
+  "Only used internally as temporary storage. Will always be null in queries"
+  currentRedemption: Redemption
 }
 
 type User @entity {
@@ -125,6 +129,7 @@ type TroveChange implements Change @entity {
   collateralRatioAfter: BigDecimal
 
   liquidation: Liquidation
+  redemption: Redemption
 }
 
 enum StabilityDepositOperation {
@@ -169,4 +174,18 @@ type Liquidation @entity {
   gasCompensation: BigDecimal!
 
   troveChanges: [TroveChange!]! @derivedFrom(field: "liquidation")
+}
+
+type Redemption @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+  redeemer: User!
+
+  tokensAttemptedToRedeem: BigDecimal!
+  tokensActuallyRedeemed: BigDecimal!
+  collateralRedeemed: BigDecimal!
+  partial: Boolean!
+
+  troveChanges: [TroveChange!]! @derivedFrom(field: "redemption")
 }

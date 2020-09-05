@@ -1,6 +1,6 @@
 import { ethereum, Entity, Value, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
-import { System, Transaction, PriceChange, Liquidation } from "../../generated/schema";
+import { System, Transaction, PriceChange, Liquidation, Redemption } from "../../generated/schema";
 
 import { decimalize, DECIMAL_INITIAL_PRICE, DECIMAL_ZERO } from "../utils/bignumbers";
 
@@ -19,6 +19,7 @@ function getSystem(): System {
     newSystem.transactionCount = 0;
     newSystem.changeCount = 0;
     newSystem.liquidationCount = 0;
+    newSystem.redemptionCount = 0;
     newSystem.currentPrice = DECIMAL_INITIAL_PRICE;
 
     return newSystem;
@@ -127,14 +128,62 @@ export function finishCurrentLiquidation(
   _liquidatedDebt: BigInt,
   _gasCompensation: BigInt
 ): void {
-  let system = getSystem();
   let currentLiquidation = getCurrentLiquidation(event);
-
   currentLiquidation.liquidatedCollateral = decimalize(_liquidatedColl);
   currentLiquidation.liquidatedDebt = decimalize(_liquidatedDebt);
   currentLiquidation.gasCompensation = decimalize(_gasCompensation);
   currentLiquidation.save();
 
+  let system = getSystem();
   system.currentLiquidation = null;
+  system.save();
+}
+
+function getRedemptionSequenceNumber(): i32 {
+  return increaseCounter("redemptionCount");
+}
+
+export function getCurrentRedemption(event: ethereum.Event): Redemption {
+  let currentRedemptionId = getSystem().currentRedemption;
+  let currentRedemptionOrNull = Redemption.load(currentRedemptionId);
+
+  if (currentRedemptionOrNull == null) {
+    let sequenceNumber = getRedemptionSequenceNumber();
+    let newRedemption = new Redemption(sequenceNumber.toString());
+
+    newRedemption.sequenceNumber = sequenceNumber;
+    newRedemption.transaction = getTransaction(event.transaction, event.block).id;
+    newRedemption.redeemer = getUser(event.transaction.from).id;
+    newRedemption.tokensAttemptedToRedeem = DECIMAL_ZERO;
+    newRedemption.tokensActuallyRedeemed = DECIMAL_ZERO;
+    newRedemption.collateralRedeemed = DECIMAL_ZERO;
+    newRedemption.partial = false;
+    newRedemption.save();
+
+    let system = getSystem();
+    system.currentRedemption = newRedemption.id;
+    system.save();
+
+    currentRedemptionOrNull = newRedemption;
+  }
+
+  return currentRedemptionOrNull as Redemption;
+}
+
+export function finishCurrentRedemption(
+  event: ethereum.Event,
+  _attemptedCLVAmount: BigInt,
+  _actualCLVAmount: BigInt,
+  _ETHSent: BigInt
+): void {
+  let currentRedemption = getCurrentRedemption(event);
+  currentRedemption.tokensAttemptedToRedeem = decimalize(_attemptedCLVAmount);
+  currentRedemption.tokensActuallyRedeemed = decimalize(_actualCLVAmount);
+  currentRedemption.collateralRedeemed = decimalize(_ETHSent);
+  currentRedemption.partial = _actualCLVAmount < _attemptedCLVAmount;
+  currentRedemption.save();
+
+  let system = getSystem();
+  system.currentRedemption = null;
   system.save();
 }

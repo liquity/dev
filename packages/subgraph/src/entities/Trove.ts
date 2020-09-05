@@ -14,7 +14,8 @@ import {
   getChangeSequenceNumber,
   initChange,
   getCurrentPrice,
-  getCurrentLiquidation
+  getCurrentLiquidation,
+  getCurrentRedemption
 } from "./System";
 import { getCurrentTroveOfOwner, closeCurrentTroveOfOwner } from "./User";
 
@@ -44,6 +45,10 @@ function isLiquidation(operation: string): boolean {
     operation == "liquidateInRecoveryMode" ||
     operation == "partiallyLiquidateInRecoveryMode"
   );
+}
+
+function isRedemption(operation: string): boolean {
+  return operation == "redeemCollateral";
 }
 
 export function updateTrove(
@@ -88,6 +93,11 @@ export function updateTrove(
   if (isLiquidation(operation)) {
     let currentLiquidation = getCurrentLiquidation(event);
     troveChange.liquidation = currentLiquidation.id;
+  }
+
+  if (isRedemption(operation)) {
+    let currentRedemption = getCurrentRedemption(event);
+    troveChange.redemption = currentRedemption.id;
   }
 
   troveChange.save();
