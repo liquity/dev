@@ -6,10 +6,12 @@ contract CommunityIssuance {
 
     // --- Data ---
 
-    address communityIssuanceDeployer;
+    address public communityIssuanceDeployer;
 
     address public growthTokenAddress;
     IGrowthToken growthToken;
+
+    bool active;
 
     // --- Events ---
 
@@ -27,6 +29,11 @@ contract CommunityIssuance {
         growthTokenAddress = _growthTokenAddress;
         growthToken = IGrowthToken(growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
+    }
+
+    function activateContract() external {
+        _requireCallerIsCommunityIssuanceDeployer();
+        active = true;
     }
 
     // --- 'require' functions ---

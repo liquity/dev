@@ -224,7 +224,6 @@ class DeploymentHelper {
       await GTContracts.gtStaking.setGrowthTokenAddress(GTContracts.growthToken.address)
       await GTContracts.lockupContractFactory.setGrowthTokenAddress(GTContracts.growthToken.address)
       await GTContracts.communityIssuance.setGrowthTokenAddress(GTContracts.growthToken.address)
-
   }
   
   static async connectGTContractsToCore(GTContracts, coreContracts) {

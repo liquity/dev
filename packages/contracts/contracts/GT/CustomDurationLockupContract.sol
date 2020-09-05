@@ -93,7 +93,7 @@ contract CustomDurationLockupContract {
         require(block.timestamp.sub(lockupStartTimeInSeconds) >= lockupDurationInSeconds, "CDLC: The lockup duration must have passed");
     }
 
-    function _requireGTBalanceAtLeastEqualsEntitlement() internal view returns (bool) {
+    function _requireGTBalanceAtLeastEqualsEntitlement() internal view {
         uint GTBalance = growthToken.balanceOf(address(this));
         require(GTBalance >= initialEntitlement, "CDLC: GT balance of this CDLC must cover the initial entitlement");
     }

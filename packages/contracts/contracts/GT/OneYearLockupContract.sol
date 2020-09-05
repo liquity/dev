@@ -81,19 +81,19 @@ contract OneYearLockupContract {
         require(msg.sender == beneficiary, "OYLC: caller is not the beneficiary");
     }
 
-    function _requireContractIsActive() internal view returns (bool) {
+    function _requireContractIsActive() internal view {
         require(active == true, "OYLC: Contract must be active");
     }
 
-    function _requireContractIsNotActive() internal view returns (bool) {
+    function _requireContractIsNotActive() internal view {
         require(active == false, "OYLC: Contract must not be active");
     }
 
-    function _requireOneYearPassedSinceLockup() internal view returns (bool) {
+    function _requireOneYearPassedSinceLockup() internal view {
         require(block.timestamp.sub(lockupStartTime) >= ONE_YEAR_IN_SECONDS, "OYLC: At least one year since lockup must have passed");
     }
 
-    function _requireGTBalanceAtLeastEqualsEntitlement() internal view returns (bool) {
+    function _requireGTBalanceAtLeastEqualsEntitlement() internal view {
         uint GTBalance = growthToken.balanceOf(address(this));
         require(GTBalance >= initialEntitlement, "OYLC: GT balance of this OYLC must cover the initial entitlement");
     }

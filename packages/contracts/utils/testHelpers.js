@@ -2,6 +2,8 @@
 const web3 = require('web3')
 const BN = require('bn.js')
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
+const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
+const CustomDurationLockupContract = artifacts.require(("./CustomDurationLockupContract.sol"))
 
 const MoneyValues = {
   _1_Ether: web3.utils.toWei('1', 'ether'),
@@ -48,6 +50,7 @@ const MoneyValues = {
   _1e18: web3.utils.toWei('1', 'ether'),
   _2e18: web3.utils.toWei('2', 'ether'),
   _3e18: web3.utils.toWei('3', 'ether'),
+  _4e18: web3.utils.toWei('3', 'ether'),
   _5e18: web3.utils.toWei('5', 'ether'),
   _10e18: web3.utils.toWei('10', 'ether'),
   _13e18: web3.utils.toWei('13', 'ether'),
@@ -92,6 +95,9 @@ const MoneyValues = {
   _2e23: web3.utils.toWei('200000', 'ether'),
   _1e24: web3.utils.toWei('1000000', 'ether'),
   _2e24: web3.utils.toWei('2000000', 'ether'),
+  _3e24: web3.utils.toWei('3000000', 'ether'),
+  _4e24: web3.utils.toWei('4000000', 'ether'),
+  _5e24: web3.utils.toWei('5000000', 'ether'),
   _1e26: web3.utils.toWei('100000000', 'ether'),
   _1e27: web3.utils.toWei('1000000000', 'ether'),
   _2e27: web3.utils.toWei('2000000000', 'ether'),
@@ -194,9 +200,9 @@ class TestHelper {
     const debtBN = web3.utils.toBN(debt)
     const priceBN = web3.utils.toBN(price)
 
-    const ICR = debtBN.eq(this.toBN('0')) ? 
-                this.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff') 
-                : collBN.mul(priceBN).div(debtBN)
+    const ICR = debtBN.eq(this.toBN('0')) ?
+      this.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+      : collBN.mul(priceBN).div(debtBN)
 
     return ICR
   }
@@ -205,7 +211,7 @@ class TestHelper {
     const ICR = await cdpManager.getCurrentICR(account, price)
     return (ICR.gt(MoneyValues._ICR100)) && (ICR.lt(MoneyValues._MCR))
   }
- 
+
   static toBN(num) {
     return web3.utils.toBN(num)
   }
@@ -311,25 +317,25 @@ class TestHelper {
   }
 
   static getEmittedLiquidationValues(liquidationTx) {
-    for (let i = 0; i< liquidationTx.logs.length; i++) {
-      if (liquidationTx.logs[i].event === "Liquidation") { 
+    for (let i = 0; i < liquidationTx.logs.length; i++) {
+      if (liquidationTx.logs[i].event === "Liquidation") {
         const liquidatedDebt = liquidationTx.logs[i].args[0]
         const liquidatedColl = liquidationTx.logs[i].args[1]
         const gasComp = liquidationTx.logs[i].args[2]
 
-        return [ liquidatedDebt, liquidatedColl, gasComp ]
+        return [liquidatedDebt, liquidatedColl, gasComp]
       }
     }
 
-    throw("The transaction logs do not contain a liquidation event")
+    throw ("The transaction logs do not contain a liquidation event")
   }
 
 
   static getEmittedLiquidatedDebt(liquidationTx) {
     return this.getLiquidationEventArg(liquidationTx, 0)  // LiquidatedDebt is position 0 in the Liquidation event
   }
-    
-  static  getEmittedLiquidatedColl(liquidationTx) {
+
+  static getEmittedLiquidatedColl(liquidationTx) {
     return this.getLiquidationEventArg(liquidationTx, 1) // LiquidatedColl is position 1 in the Liquidation event
   }
 
@@ -338,32 +344,32 @@ class TestHelper {
   }
 
   static getLiquidationEventArg(liquidationTx, arg) {
-    for (let i = 0; i< liquidationTx.logs.length; i++) {
-      if (liquidationTx.logs[i].event === "Liquidation") { 
-        return liquidationTx.logs[i].args[arg] 
+    for (let i = 0; i < liquidationTx.logs.length; i++) {
+      if (liquidationTx.logs[i].event === "Liquidation") {
+        return liquidationTx.logs[i].args[arg]
       }
     }
 
-    throw("The transaction logs do not contain a liquidation event")
+    throw ("The transaction logs do not contain a liquidation event")
   }
 
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
     return compositeDebt
   }
-  
+
   static async getBorrowerOpsListHint(contracts, newColl, newDebt, price) {
     const compositeDebt = await this.getCompositeDebt(contracts, newDebt)
     const newICR = await contracts.hintHelpers.computeCR(newColl, compositeDebt, price)
 
     const approxfullListHint = await contracts.hintHelpers.getApproxHint(newICR, 50)
 
-    const exactFullListHint  = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
- 
+    const exactFullListHint = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
+
     return exactFullListHint
   }
 
-  static async getEntireCollAndDebt (contracts, account) {
+  static async getEntireCollAndDebt(contracts, account) {
     // console.log(`account: ${account}`)
     const rawColl = (await contracts.cdpManager.CDPs(account))[1]
     const rawDebt = (await contracts.cdpManager.CDPs(account))[0]
@@ -375,16 +381,16 @@ class TestHelper {
     return { entireColl, entireDebt }
   }
 
-  static async getCollAndDebtFromAddColl(contracts,  account, amount) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
-   
+  static async getCollAndDebtFromAddColl(contracts, account, amount) {
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
+
     const newColl = entireColl.add(this.toBN(amount))
     const newDebt = entireDebt
     return { newColl, newDebt }
   }
 
   static async getCollAndDebtFromWithdrawColl(contracts, account, amount) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
     // console.log(`entireColl  ${entireColl}`)
     // console.log(`entireDebt  ${entireDebt}`)
 
@@ -394,41 +400,41 @@ class TestHelper {
   }
 
   static async getCollAndDebtFromWithdrawCLV(contracts, account, amount) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
 
     const newColl = entireColl
     const newDebt = entireDebt.add(this.toBN(amount))
-  
+
     return { newColl, newDebt }
   }
 
   static async getCollAndDebtFromRepayCLV(contracts, account, amount) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
 
     const newColl = entireColl
     const newDebt = entireDebt.sub(this.toBN(amount))
-  
+
     return { newColl, newDebt }
   }
 
   static async getCollAndDebtFromAdjustment(contracts, account, ETHChange, CLVChange) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
 
     const coll = (await contracts.cdpManager.CDPs(account))[1]
     const debt = (await contracts.cdpManager.CDPs(account))[0]
-   
+
     const newColl = entireColl.add(ETHChange)
     const newDebt = entireDebt.add(CLVChange)
-  
+
     return { newColl, newDebt }
   }
-  
+
   // --- BorrowerOperations gas functions ---
 
   static async openLoan_allAccounts(accounts, contracts, ETHAmount, CLVAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
-    
+
     for (const account of accounts) {
       const hint = await this.getBorrowerOpsListHint(contracts, ETHAmount, CLVAmount, price)
 
@@ -442,7 +448,7 @@ class TestHelper {
   static async openLoan_allAccounts_randomETH(minETH, maxETH, accounts, contracts, CLVAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
-    
+
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
       const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, CLVAmount, price)
@@ -469,8 +475,8 @@ class TestHelper {
     }
     return this.getGasMetrics(gasCostList)
   }
-  
-  static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, contracts, minCLVProportion, maxCLVProportion, logging=false) {
+
+  static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, contracts, minCLVProportion, maxCLVProportion, logging = false) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
     const _1e18 = web3.utils.toBN('1000000000000000000')
@@ -608,7 +614,7 @@ class TestHelper {
 
       const { newColl, newDebt } = await this.getCollAndDebtFromAddColl(contracts, account, amount)
       const hint = await this.getBorrowerOpsListHint(contracts, newColl, newDebt, price)
-      
+
       const tx = await contracts.borrowerOperations.addColl(account, hint, { from: account, value: amount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
@@ -770,10 +776,10 @@ class TestHelper {
 
   static async performRedemptionTx(redeemer, price, contracts, CLVAmount) {
     const redemptionhint = await contracts.hintHelpers.getRedemptionHints(CLVAmount, price)
-    
+
     const firstRedemptionHint = redemptionhint[0]
     const partialRedemptionNewICR = redemptionhint[1]
-  
+
     const approxPartialRedemptionHint = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50)
     const exactPartialRedemptionHint = (await contracts.sortedCDPs.findInsertPosition(partialRedemptionNewICR,
       price,
@@ -785,7 +791,7 @@ class TestHelper {
       exactPartialRedemptionHint,
       partialRedemptionNewICR,
       { from: redeemer })
-    
+
     return tx
   }
 
@@ -860,30 +866,53 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  // --- Time functions ---
+  // --- GT & Lockup Contract functions ---
 
-  static async increaseBlockTimestamp (seconds, currentWeb3Provider) {
-    await currentWeb3Provider.send({
-      id: 0, 
-      jsonrpc: '2.0', 
-      method: 'evm_increaseTime', 
-      params : [seconds]
-    }, 
-    (err) => {if (err) console.log(err)})
-
-    await currentWeb3Provider.send({
-      id: 0, 
-      jsonrpc: '2.0', 
-      method: 'evm_mine'
-    }, 
-    (err) => {if (err) console.log(err)})
+  static getLCAddressFromDeploymentTx(deployedLCTx) {
+    return deployedLCTx.logs[0].args[0]
   }
 
-  static async getBlockTimestamp(web3Instance) {
+  static async getOYLCFromDeploymentTx(deployedOYLCTx) {
+    const deployedOYLCAddress = this.getLCAddressFromDeploymentTx(deployedOYLCTx)  // grab addr of deployed contract from event
+    const OYLC = await OneYearLockupContract.at(deployedOYLCAddress)
+    return OYLC
+  }
+
+  static async getCDLCFromDeploymentTx(deployedCDLCTx) {
+    const deployedCDLCAddress = this.getLCAddressFromDeploymentTx(deployedCDLCTx)  // grab addr of deployed contract from event
+    const CDLC = await CustomDurationLockupContract.at(deployedCDLCAddress)
+    return CDLC
+  }
+
+  // --- Time functions ---
+
+  static async fastForwardTime(seconds, currentWeb3Provider) {
+    await currentWeb3Provider.send({
+      id: 0,
+      jsonrpc: '2.0',
+      method: 'evm_increaseTime',
+      params: [seconds]
+    },
+      (err) => { if (err) console.log(err) })
+
+    await currentWeb3Provider.send({
+      id: 0,
+      jsonrpc: '2.0',
+      method: 'evm_mine'
+    },
+      (err) => { if (err) console.log(err) })
+  }
+
+  static async getLatestBlockTimestamp(web3Instance) {
     const blockNumber = await web3Instance.eth.getBlockNumber()
-    const block =  await web3Instance.eth.getBlock(blockNumber)
+    const block = await web3Instance.eth.getBlock(blockNumber)
 
     console.log(block.timestamp);
+    return block.timestamp
+  }
+
+  static async getTimestampFromTx(tx, web3Instance) {
+    const block = await web3Instance.eth.getBlock(tx.receipt.blockNumber)
     return block.timestamp
   }
 
@@ -895,10 +924,6 @@ class TestHelper {
     return Number(days) * (60 * 60 * 24)
   }
 }
-
-
-
-
 
 module.exports = {
   TestHelper: TestHelper,

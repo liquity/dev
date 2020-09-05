@@ -8,7 +8,7 @@ contract GTStaking {
     using SafeMath for uint;
 
     // --- Data ---
-    address stakingContractDeployer;
+    address public stakingContractDeployer;
 
     mapping( address => uint) stakes;
     uint public totalGTStaked;

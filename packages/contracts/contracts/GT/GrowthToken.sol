@@ -41,10 +41,10 @@ contract GrowthToken is IERC20 {
 
     uint public deploymentStartTime;
 
-    address growthTokenDeployer;
-    address communityIssuanceAddress;
+    address public growthTokenDeployer;
+    address public communityIssuanceAddress;
 
-    address lockupFactoryAddress;
+    address public lockupFactoryAddress;
     ILockupContractFactory lockupContractFactory;
 
     // --- Events ---
@@ -55,6 +55,8 @@ contract GrowthToken is IERC20 {
     // --- Functions ---
 
     constructor(address _communityIssuanceAddress, address _lockupFactoryAddress) public {
+        growthTokenDeployer = msg.sender;
+        
         communityIssuanceAddress = _communityIssuanceAddress;
         lockupFactoryAddress = _lockupFactoryAddress;
         lockupContractFactory = ILockupContractFactory(_lockupFactoryAddress);

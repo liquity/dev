@@ -652,8 +652,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       // deploy new OYLC with Carol as beneficiary
       const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, mv._100e18, { from: owner })
 
-      const deployedOYLCAddress = deployedOYLCtx.logs[0].args[0]  // grab addr of deployed contract from event
-      const OYLC = await OneYearLockupContract.at(deployedOYLCAddress)
+      const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
 
       // Check Factory is OYLC deployer
       assert.equal(await OYLC.lockupDeployer(), lockupContractFactory.address)
@@ -677,8 +676,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       // deploy new OYLC with Carol as beneficiary
       const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, mv._100e18, { from: owner })
 
-      const deployedOYLCAddress = deployedOYLCtx.logs[0].args[0]  // grab addr of deployed contract from event
-      const OYLC = await OneYearLockupContract.at(deployedOYLCAddress)
+      const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
 
       // Deployer funds the OYLC
       await growthToken.transfer(OYLC.address, mv._100e18, { from: owner })
@@ -688,7 +686,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       assert.isTrue(await OYLC.active())
 
       // Fast-forward one year, so that beneficiary can withdraw
-      await th.increaseBlockTimestamp(ONE_YEAR_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(ONE_YEAR_IN_SECONDS, web3.currentProvider)
 
       // Bob attempts to withdraw GT
       try {
@@ -707,18 +705,17 @@ contract('All Liquity functions with intra-system access control restrictions', 
   describe('CustomDurationLockupContract', async accounts => {
     it.only("lockContract(): reverts when caller is not deployer", async () => {
       // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
-      await th.increaseBlockTimestamp(ONE_YEAR_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(ONE_YEAR_IN_SECONDS, web3.currentProvider)
 
       // deploy new CDLC with 1 month duration and Carol as beneficiary
       const deployedCDLCtx = await lockupContractFactory
-        .deployCustomDurationLockupContract(
-          carol,
-          mv._100e18,
-          ONE_MONTH_IN_SECONDS,
-          { from: owner })
+      .deployCustomDurationLockupContract(
+        carol,
+        mv._100e18,
+        ONE_MONTH_IN_SECONDS,
+        { from: owner })
 
-      const deployedCDLCAddress = deployedCDLCtx.logs[0].args[0]  // grab addr of deployed contract from event
-      const CDLC = await CustomDurationLockupContract.at(deployedCDLCAddress)
+      const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
 
       // Check Factory is CDLC deployer
       assert.equal(await CDLC.lockupDeployer(), lockupContractFactory.address)
@@ -740,7 +737,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
     it.only("withdrawGT(): reverts when caller is not beneficiary", async () => {
        // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
-       await th.increaseBlockTimestamp(ONE_YEAR_IN_SECONDS, web3.currentProvider)
+       await th.fastForwardTime(ONE_YEAR_IN_SECONDS, web3.currentProvider)
 
       // deploy new CDLC with 1 month duration and Carol as beneficiary
       const deployedCDLCtx = await lockupContractFactory
@@ -750,8 +747,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
         ONE_MONTH_IN_SECONDS,
         { from: owner })
 
-      const deployedCDLCAddress = deployedCDLCtx.logs[0].args[0]  
-      const CDLC = await OneYearLockupContract.at(deployedCDLCAddress)
+      const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
 
       // Deployer funds the CDLC
       await growthToken.transfer(CDLC.address, mv._100e18, { from: owner })
@@ -761,7 +757,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       assert.isTrue(await CDLC.active())
 
       // Fast-forward one month, so that beneficiary can withdraw
-      await th.increaseBlockTimestamp(ONE_MONTH_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(ONE_MONTH_IN_SECONDS, web3.currentProvider)
 
       // Bob attempts to withdraw GT
       try {
