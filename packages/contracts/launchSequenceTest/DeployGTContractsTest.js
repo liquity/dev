@@ -1,4 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
+const testHelpers = require("../utils/testHelpers.js")
+const th = testHelpers.TestHelper
 
 contract('GT Contracts deployments', async accounts => {
   const [liquityAG] = accounts;
@@ -24,8 +26,8 @@ contract('GT Contracts deployments', async accounts => {
     it.only("stores the timestamp for the block in which it was deployed", async () => {
       const storedDeploymentTimestamp = await lockupContractFactory.factoryDeploymentTimestamp()
 
-      const deploymentTx = await web3.eth.getTransaction(lockupContractFactory.transactionHash)
-      const deploymentBlockTimestamp = getTimestampFromTx(deploymentTx)
+      const deploymentTxReceipt = await web3.eth.getTransaction(lockupContractFactory.transactionHash)
+      const deploymentBlockTimestamp = await th.getTimestampFromTxReceipt(deploymentTxReceipt, web3)
 
       assert.equal(storedDeploymentTimestamp, deploymentBlockTimestamp)
     })

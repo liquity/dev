@@ -98,6 +98,7 @@ const MoneyValues = {
   _3e24: web3.utils.toWei('3000000', 'ether'),
   _4e24: web3.utils.toWei('4000000', 'ether'),
   _5e24: web3.utils.toWei('5000000', 'ether'),
+  _6e24: web3.utils.toWei('6000000', 'ether'),
   _1e26: web3.utils.toWei('100000000', 'ether'),
   _1e27: web3.utils.toWei('1000000000', 'ether'),
   _2e27: web3.utils.toWei('2000000000', 'ether'),
@@ -912,7 +913,11 @@ class TestHelper {
   }
 
   static async getTimestampFromTx(tx, web3Instance) {
-    const block = await web3Instance.eth.getBlock(tx.receipt.blockNumber)
+    return this.getTimestampFromTxReceipt(tx.receipt, web3Instance)
+  }
+
+  static async getTimestampFromTxReceipt(txReceipt, web3Instance) {
+    const block = await web3Instance.eth.getBlock(txReceipt.blockNumber)
     return block.timestamp
   }
 
