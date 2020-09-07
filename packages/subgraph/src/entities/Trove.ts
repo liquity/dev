@@ -10,13 +10,9 @@ import {
   DECIMAL_ZERO
 } from "../utils/bignumbers";
 
-import {
-  getChangeSequenceNumber,
-  initChange,
-  getCurrentPrice,
-  getCurrentLiquidation,
-  getCurrentRedemption
-} from "./System";
+import { getChangeSequenceNumber, initChange, getCurrentPrice } from "./System";
+import { getCurrentLiquidation } from "./Liquidation";
+import { getCurrentRedemption } from "./Redemption";
 import { getUser } from "./User";
 
 export function getCurrentTroveOfOwner(_user: Address): Trove {

@@ -10,9 +10,11 @@ import {
 } from "../../generated/CDPManager/CDPManager";
 import { BorrowerOperations, PoolManager, PriceFeed } from "../../generated/templates";
 
-import { finishCurrentLiquidation, finishCurrentRedemption } from "../entities/System";
-import { updateTrove } from "../entities/Trove";
 import { BIGINT_ZERO } from "../utils/bignumbers";
+
+import { finishCurrentLiquidation } from "../entities/Liquidation";
+import { finishCurrentRedemption } from "../entities/Redemption";
+import { updateTrove } from "../entities/Trove";
 
 enum CDPManagerOperation {
   applyPendingRewards,
