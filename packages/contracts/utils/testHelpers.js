@@ -93,6 +93,7 @@ const MoneyValues = {
   _2e22: web3.utils.toWei('20000', 'ether'),
   _1e23: web3.utils.toWei('100000', 'ether'),
   _2e23: web3.utils.toWei('200000', 'ether'),
+  _3e23: web3.utils.toWei('300000', 'ether'),
   _1e24: web3.utils.toWei('1000000', 'ether'),
   _2e24: web3.utils.toWei('2000000', 'ether'),
   _3e24: web3.utils.toWei('3000000', 'ether'),
@@ -908,7 +909,6 @@ class TestHelper {
     const blockNumber = await web3Instance.eth.getBlockNumber()
     const block = await web3Instance.eth.getBlock(blockNumber)
 
-    console.log(block.timestamp);
     return block.timestamp
   }
 

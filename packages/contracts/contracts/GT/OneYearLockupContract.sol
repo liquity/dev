@@ -39,13 +39,13 @@ contract OneYearLockupContract {
     )
     public 
     {
-    lockupDeployer = msg.sender;
+        lockupDeployer = msg.sender;
 
-    growthTokenAddress = _growthTokenAddress;
-    growthToken = IGrowthToken(_growthTokenAddress);
+        growthTokenAddress = _growthTokenAddress;
+        growthToken = IGrowthToken(_growthTokenAddress);
 
-    beneficiary =  _beneficiary;
-    initialEntitlement = _initialEntitlement;
+        beneficiary =  _beneficiary;
+        initialEntitlement = _initialEntitlement;
     }
 
     function lockContract() external returns (bool) {

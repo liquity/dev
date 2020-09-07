@@ -38,14 +38,14 @@ contract CustomDurationLockupContract {
     )
     public 
     {
-    lockupDeployer = msg.sender;
+        lockupDeployer = msg.sender;
 
-    growthTokenAddress = _growthTokenAddress;
-    growthToken = IGrowthToken(_growthTokenAddress);
+        growthTokenAddress = _growthTokenAddress;
+        growthToken = IGrowthToken(_growthTokenAddress);
 
-    beneficiary =  _beneficiary;
-    initialEntitlement = _initialEntitlement;
-    lockupDurationInSeconds = _lockupDurationInSeconds;
+        beneficiary =  _beneficiary;
+        initialEntitlement = _initialEntitlement;
+        lockupDurationInSeconds = _lockupDurationInSeconds;
     }
 
     function lockContract() public returns (bool) {
