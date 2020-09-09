@@ -2,7 +2,7 @@ import { ethereum } from "@graphprotocol/graph-ts";
 
 import { Transaction } from "../../generated/schema";
 
-import { getTransactionSequenceNumber } from "./System";
+import { getTransactionSequenceNumber } from "./Global";
 
 export function getTransaction(
   ethTransaction: ethereum.Transaction,

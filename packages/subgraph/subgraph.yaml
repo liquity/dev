@@ -18,11 +18,14 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.4
       entities:
-        - System
-        - Owner
+        - Global
+        - User
+        - Transaction
         - Trove
         - TroveChange
-        - Transaction
+        - Redemption
+        - Liquidation
+        - SystemState
       abis:
         - name: CDPManager
           file: ../lib/abi/CDPManager.json
@@ -53,11 +56,12 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.4
       entities:
-        - System
-        - Owner
+        - Global
+        - User
+        - Transaction
         - Trove
         - TroveChange
-        - Transaction
+        - SystemState
       abis:
         - name: BorrowerOperations
           file: ../lib/abi/BorrowerOperations.json
@@ -77,11 +81,12 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.4
       entities:
-        - System
-        - Owner
+        - Global
+        - User
+        - Transaction
         - StabilityDeposit
         - StabilityDepositChange
-        - Transaction
+        - SystemState
       abis:
         - name: PoolManager
           file: ../lib/abi/PoolManager.json
@@ -101,9 +106,10 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.4
       entities:
-        - System
-        - PriceChange
+        - Global
         - Transaction
+        - PriceChange
+        - SystemState
       abis:
         - name: PriceFeed
           file: ../lib/abi/PriceFeed.json

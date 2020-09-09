@@ -4,12 +4,12 @@ import { Redemption } from "../../generated/schema";
 
 import { decimalize, DECIMAL_ZERO } from "../utils/bignumbers";
 
-import { getSystem, getRedemptionSequenceNumber } from "./System";
+import { getGlobal, getRedemptionSequenceNumber } from "./Global";
 import { getTransaction } from "./Transaction";
 import { getUser } from "./User";
 
 export function getCurrentRedemption(event: ethereum.Event): Redemption {
-  let currentRedemptionId = getSystem().currentRedemption;
+  let currentRedemptionId = getGlobal().currentRedemption;
   let currentRedemptionOrNull = Redemption.load(currentRedemptionId);
 
   if (currentRedemptionOrNull == null) {
@@ -25,9 +25,9 @@ export function getCurrentRedemption(event: ethereum.Event): Redemption {
     newRedemption.partial = false;
     newRedemption.save();
 
-    let system = getSystem();
-    system.currentRedemption = newRedemption.id;
-    system.save();
+    let global = getGlobal();
+    global.currentRedemption = newRedemption.id;
+    global.save();
 
     currentRedemptionOrNull = newRedemption;
   }
@@ -48,7 +48,7 @@ export function finishCurrentRedemption(
   currentRedemption.partial = _actualCLVAmount < _attemptedCLVAmount;
   currentRedemption.save();
 
-  let system = getSystem();
-  system.currentRedemption = null;
-  system.save();
+  let global = getGlobal();
+  global.currentRedemption = null;
+  global.save();
 }

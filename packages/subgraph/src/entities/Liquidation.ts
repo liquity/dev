@@ -4,12 +4,12 @@ import { Liquidation } from "../../generated/schema";
 
 import { decimalize, DECIMAL_ZERO } from "../utils/bignumbers";
 
-import { getSystem, getLiquidationSequenceNumber } from "./System";
+import { getGlobal, getLiquidationSequenceNumber } from "./Global";
 import { getTransaction } from "./Transaction";
 import { getUser } from "./User";
 
 export function getCurrentLiquidation(event: ethereum.Event): Liquidation {
-  let currentLiquidationId = getSystem().currentLiquidation;
+  let currentLiquidationId = getGlobal().currentLiquidation;
   let currentLiquidationOrNull = Liquidation.load(currentLiquidationId);
 
   if (currentLiquidationOrNull == null) {
@@ -24,9 +24,9 @@ export function getCurrentLiquidation(event: ethereum.Event): Liquidation {
     newLiquidation.gasCompensation = DECIMAL_ZERO;
     newLiquidation.save();
 
-    let system = getSystem();
-    system.currentLiquidation = newLiquidation.id;
-    system.save();
+    let global = getGlobal();
+    global.currentLiquidation = newLiquidation.id;
+    global.save();
 
     currentLiquidationOrNull = newLiquidation;
   }
@@ -46,7 +46,7 @@ export function finishCurrentLiquidation(
   currentLiquidation.gasCompensation = decimalize(_gasCompensation);
   currentLiquidation.save();
 
-  let system = getSystem();
-  system.currentLiquidation = null;
-  system.save();
+  let global = getGlobal();
+  global.currentLiquidation = null;
+  global.save();
 }

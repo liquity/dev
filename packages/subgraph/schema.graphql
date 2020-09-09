@@ -1,19 +1,38 @@
-type System @entity {
+type Global @entity {
   "There should be only one System entity with an ID of 'only'"
   id: ID!
 
+  systemStateCount: Int!
   transactionCount: Int!
   changeCount: Int!
   liquidationCount: Int!
   redemptionCount: Int!
 
-  currentPrice: BigDecimal!
+  currentSystemState: SystemState
 
   "Only used internally as temporary storage. Will always be null in queries"
   currentLiquidation: Liquidation
 
   "Only used internally as temporary storage. Will always be null in queries"
   currentRedemption: Redemption
+}
+
+type SystemState @entity {
+  "Sequence number as an ID (string)"
+  id: ID!
+
+  "Can be used to chronologically sort SystemStates"
+  sequenceNumber: Int!
+
+  price: BigDecimal!
+
+  totalCollateral: BigDecimal!
+  totalDebt: BigDecimal!
+  totalCollateralRatio: BigDecimal
+
+  tokensInStabilityPool: BigDecimal!
+
+  cause: Change @derivedFrom(field: "systemStateAfter")
 }
 
 type User @entity {
@@ -98,6 +117,9 @@ interface Change {
 
   "Transaction that made this change"
   transaction: Transaction!
+
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
 }
 
 enum TroveOperation {
@@ -119,10 +141,11 @@ type TroveChange implements Change @entity {
   id: ID!
   sequenceNumber: Int!
   transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
 
   trove: Trove!
   troveOperation: TroveOperation!
-  price: BigDecimal!
 
   collateralBefore: BigDecimal!
   collateralChange: BigDecimal!
@@ -149,6 +172,8 @@ type StabilityDepositChange implements Change @entity {
   id: ID!
   sequenceNumber: Int!
   transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
 
   stabilityDeposit: StabilityDeposit!
   stabilityDepositOperation: StabilityDepositOperation!
@@ -164,10 +189,10 @@ type PriceChange implements Change @entity {
   id: ID!
   sequenceNumber: Int!
   transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
 
-  priceBefore: BigDecimal!
   priceChange: BigDecimal!
-  priceAfter: BigDecimal!
 }
 
 type Liquidation @entity {

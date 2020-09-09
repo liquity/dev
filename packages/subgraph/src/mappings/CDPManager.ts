@@ -12,35 +12,11 @@ import { BorrowerOperations, PoolManager, PriceFeed } from "../../generated/temp
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
+import { getTroveOperationFromCDPManagerOperation } from "../types/TroveOperation";
+
 import { finishCurrentLiquidation } from "../entities/Liquidation";
 import { finishCurrentRedemption } from "../entities/Redemption";
 import { updateTrove } from "../entities/Trove";
-
-enum CDPManagerOperation {
-  applyPendingRewards,
-  liquidateInNormalMode,
-  liquidateInRecoveryMode,
-  partiallyLiquidateInRecoveryMode,
-  redeemCollateral
-}
-
-function getTroveOperation(operation: CDPManagerOperation): string {
-  switch (operation) {
-    case CDPManagerOperation.applyPendingRewards:
-      return "accrueRewards";
-    case CDPManagerOperation.liquidateInNormalMode:
-      return "liquidateInNormalMode";
-    case CDPManagerOperation.liquidateInRecoveryMode:
-      return "liquidateInRecoveryMode";
-    case CDPManagerOperation.partiallyLiquidateInRecoveryMode:
-      return "partiallyLiquidateInRecoveryMode";
-    case CDPManagerOperation.redeemCollateral:
-      return "redeemCollateral";
-  }
-
-  // AssemblyScript can't tell we will never reach this, so it insists on a return statement
-  return "unreached";
-}
 
 export function handleBorrowerOperationsAddressChanged(
   event: BorrowerOperationsAddressChanged
@@ -62,7 +38,7 @@ export function handleCDPUpdated(event: CDPUpdated): void {
 
   updateTrove(
     event,
-    getTroveOperation(event.params.operation),
+    getTroveOperationFromCDPManagerOperation(event.params.operation),
     event.params._user,
     event.params._coll,
     event.params._debt,
@@ -86,7 +62,7 @@ export function handleCDPLiquidated(event: CDPLiquidated): void {
 
   updateTrove(
     event,
-    getTroveOperation(event.params.operation),
+    getTroveOperationFromCDPManagerOperation(event.params.operation),
     event.params._user,
     BIGINT_ZERO,
     BIGINT_ZERO,

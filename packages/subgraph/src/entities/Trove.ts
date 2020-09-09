@@ -1,4 +1,4 @@
-import { ethereum, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { ethereum, Address, BigInt } from "@graphprotocol/graph-ts";
 
 import { Trove, TroveChange } from "../../generated/schema";
 
@@ -9,13 +9,18 @@ import {
   BIGINT_MAX_UINT256,
   DECIMAL_ZERO
 } from "../utils/bignumbers";
+import { calculateCollateralRatio } from "../utils/collateralRatio";
 
-import { getChangeSequenceNumber, initChange, getCurrentPrice } from "./System";
+import { isLiquidation, isRedemption } from "../types/TroveOperation";
+
+import { getChangeSequenceNumber } from "./Global";
+import { initChange, finishChange } from "./Change";
+import { getCurrentPrice, updateSystemStateByTroveChange } from "./SystemState";
 import { getCurrentLiquidation } from "./Liquidation";
 import { getCurrentRedemption } from "./Redemption";
 import { getUser } from "./User";
 
-export function getCurrentTroveOfOwner(_user: Address): Trove {
+function getCurrentTroveOfOwner(_user: Address): Trove {
   let owner = getUser(_user);
   let currentTrove: Trove;
 
@@ -36,7 +41,7 @@ export function getCurrentTroveOfOwner(_user: Address): Trove {
   return currentTrove;
 }
 
-export function closeCurrentTroveOfOwner(_user: Address): void {
+function closeCurrentTroveOfOwner(_user: Address): void {
   let owner = getUser(_user);
 
   owner.currentTrove = null;
@@ -51,28 +56,9 @@ function createTroveChange(event: ethereum.Event): TroveChange {
   return troveChange;
 }
 
-function calculateCollateralRatio(
-  collateral: BigDecimal,
-  debt: BigDecimal,
-  price: BigDecimal
-): BigDecimal | null {
-  if (debt == DECIMAL_ZERO) {
-    return null;
-  }
-
-  return (collateral * price) / debt;
-}
-
-function isLiquidation(operation: string): boolean {
-  return (
-    operation == "liquidateInNormalMode" ||
-    operation == "liquidateInRecoveryMode" ||
-    operation == "partiallyLiquidateInRecoveryMode"
-  );
-}
-
-function isRedemption(operation: string): boolean {
-  return operation == "redeemCollateral";
+function finishTroveChange(troveChange: TroveChange): void {
+  finishChange(troveChange);
+  troveChange.save();
 }
 
 export function updateTrove(
@@ -98,7 +84,6 @@ export function updateTrove(
 
   troveChange.trove = trove.id;
   troveChange.troveOperation = operation;
-  troveChange.price = price;
 
   troveChange.collateralBefore = trove.collateral;
   troveChange.debtBefore = trove.debt;
@@ -124,7 +109,8 @@ export function updateTrove(
     troveChange.redemption = currentRedemption.id;
   }
 
-  troveChange.save();
+  updateSystemStateByTroveChange(troveChange);
+  finishTroveChange(troveChange);
 
   trove.rawCollateral = _coll;
   trove.rawDebt = _debt;
