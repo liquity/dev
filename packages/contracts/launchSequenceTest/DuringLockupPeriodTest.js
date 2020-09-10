@@ -212,7 +212,7 @@ contract('During the initial lockup period', async accounts => {
       assert.isTrue(OYLCDeploymentTx_4.receipt.status)
     })
 
-    it.only("GT Deployer can deploy OYLCs directly", async () => {
+    it("GT Deployer can deploy OYLCs directly", async () => {
       // GT deployer deploys CDLCs
       const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, mv._1e18, { from: liquityAG })
       const OYLC_A_txReceipt = await web3.eth.getTransactionReceipt(OYLC_A.transactionHash)
@@ -229,7 +229,7 @@ contract('During the initial lockup period', async accounts => {
       assert.isTrue(OYLC_C_txReceipt.status)
     })
 
-    it.only("Anyone can deploy OYLCs directly", async () => {
+    it("Anyone can deploy OYLCs directly", async () => {
       // Various EOAs deploy OYLCs
       const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, mv._1e18, { from: D })
       const OYLC_A_txReceipt = await web3.eth.getTransactionReceipt(OYLC_A.transactionHash)

@@ -17,13 +17,13 @@ contract('GT Contracts deployments', async accounts => {
   })
 
   describe('LockupContractFactory deployment', async accounts => {
-    it.only("stores the deployer's address", async () => {
+    it("stores the deployer's address", async () => {
       const storedDeployerAddress = await lockupContractFactory.factoryDeployer()
 
       assert.equal(liquityAG, storedDeployerAddress)
     })
 
-    it.only("stores the timestamp for the block in which it was deployed", async () => {
+    it("stores the timestamp for the block in which it was deployed", async () => {
       const storedDeploymentTimestamp = await lockupContractFactory.factoryDeploymentTimestamp()
 
       const deploymentTxReceipt = await web3.eth.getTransaction(lockupContractFactory.transactionHash)
@@ -34,7 +34,7 @@ contract('GT Contracts deployments', async accounts => {
   })
 
   describe('CommunityIssuance deployment', async accounts => {
-    it.only("stores the deployer's address", async () => {
+    it("stores the deployer's address", async () => {
       const storedDeployerAddress = await communityIssuance.communityIssuanceDeployer()
 
       assert.equal(liquityAG, storedDeployerAddress)
@@ -42,7 +42,7 @@ contract('GT Contracts deployments', async accounts => {
   })
 
   describe('GTStaking deployment', async accounts => {
-    it.only("stores the deployer's address", async () => {
+    it("stores the deployer's address", async () => {
       const storedDeployerAddress = await gtStaking.stakingContractDeployer()
 
       assert.equal(liquityAG, storedDeployerAddress)
@@ -50,26 +50,26 @@ contract('GT Contracts deployments', async accounts => {
   })
 
   describe('GrowthToken deployment', async accounts => {
-    it.only("stores the deployer's address", async () => {
+    it("stores the deployer's address", async () => {
       const storedDeployerAddress = await growthToken.growthTokenDeployer()
 
       assert.equal(liquityAG, storedDeployerAddress)
     })
 
-    it.only("stores the CommunityIssuance address", async () => {
+    it("stores the CommunityIssuance address", async () => {
       const storedCIAddress = await growthToken.communityIssuanceAddress()
 
       assert.equal(communityIssuance.address, storedCIAddress)
 
     })
 
-    it.only("stores the LockupContractFactory address", async () => {
+    it("stores the LockupContractFactory address", async () => {
       const storedLCFAddress = await growthToken.lockupFactoryAddress()
 
       assert.equal(lockupContractFactory.address, storedLCFAddress)
     })
 
-    it.only("mints the correct GT amount to the deployer's address: (2/3 * 100million)", async () => {
+    it("mints the correct GT amount to the deployer's address: (2/3 * 100million)", async () => {
       const deployerGTEntitlement = await growthToken.balanceOf(liquityAG)
 
       // (2/3 * 100million ), as a uint representation of 18-digit decimal
@@ -78,7 +78,7 @@ contract('GT Contracts deployments', async accounts => {
       assert.equal(_twentySix_Sixes, deployerGTEntitlement)
     })
 
-    it.only("mints the correct GT amount to the CommunityIssuance contract address: (1/3 * 100million)", async () => {
+    it("mints the correct GT amount to the CommunityIssuance contract address: (1/3 * 100million)", async () => {
       const communityGTEntitlement = await growthToken.balanceOf(communityIssuance.address)
 
       // (1/3 * 100million ), as a uint representation of 18-digit decimal
@@ -89,7 +89,7 @@ contract('GT Contracts deployments', async accounts => {
   })
 
   describe('Connecting GrowthToken to LCF, CI and GTStaking', async accounts => {
-    it.only('sets the correct GrowthToken address in GTStaking', async () => { 
+    it('sets the correct GrowthToken address in GTStaking', async () => { 
       // Set the GrowthToken address in the LCF, CI and GTStaking
       await deploymentHelper.connectGTContracts(GTContracts)
       
@@ -99,7 +99,7 @@ contract('GT Contracts deployments', async accounts => {
       assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
     })
 
-    it.only('sets the correct GrowthToken address in LockupContractFactory', async () => {
+    it('sets the correct GrowthToken address in LockupContractFactory', async () => {
       // Set the GrowthToken address in the LCF, CI and GTStaking
       await deploymentHelper.connectGTContracts(GTContracts)
 
@@ -109,7 +109,7 @@ contract('GT Contracts deployments', async accounts => {
       assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
     })
 
-    it.only('sets the correct GrowthToken address in LockupContractFactory', async () => {
+    it('sets the correct GrowthToken address in LockupContractFactory', async () => {
        // Set the GrowthToken address in the LCF, CI and GTStaking
        await deploymentHelper.connectGTContracts(GTContracts)
 

@@ -57,7 +57,7 @@ contract('Deploying and funding GT contracts', async accounts => {
       assert.isTrue(OYLCDeploymentTx_4.receipt.status)
     })
 
-    it.only("GT Deployer can deploy OYLCs directly", async () => {
+    it("GT Deployer can deploy OYLCs directly", async () => {
       // GT deployer deploys CDLCs
       const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, mv._1e18, { from: liquityAG })
       const OYLC_A_txReceipt = await web3.eth.getTransactionReceipt(OYLC_A.transactionHash)
@@ -74,7 +74,7 @@ contract('Deploying and funding GT contracts', async accounts => {
       assert.isTrue(OYLC_C_txReceipt.status)
     })
 
-    it.only("Anyone can deploy OYLCs directly", async () => {
+    it("Anyone can deploy OYLCs directly", async () => {
       // Various EOAs deploy OYLCs
       const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, mv._1e18, { from: D })
       const OYLC_A_txReceipt = await web3.eth.getTransactionReceipt(OYLC_A.transactionHash)
@@ -291,7 +291,7 @@ contract('Deploying and funding GT contracts', async accounts => {
   })
 
   describe('Withdrawal attempts on funded, inactive OYLCs', async accounts => {
-    it.only("Beneficiary can't withdraw from their funded inactive OYLC", async () => {
+    it("Beneficiary can't withdraw from their funded inactive OYLC", async () => {
       // Deploy 3 OYLCs
       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, GTEntitlement_A, { from: liquityAG })
       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, GTEntitlement_B, { from: liquityAG })
@@ -329,7 +329,7 @@ contract('Deploying and funding GT contracts', async accounts => {
       }
     })
 
-    it.only("GT deployer can't withraw from an inactive OYLC they funded", async () => {
+    it("GT deployer can't withraw from an inactive OYLC they funded", async () => {
       // Deploy 3 OYLCs
       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, GTEntitlement_A, { from: liquityAG })
       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, GTEntitlement_B, { from: liquityAG })
@@ -366,7 +366,7 @@ contract('Deploying and funding GT contracts', async accounts => {
       }
     })
 
-    it.only("No one can withraw from an inactive OYLC", async () => {
+    it("No one can withraw from an inactive OYLC", async () => {
       // Deploy 3 OYLCs
       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, GTEntitlement_A, { from: D })
 
@@ -528,7 +528,7 @@ contract('Deploying and funding GT contracts', async accounts => {
       assert.equal(lockupTxTimestamp_2, lockupStartTime_E)
     })
 
-    it.only("Locking reverts if caller is not the deployer", async () => {
+    it("Locking reverts if caller is not the deployer", async () => {
       // Deploy 2 OYLCs
       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, GTEntitlement_A, { from: liquityAG })
       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, GTEntitlement_B, { from: C })
@@ -568,7 +568,7 @@ contract('Deploying and funding GT contracts', async accounts => {
   })
 
   describe('Deploying CDLCs', async accounts => {
-    it.only("No one can deploy CDLCs through the factory", async () => {
+    it("No one can deploy CDLCs through the factory", async () => {
       try {
         const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, ONE_MONTH_IN_SECONDS, { from: liquityAG })
         assert.isFalse(deployedCDLCtx_A.receipt.status)
@@ -591,7 +591,7 @@ contract('Deploying and funding GT contracts', async accounts => {
       }
     })
 
-    it.only("Anyone can deploy CDLCs directly", async () => {
+    it("Anyone can deploy CDLCs directly", async () => {
       // Various EOAs deploy CDLCs
       const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, GTEntitlement_A, ONE_MONTH_IN_SECONDS, { from: D })
       const CDLC_A_txReceipt = await web3.eth.getTransactionReceipt(CDLC_A.transactionHash)
