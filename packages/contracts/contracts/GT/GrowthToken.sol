@@ -3,6 +3,7 @@ pragma solidity 0.5.16;
 import "../Dependencies/IERC20.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ILockupContractFactory.sol";
+import "../Dependencies/console.sol";
 
 /**
 Based upon OpenZeppelin's last ERC20 contract for Solidity 0.5.x:
@@ -56,6 +57,7 @@ contract GrowthToken is IERC20 {
 
     constructor(address _communityIssuanceAddress, address _lockupFactoryAddress) public {
         growthTokenDeployer = msg.sender;
+        deploymentStartTime  = block.timestamp;
         
         communityIssuanceAddress = _communityIssuanceAddress;
         lockupFactoryAddress = _lockupFactoryAddress;
@@ -82,8 +84,8 @@ contract GrowthToken is IERC20 {
 
     function transfer(address recipient, uint256 amount) public returns (bool) {
         // Restrict the deployer's transfers in first year
-        if (_callerIsDeployer() && isFirstYear()) {
-            _requireRecipientIsOYLC(recipient);
+        if (_callerIsDeployer() && _isFirstYear()) {
+            _requireRecipientIsRegisteredOYLC(recipient);
         }
 
         // Otherwise, standard transfer functionality
@@ -96,14 +98,14 @@ contract GrowthToken is IERC20 {
     }
 
     function approve(address spender, uint256 amount) public returns (bool) {
-        if (isFirstYear()) {_requireCallerIsNotDeployer();}
+        if (_isFirstYear()) {_requireCallerIsNotDeployer();}
 
         _approve(msg.sender, spender, amount);
         return true;
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
-        if (isFirstYear()) {_requireRecipientIsNotDeployer(recipient);}
+        if (_isFirstYear()) {_requireRecipientIsNotDeployer(recipient);}
         
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
@@ -111,14 +113,14 @@ contract GrowthToken is IERC20 {
     }
 
     function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
-        if (isFirstYear()) {_requireCallerIsNotDeployer();}
+        if (_isFirstYear()) {_requireCallerIsNotDeployer();}
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
-        if (isFirstYear()) {_requireCallerIsNotDeployer();}
+        if (_isFirstYear()) {_requireCallerIsNotDeployer();}
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
@@ -170,14 +172,15 @@ contract GrowthToken is IERC20 {
         return (msg.sender == growthTokenDeployer);
     }
 
-    function isFirstYear() internal view returns (bool) {
+    function _isFirstYear() internal view returns (bool) {
         return (block.timestamp.sub(deploymentStartTime) < ONE_YEAR_IN_SECONDS);
     }
 
     // --- 'require' functions ---
 
-    function _requireRecipientIsOYLC(address _recipient) internal view {
-        require(lockupContractFactory.isRegisteredOneYearLockup(_recipient), "GrowthToken: recipient must be a OYLC");
+    function _requireRecipientIsRegisteredOYLC(address _recipient) internal view {
+        require(lockupContractFactory.isRegisteredOneYearLockup(_recipient), 
+        "GrowthToken: recipient must be a OYLC registered in the Factory");
     }
 
     function _requireRecipientIsNotDeployer(address _recipient) internal view {
