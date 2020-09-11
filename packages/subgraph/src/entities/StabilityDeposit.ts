@@ -2,10 +2,45 @@ import { ethereum, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
 import { StabilityDepositChange, StabilityDeposit } from "../../generated/schema";
 
-import { DECIMAL_SCALING_FACTOR, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
+import { decimalize, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
 
-import { getChangeSequenceNumber, initChange } from "./System";
-import { getCurrentStabilityDepositOfOwner, closeCurrentStabilityDepositOfOwner } from "./Owner";
+import { getChangeSequenceNumber } from "./Global";
+import { initChange, finishChange } from "./Change";
+import { getUser } from "./User";
+import { updateSystemStateByStabilityDepositChange } from "./SystemState";
+
+function getCurrentStabilityDepositOfOwner(_user: Address): StabilityDeposit | null {
+  let owner = getUser(_user);
+
+  if (owner.currentStabilityDeposit == null) {
+    return null;
+  }
+
+  return StabilityDeposit.load(owner.currentStabilityDeposit);
+}
+
+function openNewStabilityDepositForOwner(_user: Address): StabilityDeposit {
+  let owner = getUser(_user);
+  let stabilityDepositSubId = owner.stabilityDepositCount++;
+
+  let newStabilityDeposit = new StabilityDeposit(
+    _user.toHexString() + "-" + stabilityDepositSubId.toString()
+  );
+  newStabilityDeposit.owner = owner.id;
+  newStabilityDeposit.depositedAmount = DECIMAL_ZERO;
+
+  owner.currentStabilityDeposit = newStabilityDeposit.id;
+  owner.save();
+
+  return newStabilityDeposit;
+}
+
+function closeCurrentStabilityDepositOfOwner(_user: Address): void {
+  let owner = getUser(_user);
+
+  owner.currentStabilityDeposit = null;
+  owner.save();
+}
 
 function createStabilityDepositChange(event: ethereum.Event): StabilityDepositChange {
   let sequenceNumber = getChangeSequenceNumber();
@@ -13,6 +48,11 @@ function createStabilityDepositChange(event: ethereum.Event): StabilityDepositCh
   initChange(stabilityDepositChange, event, sequenceNumber);
 
   return stabilityDepositChange;
+}
+
+function finishStabilityDepositChange(stabilityDepositChange: StabilityDepositChange): void {
+  finishChange(stabilityDepositChange);
+  stabilityDepositChange.save();
 }
 
 function updateStabilityDepositByOperation(
@@ -39,7 +79,8 @@ function updateStabilityDepositByOperation(
     stabilityDepositChange.collateralGain = collateralGain;
   }
 
-  stabilityDepositChange.save();
+  updateSystemStateByStabilityDepositChange(stabilityDepositChange);
+  finishStabilityDepositChange(stabilityDepositChange);
 }
 
 export function updateStabilityDeposit(
@@ -47,14 +88,22 @@ export function updateStabilityDeposit(
   _user: Address,
   _amount: BigInt
 ): void {
-  let stabilityDeposit = getCurrentStabilityDepositOfOwner(_user);
-  let newDepositedAmount = _amount.divDecimal(DECIMAL_SCALING_FACTOR);
+  let stabilityDepositOrNull = getCurrentStabilityDepositOfOwner(_user);
+  let newDepositedAmount = decimalize(_amount);
 
-  if (newDepositedAmount == stabilityDeposit.depositedAmount) {
+  if (
+    (stabilityDepositOrNull == null && newDepositedAmount == DECIMAL_ZERO) ||
+    (stabilityDepositOrNull != null && newDepositedAmount == stabilityDepositOrNull.depositedAmount)
+  ) {
     // Don't create a StabilityDepositChange when there's no change... duh.
     // It means user only wanted to withdraw collateral gains.
     return;
   }
+
+  let stabilityDeposit =
+    stabilityDepositOrNull != null
+      ? (stabilityDepositOrNull as StabilityDeposit)
+      : openNewStabilityDepositForOwner(_user);
 
   updateStabilityDepositByOperation(
     event,
@@ -81,8 +130,8 @@ export function withdrawCollateralGainFromStabilityDeposit(
     return;
   }
 
-  let stabilityDeposit = getCurrentStabilityDepositOfOwner(_user);
-  let depositLoss = _CLVLoss.divDecimal(DECIMAL_SCALING_FACTOR);
+  let stabilityDeposit = getCurrentStabilityDepositOfOwner(_user) as StabilityDeposit;
+  let depositLoss = decimalize(_CLVLoss);
   let newDepositedAmount = stabilityDeposit.depositedAmount - depositLoss;
 
   updateStabilityDepositByOperation(
@@ -90,7 +139,7 @@ export function withdrawCollateralGainFromStabilityDeposit(
     stabilityDeposit,
     "withdrawCollateralGain",
     newDepositedAmount,
-    _ETH.divDecimal(DECIMAL_SCALING_FACTOR)
+    decimalize(_ETH)
   );
 
   if (newDepositedAmount == DECIMAL_ZERO) {

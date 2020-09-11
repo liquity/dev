@@ -1,17 +1,52 @@
-import { ethereum, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { ethereum, Address, BigInt } from "@graphprotocol/graph-ts";
 
-import { TroveChange } from "../../generated/schema";
+import { Trove, TroveChange } from "../../generated/schema";
 
 import {
+  decimalize,
   BIGINT_SCALING_FACTOR,
-  DECIMAL_SCALING_FACTOR,
   BIGINT_ZERO,
   BIGINT_MAX_UINT256,
   DECIMAL_ZERO
 } from "../utils/bignumbers";
+import { calculateCollateralRatio } from "../utils/collateralRatio";
 
-import { getChangeSequenceNumber, initChange, getCurrentPrice } from "./System";
-import { getCurrentTroveOfOwner, closeCurrentTroveOfOwner } from "./Owner";
+import { isLiquidation, isRedemption } from "../types/TroveOperation";
+
+import { getChangeSequenceNumber } from "./Global";
+import { initChange, finishChange } from "./Change";
+import { getCurrentPrice, updateSystemStateByTroveChange } from "./SystemState";
+import { getCurrentLiquidation } from "./Liquidation";
+import { getCurrentRedemption } from "./Redemption";
+import { getUser } from "./User";
+
+function getCurrentTroveOfOwner(_user: Address): Trove {
+  let owner = getUser(_user);
+  let currentTrove: Trove;
+
+  if (owner.currentTrove == null) {
+    let troveSubId = owner.troveCount++;
+
+    currentTrove = new Trove(_user.toHexString() + "-" + troveSubId.toString());
+    currentTrove.owner = owner.id;
+    currentTrove.status = "open";
+    currentTrove.collateral = DECIMAL_ZERO;
+    currentTrove.debt = DECIMAL_ZERO;
+    owner.currentTrove = currentTrove.id;
+    owner.save();
+  } else {
+    currentTrove = Trove.load(owner.currentTrove) as Trove;
+  }
+
+  return currentTrove;
+}
+
+function closeCurrentTroveOfOwner(_user: Address): void {
+  let owner = getUser(_user);
+
+  owner.currentTrove = null;
+  owner.save();
+}
 
 function createTroveChange(event: ethereum.Event): TroveChange {
   let sequenceNumber = getChangeSequenceNumber();
@@ -21,16 +56,9 @@ function createTroveChange(event: ethereum.Event): TroveChange {
   return troveChange;
 }
 
-function calculateCollateralRatio(
-  collateral: BigDecimal,
-  debt: BigDecimal,
-  price: BigDecimal
-): BigDecimal | null {
-  if (debt == DECIMAL_ZERO) {
-    return null;
-  }
-
-  return collateral * price / debt;
+function finishTroveChange(troveChange: TroveChange): void {
+  finishChange(troveChange);
+  troveChange.save();
 }
 
 export function updateTrove(
@@ -44,8 +72,8 @@ export function updateTrove(
   snapshotCLVDebt: BigInt
 ): void {
   let trove = getCurrentTroveOfOwner(_user);
-  let newCollateral = _coll.divDecimal(DECIMAL_SCALING_FACTOR);
-  let newDebt = _debt.divDecimal(DECIMAL_SCALING_FACTOR);
+  let newCollateral = decimalize(_coll);
+  let newDebt = decimalize(_debt);
 
   if (newCollateral == trove.collateral && newDebt == trove.debt) {
     return;
@@ -56,7 +84,6 @@ export function updateTrove(
 
   troveChange.trove = trove.id;
   troveChange.troveOperation = operation;
-  troveChange.price = price;
 
   troveChange.collateralBefore = trove.collateral;
   troveChange.debtBefore = trove.debt;
@@ -72,7 +99,18 @@ export function updateTrove(
   troveChange.collateralChange = troveChange.collateralAfter - troveChange.collateralBefore;
   troveChange.debtChange = troveChange.debtAfter - troveChange.debtBefore;
 
-  troveChange.save();
+  if (isLiquidation(operation)) {
+    let currentLiquidation = getCurrentLiquidation(event);
+    troveChange.liquidation = currentLiquidation.id;
+  }
+
+  if (isRedemption(operation)) {
+    let currentRedemption = getCurrentRedemption(event);
+    troveChange.redemption = currentRedemption.id;
+  }
+
+  updateSystemStateByTroveChange(troveChange);
+  finishTroveChange(troveChange);
 
   trove.rawCollateral = _coll;
   trove.rawDebt = _debt;
@@ -81,13 +119,19 @@ export function updateTrove(
   trove.rawSnapshotOfTotalRedistributedDebt = snapshotCLVDebt;
 
   if (_debt != BIGINT_ZERO) {
-    trove.rawCollateralPerDebt = _coll * BIGINT_SCALING_FACTOR / _debt;
+    trove.rawCollateralPerDebt = (_coll * BIGINT_SCALING_FACTOR) / _debt;
   } else {
     trove.rawCollateralPerDebt = BIGINT_MAX_UINT256;
   }
 
   if (_coll == BIGINT_ZERO) {
     closeCurrentTroveOfOwner(_user);
+
+    if (isLiquidation(operation)) {
+      trove.status = "closedByLiquidation";
+    } else {
+      trove.status = "closedByOwner";
+    }
   }
 
   trove.save();
