@@ -1802,15 +1802,15 @@ contract('PoolManager', async accounts => {
 
     })
 
-    it("withdrawFromSPtoCDP(): caller can withdraw full deposit and ETH gain to their trove during Recovery Mode", async () => {
+    it.only("withdrawFromSPtoCDP(): caller can withdraw full deposit and ETH gain to their trove during Recovery Mode", async () => {
       // --- SETUP ---
+
+      await borrowerOperations.openLoan(mv._100e18, defaulter_1, { from: defaulter_1, value: mv._1_Ether })
 
       // A, B, C open loans 
       await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
       await borrowerOperations.openLoan(mv._200e18, bob, { from: bob, value: mv._2_Ether })
       await borrowerOperations.openLoan(mv._300e18, carol, { from: carol, value: mv._3_Ether })
-
-      await borrowerOperations.openLoan(mv._90e18, defaulter_1, { from: defaulter_1, value: mv._1_Ether })
 
       // A, B, C provides 100, 50, 30 CLV to SP
       await poolManager.provideToSP(mv._100e18, { from: alice })
@@ -1819,20 +1819,24 @@ contract('PoolManager', async accounts => {
 
       assert.isFalse(await cdpManager.checkRecoveryMode())
 
-      // Price drops to 105, Defaulter1's ICR: 100 < ICR < 110.
+      // Price drops to 105, 
       await priceFeed.setPrice(mv._105e18)
+      const price = await priceFeed.getPrice()
 
       assert.isTrue(await cdpManager.checkRecoveryMode())
 
-      // Liquidate defaulter 1
-      assert.isTrue(await sortedCDPs.contains(defaulter_1))
-      await cdpManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      // Check defaulter 1 has ICR: 100% < ICR < 110%.
+      assert.isTrue(await th.ICRbetween100and110(defaulter_1, cdpManager, price))
 
       const alice_Collateral_Before = (await cdpManager.CDPs(alice))[1]
       const bob_Collateral_Before = (await cdpManager.CDPs(bob))[1]
       const carol_Collateral_Before = (await cdpManager.CDPs(carol))[1]
 
+       // Liquidate defaulter 1
+       assert.isTrue(await sortedCDPs.contains(defaulter_1))
+       await cdpManager.liquidate(defaulter_1)
+       assert.isFalse(await sortedCDPs.contains(defaulter_1))
+ 
       const alice_ETHGain_Before = await poolManager.getCurrentETHGain(alice)
       const bob_ETHGain_Before = await poolManager.getCurrentETHGain(bob)
       const carol_ETHGain_Before = await poolManager.getCurrentETHGain(carol)

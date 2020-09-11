@@ -370,7 +370,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         // If CDP has the lowest ICR and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution)
         } else if (_user == sortedCDPs.getLast()) {
 
-            if (_CLVInPool == 0) {return V;}
+            if (_CLVInPool == 0) {
+                LiquidationValues memory zeroVals;
+                return zeroVals;
+            }
             _applyPendingRewards(_user);
             _removeStake(_user);
 
@@ -507,6 +510,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
 
+                // Break the loop if it was a partial liquidation
+                if (V.partialAddr != address(0)) {break;}
+
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
@@ -519,7 +525,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
             }  else break;  // break if the loop reaches a CDP with ICR >= MCR
 
-            // Break the loop if it has reached the first CDP in the sorted list
+            // Break the loop if it reaches the first CDP in the sorted list
             if (L.user == sortedCDPs.getFirst()) {break;}
             L.i++;
         }
@@ -621,6 +627,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
 
+                // Break the loop if it was a partial liquidation
+                if (V.partialAddr != address(0)) {break;}
+
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
@@ -674,7 +683,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         T2.totalDebtToRedistribute = T1.totalDebtToRedistribute.add(V.debtToRedistribute);
         T2.totalCollToRedistribute =T1.totalCollToRedistribute .add(V.collToRedistribute);
 
-        // Assign the address of the ppartially liquidated trove and debt/coll values
+        // Assign the address of the partially liquidated trove and debt/coll values
         T2.partialAddr = V.partialAddr;
         T2.partialNewDebt = V.partialNewDebt;
         T2.partialNewColl = V.partialNewColl;
