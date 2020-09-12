@@ -704,11 +704,13 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     
         _updateCDPRewardSnapshots(_user);
         _updateStakeAndTotalStakes(_user);
-
+        
         uint ICR = _getCurrentICR(_user, _price);
 
-        // Insert to full sorted list
+        // Insert to sorted list and add to CDPOwners array
         sortedCDPs.insert(_user, ICR, _price, _user, _user);
+        _addCDPOwnerToArray(_user);
+        
         emit CDPUpdated(_user, _newDebt, _newColl, CDPs[_user].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
     }
 

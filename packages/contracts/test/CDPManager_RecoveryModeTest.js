@@ -879,6 +879,61 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_CDP_isInSortedList_After)
   })
 
+  it.only("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: CDP remains in CDPOwners array", async () => {
+    // --- SETUP ---
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
+
+    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+
+    // Alice deposits 100 CLV in the Stability Pool
+    await poolManager.provideToSP('100000000000000000000', { from: alice })
+
+    // --- TEST ---
+    // price drops to 1ETH:100CLV, reducing TCR below 150%
+    await priceFeed.setPrice('100000000000000000000')
+
+    const recoveryMode = await cdpManager.checkRecoveryMode()
+    assert.isTrue(recoveryMode)
+
+    // Check Bob's CDP is active
+    const bob_CDPStatus_Before = (await cdpManager.CDPs(bob))[3]
+    const bob_CDP_isInSortedList_Before = await sortedCDPs.contains(bob)
+
+    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
+    assert.isTrue(bob_CDP_isInSortedList_Before)
+
+    // Liquidate Bob
+    await cdpManager.liquidate(bob, { from: owner })
+
+    /* Since the pool only contains 100 CLV, and Bob's pre-liquidation debt was 250 CLV, 
+    expect Bob's loan to only be partially offset, and remain active after liquidation */
+
+      // Check Bob is in CDP owners array
+      const arrayLength = (await cdpManager.getCDPOwnersCount()).toNumber()
+      let addressFound = false;
+      let addressIdx = 0;
+  
+      for (let i = 0; i < arrayLength; i++) {
+        const address = (await cdpManager.CDPOwners(i)).toString()
+        if (address == bob) {
+          addressFound = true
+          addressIdx = i
+        }
+      }
+  
+      assert.isTrue(addressFound);
+  
+      // Check CDPOwners idx on trove struct == idx of address found in CDPOwners array
+      const idxOnStruct = (await cdpManager.CDPs(bob))[4].toString()
+      assert.equal(addressIdx.toString(), idxOnStruct)
+  })
+
   it("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: updates loan coll, debt and stake, and system totalStakes", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
@@ -2347,14 +2402,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
-    const ICR_D = await cdpManager.getCurrentICR(dennis, price)
-    const ICR_E = await cdpManager.getCurrentICR(erin, price)
+
 
     assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
     assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
     assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
-    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
-    assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(mv._CCR))
 
     /* Liquidate troves. Troves are ordered by ICR, from low to high:  A, B, C, D, E.
     With 253 in the SP, Alice (102 debt) and Bob (101 debt) should be entirely liquidated. 
@@ -2368,6 +2420,59 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Check C remains active
     assert.isTrue(await sortedCDPs.contains(carol))
     assert.equal((await cdpManager.CDPs(carol))[3].toString(), '1') // check Status is active
+  })
+
+  it.only("liquidateCDPs() with a partial liquidation: partially liquidated trove remains in CDPOwners Array", async () => {
+    // Whale provides 253 CLV to the SP
+    await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: mv._3_Ether })
+    await poolManager.provideToSP('253000000000000000000', { from: whale })
+
+    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: mv._1_Ether })
+
+    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: mv._1_Ether })
+
+    // Price drops 
+    await priceFeed.setPrice(mv._120e18)
+    const price = await priceFeed.getPrice()
+
+    // Check Recovery Mode is active
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    // Check A, B, C, D, E troves are in range 110% < ICR < 150%
+    const ICR_A = await cdpManager.getCurrentICR(alice, price)
+    const ICR_B = await cdpManager.getCurrentICR(bob, price)
+    const ICR_C = await cdpManager.getCurrentICR(carol, price)
+
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+
+    /* Liquidate troves. Troves are ordered by ICR, from low to high:  A, B, C, D, E.
+    With 253 in the SP, Alice (102 debt) and Bob (101 debt) should be entirely liquidated. 
+    That leaves 50 CLV in the Pool to absorb exactly half of Carol's debt (100) */
+    await cdpManager.liquidateCDPs(10)
+
+    // Check C is in CDP owners array
+    const arrayLength = (await cdpManager.getCDPOwnersCount()).toNumber()
+    let addressFound = false;
+    let addressIdx = 0;
+
+    for (let i = 0; i < arrayLength; i++) {
+      const address = (await cdpManager.CDPOwners(i)).toString()
+      if (address == carol) {
+        addressFound = true
+        addressIdx = i
+      }
+    }
+
+    assert.isTrue(addressFound);
+
+    // Check CDPOwners idx on trove struct == idx of address found in CDPOwners array
+    const idxOnStruct = (await cdpManager.CDPs(carol))[4].toString()
+    assert.equal(addressIdx.toString(), idxOnStruct)
   })
 
   it("liquidateCDPs() with a partial liquidation: does not liquidate further troves after the partial", async () => {
@@ -2437,18 +2542,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C, D, E troves are in range 110% < ICR < 150%
+    // Check A, B, C troves are in range 110% < ICR < 150%
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
-    const ICR_D = await cdpManager.getCurrentICR(dennis, price)
-    const ICR_E = await cdpManager.getCurrentICR(erin, price)
 
     assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
     assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
     assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
-    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
-    assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(mv._CCR))
 
     const entireSystemCollBefore = await cdpManager.getEntireSystemColl()
     const entireSystemDebtBefore = await cdpManager.getEntireSystemDebt()
@@ -2492,14 +2593,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
-    const ICR_D = await cdpManager.getCurrentICR(dennis, price)
-    const ICR_E = await cdpManager.getCurrentICR(erin, price)
 
     assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
     assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
     assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
-    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
-    assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(mv._CCR))
 
     /* Liquidate troves. Troves are ordered by ICR, from low to high:  A, B, C, D, E.
     With 253 in the SP, Alice (102 debt) and Bob (101 debt) should be entirely liquidated. 
@@ -2590,6 +2687,57 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Check C remains active
     assert.isTrue(await sortedCDPs.contains(carol))
     assert.equal((await cdpManager.CDPs(carol))[3].toString(), '1') // check Status is active
+  })
+
+  it.only("batchLiquidateTroves() with a partial liquidation: partially liquidated trove remains in CDP Owners array", async () => {
+    // Whale provides 253 CLV to the SP
+    await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: mv._3_Ether })
+    await poolManager.provideToSP('253000000000000000000', { from: whale })
+
+    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: mv._1_Ether })
+
+    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: mv._1_Ether })
+
+    // Price drops 
+    await priceFeed.setPrice(mv._120e18)
+    const price = await priceFeed.getPrice()
+
+    // Check Recovery Mode is active
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    // Check A, B, C troves are in range 110% < ICR < 150%
+    const ICR_A = await cdpManager.getCurrentICR(alice, price)
+    const ICR_B = await cdpManager.getCurrentICR(bob, price)
+    const ICR_C = await cdpManager.getCurrentICR(carol, price)
+
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+
+    const trovesToLiquidate = [alice, bob, carol]
+    await cdpManager.batchLiquidateTroves(trovesToLiquidate)
+
+    // Check C is in CDP owners array
+    const arrayLength = (await cdpManager.getCDPOwnersCount()).toNumber()
+    let addressFound = false;
+    let addressIdx = 0;
+
+    for (let i = 0; i < arrayLength; i++) {
+      const address = (await cdpManager.CDPOwners(i)).toString()
+      if (address == carol) {
+        addressFound = true
+        addressIdx = i
+      }
+    }
+
+    assert.isTrue(addressFound);
+
+    // Check CDPOwners idx on trove struct == idx of address found in CDPOwners array
+    const idxOnStruct = (await cdpManager.CDPs(carol))[4].toString()
+    assert.equal(addressIdx.toString(), idxOnStruct)
   })
 
   it("batchLiquidateTroves() with a partial liquidation: does not liquidate further troves after the partial", async () => {
