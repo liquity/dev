@@ -343,7 +343,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.collToLiquidate = V.entireCDPColl.sub(V.gasCompensation);
 
         // If ICR <= 100%, purely redistribute the CDP across all active CDPs
-        if (_ICR <= 1000000000000000000) {
+        if (_ICR <= _100pct) {
             poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
             _removeStake(_user);
 
@@ -356,7 +356,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
         // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
-        } else if ((_ICR > 1000000000000000000) && (_ICR < MCR)) {
+        } else if ((_ICR > _100pct) && (_ICR < MCR)) {
              poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
             _removeStake(_user);
 
@@ -368,8 +368,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _closeCDP(_user);
             emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
-        // If CDP has the lowest ICR and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution)
-        } else if (_user == sortedCDPs.getLast()) {
+        /* If 110% <= ICR < 150% and there is CLV in the Stability Pool, 
+        only offset it as much as possible (no redistribution) */
+        } else if ((_ICR >= MCR) && (_ICR < CCR)) {
 
             if (_CLVInPool == 0) {
                 LiquidationValues memory zeroVals;
@@ -561,7 +562,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    // Attempt to liquidate a custom set of troves provided by the caller 
+    /* Attempt to liquidate a custom set of troves provided by the caller.  Stops if a partial liquidation is 
+    performed, and thus leaves optimization of the order troves up to the caller.  */
     function batchLiquidateTroves(address[] calldata _troveArray) external {
         require(_troveArray.length != 0, "CDPManager: Calldata address array must not be empty");
         

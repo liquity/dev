@@ -1802,7 +1802,7 @@ contract('PoolManager', async accounts => {
 
     })
 
-    it.only("withdrawFromSPtoCDP(): caller can withdraw full deposit and ETH gain to their trove during Recovery Mode", async () => {
+    it("withdrawFromSPtoCDP(): caller can withdraw full deposit and ETH gain to their trove during Recovery Mode", async () => {
       // --- SETUP ---
 
       await borrowerOperations.openLoan(mv._100e18, defaulter_1, { from: defaulter_1, value: mv._1_Ether })

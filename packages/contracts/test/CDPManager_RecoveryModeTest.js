@@ -595,7 +595,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
   // --- liquidate(), applied to loan with ICR > 110% that has the lowest ICR, and Stability Pool CLV is GREATER THAN liquidated debt ---
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV > liquidated debt: offsets the loan entirely with the pool", async () => {
+  it("liquidate(), with 110% < ICR < 150%, and StabilityPool CLV > debt to liquidate: offsets the loan entirely with the pool", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -618,13 +618,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
-    // Check Bob's ICR is > 110% but still lowest
-    bob_ICR = (await cdpManager.getCurrentICR(bob, price)).toString()
-    alice_ICR = (await cdpManager.getCurrentICR(alice, price)).toString()
-    dennis_ICR = (await cdpManager.getCurrentICR(dennis, price)).toString()
-    assert.equal(bob_ICR, '1200000000000000000')
-    assert.equal(alice_ICR, '1333333333333333333')
-    assert.equal(dennis_ICR, '1333333333333333333')
+    // Check Bob's ICR is between 110 and 150
+    const bob_ICR = await cdpManager.getCurrentICR(bob, price)
+    assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
 
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
@@ -643,7 +639,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(aliceExpectedETHGain, _3_Ether)
   })
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV > liquidated debt: removes stake and updates totalStakes", async () => {
+  it("liquidate(), with  110% < ICR < 150%, and StabilityPool CLV > debt to liquidate: removes stake and updates totalStakes", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -661,6 +657,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
+    const price = await priceFeed.getPrice()
 
     const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
@@ -671,6 +668,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     assert.equal(bob_Stake_Before, _3_Ether)
     assert.equal(totalStakes_Before, _25_Ether)
+
+    // Check Bob's ICR is between 110 and 150
+    bob_ICR = await cdpManager.getCurrentICR(bob, price)
+    assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
 
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
@@ -683,7 +684,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(totalStakes_After, _22_Ether)
   })
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV > liquidated debt: updates system snapshots", async () => {
+  it("liquidate(), with  110% < ICR < 150%, and StabilityPool CLV > debt to liquidate: updates system snapshots", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -701,6 +702,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
+    const price = await priceFeed.getPrice()
 
     const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
@@ -711,6 +713,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     assert.equal(totalStakesSnaphot_before, '0')
     assert.equal(totalCollateralSnapshot_before, '0')
+
+    // Check Bob's ICR is between 110 and 150
+    const bob_ICR = await cdpManager.getCurrentICR(bob, price)
+    assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
 
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
@@ -724,7 +730,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(totalCollateralSnapshot_After, _22_Ether)
   })
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV > liquidated debt: closes the CDP", async () => {
+  it("liquidate(), with 110% < ICR < 150%, and StabilityPool CLV > debt to liquidate: closes the CDP", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -742,6 +748,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
+    const price = await priceFeed.getPrice()
 
     const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
@@ -752,6 +759,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
     assert.isTrue(bob_CDP_isInSortedList_Before)
+
+    // Check Bob's ICR is between 110 and 150
+    const bob_ICR = await cdpManager.getCurrentICR(bob, price)
+    assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
 
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
@@ -764,10 +775,69 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse(bob_CDP_isInSortedList_After)
   })
 
+  it("liquidate(), with 110% < ICR < 150%, and StabilityPool CLV > debt to liquidate: can liquidate troves out of order", async () => {
+    // Whale provides 1000 CLV to the SP
+    await borrowerOperations.openLoan(mv._1000e18, whale, { from: whale, value: mv._10_Ether })
+    await poolManager.provideToSP(mv._1000e18, { from: whale })
+
+    await borrowerOperations.openLoan('100000000000000000000', alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan('99000000000000000000', bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan('98000000000000000000', carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: mv._1_Ether })
+
+    await borrowerOperations.openLoan('97000000000000000000', erin, { from: erin, value: mv._1_Ether })
+    await borrowerOperations.openLoan('96000000000000000000', freddy, { from: freddy, value: mv._1_Ether })
+
+    // Price drops 
+    await priceFeed.setPrice(mv._120e18)
+    const price = await priceFeed.getPrice()
+
+    // Check Recovery Mode is active
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    // Check troves A-D are in range 110% < ICR < 150%
+    const ICR_A = await cdpManager.getCurrentICR(alice, price)
+    const ICR_B = await cdpManager.getCurrentICR(bob, price)
+    const ICR_C = await cdpManager.getCurrentICR(carol, price)
+    const ICR_D = await cdpManager.getCurrentICR(dennis, price)
+
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
+
+    // Troves are ordered by ICR, low to high: A, B, C, D.
+
+    // Liquidate out of ICR order: D, B, C.  Confirm Recovery Mode is active prior to each.
+    const liquidationTx_D = await cdpManager.liquidate(dennis)
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+    const liquidationTx_B = await cdpManager.liquidate(bob)
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+    const liquidationTx_C = await cdpManager.liquidate(carol)
+
+    // Check transactions all succeeded
+    assert.isTrue(liquidationTx_D.receipt.status)
+    assert.isTrue(liquidationTx_B.receipt.status)
+    assert.isTrue(liquidationTx_C.receipt.status)
+
+    // Confirm troves D, B, C removed
+    assert.isFalse(await sortedCDPs.contains(dennis))
+    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedCDPs.contains(carol))
+
+    // Confirm troves have status 'closed' (Status enum element idx 2)
+    assert.equal((await cdpManager.CDPs(dennis))[3], '2')
+    assert.equal((await cdpManager.CDPs(dennis))[3], '2')
+    assert.equal((await cdpManager.CDPs(dennis))[3], '2')
+  })
+
+
   /* --- liquidate() applied to loan with ICR > 110% that has the lowest ICR, and Stability Pool 
   CLV is LESS THAN the liquidated debt: a partial liquidation --- */
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: CDP remains active", async () => {
+  it("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: CDP remains active", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -809,7 +879,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_CDP_isInSortedList_After)
   })
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: updates loan coll, debt and stake, and system totalStakes", async () => {
+  it("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: updates loan coll, debt and stake, and system totalStakes", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -862,7 +932,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(totalStakes_After, '23800000000000000000')
   })
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: updates system shapshots", async () => {
+  it("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: updates system shapshots", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -905,7 +975,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(totalCollateralSnapshot_After, '22000000000000000000')
   })
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: causes correct Pool offset and ETH gain, and doesn't redistribute to active troves", async () => {
+  it("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: causes correct Pool offset and ETH gain, and doesn't redistribute to active troves", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -956,7 +1026,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(L_ETH_After, '0')
   })
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: ICR of partially liquidated trove does not change", async () => {
+  it("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: ICR of partially liquidated trove does not change", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -1056,7 +1126,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(L_ETH_After, '0')
   })
 
-  it("liquidate() with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: total liquidated coll and debt is correct", async () => {
+  it("liquidate() with ICR > 110%, and StabilityPool CLV < liquidated debt: total liquidated coll and debt is correct", async () => {
     // Whale provides 50 CLV to the SP
     await borrowerOperations.openLoan(mv._50e18, whale, { from: whale, value: mv._1_Ether })
     await poolManager.provideToSP(mv._50e18, { from: whale })
@@ -1093,38 +1163,6 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     assert.equal(changeInEntireSystemColl, '500000000000000000')
     assert.equal(changeInEntireSystemDebt, mv._50e18)
-  })
-
-  it("liquidate() with ICR > 110%, loan has lowest ICR, and StabilityPool CLV < liquidated debt: emits correct liquidation event values", async () => {
-    // Whale provides 50 CLV to the SP
-    await borrowerOperations.openLoan(mv._50e18, whale, { from: whale, value: mv._1_Ether })
-    await poolManager.provideToSP(mv._50e18, { from: whale })
-
-    await borrowerOperations.openLoan('100000000000000000000', alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan('99000000000000000000', bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan('98000000000000000000', carol, { from: carol, value: mv._1_Ether })
-
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: mv._1_Ether })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: mv._1_Ether })
-
-    // Price drops 
-    await priceFeed.setPrice(mv._120e18)
-    const price = await priceFeed.getPrice()
-
-    // Check Recovery Mode is active
-    assert.isTrue(await cdpManager.checkRecoveryMode())
-
-    // Check C is in range 110% < ICR < 150%
-    const ICR_A = await cdpManager.getCurrentICR(alice, price)
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-
-    const liquidationTx = await cdpManager.liquidate(alice)
-
-    const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
-
-    assert.equal(liquidatedDebt.toString(), '500000000000000000')
-    assert.equal(liquidatedColl.toString(),  mv._50e18)
-    assert.equal(gasComp, '0')
   })
 
   // --- 
@@ -2498,7 +2536,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C_Before = await cdpManager.getCurrentICR(carol, price)
-   
+
     assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
     assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
     assert.isTrue(ICR_C_Before.gt(mv._MCR) && ICR_C_Before.lt(mv._CCR))
@@ -2537,11 +2575,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
-  
+
     assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
     assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
     assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
- 
+
     const trovesToLiquidate = [alice, bob, carol]
     await cdpManager.batchLiquidateTroves(trovesToLiquidate)
 
@@ -2586,7 +2624,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
     assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(mv._CCR))
 
- 
+
     const trovesToLiquidate = [alice, bob, carol, dennis, erin]
     await cdpManager.batchLiquidateTroves(trovesToLiquidate)
 
@@ -2707,7 +2745,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C_Before = await cdpManager.getCurrentICR(carol, price)
-   
+
     assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
     assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
     assert.isTrue(ICR_C_Before.gt(mv._MCR) && ICR_C_Before.lt(mv._CCR))
@@ -2717,6 +2755,124 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     const ICR_C_After = await cdpManager.getCurrentICR(carol, price)
     assert.equal(ICR_C_Before.toString(), ICR_C_After)
+  })
+
+  it("batchLiquidateTroves(), with 110% < ICR < 150%, and StabilityPool CLV > debt to liquidate: can liquidate troves out of order", async () => {
+    // Whale provides 1000 CLV to the SP
+    await borrowerOperations.openLoan(mv._1000e18, whale, { from: whale, value: mv._10_Ether })
+    await poolManager.provideToSP(mv._1000e18, { from: whale })
+
+    await borrowerOperations.openLoan('100000000000000000000', alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan('99000000000000000000', bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan('98000000000000000000', carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: mv._1_Ether })
+
+    await borrowerOperations.openLoan('97000000000000000000', erin, { from: erin, value: mv._1_Ether })
+    await borrowerOperations.openLoan('96000000000000000000', freddy, { from: freddy, value: mv._1_Ether })
+
+    // Price drops 
+    await priceFeed.setPrice(mv._120e18)
+    const price = await priceFeed.getPrice()
+
+    // Check Recovery Mode is active
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    // Check troves A-D are in range 110% < ICR < 150%
+    const ICR_A = await cdpManager.getCurrentICR(alice, price)
+    const ICR_B = await cdpManager.getCurrentICR(bob, price)
+    const ICR_C = await cdpManager.getCurrentICR(carol, price)
+    const ICR_D = await cdpManager.getCurrentICR(dennis, price)
+
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
+
+    // Troves are ordered by ICR, low to high: A, B, C, D.
+
+    // Liquidate out of ICR order: D, B, C. A (lowest ICR) not included.
+    const trovesToLiquidate = [dennis, bob, carol]
+
+    const liquidationTx = await cdpManager.batchLiquidateTroves(trovesToLiquidate)
+
+    // Check transaction succeeded
+    assert.isTrue(liquidationTx.receipt.status)
+
+    // Confirm troves D, B, C removed
+    assert.isFalse(await sortedCDPs.contains(dennis))
+    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedCDPs.contains(carol))
+
+    // Confirm troves have status 'closed' (Status enum element idx 2)
+    assert.equal((await cdpManager.CDPs(dennis))[3], '2')
+    assert.equal((await cdpManager.CDPs(dennis))[3], '2')
+    assert.equal((await cdpManager.CDPs(dennis))[3], '2')
+  })
+
+  it("batchLiquidateTroves(), with 110% < ICR < 150%, and StabilityPool empty: doesn't liquidate any troves", async () => {
+    await borrowerOperations.openLoan('100000000000000000000', alice, { from: alice, value: mv._1_Ether })
+
+    const bobDebt_Before = '99000000000000000000'
+    const carolDebt_Before = '98000000000000000000'
+    const dennisDebt_Before = '97000000000000000000'
+
+    await borrowerOperations.openLoan(bobDebt_Before, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(carolDebt_Before, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dennisDebt_Before, dennis, { from: dennis, value: mv._1_Ether })
+
+    await borrowerOperations.openLoan('97000000000000000000', erin, { from: erin, value: mv._1_Ether })
+    await borrowerOperations.openLoan('96000000000000000000', freddy, { from: freddy, value: mv._1_Ether })
+
+    // Price drops 
+    await priceFeed.setPrice(mv._120e18)
+    const price = await priceFeed.getPrice()
+
+    // Check Recovery Mode is active
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    // Check troves A-D are in range 110% < ICR < 150%
+    const ICR_A = await cdpManager.getCurrentICR(alice, price)
+    const ICR_B = await cdpManager.getCurrentICR(bob, price)
+    const ICR_C = await cdpManager.getCurrentICR(carol, price)
+    const ICR_D = await cdpManager.getCurrentICR(dennis, price)
+
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
+
+    // Troves are ordered by ICR, low to high: A, B, C, D.
+
+    // Liquidate out of ICR order: D, B, C. A (lowest ICR) not included.
+    const trovesToLiquidate = [dennis, bob, carol]
+
+    const liquidationTx = await cdpManager.batchLiquidateTroves(trovesToLiquidate)
+
+    // Check transaction succeeded
+    assert.isTrue(liquidationTx.receipt.status)
+
+    // Confirm troves D, B, C remain in system
+    assert.isTrue(await sortedCDPs.contains(dennis))
+    assert.isTrue(await sortedCDPs.contains(bob))
+    assert.isTrue(await sortedCDPs.contains(carol))
+
+    // Confirm troves have status 'active' (Status enum element idx 1)
+    assert.equal((await cdpManager.CDPs(dennis))[3], '1')
+    assert.equal((await cdpManager.CDPs(dennis))[3], '1')
+    assert.equal((await cdpManager.CDPs(dennis))[3], '1')
+
+    // Confirm D, B, C coll & debt have not changed
+    const dennisDebt_After = (await cdpManager.CDPs(dennis))[0].add(await cdpManager.getPendingCLVDebtReward(dennis))
+    const bobDebt_After = (await cdpManager.CDPs(bob))[0].add(await cdpManager.getPendingCLVDebtReward(bob))
+    const carolDebt_After = (await cdpManager.CDPs(carol))[0].add(await cdpManager.getPendingCLVDebtReward(carol))
+
+    const dennisColl_After = (await cdpManager.CDPs(dennis))[1].add(await cdpManager.getPendingETHReward(dennis))
+    const bobColl_After = (await cdpManager.CDPs(bob))[1].add(await cdpManager.getPendingETHReward(bob))
+    const carolColl_After = (await cdpManager.CDPs(carol))[1].add(await cdpManager.getPendingETHReward(carol))
+
+    assert.equal(dennisDebt_Before, dennisDebt_After)
+    assert.equal(bobDebt_Before, bobDebt_After)
+    assert.equal(carolDebt_Before, carolDebt_After)
   })
 })
 

@@ -2629,7 +2629,6 @@ contract('CDPManager', async accounts => {
     )
 
     // Bob tries to redeem his illegally obtained CLV
-
     const redemptionTx = await cdpManager.redeemCollateral(
       mv._100e18,
       firstRedemptionHint,
@@ -2668,15 +2667,14 @@ contract('CDPManager', async accounts => {
       bob
     )
 
-    // Bob attempts to redeem his ill-gotten 101 CLV, from a system that  has 100 CLV outstanding debt
-
+    // Bob attempts to redeem his ill-gotten 101 CLV, from a system that has 100 CLV outstanding debt
     const redemptionTx = await cdpManager.redeemCollateral(
       mv._100e18,
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
       { from: bob })
-      
+
     assert.isFalse(redemptionTx.receipt.status);
   })
 
