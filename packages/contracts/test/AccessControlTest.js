@@ -6,6 +6,7 @@ const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
+const dec = th.dec
 const mv = testHelpers.MoneyValues
 
 contract('All Liquity functions with intra-system access control restrictions', async accounts => {
@@ -41,7 +42,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
 
-    th.openLoan_allAccounts(accounts.slice(0, 10), contracts, mv._10_Ether, mv._100e18)
+    th.openLoan_allAccounts(accounts.slice(0, 10), contracts, dec(10, 'ether'), dec(100, 18))
   })
 
   describe('CDPManager', async accounts => {

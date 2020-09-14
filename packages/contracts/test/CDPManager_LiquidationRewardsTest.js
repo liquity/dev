@@ -6,6 +6,7 @@ const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
+const dec = th.dec
 const mv = testHelpers.MoneyValues
 
 contract('CDPManager - Redistribution reward calculations', async accounts => {
@@ -48,11 +49,11 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
   it("redistribution: A, B Open. B Liquidated. C, D Open. D Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {
     // A, B open trove
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
     // Price drops t0 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode())
@@ -63,14 +64,14 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(bob))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     // C, D open troves
-    await borrowerOperations.openLoan(0, carol, { from: carol, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode())
@@ -102,17 +103,17 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
-    assert.equal(entireSystemColl, mv._4_Ether)
+    assert.equal(entireSystemColl, dec(4, 'ether'))
   })
 
   it("redistribution: A, B, C Open. C Liquidated. D, E, F Open. F Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {
     // A, B C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode())
@@ -123,15 +124,15 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     // D, E, F open troves
-    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, erin, { from: erin, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, freddy, { from: freddy, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode())
@@ -174,17 +175,17 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isAtMost(th.getDifference(erin_Coll, '1200000000000000000'), 1000)
 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
-    assert.equal(entireSystemColl, mv._6_Ether)
+    assert.equal(entireSystemColl, dec(6, 'ether'))
   })
   ////
 
   it("redistribution: Sequence of alternate opening/liquidation: final surviving trove has ETH from all previously liquidated troves", async () => {
     // A, B  open troves
-    await borrowerOperations.openLoan(mv._1e18, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._1e18, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(1, 18), bob, { from: bob, value: dec(1, 'ether') })
 
     // Price drops to 1 $/E
-    await priceFeed.setPrice(mv._1e18)
+    await priceFeed.setPrice(dec(1, 18))
 
     // L1: A liquidated
     const txA = await cdpManager.liquidate(alice)
@@ -192,12 +193,12 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(alice))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
     // C, opens trove
-    await borrowerOperations.openLoan(mv._1e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(1, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._1e18)
+    await priceFeed.setPrice(dec(1, 18))
 
     // L2: B Liquidated
     const txB = await cdpManager.liquidate(bob)
@@ -205,12 +206,12 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(bob))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
     // D opens trove
-    await borrowerOperations.openLoan(mv._1e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(1, 18), dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._1e18)
+    await priceFeed.setPrice(dec(1, 18))
 
     // L3: C Liquidated
     const txC = await cdpManager.liquidate(carol)
@@ -218,12 +219,12 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
     // E opens trove
-    await borrowerOperations.openLoan(mv._1e18, erin, { from: erin, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(1, 18), erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._1e18)
+    await priceFeed.setPrice(dec(1, 18))
 
     // L4: D Liquidated
     const txD = await cdpManager.liquidate(dennis)
@@ -231,12 +232,12 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(dennis))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
     // F opens trove
-    await borrowerOperations.openLoan(mv._1e18, freddy, { from: freddy, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(1, 18), freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._1e18)
+    await priceFeed.setPrice(dec(1, 18))
 
     // L5: E Liquidated
     const txE = await cdpManager.liquidate(erin)
@@ -273,23 +274,23 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isAtMost(th.getDifference(dennis_Coll, '0'), 1000)
     assert.isAtMost(th.getDifference(erin_Coll, '0'), 1000)
 
-    assert.isAtMost(th.getDifference(freddy_rawColl, mv._1_Ether), 1000)
-    assert.isAtMost(th.getDifference(freddy_ETHReward, mv._5_Ether), 1000)
+    assert.isAtMost(th.getDifference(freddy_rawColl, dec(1, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(freddy_ETHReward, dec(5, 'ether')), 1000)
 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
-    assert.equal(entireSystemColl, mv._6_Ether)
+    assert.equal(entireSystemColl, dec(6, 'ether'))
   })
 
   // ---Trove adds collateral --- 
 
   it("redistribution: A,B,C Open. Liq(C). B adds coll. Liq(A). B acquires all coll and debt", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
     const txC = await cdpManager.liquidate(carol)
@@ -297,16 +298,16 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     //Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // Alice withdraws 100 CLV
-    await borrowerOperations.withdrawCLV(mv._100e18, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Alice
     const txA = await cdpManager.liquidate(alice)
@@ -322,18 +323,18 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
       .add(await cdpManager.getPendingCLVDebtReward(bob)))
       .toString()
 
-    assert.isAtMost(th.getDifference(bob_Coll, mv._4_Ether), 1000)
-    assert.isAtMost(th.getDifference(bob_CLVDebt, mv._300e18), 1000)
+    assert.isAtMost(th.getDifference(bob_Coll, dec(4, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(bob_CLVDebt, dec(300, 18)), 1000)
   })
 
   it("redistribution: A,B,C Open. Liq(C). B tops up coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
     const txC = await cdpManager.liquidate(carol)
@@ -341,16 +342,16 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     //Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // D opens trove
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate D
     const txA = await cdpManager.liquidate(dennis)
@@ -400,13 +401,13 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). C tops up. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
     const txD = await cdpManager.liquidate(dennis)
@@ -414,7 +415,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(dennis))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     // Expected rewards:  alice: 1 ETH, bob: 1 ETH, carol: 998 ETH
     alice_ETHReward_1 = await cdpManager.getPendingETHReward(alice)
@@ -423,24 +424,24 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
     //Expect 2000 ETH in system now
     const entireSystemColl_1 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
-    assert.equal(entireSystemColl_1, mv._2000_Ether)
+    assert.equal(entireSystemColl_1, dec(2000, 'ether'))
 
-    assert.equal(alice_ETHReward_1.toString(), mv._1_Ether)
-    assert.equal(bob_ETHReward_1.toString(), mv._1_Ether)
+    assert.equal(alice_ETHReward_1.toString(), dec(1, 'ether'))
+    assert.equal(bob_ETHReward_1.toString(), dec(1, 'ether'))
     assert.equal(carol_ETHReward_1.toString(), _998_Ether)
 
     //Carol adds 1 ETH to her trove, brings it to 1997 total coll
-    await borrowerOperations.addColl(carol, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.addColl(carol, carol, { from: carol, value: dec(1, 'ether') })
 
     //Expect 2001 ETH in system now
     const entireSystemColl_2 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_2, '2001000000000000000000')
 
     // E opens with another 2001 ETH
-    await borrowerOperations.openLoan(mv._2e23, erin, { from: erin, value: '2001000000000000000000' })
+    await borrowerOperations.openLoan(dec(2, 23), erin, { from: erin, value: '2001000000000000000000' })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
     const txE = await cdpManager.liquidate(erin)
@@ -473,8 +474,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
       .add(await cdpManager.getPendingETHReward(carol)))
       .toString()
 
-    assert.isAtMost(th.getDifference(alice_Coll, mv._4_Ether), 1000)
-    assert.isAtMost(th.getDifference(bob_Coll, mv._4_Ether), 1000)
+    assert.isAtMost(th.getDifference(alice_Coll, dec(4, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(bob_Coll, dec(4, 'ether')), 1000)
     assert.isAtMost(th.getDifference(carol_Coll, '3994000000000000000000'), 1000)
 
     //Expect 4002 ETH in system now
@@ -486,13 +487,13 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). A, B, C top up. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
     const txD = await cdpManager.liquidate(dennis)
@@ -500,7 +501,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(dennis))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     // Expected rewards:  alice: 1 ETH, bob: 1 ETH, carol: 998 ETH
     alice_ETHReward_1 = await cdpManager.getPendingETHReward(alice)
@@ -509,28 +510,28 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
     //Expect 2000 ETH in system now
     const entireSystemColl_1 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
-    assert.equal(entireSystemColl_1, mv._2000_Ether)
+    assert.equal(entireSystemColl_1, dec(2000, 'ether'))
 
-    assert.equal(alice_ETHReward_1.toString(), mv._1_Ether)
-    assert.equal(bob_ETHReward_1.toString(), mv._1_Ether)
+    assert.equal(alice_ETHReward_1.toString(), dec(1, 'ether'))
+    assert.equal(bob_ETHReward_1.toString(), dec(1, 'ether'))
     assert.equal(carol_ETHReward_1.toString(), _998_Ether)
 
     /* Alice, Bob, Carol each adds 1 ETH to their troves, 
     bringing them to 3,3, 1997 total coll each. */
 
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.addColl(carol, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(carol, carol, { from: carol, value: dec(1, 'ether') })
 
     //Expect 2003 ETH in system now
     const entireSystemColl_2 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_2, '2003000000000000000000')
 
     // E opens with another 2003 ETH
-    await borrowerOperations.openLoan(mv._2e23, erin, { from: erin, value: '2003000000000000000000' })
+    await borrowerOperations.openLoan(dec(2, 23), erin, { from: erin, value: '2003000000000000000000' })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
     const txE = await cdpManager.liquidate(erin)
@@ -563,8 +564,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
       .add(await cdpManager.getPendingETHReward(carol)))
       .toString()
 
-    assert.isAtMost(th.getDifference(alice_Coll, mv._6_Ether), 1000)
-    assert.isAtMost(th.getDifference(bob_Coll, mv._6_Ether), 1000)
+    assert.isAtMost(th.getDifference(alice_Coll, dec(6, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(bob_Coll, dec(6, 'ether')), 1000)
     assert.isAtMost(th.getDifference(carol_Coll, '3994000000000000000000'), 1000)
 
     //Expect 4004 ETH in system now
@@ -576,12 +577,12 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
   it("redistribution: A,B,C Open. Liq(C). B withdraws coll. Liq(A). B acquires all coll and debt", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
     const txC = await cdpManager.liquidate(carol)
@@ -589,16 +590,16 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     //Bob withdraws 0.5 ETH from his trove
-    await borrowerOperations.withdrawColl(mv._5e17, bob, { from: bob })
+    await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, { from: bob })
 
     // Alice withdraws 100 CLV
-    await borrowerOperations.withdrawCLV(mv._100e18, alice, { from: alice })
+    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Alice
     const txA = await cdpManager.liquidate(alice)
@@ -615,17 +616,17 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, '2500000000000000000'), 1000)
-    assert.isAtMost(th.getDifference(bob_CLVDebt, mv._300e18), 1000)
+    assert.isAtMost(th.getDifference(bob_CLVDebt, dec(300, 18)), 1000)
   })
 
   it("redistribution: A,B,C Open. Liq(C). B withdraws coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
     const txC = await cdpManager.liquidate(carol)
@@ -633,16 +634,16 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     //Bob  withdraws 0.5 ETH from his trove
-    await borrowerOperations.withdrawColl(mv._5e17, bob, { from: bob })
+    await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, { from: bob })
 
     // D opens trove
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate D
     const txA = await cdpManager.liquidate(dennis)
@@ -692,13 +693,13 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). C withdraws some coll. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
     const txD = await cdpManager.liquidate(dennis)
@@ -706,7 +707,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(dennis))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     // Expected rewards:  alice: 1 ETH, bob: 1 ETH, carol: 998 ETH
     alice_ETHReward_1 = await cdpManager.getPendingETHReward(alice)
@@ -715,24 +716,24 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
     //Expect 2000 ETH in system now
     const entireSystemColl_1 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
-    assert.equal(entireSystemColl_1, mv._2000_Ether)
+    assert.equal(entireSystemColl_1, dec(2000, 'ether'))
 
-    assert.equal(alice_ETHReward_1.toString(), mv._1_Ether)
-    assert.equal(bob_ETHReward_1.toString(), mv._1_Ether)
+    assert.equal(alice_ETHReward_1.toString(), dec(1, 'ether'))
+    assert.equal(bob_ETHReward_1.toString(), dec(1, 'ether'))
     assert.equal(carol_ETHReward_1.toString(), _998_Ether)
 
     //Carol wthdraws 1 ETH from her trove, brings it to 1995 total coll
-    await borrowerOperations.withdrawColl(mv._1_Ether, carol, { from: carol })
+    await borrowerOperations.withdrawColl(dec(1, 'ether'), carol, { from: carol })
 
     //Expect 1999 ETH in system now
     const entireSystemColl_2 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_2, '1999000000000000000000')
 
     // E opens with another 1999 ETH
-    await borrowerOperations.openLoan(mv._2e23, erin, { from: erin, value: '1999000000000000000000' })
+    await borrowerOperations.openLoan(dec(2, 23), erin, { from: erin, value: '1999000000000000000000' })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
     const txE = await cdpManager.liquidate(erin)
@@ -765,8 +766,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
       .add(await cdpManager.getPendingETHReward(carol)))
       .toString()
 
-    assert.isAtMost(th.getDifference(alice_Coll, mv._4_Ether), 1000)
-    assert.isAtMost(th.getDifference(bob_Coll, mv._4_Ether), 1000)
+    assert.isAtMost(th.getDifference(alice_Coll, dec(4, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(bob_Coll, dec(4, 'ether')), 1000)
     assert.isAtMost(th.getDifference(carol_Coll, '3990000000000000000000'), 1000)
 
     //Expect 4002 ETH in system now
@@ -779,13 +780,13 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). A, B, C withdraw. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openLoan(mv._1e23, dennis, { from: dennis, value: mv._1000_Ether })
+    await borrowerOperations.openLoan(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
     const txD = await cdpManager.liquidate(dennis)
@@ -793,7 +794,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(dennis))
 
     // Price bounces back to 200 $/E
-    await priceFeed.setPrice(mv._200e18)
+    await priceFeed.setPrice(dec(200, 18))
 
     // Expected rewards:  alice: 1 ETH, bob: 1 ETH, carol: 998 ETH
     alice_ETHReward_1 = await cdpManager.getPendingETHReward(alice)
@@ -802,17 +803,17 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
     //Expect 2000 ETH in system now
     const entireSystemColl_1 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
-    assert.equal(entireSystemColl_1, mv._2000_Ether)
+    assert.equal(entireSystemColl_1, dec(2000, 'ether'))
 
-    assert.equal(alice_ETHReward_1.toString(), mv._1_Ether)
-    assert.equal(bob_ETHReward_1.toString(), mv._1_Ether)
+    assert.equal(alice_ETHReward_1.toString(), dec(1, 'ether'))
+    assert.equal(bob_ETHReward_1.toString(), dec(1, 'ether'))
     assert.equal(carol_ETHReward_1.toString(), _998_Ether)
 
     /* Alice, Bob, Carol each withdraw 0.5 ETH to their troves, 
     bringing them to 1.5, 1.5, 1995.5 total coll each. */
-    await borrowerOperations.withdrawColl(mv._5e17, alice, { from: alice })
-    await borrowerOperations.withdrawColl(mv._5e17, bob, { from: bob })
-    await borrowerOperations.withdrawColl(mv._5e17, carol, { from: carol })
+    await borrowerOperations.withdrawColl(dec(500, 'finney'), alice, { from: alice })
+    await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, { from: bob })
+    await borrowerOperations.withdrawColl(dec(500, 'finney'), carol, { from: carol })
 
     const alice_Coll_1 = ((await cdpManager.CDPs(alice))[1]
       .add(await cdpManager.getPendingETHReward(alice)))
@@ -835,10 +836,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.equal(entireSystemColl_2, '1998500000000000000000')
 
     // E opens with another 1998.5 ETH
-    await borrowerOperations.openLoan(mv._2e23, erin, { from: erin, value: '1998500000000000000000' })
+    await borrowerOperations.openLoan(dec(2, 23), erin, { from: erin, value: '1998500000000000000000' })
 
     // Price drops to 100 $/E
-    await priceFeed.setPrice(mv._100e18)
+    await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
     const txE = await cdpManager.liquidate(erin)
@@ -871,8 +872,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
       .add(await cdpManager.getPendingETHReward(carol)))
       .toString()
 
-    assert.isAtMost(th.getDifference(alice_Coll_2, mv._3_Ether), 1000)
-    assert.isAtMost(th.getDifference(bob_Coll_2, mv._3_Ether), 1000)
+    assert.isAtMost(th.getDifference(alice_Coll_2, dec(3, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(bob_Coll_2, dec(3, 'ether')), 1000)
     assert.isAtMost(th.getDifference(carol_Coll_2, '3991000000000000000000'), 1000)
 
     //Expect 3997 ETH in system now
@@ -884,12 +885,12 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
  // https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
   it("redistribution, all operations: A,B,C open. Liq(A). D opens. B adds, C withdraws. Liq(B). E & F open. D adds. Liq(F). All 1 ETH operations. Distributes correct rewards", async () => {
     // A, B, C open troves
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 1 $/E
-    await priceFeed.setPrice(mv._1e18)
+    await priceFeed.setPrice(dec(1, 18))
 
     // Liquidate A
     const txA = await cdpManager.liquidate(alice)
@@ -897,19 +898,19 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(alice))
 
     // Price rises to 1000
-    await priceFeed.setPrice(mv._1000e18)
+    await priceFeed.setPrice(dec(1000, 18))
 
     // D opens trove
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(1, 'ether') })
 
     //Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: mv._1_Ether })
+    await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
 
     //Carol  withdraws 1 ETH from her trove
-    await borrowerOperations.withdrawColl(mv._1_Ether, carol, { from: carol })
+    await borrowerOperations.withdrawColl(dec(1, 'ether'), carol, { from: carol })
 
     // Price drops
-    await priceFeed.setPrice(mv._1e18)
+    await priceFeed.setPrice(dec(1, 18))
 
     // Liquidate B
     const txB = await cdpManager.liquidate(bob)
@@ -917,17 +918,17 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(bob))
 
     // Price rises to 1000
-    await priceFeed.setPrice(mv._1000e18)
+    await priceFeed.setPrice(dec(1000, 18))
 
     // E and F open troves
-    await borrowerOperations.openLoan(mv._100e18, erin, { from: erin, value: mv._1_Ether })
-    await borrowerOperations.openLoan(mv._100e18, freddy, { from: freddy, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), freddy, { from: freddy, value: dec(1, 'ether') })
 
     // D tops up
-    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 1
-    await priceFeed.setPrice(mv._1e18)
+    await priceFeed.setPrice(dec(1, 18))
 
     // Liquidate F
     const txF = await cdpManager.liquidate(freddy)
@@ -945,9 +946,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     const erin_pendingETHReward = (await cdpManager.getPendingETHReward(erin)).toString()
 
     // Check raw collateral of C, D, E
-    assert.isAtMost(th.getDifference(carol_rawColl, mv._5e17), 1000)
+    assert.isAtMost(th.getDifference(carol_rawColl, dec(500, 'finney')), 1000)
     assert.isAtMost(th.getDifference(dennis_rawColl,'3666666666666666666' ), 1000)
-    assert.isAtMost(th.getDifference(erin_rawColl, mv._1_Ether), 1000)
+    assert.isAtMost(th.getDifference(erin_rawColl, dec(1, 'ether')), 1000)
 
     // Check pending ETH rewards of C, D, E
     assert.isAtMost(th.getDifference(carol_pendingETHReward, '1055555555555555555'), 1000)
@@ -965,7 +966,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     const totalStakesSnapshot = (await cdpManager.totalStakesSnapshot()).toString()
     const totalCollateralSnapshot = (await cdpManager.totalCollateralSnapshot()).toString()
     assert.isAtMost(th.getDifference(totalStakesSnapshot, '1500000000000000000'), 1000)
-    assert.isAtMost(th.getDifference(totalCollateralSnapshot, mv._7_Ether), 1000)
+    assert.isAtMost(th.getDifference(totalCollateralSnapshot, dec(7, 'ether')), 1000)
   })
 
   it("redistribution, all operations: A,B,C open. Liq(A). D opens. B adds, C withdraws. Liq(B). E & F open. D adds. Liq(F). Varying coll. Distributes correct rewards", async () => {
@@ -974,9 +975,9 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     B: 8901 ETH
     C: 23.902 ETH
     */
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: '450000000000000000000' })
-    await borrowerOperations.openLoan(mv._100e18, bob, { from: bob, value: '8901000000000000000000' })
-    await borrowerOperations.openLoan(mv._100e18, carol, { from: carol, value: '23902000000000000000' })
+    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: '450000000000000000000' })
+    await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: '8901000000000000000000' })
+    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: '23902000000000000000' })
 
     // Price drops 
     await priceFeed.setPrice('1')
@@ -991,16 +992,16 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isAtMost(th.getDifference(await cdpManager.getPendingETHReward(carol), '1205156090229340000'), 1000000)
 
     // Price rises 
-    await priceFeed.setPrice(mv._1e27)
+    await priceFeed.setPrice(dec(1, 27))
 
     // D opens trove: 0.035 ETH
-    await borrowerOperations.openLoan(mv._100e18, dennis, { from: dennis, value: '35000000000000000' })
+    await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: '35000000000000000' })
    
     // Bob adds 11.33909 ETH to his trove
     await borrowerOperations.addColl(bob, bob, { from: bob, value: '11339090000000000000' })
 
     // Carol withdraws 15 ETH from her trove
-    await borrowerOperations.withdrawColl(mv._15_Ether, carol, { from: carol })
+    await borrowerOperations.withdrawColl(dec(15, 'ether'), carol, { from: carol })
 
     // Price drops
     await priceFeed.setPrice('1')
@@ -1015,17 +1016,17 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isAtMost(th.getDifference(await cdpManager.getPendingETHReward(dennis), '32304737254288600000'), 10000000)
 
     // Price rises 
-    await priceFeed.setPrice(mv._1e27)
+    await priceFeed.setPrice(dec(1, 27))
 
     /* E and F open troves.
     E: 10000 ETH
     F: 0.0007 ETH
     */
-    await borrowerOperations.openLoan(mv._100e18, erin, { from: erin, value: mv._1e22 })
-    await borrowerOperations.openLoan(mv._100e18, freddy, { from: freddy, value: '700000000000000' })
+    await borrowerOperations.openLoan(dec(100, 18), erin, { from: erin, value: dec(1, 22) })
+    await borrowerOperations.openLoan(dec(100, 18), freddy, { from: freddy, value: '700000000000000' })
 
     // D tops up
-    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: mv._1_Ether })
+    await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice('1')
@@ -1051,7 +1052,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     // Check raw collateral of C, D, E
     assert.isAtMost(th.getDifference(carol_rawColl, '10107156090229300000'), 1000000)
     assert.isAtMost(th.getDifference(dennis_rawColl,'33339737254288600000' ), 1000000)
-    assert.isAtMost(th.getDifference(erin_rawColl, mv._1e22), 1000000)
+    assert.isAtMost(th.getDifference(erin_rawColl, dec(1, 22)), 1000000)
    
     // Check pending ETH rewards of C, D, E
     assert.isAtMost(th.getDifference(carol_pendingETHReward,'9328829534109660000000' ), 10000000)

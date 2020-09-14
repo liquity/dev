@@ -6,7 +6,9 @@ const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
+const dec = th.dec
 const moneyVals = testHelpers.MoneyValues
+
 contract('CDPManager', async accounts => {
  
   const [owner] = accounts;
