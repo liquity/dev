@@ -173,6 +173,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
     event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
     event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _gasCompensation);
+    event Redemption(uint _attemptedCLVAmount, uint _actualCLVAmount, uint _ETHSent);
 
     enum CDPManagerOperation {
         applyPendingRewards,
@@ -342,7 +343,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.collToLiquidate = V.entireCDPColl.sub(V.gasCompensation);
 
         // If ICR <= 100%, purely redistribute the CDP across all active CDPs
-        if (_ICR <= 1000000000000000000) {
+        if (_ICR <= _100pct) {
             poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
             _removeStake(_user);
 
@@ -355,7 +356,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
         // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
-        } else if ((_ICR > 1000000000000000000) && (_ICR < MCR)) {
+        } else if ((_ICR > _100pct) && (_ICR < MCR)) {
              poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
             _removeStake(_user);
 
@@ -367,10 +368,14 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _closeCDP(_user);
             emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
-        // If CDP has the lowest ICR and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution)
-        } else if (_user == sortedCDPs.getLast()) {
+        /* If 110% <= ICR < 150% and there is CLV in the Stability Pool, 
+        only offset it as much as possible (no redistribution) */
+        } else if ((_ICR >= MCR) && (_ICR < CCR)) {
 
-            if (_CLVInPool == 0) {return V;}
+            if (_CLVInPool == 0) {
+                LiquidationValues memory zeroVals;
+                return zeroVals;
+            }
             _applyPendingRewards(_user);
             _removeStake(_user);
 
@@ -507,6 +512,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
 
+                // Break the loop if it was a partial liquidation
+                if (V.partialAddr != address(0)) {break;}
+
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
@@ -519,7 +527,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
             }  else break;  // break if the loop reaches a CDP with ICR >= MCR
 
-            // Break the loop if it has reached the first CDP in the sorted list
+            // Break the loop if it reaches the first CDP in the sorted list
             if (L.user == sortedCDPs.getFirst()) {break;}
             L.i++;
         }
@@ -554,7 +562,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    // Attempt to liquidate a custom set of troves provided by the caller 
+    /* Attempt to liquidate a custom set of troves provided by the caller.  Stops if a partial liquidation is 
+    performed, and thus leaves optimization of the order troves up to the caller.  */
     function batchLiquidateTroves(address[] calldata _troveArray) external {
         require(_troveArray.length != 0, "CDPManager: Calldata address array must not be empty");
         
@@ -621,6 +630,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
 
+                // Break the loop if it was a partial liquidation
+                if (V.partialAddr != address(0)) {break;}
+
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
@@ -674,7 +686,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         T2.totalDebtToRedistribute = T1.totalDebtToRedistribute.add(V.debtToRedistribute);
         T2.totalCollToRedistribute =T1.totalCollToRedistribute .add(V.collToRedistribute);
 
-        // Assign the address of the ppartially liquidated trove and debt/coll values
+        // Assign the address of the partially liquidated trove and debt/coll values
         T2.partialAddr = V.partialAddr;
         T2.partialNewDebt = V.partialNewDebt;
         T2.partialNewColl = V.partialNewColl;
@@ -692,11 +704,13 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     
         _updateCDPRewardSnapshots(_user);
         _updateStakeAndTotalStakes(_user);
-
+        
         uint ICR = _getCurrentICR(_user, _price);
 
-        // Insert to full sorted list
+        // Insert to sorted list and add to CDPOwners array
         sortedCDPs.insert(_user, ICR, _price, _user, _user);
+        _addCDPOwnerToArray(_user);
+        
         emit CDPUpdated(_user, _newDebt, _newColl, CDPs[_user].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
     }
 
@@ -845,7 +859,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
 
         // Burn the total CLV redeemed from troves, and send the corresponding ETH to _msgSender()
-        poolManager.redeemCollateral(_msgSender(), T.totalCLVtoRedeem, T.totalETHtoSend); 
+        poolManager.redeemCollateral(_msgSender(), T.totalCLVtoRedeem, T.totalETHtoSend);
+
+        emit Redemption(_CLVamount, T.totalCLVtoRedeem, T.totalETHtoSend);
     }
 
     // --- Helper functions ---

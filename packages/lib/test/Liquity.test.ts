@@ -139,7 +139,17 @@ describe("Liquity", () => {
       expect(trove).to.deep.equal(troveWithHalfOfTheCollateral);
     });
 
-    it("should close the Trove after withdrawing the remaining collateral", async () => {
+    it("should fail to close the Trove when there are no other Troves", async () => {
+      const numberOfTroves = await liquity.getNumberOfTroves();
+      expect(numberOfTroves).to.equal(1);
+
+      expect(liquity.closeTrove()).to.eventually.be.rejected;
+    });
+
+    it("should close the Trove after another user creates a Trove", async () => {
+      const funderLiquity = await Liquity.connect(addresses, funder);
+      await funderLiquity.openTrove(new Trove({ collateral: 1 }));
+
       await liquity.closeTrove();
       trove = await liquity.getTrove();
 

@@ -5,6 +5,7 @@ export let DECIMAL_SCALING_FACTOR = BigDecimal.fromString("1000000000000000000")
 export let BIGINT_SCALING_FACTOR = BigInt.fromI32(10).pow(18);
 
 export let DECIMAL_ZERO = BigDecimal.fromString("0");
+export let DECIMAL_ONE = BigDecimal.fromString("1");
 
 export let BIGINT_ZERO = BigInt.fromI32(0);
 export let BIGINT_MAX_UINT256 = BigInt.fromUnsignedBytes(
@@ -12,3 +13,7 @@ export let BIGINT_MAX_UINT256 = BigInt.fromUnsignedBytes(
 );
 
 export let DECIMAL_INITIAL_PRICE = BigDecimal.fromString("200");
+
+export function decimalize(bigInt: BigInt): BigDecimal {
+  return bigInt.divDecimal(DECIMAL_SCALING_FACTOR);
+}

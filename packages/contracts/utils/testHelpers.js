@@ -4,102 +4,6 @@ const BN = require('bn.js')
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 
 const MoneyValues = {
-  _1_Ether: web3.utils.toWei('1', 'ether'),
-  _2_Ether: web3.utils.toWei('2', 'ether'),
-  _3_Ether: web3.utils.toWei('3', 'ether'),
-  _4_Ether: web3.utils.toWei('4', 'ether'),
-  _5_Ether: web3.utils.toWei('5', 'ether'),
-  _6_Ether: web3.utils.toWei('6', 'ether'),
-  _7_Ether: web3.utils.toWei('7', 'ether'),
-  _8_Ether: web3.utils.toWei('8', 'ether'),
-  _9_Ether: web3.utils.toWei('9', 'ether'),
-  _10_Ether: web3.utils.toWei('10', 'ether'),
-  _11_Ether: web3.utils.toWei('11', 'ether'),
-  _15_Ether: web3.utils.toWei('15', 'ether'),
-  _20_Ether: web3.utils.toWei('20', 'ether'),
-  _22_Ether: web3.utils.toWei('22', 'ether'),
-  _30_Ether: web3.utils.toWei('30', 'ether'),
-  _40_Ether: web3.utils.toWei('40', 'ether'),
-  _50_Ether: web3.utils.toWei('50', 'ether'),
-  _98_Ether: web3.utils.toWei('98', 'ether'),
-  _100_Ether: web3.utils.toWei('100', 'ether'),
-  _200_Ether: web3.utils.toWei('200', 'ether'),
-  _300_Ether: web3.utils.toWei('300', 'ether'),
-  _999_Ether: web3.utils.toWei('300', 'ether'),
-  _1000_Ether: web3.utils.toWei('1000', 'ether'),
-  _2000_Ether: web3.utils.toWei('2000', 'ether'),
-  _10000_Ether: web3.utils.toWei('10000', 'ether'),
-  _1million_Ether: web3.utils.toWei('1000000', 'ether'),
-  _10million_Ether: web3.utils.toWei('10000000', 'ether'),
-  _100million_Ether: web3.utils.toWei('100000000', 'ether'),
-  _500million_Ether: web3.utils.toWei('500000000', 'ether'),
-  _1billion_Ether: web3.utils.toWei('1000000000', 'ether'),
-  _10billion_Ether: web3.utils.toWei('10000000000', 'ether'),
-  _100billion_Ether: web3.utils.toWei('100000000000', 'ether'),
-  _500billion_Ether: web3.utils.toWei('500000000000', 'ether'),
-
-  _0pt5_Ether: web3.utils.toWei('500', 'finney'),
-  _1pt5_Ether: web3.utils.toWei('1500', 'finney'),
-
-  _1e17: web3.utils.toWei('100', 'finney'),
-  _3e17: web3.utils.toWei('300', 'finney'),
-  _5e17: web3.utils.toWei('500', 'finney'),
-
-  _1e18: web3.utils.toWei('1', 'ether'),
-  _2e18: web3.utils.toWei('2', 'ether'),
-  _3e18: web3.utils.toWei('3', 'ether'),
-  _5e18: web3.utils.toWei('5', 'ether'),
-  _10e18: web3.utils.toWei('10', 'ether'),
-  _13e18: web3.utils.toWei('13', 'ether'),
-  _15e18: web3.utils.toWei('15', 'ether'),
-  _20e18: web3.utils.toWei('20', 'ether'),
-  _30e18: web3.utils.toWei('30', 'ether'),
-  _40e18: web3.utils.toWei('40', 'ether'),
-  _50e18: web3.utils.toWei('50', 'ether'),
-  _60e18: web3.utils.toWei('60', 'ether'),
-  _70e18: web3.utils.toWei('70', 'ether'),
-  _80e18: web3.utils.toWei('80', 'ether'),
-  _90e18: web3.utils.toWei('90', 'ether'),
-  _100e18: web3.utils.toWei('100', 'ether'),
-  _101e18: web3.utils.toWei('101', 'ether'),
-  _105e18: web3.utils.toWei('105', 'ether'),
-  _110e18: web3.utils.toWei('110', 'ether'),
-  _120e18: web3.utils.toWei('120', 'ether'),
-  _125e18: web3.utils.toWei('125', 'ether'),
-  _150e18: web3.utils.toWei('150', 'ether'),
-  _170e18: web3.utils.toWei('150', 'ether'),
-  _180e18: web3.utils.toWei('180', 'ether'),
-  _200e18: web3.utils.toWei('200', 'ether'),
-  _250e18: web3.utils.toWei('250', 'ether'),
-  _300e18: web3.utils.toWei('300', 'ether'),
-  _360e18: web3.utils.toWei('360', 'ether'),
-  _400e18: web3.utils.toWei('400', 'ether'),
-  _450e18: web3.utils.toWei('450', 'ether'),
-  _500e18: web3.utils.toWei('500', 'ether'),
-  _600e18: web3.utils.toWei('600', 'ether'),
-  _800e18: web3.utils.toWei('800', 'ether'),
-  _900e18: web3.utils.toWei('900', 'ether'),
-  _1000e18: web3.utils.toWei('1000', 'ether'),
-  _1500e18: web3.utils.toWei('1500', 'ether'),
-  _1700e18: web3.utils.toWei('1700', 'ether'),
-  _1800e18: web3.utils.toWei('1800', 'ether'),
-  _2000e18: web3.utils.toWei('2000', 'ether'),
-  _5000e18: web3.utils.toWei('5000', 'ether'),
-  _8000e18: web3.utils.toWei('8000', 'ether'),
-  _1e22: web3.utils.toWei('10000', 'ether'),
-  _2e22: web3.utils.toWei('20000', 'ether'),
-  _1e23: web3.utils.toWei('100000', 'ether'),
-  _2e23: web3.utils.toWei('200000', 'ether'),
-  _1e24: web3.utils.toWei('1000000', 'ether'),
-  _2e24: web3.utils.toWei('2000000', 'ether'),
-  _1e26: web3.utils.toWei('100000000', 'ether'),
-  _1e27: web3.utils.toWei('1000000000', 'ether'),
-  _2e27: web3.utils.toWei('2000000000', 'ether'),
-  _9e28: web3.utils.toWei('90000000000', 'ether'),
-  _1e29: web3.utils.toWei('100000000000', 'ether'),
-  _5e35: web3.utils.toWei('500000000000000000', 'ether'),
-  _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
-
   negative_5e17: "-" + web3.utils.toWei('500', 'finney'),
   negative_1e18: "-" + web3.utils.toWei('1', 'ether'),
   negative_10e18: "-" + web3.utils.toWei('10', 'ether'),
@@ -113,17 +17,33 @@ const MoneyValues = {
   _100e18BN: web3.utils.toBN('100000000000000000000'),
   _100BN: web3.utils.toBN('100'),
   _110BN: web3.utils.toBN('110'),
-  _150BN: web3.utils.toBN('110'),
+  _150BN: web3.utils.toBN('150'),
 
   _MCR: web3.utils.toBN('1100000000000000000'),
   _ICR100: web3.utils.toBN('1000000000000000000'),
   _CCR: web3.utils.toBN('1500000000000000000')
-
 }
 
 // TODO: Make classes for function export
 
 class TestHelper {
+
+  static dec(val, scale) {
+    let zerosCount
+
+    if (scale == 'ether') {
+      zerosCount = 18
+    } else if (scale == 'finney')
+      zerosCount = 15
+    else {
+      zerosCount = scale
+    }
+
+    const strVal = val.toString()
+    const strZeros = ('0').repeat(zerosCount)
+
+    return strVal.concat(strZeros)
+  }
 
   static squeezeAddr(address) {
     const len = address.length
@@ -194,9 +114,9 @@ class TestHelper {
     const debtBN = web3.utils.toBN(debt)
     const priceBN = web3.utils.toBN(price)
 
-    const ICR = debtBN.eq(this.toBN('0')) ? 
-                this.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff') 
-                : collBN.mul(priceBN).div(debtBN)
+    const ICR = debtBN.eq(this.toBN('0')) ?
+      this.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+      : collBN.mul(priceBN).div(debtBN)
 
     return ICR
   }
@@ -205,7 +125,7 @@ class TestHelper {
     const ICR = await cdpManager.getCurrentICR(account, price)
     return (ICR.gt(MoneyValues._ICR100)) && (ICR.lt(MoneyValues._MCR))
   }
- 
+
   static toBN(num) {
     return web3.utils.toBN(num)
   }
@@ -311,25 +231,25 @@ class TestHelper {
   }
 
   static getEmittedLiquidationValues(liquidationTx) {
-    for (let i = 0; i< liquidationTx.logs.length; i++) {
-      if (liquidationTx.logs[i].event === "Liquidation") { 
+    for (let i = 0; i < liquidationTx.logs.length; i++) {
+      if (liquidationTx.logs[i].event === "Liquidation") {
         const liquidatedDebt = liquidationTx.logs[i].args[0]
         const liquidatedColl = liquidationTx.logs[i].args[1]
         const gasComp = liquidationTx.logs[i].args[2]
 
-        return [ liquidatedDebt, liquidatedColl, gasComp ]
+        return [liquidatedDebt, liquidatedColl, gasComp]
       }
     }
 
-    throw("The transaction logs do not contain a liquidation event")
+    throw ("The transaction logs do not contain a liquidation event")
   }
 
 
   static getEmittedLiquidatedDebt(liquidationTx) {
     return this.getLiquidationEventArg(liquidationTx, 0)  // LiquidatedDebt is position 0 in the Liquidation event
   }
-    
-  static  getEmittedLiquidatedColl(liquidationTx) {
+
+  static getEmittedLiquidatedColl(liquidationTx) {
     return this.getLiquidationEventArg(liquidationTx, 1) // LiquidatedColl is position 1 in the Liquidation event
   }
 
@@ -338,13 +258,13 @@ class TestHelper {
   }
 
   static getLiquidationEventArg(liquidationTx, arg) {
-    for (let i = 0; i< liquidationTx.logs.length; i++) {
-      if (liquidationTx.logs[i].event === "Liquidation") { 
-        return liquidationTx.logs[i].args[arg] 
+    for (let i = 0; i < liquidationTx.logs.length; i++) {
+      if (liquidationTx.logs[i].event === "Liquidation") {
+        return liquidationTx.logs[i].args[arg]
       }
     }
 
-    throw("The transaction logs do not contain a liquidation event")
+    throw ("The transaction logs do not contain a liquidation event")
   }
 
 
@@ -353,19 +273,19 @@ class TestHelper {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
     return compositeDebt
   }
-  
+
   static async getBorrowerOpsListHint(contracts, newColl, newDebt, price) {
     const compositeDebt = await this.getCompositeDebt(contracts, newDebt)
     const newICR = await contracts.hintHelpers.computeCR(newColl, compositeDebt, price)
 
     const approxfullListHint = await contracts.hintHelpers.getApproxHint(newICR, 50)
 
-    const exactFullListHint  = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
- 
+    const exactFullListHint = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
+
     return exactFullListHint
   }
 
-  static async getEntireCollAndDebt (contracts, account) {
+  static async getEntireCollAndDebt(contracts, account) {
     // console.log(`account: ${account}`)
     const rawColl = (await contracts.cdpManager.CDPs(account))[1]
     const rawDebt = (await contracts.cdpManager.CDPs(account))[0]
@@ -377,16 +297,16 @@ class TestHelper {
     return { entireColl, entireDebt }
   }
 
-  static async getCollAndDebtFromAddColl(contracts,  account, amount) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
-   
+  static async getCollAndDebtFromAddColl(contracts, account, amount) {
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
+
     const newColl = entireColl.add(this.toBN(amount))
     const newDebt = entireDebt
     return { newColl, newDebt }
   }
 
   static async getCollAndDebtFromWithdrawColl(contracts, account, amount) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
     // console.log(`entireColl  ${entireColl}`)
     // console.log(`entireDebt  ${entireDebt}`)
 
@@ -396,41 +316,41 @@ class TestHelper {
   }
 
   static async getCollAndDebtFromWithdrawCLV(contracts, account, amount) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
 
     const newColl = entireColl
     const newDebt = entireDebt.add(this.toBN(amount))
-  
+
     return { newColl, newDebt }
   }
 
   static async getCollAndDebtFromRepayCLV(contracts, account, amount) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
 
     const newColl = entireColl
     const newDebt = entireDebt.sub(this.toBN(amount))
-  
+
     return { newColl, newDebt }
   }
 
   static async getCollAndDebtFromAdjustment(contracts, account, ETHChange, CLVChange) {
-    const {entireColl, entireDebt} = await this.getEntireCollAndDebt(contracts, account)
+    const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
 
     const coll = (await contracts.cdpManager.CDPs(account))[1]
     const debt = (await contracts.cdpManager.CDPs(account))[0]
-   
+
     const newColl = entireColl.add(ETHChange)
     const newDebt = entireDebt.add(CLVChange)
-  
+
     return { newColl, newDebt }
   }
-  
+
   // --- BorrowerOperations gas functions ---
 
   static async openLoan_allAccounts(accounts, contracts, ETHAmount, CLVAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
-    
+
     for (const account of accounts) {
       const hint = await this.getBorrowerOpsListHint(contracts, ETHAmount, CLVAmount, price)
 
@@ -444,7 +364,7 @@ class TestHelper {
   static async openLoan_allAccounts_randomETH(minETH, maxETH, accounts, contracts, CLVAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
-    
+
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
       const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, CLVAmount, price)
@@ -471,8 +391,8 @@ class TestHelper {
     }
     return this.getGasMetrics(gasCostList)
   }
-  
-  static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, contracts, minCLVProportion, maxCLVProportion, logging=false) {
+
+  static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, contracts, minCLVProportion, maxCLVProportion, logging = false) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
     const _1e18 = web3.utils.toBN('1000000000000000000')
@@ -611,7 +531,7 @@ class TestHelper {
 
       const { newColl, newDebt } = await this.getCollAndDebtFromAddColl(contracts, account, amount)
       const hint = await this.getBorrowerOpsListHint(contracts, newColl, newDebt, price)
-      
+
       const tx = await contracts.borrowerOperations.addColl(account, hint, { from: account, value: amount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
@@ -773,10 +693,10 @@ class TestHelper {
 
   static async performRedemptionTx(redeemer, price, contracts, CLVAmount) {
     const redemptionhint = await contracts.hintHelpers.getRedemptionHints(CLVAmount, price)
-    
+
     const firstRedemptionHint = redemptionhint[0]
     const partialRedemptionNewICR = redemptionhint[1]
-  
+
     const approxPartialRedemptionHint = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50)
     const exactPartialRedemptionHint = (await contracts.sortedCDPs.findInsertPosition(partialRedemptionNewICR,
       price,
@@ -788,7 +708,7 @@ class TestHelper {
       exactPartialRedemptionHint,
       partialRedemptionNewICR,
       { from: redeemer })
-    
+
     return tx
   }
 
@@ -802,7 +722,7 @@ class TestHelper {
     for (const account of accounts) {
       const coll = web3.utils.toWei(amountFinney.toString(), 'finney')
 
-      await contracts.borrowerOperations.openLoan('200000000000000000000', account, account, { from: account, value: coll })
+      await contracts.borrowerOperations.openLoan('200000000000000000000', account, { from: account, value: coll })
 
       amountFinney += 10
     }
