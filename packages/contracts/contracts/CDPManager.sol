@@ -357,7 +357,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > _100pct) && (_ICR < MCR)) {
-             poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
+            poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
             _removeStake(_user);
 
             (V.debtToOffset,
@@ -371,7 +371,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         /* If 110% <= ICR < 150% and there is CLV in the Stability Pool, 
         only offset it as much as possible (no redistribution) */
         } else if ((_ICR >= MCR) && (_ICR < CCR)) {
-
             if (_CLVInPool == 0) {
                 LiquidationValues memory zeroVals;
                 return zeroVals;
@@ -382,6 +381,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V = _getPartialOffsetVals(_user, V.entireCDPDebt, V.entireCDPColl, _price, _CLVInPool);
 
             _closeCDP(_user);
+        } 
+
+        else if (_ICR >= CCR) {
+            LiquidationValues memory zeroVals;
+            return zeroVals;
         }
 
         // Move the gas compensation ETH to the CDPManager
@@ -417,7 +421,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         V.entireCDPColl = _entireCDPColl;
 
         // When Pool can fully absorb the trove's debt, perform a full offset
-        if (_entireCDPDebt < _CLVInPool) {
+        if (_entireCDPDebt <= _CLVInPool) {
             V.gasCompensation = _getGasCompensation(_entireCDPColl, _price);
 
             V.debtToOffset = _entireCDPDebt;
@@ -501,6 +505,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
             // Attempt to close CDP
             if (L.backToNormalMode == false) {
+
+                // Break the loop if ICR is greater than MCR and Stability Pool is empty
+                if (L.ICR >= MCR && L.remainingCLVInPool == 0) {break;}
 
                 V = _liquidateRecoveryMode(L.user, L.ICR, _price, L.remainingCLVInPool);
 
@@ -618,8 +625,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
              L.user = _troveArray[L.i];
             L.ICR = _getCurrentICR(L.user, _price);
 
-            // Attempt to close CDP
+            // Attempt to close trove
             if (L.backToNormalMode == false) {
+
+                // Skip this trove if ICR is greater than MCR and Stability Pool is empty
+                if (L.ICR >= MCR && L.remainingCLVInPool == 0) {continue;}
+
                 V = _liquidateRecoveryMode(L.user, L.ICR, _price, L.remainingCLVInPool);
 
                 // Update aggregate trackers

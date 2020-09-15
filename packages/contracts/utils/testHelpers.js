@@ -47,7 +47,7 @@ class TestHelper {
 
   static squeezeAddr(address) {
     const len = address.length
-    return address.slice(0, 6).concat("...").concat(address.slice(len - 5, len - 1))
+    return address.slice(0, 6).concat("...").concat(address.slice(len - 4, len))
   }
   static getDifference(x, y) {
     const x_BN = web3.utils.toBN(x)
@@ -160,13 +160,14 @@ class TestHelper {
     )
   }
 
-  static async logActiveAccounts(cdpManager, sortedCDPs, price, n) {
-    const count = await sortedCDPs.getSize()
+  static async logActiveAccounts(contracts, n) {
+    const count = await contracts.sortedCDPs.getSize()
+    const price = await contracts.priceFeed.getPrice()
 
     n = (typeof n == 'undefined') ? count : n
 
-    let account = await sortedCDPs.getLast()
-    const head = await sortedCDPs.getFirst()
+    let account = await contracts.sortedCDPs.getLast()
+    const head = await contracts.sortedCDPs.getFirst()
 
     console.log(`Total active accounts: ${count}`)
     console.log(`First ${n} accounts, in ascending ICR order:`)
@@ -175,15 +176,15 @@ class TestHelper {
     while (i < n) {
 
       const squeezedAddr = this.squeezeAddr(account)
-      const coll = (await cdpManager.CDPs(account))[1]
-      const debt = (await cdpManager.CDPs(account))[0]
-      const ICR = await cdpManager.getCurrentICR(account, price)
+      const coll = (await contracts.cdpManager.CDPs(account))[1]
+      const debt = (await contracts.cdpManager.CDPs(account))[0]
+      const ICR = await contracts.cdpManager.getCurrentICR(account, price)
 
       console.log(`Acct: ${squeezedAddr}  coll:${coll}  debt: ${debt}  ICR: ${ICR}`)
 
       if (account == head) { break; }
 
-      account = await sortedCDPs.getPrev(account)
+      account = await contracts.sortedCDPs.getPrev(account)
 
       i++
     }
