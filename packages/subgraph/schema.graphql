@@ -1,15 +1,42 @@
-type System @entity {
+type Global @entity {
   "There should be only one System entity with an ID of 'only'"
   id: ID!
 
+  systemStateCount: Int!
   transactionCount: Int!
   changeCount: Int!
+  liquidationCount: Int!
+  redemptionCount: Int!
 
-  currentPrice: BigDecimal!
+  currentSystemState: SystemState
+
+  "Only used internally as temporary storage. Will always be null in queries"
+  currentLiquidation: Liquidation
+
+  "Only used internally as temporary storage. Will always be null in queries"
+  currentRedemption: Redemption
 }
 
-type Owner @entity {
-  "Owner's Ethereum address as a hex-string"
+type SystemState @entity {
+  "Sequence number as an ID (string)"
+  id: ID!
+
+  "Can be used to chronologically sort SystemStates"
+  sequenceNumber: Int!
+
+  price: BigDecimal!
+
+  totalCollateral: BigDecimal!
+  totalDebt: BigDecimal!
+  totalCollateralRatio: BigDecimal
+
+  tokensInStabilityPool: BigDecimal!
+
+  cause: Change @derivedFrom(field: "systemStateAfter")
+}
+
+type User @entity {
+  "User's Ethereum address as a hex-string"
   id: ID!
 
   currentTrove: Trove
@@ -20,13 +47,21 @@ type Owner @entity {
 
   troves: [Trove!]! @derivedFrom(field: "owner")
   stabilityDeposits: [StabilityDeposit!]! @derivedFrom(field: "owner")
+  liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
+}
+
+enum TroveStatus {
+  open
+  closedByOwner
+  closedByLiquidation
 }
 
 type Trove @entity {
   "Owner's ID + '-' + an incremented integer"
   id: ID!
 
-  owner: Owner!
+  owner: User!
+  status: TroveStatus!
 
   collateral: BigDecimal!
   debt: BigDecimal!
@@ -51,7 +86,7 @@ type StabilityDeposit @entity {
   "Owner's ID + '-' + an incremented integer"
   id: ID!
 
-  owner: Owner!
+  owner: User!
 
   depositedAmount: BigDecimal!
 
@@ -82,6 +117,9 @@ interface Change {
 
   "Transaction that made this change"
   transaction: Transaction!
+
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
 }
 
 enum TroveOperation {
@@ -103,10 +141,11 @@ type TroveChange implements Change @entity {
   id: ID!
   sequenceNumber: Int!
   transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
 
   trove: Trove!
   troveOperation: TroveOperation!
-  price: BigDecimal!
 
   collateralBefore: BigDecimal!
   collateralChange: BigDecimal!
@@ -118,6 +157,9 @@ type TroveChange implements Change @entity {
 
   collateralRatioBefore: BigDecimal
   collateralRatioAfter: BigDecimal
+
+  liquidation: Liquidation
+  redemption: Redemption
 }
 
 enum StabilityDepositOperation {
@@ -130,6 +172,8 @@ type StabilityDepositChange implements Change @entity {
   id: ID!
   sequenceNumber: Int!
   transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
 
   stabilityDeposit: StabilityDeposit!
   stabilityDepositOperation: StabilityDepositOperation!
@@ -145,8 +189,35 @@ type PriceChange implements Change @entity {
   id: ID!
   sequenceNumber: Int!
   transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
 
-  priceBefore: BigDecimal!
   priceChange: BigDecimal!
-  priceAfter: BigDecimal!
+}
+
+type Liquidation @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+  liquidator: User!
+
+  liquidatedDebt: BigDecimal!
+  liquidatedCollateral: BigDecimal!
+  gasCompensation: BigDecimal!
+
+  troveChanges: [TroveChange!]! @derivedFrom(field: "liquidation")
+}
+
+type Redemption @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+  redeemer: User!
+
+  tokensAttemptedToRedeem: BigDecimal!
+  tokensActuallyRedeemed: BigDecimal!
+  collateralRedeemed: BigDecimal!
+  partial: Boolean!
+
+  troveChanges: [TroveChange!]! @derivedFrom(field: "redemption")
 }

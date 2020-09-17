@@ -6,6 +6,7 @@ const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
 const CustomDurationLockupContract = artifacts.require(("./CustomDurationLockupContract.sol"))
 
 const MoneyValues = {
+<<<<<<< HEAD
   _1_Ether: web3.utils.toWei('1', 'ether'),
   _2_Ether: web3.utils.toWei('2', 'ether'),
   _3_Ether: web3.utils.toWei('3', 'ether'),
@@ -108,6 +109,8 @@ const MoneyValues = {
   _5e35: web3.utils.toWei('500000000000000000', 'ether'),
   _1e36: web3.utils.toWei('1000000000000000000', 'ether'),
 
+=======
+>>>>>>> main
   negative_5e17: "-" + web3.utils.toWei('500', 'finney'),
   negative_1e18: "-" + web3.utils.toWei('1', 'ether'),
   negative_10e18: "-" + web3.utils.toWei('10', 'ether'),
@@ -121,21 +124,37 @@ const MoneyValues = {
   _100e18BN: web3.utils.toBN('100000000000000000000'),
   _100BN: web3.utils.toBN('100'),
   _110BN: web3.utils.toBN('110'),
-  _150BN: web3.utils.toBN('110'),
+  _150BN: web3.utils.toBN('150'),
 
   _MCR: web3.utils.toBN('1100000000000000000'),
   _ICR100: web3.utils.toBN('1000000000000000000'),
   _CCR: web3.utils.toBN('1500000000000000000')
-
 }
 
 // TODO: Make classes for function export
 
 class TestHelper {
 
+  static dec(val, scale) {
+    let zerosCount
+
+    if (scale == 'ether') {
+      zerosCount = 18
+    } else if (scale == 'finney')
+      zerosCount = 15
+    else {
+      zerosCount = scale
+    }
+
+    const strVal = val.toString()
+    const strZeros = ('0').repeat(zerosCount)
+
+    return strVal.concat(strZeros)
+  }
+
   static squeezeAddr(address) {
     const len = address.length
-    return address.slice(0, 6).concat("...").concat(address.slice(len - 5, len - 1))
+    return address.slice(0, 6).concat("...").concat(address.slice(len - 4, len))
   }
   static getDifference(x, y) {
     const x_BN = web3.utils.toBN(x)
@@ -248,13 +267,14 @@ class TestHelper {
     )
   }
 
-  static async logActiveAccounts(cdpManager, sortedCDPs, price, n) {
-    const count = await sortedCDPs.getSize()
+  static async logActiveAccounts(contracts, n) {
+    const count = await contracts.sortedCDPs.getSize()
+    const price = await contracts.priceFeed.getPrice()
 
     n = (typeof n == 'undefined') ? count : n
 
-    let account = await sortedCDPs.getLast()
-    const head = await sortedCDPs.getFirst()
+    let account = await contracts.sortedCDPs.getLast()
+    const head = await contracts.sortedCDPs.getFirst()
 
     console.log(`Total active accounts: ${count}`)
     console.log(`First ${n} accounts, in ascending ICR order:`)
@@ -263,15 +283,15 @@ class TestHelper {
     while (i < n) {
 
       const squeezedAddr = this.squeezeAddr(account)
-      const coll = (await cdpManager.CDPs(account))[1]
-      const debt = (await cdpManager.CDPs(account))[0]
-      const ICR = await cdpManager.getCurrentICR(account, price)
+      const coll = (await contracts.cdpManager.CDPs(account))[1]
+      const debt = (await contracts.cdpManager.CDPs(account))[0]
+      const ICR = await contracts.cdpManager.getCurrentICR(account, price)
 
       console.log(`Acct: ${squeezedAddr}  coll:${coll}  debt: ${debt}  ICR: ${ICR}`)
 
       if (account == head) { break; }
 
-      account = await sortedCDPs.getPrev(account)
+      account = await contracts.sortedCDPs.getPrev(account)
 
       i++
     }
@@ -807,7 +827,7 @@ class TestHelper {
     for (const account of accounts) {
       const coll = web3.utils.toWei(amountFinney.toString(), 'finney')
 
-      await contracts.borrowerOperations.openLoan('200000000000000000000', account, account, { from: account, value: coll })
+      await contracts.borrowerOperations.openLoan('200000000000000000000', account, { from: account, value: coll })
 
       amountFinney += 10
     }

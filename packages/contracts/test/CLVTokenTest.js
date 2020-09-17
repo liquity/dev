@@ -7,13 +7,12 @@ const connectContracts = deploymentHelpers.connectContracts
 
 const getDifference = testHelpers.getDifference
 const moneyVals = testHelpers.MoneyValues
+const dec = testHelpers.TestHelper.dec
 
 contract('CLVToken', async accounts => {
   /* mockPool is an EOA, temporarily used to call PoolManager functions.
   TODO: Replace with a mockPool contract, and later complete transactions from EOA -> CDPManager -> PoolManager -> CLVToken.
   */
-
-  const _1_Ether = web3.utils.toWei('1', 'ether')
 
   const [owner, mockPool, alice, bob, carol] = accounts;
   let priceFeed
@@ -48,9 +47,9 @@ contract('CLVToken', async accounts => {
       await connectContracts(contracts, contractAddresses)
       
       // add CDPs for three test users
-      await borrowerOperations.openLoan(0, alice, { from: alice, value: _1_Ether })
-      await borrowerOperations.openLoan(0, bob, { from: bob, value: _1_Ether })
-      await borrowerOperations.openLoan(0, carol, { from: carol, value: _1_Ether })
+      await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(1, 'ether') })
 
       // Three test users withdraw CLV
       await borrowerOperations.withdrawCLV(150, alice, { from: alice }) 

@@ -5,6 +5,7 @@ const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
 const CustomDurationLockupContract = artifacts.require(("./CustomDurationLockupContract.sol"))
 
 const th = testHelpers.TestHelper
+const dec = th.dec
 const mv = testHelpers.MoneyValues
 
 const ONE_MONTH_IN_SECONDS = 2592000
@@ -26,6 +27,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
   let borrowerOperations
 
   before(async () => {
+<<<<<<< HEAD
     const coreContracts = await deploymentHelper.deployLiquityCore()
     const GTContracts = await deploymentHelper.deployGTContracts()
 
@@ -51,6 +53,26 @@ contract('All Liquity functions with intra-system access control restrictions', 
     await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
 
     th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, mv._10_Ether, mv._100e18)
+=======
+    const contracts = await deployLiquity()
+
+    priceFeed = contracts.priceFeed
+    clvToken = contracts.clvToken
+    poolManager = contracts.poolManager
+    sortedCDPs = contracts.sortedCDPs
+    cdpManager = contracts.cdpManager
+    nameRegistry = contracts.nameRegistry
+    activePool = contracts.activePool
+    stabilityPool = contracts.stabilityPool
+    defaultPool = contracts.defaultPool
+    functionCaller = contracts.functionCaller
+    borrowerOperations = contracts.borrowerOperations
+
+    const contractAddresses = getAddresses(contracts)
+    await connectContracts(contracts, contractAddresses)
+
+    th.openLoan_allAccounts(accounts.slice(0, 10), contracts, dec(10, 'ether'), dec(100, 18))
+>>>>>>> main
   })
 
   describe('CDPManager', async accounts => {

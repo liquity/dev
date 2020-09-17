@@ -2,40 +2,21 @@ import {
   CDPManager,
   CDPUpdated,
   CDPLiquidated,
+  Liquidation,
+  Redemption,
   BorrowerOperationsAddressChanged,
   PoolManagerAddressChanged,
   PriceFeedAddressChanged
 } from "../../generated/CDPManager/CDPManager";
 import { BorrowerOperations, PoolManager, PriceFeed } from "../../generated/templates";
 
-import { updateTrove } from "../entities/Trove";
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
-enum CDPManagerOperation {
-  applyPendingRewards,
-  liquidateInNormalMode,
-  liquidateInRecoveryMode,
-  partiallyLiquidateInRecoveryMode,
-  redeemCollateral
-}
+import { getTroveOperationFromCDPManagerOperation } from "../types/TroveOperation";
 
-function getTroveOperation(operation: CDPManagerOperation): string {
-  switch (operation) {
-    case CDPManagerOperation.applyPendingRewards:
-      return "accrueRewards";
-    case CDPManagerOperation.liquidateInNormalMode:
-      return "liquidateInNormalMode";
-    case CDPManagerOperation.liquidateInRecoveryMode:
-      return "liquidateInRecoveryMode";
-    case CDPManagerOperation.partiallyLiquidateInRecoveryMode:
-      return "partiallyLiquidateInRecoveryMode";
-    case CDPManagerOperation.redeemCollateral:
-      return "redeemCollateral";
-  }
-
-  // AssemblyScript can't tell we will never reach this, so it insists on a return statement
-  return "unreached";
-}
+import { finishCurrentLiquidation } from "../entities/Liquidation";
+import { finishCurrentRedemption } from "../entities/Redemption";
+import { updateTrove } from "../entities/Trove";
 
 export function handleBorrowerOperationsAddressChanged(
   event: BorrowerOperationsAddressChanged
@@ -57,7 +38,7 @@ export function handleCDPUpdated(event: CDPUpdated): void {
 
   updateTrove(
     event,
-    getTroveOperation(event.params.operation),
+    getTroveOperationFromCDPManagerOperation(event.params.operation),
     event.params._user,
     event.params._coll,
     event.params._debt,
@@ -81,12 +62,30 @@ export function handleCDPLiquidated(event: CDPLiquidated): void {
 
   updateTrove(
     event,
-    getTroveOperation(event.params.operation),
+    getTroveOperationFromCDPManagerOperation(event.params.operation),
     event.params._user,
     BIGINT_ZERO,
     BIGINT_ZERO,
     BIGINT_ZERO,
     BIGINT_ZERO,
     BIGINT_ZERO
+  );
+}
+
+export function handleLiquidation(event: Liquidation): void {
+  finishCurrentLiquidation(
+    event,
+    event.params._liquidatedColl,
+    event.params._liquidatedDebt,
+    event.params._gasCompensation
+  );
+}
+
+export function handleRedemption(event: Redemption): void {
+  finishCurrentRedemption(
+    event,
+    event.params._attemptedCLVAmount,
+    event.params._actualCLVAmount,
+    event.params._ETHSent
   );
 }

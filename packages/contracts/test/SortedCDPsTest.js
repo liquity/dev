@@ -7,6 +7,7 @@ const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
+const dec = th.dec
 const mv = testHelpers.MoneyValues
 
 contract('CDPManager', async accounts => {
@@ -56,8 +57,8 @@ contract('CDPManager', async accounts => {
   })
 
   it('contains(): returns true for addresses that have opened troves', async () => {
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._5_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openLoan('98908089089', carol, { from: carol, value: '23082308092385098009809' })
 
     // Confirm trove statuses became active
@@ -72,8 +73,8 @@ contract('CDPManager', async accounts => {
   })
 
   it('contains(): returns false for addresses that have not opened troves', async () => {
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._5_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openLoan('98908089089', carol, { from: carol, value: '23082308092385098009809' })
 
     // Confirm troves have non-existent status
@@ -86,10 +87,10 @@ contract('CDPManager', async accounts => {
   })
 
   it('contains(): returns false for addresses that opened and then closed a trove', async () => {
-    await borrowerOperations.openLoan('0', whale, { from: whale, value: mv._100_Ether })
+    await borrowerOperations.openLoan('0', whale, { from: whale, value: dec(100, 'ether') })
     
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._5_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openLoan('98908089089', carol, { from: carol, value: '23082308092385098009809' })
 
     // A, B, C close loans
@@ -110,10 +111,10 @@ contract('CDPManager', async accounts => {
 
   // true for addresses that opened -> closed -> opened a trove
   it('contains(): returns true for addresses that opened, closed and then re-opened a trove', async () => {
-    await borrowerOperations.openLoan('0', whale, { from: whale, value: mv._100_Ether })
+    await borrowerOperations.openLoan('0', whale, { from: whale, value: dec(100, 'ether') })
     
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: mv._5_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openLoan('98908089089', carol, { from: carol, value: '23082308092385098009809' })
 
     // A, B, C close loans
@@ -126,8 +127,8 @@ contract('CDPManager', async accounts => {
     assert.equal((await cdpManager.CDPs(bob))[3], '2')
     assert.equal((await cdpManager.CDPs(carol))[3], '2')
 
-    await borrowerOperations.openLoan('234234', alice, { from: alice, value: mv._1_Ether })
-    await borrowerOperations.openLoan('9999', bob, { from: bob, value: mv._5_Ether })
+    await borrowerOperations.openLoan('234234', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('9999', bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openLoan('1', carol, { from: carol, value: '23082308092385098009809' })
 
      // Confirm trove statuses became open again
@@ -150,14 +151,14 @@ contract('CDPManager', async accounts => {
 
   // true when list size is 1 and the trove the only one in system
   it('contains(): true when list size is 1 and the trove the only one in system', async () => {
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     
     assert.isTrue(await sortedCDPs.contains(alice))
   })
 
   // false when list size is 1 and trove is not in the system
   it('contains(): false when list size is 1 and trove is not in the system', async () => {
-    await borrowerOperations.openLoan(mv._100e18, alice, { from: alice, value: mv._1_Ether })
+    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     
     assert.isFalse(await sortedCDPs.contains(bob))
   })
