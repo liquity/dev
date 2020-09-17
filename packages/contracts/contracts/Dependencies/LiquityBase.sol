@@ -20,7 +20,9 @@ contract LiquityBase {
 
     // The minimum value of collateral allowed for a new deposit, in USD.
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
-    
+
+   
+
     // --- Gas compensation functions ---
 
     /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 

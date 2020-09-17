@@ -24,6 +24,19 @@ contract CDPManagerTester is CDPManager {
         return _getCompositeDebt(_debt);
     }
 
-  
+    function callDecayBaseRate() external returns (uint) {
+        decayBaseRate();
+    }
 
+    function callGetRedemptionFee(uint _ETHDrawn, uint _price) external returns (uint) {
+        getRedemptionFee(_ETHDrawn, _price);
+    }  
+
+    function callGetBorrowingFee(uint _CLVDebt) external returns (uint) {
+        getBorrowingFee(_CLVDebt);
+    }
+
+    function callDecPow(uint _base, uint _n) external returns (uint) {
+        decayBaseRate();
+    }
 }

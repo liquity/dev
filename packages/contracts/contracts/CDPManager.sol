@@ -46,6 +46,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Data structures ---
 
+    uint constant public SECONDS_IN_ONE_HOUR = 3600;
+    uint constant public HOURLY_DECAY_FACTOR = 990000000000000000;  // 0.99 as 18-digit decimal
+
+    uint public baseRate;
+    uint public lastFeeOperationTime;
+
     enum Status { nonExistent, active, closed }
 
     // Store the necessary data for a Collateralized Debt Position (CDP)
@@ -773,9 +779,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         CDPs[_cdpUser].coll = newColl;
         _updateStakeAndTotalStakes(_cdpUser);
 
-        // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()
-        // poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); 
-
         emit CDPUpdated(
                         _cdpUser,
                         newDebt,
@@ -1200,6 +1203,36 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint closedDebt = defaultPool.getCLVDebt();
 
         return activeDebt.add(closedDebt);
+    }
+
+    // --- Fee functions ---
+
+    function getRedemptionFee(uint _ETHDrawn, uint _price) internal view returns (uint) {
+        uint activeDebt = activePool.getCLVDebt();
+        uint closedDebt = defaultPool.getCLVDebt();
+        uint totalCLVSupply = activeDebt.add(closedDebt);
+
+        /* Convert the drawn ETH back to CLV at face value rate (1 CLV:1 USD), in order to get
+        the fraction of total supply that was redeemed at face value. */
+        uint redeemedCLVFraction = _ETHDrawn.mul(_price).div(totalCLVSupply);
+
+        uint redemptionFee = baseRate.add(redeemedCLVFraction).mul(_ETHDrawn).div(1e18);
+
+        return redemptionFee;
+   }
+
+    // Updates the baseRate state variable based on time elapsed since the last operation
+    function decayBaseRate() internal returns (uint) {
+        uint hoursPassed = (block.timestamp.sub(lastFeeOperationTime)).div(SECONDS_IN_ONE_HOUR);
+        uint decayFactor = Math.decPow(HOURLY_DECAY_FACTOR, hoursPassed);
+
+        baseRate = baseRate.mul(decayFactor);
+
+        return baseRate;
+    }
+
+    function getBorrowingFee(uint CLVDebt) internal view returns (uint) {
+        return CLVDebt.mul(baseRate).div(1e18);
     }
 
     // --- 'require' wrapper functions ---

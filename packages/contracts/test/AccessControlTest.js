@@ -27,33 +27,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
   let borrowerOperations
 
   before(async () => {
-<<<<<<< HEAD
-    const coreContracts = await deploymentHelper.deployLiquityCore()
-    const GTContracts = await deploymentHelper.deployGTContracts()
-
-    priceFeed = coreContracts.priceFeed
-    clvToken = coreContracts.clvToken
-    poolManager = coreContracts.poolManager
-    sortedCDPs = coreContracts.sortedCDPs
-    cdpManager = coreContracts.cdpManager
-    nameRegistry = coreContracts.nameRegistry
-    activePool = coreContracts.activePool
-    stabilityPool = coreContracts.stabilityPool
-    defaultPool = coreContracts.defaultPool
-    functionCaller = coreContracts.functionCaller
-    borrowerOperations = coreContracts.borrowerOperations
-
-    gtStaking = GTContracts.gtStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
-
-    await deploymentHelper.connectCoreContracts(coreContracts)
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
-
-    th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, mv._10_Ether, mv._100e18)
-=======
     const contracts = await deployLiquity()
 
     priceFeed = contracts.priceFeed
@@ -72,7 +45,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
     await connectContracts(contracts, contractAddresses)
 
     th.openLoan_allAccounts(accounts.slice(0, 10), contracts, dec(10, 'ether'), dec(100, 18))
->>>>>>> main
   })
 
   describe('CDPManager', async accounts => {
