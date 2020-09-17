@@ -770,9 +770,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         CDPs[_cdpUser].coll = newColl;
         _updateStakeAndTotalStakes(_cdpUser);
 
-        // Burn the calculated lot of CLV and send the corresponding ETH to _msgSender()
-        // poolManager.redeemCollateral(_msgSender(), CLVLot, ETHLot); 
-
         emit CDPUpdated(
                         _cdpUser,
                         newDebt,
