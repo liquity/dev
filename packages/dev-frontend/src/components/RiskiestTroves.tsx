@@ -252,9 +252,9 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                         {(collateralRatio => (
                           <Text
                             color={
-                              collateralRatio.gt(Liquity.CRITICAL_COLLATERAL_RATIO)
+                              collateralRatio.gt(Trove.CRITICAL_COLLATERAL_RATIO)
                                 ? "success"
-                                : collateralRatio.gt(Liquity.MINIMUM_COLLATERAL_RATIO)
+                                : collateralRatio.gt(Trove.MINIMUM_COLLATERAL_RATIO)
                                 ? "warning"
                                 : "danger"
                             }

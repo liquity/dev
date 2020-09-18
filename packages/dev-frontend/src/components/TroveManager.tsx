@@ -19,8 +19,8 @@ type TroveActionProps = {
   numberOfTroves: number;
 };
 
-const mcrPercent = new Percent(Liquity.MINIMUM_COLLATERAL_RATIO).toString(0);
-const ccrPercent = new Percent(Liquity.CRITICAL_COLLATERAL_RATIO).toString(0);
+const mcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO).toString(0);
+const ccrPercent = new Percent(Trove.CRITICAL_COLLATERAL_RATIO).toString(0);
 
 const TroveAction: React.FC<TroveActionProps> = ({
   liquity,

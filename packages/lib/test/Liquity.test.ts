@@ -5,9 +5,9 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { ethers } from "@nomiclabs/buidler";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
+
 import { deployAndSetupContracts } from "../utils/deploy";
-import { LiquityContractAddresses, addressesOf } from "../src/contracts";
-import { Liquity, Trove, StabilityDeposit } from "../src/Liquity";
+import { LiquityContractAddresses, addressesOf, Liquity, Trove, StabilityDeposit } from "..";
 
 const provider = ethers.provider;
 
