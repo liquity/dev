@@ -6,7 +6,8 @@ import CopyToClipboard from "react-copy-to-clipboard";
 import { Card, Button, Text, Box, Heading, Flex, Styled } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
-import { Liquity, Trove } from "@liquity/lib";
+import { Trove } from "@liquity/lib-base";
+import { EthersLiquity } from "@liquity/lib-ethers";
 import { shortenAddress } from "../utils/shortenAddress";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
@@ -18,7 +19,7 @@ const rowHeight = "40px";
 
 type RiskiestTrovesProps = {
   pageSize: number;
-  liquity: Liquity;
+  liquity: EthersLiquity;
   numberOfTroves: number;
   price: Decimal;
   totalRedistributed: Trove;

@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 import { Transaction } from "./Transaction";
 
-import { Liquity } from "@liquity/lib";
+import { EthersLiquity } from "@liquity/lib-ethers";
 import { Icon } from "./Icon";
 
 type LiquidationManagerProps = {
-  liquity: Liquity;
+  liquity: EthersLiquity;
 };
 
 export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity }) => {

@@ -4,7 +4,8 @@ import { Flex, Spinner, Heading, Text, ThemeProvider, Container } from "theme-ui
 
 import { Decimal, Difference, Percent } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
-import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import { Trove, StabilityDeposit } from "@liquity/lib-base";
+import { EthersLiquity } from "@liquity/lib-ethers";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
 import { useLiquityStore } from "./hooks/BlockPolledLiquityStore";
@@ -60,7 +61,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
     contracts,
     liquity,
     store: storeState.value,
-    Liquity,
+    EthersLiquity,
     Trove,
     StabilityDeposit,
     Decimal,

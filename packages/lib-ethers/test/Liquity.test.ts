@@ -5,9 +5,10 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { ethers } from "@nomiclabs/buidler";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
+import { Trove, StabilityDeposit } from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
-import { LiquityContractAddresses, addressesOf, Liquity, Trove, StabilityDeposit } from "..";
+import { LiquityContractAddresses, addressesOf, EthersLiquity } from "..";
 
 const provider = ethers.provider;
 
@@ -15,7 +16,7 @@ chai.use(chaiAsPromised);
 
 // TODO make the testcases isolated
 
-describe("Liquity", () => {
+describe("EthersLiquity", () => {
   let deployer: Signer;
   let funder: Signer;
   let user: Signer;
@@ -23,9 +24,9 @@ describe("Liquity", () => {
 
   let addresses: LiquityContractAddresses;
 
-  let deployerLiquity: Liquity;
-  let liquity: Liquity;
-  let otherLiquities: Liquity[];
+  let deployerLiquity: EthersLiquity;
+  let liquity: EthersLiquity;
+  let otherLiquities: EthersLiquity[];
 
   let price: Decimal;
   let trove: Trove;
@@ -97,7 +98,7 @@ describe("Liquity", () => {
   });
 
   it("should connect to contracts their addresses", async () => {
-    liquity = await Liquity.connect(addresses, user);
+    liquity = await EthersLiquity.connect(addresses, user);
   });
 
   it("should get the price", async () => {
@@ -149,7 +150,7 @@ describe("Liquity", () => {
     });
 
     it("should close the Trove after another user creates a Trove", async () => {
-      const funderLiquity = await Liquity.connect(addresses, funder);
+      const funderLiquity = await EthersLiquity.connect(addresses, funder);
       await funderLiquity.openTrove(new Trove({ collateral: 1 }));
 
       await liquity.closeTrove();
@@ -216,7 +217,7 @@ describe("Liquity", () => {
   });
 
   const connectUsers = (users: Signer[]) =>
-    Promise.all(users.map(user => Liquity.connect(addresses, user)));
+    Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
 
   describe("StabilityPool", () => {
     before(async () => {

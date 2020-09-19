@@ -6,15 +6,17 @@ import { AddressZero } from "@ethersproject/constants";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 
-import { Trove, TroveWithPendingRewards, TroveChange } from "./Trove";
-import { StabilityDeposit } from "./StabilityDeposit";
-import { ReadableLiquity } from "./ReadableLiquity";
 import {
+  Trove,
+  TroveWithPendingRewards,
+  TroveChange,
+  StabilityDeposit,
+  ReadableLiquity,
   HintedTransactionOptionalParams,
   TroveChangeOptionalParams,
   StabilityDepositTransferOptionalParams,
   HintedLiquity
-} from "./HintedLiquity";
+} from "@liquity/lib-base";
 
 import {
   CDPManager,
@@ -68,18 +70,18 @@ type PromisesOf<T> = {
   [P in keyof T]: T[P] extends infer U | undefined ? U | Promise<U> : T[P] | Promise<T[P]>;
 };
 
-type EthersCallOverrides = PromisesOf<{
+export type EthersCallOverrides = PromisesOf<{
   blockTag?: BlockTag;
   from?: string;
 }>;
 
-type EthersTransactionOverrides = PromisesOf<{
+export type EthersTransactionOverrides = PromisesOf<{
   nonce?: BigNumberish;
   gasLimit?: BigNumberish;
   gasPrice?: BigNumberish;
 }>;
 
-export class Liquity implements ReadableLiquity, HintedLiquity<ContractTransaction> {
+export class EthersLiquity implements ReadableLiquity, HintedLiquity<ContractTransaction> {
   readonly userAddress?: string;
 
   private readonly cdpManager: CDPManager;
@@ -116,7 +118,7 @@ export class Liquity implements ReadableLiquity, HintedLiquity<ContractTransacti
 
     const contracts = connectToContracts(addresses, signerOrProvider);
 
-    return new Liquity(contracts, userAddress);
+    return new EthersLiquity(contracts, userAddress);
   }
 
   private requireAddress(): string {

@@ -18,6 +18,6 @@
     "typescript": "^3.9.5"
   },
   "peerDependencies": {
-    "@ethersproject/bignumber": "^5.0.0-beta.139"
+    "@ethersproject/bignumber": "^5.0.1"
   }
 }

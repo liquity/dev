@@ -11,6 +11,7 @@ import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config
 import { NetworkConfig } from "@nomiclabs/buidler/types";
 
 import { Decimal, Difference, Decimalish, Percent } from "@liquity/decimal";
+import { Trove, TroveWithPendingRewards } from "@liquity/lib-base";
 
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
 import {
@@ -19,9 +20,7 @@ import {
   deploymentOnNetwork,
   connectToContracts,
   LiquityDeployment,
-  Liquity,
-  Trove,
-  TroveWithPendingRewards
+  EthersLiquity as Liquity
 } from ".";
 
 dotenv.config();
