@@ -1,9 +1,8 @@
 import { Decimalish } from "@liquity/decimal";
 
 import { Trove, TroveChange } from "./Trove";
-import { ReadableLiquity } from "./ReadableLiquity";
 
-export interface TransactableLiquity<TTransaction = unknown> extends ReadableLiquity {
+export interface TransactableLiquity<TTransaction = unknown> {
   openTrove(trove: Trove): Promise<TTransaction>;
   closeTrove(): Promise<TTransaction>;
 

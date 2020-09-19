@@ -8,6 +8,7 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 
 import { Trove, TroveWithPendingRewards, TroveChange } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
+import { ReadableLiquity } from "./ReadableLiquity";
 import {
   HintedTransactionOptionalParams,
   TroveChangeOptionalParams,
@@ -78,7 +79,7 @@ type EthersTransactionOverrides = PromisesOf<{
   gasPrice?: BigNumberish;
 }>;
 
-export class Liquity implements HintedLiquity<ContractTransaction> {
+export class Liquity implements ReadableLiquity, HintedLiquity<ContractTransaction> {
   readonly userAddress?: string;
 
   private readonly cdpManager: CDPManager;
