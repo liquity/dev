@@ -83,6 +83,10 @@ interface ICDPManager {
 
     function removeStake(address _user) external;
 
+    function getBorrowingFee(uint CLVDebt) external view returns (uint);
+
+    function decayBaseRate() external returns (uint);
+
     function getCDPStatus(address _user) external view returns (uint);
     
     function getCDPStake(address _user) external view returns (uint);

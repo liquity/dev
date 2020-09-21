@@ -162,8 +162,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // --- Variable container structs for redemptions ---
 
     struct RedemptionTotals {
-        uint totalCLVtoRedeem;
-        uint totalETHtoSend;
+        uint totalCLVToRedeem;
+        uint totalETHDrawn;
+        uint ETHFee;
+        uint ETHToSendToRedeemer;
     }
 
     struct SingleRedemptionValues {
@@ -868,17 +870,24 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
             if (V.CLVLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last CDP
 
-            T.totalCLVtoRedeem  = T.totalCLVtoRedeem.add(V.CLVLot);
-            T.totalETHtoSend = T.totalETHtoSend.add(V.ETHLot);
+            T.totalCLVToRedeem  = T.totalCLVToRedeem.add(V.CLVLot);
+            T.totalETHDrawn = T.totalETHDrawn.add(V.ETHLot);
             
             remainingCLV = remainingCLV.sub(V.CLVLot);
             currentCDPuser = nextUserToCheck;
         }
 
-        // Burn the total CLV redeemed from troves, and send the corresponding ETH to _msgSender()
-        poolManager.redeemCollateral(_msgSender(), T.totalCLVtoRedeem, T.totalETHtoSend);
+        // Update base rate, then calculate the ETH fee and send it to GT staking contract
+        _decayBaseRate();
+        T.ETHFee = _getRedemptionFee(T.totalETHDrawn, price);
+        gtStaking.addETHFee.value(T.ETHFee);
 
-        emit Redemption(_CLVamount, T.totalCLVtoRedeem, T.totalETHtoSend);
+        T.ETHToSendToRedeemer = T.totalETHDrawn.sub(T.ETHFee);
+
+        // Burn the total CLV redeemed from troves, and send the remaining drawn ETH to _msgSender()
+        poolManager.redeemCollateral(_msgSender(), T.totalCLVToRedeem, T.ETHToSendToRedeemer);
+
+        emit Redemption(_CLVamount, T.totalCLVToRedeem, T.totalETHDrawn);
     }
 
     // --- Helper functions ---
@@ -1207,7 +1216,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Fee functions ---
 
-    function getRedemptionFee(uint _ETHDrawn, uint _price) internal view returns (uint) {
+    function _getRedemptionFee(uint _ETHDrawn, uint _price) internal view returns (uint) {
         uint activeDebt = activePool.getCLVDebt();
         uint closedDebt = defaultPool.getCLVDebt();
         uint totalCLVSupply = activeDebt.add(closedDebt);
@@ -1221,18 +1230,32 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return redemptionFee;
    }
 
+    function getBorrowingFee(uint _CLVDebt) external view returns (uint) {
+        _requireCallerIsBorrowerOperations();
+        return _getBorrowingFee(_CLVDebt);
+    }
+
+    function _getBorrowingFee(uint _CLVDebt) internal view returns (uint) {
+        return _CLVDebt.mul(baseRate).div(1e18);
+    }
+
+    function decayBaseRate() external returns (uint) {
+        _decayBaseRate();
+    }
+
     // Updates the baseRate state variable based on time elapsed since the last operation
-    function decayBaseRate() internal returns (uint) {
-        uint hoursPassed = (block.timestamp.sub(lastFeeOperationTime)).div(SECONDS_IN_ONE_HOUR);
-        uint decayFactor = Math.decPow(HOURLY_DECAY_FACTOR, hoursPassed);
-
-        baseRate = baseRate.mul(decayFactor);
-
+    function _decayBaseRate() internal returns (uint) {
+        uint hoursPassed = _hoursPassedSinceLastFeeOp();
+        uint decayFactor = Math._decPow(HOURLY_DECAY_FACTOR, hoursPassed);
+        console.log("decayFactor %s", decayFactor);
+         console.log("baseRate before mul is: %s", baseRate);
+        baseRate = baseRate.mul(decayFactor).div(1e18);
+        console.log("baseRate after mul is:  %s", baseRate);
         return baseRate;
     }
 
-    function getBorrowingFee(uint CLVDebt) internal view returns (uint) {
-        return CLVDebt.mul(baseRate).div(1e18);
+    function _hoursPassedSinceLastFeeOp() internal view returns (uint) {
+        return (block.timestamp.sub(lastFeeOperationTime)).div(SECONDS_IN_ONE_HOUR);
     }
 
     // --- 'require' wrapper functions ---

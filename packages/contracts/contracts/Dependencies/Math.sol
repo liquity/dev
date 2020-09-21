@@ -6,7 +6,7 @@ import "./console.sol";
 library Math {
     using SafeMath for uint;
 
-    // The virtual debt assigned to all troves. Needed for preserving collateral for
+    // The virtual debt assigned to all troves. 
     uint constant virtualDebt = 6e18;
   
     function _min(uint _a, uint _b) internal pure returns (uint) {
@@ -17,25 +17,35 @@ library Math {
         return (_a >= _b) ? _a : _b;
     }
 
+    /* multiply two decimal numbers and use normal rounding rules:
+    -round product up if 19th mantissa digit >= 5
+    -round product down if 19th mantissa digit < 5
+    */
+    function decMul(uint x, uint y) internal pure returns (uint decProd) {
+        uint prod_xy = x.mul(y);
+
+        decProd = prod_xy.add(1e18 / 2).div(1e18);
+    }
+
     /* Exponentiation function for 18-digit decimal base, and integer exponent n. 
     Uses the efficient "exponentiation by squaring" algorithm. O(log(n)) complexity. */
-    function decPow(uint _base, uint _n) internal pure returns (uint) {
+    function _decPow(uint _base, uint _n) internal pure returns (uint) {
         if (_n == 0) {return 1e18;}
 
         uint y = 1e18;
 
         while (_n > 1) {
             if (_n % 2 == 0) {
-                _base = _base.mul(_base).div(1e18);
+                _base = decMul(_base, _base);
                 _n = _n.div(2);
             } else if (_n % 2 != 0) {
-                y = _base.mul(y).div(1e18);
-                _base = _base.mul(_base).div(1e18);
+                y = decMul(_base, y);
+                _base = decMul(_base, _base);
                 _n = (_n.sub(1)).div(2);
             }
         }
 
-        return _base.mul(y).div(1e18);
+        return decMul(_base, y);
   }
 
     /* Converts the magnitude of an int to a uint

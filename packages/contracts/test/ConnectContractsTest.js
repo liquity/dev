@@ -1,4 +1,3 @@
-
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 
 contract('Deployment script - Sets correct contract addresses dependencies after deployment', async accounts => {
@@ -350,7 +349,4 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     const recordedGrowthTokenAddress = await communityIssuance.growthTokenAddress()
     assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
   })
-
 })
-
-contract('Reset chain state', async accounts => { })

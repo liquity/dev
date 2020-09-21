@@ -39,6 +39,24 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     ISortedCDPs public sortedCDPs;
     address public sortedCDPsAddress;
 
+    /* --- Variable container structs  ---
+
+    Used to hold, return and assign variables inside a function, in order to avoid the error: 
+    "CompilerError: Stack too deep". */
+
+     struct LocalVariables_adjustLoan {
+        address user;
+        uint price;
+        int collChange;
+        uint debt;
+        uint coll;
+        uint newICR;
+        uint CLVFee;
+        uint newDebt;
+        uint newColl;
+        uint stake;
+    }
+
     // --- Events --- 
 
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
@@ -124,6 +142,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
             _requireNewTCRisAboveCCR(int(msg.value), int(_CLVAmount), price); 
         }
+
+        // Update base rate, then calculate the CLV fee and send it to GT staking contract
+        cdpManager.decayBaseRate();
+        uint CLVFee = cdpManager.getBorrowingFee(_CLVAmount);
+        gtStaking.addLQTYFee(CLVFee);
         
         // Update loan properties
         cdpManager.setCDPStatus(user, 1);
@@ -137,9 +160,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint arrayIndex = cdpManager.addCDPOwnerToArray(user);
         emit CDPCreated(user, arrayIndex);
         
-        // Tell PM to move the ether to the Active Pool, and mint CLV to the borrower
+        // Tell PM to move the ether to the Active Pool, and mint CLV (minus the fee) to the borrower
         poolManager.addColl.value(msg.value)(); 
-        poolManager.withdrawCLV(user, _CLVAmount); 
+        poolManager.withdrawCLV(user, _CLVAmount, CLVFee); 
        
         emit CDPUpdated(user, _CLVAmount, msg.value, stake, BorrowerOperation.openLoan);
     }
@@ -216,15 +239,20 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _requireICRisAboveMCR(newICR);
 
         _requireNewTCRisAboveCCR(0, int(_amount), price);
-        
+
+        // Update base rate, then calculate the CLV fee on the debt increase, and send it to GT staking contract
+        cdpManager.decayBaseRate();
+        uint CLVFee = cdpManager.getBorrowingFee(_amount);
+        gtStaking.addLQTYFee(CLVFee);
+
         // Increase the CDP's debt
         uint newDebt = cdpManager.increaseCDPDebt(user, _amount);
        
         // Update CDP's position in sortedCDPs
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
 
-        // Mint the given amount of CLV to the owner's address and add them to the ActivePool
-        poolManager.withdrawCLV(user, _amount);
+        // Mint the CLV amount (minus fee) to the borrower, and update the ActivePool
+        poolManager.withdrawCLV(user, _amount, CLVFee); 
         
         uint stake = cdpManager.getCDPStake(user);
         emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.withdrawCLV);
@@ -280,44 +308,55 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     /* If ether is sent, the operation is considered as an increase in ether, and the first parameter 
     _collWithdrawal is ignored  */
     function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable {
-        address user = _msgSender();
-        _requireCDPisActive(user);
+        LocalVariables_adjustLoan memory L;
+
+        L.user = _msgSender();
+        _requireCDPisActive(L.user);
         _requireNotInRecoveryMode();
         
-        uint price = priceFeed.getPrice();
+        L.price = priceFeed.getPrice();
      
-        cdpManager.applyPendingRewards(user);
+        cdpManager.applyPendingRewards(L.user);
 
         // If Ether is sent, grab the amount. Otherwise, grab the specified collateral withdrawal
-        int collChange = (msg.value != 0) ? int(msg.value) : -int(_collWithdrawal);
+        L.collChange = (msg.value != 0) ? int(msg.value) : -int(_collWithdrawal);
 
-        uint debt = cdpManager.getCDPDebt(user);
-        uint coll = cdpManager.getCDPColl(user);
+        L.debt = cdpManager.getCDPDebt(L.user);
+        L.coll = cdpManager.getCDPColl(L.user);
        
-        uint newICR = _getNewICRFromTroveChange(coll, debt, collChange, _debtChange, price);
+        uint newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, _debtChange, L.price);
        
         // --- Checks --- 
         _requireICRisAboveMCR(newICR);
-        _requireNewTCRisAboveCCR(collChange, _debtChange, price);
-        _requireCLVRepaymentAllowed(debt, _debtChange);
-        _requireCollAmountIsWithdrawable(coll, _collWithdrawal, price);
+        _requireNewTCRisAboveCCR(L.collChange, _debtChange, L.price);
+        _requireCLVRepaymentAllowed(L.debt, _debtChange);
+        _requireCollAmountIsWithdrawable(L.coll, _collWithdrawal, L.price);
 
         //  --- Effects --- 
-        (uint newColl, uint newDebt) = _updateTroveFromAdjustment(user, collChange, _debtChange);
+
+        /* If debt increases, update base rate, then calculate the CLV fee on the debt increase, 
+        and send it to GT staking contract */
+        if (_debtChange > 0) {
+            cdpManager.decayBaseRate();
+            L.CLVFee = cdpManager.getBorrowingFee(Math._intToUint(_debtChange));
+            gtStaking.addLQTYFee(L.CLVFee);
+        }
+
+        (uint newColl, uint newDebt) = _updateTroveFromAdjustment(L.user, L.collChange, _debtChange);
         
-        uint stake = cdpManager.updateStakeAndTotalStakes(user);
+        uint stake = cdpManager.updateStakeAndTotalStakes(L.user);
        
         // Close a CDP if it is empty, otherwise, re-insert it in the sorted list
         if (newDebt == 0 && newColl == 0) {
-            cdpManager.closeCDP(user);
+            cdpManager.closeCDP(L.user);
         } else {
-            sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
+            sortedCDPs.reInsert(L.user, newICR, L.price, _hint, _hint);
         }
 
         //  --- Interactions ---
-        _moveTokensAndETHfromAdjustment(user, collChange, _debtChange);   
+        _moveTokensAndETHfromAdjustment(L.user, L.collChange, _debtChange, L.CLVFee);   
     
-        emit CDPUpdated(user, newDebt, newColl, stake, BorrowerOperation.adjustLoan);
+        emit CDPUpdated(L.user, newDebt, newColl, stake, BorrowerOperation.adjustLoan);
     }
 
     // --- Helper functions --- 
@@ -338,9 +377,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         return (newColl, newDebt);
     }
 
-    function _moveTokensAndETHfromAdjustment(address _user, int _collChange, int _debtChange) internal {
+    function _moveTokensAndETHfromAdjustment(address _user, int _collChange, int _debtChange, uint CLVFee) internal {
         if (_debtChange > 0){
-            poolManager.withdrawCLV(_user, Math._intToUint(_debtChange));
+            poolManager.withdrawCLV(_user, Math._intToUint(_debtChange), CLVFee);
         } else if (_debtChange < 0) {
             poolManager.repayCLV(_user, Math._intToUint(_debtChange));
         }

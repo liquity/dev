@@ -1,10 +1,6 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
-
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -18,11 +14,9 @@ contract('BorrowerOperations', async accounts => {
   let poolManager
   let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
   let borrowerOperations
 
   let contracts
@@ -31,28 +25,35 @@ contract('BorrowerOperations', async accounts => {
   before(async () => {
     borrowerOpsTester = await BorrowerOperationsTester.new()
     BorrowerOperationsTester.setAsDeployed(borrowerOpsTester)
+    
   })
 
   beforeEach(async () => {
-    contracts = await deployLiquity()
+    contracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
-    nameRegistry = contracts.nameRegistry
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
+    hintHelpers = contracts.hintHelpers
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    gtStaking = GTContracts.gtStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
 
     borrowerOpsTester.setActivePool(contracts.activePool.address)
     borrowerOpsTester.setDefaultPool(contracts.defaultPool.address)
+    
+    await deploymentHelper.connectCoreContracts(contracts)
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
   it("addColl(): Increases the activePool ETH and raw ether balance by correct amount", async () => {

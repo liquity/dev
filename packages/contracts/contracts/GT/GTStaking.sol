@@ -131,13 +131,17 @@ contract GTStaking {
 
     function addETHFee() public payable {
         _requireCallerIsCDPManager();
-        uint ETHFeePerGTStaked = msg.value.mul(1e18).div(totalGTStaked);
+        uint ETHFeePerGTStaked;
+        
+        if (totalGTStaked > 0) {ETHFeePerGTStaked = msg.value.mul(1e18).div(totalGTStaked);}
         F_ETH = F_ETH.add(ETHFeePerGTStaked);
     }
 
     function addLQTYFee(uint _LQTYFee) public {
         _requireCallerIsBorrowerOperations();
-        uint LQTYFeePerGTStaked = _LQTYFee.mul(1e18).div(totalGTStaked);
+        uint LQTYFeePerGTStaked;
+        
+        if (totalGTStaked > 0) {LQTYFeePerGTStaked = _LQTYFee.mul(1e18).div(totalGTStaked);}
         F_LQTY = F_LQTY.add(LQTYFeePerGTStaked);
     }
 

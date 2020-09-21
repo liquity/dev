@@ -61,7 +61,7 @@ interface IPoolManager {
 
     function withdrawColl(address _account, uint _ETH) external;
 
-    function withdrawCLV(address _account, uint _CLV) external;
+    function withdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) external;
     
     function repayCLV(address _account, uint _CLV) external;
 
