@@ -700,6 +700,279 @@ contract('BorrowerOperations', async accounts => {
 
   // --- withdrawCLV() ---
 
+  it.only("withdrawCLV(): decays a non-zero base rate", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    // D withdraws CLV
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+
+    // Check baseRate has decreased
+    const baseRate_2 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_2.lt(baseRate_1))
+
+    // console.log(`baseRate_2: ${baseRate_2}`)
+
+    // 1 hour passes
+    th.fastForwardTime(3600, web3.currentProvider)
+
+    // E opens loan 
+    await borrowerOperations.openLoan(dec(12, 18), E, { from: E, value: dec(3, 'ether') })
+
+    const baseRate_3 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_3.lt(baseRate_2))
+  })
+
+  it.only("withdrawCLV(): doesn't change base rate if it is already zero", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate is zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.equal(baseRate_1, '0')
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    // D withdraws CLV
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+    
+    // Check baseRate is still 0
+    const baseRate_2 = await cdpManager.baseRate()
+    assert.equal(baseRate_2, '0')
+
+    // 1 hour passes
+    th.fastForwardTime(3600, web3.currentProvider)
+
+    // E opens loan 
+    await borrowerOperations.openLoan(dec(12, 18), E, { from: E, value: dec(3, 'ether') })
+
+    const baseRate_3 = await cdpManager.baseRate()
+    assert.equal(baseRate_3, '0')
+  })
+
+  it.only("withdrawCLV(): borrowing at non-zero base rate sends CLV fee to GT staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await growthToken.approve(gtStaking.address, dec(1, 18), { from: owner })
+    await gtStaking.stake(dec(1, 18), { from: owner })
+
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    // Check GT CLV balance before == 0
+    const gtStaking_CLVBalance_Before = await clvToken.balanceOf(gtStaking.address)
+    assert.equal(gtStaking_CLVBalance_Before, '0')
+
+    // D withdraws CLV
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+
+    // Check GT CLV balance after has increased
+    const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
+    assert.isTrue(gtStaking_CLVBalance_After.gt(gtStaking_CLVBalance_Before))
+  })
+
+  it.only("withdrawCLV(): Borrowing at non-zero base rate increases the GT staking contract CLV fees-per-unit-staked", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await growthToken.approve(gtStaking.address, dec(1, 18), { from: owner })
+    await gtStaking.stake(dec(1, 18), { from: owner })
+
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    // Check GT contract CLV fees-per-unit-staked is zero
+    const F_LQTY_Before = await gtStaking.F_LQTY()
+    assert.equal(F_LQTY_Before, '0')
+
+    // D withdraws CLV
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+
+    // Check GT contract CLV fees-per-unit-staked has increased
+    const F_LQTY_After = await gtStaking.F_LQTY()
+    assert.isTrue(F_LQTY_After.gt(F_LQTY_Before))
+  })
+
+  it.only("withdrawCLV(): Borrowing at non-zero base rate sends (CLVDebtIncrease - CLVFee) to the user", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await growthToken.approve(gtStaking.address, dec(1, 18), { from: owner })
+    await gtStaking.stake(dec(1, 18), { from: owner })
+
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check GT Staking contract balance before == 0
+    const gtStaking_CLVBalance_Before = await clvToken.balanceOf(gtStaking.address)
+    assert.equal(gtStaking_CLVBalance_Before, '0')
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    // D withdraws CLV
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    const CLVRequest_D = th.toBN(dec(40, 18))
+    await borrowerOperations.withdrawCLV(CLVRequest_D, D, { from: D })
+
+    // Check GT staking CLV balance has increased
+    const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
+    assert.isTrue(gtStaking_CLVBalance_After.gt(gtStaking_CLVBalance_Before))
+
+    // Check D's CLV balance now equals their requested CLV, minus the fee
+    const expectedCLVBalance_D = CLVRequest_D.sub(gtStaking_CLVBalance_After)
+    const CLVBalance_D = await clvToken.balanceOf(D)
+
+    assert.isTrue(expectedCLVBalance_D.eq(CLVBalance_D))
+  })
+
+  it.only("withdrawCLV(): Borrowing at zero base rate does not change CLV balance of GT staking contract", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate is zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.equal(baseRate_1, '0')
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    // Check GT CLV balance before == 0
+    const gtStaking_CLVBalance_Before = await clvToken.balanceOf(gtStaking.address)
+    assert.equal(gtStaking_CLVBalance_Before, '0')
+
+    // D withdraws CLV
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+
+    // Check GT CLV balance after == 0
+    const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
+    assert.equal(gtStaking_CLVBalance_After, '0')
+  })
+
+  it.only("withdrawCLV(): Borrowing at zero base rate does not change GT staking contract CLV fees-per-unit-staked", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate is zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.equal(baseRate_1, '0')
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    // Check GT CLV balance before == 0
+    const F_LQTY_Before = await gtStaking.F_LQTY()
+    assert.equal(F_LQTY_Before, '0')
+
+    // D withdraws CLV
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+
+    // Check GT CLV balance after == 0
+    const F_LQTY_After = await gtStaking.F_LQTY()
+    assert.equal(F_LQTY_After, '0')
+  })
+
+  it.only("withdrawCLV(): Borrowing at zero base rate sends total requested CLV to the user", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate is zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.equal(baseRate_1, '0')
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    
+    // D withdraws CLV
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    const CLVRequest_D = th.toBN(dec(40, 18))
+    await borrowerOperations.withdrawCLV(CLVRequest_D, D, { from: D })
+
+    // Check D's CLV balance now equals their requested CLV
+    const CLVBalance_D = await clvToken.balanceOf(D)
+
+    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
+  })
+
   it("withdrawCLV(): reverts when calling address does not have active trove", async () => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
@@ -2049,7 +2322,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(F_LQTY_After, '0')
   })
 
-  it.only("openLoan(): Borrowing at zero base rate sends total CLV debt increase to the user", async () => {
+  it.only("openLoan(): Borrowing at zero base rate sends total requested CLV to the user", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })

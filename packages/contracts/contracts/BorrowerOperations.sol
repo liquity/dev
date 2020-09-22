@@ -258,6 +258,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         cdpManager.decayBaseRate();
         uint CLVFee = cdpManager.getBorrowingFee(_amount);
         gtStaking.addLQTYFee(CLVFee);
+        clvToken.mint(gtStakingAddress, CLVFee);
 
         // Increase the CDP's debt
         uint newDebt = cdpManager.increaseCDPDebt(user, _amount);
@@ -354,6 +355,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             cdpManager.decayBaseRate();
             L.CLVFee = cdpManager.getBorrowingFee(Math._intToUint(_debtChange));
             gtStaking.addLQTYFee(L.CLVFee);
+            clvToken.mint(gtStakingAddress, L.CLVFee);
         }
 
         (uint newColl, uint newDebt) = _updateTroveFromAdjustment(L.user, L.collChange, _debtChange);
