@@ -2,6 +2,7 @@ pragma solidity 0.5.16;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/ICLVToken.sol";
 import "./Interfaces/IPool.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
@@ -35,6 +36,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     IGTStaking public gtStaking;
     address public gtStakingAddress;
 
+    ICLVToken public clvToken;
+    address public clvTokenAddress;
+
+
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
     address public sortedCDPsAddress;
@@ -66,6 +71,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
     event GTStakingAddressChanged(address _gtStakingAddress);
+    event CLVTokenAddressChanged(address _clvTokenAddress);
 
     enum BorrowerOperation {
         openLoan,
@@ -124,6 +130,12 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit GTStakingAddressChanged(_gtStakingAddress);
     }
 
+    function setCLVToken(address _clvTokenAddress) external onlyOwner {
+        clvTokenAddress = _clvTokenAddress;
+        clvToken = ICLVToken(_clvTokenAddress);
+        emit CLVTokenAddressChanged(_clvTokenAddress);
+    }
+
     // --- Borrower Trove Operations ---
 
     function openLoan(uint _CLVAmount, address _hint) external payable {
@@ -136,18 +148,20 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint compositeDebt = _getCompositeDebt(_CLVAmount);
         uint ICR = Math._computeCR(msg.value, compositeDebt, price);  
 
+        uint CLVFee;
         if (_CLVAmount > 0) {
             _requireNotInRecoveryMode();
             _requireICRisAboveMCR(ICR);
 
             _requireNewTCRisAboveCCR(int(msg.value), int(_CLVAmount), price); 
+
+             // Update base rate, then calculate the CLV fee and send it to GT staking contract
+            cdpManager.decayBaseRate();
+            CLVFee = cdpManager.getBorrowingFee(_CLVAmount);
+            gtStaking.addLQTYFee(CLVFee);
+            clvToken.mint(gtStakingAddress, CLVFee);
         }
 
-        // Update base rate, then calculate the CLV fee and send it to GT staking contract
-        cdpManager.decayBaseRate();
-        uint CLVFee = cdpManager.getBorrowingFee(_CLVAmount);
-        gtStaking.addLQTYFee(CLVFee);
-        
         // Update loan properties
         cdpManager.setCDPStatus(user, 1);
         cdpManager.increaseCDPColl(user, msg.value);

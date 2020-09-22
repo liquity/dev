@@ -158,8 +158,9 @@ class DeploymentHelper {
 
   // Connect core contracts to their dependencies
   static async connectCoreContracts(coreContracts) {
-    // set PoolManager address in the CLVToken contract
+    // set contracts in the CLVToken contract
     await coreContracts.clvToken.setPoolManagerAddress(coreContracts.poolManager.address)
+    await coreContracts.clvToken.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
 
     // set contracts in the PoolManager
     await coreContracts.poolManager.setBorrowerOperations(coreContracts.borrowerOperations.address)
@@ -198,6 +199,7 @@ class DeploymentHelper {
     await coreContracts.borrowerOperations.setActivePool(coreContracts.activePool.address)
     await coreContracts.borrowerOperations.setDefaultPool(coreContracts.defaultPool.address)
     await coreContracts.borrowerOperations.setCDPManager(coreContracts.cdpManager.address)
+    await coreContracts.borrowerOperations.setCLVToken(coreContracts.clvToken.address)
 
     // set contracts in the Pools
     await coreContracts.stabilityPool.setPoolManagerAddress(coreContracts.poolManager.address)
