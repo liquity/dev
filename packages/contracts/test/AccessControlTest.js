@@ -66,7 +66,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
       }
     })
 
-
     // applyPendingRewards
     it("applyPendingRewards(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice

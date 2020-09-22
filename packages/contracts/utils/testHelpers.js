@@ -23,7 +23,12 @@ const MoneyValues = {
 
   _MCR: web3.utils.toBN('1100000000000000000'),
   _ICR100: web3.utils.toBN('1000000000000000000'),
-  _CCR: web3.utils.toBN('1500000000000000000')
+  _CCR: web3.utils.toBN('1500000000000000000'),
+}
+
+const TimeValues = {
+  ONE_MONTH_IN_SECONDS: 2592000,
+  ONE_YEAR_IN_SECONDS: 31536000
 }
 
 // TODO: Make classes for function export
@@ -677,6 +682,12 @@ class TestHelper {
     return gas
   }
 
+  static async redeemCollateralAndGetTxObject(redeemer, contracts, CLVAmount) {
+    const price = await contracts.priceFeed.getPrice()
+    const tx = await this.performRedemptionTx(redeemer, price, contracts, CLVAmount)
+    return tx
+  }
+
   static async redeemCollateral_allAccounts_randomAmount(min, max, accounts, contracts) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
@@ -707,7 +718,8 @@ class TestHelper {
       firstRedemptionHint,
       exactPartialRedemptionHint,
       partialRedemptionNewICR,
-      { from: redeemer })
+      { from: redeemer, gasPrice: 0},
+      )
 
     return tx
   }
@@ -847,5 +859,6 @@ class TestHelper {
 
 module.exports = {
   TestHelper: TestHelper,
-  MoneyValues: MoneyValues
+  MoneyValues: MoneyValues,
+  TimeValues: TimeValues
 }

@@ -5,6 +5,7 @@ const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 const th = testHelpers.TestHelper
 const dec = th.dec
 const mv = testHelpers.MoneyValues
+const timeValues = testHelpers.TimeValues
 
 contract('CDPManager', async accounts => {
 
@@ -13,7 +14,8 @@ contract('CDPManager', async accounts => {
   const [
     owner,
     alice, bob, carol, dennis, erin, flyn, graham, harriet, ida,
-    defaulter_1, defaulter_2, defaulter_3, defaulter_4, whale] = accounts;
+    defaulter_1, defaulter_2, defaulter_3, defaulter_4, whale,
+    A, B, C, D, E] = accounts;
 
   let priceFeed
   let clvToken
@@ -2656,7 +2658,7 @@ contract('CDPManager', async accounts => {
 
     // Bob attempts to redeem his ill-gotten 101 CLV, from a system that has 100 CLV outstanding debt
     const redemptionTx = await cdpManager.redeemCollateral(
-      dec(100, 18),
+      dec(101, 18),
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
@@ -2665,8 +2667,247 @@ contract('CDPManager', async accounts => {
     assert.isFalse(redemptionTx.receipt.status);
   })
 
+  // Redemption fees 
+  it.only("A redemption made when base rate is zero increases the base rate", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate == 0
+    assert.equal(await cdpManager.baseRate(), '0')
+
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    assert.isTrue((await cdpManager.baseRate()).gt(th.toBN('0')))
+  })
+
+  it.only("A redemption made when base rate is non-zero increases the base rate, for negligible time passed", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
+    await gtStaking.stake(dec(1, 18), {from: owner})
+    
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate == 0
+    assert.equal(await cdpManager.baseRate(), '0')
+
+    // A redeems 10 CLV
+    const redemptionTx_A = await th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18))
+    const timeStamp_A = await th.getTimestampFromTx(redemptionTx_A, web3)
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // B redeems 10 CLV
+    const redemptionTx_B = await th.redeemCollateralAndGetTxObject(B, contracts, dec(10, 18))
+    const timeStamp_B = await th.getTimestampFromTx(redemptionTx_B, web3)
+
+    // Check B's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(B), dec(30, 18))
+
+    // Check negligible time difference (< 1 minute) between txs
+    assert.isTrue(Number(timeStamp_B) - Number(timeStamp_A) < 60)
+
+    const baseRate_2 = await cdpManager.baseRate()
+
+    // Check baseRate has again increased
+    assert.isTrue(baseRate_2.gt(baseRate_1))
+  })
+
+  it.only("A redemption made at zero base rate send a non-zero ETHFee to GT staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
+    await gtStaking.stake(dec(1, 18), {from: owner})
+    
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate == 0
+    assert.equal(await cdpManager.baseRate(), '0')
+   
+    // Check GT Staking contract balance before is zero
+    const gtStakingBalance_Before = await web3.eth.getBalance(gtStaking.address)
+    assert.equal(gtStakingBalance_Before, '0')
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // Check GT Staking contract balance after is non-zero
+    const gtStakingBalance_After = th.toBN(await web3.eth.getBalance(gtStaking.address))
+    assert.isTrue(gtStakingBalance_After.gt(th.toBN('0')))
+  })
+
+  it.only("A redemption made at zero base increases the ETH-fees-per-GT-staked in GT Staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
+    await gtStaking.stake(dec(1, 18), {from: owner})
+    
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate == 0
+    assert.equal(await cdpManager.baseRate(), '0')
+
+    // Check GT Staking ETH-fees-per-GT-staked before is zero
+    const F_ETH_Before = await gtStaking.F_ETH()
+    assert.equal(F_ETH_Before, '0')
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // Check GT Staking ETH-fees-per-GT-staked after is non-zero
+    const F_ETH_After = await gtStaking.F_ETH()
+    assert.isTrue(F_ETH_After.gt('0'))
+  })
+
+  it.only("A redemption made at a non-zero base rate send a non-zero ETHFee to GT staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
+    await gtStaking.stake(dec(1, 18), {from: owner})
+    
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate == 0
+    assert.equal(await cdpManager.baseRate(), '0')
+    
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+    
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    const gtStakingBalance_Before = th.toBN(await web3.eth.getBalance(gtStaking.address))
+
+    // B redeems 10 CLV
+    await th.redeemCollateral(B, contracts, dec(10, 18))
+   
+    // Check B's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(B), dec(30, 18))
+
+    const gtStakingBalance_After = th.toBN(await web3.eth.getBalance(gtStaking.address))
+
+    // check GT Staking balance has increased
+    assert.isTrue(gtStakingBalance_After.gt(gtStakingBalance_Before))
+  })
+
+  it.only("A redemption made at a non-zero base rate increases ETH-per-GT-staked in the staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
+    await gtStaking.stake (dec(1, 18), {from: owner})
+    
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // Check baseRate == 0
+    assert.equal(await cdpManager.baseRate(), '0')
+  
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // Check GT Staking ETH-fees-per-GT-staked before is zero
+    const F_ETH_Before = await gtStaking.F_ETH()
+     
+    // B redeems 10 CLV
+    await th.redeemCollateral(B, contracts, dec(10, 18))
+    
+    // Check B's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(B), dec(30, 18))
+
+    const F_ETH_After = await gtStaking.F_ETH()
+
+    // check GT Staking balance has increased
+    assert.isTrue(F_ETH_After.gt(F_ETH_Before))
+  })
+
+  it.only("A redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => { 
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
+    await gtStaking.stake(dec(1, 18), {from: owner})
+    
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(10, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    const A_balanceBefore = th.toBN(await web3.eth.getBalance(A))
+
+    // A redeems 10 CLV, which is 10% of total CLV supply, at 0 gas cost
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    /*
+    At ETH:USD price of 200:
+    ETHDrawn = (10 / 200) = 0.05 ETH
+    ETHfee = ( 10/100 ) * ETHDrawn = 0.005 ETH
+    ETHRemainder = 0.005 - 0.05 = 0.045 ETH
+    */
+
+   const A_balanceAfter = th.toBN(await web3.eth.getBalance(A))
+
+   // check A's ETH balance has increased by 0.045 ETH 
+   assert.equal((A_balanceAfter.sub(A_balanceBefore)).toString(), dec(45, 15))
+  })
+
   it("getPendingCLVDebtReward(): Returns 0 if there is no pending CLVDebt reward", async () => {
-    // make some loans
+    // Make some loans
     const price = await priceFeed.getPrice()
     await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await poolManager.provideToSP(dec(2000, 18), { from: whale })

@@ -24,21 +24,21 @@ contract CDPManagerTester is CDPManager {
     //     return _getCompositeDebt(_debt);
     // }
 
-    function callDecayBaseRate() external returns (uint) {
-        _decayBaseRate();
-    }
+    // function callDecayBaseRate() external returns (uint) {
+    //     _decayBaseRate();
+    // }
 
-    function hoursPassedSinceLastFeeOp() external view returns (uint) {
-        return _hoursPassedSinceLastFeeOp();
-    }
+    // function hoursPassedSinceLastFeeOp() external view returns (uint) {
+    //     return _hoursPassedSinceLastFeeOp();
+    // }
 
-    function setLastFeeOpTimeToNow() external {
-        lastFeeOperationTime = block.timestamp;
-    }
+    // function setLastFeeOpTimeToNow() external {
+    //     lastFeeOperationTime = block.timestamp;
+    // }
 
-     function setBaseRate(uint _baseRate) external {
-        baseRate = _baseRate;
-    }
+    //  function setBaseRate(uint _baseRate) external {
+    //     baseRate = _baseRate;
+    // }
 
     // function callGetBorrowingFee(uint _CLVDebt) external view returns (uint) {
     //     _getBorrowingFee(_CLVDebt);

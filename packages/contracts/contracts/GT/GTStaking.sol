@@ -1,6 +1,7 @@
 pragma solidity 0.5.16;
 
 import "../Dependencies/SafeMath.sol";
+import "../Dependencies/console.sol";
 import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ICLVToken.sol";
 
@@ -129,19 +130,21 @@ contract GTStaking {
 
     // --- Fee adding functions - called by Liquity core contracts ---
 
-    function addETHFee() public payable {
+    function addETHFee() external payable {
         _requireCallerIsCDPManager();
         uint ETHFeePerGTStaked;
-        
+     
         if (totalGTStaked > 0) {ETHFeePerGTStaked = msg.value.mul(1e18).div(totalGTStaked);}
-        F_ETH = F_ETH.add(ETHFeePerGTStaked);
+
+        F_ETH = F_ETH.add(ETHFeePerGTStaked); 
     }
 
-    function addLQTYFee(uint _LQTYFee) public {
+    function addLQTYFee(uint _LQTYFee) external {
         _requireCallerIsBorrowerOperations();
         uint LQTYFeePerGTStaked;
         
         if (totalGTStaked > 0) {LQTYFeePerGTStaked = _LQTYFee.mul(1e18).div(totalGTStaked);}
+        
         F_LQTY = F_LQTY.add(LQTYFeePerGTStaked);
     }
 
