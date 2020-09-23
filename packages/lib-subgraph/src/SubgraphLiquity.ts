@@ -1,16 +1,10 @@
 import fetch from "cross-fetch";
-import {
-  gql,
-  ApolloClient,
-  InMemoryCache,
-  NormalizedCacheObject,
-  HttpLink,
-  ApolloQueryResult,
-  DocumentNode
-} from "@apollo/client";
+import { gql, ApolloClient, InMemoryCache, NormalizedCacheObject, HttpLink } from "@apollo/client";
 import { BigNumber } from "@ethersproject/bignumber";
 
 import { Decimal } from "@liquity/decimal";
+
+import { Query } from "./Query";
 
 import {
   ReadableLiquity,
@@ -35,30 +29,6 @@ const normalizeAddress = (address?: string) => {
 };
 
 const decimalify = (bigNumberString: string) => new Decimal(BigNumber.from(bigNumberString));
-
-class Query<T, U, V = undefined> {
-  query: DocumentNode;
-  mapResult: (result: ApolloQueryResult<U>) => T;
-
-  constructor(query: DocumentNode, mapResult: (result: ApolloQueryResult<U>) => T) {
-    this.query = query;
-    this.mapResult = mapResult;
-  }
-
-  get(client: ApolloClient<unknown>, variables?: V) {
-    return client
-      .query<U, V>({ query: this.query, variables })
-      .then(result => this.mapResult(result));
-  }
-
-  watch(client: ApolloClient<unknown>, onChanged: (value: T) => void, variables?: V) {
-    const subscription = client
-      .watchQuery<U, V>({ query: this.query, variables })
-      .subscribe(result => onChanged(this.mapResult(result)));
-
-    return () => subscription.unsubscribe();
-  }
-}
 
 const totalRedistributed = new Query<Trove, TotalRedistributed>(
   gql`
@@ -184,7 +154,7 @@ const tokensInStabilityPool = new Query<Decimal, TokensInStabilityPool>(
 export class SubgraphLiquity implements ReadableLiquity {
   private client: ApolloClient<NormalizedCacheObject>;
 
-  constructor(uri: string, pollInterval?: number) {
+  constructor(uri = "http://localhost:8000/subgraphs/name/liquity/subgraph", pollInterval = 4000) {
     this.client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new HttpLink({ fetch, uri }),
