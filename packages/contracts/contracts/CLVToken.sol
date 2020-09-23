@@ -17,7 +17,9 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     CLVTokenData public clvTokenData;
     address public tokenDataAddress;
 
+    // @REVIEW: Don’t we have name, symbol and decimals?
     constructor() public {
+        // @REVIEW: Why are we splitting CLVTokenData? Aren’t we wasting gas with external calls?
         clvTokenData = new CLVTokenData();
         tokenDataAddress = address(clvTokenData);
     }    
@@ -42,6 +44,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     }
 
     function mint(address _account, uint256 _amount) external onlyPoolManager {
+        // @REVIEW: Can we inline this?
         _mint(_account, _amount); 
     }
     
@@ -84,6 +87,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
  * allowances. See {IERC20-approve}.
  */
    
+    // @REVIEW: What’s the rationale for declaring these functions public? Do we expect this to be inherited?
     /**
      * @dev See {IERC20-totalSupply}.
      */
@@ -145,6 +149,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      */
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
         _transfer(sender, recipient, amount);
+        // @REVIEW: wouldn’t it be better to put this in the first place to fail as soon as possible?
         uint newAllowance = clvTokenData.getAllowance(sender, _msgSender()).sub(amount, "ERC20: transfer amount exceeds allowance");
         _approve(sender, _msgSender(), newAllowance);
         return true;
@@ -275,6 +280,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      *
      * See {_burn} and {_approve}.
      */
+    // @REVIEW: Where is this used? Can it be removed? (And then maybe we could inline _burn too)
     function _burnFrom(address account, uint256 amount) internal {
         _burn(account, amount);
         uint newAllowance = clvTokenData.getAllowance(account, _msgSender()).sub(amount, "ERC20: burn amount exceeds allowance");

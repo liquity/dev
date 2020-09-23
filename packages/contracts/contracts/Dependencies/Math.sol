@@ -29,11 +29,13 @@ library Math {
 
     function _computeCR(uint _coll, uint _debt, uint _price) internal pure returns (uint) {
         if (_debt > 0) {
+            // @REVIEW: We are checking that _debt is zero, so there’s no need for .div
             uint newCollRatio = _coll.mul(_price).div(_debt);
 
             return newCollRatio;
         }
         // Return the maximal value for uint256 if the CDP has a debt of 0
+        // @REVIEW: We don’t need the if part, right? (Actually we don’t even need the else)
         else if (_debt == 0) {
             return 2**256 - 1; 
         }

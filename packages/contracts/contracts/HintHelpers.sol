@@ -8,16 +8,20 @@ import "./Dependencies/Ownable.sol";
 
 contract HintHelpers is LiquityBase, Ownable {
 
+    // @REVIEW: We already have these variables in LiquityBase
     uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.  TODO: extract to base contract
     uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
 
     IPriceFeed public priceFeed;
+    // @REVIEW: Do we need this?
     address public priceFeedAddress;
 
     ISortedCDPs public sortedCDPs;
+    // @REVIEW: Do we need this?
     address public sortedCDPsAddress;
 
     ICDPManager public cdpManager;
+    // @REVIEW: Do we need this?
     address public cdpManagerAddress;
 
     // --- Events ---
@@ -30,6 +34,7 @@ contract HintHelpers is LiquityBase, Ownable {
 
     function setPriceFeed(address _priceFeedAddress) external onlyOwner {
         priceFeedAddress = _priceFeedAddress;
+        // @REVIEW: It’s cheaper to use the param, like in the setters below
         priceFeed = IPriceFeed(priceFeedAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
     }
@@ -74,6 +79,7 @@ contract HintHelpers is LiquityBase, Ownable {
             if (CLVDebt > remainingCLV) {
                 uint ETH = cdpManager.getCDPColl(currentCDPuser)
                                      .add(cdpManager.getPendingETHReward(currentCDPuser));
+                // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero.
                 uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
 
                 uint newDebt = CLVDebt.sub(remainingCLV);

@@ -144,18 +144,21 @@ contract PoolManager is Ownable, IPoolManager {
 
     function setStabilityPool(address _stabilityPoolAddress) external onlyOwner {
         stabilityPoolAddress = _stabilityPoolAddress;
+        // @REVIEW: It’s cheaper to use the param, like in the other setters (unless the compiler optimizes it)
         stabilityPool = IStabilityPool(stabilityPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
     }
 
     function setActivePool(address _activePoolAddress) external onlyOwner {
         activePoolAddress = _activePoolAddress;
+        // @REVIEW: It’s cheaper to use the param, like in the other setters (unless the compiler optimizes it)
         activePool = IPool(activePoolAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
     }
 
     function setDefaultPool(address _defaultPoolAddress) external onlyOwner {
         defaultPoolAddress = _defaultPoolAddress;
+        // @REVIEW: It’s cheaper to use the param, like in the other setters (unless the compiler optimizes it)
         defaultPool = IPool(defaultPoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
     }
@@ -163,6 +166,7 @@ contract PoolManager is Ownable, IPoolManager {
     // --- Getters ---
 
     // Return the current ETH balance of the PoolManager contract
+    // @REVIEW: Do we need this?
     function getBalance() external view returns (uint) {
         return address(this).balance;
     } 
@@ -218,6 +222,7 @@ contract PoolManager is Ownable, IPoolManager {
         CLV.burn(_account, _CLV);
     }           
     
+    // @REVIEW: The name of the function clarifies it, but the comment saying “closed” confused me a little bit (with closing a loan)
     // Update the Active Pool and the Default Pool when a CDP gets closed
     function liquidate(uint _CLV, uint _ETH) external onlyCDPManager {
         // Transfer the debt & coll from the Active Pool to the Default Pool
@@ -251,6 +256,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Reward calculator functions ---
 
+    // @REVIEW: No big deal, but couldn’t make this one public instead of external and get rid of the internal? What’s the benefit of doing it this way?
     function getCurrentETHGain(address _user) external view returns (uint) {
         return _getCurrentETHGain(_user);
     }
@@ -274,6 +280,7 @@ contract PoolManager is Ownable, IPoolManager {
         If it does, the second portion of the reward is scaled by 1e18. 
         If the reward spans no scale change, the second portion will be 0. */
         uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(snapshot_S);
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero. I don’t think it makes sense for constants.
         uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
 
         ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(snapshot_P).div(1e18);
@@ -305,6 +312,7 @@ contract PoolManager is Ownable, IPoolManager {
         /* Compute the compounded deposit. If a scale change in P was made during the deposit's lifetime, 
         account for it. If more than one scale change was made, then the deposit has decreased by a factor of 
         at least 1e-18 -- so return 0.*/
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero. I don’t think it makes sense for constants.
         if (scaleDiff == 0) { 
             compoundedDeposit = initialDeposit.mul(P).div(snapshot_P);
         } else if (scaleDiff == 1) {
@@ -314,6 +322,7 @@ contract PoolManager is Ownable, IPoolManager {
         }
 
         // If compounded deposit is less than a billionth of the initial deposit, return 0
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero. I don’t think it makes sense for constants.
         if (compoundedDeposit < initialDeposit.div(1e9)) { return 0; }
 
         return compoundedDeposit;
@@ -479,10 +488,13 @@ contract PoolManager is Ownable, IPoolManager {
             CLVLossPerUnitStaked = 1e18;
             lastCLVLossError_Offset = 0;
         } else {
+            // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero.
+            // @REVIEW: TODO
             CLVLossPerUnitStaked = (CLVLossNumerator.div(_totalCLVDeposits)).add(1); // add 1 to make error in quotient positive
              lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(_totalCLVDeposits)).sub(CLVLossNumerator);
         } 
 
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero.
         ETHGainPerUnitStaked = ETHNumerator.div(_totalCLVDeposits); 
         lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(_totalCLVDeposits)); 
 
@@ -510,6 +522,7 @@ contract PoolManager is Ownable, IPoolManager {
             P = P.mul(newProductFactor);
             currentScale = currentScale.add(1);
          } else {
+            // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero. I don’t think it makes sense for constants.
             P = P.mul(newProductFactor).div(1e18); 
         }
 
@@ -539,5 +552,6 @@ contract PoolManager is Ownable, IPoolManager {
         require(cdpManager.getCDPStatus(_user) == 1, "CDPManager: caller must have an active trove to withdraw ETHGain to");
     }
 
+    // @REVIEW: Why don’t we add the check for zero data like in DefaultPool?
     function () external payable onlyStabilityPoolorActivePool {}
 }    

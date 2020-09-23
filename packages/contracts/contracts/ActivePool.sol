@@ -12,6 +12,7 @@ contract ActivePool is Ownable, IPool {
     address public cdpManagerAddress;
     address public stabilityPoolAddress;
     address public defaultPoolAddress;
+    // @REVIEW: We have getters for these 2 variables, so I would make them internal
     uint256 public ETH;  // deposited ether tracker
     uint256 public CLVDebt;
 
@@ -95,6 +96,8 @@ contract ActivePool is Ownable, IPool {
 
     /* Returns the raw ether balance at ActivePool address.  
     Not necessarily equal to the ETH state variable - ether can be forcibly sent to contracts. */
+    // @REVIEW: Like with a selfdestruct? What would be the side effect of having more ETH and using the real balance for computations?
+    // @REVIEW: Why do we need this function? Contract balance can always be queried, right?
     function getRawETHBalance() external view returns (uint) {
         return address(this).balance;
     }

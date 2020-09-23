@@ -12,10 +12,12 @@ import "./Dependencies/console.sol";
 
 contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
+    // @REVIEW: We already have this in LiquityBase, right?
     uint constant public MIN_COLL_IN_USD = 20000000000000000000;
    
     // --- Connected contract declarations ---
 
+    // @REVIEW: Do we need all these addresses below?
     ICDPManager public cdpManager;
     address public cdpManagerAddress;
 
@@ -85,6 +87,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function setPriceFeed(address _priceFeedAddress) external onlyOwner {
         priceFeedAddress = _priceFeedAddress;
+        // @REVIEW: It’s cheaper to use the param (unless the compiler opitmizes it)
         priceFeed = IPriceFeed(priceFeedAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
     }
@@ -115,6 +118,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
         
         // Update loan properties
+        // @REVIEW: Should we use an enum here?
         cdpManager.setCDPStatus(user, 1);
         cdpManager.increaseCDPColl(user, msg.value);
         cdpManager.increaseCDPDebt(user, _CLVAmount);
@@ -157,6 +161,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     
     // Withdraw ETH collateral from a CDP
     function withdrawColl(uint _amount, address _hint) external {
+        // @REVIEW: Should we check _amount is not zero, like in withdrawCLV?
         address user = _msgSender();
         _requireCDPisActive(user);
         _requireNotInRecoveryMode();
@@ -221,6 +226,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     
     // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the debt accordingly
     function repayCLV(uint _amount, address _hint) external {
+        // @REVIEW: Should we check _amount is not zero, like in withdrawCLV?
         address user = _msgSender();
         _requireCDPisActive(user);
 
@@ -268,6 +274,12 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     /* If ether is sent, the operation is considered as an increase in ether, and the first parameter 
     _collWithdrawal is ignored  */
+    // @REVIEW: Could we add check like require(msg.value == 0 || _collWithdrawal == 0), to prevent some possible user mistakes?
+    // @REVIEW: Is the point of this function to be able to change both collateral and CLV balance in 1 call?
+    // Do we expect it to be called with the 8 possible combinations?
+    // +/+, +/-, -/+, -/-, 0/+, 0/-, +/0, -/0
+    // Otherwise, we should prevent the undesired ones with require’s
+    // In case we do, aren’t previous functions redundant?
     function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable {
         address user = _msgSender();
         _requireCDPisActive(user);
@@ -312,6 +324,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- Helper functions --- 
     
     function _getUSDValue(uint _coll, uint _price) internal pure returns (uint) {
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero. I don’t think it makes sense for constants.
         uint usdValue = _price.mul(_coll).div(1e18);
 
         return usdValue;
@@ -343,6 +356,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     
     // --- 'Require' wrapper functions ---
 
+    // @REVIEW: Should we use enums for status in the 2 functions below?
     function _requireCDPisActive(address _user) internal view {
         uint status = cdpManager.getCDPStatus(_user);
         require(status == 1, "BorrowerOps: CDP does not exist or is closed");
@@ -372,6 +386,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
     }
 
+    // @REVIEW: I guess I would remove all hardcoded references to “20” (function name and error message), in case the constant is ever changed
     function _requireValueIsGreaterThan20Dollars(uint _amount, uint _price) internal pure {
          require(_getUSDValue(_amount, _price) >= MIN_COLL_IN_USD,  
             "BorrowerOps: Collateral must have $USD value >= 20");
@@ -445,6 +460,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- Recovery Mode and TCR functions ---
 
     function _checkRecoveryMode() internal view returns (bool) {
+        // @REVIEW: Maybe we could move the getPrice call into _getTCR
         uint price = priceFeed.getPrice();
         uint TCR = _getTCR(price);
         

@@ -11,6 +11,7 @@ contract StabilityPool is Ownable, IStabilityPool {
     address public poolManagerAddress;
     address public defaultPoolAddress;
     address public activePoolAddress;
+    // @REVIEW: We have getters for these 2 variables, so I would make them internal
     uint256 public ETH;  // deposited ether tracker
     
     // Total CLV held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.

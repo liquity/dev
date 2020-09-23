@@ -37,7 +37,8 @@ contract FunctionCaller {
         priceFeed = IPriceFeed(_priceFeedAddress);
     }
 
-    // --- PriceFeed functions -  non-view wrappers ---
+     // @REVIEW: What are these non-view wrappers used for? They throw compiler warnings
+     // --- PriceFeed functions -  non-view wrappers ---
 
      function priceFeed_getPrice() external returns (uint) {
         return priceFeed.getPrice();

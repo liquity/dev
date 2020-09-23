@@ -19,6 +19,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     address public borrowerOperationsAddress;
 
     IPoolManager public poolManager;
+    // @REVIEW: Where are all those addresses used? Isn’t it enough with the contract objects?
     address public poolManagerAddress;
 
     IPool public activePool;
@@ -49,6 +50,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint debt;
         uint coll;
         uint stake;
+        // @REVIEW: Do we really need status? Is it necessary to know that a trove was active in the past and now is closed? We could save some gas and avoind the cast to u128
         Status status;
         uint128 arrayIndex;
     }
@@ -79,6 +81,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     struct RewardSnapshot { uint ETH; uint CLVDebt;}
 
     // Array of all active CDP addresses - used to compute “approx hint” for list insertion
+    // @REVIEW: what do we need this for? Could we just get track of the number of active troves (i.e., its length) and thus save gas? We could also get rid of CDP.arrayIndex
     address[] public CDPOwners;
 
     // Error trackers for the trove redistribution calculation
@@ -257,6 +260,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     /* Single liquidation function. Closes the CDP of the specified user if its individual 
     collateral ratio is lower than the minimum collateral ratio. */
+    // @REVIEW: Isn’t this quite redundant with batchLiquidateTroves? We could avoid some duplicated code and save some bytecode from this contract, which is already close to EIP-170 limit by removing this function and just  using `batchLiquidateTroves([_user])` from the frontend
     function liquidate(address _user) external {
         _requireCDPisActive(_user);
 
@@ -299,6 +303,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     {
         LocalVariables_InnerSingleLiquidateFunction memory L;
 
+        // @REVIEW: Why we don’t liquidate last trove?
         // If ICR >= MCR, or is last trove, don't liquidate
         if (_ICR >= MCR || CDPOwners.length <= 1) {return V;}
 
@@ -319,6 +324,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, collToLiquidate, _CLVInPool);
 
         // Move the gas compensation ETH to the CDPManager
+        // @REVIEW: Can’t we send it directly to the sender? (replacing address(this) below)
+        // @REVIEW: Anyway, could we could do it in the outer function? That would save calls for the case of several troves liquidated (`liquidateCDPs` and `batchLiquidateTroves`)
         activePool.sendETH(address(this), V.gasCompensation);
 
         _closeCDP(_user);
@@ -331,6 +338,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     returns (LiquidationValues memory V)
     {
         LocalVariables_InnerSingleLiquidateFunction memory L;
+        // @REVIEW: Why we don’t liquidate last trove?
         // If is last trove, don't liquidate
         if (CDPOwners.length <= 1) {return V;}
 
@@ -389,6 +397,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
 
         // Move the gas compensation ETH to the CDPManager
+        // @REVIEW: Can’t we send it directly to the sender? (replacing address(this) below)
+        // @REVIEW: Anyway, could we could do it in the outer function? That would save calls for the case of several troves liquidated (`liquidateCDPs` and `batchLiquidateTroves`)
         activePool.sendETH(address(this), V.gasCompensation);
 
         return V;
@@ -398,10 +408,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     returns (uint debtToOffset, uint collToSendToSP, uint debtToRedistribute, uint collToRedistribute)
     {
          // Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder
+        // @REVIEW: I wonder if we could get rid of this if-else clause. It would be less efficient when Stability pool is empty, but more otherwise. I guess (and hope, haha) that Stability pool won’t be empty too often. In any case, we save some code.
         if (_CLVInPool > 0) {
         /* If the debt is larger than the deposited CLV, offset an amount of debt equal to the latter,
         and send collateral in proportion to the cancelled debt */
             debtToOffset = Math._min(_debt, _CLVInPool);
+            // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero.
             collToSendToSP = _coll.mul(debtToOffset).div(_debt);
             debtToRedistribute = _debt.sub(debtToOffset);
             collToRedistribute = _coll.sub(collToSendToSP);
@@ -436,6 +448,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         Gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. */
         else if (_entireCDPDebt > _CLVInPool) {
             V.debtToOffset = _CLVInPool;
+            // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero.
             uint collFraction = _entireCDPColl.mul(V.debtToOffset).div(_entireCDPDebt);
             V.gasCompensation = _getGasCompensation(collFraction, _price);
             
@@ -584,6 +597,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         // Perform the appropriate liquidation sequence - tally values and obtain their totals
         if (L.recoveryModeAtStart == true) {
            T = _getTotalFromBatchLiquidate_RecoveryMode(L.price, L.CLVInPool, _troveArray);
+        // @REVIEW: we don’t need the if, right? (hopefully the compiler optimizes it?)
         } else if (L.recoveryModeAtStart == false) {
             T = _getTotalsFromBatchLiquidate_NormalMode(L.price, L.CLVInPool, _troveArray);
         }
@@ -741,6 +755,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         V.CLVLot = Math._min(_maxCLVamount, CDPs[_cdpUser].debt);
         
         // Get the ETHLot of equivalent value in USD
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero.
         V.ETHLot = V.CLVLot.mul(1e18).div(_price);
         
         // Decrease the debt and collateral of the current CDP according to the CLV lot and corresponding ETH to send
@@ -942,6 +957,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
        
         uint stake = CDPs[_user].stake;
         
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero. I don’t think it makes sense for constants.
         uint pendingETHReward = stake.mul(rewardPerUnitStaked).div(1e18);
 
         return pendingETHReward;
@@ -960,6 +976,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
        
         uint stake =  CDPs[_user].stake; 
       
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero. I don’t think it makes sense for constants.
         uint pendingCLVDebtReward = stake.mul(rewardPerUnitStaked).div(1e18);
      
         return pendingCLVDebtReward;
@@ -1024,6 +1041,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (totalCollateralSnapshot == 0) {
             stake = _coll;
         } else {
+            // @REVIEW: We already checked that totalCollateralSnapshot is not zero, so there’s no need for .div
+            // @REVIEW: assert(totalStakesSnapshot > 0); (at least I would add a comment of why this always holds true)
             stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot);
         }
      return stake;
@@ -1038,6 +1057,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
             uint CLVDebtNumerator = _debt.mul(1e18).add(lastCLVDebtError_Redistribution);
 
+            // @REVIEW: We already checked that totalStakes > 0, so there’s no need for SafeMath’s div
             uint ETHRewardPerUnitStaked = ETHNumerator.div(totalStakes);
             uint CLVDebtRewardPerUnitStaked = CLVDebtNumerator.div(totalStakes);
 

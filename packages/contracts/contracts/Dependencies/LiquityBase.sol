@@ -34,6 +34,7 @@ contract LiquityBase {
 
         // if (_entireColl <= minETHComp) { return _entireColl; }
 
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero. I don’t think it makes sense for constants.
         // uint _0pt5percentOfColl = _entireColl.div(200);
 
         // uint compensation = Math._max(minETHComp, _0pt5percentOfColl);
@@ -74,6 +75,7 @@ contract LiquityBase {
 
       // Returns the ETH amount that is equal, in $USD value, to the minVirtualDebt 
     function _getMinVirtualDebtInETH(uint _price) internal pure returns (uint minETHComp) {
+        // @REVIEW: Are we sure we want to use SafeMath’s div? Solidity already asserts when dividing by zero.
         minETHComp = MIN_VIRTUAL_DEBT.mul(1e18).div(_price);
         return minETHComp;
     }
