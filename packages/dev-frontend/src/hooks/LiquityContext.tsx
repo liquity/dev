@@ -6,18 +6,18 @@ import { useWeb3React } from "@web3-react/core";
 
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import {
-  Liquity,
+  EthersLiquity,
   deploymentOnNetwork,
   connectToContracts,
   LiquityContracts,
   DEV_CHAIN_ID
-} from "@liquity/lib";
+} from "@liquity/lib-ethers";
 
 type LiquityContext = {
   account: string;
   provider: Provider;
   contracts: LiquityContracts;
-  liquity: Liquity;
+  liquity: EthersLiquity;
   devChain: boolean;
   oracleAvailable: boolean;
   contractsVersion: string;
@@ -76,7 +76,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
 
   const { addresses, version: contractsVersion, deploymentDate } = deployment;
   const contracts = connectToContracts(addresses, provider.getSigner(account));
-  const liquity = new Liquity(contracts, account);
+  const liquity = new EthersLiquity(contracts, account);
   const devChain = chainId === DEV_CHAIN_ID;
   const oracleAvailable = chainId === 3;
 

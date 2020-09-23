@@ -1,5 +1,5 @@
 {
-  "name": "@liquity/lib",
+  "name": "@liquity/lib-ethers",
   "version": "0.0.1",
   "private": true,
   "main": "dist/index.js",
@@ -22,11 +22,12 @@
     "test-live:run": "cross-env USE_LIVE_VERSION=true buidler test"
   },
   "peerDependencies": {
-    "@liquity/decimal": "^0.0.1",
+    "@liquity/lib-base": "^0.0.1",
     "ethers": "^5.0.0-beta.187"
   },
   "devDependencies": {
     "@liquity/decimal": "^0.0.1",
+    "@liquity/lib-base": "^0.0.1",
     "@nomiclabs/buidler": "^1.3.6",
     "@types/chai": "^4.2.9",
     "@types/chai-as-promised": "^7.1.2",

@@ -5,9 +5,10 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { ethers } from "@nomiclabs/buidler";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
+import { Trove, StabilityDeposit } from "@liquity/lib-base";
+
 import { deployAndSetupContracts } from "../utils/deploy";
-import { LiquityContractAddresses, addressesOf } from "../src/contracts";
-import { Liquity, Trove, StabilityDeposit } from "../src/Liquity";
+import { LiquityContractAddresses, addressesOf, EthersLiquity } from "..";
 
 const provider = ethers.provider;
 
@@ -15,7 +16,7 @@ chai.use(chaiAsPromised);
 
 // TODO make the testcases isolated
 
-describe("Liquity", () => {
+describe("EthersLiquity", () => {
   let deployer: Signer;
   let funder: Signer;
   let user: Signer;
@@ -23,9 +24,9 @@ describe("Liquity", () => {
 
   let addresses: LiquityContractAddresses;
 
-  let deployerLiquity: Liquity;
-  let liquity: Liquity;
-  let otherLiquities: Liquity[];
+  let deployerLiquity: EthersLiquity;
+  let liquity: EthersLiquity;
+  let otherLiquities: EthersLiquity[];
 
   let price: Decimal;
   let trove: Trove;
@@ -58,7 +59,9 @@ describe("Liquity", () => {
     const txCost = (await provider.getGasPrice()).mul(gasLimit);
     let balance = await provider.getBalance(user.getAddress());
 
-    if (balance.eq(targetBalance)) return;
+    if (balance.eq(targetBalance)) {
+      return;
+    }
 
     if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
       await funder.sendTransaction({
@@ -95,7 +98,7 @@ describe("Liquity", () => {
   });
 
   it("should connect to contracts their addresses", async () => {
-    liquity = await Liquity.connect(addresses, user);
+    liquity = await EthersLiquity.connect(addresses, user);
   });
 
   it("should get the price", async () => {
@@ -147,7 +150,7 @@ describe("Liquity", () => {
     });
 
     it("should close the Trove after another user creates a Trove", async () => {
-      const funderLiquity = await Liquity.connect(addresses, funder);
+      const funderLiquity = await EthersLiquity.connect(addresses, funder);
       await funderLiquity.openTrove(new Trove({ collateral: 1 }));
 
       await liquity.closeTrove();
@@ -214,7 +217,7 @@ describe("Liquity", () => {
   });
 
   const connectUsers = (users: Signer[]) =>
-    Promise.all(users.map(user => Liquity.connect(addresses, user)));
+    Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
 
   describe("StabilityPool", () => {
     before(async () => {
@@ -237,7 +240,7 @@ describe("Liquity", () => {
       await otherLiquities[0].openTrove(new Trove({ collateral: 0.2233, debt: 29 }));
       const otherTrove = await otherLiquities[0].getTrove();
 
-      expect(otherTrove.collateralRatio(price).toString()).to.equal("1.145128205128205128");
+      expect(`${otherTrove.collateralRatio(price)}`).to.equal("1.145128205128205128");
     });
 
     it("the price should take a dip", async () => {
@@ -292,6 +295,55 @@ describe("Liquity", () => {
       expect(deposit.isEmpty).to.be.true;
     });
 
+    describe("when non-empty in recovery mode", () => {
+      before(async () => {
+        // Deploy new instances of the contracts, for a clean slate
+        addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+        [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
+          deployer,
+          user,
+          ...otherUsers.slice(0, 2)
+        ]);
+
+        await sendToEach(otherUsers, 1.1);
+
+        price = Decimal.from(200);
+        await deployerLiquity.setPrice(price);
+
+        await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 100 }));
+        await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 100 }));
+
+        await liquity.openTrove(new Trove({ collateral: 10, debt: 1400 }));
+        await liquity.depositQuiInStabilityPool(100);
+
+        price = Decimal.from(190);
+        await deployerLiquity.setPrice(price);
+
+        const total = await deployerLiquity.getTotal();
+        expect(total.collateralRatio(price).lt(1.5)).to.be.true;
+      });
+
+      it("should partially liquidate the bottom Trove", async () => {
+        await liquity.liquidateUpTo(40);
+
+        trove = await liquity.getTrove();
+        expect(trove).to.deep.equal(new Trove({ collateral: "9.285714285714285715", debt: 1300 }));
+      });
+
+      describe("after depositing some more tokens", () => {
+        before(async () => {
+          await liquity.depositQuiInStabilityPool(1300);
+        });
+
+        it("should liquidate more of the bottom Trove", async () => {
+          await liquity.liquidateUpTo(40);
+
+          trove = await liquity.getTrove();
+          expect(trove.isEmpty).to.be.true;
+        });
+      });
+    });
+
     describe("when people overstay", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
@@ -342,7 +394,6 @@ describe("Liquity", () => {
         expect((await liquity.getQuiInStabilityPool()).toString()).to.equal("0");
       });
 
-      // Currently failing due to a problem with the backend
       it("should still be able to withdraw remaining deposit", async () => {
         for (const l of [otherLiquities[0], otherLiquities[1], otherLiquities[2]]) {
           const stabilityDeposit = await l.getStabilityDeposit();
