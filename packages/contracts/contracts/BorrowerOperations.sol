@@ -167,7 +167,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint debt = cdpManager.getCDPDebt(user);
         uint coll = cdpManager.getCDPColl(user);
         
-        _requireCollAmountIsWithdrawable(coll, _amount, price);
+        _requireCollAmountIsWithdrawable(coll, _amount);
 
         uint newICR = _getNewICRFromTroveChange(coll, debt, -int(_amount), 0, price);
         _requireICRisAboveMCR(newICR);
@@ -289,7 +289,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _requireICRisAboveMCR(newICR);
         _requireNewTCRisAboveCCR(collChange, _debtChange, price);
         _requireCLVRepaymentAllowed(debt, _debtChange);
-        _requireCollAmountIsWithdrawable(coll, _collWithdrawal, price);
+        _requireCollAmountIsWithdrawable(coll, _collWithdrawal);
 
         //  --- Effects --- 
         (uint newColl, uint newDebt) = _updateTroveFromAdjustment(user, collChange, _debtChange);
@@ -381,7 +381,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(_amount > 0, "BorrowerOps: Amount must be larger than 0");
     }
 
-    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal, uint _price) 
+    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)
     internal 
     pure 
     {
