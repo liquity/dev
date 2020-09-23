@@ -7,19 +7,19 @@ common functions. */
 contract LiquityBase {
     using SafeMath for uint;
 
-    uint constant public _100pct = 1000000000000000000;
+    uint constant public _100pct = 1000000000000000000; // 1e18
 
     // Minimum collateral ratio for individual troves
-    uint constant public MCR = 1100000000000000000; 
+    uint constant public MCR = 1100000000000000000; // 110%
 
     // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant public  CCR = 1500000000000000000; 
+    uint constant public  CCR = 1500000000000000000; // 150%
     
     // The minimum virtual debt assigned to all troves: 10 CLV.
     uint constant public MIN_VIRTUAL_DEBT = 10e18;   
 
     // The minimum value of collateral allowed for a new deposit, in USD.
-    uint constant public MIN_COLL_IN_USD = 20000000000000000000;
+    uint constant public MIN_COLL_IN_USD = 20000000000000000000; // $20 with 18 decimals
     
     // --- Gas compensation functions ---
 
