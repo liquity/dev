@@ -14,7 +14,32 @@ contract('CDPManager', async accounts => {
 
   const _18_zeros = '000000000000000000'
 
-  const [owner, alice, bob, carol, dennis, erin, whale] = accounts;
+
+  const assertSortedListIsOrdered = async (contracts) => {
+    const price = await contracts.priceFeed.getPrice()
+
+    let trove = await contracts.sortedCDPs.getLast()
+    while (trove !== (await contracts.sortedCDPs.getFirst())) {
+      
+      const prevTrove = await contracts.sortedCDPs.getPrev(trove)
+      console.log(`trove: ${trove}`)
+      console.log(`prevTrove: ${prevTrove}`)
+
+      const troveICR = await contracts.cdpManager.getCurrentICR(trove, price)
+      const prevTroveICR = await contracts.cdpManager.getCurrentICR(prevTrove, price)
+      
+      assert.isTrue(prevTroveICR.gte(troveICR))
+
+      // climb the list
+      trove = prevTrove
+    }
+  }
+
+  const [
+    owner,
+    alice, bob, carol, dennis, erin, flyn, graham, harriet, ida,
+    defaulter_1, defaulter_2, defaulter_3, defaulter_4,
+    A, B, C, D, E, F, G, H, I, J, whale] = accounts;
 
   let priceFeed
   let clvToken
@@ -29,6 +54,7 @@ contract('CDPManager', async accounts => {
   let borrowerOperations
   let hintHelpers
 
+  let contracts
   let cdpManagerTester
 
   before(async () => {
@@ -37,7 +63,7 @@ contract('CDPManager', async accounts => {
   })
 
   beforeEach(async () => {
-    const contracts = await deployLiquity()
+    contracts = await deployLiquity()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -161,5 +187,43 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     
     assert.isFalse(await sortedCDPs.contains(bob))
+  })
+
+  // Ordering
+  it.only("stays ordered after troves with 'infinite' ICR receive a redistribution", async () => {
+
+    // make several troves with 0 debt and collateral, in random order
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
+    await borrowerOperations.openLoan(0, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, B, { from: B, value: dec(37, 'ether') })
+    await borrowerOperations.openLoan(0, C, { from: C, value: dec(5, 'ether') })
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(4, 'ether') })
+    await borrowerOperations.openLoan(0, E, { from: E, value: dec(19, 'ether') })
+
+    // Make some troves with non-zero debt, in random orderd
+    await borrowerOperations.openLoan(dec(5, 19), F, { from: F, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(3, 18), G, { from: G, value: dec(37, 'ether') })
+    await borrowerOperations.openLoan(dec(2, 20), H, { from: H, value: dec(5, 'ether') })
+    await borrowerOperations.openLoan(dec(17, 18), I, { from: I, value: dec(4, 'ether') })
+    await borrowerOperations.openLoan(dec(5, 21), J, { from: J, value: dec(1345, 'ether') })
+
+    const price_1 = await priceFeed.getPrice()
+    
+    // Check troves are ordered
+    await assertSortedListIsOrdered(contracts)
+
+    await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    assert.isTrue(await sortedCDPs.contains(defaulter_1))
+
+    // Price drops
+    await priceFeed.setPrice(dec(100, 18))
+    const price_2 = await priceFeed.getPrice()
+
+    // Liquidate a trove
+    await cdpManager.liquidate(defaulter_1)
+    assert.isFalse(await sortedCDPs.contains(defaulter_1))
+
+    // Check troves are ordered
+    await assertSortedListIsOrdered(contracts)
   })
 })
