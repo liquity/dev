@@ -12,7 +12,7 @@ contract CDPManagerTester is CDPManager {
         return Math._computeCR(_coll, _debt, _price);
     }
 
-    function getMinVirtualDebtInETH(uint _price) external view returns (uint) {
+    function getMinVirtualDebtInETH(uint _price) external pure returns (uint) {
         return _getMinVirtualDebtInETH(_price);
     }
 

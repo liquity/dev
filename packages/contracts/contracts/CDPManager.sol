@@ -36,7 +36,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     IStabilityPool public stabilityPool;
     address public stabilityPoolAddress;
 
-    // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
+    // A doubly linked list of CDPs, sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
     address public sortedCDPsAddress;
 
