@@ -8,6 +8,12 @@ type Global @entity {
   liquidationCount: Int!
   redemptionCount: Int!
 
+  "Total redistributed per-stake collateral"
+  rawTotalRedistributedCollateral: BigInt!
+
+  "Total redistributed per-stake debt"
+  rawTotalRedistributedDebt: BigInt!
+
   currentSystemState: SystemState
 
   "Only used internally as temporary storage. Will always be null in queries"

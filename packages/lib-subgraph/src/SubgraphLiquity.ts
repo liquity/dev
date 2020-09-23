@@ -20,6 +20,7 @@ import {
 } from "@liquity/lib-base";
 
 import { TroveStatus } from "../types/globalTypes";
+import { TotalRedistributed } from "../types/TotalRedistributed";
 import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
 import { Price } from "../types/Price";
 import { Total } from "../types/Total";
@@ -58,6 +59,30 @@ class Query<T, U, V = undefined> {
     return () => subscription.unsubscribe();
   }
 }
+
+const totalRedistributed = new Query<Trove, TotalRedistributed>(
+  gql`
+    query TotalRedistributed {
+      global(id: "only") {
+        rawTotalRedistributedCollateral
+        rawTotalRedistributedDebt
+      }
+    }
+  `,
+  ({ data: { global } }) => {
+    if (global) {
+      const { rawTotalRedistributedCollateral, rawTotalRedistributedDebt } = global;
+
+      return new Trove({
+        collateral: decimalify(rawTotalRedistributedCollateral),
+        debt: decimalify(rawTotalRedistributedDebt),
+        virtualDebt: 0
+      });
+    } else {
+      return new Trove({ virtualDebt: 0 });
+    }
+  }
+);
 
 const troveWithoutRewards = new Query<
   TroveWithPendingRewards,
@@ -138,7 +163,7 @@ const total = new Query<Trove, Total>(
         virtualDebt: 0
       });
     } else {
-      return new Trove({ collateral: 0, debt: 0, virtualDebt: 0 });
+      return new Trove({ virtualDebt: 0 });
     }
   }
 );
@@ -170,14 +195,12 @@ export class SubgraphLiquity implements ReadableLiquity {
     });
   }
 
-  getTotalRedistributed(): Promise<Trove> {
-    throw new Error("Method not implemented.");
+  getTotalRedistributed() {
+    return totalRedistributed.get(this.client);
   }
 
-  watchTotalRedistributed(
-    onTotalRedistributedChanged: (totalRedistributed: Trove) => void
-  ): () => void {
-    throw new Error("Method not implemented.");
+  watchTotalRedistributed(onTotalRedistributedChanged: (totalRedistributed: Trove) => void) {
+    return totalRedistributed.watch(this.client, onTotalRedistributedChanged);
   }
 
   getTroveWithoutRewards(address?: string) {
@@ -193,8 +216,13 @@ export class SubgraphLiquity implements ReadableLiquity {
     });
   }
 
-  getTrove(address?: string): Promise<Trove> {
-    throw new Error("Method not implemented.");
+  async getTrove(address?: string) {
+    const [trove, totalRedistributed] = await Promise.all([
+      this.getTroveWithoutRewards(address),
+      this.getTotalRedistributed()
+    ] as const);
+
+    return trove.applyRewards(totalRedistributed);
   }
 
   getNumberOfTroves(): Promise<number> {

@@ -1,6 +1,8 @@
-import { Value } from "@graphprotocol/graph-ts";
+import { Value, BigInt } from "@graphprotocol/graph-ts";
 
 import { Global } from "../../generated/schema";
+
+import { BIGINT_ZERO } from "../utils/bignumbers";
 
 const onlyGlobalId = "only";
 
@@ -17,6 +19,8 @@ export function getGlobal(): Global {
     newGlobal.changeCount = 0;
     newGlobal.liquidationCount = 0;
     newGlobal.redemptionCount = 0;
+    newGlobal.rawTotalRedistributedCollateral = BIGINT_ZERO;
+    newGlobal.rawTotalRedistributedDebt = BIGINT_ZERO;
 
     return newGlobal;
   }
@@ -50,4 +54,12 @@ export function getLiquidationSequenceNumber(): i32 {
 
 export function getRedemptionSequenceNumber(): i32 {
   return increaseCounter("redemptionCount");
+}
+
+export function updateTotalRedistributed(L_ETH: BigInt, L_CLVDebt: BigInt): void {
+  let global = getGlobal();
+
+  global.rawTotalRedistributedCollateral = L_ETH;
+  global.rawTotalRedistributedDebt = L_CLVDebt;
+  global.save();
 }
