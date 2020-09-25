@@ -6,9 +6,9 @@ env:
 
 on:
   push:
-    branches: [master]
+    branches: [master, main]
   pull_request:
-    branches: [master]
+    branches: [master, main]
 
 jobs:
   test:
@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
       - name: Build dev-frontend Docker image
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         run: |
           docker-compose build
           docker-compose push
@@ -56,7 +56,7 @@ jobs:
           CHANNEL: internal
 
       - name: Build dev-frontend Docker image for internal use
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master'}}
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.internal.yml build
           docker-compose -f docker-compose.yml -f docker-compose.internal.yml push
