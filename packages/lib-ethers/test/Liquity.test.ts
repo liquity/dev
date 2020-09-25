@@ -237,7 +237,7 @@ describe("EthersLiquity", () => {
     });
 
     it("other user should make a Trove with very low ICR", async () => {
-      await otherLiquities[0].openTrove(new Trove({ collateral: 0.2233, debt: 29 }));
+      await otherLiquities[0].openTrove(new Trove({ collateral: 0.2233, debt: 39 }));
       const otherTrove = await otherLiquities[0].getTrove();
 
       expect(`${otherTrove.collateralRatio(price)}`).to.equal("1.145128205128205128");
@@ -264,7 +264,7 @@ describe("EthersLiquity", () => {
         new StabilityDeposit({
           deposit: 10,
           depositAfterLoss: 0,
-          pendingCollateralGain: "0.05885117967332123"
+          pendingCollateralGain: "0.05725641025641025"
         })
       );
     });
@@ -274,8 +274,8 @@ describe("EthersLiquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: "2.111817241379310344",
-          debt: 129
+          collateral: "2.110695726495726496",
+          debt: "129.333333333333333332"
         })
       );
     });
@@ -287,8 +287,8 @@ describe("EthersLiquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: "2.170668421052631574",
-          debt: 129
+          collateral: "2.167952136752136746",
+          debt: "129.333333333333333332"
         })
       );
 
@@ -427,7 +427,7 @@ describe("EthersLiquity", () => {
       expect(redemptionHints).to.deep.equal([
         otherLiquities[2].userAddress!,
         liquity.userAddress!,
-        Decimal.from("13")
+        Decimal.from("39")
       ]);
     });
 
