@@ -190,7 +190,7 @@ contract('CDPManager', async accounts => {
   })
 
   // Ordering
-  it.only("stays ordered after troves with 'infinite' ICR receive a redistribution", async () => {
+  it("stays ordered after troves with 'infinite' ICR receive a redistribution", async () => {
 
     // make several troves with 0 debt and collateral, in random order
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
