@@ -265,6 +265,23 @@ class TestHelper {
     return totalCollRemainder
   }
 
+
+  static getEmittedRedemptionValues(redemptionTx) {
+    for (let i = 0; i < redemptionTx.logs.length; i++) {
+      if (redemptionTx.logs[i].event === "Redemption") {
+        
+        const CLVAmount = redemptionTx.logs[i].args[0]
+        const totalCLVRedeemed = redemptionTx.logs[i].args[1]
+        const totalETHDrawn = redemptionTx.logs[i].args[2]
+        const ETHFee = redemptionTx.logs[i].args[3]
+
+        return [CLVAmount, totalCLVRedeemed, totalETHDrawn, ETHFee]
+      }
+    }
+
+    throw ("The transaction logs do not contain a redemption event")
+  }
+
   static getEmittedLiquidationValues(liquidationTx) {
     for (let i = 0; i < liquidationTx.logs.length; i++) {
       if (liquidationTx.logs[i].event === "Liquidation") {

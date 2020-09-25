@@ -186,7 +186,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
     event GTStakingAddressChanged(address _gtStakingAddress);
     event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _gasCompensation);
-    event Redemption(uint _attemptedCLVAmount, uint _actualCLVAmount, uint _ETHSent);
+    event Redemption(uint _attemptedCLVAmount, uint _actualCLVAmount, uint _ETHSent, uint _ETHFee);
 
     enum CDPManagerOperation {
         applyPendingRewards,
@@ -895,7 +895,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         // Burn the total CLV redeemed from troves, and send the remaining drawn ETH to _msgSender()
         poolManager.redeemCollateral(_msgSender(), T.totalCLVToRedeem, T.ETHToSendToRedeemer);
 
-        emit Redemption(_CLVamount, T.totalCLVToRedeem, T.totalETHDrawn);
+        emit Redemption(_CLVamount, T.totalCLVToRedeem, T.totalETHDrawn, T.ETHFee);
     }
 
     // --- Helper functions ---

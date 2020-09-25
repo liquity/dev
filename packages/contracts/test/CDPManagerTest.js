@@ -1797,19 +1797,19 @@ contract('CDPManager', async accounts => {
   it('redeemCollateral(): cancels the provided CLV with debt from CDPs with the lowest ICRs and sends an equivalent amount of Ether', async () => {
     // --- SETUP ---
 
-    await borrowerOperations.openLoan('5' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('8' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('10' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(5, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(8, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(10, 18), carol, { from: carol, value: dec(1, 'ether') })
     // start Dennis with a high ICR
-    await borrowerOperations.openLoan('150' + _18_zeros, dennis, { from: dennis, value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(dec(150, 18), dennis, { from: dennis, value: dec(100, 'ether') })
 
-    const dennis_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(dennis))
+    const dennis_ETHBalance_Before = th.toBN(await web3.eth.getBalance(dennis))
 
     const dennis_CLVBalance_Before = await clvToken.balanceOf(dennis)
-    assert.equal(dennis_CLVBalance_Before, '150' + _18_zeros)
+    assert.equal(dennis_CLVBalance_Before, dec(150, 18))
 
     const price = await priceFeed.getPrice()
-    assert.equal(price, '200' + _18_zeros)
+    assert.equal(price, dec(200, 18))
 
     // --- TEST --- 
 
@@ -1817,7 +1817,7 @@ contract('CDPManager', async accounts => {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await hintHelpers.getRedemptionHints('20' + _18_zeros, price)
+    } = await hintHelpers.getRedemptionHints(dec(20, 18), price)
 
     // We don't need to use getApproxHint for this test, since it's not the subject of this
     // test case, and the list is very small, so the correct position is quickly found
@@ -1830,8 +1830,8 @@ contract('CDPManager', async accounts => {
 
     // Dennis redeems 20 CLV
     // Don't pay for gas, as it makes it easier to calculate the received Ether
-    await cdpManager.redeemCollateral(
-      '20' + _18_zeros,
+    const redemptionTx = await cdpManager.redeemCollateral(
+      dec(20, 18),
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
@@ -1840,6 +1840,8 @@ contract('CDPManager', async accounts => {
         gasPrice: 0
       }
     )
+
+    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
 
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const bob_CDP_After = await cdpManager.CDPs(bob)
@@ -1852,16 +1854,20 @@ contract('CDPManager', async accounts => {
     /* check that Dennis' redeemed 20 CLV has been cancelled with debt from Bobs's CDP (8) and Carol's CDP (10).
     The remaining lot (2) is sent to Alice's CDP, who had the best ICR.
     It leaves her with (3) CLV debt. */
-    assert.equal(alice_debt_After, '3' + _18_zeros)
+    assert.equal(alice_debt_After, dec(3, 18))
     assert.equal(bob_debt_After, '0')
     assert.equal(carol_debt_After, '0')
 
-    const dennis_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(dennis))
+    const dennis_ETHBalance_After = th.toBN(await web3.eth.getBalance(dennis))
     const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
-    assert.equal(receivedETH, web3.utils.toWei('0.1', 'ether'))
+    
+    const expectedTotalETHDrawn = th.toBN(dec(20, 18)).div(th.toBN(200)) // convert 20 CLV to ETH, at ETH:USD price 200
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(th.toBN(ETHFee))
+    
+    assert.isTrue(expectedReceivedETH.eq(receivedETH))
 
     const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
-    assert.equal(dennis_CLVBalance_After, '130' + _18_zeros)
+    assert.equal(dennis_CLVBalance_After, dec(130, 18))
   })
 
   it('redeemCollateral(): ends the redemption sequence when the token redemption request has been filled', async () => {
@@ -1925,25 +1931,25 @@ contract('CDPManager', async accounts => {
   it('redeemCollateral(): doesnt perform the final partial redemption in the sequence if the hint is out-of-date', async () => {
     // --- SETUP ---
 
-    await borrowerOperations.openLoan('5' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('8' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('10' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('150' + _18_zeros, dennis, { from: dennis, value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(dec(5, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(8, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(10, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(150, 18), dennis, { from: dennis, value: dec(100, 'ether') })
 
-    const dennis_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(dennis))
+    const dennis_ETHBalance_Before = th.toBN(await web3.eth.getBalance(dennis))
 
     const dennis_CLVBalance_Before = await clvToken.balanceOf(dennis)
-    assert.equal(dennis_CLVBalance_Before, '150' + _18_zeros)
+    assert.equal(dennis_CLVBalance_Before, dec(150, 18))
 
     const price = await priceFeed.getPrice()
-    assert.equal(price, '200' + _18_zeros)
+    assert.equal(price, dec(200, 18))
 
     // --- TEST --- 
 
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await hintHelpers.getRedemptionHints('20' + _18_zeros, price)
+    } = await hintHelpers.getRedemptionHints(dec(20, 18), price)
 
     const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
       partialRedemptionHintICR,
@@ -1957,7 +1963,7 @@ contract('CDPManager', async accounts => {
       const {
         firstRedemptionHint,
         partialRedemptionHintICR
-      } = await hintHelpers.getRedemptionHints('1' + _18_zeros, price)
+      } = await hintHelpers.getRedemptionHints(dec(1, 18), price)
 
       const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
         partialRedemptionHintICR,
@@ -1968,7 +1974,7 @@ contract('CDPManager', async accounts => {
 
       // Alice redeems 1 CLV from Carol's CDP
       await cdpManager.redeemCollateral(
-        '1' + _18_zeros,
+        dec(1, 18),
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintICR,
@@ -1977,8 +1983,8 @@ contract('CDPManager', async accounts => {
     }
 
     // Dennis tries to redeem 20 CLV
-    await cdpManager.redeemCollateral(
-      '20' + _18_zeros,
+    const redemptionTx = await cdpManager.redeemCollateral(
+      dec(20, 18),
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
@@ -1987,6 +1993,8 @@ contract('CDPManager', async accounts => {
         gasPrice: 0
       }
     )
+
+    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
 
     // Since Alice already redeemed 1 CLV from Carol's CDP, Dennis was  able to redeem:
     //  - 9 CLV from Carol's
@@ -1997,23 +2005,28 @@ contract('CDPManager', async accounts => {
     // got in the way, he would have needed to redeem 3 CLV to fully complete his redemption of 20 CLV.
     // This would have required a different hint, therefore he ended up with a partial redemption.
 
-    const dennis_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(dennis))
+    const dennis_ETHBalance_After = th.toBN(await web3.eth.getBalance(dennis))
     const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
-    assert.equal(receivedETH, web3.utils.toWei('0.085', 'ether'))
+
+    // Expect only 17 worth of ETH drawn
+    const expectedTotalETHDrawn = th.toBN(dec(17, 18)).div(th.toBN(200)) // 20 CLV converted to ETH, at ETH:USD price 200
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(ETHFee)
+
+    assert.isTrue(expectedReceivedETH.eq(receivedETH))
 
     const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
-    assert.equal(dennis_CLVBalance_After, '133' + _18_zeros)
+    assert.equal(dennis_CLVBalance_After, dec(133,  18))
   })
 
   it("redeemCollateral(): can redeem if there is zero active debt but non-zero debt in DefaultPool", async () => {
     // --- SETUP ---
 
     await borrowerOperations.openLoan('0', alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openLoan('100' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100,  18), bob, { from: bob, value: dec(1, 'ether') })
 
-    await clvToken.transfer(carol, '100' + _18_zeros, { from: bob })
+    await clvToken.transfer(carol, dec(100, 18), { from: bob })
 
-    const price = '100' + _18_zeros
+    const price = dec(100, 18)
     await priceFeed.setPrice(price)
 
     // Liquidate Bob's CDP
@@ -2021,10 +2034,10 @@ contract('CDPManager', async accounts => {
 
     // --- TEST --- 
 
-    const carol_ETHBalance_Before = web3.utils.toBN(await web3.eth.getBalance(carol))
+    const carol_ETHBalance_Before = th.toBN(await web3.eth.getBalance(carol))
 
-    await cdpManager.redeemCollateral(
-      '100' + _18_zeros,
+    const redemptionTx = await cdpManager.redeemCollateral(
+      dec(100, 18),
       alice,
       '0x0000000000000000000000000000000000000000',
       0,
@@ -2034,9 +2047,15 @@ contract('CDPManager', async accounts => {
       }
     )
 
-    const carol_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(carol))
+    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
+
+    const carol_ETHBalance_After = th.toBN(await web3.eth.getBalance(carol))
+
+    const expectedTotalETHDrawn = th.toBN(dec(100, 18)).div(th.toBN(100)) // convert 100 CLV to ETH at ETH:USD price of 100
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(ETHFee)
+
     const receivedETH = carol_ETHBalance_After.sub(carol_ETHBalance_Before)
-    assert.equal(receivedETH, '1' + _18_zeros)
+    assert.isTrue(expectedReceivedETH.eq(receivedETH))
 
     const carol_CLVBalance_After = (await clvToken.balanceOf(carol)).toString()
     assert.equal(carol_CLVBalance_After, '0')
@@ -2045,19 +2064,19 @@ contract('CDPManager', async accounts => {
   it("redeemCollateral(): doesn't touch CDPs with ICR < 110%", async () => {
     // --- SETUP ---
 
-    await borrowerOperations.openLoan('100' + _18_zeros, alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openLoan('100' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
-    await clvToken.transfer(carol, '100' + _18_zeros, { from: bob })
+    await clvToken.transfer(carol, dec(100, 18), { from: bob })
 
     // Put Bob's CDP below 110% ICR
-    const price = '100' + _18_zeros
+    const price = dec(100, 18)
     await priceFeed.setPrice(price)
 
     // --- TEST --- 
 
     await cdpManager.redeemCollateral(
-      '100' + _18_zeros,
+      dec(100, 18),
       bob,
       '0x0000000000000000000000000000000000000000',
       0,
@@ -2070,7 +2089,7 @@ contract('CDPManager', async accounts => {
 
     // Bob's CDP was left untouched
     const { debt: bob_Debt_After } = await cdpManager.CDPs(bob)
-    assert.equal(bob_Debt_After, '100' + _18_zeros)
+    assert.equal(bob_Debt_After, dec(100,  18))
   });
 
   it("redeemCollateral(): finds the last CDP with ICR == 110% even if there is more than one", async () => {
@@ -2448,7 +2467,7 @@ contract('CDPManager', async accounts => {
     }
 
     // Erin tries to redeem 2^256 - 1 CLV
-    const maxBytes32 = web3.utils.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+    const maxBytes32 = th.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
 
     try {
       ({
@@ -2674,7 +2693,7 @@ contract('CDPManager', async accounts => {
   })
 
   // Redemption fees 
-  it("A redemption made when base rate is zero increases the base rate", async () => {
+  it("redeemCollateral(): a redemption made when base rate is zero increases the base rate", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2693,7 +2712,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue((await cdpManager.baseRate()).gt(th.toBN('0')))
   })
 
-  it("A redemption made when base rate is non-zero increases the base rate, for negligible time passed", async () => {
+  it("redeemCollateral(): a redemption made when base rate is non-zero increases the base rate, for negligible time passed", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
@@ -2735,7 +2754,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(baseRate_2.gt(baseRate_1))
   })
 
-  it("A redemption made at zero base rate send a non-zero ETHFee to GT staking contract", async () => {
+  it("redeemCollateral(): a redemption made at zero base rate send a non-zero ETHFee to GT staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
@@ -2769,7 +2788,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(gtStakingBalance_After.gt(th.toBN('0')))
   })
 
-  it("A redemption made at zero base increases the ETH-fees-per-GT-staked in GT Staking contract", async () => {
+  it("redeemCollateral(): a redemption made at zero base increases the ETH-fees-per-GT-staked in GT Staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
@@ -2803,7 +2822,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(F_ETH_After.gt('0'))
   })
 
-  it("A redemption made at a non-zero base rate send a non-zero ETHFee to GT staking contract", async () => {
+  it("redeemCollateral(): a redemption made at a non-zero base rate send a non-zero ETHFee to GT staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
@@ -2842,7 +2861,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(gtStakingBalance_After.gt(gtStakingBalance_Before))
   })
 
-  it("A redemption made at a non-zero base rate increases ETH-per-GT-staked in the staking contract", async () => {
+  it("redeemCollateral(): a redemption made at a non-zero base rate increases ETH-per-GT-staked in the staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
@@ -2882,7 +2901,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(F_ETH_After.gt(F_ETH_Before))
   })
 
-  it("A redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => { 
+  it("redeemCollateral(): a redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => { 
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
@@ -3060,7 +3079,7 @@ contract('CDPManager', async accounts => {
 
     const TCR = (await cdpManager.getTCR())
 
-    assert.isTrue(TCR.lte(web3.utils.toBN('1500000000000000000')))
+    assert.isTrue(TCR.lte(th.toBN('1500000000000000000')))
 
     assert.isTrue(await cdpManager.checkRecoveryMode())
   })
@@ -3076,7 +3095,7 @@ contract('CDPManager', async accounts => {
 
     const TCR = (await cdpManager.getTCR())
 
-    assert.isTrue(TCR.gte(web3.utils.toBN('1500000000000000000')))
+    assert.isTrue(TCR.gte(th.toBN('1500000000000000000')))
 
     assert.isFalse(await cdpManager.checkRecoveryMode())
   })
