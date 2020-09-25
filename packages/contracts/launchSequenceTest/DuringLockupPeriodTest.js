@@ -4,8 +4,10 @@ const CustomDurationLockupContract = artifacts.require("./CustomDurationLockupCo
 
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+
 const th = testHelpers.TestHelper
-const mv = testHelpers.MoneyValues
+const dec = th.dec
+
 
 contract('During the initial lockup period', async accounts => {
   const [
@@ -42,12 +44,12 @@ contract('During the initial lockup period', async accounts => {
   let OYLC_I3
 
   // 1e24 = 1 million tokens with 18 decimal digits
-  const teamMemberInitialEntitlement_1 = mv._1e24
-  const teamMemberInitialEntitlement_2 = mv._2e24
-  const teamMemberInitialEntitlement_3 = mv._3e24
-  const investorInitialEntitlement_1 = mv._4e24
-  const investorInitialEntitlement_2 = mv._5e24
-  const investorInitialEntitlement_3 = mv._6e24
+  const teamMemberInitialEntitlement_1 = dec(1, 24)
+  const teamMemberInitialEntitlement_2 = dec(2, 24)
+  const teamMemberInitialEntitlement_3 = dec(3, 24)
+  const investorInitialEntitlement_1 = dec(4, 24)
+  const investorInitialEntitlement_2 = dec(5, 24)
+  const investorInitialEntitlement_3 = dec(6, 24)
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
@@ -123,9 +125,9 @@ contract('During the initial lockup period', async accounts => {
       await th.fastForwardTime(ONE_MONTH_IN_SECONDS, web3.currentProvider)
 
       // GT deployer transfers vesting amount
-      await growthToken.transfer(OYLC_T1.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_T2.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_T3.address, mv._1e24, { from: liquityAG })
+      await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
 
       // Get new OYLC GT balances
       const GTBalanceOfOYLC_T1_1 = await growthToken.balanceOf(OYLC_T1.address)
@@ -133,17 +135,17 @@ contract('During the initial lockup period', async accounts => {
       const GTBalanceOfOYLC_T3_1 = await growthToken.balanceOf(OYLC_T3.address)
 
       // // Check team member OYLC balances have increased 
-      assert.isTrue(GTBalanceOfOYLC_T1_1.eq(th.toBN(initialGTBalanceOfOYLC_T1).add(th.toBN(mv._1e24))))
-      assert.isTrue(GTBalanceOfOYLC_T2_1.eq(th.toBN(initialGTBalanceOfOYLC_T2).add(th.toBN(mv._1e24))))
-      assert.isTrue(GTBalanceOfOYLC_T3_1.eq(th.toBN(initialGTBalanceOfOYLC_T3).add(th.toBN(mv._1e24))))
+      assert.isTrue(GTBalanceOfOYLC_T1_1.eq(th.toBN(initialGTBalanceOfOYLC_T1).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(GTBalanceOfOYLC_T2_1.eq(th.toBN(initialGTBalanceOfOYLC_T2).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(GTBalanceOfOYLC_T3_1.eq(th.toBN(initialGTBalanceOfOYLC_T3).add(th.toBN(dec(1, 24)))))
 
       // Another month passes
       await th.fastForwardTime(ONE_MONTH_IN_SECONDS, web3.currentProvider)
 
       // GT deployer transfers vesting amount
-      await growthToken.transfer(OYLC_T1.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_T2.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_T3.address, mv._1e24, { from: liquityAG })
+      await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
 
       // Get new OYLC GT balances
       const GTBalanceOfOYLC_T1_2 = await growthToken.balanceOf(OYLC_T1.address)
@@ -151,16 +153,16 @@ contract('During the initial lockup period', async accounts => {
       const GTBalanceOfOYLC_T3_2 = await growthToken.balanceOf(OYLC_T3.address)
 
       // Check team member OYLC balances have increased again
-      assert.isTrue(GTBalanceOfOYLC_T1_2.eq(GTBalanceOfOYLC_T1_1.add(th.toBN(mv._1e24))))
-      assert.isTrue(GTBalanceOfOYLC_T2_2.eq(GTBalanceOfOYLC_T2_1.add(th.toBN(mv._1e24))))
-      assert.isTrue(GTBalanceOfOYLC_T3_2.eq(GTBalanceOfOYLC_T3_1.add(th.toBN(mv._1e24))))
+      assert.isTrue(GTBalanceOfOYLC_T1_2.eq(GTBalanceOfOYLC_T1_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(GTBalanceOfOYLC_T2_2.eq(GTBalanceOfOYLC_T2_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(GTBalanceOfOYLC_T3_2.eq(GTBalanceOfOYLC_T3_1.add(th.toBN(dec(1, 24)))))
     })
 
     it("GT deployer can transfer GT to one-year lockup contracts deployed by anyone", async () => {
       // A, B, C each deploy a lockup contract ith themself as beneficiary
-      const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, mv._1e24, { from: A })
-      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, mv._2e24, { from: B })
-      const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, mv._3e24, { from: C })
+      const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 24), { from: A })
+      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 24), { from: B })
+      const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, dec(3, 24), { from: C })
 
       // OYLCs for team members on vesting schedules
       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
@@ -176,22 +178,22 @@ contract('During the initial lockup period', async accounts => {
       await th.fastForwardTime(ONE_MONTH_IN_SECONDS, web3.currentProvider)
 
       // GT deployer transfers GT to OYLCs deployed by other accounts
-      await growthToken.transfer(OYLC_A.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_B.address, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_C.address, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(OYLC_A.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_B.address, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_C.address, dec(3, 24), { from: liquityAG })
 
       // Check balances of OYLCs have increased
-      assert.equal(await growthToken.balanceOf(OYLC_A.address), mv._1e24)
-      assert.equal(await growthToken.balanceOf(OYLC_B.address), mv._2e24)
-      assert.equal(await growthToken.balanceOf(OYLC_C.address), mv._3e24)
+      assert.equal(await growthToken.balanceOf(OYLC_A.address), dec(1, 24))
+      assert.equal(await growthToken.balanceOf(OYLC_B.address), dec(2, 24))
+      assert.equal(await growthToken.balanceOf(OYLC_C.address), dec(3, 24))
     })
   })
 
   describe('Deploying new OYLCs', async accounts => {
     it("GT Deployer can deploy OYLCs through the Factory", async () => {
       // GT deployer deploys OYLCs
-      const OYLCDeploymentTx_A = await lockupContractFactory.deployOneYearLockupContract(A, mv._1e18, { from: liquityAG })
-      const OYLCDeploymentTx_B = await lockupContractFactory.deployOneYearLockupContract(B, mv._1e18, { from: liquityAG })
+      const OYLCDeploymentTx_A = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 18), { from: liquityAG })
+      const OYLCDeploymentTx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(1, 18), { from: liquityAG })
       const OYLCDeploymentTx_C = await lockupContractFactory.deployOneYearLockupContract(C, '9595995999999900000023423234', { from: liquityAG })
 
       assert.isTrue(OYLCDeploymentTx_A.receipt.status)
@@ -201,8 +203,8 @@ contract('During the initial lockup period', async accounts => {
 
     it("Anyone can deploy OYLCs through the Factory", async () => {
       // Various EOAs deploy CDLCs
-      const OYLCDeploymentTx_1 = await lockupContractFactory.deployOneYearLockupContract(A, mv._1e18, { from: teamMember_1 })
-      const OYLCDeploymentTx_2 = await lockupContractFactory.deployOneYearLockupContract(C, mv._1e18, { from: investor_2 })
+      const OYLCDeploymentTx_1 = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 18), { from: teamMember_1 })
+      const OYLCDeploymentTx_2 = await lockupContractFactory.deployOneYearLockupContract(C, dec(1, 18), { from: investor_2 })
       const OYLCDeploymentTx_3 = await lockupContractFactory.deployOneYearLockupContract(liquityAG, '9595995999999900000023423234', { from: A })
       const OYLCDeploymentTx_4 = await lockupContractFactory.deployOneYearLockupContract(D, '123', { from: B })
 
@@ -214,13 +216,13 @@ contract('During the initial lockup period', async accounts => {
 
     it("GT Deployer can deploy OYLCs directly", async () => {
       // GT deployer deploys CDLCs
-      const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, mv._1e18, { from: liquityAG })
+      const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, dec(1, 18), { from: liquityAG })
       const OYLC_A_txReceipt = await web3.eth.getTransactionReceipt(OYLC_A.transactionHash)
 
-      const OYLC_B = await OneYearLockupContract.new(growthToken.address, B, mv._2e18, { from: liquityAG })
+      const OYLC_B = await OneYearLockupContract.new(growthToken.address, B, dec(2, 18), { from: liquityAG })
       const OYLC_B_txReceipt = await web3.eth.getTransactionReceipt(OYLC_B.transactionHash)
 
-      const OYLC_C = await OneYearLockupContract.new(growthToken.address, C, mv._3e18, { from: liquityAG })
+      const OYLC_C = await OneYearLockupContract.new(growthToken.address, C, dec(3, 18), { from: liquityAG })
       const OYLC_C_txReceipt = await web3.eth.getTransactionReceipt(OYLC_C.transactionHash)
 
       // Check deployment succeeded
@@ -231,13 +233,13 @@ contract('During the initial lockup period', async accounts => {
 
     it("Anyone can deploy OYLCs directly", async () => {
       // Various EOAs deploy OYLCs
-      const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, mv._1e18, { from: D })
+      const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, dec(1, 18), { from: D })
       const OYLC_A_txReceipt = await web3.eth.getTransactionReceipt(OYLC_A.transactionHash)
 
-      const OYLC_B = await OneYearLockupContract.new(growthToken.address, B, mv._2e18, { from: E })
+      const OYLC_B = await OneYearLockupContract.new(growthToken.address, B, dec(2, 18), { from: E })
       const OYLC_B_txReceipt = await web3.eth.getTransactionReceipt(OYLC_B.transactionHash)
 
-      const OYLC_C = await OneYearLockupContract.new(growthToken.address, C, mv._3e18, { from: F })
+      const OYLC_C = await OneYearLockupContract.new(growthToken.address, C, dec(3, 18), { from: F })
       const OYLC_C_txReceipt = await web3.eth.getTransactionReceipt(OYLC_C.transactionHash)
 
       // Check deployment succeeded
@@ -250,14 +252,14 @@ contract('During the initial lockup period', async accounts => {
   describe('GT transfer during first year after GT deployment', async accounts => {
     it("GT deployer can not transfer GT to a OYLC that was not deployed by the Factory", async () => {
       // GT deployer deploys OYLC_A
-      const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, mv._1e18, { from: liquityAG })
+      const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, dec(1, 18), { from: liquityAG })
 
       // Account F deploys OYLC_B
-      const OYLC_B = await OneYearLockupContract.new(growthToken.address, B, mv._1e18, { from: F })
+      const OYLC_B = await OneYearLockupContract.new(growthToken.address, B, dec(1, 18), { from: F })
 
       // GT deployer attempts GT transfer to OYLC_A
       try {
-        const GTtransferTx_A = await growthToken.transfer(OYLC_A.address, mv._1e18, { from: liquityAG })
+        const GTtransferTx_A = await growthToken.transfer(OYLC_A.address, dec(1, 18), { from: liquityAG })
         assert.isFalse(GTtransferTx_A.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
@@ -265,7 +267,7 @@ contract('During the initial lockup period', async accounts => {
 
       // GT deployer attempts GT transfer to OYLC_B
       try {
-        const GTtransferTx_B = await growthToken.transfer(OYLC_B.address, mv._1e18, { from: liquityAG })
+        const GTtransferTx_B = await growthToken.transfer(OYLC_B.address, dec(1, 18), { from: liquityAG })
         assert.isFalse(GTtransferTx_B.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
@@ -274,11 +276,11 @@ contract('During the initial lockup period', async accounts => {
 
     it("GT deployer can not transfer GT to a CDLC that they deployed directly", async () => {
       // GT deployer deploys CDLC directly
-      const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, mv._1e18, ONE_MONTH_IN_SECONDS, { from: liquityAG })
+      const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, dec(1, 18), ONE_MONTH_IN_SECONDS, { from: liquityAG })
 
       // GT deployer attempts GT transfer to CDLC
       try {
-        const GTtransferTx = await growthToken.transfer(CDLC_A.address, mv._1e18, { from: liquityAG })
+        const GTtransferTx = await growthToken.transfer(CDLC_A.address, dec(1, 18), { from: liquityAG })
         assert.isFalse(GTtransferTx.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
@@ -287,11 +289,11 @@ contract('During the initial lockup period', async accounts => {
 
     it("GT deployer can not transfer GT to a CDLC that someone else deployed directly", async () => {
       // GT deployer deploys CDLC directly
-      const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, mv._1e18, ONE_MONTH_IN_SECONDS, { from: D })
+      const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, dec(1, 18), ONE_MONTH_IN_SECONDS, { from: D })
 
       // GT deployer attempts GT transfer to CDLC
       try {
-        const GTtransferTx = await growthToken.transfer(CDLC_A.address, mv._1e18, { from: liquityAG })
+        const GTtransferTx = await growthToken.transfer(CDLC_A.address, dec(1, 18), { from: liquityAG })
         assert.isFalse(GTtransferTx.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
@@ -302,21 +304,21 @@ contract('During the initial lockup period', async accounts => {
   describe('Deploying CDLCs', async accounts => {
     it("No one can deploy CDLCs through the factory", async () => {
       try {
-        const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e18, ONE_MONTH_IN_SECONDS, { from: liquityAG })
+        const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 18), ONE_MONTH_IN_SECONDS, { from: liquityAG })
         assert.isFalse(deployedCDLCtx_A.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
 
       try {
-        const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, mv._2e18, ONE_MONTH_IN_SECONDS, { from: B })
+        const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 18), ONE_MONTH_IN_SECONDS, { from: B })
         assert.isFalse(deployedCDLCtx_B.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
 
       try {
-        const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, mv._3e18, ONE_MONTH_IN_SECONDS, { from: F })
+        const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 18), ONE_MONTH_IN_SECONDS, { from: F })
         assert.isFalse(deployedCDLCtx_C.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
@@ -325,13 +327,13 @@ contract('During the initial lockup period', async accounts => {
 
     it("Anyone can deploy CDLCs directly", async () => {
       // Various EOAs deploy CDLCs
-      const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, mv._1e18, ONE_MONTH_IN_SECONDS, { from: D })
+      const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, dec(1, 18), ONE_MONTH_IN_SECONDS, { from: D })
       const CDLC_A_txReceipt = await web3.eth.getTransactionReceipt(CDLC_A.transactionHash)
 
-      const CDLC_B = await CustomDurationLockupContract.new(growthToken.address, B, mv._2e18, ONE_MONTH_IN_SECONDS, { from: liquityAG })
+      const CDLC_B = await CustomDurationLockupContract.new(growthToken.address, B, dec(2, 18), ONE_MONTH_IN_SECONDS, { from: liquityAG })
       const CDLC_B_txReceipt = await web3.eth.getTransactionReceipt(CDLC_B.transactionHash)
 
-      const CDLC_C = await CustomDurationLockupContract.new(growthToken.address, C, mv._3e18, ONE_MONTH_IN_SECONDS, { from: F })
+      const CDLC_C = await CustomDurationLockupContract.new(growthToken.address, C, dec(3, 18), ONE_MONTH_IN_SECONDS, { from: F })
       const CDLC_C_txReceipt = await web3.eth.getTransactionReceipt(CDLC_C.transactionHash)
 
       // Check deployment succeeded
@@ -355,11 +357,11 @@ contract('During the initial lockup period', async accounts => {
 
     it("GT Deployer can't withdraw from a locked and funded OYLC that someone else deployed", async () => {
       // Account D deploys a new OYLC via the Factory
-      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, mv._2e18, { from: D })
+      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 18), { from: D })
       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
       //GT deployer fund the newly deployed OYLCs
-      await growthToken.transfer(OYLC_B.address, mv._2e18, { from: liquityAG })
+      await growthToken.transfer(OYLC_B.address, dec(2, 18), { from: liquityAG })
 
       // D locks their deployed OYLC
       await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: D })
@@ -375,11 +377,11 @@ contract('During the initial lockup period', async accounts => {
 
     it("Beneficiary can't withdraw from their funded and locked OYLC", async () => {
       // Account D deploys a new OYLC via the Factory
-      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, mv._2e18, { from: D })
+      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 18), { from: D })
       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
       // GT deployer funds contracts
-      await growthToken.transfer(OYLC_B.address, mv._2e18, { from: liquityAG })
+      await growthToken.transfer(OYLC_B.address, dec(2, 18), { from: liquityAG })
 
       // D locks their deployed OYLC
       await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: D })
@@ -409,11 +411,11 @@ contract('During the initial lockup period', async accounts => {
 
     it("No one can withdraw from a funded and locked OYLC", async () => {
       // Account D deploys a new OYLC via the Factory
-      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, mv._2e18, { from: D })
+      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 18), { from: D })
       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
       // GT deployer funds contracts
-      await growthToken.transfer(OYLC_B.address, mv._2e18, { from: liquityAG })
+      await growthToken.transfer(OYLC_B.address, dec(2, 18), { from: liquityAG })
 
       // D locks their deployed OYLC
       await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: D })

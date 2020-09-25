@@ -2668,7 +2668,7 @@ contract('CDPManager', async accounts => {
   })
 
   // Redemption fees 
-  it.only("A redemption made when base rate is zero increases the base rate", async () => {
+  it("A redemption made when base rate is zero increases the base rate", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2687,9 +2687,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue((await cdpManager.baseRate()).gt(th.toBN('0')))
   })
 
-  it.only("A redemption made when base rate is non-zero increases the base rate, for negligible time passed", async () => {
+  it("A redemption made when base rate is non-zero increases the base rate, for negligible time passed", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
-    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
     await gtStaking.stake(dec(1, 18), {from: owner})
     
@@ -2729,9 +2729,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(baseRate_2.gt(baseRate_1))
   })
 
-  it.only("A redemption made at zero base rate send a non-zero ETHFee to GT staking contract", async () => {
+  it("A redemption made at zero base rate send a non-zero ETHFee to GT staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
-    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
     await gtStaking.stake(dec(1, 18), {from: owner})
     
@@ -2763,9 +2763,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(gtStakingBalance_After.gt(th.toBN('0')))
   })
 
-  it.only("A redemption made at zero base increases the ETH-fees-per-GT-staked in GT Staking contract", async () => {
+  it("A redemption made at zero base increases the ETH-fees-per-GT-staked in GT Staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
-    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
     await gtStaking.stake(dec(1, 18), {from: owner})
     
@@ -2797,9 +2797,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(F_ETH_After.gt('0'))
   })
 
-  it.only("A redemption made at a non-zero base rate send a non-zero ETHFee to GT staking contract", async () => {
+  it("A redemption made at a non-zero base rate send a non-zero ETHFee to GT staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
-    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
     await gtStaking.stake(dec(1, 18), {from: owner})
     
@@ -2836,9 +2836,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(gtStakingBalance_After.gt(gtStakingBalance_Before))
   })
 
-  it.only("A redemption made at a non-zero base rate increases ETH-per-GT-staked in the staking contract", async () => {
+  it("A redemption made at a non-zero base rate increases ETH-per-GT-staked in the staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
-    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
     await gtStaking.stake (dec(1, 18), {from: owner})
     
@@ -2876,9 +2876,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(F_ETH_After.gt(F_ETH_Before))
   })
 
-  it.only("A redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => { 
+  it("A redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => { 
     // time fast-forwards 1 year, and owner stakes 1 GT
-    await th.fastForwardTime(timeValues.ONE_YEAR_IN_SECONDS, web3.currentProvider)
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), {from: owner})
     await gtStaking.stake(dec(1, 18), {from: owner})
     

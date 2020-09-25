@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+
 const th = testHelpers.TestHelper
 
 contract('GT Contracts deployments', async accounts => {

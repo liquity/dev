@@ -1,7 +1,8 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+
 const th = testHelpers.TestHelper
-const mv = testHelpers.MoneyValues
+const dec = th.dec
 
 contract('After the initial lockup period has passed', async accounts => {
   const [
@@ -32,23 +33,23 @@ contract('After the initial lockup period has passed', async accounts => {
   let OYLC_I3
 
   // 1e24 = 1 million tokens with 18 decimal digits
-  const teamMemberInitialEntitlement_1 = mv._1e24
-  const teamMemberInitialEntitlement_2 = mv._2e24
-  const teamMemberInitialEntitlement_3 = mv._3e24
+  const teamMemberInitialEntitlement_1 = dec(1, 24)
+  const teamMemberInitialEntitlement_2 = dec(2, 24)
+  const teamMemberInitialEntitlement_3 = dec(3, 24)
 
-  const investorInitialEntitlement_1 = mv._4e24
-  const investorInitialEntitlement_2 = mv._5e24
-  const investorInitialEntitlement_3 = mv._6e24
+  const investorInitialEntitlement_1 = dec(4, 24)
+  const investorInitialEntitlement_2 = dec(5, 24)
+  const investorInitialEntitlement_3 = dec(6, 24)
 
-  const teamMemberMonthlyVesting_1 = mv._1e23
-  const teamMemberMonthlyVesting_2 = mv._2e23
-  const teamMemberMonthlyVesting_3 = mv._3e23
+  const teamMemberMonthlyVesting_1 = dec(1, 23)
+  const teamMemberMonthlyVesting_2 = dec(2, 23)
+  const teamMemberMonthlyVesting_3 = dec(3, 23)
 
-  const GTEntitlement_A = mv._1e24
-  const GTEntitlement_B = mv._2e24
-  const GTEntitlement_C = mv._3e24
-  const GTEntitlement_E = mv._4e24
-  const GTEntitlement_D = mv._5e24
+  const GTEntitlement_A = dec(1, 24)
+  const GTEntitlement_B = dec(2, 24)
+  const GTEntitlement_C = dec(3, 24)
+  const GTEntitlement_D = dec(4, 24)
+  const GTEntitlement_E = dec(5, 24)
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
@@ -126,8 +127,8 @@ contract('After the initial lockup period has passed', async accounts => {
   describe('Deploying new OYLCs', async accounts => {
     it("GT Deployer can deploy OYLCs", async () => {
       // GT deployer deploys CDLCs
-      const OYLCDeploymentTx_A = await lockupContractFactory.deployOneYearLockupContract(A, mv._1e18, { from: liquityAG })
-      const OYLCDeploymentTx_B = await lockupContractFactory.deployOneYearLockupContract(B, mv._1e18, { from: liquityAG })
+      const OYLCDeploymentTx_A = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 18), { from: liquityAG })
+      const OYLCDeploymentTx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(1, 18), { from: liquityAG })
       const OYLCDeploymentTx_C = await lockupContractFactory.deployOneYearLockupContract(C, '9595995999999900000023423234', { from: liquityAG })
 
       assert.isTrue(OYLCDeploymentTx_A.receipt.status)
@@ -137,8 +138,8 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("Anyone can deploy OYLCs", async () => {
       // Various EOAs deploy CDLCs
-      const OYLCDeploymentTx_1 = await lockupContractFactory.deployOneYearLockupContract(A, mv._1e18, { from: teamMember_1 })
-      const OYLCDeploymentTx_2 = await lockupContractFactory.deployOneYearLockupContract(C, mv._1e18, { from: investor_2 })
+      const OYLCDeploymentTx_1 = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 18), { from: teamMember_1 })
+      const OYLCDeploymentTx_2 = await lockupContractFactory.deployOneYearLockupContract(C, dec(1, 18), { from: investor_2 })
       const OYLCDeploymentTx_3 = await lockupContractFactory.deployOneYearLockupContract(liquityAG, '9595995999999900000023423234', { from: A })
       const OYLCDeploymentTx_4 = await lockupContractFactory.deployOneYearLockupContract(D, '123', { from: B })
 
@@ -152,8 +153,8 @@ contract('After the initial lockup period has passed', async accounts => {
   describe('Deploying Custom Duration Lockup Contracts (CDLCs)', async accounts => {
     it("GT Deployer can now deploy CDLCs", async () => {
       // GT deployer deploys CDLCs
-      const CDLCDeploymentTx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e18, ONE_DAY_IN_SECONDS, { from: liquityAG })
-      const CDLCDeploymentTx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, mv._1e18, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const CDLCDeploymentTx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 18), ONE_DAY_IN_SECONDS, { from: liquityAG })
+      const CDLCDeploymentTx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(1, 18), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
       const CDLCDeploymentTx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, '9595995999999900000023423234', '23403434', { from: liquityAG })
 
       assert.isTrue(CDLCDeploymentTx_A.receipt.status)
@@ -163,8 +164,8 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("Anyone can deploy CDLCs", async () => {
       // Various EOAs deploy CDLCs
-      const CDLCDeploymentTx_1 = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e18, ONE_DAY_IN_SECONDS, { from: teamMember_1 })
-      const CDLCDeploymentTx_2 = await lockupContractFactory.deployCustomDurationLockupContract(C, mv._1e18, THIRTY_DAYS_IN_SECONDS, { from: investor_2 })
+      const CDLCDeploymentTx_1 = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 18), ONE_DAY_IN_SECONDS, { from: teamMember_1 })
+      const CDLCDeploymentTx_2 = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(1, 18), THIRTY_DAYS_IN_SECONDS, { from: investor_2 })
       const CDLCDeploymentTx_3 = await lockupContractFactory.deployCustomDurationLockupContract(liquityAG, '9595995999999900000023423234', '23403434', { from: A })
       const CDLCDeploymentTx_4 = await lockupContractFactory.deployCustomDurationLockupContract(D, '123', '23403434', { from: B })
 
@@ -410,17 +411,17 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.equal(await growthToken.balanceOf(investor_3), '0')
 
       // GT deployer sends extra GT to investor OYLCs
-      await growthToken.transfer(OYLC_I1.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_I2.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_I3.address, mv._1e24, { from: liquityAG })
+      await growthToken.transfer(OYLC_I1.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_I2.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_I3.address, dec(1, 24), { from: liquityAG })
 
       // 1 month passes
       await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
 
       // GT deployer again sends extra GT to investor OYLCs
-      await growthToken.transfer(OYLC_I1.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_I2.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_I3.address, mv._1e24, { from: liquityAG })
+      await growthToken.transfer(OYLC_I1.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_I2.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_I3.address, dec(1, 24), { from: liquityAG })
 
       // Get GT balances of OYLCs for investors 
       const GTBalanceOfOYLC_I1_Before = await growthToken.balanceOf(OYLC_I1.address)
@@ -462,11 +463,11 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("GT Deployer can't withdraw from a OYLC that someone else deployed", async () => {
       // Account D deploys a new OYLC via the Factory
-      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, mv._2e18, { from: D })
+      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 18), { from: D })
       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
       //GT deployer fund the newly deployed OYLCs
-      await growthToken.transfer(OYLC_B.address, mv._2e18, { from: liquityAG })
+      await growthToken.transfer(OYLC_B.address, dec(2, 18), { from: liquityAG })
 
       // D locks their deployed OYLC
       await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: D })
@@ -519,9 +520,9 @@ contract('After the initial lockup period has passed', async accounts => {
       await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
 
       // GT deployer transfers vesting amount
-      await growthToken.transfer(OYLC_T1.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_T2.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_T3.address, mv._1e24, { from: liquityAG })
+      await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
 
       // Get new OYLC GT balances
       const GTBalanceOfOYLC_T1_1 = await growthToken.balanceOf(OYLC_T1.address)
@@ -529,17 +530,17 @@ contract('After the initial lockup period has passed', async accounts => {
       const GTBalanceOfOYLC_T3_1 = await growthToken.balanceOf(OYLC_T3.address)
 
       // // Check team member OYLC balances have increased 
-      assert.isTrue(GTBalanceOfOYLC_T1_1.eq(th.toBN(initialGTBalanceOfOYLC_T1).add(th.toBN(mv._1e24))))
-      assert.isTrue(GTBalanceOfOYLC_T2_1.eq(th.toBN(initialGTBalanceOfOYLC_T2).add(th.toBN(mv._1e24))))
-      assert.isTrue(GTBalanceOfOYLC_T3_1.eq(th.toBN(initialGTBalanceOfOYLC_T3).add(th.toBN(mv._1e24))))
+      assert.isTrue(GTBalanceOfOYLC_T1_1.eq(th.toBN(initialGTBalanceOfOYLC_T1).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(GTBalanceOfOYLC_T2_1.eq(th.toBN(initialGTBalanceOfOYLC_T2).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(GTBalanceOfOYLC_T3_1.eq(th.toBN(initialGTBalanceOfOYLC_T3).add(th.toBN(dec(1, 24)))))
 
       // Another month passes
       await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
 
       // GT deployer transfers vesting amount
-      await growthToken.transfer(OYLC_T1.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_T2.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_T3.address, mv._1e24, { from: liquityAG })
+      await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
 
       // Get new OYLC GT balances
       const GTBalanceOfOYLC_T1_2 = await growthToken.balanceOf(OYLC_T1.address)
@@ -547,16 +548,16 @@ contract('After the initial lockup period has passed', async accounts => {
       const GTBalanceOfOYLC_T3_2 = await growthToken.balanceOf(OYLC_T3.address)
 
       // Check team member OYLC balances have increased again
-      assert.isTrue(GTBalanceOfOYLC_T1_2.eq(GTBalanceOfOYLC_T1_1.add(th.toBN(mv._1e24))))
-      assert.isTrue(GTBalanceOfOYLC_T2_2.eq(GTBalanceOfOYLC_T2_1.add(th.toBN(mv._1e24))))
-      assert.isTrue(GTBalanceOfOYLC_T3_2.eq(GTBalanceOfOYLC_T3_1.add(th.toBN(mv._1e24))))
+      assert.isTrue(GTBalanceOfOYLC_T1_2.eq(GTBalanceOfOYLC_T1_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(GTBalanceOfOYLC_T2_2.eq(GTBalanceOfOYLC_T2_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(GTBalanceOfOYLC_T3_2.eq(GTBalanceOfOYLC_T3_1.add(th.toBN(dec(1, 24)))))
     })
 
     it("GT deployer can transfer tokens to OYLCs deployed by anyone", async () => {
       // A, B, C each deploy a lockup contract ith themself as beneficiary
-      const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, mv._1e24, { from: A })
-      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, mv._2e24, { from: B })
-      const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, mv._3e24, { from: C })
+      const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 24), { from: A })
+      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 24), { from: B })
+      const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, dec(3, 24), { from: C })
 
       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
@@ -571,14 +572,14 @@ contract('After the initial lockup period has passed', async accounts => {
       await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
 
       // GT deployer transfers GT to OYLCs deployed by other accounts
-      await growthToken.transfer(OYLC_A.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_B.address, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(OYLC_C.address, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(OYLC_A.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_B.address, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(OYLC_C.address, dec(3, 24), { from: liquityAG })
 
       // Check balances of OYLCs have increased
-      assert.equal(await growthToken.balanceOf(OYLC_A.address), mv._1e24)
-      assert.equal(await growthToken.balanceOf(OYLC_B.address), mv._2e24)
-      assert.equal(await growthToken.balanceOf(OYLC_C.address), mv._3e24)
+      assert.equal(await growthToken.balanceOf(OYLC_A.address), dec(1, 24))
+      assert.equal(await growthToken.balanceOf(OYLC_B.address), dec(2, 24))
+      assert.equal(await growthToken.balanceOf(OYLC_C.address), dec(3, 24))
     })
 
     it("GT deployer can transfer GT directly to any externally owned account", async () => {
@@ -588,14 +589,14 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.equal(await growthToken.balanceOf(C), '0')
 
       // GT deployer transfers GT to EOAs
-      const txA = await growthToken.transfer(A, mv._1e24, { from: liquityAG })
-      const txB = await growthToken.transfer(B, mv._2e24, { from: liquityAG })
-      const txC = await growthToken.transfer(C, mv._3e24, { from: liquityAG })
+      const txA = await growthToken.transfer(A, dec(1, 24), { from: liquityAG })
+      const txB = await growthToken.transfer(B, dec(2, 24), { from: liquityAG })
+      const txC = await growthToken.transfer(C, dec(3, 24), { from: liquityAG })
 
       // Check new balances have increased by correct amount
-      assert.equal(await growthToken.balanceOf(A), mv._1e24)
-      assert.equal(await growthToken.balanceOf(B), mv._2e24)
-      assert.equal(await growthToken.balanceOf(C), mv._3e24)
+      assert.equal(await growthToken.balanceOf(A), dec(1, 24))
+      assert.equal(await growthToken.balanceOf(B), dec(2, 24))
+      assert.equal(await growthToken.balanceOf(C), dec(3, 24))
     })
 
     it("GT deployer can transfer GT to CDLCs they deployed", async () => {
@@ -654,14 +655,14 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("Anyone can transfer GT to OYLCs deployed by anyone", async () => {
       // Start D, E, F with some GT
-      await growthToken.transfer(D, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(E, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(F, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(D, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(E, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(F, dec(3, 24), { from: liquityAG })
 
       // H, I, J deploy lockup contracts with A, B, C as beneficiaries, respectively
-      const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, mv._1e24, { from: H })
-      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, mv._2e24, { from: I })
-      const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, mv._3e24, { from: J })
+      const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 24), { from: H })
+      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 24), { from: I })
+      const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, dec(3, 24), { from: J })
 
       // Grab contract addresses from deployment tx events
       const OYLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_A)
@@ -674,26 +675,26 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.equal(await growthToken.balanceOf(OYLCAddress_C), '0')
 
       // D, E, F transfer GT to OYLCs
-      await growthToken.transfer(OYLCAddress_A, mv._1e24, { from: D })
-      await growthToken.transfer(OYLCAddress_B, mv._2e24, { from: E })
-      await growthToken.transfer(OYLCAddress_C, mv._3e24, { from: F })
+      await growthToken.transfer(OYLCAddress_A, dec(1, 24), { from: D })
+      await growthToken.transfer(OYLCAddress_B, dec(2, 24), { from: E })
+      await growthToken.transfer(OYLCAddress_C, dec(3, 24), { from: F })
 
       // Check balances of OYLCs has increased
-      assert.equal(await growthToken.balanceOf(OYLCAddress_A), mv._1e24)
-      assert.equal(await growthToken.balanceOf(OYLCAddress_B), mv._2e24)
-      assert.equal(await growthToken.balanceOf(OYLCAddress_C), mv._3e24)
+      assert.equal(await growthToken.balanceOf(OYLCAddress_A), dec(1, 24))
+      assert.equal(await growthToken.balanceOf(OYLCAddress_B), dec(2, 24))
+      assert.equal(await growthToken.balanceOf(OYLCAddress_C), dec(3, 24))
     })
 
     it("Anyone can transfer GT to CDLCs deployed by anyone", async () => {
       // Start D, E, F with some GT
-      await growthToken.transfer(D, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(E, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(F, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(D, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(E, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(F, dec(3, 24), { from: liquityAG })
 
       // H, I, J deploy lockup contracts with A, B, C as beneficiaries, respectively
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e24, THIRTY_DAYS_IN_SECONDS, { from: H })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, mv._2e24, THIRTY_DAYS_IN_SECONDS, { from: I })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, mv._3e24, THIRTY_DAYS_IN_SECONDS, { from: J })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: H })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: I })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: J })
 
       // Grab contract addresses from deployment tx events
       const CDLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedCDLCtx_A)
@@ -706,22 +707,22 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.equal(await growthToken.balanceOf(CDLCAddress_C), '0')
 
       // D, E, F transfer GT to OYLCs
-      await growthToken.transfer(CDLCAddress_A, mv._1e24, { from: D })
-      await growthToken.transfer(CDLCAddress_B, mv._2e24, { from: E })
-      await growthToken.transfer(CDLCAddress_C, mv._3e24, { from: F })
+      await growthToken.transfer(CDLCAddress_A, dec(1, 24), { from: D })
+      await growthToken.transfer(CDLCAddress_B, dec(2, 24), { from: E })
+      await growthToken.transfer(CDLCAddress_C, dec(3, 24), { from: F })
 
       // Check balances of OYLCs has increased
-      assert.equal(await growthToken.balanceOf(CDLCAddress_A), mv._1e24)
-      assert.equal(await growthToken.balanceOf(CDLCAddress_B), mv._2e24)
-      assert.equal(await growthToken.balanceOf(CDLCAddress_C), mv._3e24)
+      assert.equal(await growthToken.balanceOf(CDLCAddress_A), dec(1, 24))
+      assert.equal(await growthToken.balanceOf(CDLCAddress_B), dec(2, 24))
+      assert.equal(await growthToken.balanceOf(CDLCAddress_C), dec(3, 24))
     })
   })
 
   describe('Locking CDLCs', async accounts => {
     it("GT deployer can lock CDLCs they deployed through the Factory", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, mv._2e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, mv._3e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
@@ -733,9 +734,9 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.isFalse(await CDLC_C.active())
 
       // GT deployer transfers GT entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -750,9 +751,9 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("An externally owned account can lock CDLCs they deployed through the Factory", async () => {
       // D, E, F each deploy a CDLC
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e24, THIRTY_DAYS_IN_SECONDS, { from: D })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, mv._2e24, THIRTY_DAYS_IN_SECONDS, { from: E })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, mv._3e24, THIRTY_DAYS_IN_SECONDS, { from: F })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: D })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: E })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: F })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
@@ -764,9 +765,9 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.isFalse(await CDLC_C.active())
 
       // GT deployer transfers GT entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       // D, E, F lock their resppective deployed CDLCs, through the Factory
       await lockupContractFactory.lockCustomDurationContracts([CDLC_A.address], { from: D })
@@ -782,18 +783,18 @@ contract('After the initial lockup period has passed', async accounts => {
 
   describe('Beneficiary withdrawal from CDLCs', async accounts => {
     it("After a CDLC lockup period has passed, beneficiary can withdraw their full entitlement from their CDLC", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, mv._2e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, mv._3e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
       const CDLC_C = await th.getCDLCFromDeploymentTx(deployedCDLCtx_C)
 
       // GT deployer transfers GT entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -813,24 +814,24 @@ contract('After the initial lockup period has passed', async accounts => {
       await CDLC_C.withdrawGT({ from: C })
 
       // Check A, B, C GT balances after withdrawal
-      assert.equal(await growthToken.balanceOf(A), mv._1e24)
-      assert.equal(await growthToken.balanceOf(B), mv._2e24)
-      assert.equal(await growthToken.balanceOf(C), mv._3e24)
+      assert.equal(await growthToken.balanceOf(A), dec(1, 24))
+      assert.equal(await growthToken.balanceOf(B), dec(2, 24))
+      assert.equal(await growthToken.balanceOf(C), dec(3, 24))
     })
 
     it("After a CDLC lockup period has passed, Beneficiary can withdraw full GT balance of CDLC when it exceeds their initial entitlement", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, mv._2e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, mv._3e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
       const CDLC_C = await th.getCDLCFromDeploymentTx(deployedCDLCtx_C)
 
       // GT deployer transfers GT entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -840,9 +841,9 @@ contract('After the initial lockup period has passed', async accounts => {
       await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
 
       // Transfer more GT, such that CDLC balances exceed their respective entitlements
-      await growthToken.transfer(CDLC_A.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, mv._1e24, { from: liquityAG })
+      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_B.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_C.address, dec(1, 24), { from: liquityAG })
 
       // Check A, B, C GT balances before
       assert.equal(await growthToken.balanceOf(A), '0')
@@ -850,9 +851,9 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.equal(await growthToken.balanceOf(C), '0')
 
       // Confirm CDLC balances before withdrawal
-      assert.equal(await growthToken.balanceOf(CDLC_A.address), mv._2e24)
-      assert.equal(await growthToken.balanceOf(CDLC_B.address), mv._3e24)
-      assert.equal(await growthToken.balanceOf(CDLC_C.address), mv._4e24)
+      assert.equal(await growthToken.balanceOf(CDLC_A.address), dec(2, 24))
+      assert.equal(await growthToken.balanceOf(CDLC_B.address), dec(3, 24))
+      assert.equal(await growthToken.balanceOf(CDLC_C.address), dec(4, 24))
 
       // A, B, C withdraw from their CDLCs
       await CDLC_A.withdrawGT({ from: A })
@@ -860,26 +861,26 @@ contract('After the initial lockup period has passed', async accounts => {
       await CDLC_C.withdrawGT({ from: C })
 
       // Check A, B, C GT balances after withdrawal
-      assert.equal(await growthToken.balanceOf(A), mv._2e24)
-      assert.equal(await growthToken.balanceOf(B), mv._3e24)
-      assert.equal(await growthToken.balanceOf(C), mv._4e24)
+      assert.equal(await growthToken.balanceOf(A), dec(2, 24))
+      assert.equal(await growthToken.balanceOf(B), dec(3, 24))
+      assert.equal(await growthToken.balanceOf(C), dec(4, 24))
     })
   })
 
   describe('Withdrawal attempts from CDLCs by non-beneficiaries', async accounts => {
     it("After a CDLC lockup period has passed, GT deployer can't withdraw from a CDLC they deployed", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, mv._2e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, mv._3e24, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
       const CDLC_C = await th.getCDLCFromDeploymentTx(deployedCDLCtx_C)
 
       // GT deployer transfers GT entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -901,18 +902,18 @@ contract('After the initial lockup period has passed', async accounts => {
     })
 
     it("After a CDLC lockup period has passed, GT deployer can't withdraw from a CDLC someone else deployed", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e24, THIRTY_DAYS_IN_SECONDS, { from: D })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, mv._2e24, THIRTY_DAYS_IN_SECONDS, { from: E })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, mv._3e24, THIRTY_DAYS_IN_SECONDS, { from: F })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: D })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: E })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: F })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
       const CDLC_C = await th.getCDLCFromDeploymentTx(deployedCDLCtx_C)
 
       // GT deployer transfers GT entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, mv._1e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, mv._2e24, { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, mv._3e24, { from: liquityAG })
+      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -936,11 +937,11 @@ contract('After the initial lockup period has passed', async accounts => {
     })
 
     it("After a CDLC lockup period has passed, any account that is not the beneficiary can not withdraw", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, mv._1e24, THIRTY_DAYS_IN_SECONDS, { from: D })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: D })
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
 
       // GT deployer transfers GT entitlements to the contract
-      await growthToken.transfer(CDLC_A.address, mv._1e24, { from: liquityAG })
+      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
 
       // GT deployer locks the CDLCs they deployed
       await lockupContractFactory.lockCustomDurationContracts([CDLC_A.address], { from: D })

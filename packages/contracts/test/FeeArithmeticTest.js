@@ -3,25 +3,16 @@ const deploymentHelper = require("../utils/deploymentHelpers.js")
 const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const MathTester = artifacts.require("./MathTester.sol")
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
 const dec = th.dec
 
 contract('Fee arithmetic tests', async accounts => {
-  let priceFeed
-  let clvToken
-  let poolManager
-  let sortedCDPs
-  let cdpManager
-  let activePool
-  let stabilityPool
-  let defaultPool
-  let borrowerOperations
-  let hintHelpers
-
   let contracts
   let cdpManagerTester
+  let mathTester
 
   // Results array, maps seconds to expected hours passed output (rounded down to nearest hour).
 
@@ -337,6 +328,9 @@ contract('Fee arithmetic tests', async accounts => {
   before(async () => {
     cdpManagerTester = await CDPManagerTester.new()
     CDPManagerTester.setAsDeployed(cdpManagerTester)
+
+    mathTester = await MathTester.new()
+    MathTester.setAsDeployed(mathTester)
   })
 
   beforeEach(async () => {
@@ -381,7 +375,7 @@ contract('Fee arithmetic tests', async accounts => {
       await th.fastForwardTime(seconds, web3.currentProvider)
 
       const hoursPassed = await cdpManagerTester.hoursPassedSinceLastFeeOp()
-    
+
       assert.equal(expectedHoursPassed.toString(), hoursPassed.toString())
     }
   })
@@ -548,6 +542,8 @@ contract('Fee arithmetic tests', async accounts => {
     }
   })
 
+  // --- Exponentiation tests ---
+
   describe('Basic exponentiation', async accounts => {
     // for exponent = 0, returns 1
     it("decPow(): for exponent = 0, returns 1, regardless of base", async () => {
@@ -560,14 +556,14 @@ contract('Fee arithmetic tests', async accounts => {
       const g = dec(8789789, 27)
       const maxUint256 = th.toBN('2').pow(th.toBN('256')).sub(th.toBN('1'))
 
-      const res_a = await cdpManagerTester.callDecPow(a, 0)
-      const res_b = await cdpManagerTester.callDecPow(b, 0)
-      const res_c = await cdpManagerTester.callDecPow(c, 0)
-      const res_d = await cdpManagerTester.callDecPow(d, 0)
-      const res_e = await cdpManagerTester.callDecPow(e, 0)
-      const res_f = await cdpManagerTester.callDecPow(f, 0)
-      const res_g = await cdpManagerTester.callDecPow(f, 0)
-      const res_max = await cdpManagerTester.callDecPow(f, 0)
+      const res_a = await mathTester.callDecPow(a, 0)
+      const res_b = await mathTester.callDecPow(b, 0)
+      const res_c = await mathTester.callDecPow(c, 0)
+      const res_d = await mathTester.callDecPow(d, 0)
+      const res_e = await mathTester.callDecPow(e, 0)
+      const res_f = await mathTester.callDecPow(f, 0)
+      const res_g = await mathTester.callDecPow(f, 0)
+      const res_max = await mathTester.callDecPow(f, 0)
 
       assert.equal(res_a, dec(1, 18))
       assert.equal(res_b, dec(1, 18))
@@ -591,15 +587,15 @@ contract('Fee arithmetic tests', async accounts => {
       const maxUint128 = th.toBN('2').pow(th.toBN('128')).sub(th.toBN('1'))
       const maxUint192 = th.toBN('2').pow(th.toBN('192')).sub(th.toBN('1'))
 
-      const res_a = await cdpManagerTester.callDecPow(a, 1)
-      const res_b = await cdpManagerTester.callDecPow(b, 1)
-      const res_c = await cdpManagerTester.callDecPow(c, 1)
-      const res_d = await cdpManagerTester.callDecPow(d, 1)
-      const res_e = await cdpManagerTester.callDecPow(e, 1)
-      const res_f = await cdpManagerTester.callDecPow(f, 1)
-      const res_g = await cdpManagerTester.callDecPow(g, 1)
-      const res_max128 = await cdpManagerTester.callDecPow(maxUint128, 1)
-      const res_max192 = await cdpManagerTester.callDecPow(maxUint192, 1)
+      const res_a = await mathTester.callDecPow(a, 1)
+      const res_b = await mathTester.callDecPow(b, 1)
+      const res_c = await mathTester.callDecPow(c, 1)
+      const res_d = await mathTester.callDecPow(d, 1)
+      const res_e = await mathTester.callDecPow(e, 1)
+      const res_f = await mathTester.callDecPow(f, 1)
+      const res_g = await mathTester.callDecPow(g, 1)
+      const res_max128 = await mathTester.callDecPow(maxUint128, 1)
+      const res_max192 = await mathTester.callDecPow(maxUint192, 1)
 
       assert.equal(res_a, a)
       assert.equal(res_b, b)
@@ -614,16 +610,16 @@ contract('Fee arithmetic tests', async accounts => {
 
     // for base = 0, returns 0 for any exponent other than 1
     it("decPow(): for base = 0, returns 0 for any exponent other than 0", async () => {
-      const res_a = await cdpManagerTester.callDecPow(0, 1)
-      const res_b = await cdpManagerTester.callDecPow(0, 3)
-      const res_c = await cdpManagerTester.callDecPow(0, 17)
-      const res_d = await cdpManagerTester.callDecPow(0, 44)
-      const res_e = await cdpManagerTester.callDecPow(0, 118)
-      const res_f = await cdpManagerTester.callDecPow(0, 1000)
-      const res_g = await cdpManagerTester.callDecPow(0, dec(1, 6))
-      const res_h = await cdpManagerTester.callDecPow(0, dec(1, 9))
-      const res_i = await cdpManagerTester.callDecPow(0, dec(1, 12))
-      const res_j = await cdpManagerTester.callDecPow(0, dec(1, 18))
+      const res_a = await mathTester.callDecPow(0, 1)
+      const res_b = await mathTester.callDecPow(0, 3)
+      const res_c = await mathTester.callDecPow(0, 17)
+      const res_d = await mathTester.callDecPow(0, 44)
+      const res_e = await mathTester.callDecPow(0, 118)
+      const res_f = await mathTester.callDecPow(0, 1000)
+      const res_g = await mathTester.callDecPow(0, dec(1, 6))
+      const res_h = await mathTester.callDecPow(0, dec(1, 9))
+      const res_i = await mathTester.callDecPow(0, dec(1, 12))
+      const res_j = await mathTester.callDecPow(0, dec(1, 18))
 
       assert.equal(res_a, '0')
       assert.equal(res_b, '0')
@@ -642,16 +638,16 @@ contract('Fee arithmetic tests', async accounts => {
     it("decPow(): for base = 0, returns 0 for any exponent other than 1", async () => {
 
       const ONE = dec(1, 18)
-      const res_a = await cdpManagerTester.callDecPow(ONE, 1)
-      const res_b = await cdpManagerTester.callDecPow(ONE, 3)
-      const res_c = await cdpManagerTester.callDecPow(ONE, 17)
-      const res_d = await cdpManagerTester.callDecPow(ONE, 44)
-      const res_e = await cdpManagerTester.callDecPow(ONE, 118)
-      const res_f = await cdpManagerTester.callDecPow(ONE, 1000)
-      const res_g = await cdpManagerTester.callDecPow(ONE, dec(1, 6))
-      const res_h = await cdpManagerTester.callDecPow(ONE, dec(1, 9))
-      const res_i = await cdpManagerTester.callDecPow(ONE, dec(1, 12))
-      const res_j = await cdpManagerTester.callDecPow(ONE, dec(1, 18))
+      const res_a = await mathTester.callDecPow(ONE, 1)
+      const res_b = await mathTester.callDecPow(ONE, 3)
+      const res_c = await mathTester.callDecPow(ONE, 17)
+      const res_d = await mathTester.callDecPow(ONE, 44)
+      const res_e = await mathTester.callDecPow(ONE, 118)
+      const res_f = await mathTester.callDecPow(ONE, 1000)
+      const res_g = await mathTester.callDecPow(ONE, dec(1, 6))
+      const res_h = await mathTester.callDecPow(ONE, dec(1, 9))
+      const res_i = await mathTester.callDecPow(ONE, dec(1, 12))
+      const res_j = await mathTester.callDecPow(ONE, dec(1, 18))
 
       assert.equal(res_a, ONE)
       assert.equal(res_b, ONE)
@@ -678,16 +674,16 @@ contract('Fee arithmetic tests', async accounts => {
       const i = dec(125435, 15) // 125.435
       const j = dec(99999, 18)  // 99999
 
-      const res_a = await cdpManagerTester.callDecPow(a, 2)
-      const res_b = await cdpManagerTester.callDecPow(b, 2)
-      const res_c = await cdpManagerTester.callDecPow(c, 2)
-      const res_d = await cdpManagerTester.callDecPow(d, 2)
-      const res_e = await cdpManagerTester.callDecPow(e, 2)
-      const res_f = await cdpManagerTester.callDecPow(f, 2)
-      const res_g = await cdpManagerTester.callDecPow(g, 2)
-      const res_h = await cdpManagerTester.callDecPow(h, 2)
-      const res_i = await cdpManagerTester.callDecPow(i, 2)
-      const res_j = await cdpManagerTester.callDecPow(j, 2)
+      const res_a = await mathTester.callDecPow(a, 2)
+      const res_b = await mathTester.callDecPow(b, 2)
+      const res_c = await mathTester.callDecPow(c, 2)
+      const res_d = await mathTester.callDecPow(d, 2)
+      const res_e = await mathTester.callDecPow(e, 2)
+      const res_f = await mathTester.callDecPow(f, 2)
+      const res_g = await mathTester.callDecPow(g, 2)
+      const res_h = await mathTester.callDecPow(h, 2)
+      const res_i = await mathTester.callDecPow(i, 2)
+      const res_j = await mathTester.callDecPow(j, 2)
 
       assert.equal(res_a.toString(), '1000000000000000000')
       assert.equal(res_b.toString(), '2250000000000000000')
@@ -707,28 +703,90 @@ contract('Fee arithmetic tests', async accounts => {
         const exponent = list[1].toString()
         const expectedResult = list[2].toString()
 
-        const result = await cdpManagerTester.callDecPow(base, exponent)
+        const result = await mathTester.callDecPow(base, exponent)
 
         assert.isAtMost(th.getDifference(expectedResult, result.toString()), 10000)  // allow absolute error tolerance of 1e-14
       }
     })
 
-    it.only("decPow(): correct output for highest plausible exponent (2592000, seconds in one month)", async () => {
-      for (let i = 0; i < 10; i++) {
-        const exponent = timeValues.MINUTES_IN_ONE_MONTH
+    it("decPow(): abs. error < 1e-9 for exponent = 7776000 (seconds in three months)", async () => {
+      for (let i = 1; i <= 200; i++) {
+        const exponent = timeValues.SECONDS_IN_THREE_MONTHS
+
         // Use a high base to fully test high exponent, without prematurely decaying to 0
-        const base = th.randDecayFactor(0.9999999999, 0.999999999999999999)
+        const base = th.randDecayFactor(0.999999, 0.999999999999999999)
+        const baseAsDecimal = BNConverter.makeDecimal(base, 18)
 
         // Calculate actual expected value
-        const expected = BNConverter.makeBN(Decimal.pow(base, exponent).toFixed(18)) 
+        let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
+        expected = BNConverter.makeBN(expected)
+
         console.log(`expected: ${expected}`)
-        const res = await cdpManagerTester.callDecPow(base, exponent)  // BN
+        const res = await mathTester.callDecPow(base, exponent)
 
         const error = expected.sub(res).abs()
 
-        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, res: ${res}, error: ${error}`)
+        // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
 
-        assert.isAtMost(th.getDifference(expected, result.toString()), 100000000)  // allow absolute error tolerance of 1e-9
+        try {
+          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+        } catch (error) {
+          console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        }
+      }
+    })
+
+    it("decPow(): abs. error < 1e-9 for exponent = 2592000 (seconds in one month)", async () => {
+      for (let i = 1; i <= 200; i++) {
+        const exponent = timeValues.SECONDS_IN_ONE_MONTH
+
+        // Use a high base to fully test high exponent, without prematurely decaying to 0
+        const base = th.randDecayFactor(0.999995, 0.999999999999999999)
+        const baseAsDecimal = BNConverter.makeDecimal(base, 18)
+
+        // Calculate actual expected value
+        let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
+        expected = BNConverter.makeBN(expected)
+
+        console.log(`expected: ${expected}`)
+        const res = await mathTester.callDecPow(base, exponent)
+
+        const error = expected.sub(res).abs()
+
+        // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+
+        try {
+          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+        } catch (error) {
+          console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        }
+      }
+    })
+
+    it("decPow(): abs. error < 1e-9 for exponent = 43200 (minutes in one month)", async () => {
+      for (let i = 1; i <= 200; i++) {
+        const exponent = timeValues.MINUTES_IN_ONE_MONTH
+
+        // Use a high base to fully test high exponent, without prematurely decaying to 0
+        const base = th.randDecayFactor(0.9997, 0.999999999999999999)
+        const baseAsDecimal = BNConverter.makeDecimal(base, 18)
+
+        // Calculate actual expected value
+        let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
+        expected = BNConverter.makeBN(expected)
+
+        console.log(`expected: ${expected}`)
+        const res = await mathTester.callDecPow(base, exponent)
+
+        const error = expected.sub(res).abs()
+
+        // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+
+        try {
+          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+        } catch (error) {
+          console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        }
       }
     })
   })

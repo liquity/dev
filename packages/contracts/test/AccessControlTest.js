@@ -5,10 +5,10 @@ const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
 const CustomDurationLockupContract = artifacts.require(("./CustomDurationLockupContract.sol"))
 
 const th = testHelpers.TestHelper
-const mv = testHelpers.MoneyValues
+const timeValues = testHelpers.TimeValues
 
-const ONE_MONTH_IN_SECONDS = 2592000
-const ONE_YEAR_IN_SECONDS = 31536000
+const dec = th.dec
+
 
 contract('All Liquity functions with intra-system access control restrictions', async accounts => {
 
@@ -50,7 +50,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     await deploymentHelper.connectGTContracts(GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
 
-    th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, mv._10_Ether, mv._100e18)
+    th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
   })
 
   describe('CDPManager', async accounts => {
@@ -282,7 +282,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("withdrawCLV(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await poolManager.withdrawCLV(alice, 100, { from: alice })
+        const txAlice = await poolManager.withdrawCLV(alice, 100, 10, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
@@ -486,7 +486,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is not the PM or CDPM")
       }
     })
 
@@ -644,7 +644,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
   })
 
   describe('LockupContractFactory', async accounts => {
-    it.only("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
+    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
       try {
         const txAlice = await lockupContractFactory.setGrowthTokenAddress(growthToken.address, { from: alice })
         assert.isFalse(txAlice.receipt.status)
@@ -659,9 +659,9 @@ contract('All Liquity functions with intra-system access control restrictions', 
   })
 
   describe('OneYearLockupContract', async accounts => {
-    it.only("lockContract(): reverts when caller is not deployer", async () => {
+    it("lockContract(): reverts when caller is not deployer", async () => {
       // deploy new OYLC with Carol as beneficiary
-      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, mv._100e18, { from: owner })
+      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, dec(100, 18), { from: owner })
 
       const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
 
@@ -669,7 +669,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       assert.equal(await OYLC.lockupDeployer(), lockupContractFactory.address)
 
       // Deployer funds the OYLC
-      await growthToken.transfer(OYLC.address, mv._100e18, { from: owner })
+      await growthToken.transfer(OYLC.address, dec(100, 18), { from: owner })
 
       try {
         const txAlice = await OYLC.lockContract({ from: alice })
@@ -683,21 +683,21 @@ contract('All Liquity functions with intra-system access control restrictions', 
       assert.isTrue(txOwner.receipt.status)
     })
 
-    it.only("withdrawGT(): reverts when caller is not beneficiary", async () => {
+    it("withdrawGT(): reverts when caller is not beneficiary", async () => {
       // deploy new OYLC with Carol as beneficiary
-      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, mv._100e18, { from: owner })
+      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, dec(100, 18), { from: owner })
 
       const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
 
       // Deployer funds the OYLC
-      await growthToken.transfer(OYLC.address, mv._100e18, { from: owner })
+      await growthToken.transfer(OYLC.address, dec(100, 18), { from: owner })
 
       // Deployer locks contract via the factory
       await lockupContractFactory.lockOneYearContracts([OYLC.address], { from: owner })
       assert.isTrue(await OYLC.active())
 
       // Fast-forward one year, so that beneficiary can withdraw
-      await th.fastForwardTime(ONE_YEAR_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // Bob attempts to withdraw GT
       try {
@@ -714,16 +714,16 @@ contract('All Liquity functions with intra-system access control restrictions', 
   })
 
   describe('CustomDurationLockupContract', async accounts => {
-    it.only("lockContract(): reverts when caller is not deployer", async () => {
+    it("lockContract(): reverts when caller is not deployer", async () => {
       // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
-      await th.fastForwardTime(ONE_YEAR_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // deploy new CDLC with 1 month duration and Carol as beneficiary
       const deployedCDLCtx = await lockupContractFactory
       .deployCustomDurationLockupContract(
         carol,
-        mv._100e18,
-        ONE_MONTH_IN_SECONDS,
+        dec(100, 18),
+        timeValues.SECONDS_IN_ONE_MONTH,
         { from: owner })
 
       const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
@@ -732,7 +732,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       assert.equal(await CDLC.lockupDeployer(), lockupContractFactory.address)
 
       // Deployer funds the CDLC
-      await growthToken.transfer(CDLC.address, mv._100e18, { from: owner })
+      await growthToken.transfer(CDLC.address, dec(100, 18), { from: owner })
 
 
       try {
@@ -746,29 +746,29 @@ contract('All Liquity functions with intra-system access control restrictions', 
       const txOwner1 = await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
     })
 
-    it.only("withdrawGT(): reverts when caller is not beneficiary", async () => {
+    it("withdrawGT(): reverts when caller is not beneficiary", async () => {
        // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
-       await th.fastForwardTime(ONE_YEAR_IN_SECONDS, web3.currentProvider)
+       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // deploy new CDLC with 1 month duration and Carol as beneficiary
       const deployedCDLCtx = await lockupContractFactory
       .deployCustomDurationLockupContract(
         carol,
-        mv._100e18,
-        ONE_MONTH_IN_SECONDS,
+        dec(100, 18),
+        timeValues.SECONDS_IN_ONE_MONTH,
         { from: owner })
 
       const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
 
       // Deployer funds the CDLC
-      await growthToken.transfer(CDLC.address, mv._100e18, { from: owner })
+      await growthToken.transfer(CDLC.address, dec(100, 18), { from: owner })
 
       // Deployer locks contract via the factory
       await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
       assert.isTrue(await CDLC.active())
 
       // Fast-forward one month, so that beneficiary can withdraw
-      await th.fastForwardTime(ONE_MONTH_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Bob attempts to withdraw GT
       try {
@@ -785,7 +785,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
   })
 
   describe('GTStaking', async accounts => { 
-    it.only("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
+    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
       try {
         const txAlice = await gtStaking.setGrowthTokenAddress(growthToken.address, { from: alice })
         assert.isFalse(txAlice.receipt.status)
@@ -797,7 +797,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       const txDeployer =  gtStaking.setGrowthTokenAddress(growthToken.address, { from: owner })
     })
 
-    it.only("setCLVTokenAddress(): reverts when caller is not  deployer", async () => {
+    it("setCLVTokenAddress(): reverts when caller is not  deployer", async () => {
       try {
         const txAlice = await gtStaking.setCLVTokenAddress(clvToken.address, { from: alice })
         assert.isFalse(txAlice.receipt.status)
@@ -809,7 +809,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       const txDeployer =  gtStaking.setCLVTokenAddress(clvToken.address, { from: owner })
     })
 
-    it.only("setCDPManagerAddress(): reverts when caller is not deployer", async () => {
+    it("setCDPManagerAddress(): reverts when caller is not deployer", async () => {
       try {
         const txAlice = await gtStaking.setCDPManagerAddress(cdpManager.address, { from: alice })
         assert.isFalse(txAlice.receipt.status)
@@ -821,7 +821,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       const txDeployer = gtStaking.setCDPManagerAddress(cdpManager.address, { from: owner })
     })
 
-    it.only("setBorrowerOperationsAddress(): reverts when caller is not deployer", async () => {
+    it("setBorrowerOperationsAddress(): reverts when caller is not deployer", async () => {
       try {
         const txAlice = await gtStaking.setBorrowerOperationsAddress(borrowerOperations.address, { from: alice })
         assert.isFalse(txAlice.receipt.status)
@@ -833,18 +833,18 @@ contract('All Liquity functions with intra-system access control restrictions', 
       const txDeployer = gtStaking.setBorrowerOperationsAddress(borrowerOperations.address, { from: owner })
     })
 
-    it.only("addETHFee(): reverts when caller is not CDPManager", async () => {
+    it("addETHFee(): reverts when caller is not CDPManager", async () => {
       try {
-        const txAlice = await gtStaking.addETHFee({ from: alice, value: mv._1_Ether})
+        const txAlice = await gtStaking.addETHFee({ from: alice, value: dec(1, 'ether')})
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
       }
     })
 
-    it.only("addLQTYFee(): reverts when caller is not CDPManager", async () => {
+    it("addLQTYFee(): reverts when caller is not CDPManager", async () => {
       try {
-        const txAlice = await gtStaking.addLQTYFee(mv._1e18, { from: alice})
+        const txAlice = await gtStaking.addLQTYFee(dec(1, 18), { from: alice})
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
@@ -853,7 +853,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
   })
 
   describe('CommunityIssuance', async accounts => { 
-    it.only("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
+    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
       try {
         const txAlice = await communityIssuance.setGrowthTokenAddress(growthToken.address, { from: alice })
         assert.isFalse(txAlice.receipt.status)
