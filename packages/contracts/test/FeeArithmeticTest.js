@@ -1,10 +1,12 @@
+const Decimal = require("decimal.js");
 const deploymentHelper = require("../utils/deploymentHelpers.js")
+const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 
 const th = testHelpers.TestHelper
+const timeValues = testHelpers.TimeValues
 const dec = th.dec
-const mv = testHelpers.MoneyValues
 
 contract('Fee arithmetic tests', async accounts => {
   let priceFeed
@@ -277,6 +279,7 @@ contract('Fee arithmetic tests', async accounts => {
     ]
   }
 
+  // Exponent in range [2, 300]
   const exponentiationResults = [
     [187706062567632000, 17, 445791],
     [549137589365708000, 2, 301552092054380000],
@@ -707,6 +710,25 @@ contract('Fee arithmetic tests', async accounts => {
         const result = await cdpManagerTester.callDecPow(base, exponent)
 
         assert.isAtMost(th.getDifference(expectedResult, result.toString()), 10000)  // allow absolute error tolerance of 1e-14
+      }
+    })
+
+    it.only("decPow(): correct output for highest plausible exponent (2592000, seconds in one month)", async () => {
+      for (let i = 0; i < 10; i++) {
+        const exponent = timeValues.MINUTES_IN_ONE_MONTH
+        // Use a high base to fully test high exponent, without prematurely decaying to 0
+        const base = th.randDecayFactor(0.9999999999, 0.999999999999999999)
+
+        // Calculate actual expected value
+        const expected = BNConverter.makeBN(Decimal.pow(base, exponent).toFixed(18)) 
+        console.log(`expected: ${expected}`)
+        const res = await cdpManagerTester.callDecPow(base, exponent)  // BN
+
+        const error = expected.sub(res).abs()
+
+        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, res: ${res}, error: ${error}`)
+
+        assert.isAtMost(th.getDifference(expected, result.toString()), 100000000)  // allow absolute error tolerance of 1e-9
       }
     })
   })

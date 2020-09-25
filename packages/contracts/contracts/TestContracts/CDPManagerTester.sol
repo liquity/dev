@@ -49,6 +49,12 @@ contract CDPManagerTester is CDPManager {
     // }  
 
 
+    // Non-view wrapper for gas test
+    function callDecPowTx(uint _base, uint _n) external returns (uint) {
+        return Math._decPow(_base, _n);
+    }
+
+    // View wrapper
     function callDecPow(uint _base, uint _n) external view returns (uint) {
         return Math._decPow(_base, _n);
     }

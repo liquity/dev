@@ -881,7 +881,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         // Decay the baseRate, then increase it from the redemption
         T.decayedBaseRate = _getDecayedBaseRate();
         _increaseBaseRateFromRedemption(T.totalETHDrawn, T.decayedBaseRate, price);
-        lastFeeOperationTime = block.timestamp;
+        _updateLastFeeOpTime();
 
         // Calculate the ETH fee and send it to GT staking contract
         T.ETHFee = _getRedemptionFee(T.totalETHDrawn, baseRate);
@@ -1260,6 +1260,15 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         baseRate = _getDecayedBaseRate();
         lastFeeOperationTime = block.timestamp;
         return baseRate;
+    }
+
+     // Only update the last fee operation time if time passed >= decay interval. This prevents base rate griefing.
+    function _updateLastFeeOpTime() internal {
+        uint timePassed = block.timestamp.sub(lastFeeOperationTime);
+
+        if (timePassed >= SECONDS_IN_ONE_HOUR) {
+            lastFeeOperationTime = block.timestamp;
+        }
     }
 
     function _getDecayedBaseRate() internal view returns (uint) {

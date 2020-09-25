@@ -27,8 +27,9 @@ const MoneyValues = {
 }
 
 const TimeValues = {
-  ONE_MONTH_IN_SECONDS: 2592000,
-  ONE_YEAR_IN_SECONDS: 31536000
+  SECONDS_IN_ONE_MONTH: 2592000,
+  SECONDS_IN_ONE_YEAR: 31536000,
+  MINUTES_IN_ONE_MONTH: 43200
 }
 
 // TODO: Make classes for function export
@@ -68,11 +69,19 @@ class TestHelper {
     const maxGas = Math.max(...gasCostList)
 
     let sum = 0;
-    let meanGas;
     for (const gas of gasCostList) {
       sum += gas
     }
-    meanGas = sum / gasCostList.Length
+
+    if (sum === 0) { 
+      return  { gasCostList: gasCostList, 
+                minGas: undefined, 
+                maxGas: undefined, 
+                meanGas: undefined, 
+                medianGas: undefined 
+              }
+    }
+    const meanGas = sum / gasCostList.length
 
     // median is the middle element (for odd list size) or element adjacent-right of middle (for even list size)
     const sortedGasCostList = [...gasCostList].sort()
@@ -80,9 +89,26 @@ class TestHelper {
     return { gasCostList, minGas, maxGas, meanGas, medianGas }
   }
 
+  static getGasMinMaxAvg(gasCostList) {
+    const metrics = th.getGasMetrics(gasCostList)
+
+    const minGas = metrics.minGas
+    const maxGas = metrics.maxGas
+    const meanGas = metrics.meanGas
+    const medianGas = metrics.medianGas
+
+    return { minGas, maxGas, meanGas, medianGas }
+  }
+
   static getEndOfAccount(account) {
     const accountLast2bytes = account.slice((account.length - 4), account.length)
     return accountLast2bytes
+  }
+
+  static randDecayFactor(min, max) {
+    const amount = Math.random() * (max - min) + min;
+    const amountInWei = web3.utils.toWei(amount.toFixed(18), 'ether')
+    return amountInWei
   }
 
   static randAmountInWei(min, max) {
