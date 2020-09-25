@@ -167,7 +167,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint debt = cdpManager.getCDPDebt(user);
         uint coll = cdpManager.getCDPColl(user);
         
-        _requireCollAmountIsWithdrawable(coll, _amount);
+        _requireCollAmountIsWithdrawable(coll, _amount, price);
 
         uint newICR = _getNewICRFromTroveChange(coll, debt, -int(_amount), 0, price);
         _requireICRisAboveMCR(newICR);
@@ -289,7 +289,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _requireICRisAboveMCR(newICR);
         _requireNewTCRisAboveCCR(collChange, _debtChange, price);
         _requireCLVRepaymentAllowed(debt, _debtChange);
-        _requireCollAmountIsWithdrawable(coll, _collWithdrawal);
+        _requireCollAmountIsWithdrawable(coll, _collWithdrawal, price);
 
         //  --- Effects --- 
         (uint newColl, uint newDebt) = _updateTroveFromAdjustment(user, collChange, _debtChange);
@@ -381,13 +381,14 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(_amount > 0, "BorrowerOps: Amount must be larger than 0");
     }
 
-    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)
+    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal, uint _price)
     internal 
     pure 
     {
-        if (_collWithdrawal > 0) {
-            require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
-        }
+        require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
+
+        uint remainingColl = _currentColl.sub(_collWithdrawal);
+        if (remainingColl > 0) {_requireValueIsGreaterThan20Dollars(remainingColl, _price);}
     }
 
     // --- ICR and TCR checks ---
