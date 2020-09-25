@@ -381,13 +381,14 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(_amount > 0, "BorrowerOps: Amount must be larger than 0");
     }
 
-    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal, uint _price) 
+    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal, uint _price)
     internal 
     pure 
     {
-        if (_collWithdrawal > 0) {
-            require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
-        }
+        require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
+
+        uint remainingColl = _currentColl.sub(_collWithdrawal);
+        if (remainingColl > 0) {_requireValueIsGreaterThan20Dollars(remainingColl, _price);}
     }
 
     // --- ICR and TCR checks ---
