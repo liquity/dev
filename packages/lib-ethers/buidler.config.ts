@@ -11,15 +11,17 @@ import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config
 import { NetworkConfig } from "@nomiclabs/buidler/types";
 
 import { Decimal, Difference, Decimalish, Percent } from "@liquity/decimal";
+import { Trove, TroveWithPendingRewards } from "@liquity/lib-base";
+
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
 import {
   abi,
   addressesOf,
   deploymentOnNetwork,
   connectToContracts,
-  LiquityDeployment
-} from "./src/contracts";
-import { Liquity, Trove, TroveWithPendingRewards } from "./src/Liquity";
+  LiquityDeployment,
+  EthersLiquity as Liquity
+} from ".";
 
 dotenv.config();
 

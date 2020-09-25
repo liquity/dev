@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Difference } from "@liquity/decimal";
-import { StabilityDeposit } from "@liquity/lib";
+import { StabilityDeposit } from "@liquity/lib-base";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Icon } from "./Icon";

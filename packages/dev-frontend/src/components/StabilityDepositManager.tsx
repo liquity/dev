@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
-import { Liquity, StabilityDeposit, Trove } from "@liquity/lib";
+import { StabilityDeposit, Trove } from "@liquity/lib-base";
+import { EthersLiquity } from "@liquity/lib-ethers";
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
 
 type StabilityDepositActionProps = {
-  liquity: Liquity;
+  liquity: EthersLiquity;
   originalDeposit: StabilityDeposit;
   editedDeposit: StabilityDeposit;
   changePending: boolean;
@@ -120,7 +121,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
 };
 
 type StabilityDepositManagerProps = {
-  liquity: Liquity;
+  liquity: EthersLiquity;
   deposit: StabilityDeposit;
   trove: Trove;
   price: Decimal;

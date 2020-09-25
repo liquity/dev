@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
-import { Liquity } from "@liquity/lib";
+import { EthersLiquity } from "@liquity/lib-ethers";
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { EditableRow } from "./Editor";
 import { Icon } from "./Icon";
 
 type RedemptionActionProps = {
-  liquity: Liquity;
+  liquity: EthersLiquity;
   price: Decimal;
   exchangedQui: Decimal;
   setExchangedQui: (exchangedQui: Decimal) => void;
@@ -74,7 +74,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
 };
 
 type RedemptionManagerProps = {
-  liquity: Liquity;
+  liquity: EthersLiquity;
   price: Decimal;
   quiBalance: Decimal;
   numberOfTroves: number;

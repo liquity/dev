@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
-import { Trove, Liquity } from "@liquity/lib";
+import { Trove } from "@liquity/lib-base";
+import { EthersLiquity } from "@liquity/lib-ethers";
 import { usePrevious } from "../hooks/usePrevious";
 import { TroveEditor } from "./TroveEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
 
 type TroveActionProps = {
-  liquity: Liquity;
+  liquity: EthersLiquity;
   original: Trove;
   edited: Trove;
   changePending: boolean;
@@ -19,8 +20,8 @@ type TroveActionProps = {
   numberOfTroves: number;
 };
 
-const mcrPercent = new Percent(Liquity.MINIMUM_COLLATERAL_RATIO).toString(0);
-const ccrPercent = new Percent(Liquity.CRITICAL_COLLATERAL_RATIO).toString(0);
+const mcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO).toString(0);
+const ccrPercent = new Percent(Trove.CRITICAL_COLLATERAL_RATIO).toString(0);
 
 const TroveAction: React.FC<TroveActionProps> = ({
   liquity,
@@ -175,7 +176,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
 };
 
 type TroveManagerProps = {
-  liquity: Liquity;
+  liquity: EthersLiquity;
   troveWithoutRewards: Trove;
   trove: Trove;
   price: Decimal;

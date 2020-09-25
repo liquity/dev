@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Text, Heading, Link, Box } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
-import { Trove } from "@liquity/lib";
+import { Trove } from "@liquity/lib-base";
 
 export type SystemStatsProps = {
   variant?: string;

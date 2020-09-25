@@ -422,9 +422,11 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(1, 'ether') })
 
+    // Carol withdraws exactly all her collateral
     const txCarol = await borrowerOperations.withdrawColl('1000000000000000000', carol, { from: carol })
     assert.isTrue(txCarol.receipt.status)
 
+    // Bob attempts to withdraw 1 wei more than his collateral
     try {
       const txBob = await borrowerOperations.withdrawColl('1000000000000000001', bob, { from: bob })
       assert.fail(txBob)

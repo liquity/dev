@@ -3,12 +3,12 @@ import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 import { Transaction } from "./Transaction";
 
 import { Decimal } from "@liquity/decimal";
-import { Liquity } from "@liquity/lib";
+import { EthersLiquity } from "@liquity/lib-ethers";
 import { useLiquity } from "../hooks/LiquityContext";
 import { Icon } from "./Icon";
 
 type PriceManagerProps = {
-  liquity: Liquity;
+  liquity: EthersLiquity;
   price: Decimal;
 };
 

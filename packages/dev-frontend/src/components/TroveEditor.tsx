@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Decimal, Percent, Difference } from "@liquity/decimal";
-import { Trove, Liquity } from "@liquity/lib";
+import { Trove } from "@liquity/lib-base";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Icon } from "./Icon";
@@ -94,9 +94,9 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
               : collateralRatioPct.prettify()
           }
           color={
-            collateralRatio?.gt(Liquity.CRITICAL_COLLATERAL_RATIO)
+            collateralRatio?.gt(Trove.CRITICAL_COLLATERAL_RATIO)
               ? "success"
-              : collateralRatio?.gt(Liquity.MINIMUM_COLLATERAL_RATIO)
+              : collateralRatio?.gt(Trove.MINIMUM_COLLATERAL_RATIO)
               ? "warning"
               : "danger"
           }

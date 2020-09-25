@@ -28,7 +28,7 @@ dataSources:
         - SystemState
       abis:
         - name: CDPManager
-          file: ../lib/abi/CDPManager.json
+          file: ../lib-ethers/abi/CDPManager.json
       eventHandlers:
         - event: BorrowerOperationsAddressChanged(address)
           handler: handleBorrowerOperationsAddressChanged
@@ -64,9 +64,9 @@ templates:
         - SystemState
       abis:
         - name: BorrowerOperations
-          file: ../lib/abi/BorrowerOperations.json
+          file: ../lib-ethers/abi/BorrowerOperations.json
         - name: CDPManager
-          file: ../lib/abi/CDPManager.json
+          file: ../lib-ethers/abi/CDPManager.json
       eventHandlers:
         - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleCDPUpdated
@@ -89,7 +89,7 @@ templates:
         - SystemState
       abis:
         - name: PoolManager
-          file: ../lib/abi/PoolManager.json
+          file: ../lib-ethers/abi/PoolManager.json
       eventHandlers:
         - event: UserDepositChanged(indexed address,uint256)
           handler: handleUserDepositChanged
@@ -112,7 +112,7 @@ templates:
         - SystemState
       abis:
         - name: PriceFeed
-          file: ../lib/abi/PriceFeed.json
+          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: PriceUpdated(uint256)
           handler: handlePriceUpdated

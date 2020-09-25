@@ -3,7 +3,8 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Provider } from "@ethersproject/abstract-provider";
 
 import { Decimal } from "@liquity/decimal";
-import { Liquity, Trove, StabilityDeposit } from "@liquity/lib";
+import { Trove, StabilityDeposit } from "@liquity/lib-base";
+import { EthersLiquity } from "@liquity/lib-ethers";
 import { useAsyncValue } from "./AsyncValue";
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
@@ -18,7 +19,7 @@ const promiseAllValues = <T>(object: T): Promise<ResolvedValues<T>> => {
 
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 
-export const useLiquityStore = (provider: Provider, account: string, liquity: Liquity) => {
+export const useLiquityStore = (provider: Provider, account: string, liquity: EthersLiquity) => {
   const get = useCallback(
     async (blockTag?: number) => {
       const store = await promiseAllValues({

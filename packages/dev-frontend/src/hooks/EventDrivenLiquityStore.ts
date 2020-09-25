@@ -2,11 +2,16 @@ import { useCallback } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
 
 import { Decimal } from "@liquity/decimal";
-import { Liquity, Trove, StabilityDeposit, TroveWithPendingRewards } from "@liquity/lib";
+import {
+  ReadableLiquity,
+  Trove,
+  StabilityDeposit,
+  TroveWithPendingRewards
+} from "@liquity/lib-base";
 import { useAsyncValue, useAsyncStore } from "./AsyncValue";
 import { useAccountBalance } from "./AccountBalance";
 
-export const useLiquityStore = (provider: Provider, account: string, liquity: Liquity) => {
+export const useLiquityStore = (provider: Provider, account: string, liquity: ReadableLiquity) => {
   const getTotal = useCallback(() => liquity.getTotal(), [liquity]);
   const watchTotal = useCallback(
     (onTotalChanged: (total: Trove) => void) => {

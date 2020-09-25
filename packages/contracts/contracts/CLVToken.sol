@@ -2,7 +2,6 @@ pragma solidity 0.5.16;
 
 import "./Interfaces/ICLVToken.sol";
 import "./CLVTokenData.sol";
-import "./Dependencies/ERC20.sol";
 import "./Dependencies/IERC20.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
