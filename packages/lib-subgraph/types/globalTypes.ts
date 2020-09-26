@@ -7,10 +7,9 @@
 // START Enums and Input Objects
 //==============================================================
 
-export enum TroveStatus {
-  closedByLiquidation = "closedByLiquidation",
-  closedByOwner = "closedByOwner",
-  open = "open",
+export enum OrderDirection {
+  asc = "asc",
+  desc = "desc",
 }
 
 //==============================================================

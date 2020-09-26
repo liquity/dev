@@ -118,10 +118,10 @@ export function updateTrove(
   trove.rawSnapshotOfTotalRedistributedCollateral = snapshotETH;
   trove.rawSnapshotOfTotalRedistributedDebt = snapshotCLVDebt;
 
-  if (_debt != BIGINT_ZERO) {
-    trove.rawCollateralPerDebt = (_coll * BIGINT_SCALING_FACTOR) / _debt;
+  if (stake != BIGINT_ZERO) {
+    trove.collateralRatioSortKey = (_debt * BIGINT_SCALING_FACTOR) / stake - snapshotCLVDebt;
   } else {
-    trove.rawCollateralPerDebt = BIGINT_MAX_UINT256;
+    trove.collateralRatioSortKey = null;
   }
 
   if (_coll == BIGINT_ZERO) {

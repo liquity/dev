@@ -10,13 +10,13 @@
 export interface TotalRedistributed_global {
   __typename: "Global";
   /**
-   * Total redistributed per-stake debt
-   */
-  rawTotalRedistributedDebt: any;
-  /**
    * Total redistributed per-stake collateral
    */
   rawTotalRedistributedCollateral: any;
+  /**
+   * Total redistributed per-stake debt
+   */
+  rawTotalRedistributedDebt: any;
 }
 
 export interface TotalRedistributed {

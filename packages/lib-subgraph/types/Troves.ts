@@ -3,12 +3,23 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
+import { OrderDirection } from "./globalTypes";
+
 // ====================================================
-// GraphQL query operation: TroveWithoutRewards
+// GraphQL query operation: Troves
 // ====================================================
 
-export interface TroveWithoutRewards_user_currentTrove {
+export interface Troves_troves_owner {
+  __typename: "User";
+  /**
+   * User's Ethereum address as a hex-string
+   */
+  id: string;
+}
+
+export interface Troves_troves {
   __typename: "Trove";
+  owner: Troves_troves_owner;
   rawCollateral: any;
   rawDebt: any;
   rawStake: any;
@@ -22,15 +33,12 @@ export interface TroveWithoutRewards_user_currentTrove {
   rawSnapshotOfTotalRedistributedDebt: any;
 }
 
-export interface TroveWithoutRewards_user {
-  __typename: "User";
-  currentTrove: TroveWithoutRewards_user_currentTrove | null;
+export interface Troves {
+  troves: Troves_troves[];
 }
 
-export interface TroveWithoutRewards {
-  user: TroveWithoutRewards_user | null;
-}
-
-export interface TroveWithoutRewardsVariables {
-  address: string;
+export interface TrovesVariables {
+  orderDirection: OrderDirection;
+  startIdx: number;
+  numberOfTroves: number;
 }

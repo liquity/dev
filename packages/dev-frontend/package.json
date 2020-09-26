@@ -11,6 +11,7 @@
     "@liquity/decimal": "^0.0.1",
     "@liquity/lib-base": "^0.0.1",
     "@liquity/lib-ethers": "^0.0.1",
+    "@liquity/lib-subgraph": "^0.0.1",
     "@liquity/providers": "^0.0.1",
     "@popperjs/core": "^2.4.2",
     "@testing-library/dom": "^6.12.2",

@@ -1,5 +1,6 @@
 import fetch from "cross-fetch";
 import { gql, ApolloClient, InMemoryCache, NormalizedCacheObject, HttpLink } from "@apollo/client";
+import { getAddress } from "@ethersproject/address";
 import { BigNumber } from "@ethersproject/bignumber";
 
 import { Decimal } from "@liquity/decimal";
@@ -13,9 +14,11 @@ import {
   StabilityDeposit
 } from "@liquity/lib-base";
 
-import { TroveStatus } from "../types/globalTypes";
+import { OrderDirection } from "../types/globalTypes";
 import { TotalRedistributed } from "../types/TotalRedistributed";
+import { TroveRawFields } from "../types/TroveRawFields";
 import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
+import { Troves, TrovesVariables } from "../types/Troves";
 import { Price } from "../types/Price";
 import { Total } from "../types/Total";
 import { TokensInStabilityPool } from "../types/TokensInStabilityPool";
@@ -54,6 +57,34 @@ const totalRedistributed = new Query<Trove, TotalRedistributed>(
   }
 );
 
+const troveRawFields = gql`
+  fragment TroveRawFields on Trove {
+    rawCollateral
+    rawDebt
+    rawStake
+    rawSnapshotOfTotalRedistributedCollateral
+    rawSnapshotOfTotalRedistributedDebt
+  }
+`;
+
+const troveFromRawFields = ({
+  rawCollateral,
+  rawDebt,
+  rawStake,
+  rawSnapshotOfTotalRedistributedCollateral,
+  rawSnapshotOfTotalRedistributedDebt
+}: TroveRawFields) =>
+  new TroveWithPendingRewards({
+    collateral: decimalify(rawCollateral),
+    debt: decimalify(rawDebt),
+    stake: decimalify(rawStake),
+
+    snapshotOfTotalRedistributed: {
+      collateral: decimalify(rawSnapshotOfTotalRedistributedCollateral),
+      debt: decimalify(rawSnapshotOfTotalRedistributedDebt)
+    }
+  });
+
 const troveWithoutRewards = new Query<
   TroveWithPendingRewards,
   TroveWithoutRewards,
@@ -63,40 +94,43 @@ const troveWithoutRewards = new Query<
     query TroveWithoutRewards($address: ID!) {
       user(id: $address) {
         currentTrove {
-          status
-          rawCollateral
-          rawDebt
-          rawStake
-          rawSnapshotOfTotalRedistributedCollateral
-          rawSnapshotOfTotalRedistributedDebt
+          ...TroveRawFields
         }
       }
     }
+    ${troveRawFields}
   `,
   ({ data: { user } }) => {
-    if (user?.currentTrove?.status === TroveStatus.open) {
-      const {
-        rawCollateral,
-        rawDebt,
-        rawStake,
-        rawSnapshotOfTotalRedistributedCollateral,
-        rawSnapshotOfTotalRedistributedDebt
-      } = user.currentTrove;
-
-      return new TroveWithPendingRewards({
-        collateral: decimalify(rawCollateral),
-        debt: decimalify(rawDebt),
-        stake: decimalify(rawStake),
-
-        snapshotOfTotalRedistributed: {
-          collateral: decimalify(rawSnapshotOfTotalRedistributedCollateral),
-          debt: decimalify(rawSnapshotOfTotalRedistributedDebt)
-        }
-      });
+    if (user?.currentTrove) {
+      return troveFromRawFields(user.currentTrove);
     } else {
       return new TroveWithPendingRewards();
     }
   }
+);
+
+const troves = new Query<(readonly [string, TroveWithPendingRewards])[], Troves, TrovesVariables>(
+  gql`
+    query Troves($orderDirection: OrderDirection!, $startIdx: Int!, $numberOfTroves: Int!) {
+      troves(
+        where: { status: open }
+        orderBy: collateralRatioSortKey
+        orderDirection: $orderDirection
+        skip: $startIdx
+        first: $numberOfTroves
+      ) {
+        owner {
+          id
+        }
+        ...TroveRawFields
+      }
+    }
+    ${troveRawFields}
+  `,
+  ({ data: { troves } }) =>
+    troves.map(
+      ({ owner: { id }, ...rawFields }) => [getAddress(id), troveFromRawFields(rawFields)] as const
+    )
 );
 
 const price = new Query<Decimal, Price>(
@@ -246,17 +280,19 @@ export class SubgraphLiquity implements ReadableLiquity {
     throw new Error("Method not implemented.");
   }
 
-  getLastTroves(
-    startIdx: number,
-    numberOfTroves: number
-  ): Promise<(readonly [string, TroveWithPendingRewards])[]> {
-    throw new Error("Method not implemented.");
+  getFirstTroves(startIdx: number, numberOfTroves: number) {
+    return troves.get(this.client, {
+      startIdx,
+      numberOfTroves,
+      orderDirection: OrderDirection.asc
+    });
   }
 
-  getFirstTroves(
-    startIdx: number,
-    numberOfTroves: number
-  ): Promise<(readonly [string, TroveWithPendingRewards])[]> {
-    throw new Error("Method not implemented.");
+  getLastTroves(startIdx: number, numberOfTroves: number) {
+    return troves.get(this.client, {
+      startIdx,
+      numberOfTroves,
+      orderDirection: OrderDirection.desc
+    });
   }
 }
