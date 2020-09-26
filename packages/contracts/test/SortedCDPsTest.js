@@ -11,10 +11,7 @@ const dec = th.dec
 const mv = testHelpers.MoneyValues
 
 contract('CDPManager', async accounts => {
-
-  const _18_zeros = '000000000000000000'
-
-
+  
   const assertSortedListIsOrdered = async (contracts) => {
     const price = await contracts.priceFeed.getPrice()
 
@@ -22,9 +19,7 @@ contract('CDPManager', async accounts => {
     while (trove !== (await contracts.sortedCDPs.getFirst())) {
       
       const prevTrove = await contracts.sortedCDPs.getPrev(trove)
-      console.log(`trove: ${trove}`)
-      console.log(`prevTrove: ${prevTrove}`)
-
+     
       const troveICR = await contracts.cdpManager.getCurrentICR(trove, price)
       const prevTroveICR = await contracts.cdpManager.getCurrentICR(prevTrove, price)
       
@@ -50,9 +45,7 @@ contract('CDPManager', async accounts => {
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
   let borrowerOperations
-  let hintHelpers
 
   let contracts
   let cdpManagerTester
@@ -190,7 +183,7 @@ contract('CDPManager', async accounts => {
   })
 
   // Ordering
-  it.only("stays ordered after troves with 'infinite' ICR receive a redistribution", async () => {
+  it("stays ordered after troves with 'infinite' ICR receive a redistribution", async () => {
 
     // make several troves with 0 debt and collateral, in random order
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
