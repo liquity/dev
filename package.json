@@ -23,6 +23,7 @@
     "build:dev-frontend": "yarn workspace @liquity/dev-frontend build",
     "build:subgraph": "yarn workspace @liquity/subgraph build",
     "deploy": "yarn workspace @liquity/lib-ethers buidler deploy",
+    "fuzzer": "yarn workspace @liquity/fuzzer fuzzer",
     "prepare": "run-s prepare:*",
     "prepare:contracts": "yarn workspace @liquity/contracts prepare",
     "prepare:decimal": "yarn workspace @liquity/decimal prepare",
