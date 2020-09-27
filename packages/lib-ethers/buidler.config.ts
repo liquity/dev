@@ -133,25 +133,6 @@ task("deploy", "Deploys the contracts to the network")
     }
   });
 
-type SetPriceFeedParams = { priceFeedAddress: string };
-
-task("set-pricefeed", "Set the address of the PriceFeed in the deployed contracts")
-  .addPositionalParam("priceFeedAddress", "Address of new PriceFeed", undefined, types.string)
-  .setAction(async ({ priceFeedAddress }: SetPriceFeedParams, bre) => {
-    const [deployer] = await bre.ethers.getSigners();
-    const { addresses } = deploymentOnNetwork[bre.network.name];
-
-    const { cdpManager, borrowerOperations, poolManager, priceFeed } = connectToContracts(
-      { ...addresses, priceFeed: priceFeedAddress },
-      deployer
-    );
-
-    // await priceFeed.setCDPManagerAddress(cdpManager.address);
-    await cdpManager.setPriceFeed(priceFeedAddress);
-    await borrowerOperations.setPriceFeed(priceFeedAddress);
-    await poolManager.setPriceFeed(priceFeedAddress);
-  });
-
 task(
   "deploy-warzone",
   "Deploys the contracts to the network then creates lots of Troves",
@@ -201,63 +182,6 @@ task(
       }
 
       //await new Promise(resolve => setTimeout(resolve, 4000));
-    }
-  }
-);
-
-task(
-  "liquidation-gas",
-  "Show estimated and real gas usage of liquidation for an increasing number of Troves",
-  async (_taskArgs, bre) => {
-    const collateral = Decimal.from(1);
-
-    const [deployer, funder, ...randomUsers] = await bre.ethers.getSigners();
-    const addresses = addressesOf(
-      await deployAndSetupContracts(deployer, bre.ethers.getContractFactory)
-    );
-
-    const deployerLiquity = await Liquity.connect(addresses, deployer);
-    const funderLiquity = await Liquity.connect(addresses, funder);
-
-    const price = await deployerLiquity.getPrice();
-
-    let numberOfTroves = 0;
-
-    // Create a whale Trove that will keep the system in normal mode
-    await funderLiquity.openTrove(new Trove({ collateral: collateral.mul(1000) }), {
-      price,
-      numberOfTroves
-    });
-
-    numberOfTroves++;
-
-    for (let i = 1; i < randomUsers.length; ++i) {
-      for (const user of randomUsers.slice(0, i)) {
-        const liquity = await Liquity.connect(addresses, user);
-
-        await funder.sendTransaction({
-          to: liquity.userAddress,
-          value: collateral.bigNumber
-        });
-
-        await liquity.openTrove(
-          new Trove({ collateral, debt: collateral.mul(price).div(1.11) }),
-          { price, numberOfTroves },
-          { gasPrice: 0 }
-        );
-
-        numberOfTroves++;
-      }
-
-      await deployerLiquity.setPrice(price.mul(0.95));
-
-      const estimate = await deployerLiquity._estimateLiquidateUpTo(randomUsers.length);
-      const tx = await deployerLiquity.liquidateUpTo(randomUsers.length, { gasLimit: 8000000 });
-      const receipt = await tx.wait();
-
-      console.log(`${i},${estimate},${receipt.gasUsed}`);
-
-      await deployerLiquity.setPrice(price);
     }
   }
 );
