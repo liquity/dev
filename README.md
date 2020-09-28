@@ -28,6 +28,7 @@
   - [Public User-Facing Functions](#public-user-facing-functions)
   - [Supplying Hints to CDP operations](#supplying-hints-to-cdp-operations)
   - [Gas Compensation](#gas-compensation)
+  - [Redistributions and Corrected Stakes](#redistributions-and-corrected-stakes)
   - [Math Proofs](#math-proofs)
   - [Definitions](#definitions)
   - [Development](#development)
@@ -558,6 +559,46 @@ Currently, with gas compensation disabled, all unit tests (except gas compensati
 The gas compensation and virtual debt functionality is simply commented out in the above two functions.
 
 To **enable** gas compensation, please un-comment the relevant gas compensation and virtual debt sections in the above two functions in _LiquityBase.sol_
+
+## Redistributions and Corrected Stakes
+
+When a liquidation occurs and the Stability Pool is empty, the redistribution mechanism should distribute the collateral and debt of the liquidated trove, to all active troves in the system, in proportion to their collateral.
+
+For two troves A and B with collateral `A.coll > B.coll`, trove A should earn a bigger share of the liquidated collateral and debt.
+
+In Liquity it is important that all active troves remain ordered by their ICR. We have proven that redistribution of the liquidated debt and collateral proportional to active troves’ collateral, preserves the ordering of active troves by ICR, as liquidations occur over time.  Please see the [proofs section](https://github.com/liquity/dev/tree/main/packages/contracts/mathProofs).
+
+However in the Solidity implementation, neither the collateral nor debt of active troves are compounded. When a trove receives redistribution rewards, the system does not update the trove's collateral and debt properties - instead, the trove’s rewards remain "pending" until the borrower's next operation.
+
+These “pending rewards” can not be accounted for in future reward calculations in a scalable way.
+
+However: the ICR of a CDP is always calculated as the ratio of its total collateral to its total debt. So, a trove’s ICR calculation **does** include all its previous accumulated rewards.
+
+**This causes a problem: redistributions proportional to initial collateral can break CDP Ordering.**
+
+Consider the case where new trove is created after all active troves have received a redistribution from a liquidation. This “fresh” trove has then experienced fewer rewards than the older troves, and thus, it receives a disproportionate share of subsequent rewards, relative to its total collateral.
+
+The fresh trove would earns rewards based on its **entire** collateral, whereas old troves would earn rewards based only on **some portion** of their collateral - since a part of their collateral is pending, and not included in the trove’s `coll` property.
+
+This can break the ordering of troves by ICR - see the [proofs section](https://github.com/liquity/dev/tree/main/packages/contracts/mathProofs).
+### Corrected Stake Solution
+
+We use a corrected stake to account for this discrepancy, and ensure that newer troves earn the same liquidation rewards per unit of total collateral, as do older troves with pending rewards. Thus the corrected stake ensures the sorted list remains ordered by ICR, as liquidation events occur over time.
+
+When a trove is opened, its stake is calculated based on its collateral, and snapshots of the entire system collateral and debt which were taken immediately after the last liquidation.
+
+A trove’s stake is given by:
+
+```
+stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot)
+```
+
+It then earns redistribution rewards based on this corrected stake. A newly opened trove’s stake will be less than its raw collateral, if the system contains active troves with pending redistribution rewards when it was made.
+
+Whenever a borrower adjusts their trove’s collateral, their pending rewards are applied, and a fresh corrected stake is computed.
+
+To convince yourself this corrected stake preserves ordering of active troves by ICR, please see the [proofs section](https://github.com/liquity/dev/tree/main/packages/contracts/mathProofs).
+
 
 ## Math Proofs
 
