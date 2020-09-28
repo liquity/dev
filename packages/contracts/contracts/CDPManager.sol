@@ -50,7 +50,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     uint constant public HOURLY_DECAY_FACTOR = 990000000000000000;  // 0.99 as 18-digit decimal
 
     uint public baseRate;
-    uint public lastFeeOperationTime;
+
+    /* Records the timestamp of the last fee operation. To avoid base-rate griefing, it is only updated by 
+    fees that occur more than one hour after the last recorded value.  */
+    uint public lastFeeOperationTime;  
 
     enum Status { nonExistent, active, closed }
 
@@ -1258,7 +1261,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // Updates the baseRate state variable based on time elapsed since the last operation
     function _decayBaseRate() internal returns (uint) {
         baseRate = _getDecayedBaseRate();
-        lastFeeOperationTime = block.timestamp;
+        _updateLastFeeOpTime();
         return baseRate;
     }
 

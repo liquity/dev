@@ -774,6 +774,90 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(baseRate_3, '0')
   })
 
+  it.only("withdrawCLV(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
+
+    // 59 minutes pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Borrower C triggers a fee
+    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C})
+
+    const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
+
+    // Check that the last fee operation time did not update, as borrower D's debt issuance occured
+    // since before minimum interval had passed 
+    assert.isTrue(lastFeeOpTime_2.eq(lastFeeOpTime_1))
+
+    // 1 minute passes
+    th.fastForwardTime(60, web3.currentProvider)
+
+    // Check that now, at least one hour has passed since lastFeeOpTime_1
+    const timeNow = await th.getLatestBlockTimestamp(web3)
+    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
+
+     // Borrower C triggers a fee
+     await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
+
+     const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+
+    // Check that the last fee operation time DID update, as borrower's debt issuance occured
+    // after minimum interval had passed 
+    assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
+  })
+
+
+  it.only("withdrawCLV(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // 59 minutes pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Borrower C triggers a fee, before decay interval has passed
+    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C})
+
+    // 1 minute pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Borrower C triggers another fee
+    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C})
+
+    // Check base rate has decreased even though Borrower tried to stop it decaying
+    const baseRate_2 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_2.lt(baseRate_1))
+  })
+
+
   it("withdrawCLV(): borrowing at non-zero base rate sends CLV fee to GT staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -1337,6 +1421,89 @@ contract('BorrowerOperations', async accounts => {
 
     const baseRate_3 = await cdpManager.baseRate()
     assert.equal(baseRate_3, '0')
+  })
+
+  it.only("adjustLoan(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
+
+    // 59 minutes pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Borrower C triggers a fee
+    await borrowerOperations.adjustLoan(0, dec(1, 18), C, { from: C})
+
+    const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
+
+    // Check that the last fee operation time did not update, as borrower D's debt issuance occured
+    // since before minimum interval had passed 
+    assert.isTrue(lastFeeOpTime_2.eq(lastFeeOpTime_1))
+
+    // 1 minute passes
+    th.fastForwardTime(60, web3.currentProvider)
+
+    // Check that now, at least one hour has passed since lastFeeOpTime_1
+    const timeNow = await th.getLatestBlockTimestamp(web3)
+    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
+
+    // Borrower C triggers a fee
+    await borrowerOperations.adjustLoan(0, dec(1, 18), C, { from: C})
+
+     const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+
+    // Check that the last fee operation time DID update, as borrower's debt issuance occured
+    // after minimum interval had passed 
+    assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
+  })
+
+
+  it.only("adjustLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // 59 minutes pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Borrower C triggers a fee, before decay interval has passed
+    await borrowerOperations.adjustLoan(0, dec(1, 18), C, { from: C})
+
+    // 1 minute pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Borrower C triggers another fee
+    await borrowerOperations.adjustLoan(0, dec(1, 18), C, { from: C})
+
+    // Check base rate has decreased even though Borrower tried to stop it decaying
+    const baseRate_2 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
   it("adjustLoan(): borrowing at non-zero base rate sends CLV fee to GT staking contract", async () => {
@@ -2395,6 +2562,9 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_2.eq(baseRate_1))
   })
 
+
+
+
   it("openLoan(): doesn't change base rate if it is already zero", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
@@ -2424,6 +2594,90 @@ contract('BorrowerOperations', async accounts => {
 
     const baseRate_3 = await cdpManager.baseRate()
     assert.equal(baseRate_3, '0')
+  })
+
+  it.only("openLoan(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
+
+    // 59 minutes pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Borrower D triggers a fee
+    await borrowerOperations.openLoan(dec(1, 18), D, { from: D, value: dec(1, 'ether') })
+
+    const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
+
+    // Check that the last fee operation time did not update, as borrower D's debt issuance occured
+    // since before minimum interval had passed 
+    assert.isTrue(lastFeeOpTime_2.eq(lastFeeOpTime_1))
+
+    // 1 minute passes
+    th.fastForwardTime(60, web3.currentProvider)
+
+    // Check that now, at least one hour has passed since lastFeeOpTime_1
+    const timeNow = await th.getLatestBlockTimestamp(web3)
+    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
+
+     // Borrower E triggers a fee
+     await borrowerOperations.openLoan(dec(1, 18), E, { from: E, value: dec(1, 'ether') })
+
+     const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+
+    // Check that the last fee operation time DID update, as borrower's debt issuance occured
+    // after minimum interval had passed 
+    assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
+  })
+
+
+  it.only("openLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    // 59 minutes pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Assume Borrower also owns accounts D and E
+    // Borrower triggers a fee, before decay interval has passed
+    await borrowerOperations.openLoan(dec(1, 18), D, { from: D, value: dec(1, 'ether') })
+
+    // 1 minute pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Borrower triggers another fee
+    await borrowerOperations.openLoan(dec(1, 18), E, { from: E, value: dec(1, 'ether') })
+
+    // Check base rate has decreased even though Borrower tried to stop it decaying
+    const baseRate_2 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
   it("openLoan(): borrowing at non-zero base rate sends CLV fee to GT staking contract", async () => {
