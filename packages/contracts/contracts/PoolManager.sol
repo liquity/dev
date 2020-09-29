@@ -192,10 +192,11 @@ contract PoolManager is Ownable, IPoolManager {
     // Issue the specified amount of CLV (minus the fee) to _account, and increase the total active debt
     function withdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) external {
         _requireCallerIsBorrowerOperations();
-        activePool.increaseCLVDebt(_CLVAmount);  
 
-        uint CLVIssuance = _CLVAmount.sub(_CLVFee);
-        CLV.mint(_account, CLVIssuance);  
+        uint totalCLVDrawn = _CLVAmount.add(_CLVFee);
+        activePool.increaseCLVDebt(totalCLVDrawn);  
+
+        CLV.mint(_account, _CLVAmount);  
     }
     
     // Burn the specified amount of CLV from _account and decreases the total active debt

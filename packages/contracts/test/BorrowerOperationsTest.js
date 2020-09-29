@@ -774,7 +774,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(baseRate_3, '0')
   })
 
-  it.only("withdrawCLV(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
+  it("withdrawCLV(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -823,7 +823,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it.only("withdrawCLV(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
+  it("withdrawCLV(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1423,7 +1423,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(baseRate_3, '0')
   })
 
-  it.only("adjustLoan(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
+  it("adjustLoan(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1446,7 +1446,7 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers a fee
-    await borrowerOperations.adjustLoan(0, dec(1, 18), C, { from: C})
+    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C})
 
     const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
 
@@ -1462,7 +1462,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
 
     // Borrower C triggers a fee
-    await borrowerOperations.adjustLoan(0, dec(1, 18), C, { from: C})
+    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C})
 
      const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
 
@@ -1472,7 +1472,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it.only("adjustLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
+  it("adjustLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1493,13 +1493,13 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers a fee, before decay interval has passed
-    await borrowerOperations.adjustLoan(0, dec(1, 18), C, { from: C})
+    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C})
 
     // 1 minute pass
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers another fee
-    await borrowerOperations.adjustLoan(0, dec(1, 18), C, { from: C})
+    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C})
 
     // Check base rate has decreased even though Borrower tried to stop it decaying
     const baseRate_2 = await cdpManager.baseRate()
@@ -2562,9 +2562,6 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_2.eq(baseRate_1))
   })
 
-
-
-
   it("openLoan(): doesn't change base rate if it is already zero", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
@@ -2596,7 +2593,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(baseRate_3, '0')
   })
 
-  it.only("openLoan(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
+  it("openLoan(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2645,7 +2642,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it.only("openLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
+  it("openLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })

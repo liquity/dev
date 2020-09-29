@@ -169,7 +169,6 @@ class TestHelper {
     return gas
   }
 
-
   // --- Logging functions ---
 
   static logGasMetrics(gasResults, message) {

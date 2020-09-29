@@ -881,9 +881,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             currentCDPuser = nextUserToCheck;
         }
 
-        // Decay the baseRate, then increase it from the redemption
-        T.decayedBaseRate = _getDecayedBaseRate();
-        _increaseBaseRateFromRedemption(T.totalETHDrawn, T.decayedBaseRate, price);
+        // Decay the baseRate and increase it from the redemption
+        _updateBaseRateFromRedemption(T.totalETHDrawn, price);
         _updateLastFeeOpTime();
 
         // Calculate the ETH fee and send it to GT staking contract
@@ -1227,7 +1226,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Fee functions ---
 
-    function _increaseBaseRateFromRedemption(uint _ETHDrawn, uint _decayedBaseRate, uint _price) internal returns (uint) {
+    function _updateBaseRateFromRedemption(uint _ETHDrawn,  uint _price) internal returns (uint) {
+        uint decayedBaseRate = _calcDecayedBaseRate();
+       
         uint activeDebt = activePool.getCLVDebt();
         uint closedDebt = defaultPool.getCLVDebt();
         uint totalCLVSupply = activeDebt.add(closedDebt);
@@ -1237,7 +1238,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint redeemedCLVFraction = _ETHDrawn.mul(_price).div(totalCLVSupply);
 
         // update the baseRate state variable
-        baseRate = _decayedBaseRate.add(redeemedCLVFraction);
+        baseRate = decayedBaseRate.add(redeemedCLVFraction);
         return baseRate;
    }
 
@@ -1260,7 +1261,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // Updates the baseRate state variable based on time elapsed since the last operation
     function _decayBaseRate() internal returns (uint) {
-        baseRate = _getDecayedBaseRate();
+        baseRate = _calcDecayedBaseRate();
         _updateLastFeeOpTime();
         return baseRate;
     }
@@ -1274,7 +1275,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    function _getDecayedBaseRate() internal view returns (uint) {
+    function _calcDecayedBaseRate() internal view returns (uint) {
         uint hoursPassed = _hoursPassedSinceLastFeeOp();
         uint decayFactor = Math._decPow(HOURLY_DECAY_FACTOR, hoursPassed);
     

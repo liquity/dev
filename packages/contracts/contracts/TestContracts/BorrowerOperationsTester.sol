@@ -6,20 +6,36 @@ import "../BorrowerOperations.sol";
 for testing the parent's internal functions. */
 contract BorrowerOperationsTester is BorrowerOperations {
 
-    function getNewICRFromTroveChange(uint _coll, uint _debt, int _collChange, int _debtChange, uint _price) 
+    function getNewICRFromTroveChange
+    (
+        uint _coll, 
+        uint _debt, 
+        uint _collChange, 
+        bool isCollIncrease, 
+        uint _debtChange, 
+        bool isDebtIncrease, 
+        uint _price
+    ) 
     external
     pure
     returns (uint)
     {
-        return _getNewICRFromTroveChange(_coll, _debt, _collChange, _debtChange, _price);
+        return _getNewICRFromTroveChange(_coll, _debt, _collChange, isCollIncrease, _debtChange, isDebtIncrease, _price);
     }
 
-    function getNewTCRFromTroveChange(int _collChange, int _debtChange, uint _price) 
+    function getNewTCRFromTroveChange
+    (
+        uint _collChange, 
+        bool isCollIncrease,  
+        uint _debtChange, 
+        bool isDebtIncrease, 
+        uint _price
+    ) 
     external 
     view
     returns (uint) 
     {
-        return _getNewTCRFromTroveChange(_collChange,  _debtChange, _price);
+        return _getNewTCRFromTroveChange(_collChange, isCollIncrease, _debtChange, isDebtIncrease, _price);
     }
 
     function getUSDValue(uint _coll, uint _price) external pure returns (uint) {
