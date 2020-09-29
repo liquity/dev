@@ -2754,6 +2754,54 @@ contract('CDPManager', async accounts => {
     assert.isTrue(baseRate_2.gt(baseRate_1))
   })
 
+  it("redeemCollateral(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+
+    const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
+
+    // 59 minutes pass
+    th.fastForwardTime(3540, web3.currentProvider)
+
+    // Borrower A triggers a fee
+    await th.redeemCollateral(A, contracts, dec(1, 18))
+
+    const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
+
+    // Check that the last fee operation time did not update, as borrower A's 2nd redemption occured
+    // since before minimum interval had passed 
+    assert.isTrue(lastFeeOpTime_2.eq(lastFeeOpTime_1))
+
+    // 1 minute passes
+    th.fastForwardTime(60, web3.currentProvider)
+
+    // Check that now, at least one hour has passed since lastFeeOpTime_1
+    const timeNow = await th.getLatestBlockTimestamp(web3)
+    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
+
+     // Borrower A triggers a fee
+     await th.redeemCollateral(A, contracts, dec(1, 18))
+
+     const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+
+    // Check that the last fee operation time DID update, as A's 2rd redemption occured
+    // after minimum interval had passed 
+    assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
+  })
+
   it("redeemCollateral(): a redemption made at zero base rate send a non-zero ETHFee to GT staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
