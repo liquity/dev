@@ -19,6 +19,7 @@ import { Global } from "../types/Global";
 import { TroveRawFields } from "../types/TroveRawFields";
 import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
 import { Troves, TrovesVariables } from "../types/Troves";
+import { BlockNumberDummy, BlockNumberDummyVariables } from "../types/BlockNumberDummy";
 
 const normalizeAddress = (address?: string) => {
   if (address === undefined) {
@@ -169,6 +170,17 @@ const troves = new Query<(readonly [string, TroveWithPendingRewards])[], Troves,
     )
 );
 
+const blockNumberDummy = new Query<void, BlockNumberDummy, BlockNumberDummyVariables>(
+  gql`
+    query BlockNumberDummy($blockNumber: Int!) {
+      globals(block: { number: $blockNumber }) {
+        id
+      }
+    }
+  `,
+  () => {}
+);
+
 export class SubgraphLiquity implements ReadableLiquity {
   private client: ApolloClient<NormalizedCacheObject>;
 
@@ -278,5 +290,17 @@ export class SubgraphLiquity implements ReadableLiquity {
       numberOfTroves,
       orderDirection: OrderDirection.desc
     });
+  }
+
+  async waitForBlock(blockNumber: number) {
+    for (;;) {
+      try {
+        await blockNumberDummy.get(this.client, { blockNumber });
+      } catch {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
+      }
+      return;
+    }
   }
 }

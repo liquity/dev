@@ -3,8 +3,9 @@ import { Provider } from "@ethersproject/abstract-provider";
 import { Wallet } from "@ethersproject/wallet";
 
 import { Decimal, Decimalish, Percent } from "@liquity/decimal";
-import { Trove, TroveWithPendingRewards } from "@liquity/lib-base";
+import { Trove, TroveWithPendingRewards, ReadableLiquity } from "@liquity/lib-base";
 import { EthersLiquity as Liquity, LiquityContractAddresses } from "@liquity/lib-ethers";
+import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 export const createRandomWallets = (numberOfWallets: number, provider: Provider) => {
   const accounts = new Array<Wallet>(numberOfWallets);
@@ -16,16 +17,16 @@ export const createRandomWallets = (numberOfWallets: number, provider: Provider)
   return accounts;
 };
 
-export const getListOfTroves = async (liquity: Liquity) =>
+export const getListOfTroves = async (liquity: ReadableLiquity) =>
   liquity.getFirstTroves(0, await liquity.getNumberOfTroves());
 
-export const getListOfTroveOwners = async (liquity: Liquity) =>
+export const getListOfTroveOwners = async (liquity: ReadableLiquity) =>
   getListOfTroves(liquity).then(troves => troves.map(([owner]) => owner));
 
 export const tinyDifference = Decimal.from("0.000000001");
 
 export const sortedByICR = async (
-  liquity: Liquity,
+  liquity: ReadableLiquity,
   listOfTroves: (readonly [string, TroveWithPendingRewards])[],
   price: Decimalish
 ) => {
@@ -56,6 +57,77 @@ export const listDifference = (listA: string[], listB: string[]) => {
   return listA.filter(x => !setB.has(x));
 };
 
+export const listOfTrovesShouldBeEqual = (
+  listA: (readonly [string, TroveWithPendingRewards])[],
+  listB: (readonly [string, TroveWithPendingRewards])[]
+) => {
+  if (listA.length !== listB.length) {
+    throw new Error("length of trove lists is different");
+  }
+
+  const mapB = new Map(listB);
+
+  listA.forEach(([owner, troveA]) => {
+    const troveB = mapB.get(owner);
+
+    if (!troveB) {
+      throw new Error(`${owner} has no trove in listB`);
+    }
+
+    if (!troveA.equals(troveB)) {
+      throw new Error(`${owner} has different troves in listA & listB`);
+    }
+  });
+};
+
+export const checkSubgraph = async (subgraph: SubgraphLiquity, l1Liquity: ReadableLiquity) => {
+  const l1NumberOfTroves = await l1Liquity.getNumberOfTroves();
+  const subgraphNumberOfTroves = await subgraph.getNumberOfTroves();
+
+  if (l1NumberOfTroves !== subgraphNumberOfTroves) {
+    throw new Error("Mismatch between L1 and subgraph numberOfTroves");
+  }
+
+  const l1Price = await l1Liquity.getPrice();
+  const subgraphPrice = await subgraph.getPrice();
+
+  if (!l1Price.eq(subgraphPrice)) {
+    throw new Error("Mismatch between L1 and subgraph price");
+  }
+
+  const l1Total = await l1Liquity.getTotal();
+  const subgraphTotal = await subgraph.getTotal();
+
+  if (!l1Total.equals(subgraphTotal)) {
+    throw new Error("Mismatch between L1 and subgraph total");
+  }
+
+  const l1TotalRedistributed = await l1Liquity.getTotalRedistributed();
+  const subgraphTotalRedistributed = await subgraph.getTotalRedistributed();
+
+  if (!l1TotalRedistributed.equals(subgraphTotalRedistributed)) {
+    throw new Error("Mismatch between L1 and subgraph totalRedistributed");
+  }
+
+  const l1TokensInStabilityPool = await l1Liquity.getQuiInStabilityPool();
+  const subgraphTokensInStabilityPool = await subgraph.getQuiInStabilityPool();
+
+  if (!l1TokensInStabilityPool.eq(subgraphTokensInStabilityPool)) {
+    throw new Error("Mismatch between L1 and subgraph tokensInStabilityPool");
+  }
+
+  const l1ListOfTroves = await getListOfTroves(l1Liquity);
+  const subgraphListOfTroves = await getListOfTroves(subgraph);
+  listOfTrovesShouldBeEqual(l1ListOfTroves, subgraphListOfTroves);
+
+  if (!(await sortedByICR(subgraph, subgraphListOfTroves, l1Price))) {
+    console.log();
+    console.log("// List of Troves returned by subgraph:");
+    await dumpTroves(subgraph, subgraphListOfTroves, l1Price);
+    throw new Error("subgraph sorting broken");
+  }
+};
+
 export const shortenAddress = (address: string) => address.substr(0, 6) + "..." + address.substr(-4);
 
 export const troveToString = (
@@ -80,7 +152,7 @@ export const troveToString = (
 };
 
 export const dumpTroves = async (
-  liquity: Liquity,
+  liquity: ReadableLiquity,
   listOfTroves: (readonly [string, TroveWithPendingRewards])[],
   price: Decimalish
 ) => {
