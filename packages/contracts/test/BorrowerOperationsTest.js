@@ -26,15 +26,13 @@ contract('BorrowerOperations', async accounts => {
   let borrowerOperations
 
   let contracts
-  let borrowerOpsTester
 
   before(async () => {
-    borrowerOpsTester = await BorrowerOperationsTester.new()
-    BorrowerOperationsTester.setAsDeployed(borrowerOpsTester)
   })
 
   beforeEach(async () => {
     contracts = await deployLiquity()
+    contracts.borrowerOperations = await BorrowerOperationsTester.new()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -50,9 +48,6 @@ contract('BorrowerOperations', async accounts => {
 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
-
-    borrowerOpsTester.setActivePool(contracts.activePool.address)
-    borrowerOpsTester.setDefaultPool(contracts.defaultPool.address)
   })
 
   it("addColl(): Increases the activePool ETH and raw ether balance by correct amount", async () => {
@@ -2151,7 +2146,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = 0
       const debtChange = 0
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
@@ -2163,7 +2158,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = 0
       const debtChange = dec(50, 18)
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.isAtMost(th.getDifference(newICR, '1333333333333333333'), 100)
     })
 
@@ -2175,7 +2170,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = 0
       const debtChange = mv.negative_50e18
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '4000000000000000000')
     })
 
@@ -2187,7 +2182,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(1, 'ether')
       const debtChange = 0
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '4000000000000000000')
     })
 
@@ -2199,7 +2194,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = mv.negative_5e17
       const debtChange = 0
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '1000000000000000000')
     })
 
@@ -2211,7 +2206,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = mv.negative_5e17
       const debtChange = mv.negative_50e18
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
@@ -2223,7 +2218,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(1, 'ether')
       const debtChange = dec(100, 18)
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
@@ -2235,7 +2230,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(1, 'ether')
       const debtChange = mv.negative_50e18
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '8000000000000000000')
     })
 
@@ -2247,7 +2242,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = mv.negative_5e17
       const debtChange = dec(100, 18)
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
       assert.equal(newICR, '500000000000000000')
     })
   })
@@ -2278,7 +2273,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = 0
       const debtChange = 0
-      const newTCR = await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)
+      const newTCR = await borrowerOperations.getNewTCRFromTroveChange(collChange, debtChange, price)
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
                           .div(troveDebt.add(liquidatedDebt))
@@ -2310,7 +2305,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = 0
       const debtChange = dec(200, 18)
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, debtChange, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
       .div(troveDebt.add(liquidatedDebt).add(th.toBN(debtChange)))
@@ -2338,7 +2333,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = 0
       const debtChange = mv.negative_100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, debtChange, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
       .div(troveDebt.add(liquidatedDebt).sub(th.toBN(dec(100, 18))))
@@ -2366,7 +2361,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = dec(2, 'ether')
       const debtChange = 0
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, debtChange, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(collChange))).mul(price)
       .div(troveDebt.add(liquidatedDebt))
@@ -2395,7 +2390,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = mv.negative_1e18
       const debtChange = 0
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, debtChange, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 'ether')))).mul(price)
                           .div(troveDebt.add(liquidatedDebt))
@@ -2424,7 +2419,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = mv.negative_1e18
       const debtChange = mv.negative_100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, debtChange, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 'ether')))).mul(price)
       .div(troveDebt.add(liquidatedDebt).sub(th.toBN(dec(100, 18)))) 
@@ -2453,7 +2448,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = dec(1, 'ether')
       const debtChange = dec(100, 18)
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, debtChange, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(dec(1, 'ether')))).mul(price)
                           .div(troveDebt.add(liquidatedDebt).add(th.toBN(dec(100, 18)))) 
@@ -2482,7 +2477,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = dec(1, 'ether')
       const debtChange = mv.negative_100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, debtChange, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(dec(1, 'ether')))).mul(price)
                           .div(troveDebt.add(liquidatedDebt).sub(th.toBN(dec(100, 18)))) 
@@ -2511,7 +2506,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = mv.negative_1e18
       const debtChange = dec(200, 18)
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, debtChange, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 18)))).mul(price)
                           .div(troveDebt.add(liquidatedDebt).add(th.toBN(debtChange)))  

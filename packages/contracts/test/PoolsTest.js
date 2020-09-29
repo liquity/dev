@@ -1,8 +1,9 @@
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const ActivePool = artifacts.require("./StabilityPool.sol")
-const DefaultPool = artifacts.require("./StabilityPool.sol")
+const ActivePool = artifacts.require("./ActivePool.sol")
+const DefaultPool = artifacts.require("./DefaultPool.sol")
 
 const testHelpers = require("../utils/testHelpers.js")
+const { ZERO_ADDRESS } = require("../utils/deploymentHelpers.js")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -20,11 +21,10 @@ contract('StabilityPool', async accounts => {
   const [owner, mockPoolManagerAddress, alice] = accounts;
   beforeEach(async () => {
     stabilityPool = await StabilityPool.new()
-    await stabilityPool.setPoolManagerAddress(mockPoolManagerAddress)
+    await stabilityPool.setAddresses(mockPoolManagerAddress, ZERO_ADDRESS, ZERO_ADDRESS)
   })
 
-  it('poolManagerAddress(): sets and gets the poolManager address', async () => {
-    await stabilityPool.setPoolManagerAddress(mockPoolManagerAddress)
+  it('poolManagerAddress(): gets the poolManager address', async () => {
     const recordedPMAddress = await stabilityPool.poolManagerAddress()
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
@@ -63,19 +63,19 @@ contract('StabilityPool', async accounts => {
   // send raw ether
   it('sendETH(): decreases the recorded ETH balance by the correct amount', async () => {
     // setup: give pool 2 ether
-    stabilityPool_initialBalance = web3.utils.toBN(await web3.eth.getBalance(stabilityPool.address))
+    const stabilityPool_initialBalance = web3.utils.toBN(await web3.eth.getBalance(stabilityPool.address))
     assert.equal(stabilityPool_initialBalance, 0)
     await web3.eth.sendTransaction({ from: mockPoolManagerAddress, to: stabilityPool.address, value: dec(2, 'ether') }) // start pool with 2 ether 
 
-    stabilityPool_BalanceBeforeTx = web3.utils.toBN(await web3.eth.getBalance(stabilityPool.address))
+    const stabilityPool_BalanceBeforeTx = web3.utils.toBN(await web3.eth.getBalance(stabilityPool.address))
     const alice_Balance_BeforeTx = web3.utils.toBN(await web3.eth.getBalance(alice))
 
     assert.equal(stabilityPool_BalanceBeforeTx, dec(2, 'ether'))
     
     //send ether from pool to alice
     await stabilityPool.sendETH(alice, dec(1, 'ether'), { from: mockPoolManagerAddress })
-    stabilityPool_BalanceAfterTx = web3.utils.toBN(await web3.eth.getBalance(stabilityPool.address))
-    alice_Balance_AfterTx = web3.utils.toBN(await web3.eth.getBalance(alice))
+    const stabilityPool_BalanceAfterTx = web3.utils.toBN(await web3.eth.getBalance(stabilityPool.address))
+    const alice_Balance_AfterTx = web3.utils.toBN(await web3.eth.getBalance(alice))
 
     const alice_BalanceChange = alice_Balance_AfterTx.sub(alice_Balance_BeforeTx)
     const pool_BalanceChange = stabilityPool_BalanceAfterTx.sub(stabilityPool_BalanceBeforeTx)
@@ -91,12 +91,10 @@ contract('ActivePool', async accounts => {
   const [owner, mockPoolManagerAddress, alice] = accounts;
   beforeEach(async () => {
     activePool = await ActivePool.new()
-    await activePool.setPoolManagerAddress(mockPoolManagerAddress)
-    recordedPMAddress = await activePool.poolManagerAddress()
+    await activePool.setAddresses(mockPoolManagerAddress, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS)
   })
 
-  it('poolManagerAddress(): sets and gets the poolManager address', async () => {
-    await activePool.setPoolManagerAddress(mockPoolManagerAddress)
+  it('poolManagerAddress(): gets the poolManager address', async () => {
     const recordedPMAddress = await activePool.poolManagerAddress()
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })
@@ -163,12 +161,10 @@ contract('DefaultPool', async accounts => {
   const [owner, mockPoolManagerAddress, alice] = accounts;
   beforeEach(async () => {
     defaultPool = await DefaultPool.new()
-    await defaultPool.setPoolManagerAddress(mockPoolManagerAddress)
-    recordedPMAddress = await defaultPool.poolManagerAddress()
+    await defaultPool.setAddresses(mockPoolManagerAddress, ZERO_ADDRESS, ZERO_ADDRESS)
   })
 
-  it('poolManagerAddress(): sets and gets the poolManager address', async () => {
-    await defaultPool.setPoolManagerAddress(mockPoolManagerAddress)
+  it('poolManagerAddress(): gets the poolManager address', async () => {
     const recordedPMAddress = await defaultPool.poolManagerAddress()
     assert.equal(mockPoolManagerAddress, recordedPMAddress)
   })

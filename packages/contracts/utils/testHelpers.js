@@ -1,7 +1,6 @@
-
-const web3 = require('web3')
 const BN = require('bn.js')
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
+const Destructible = artifacts.require("./TestContracts/Destructible.sol")
 
 const MoneyValues = {
   negative_5e17: "-" + web3.utils.toWei('500', 'finney'),
@@ -785,7 +784,28 @@ class TestHelper {
   }
 }
 
+const assertRevert = async (txPromise, message = undefined) => {
+  try {
+    const tx = await txPromise
+
+    assert.isFalse(tx.receipt.status)
+  } catch (err) {
+    assert.include(err.message, "revert")
+    if (message) {
+      assert.include(err.message, message)
+    }
+  }
+}
+
+const forceSendEth = async (from, receiver, value) => {
+  const destructible = await Destructible.new()
+  await web3.eth.sendTransaction({ to: destructible.address, from, value })
+  await destructible.destruct(receiver)
+}
+
 module.exports = {
   TestHelper: TestHelper,
-  MoneyValues: MoneyValues
+  MoneyValues: MoneyValues,
+  assertRevert,
+  forceSendEth
 }

@@ -1,6 +1,7 @@
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 
 const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
@@ -42,6 +43,7 @@ contract('CDPManager', async accounts => {
 
   beforeEach(async () => {
     contracts = await deployLiquity()
+    contracts.clvToken = await CLVTokenTester.new()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -2589,14 +2591,10 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if there is zero outstanding system debt", async () => {
-    // --- SETUP --- mock Alice as poolManager address in CLVTokenContract to ilegally mint CLV to Bob
-    await clvToken.setPoolManagerAddress(alice)
-    await clvToken.mint(bob, dec(100, 18), { from: alice })
+    // --- SETUP --- illegally mint CLV to Bob
+    await clvToken.unprotectedMint(bob, dec(100, 18))
 
     assert.equal((await clvToken.balanceOf(bob)), dec(100, 18))
-
-    // Set poolManager in clvToken back to correct address
-    await clvToken.setPoolManagerAddress(poolManager.address)
 
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(30, 'ether') })
@@ -2632,14 +2630,10 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if caller's tries to redeem more than the outstanding system debt", async () => {
-    // --- SETUP --- mock Alice as poolManager address in CLVTokenContract to ilegally mint CLV to Bob
-    await clvToken.setPoolManagerAddress(alice)
-    await clvToken.mint(bob, '101000000000000000000', { from: alice })
+    // --- SETUP --- illegally mint CLV to Bob
+    await clvToken.unprotectedMint(bob, '101000000000000000000')
 
     assert.equal((await clvToken.balanceOf(bob)), '101000000000000000000')
-
-    // Set poolManager in clvToken back to correct address
-    await clvToken.setPoolManagerAddress(poolManager.address)
 
     await borrowerOperations.openLoan(dec(50, 18), carol, { from: carol, value: dec(30, 'ether') })
     await borrowerOperations.openLoan(dec(50, 18), dennis, { from: dennis, value: dec(40, 'ether') })
