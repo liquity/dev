@@ -15,6 +15,7 @@ import {
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
+import { NumberOfOpenTroves } from "../types/NumberOfOpenTroves";
 import { TotalRedistributed } from "../types/TotalRedistributed";
 import { TroveRawFields } from "../types/TroveRawFields";
 import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
@@ -32,6 +33,17 @@ const normalizeAddress = (address?: string) => {
 };
 
 const decimalify = (bigNumberString: string) => new Decimal(BigNumber.from(bigNumberString));
+
+const numberOfTroves = new Query<number, NumberOfOpenTroves>(
+  gql`
+    query NumberOfOpenTroves {
+      global(id: "only") {
+        numberOfOpenTroves
+      }
+    }
+  `,
+  ({ data: { global } }) => global?.numberOfOpenTroves ?? 0
+);
 
 const totalRedistributed = new Query<Trove, TotalRedistributed>(
   gql`
@@ -230,11 +242,11 @@ export class SubgraphLiquity implements ReadableLiquity {
   }
 
   getNumberOfTroves(): Promise<number> {
-    throw new Error("Method not implemented.");
+    return numberOfTroves.get(this.client);
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void): () => void {
-    throw new Error("Method not implemented.");
+    return numberOfTroves.watch(this.client, onNumberOfTrovesChanged);
   }
 
   getPrice() {

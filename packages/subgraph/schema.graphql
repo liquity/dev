@@ -8,6 +8,11 @@ type Global @entity {
   liquidationCount: Int!
   redemptionCount: Int!
 
+  numberOfOpenTroves: Int!
+  numberOfLiquidatedTroves: Int!
+  numberOfTrovesClosedByOwner: Int!
+  totalNumberOfTroves: Int!
+
   "Total redistributed per-stake collateral"
   rawTotalRedistributedCollateral: BigInt!
 
