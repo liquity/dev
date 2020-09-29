@@ -19,6 +19,10 @@ export interface Troves_troves_owner {
 
 export interface Troves_troves {
   __typename: "Trove";
+  /**
+   * Owner's ID + '-' + an incremented integer
+   */
+  id: string;
   owner: Troves_troves_owner;
   rawCollateral: any;
   rawDebt: any;

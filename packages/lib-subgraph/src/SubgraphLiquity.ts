@@ -15,14 +15,10 @@ import {
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
-import { NumberOfOpenTroves } from "../types/NumberOfOpenTroves";
-import { TotalRedistributed } from "../types/TotalRedistributed";
+import { Global } from "../types/Global";
 import { TroveRawFields } from "../types/TroveRawFields";
 import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
 import { Troves, TrovesVariables } from "../types/Troves";
-import { Price } from "../types/Price";
-import { Total } from "../types/Total";
-import { TokensInStabilityPool } from "../types/TokensInStabilityPool";
 
 const normalizeAddress = (address?: string) => {
   if (address === undefined) {
@@ -34,39 +30,64 @@ const normalizeAddress = (address?: string) => {
 
 const decimalify = (bigNumberString: string) => new Decimal(BigNumber.from(bigNumberString));
 
-const numberOfTroves = new Query<number, NumberOfOpenTroves>(
-  gql`
-    query NumberOfOpenTroves {
-      global(id: "only") {
-        numberOfOpenTroves
+const queryGlobal = gql`
+  query Global {
+    global(id: "only") {
+      id
+      numberOfOpenTroves
+      rawTotalRedistributedCollateral
+      rawTotalRedistributedDebt
+
+      currentSystemState {
+        id
+        price
+        totalCollateral
+        totalDebt
+        tokensInStabilityPool
       }
     }
-  `,
+  }
+`;
+
+const numberOfTroves = new Query<number, Global>(
+  queryGlobal,
   ({ data: { global } }) => global?.numberOfOpenTroves ?? 0
 );
 
-const totalRedistributed = new Query<Trove, TotalRedistributed>(
-  gql`
-    query TotalRedistributed {
-      global(id: "only") {
-        rawTotalRedistributedCollateral
-        rawTotalRedistributedDebt
-      }
-    }
-  `,
-  ({ data: { global } }) => {
-    if (global) {
-      const { rawTotalRedistributedCollateral, rawTotalRedistributedDebt } = global;
+const totalRedistributed = new Query<Trove, Global>(queryGlobal, ({ data: { global } }) => {
+  if (global) {
+    const { rawTotalRedistributedCollateral, rawTotalRedistributedDebt } = global;
 
-      return new Trove({
-        collateral: decimalify(rawTotalRedistributedCollateral),
-        debt: decimalify(rawTotalRedistributedDebt),
-        virtualDebt: 0
-      });
-    } else {
-      return new Trove({ virtualDebt: 0 });
-    }
+    return new Trove({
+      collateral: decimalify(rawTotalRedistributedCollateral),
+      debt: decimalify(rawTotalRedistributedDebt),
+      virtualDebt: 0
+    });
+  } else {
+    return new Trove({ virtualDebt: 0 });
   }
+});
+
+const price = new Query<Decimal, Global>(queryGlobal, ({ data: { global } }) =>
+  Decimal.from(global?.currentSystemState?.price ?? 200)
+);
+
+const total = new Query<Trove, Global>(queryGlobal, ({ data: { global } }) => {
+  if (global?.currentSystemState) {
+    const { totalCollateral, totalDebt } = global.currentSystemState;
+
+    return new Trove({
+      collateral: totalCollateral,
+      debt: totalDebt,
+      virtualDebt: 0
+    });
+  } else {
+    return new Trove({ virtualDebt: 0 });
+  }
+});
+
+const tokensInStabilityPool = new Query<Decimal, Global>(queryGlobal, ({ data: { global } }) =>
+  Decimal.from(global?.currentSystemState?.tokensInStabilityPool ?? 0)
 );
 
 const troveRawFields = gql`
@@ -105,7 +126,9 @@ const troveWithoutRewards = new Query<
   gql`
     query TroveWithoutRewards($address: ID!) {
       user(id: $address) {
+        id
         currentTrove {
+          id
           ...TroveRawFields
         }
       }
@@ -131,6 +154,7 @@ const troves = new Query<(readonly [string, TroveWithPendingRewards])[], Troves,
         skip: $startIdx
         first: $numberOfTroves
       ) {
+        id
         owner {
           id
         }
@@ -143,58 +167,6 @@ const troves = new Query<(readonly [string, TroveWithPendingRewards])[], Troves,
     troves.map(
       ({ owner: { id }, ...rawFields }) => [getAddress(id), troveFromRawFields(rawFields)] as const
     )
-);
-
-const price = new Query<Decimal, Price>(
-  gql`
-    query Price {
-      global(id: "only") {
-        currentSystemState {
-          price
-        }
-      }
-    }
-  `,
-  ({ data: { global } }) => Decimal.from(global?.currentSystemState?.price ?? 200)
-);
-
-const total = new Query<Trove, Total>(
-  gql`
-    query Total {
-      global(id: "only") {
-        currentSystemState {
-          totalCollateral
-          totalDebt
-        }
-      }
-    }
-  `,
-  ({ data: { global } }) => {
-    if (global?.currentSystemState) {
-      const { totalCollateral, totalDebt } = global.currentSystemState;
-
-      return new Trove({
-        collateral: totalCollateral,
-        debt: totalDebt,
-        virtualDebt: 0
-      });
-    } else {
-      return new Trove({ virtualDebt: 0 });
-    }
-  }
-);
-
-const tokensInStabilityPool = new Query<Decimal, TokensInStabilityPool>(
-  gql`
-    query TokensInStabilityPool {
-      global(id: "only") {
-        currentSystemState {
-          tokensInStabilityPool
-        }
-      }
-    }
-  `,
-  ({ data: { global } }) => Decimal.from(global?.currentSystemState?.tokensInStabilityPool ?? 0)
 );
 
 export class SubgraphLiquity implements ReadableLiquity {

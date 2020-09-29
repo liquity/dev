@@ -9,6 +9,10 @@
 
 export interface TroveWithoutRewards_user_currentTrove {
   __typename: "Trove";
+  /**
+   * Owner's ID + '-' + an incremented integer
+   */
+  id: string;
   rawCollateral: any;
   rawDebt: any;
   rawStake: any;
@@ -24,6 +28,10 @@ export interface TroveWithoutRewards_user_currentTrove {
 
 export interface TroveWithoutRewards_user {
   __typename: "User";
+  /**
+   * User's Ethereum address as a hex-string
+   */
+  id: string;
   currentTrove: TroveWithoutRewards_user_currentTrove | null;
 }
 
