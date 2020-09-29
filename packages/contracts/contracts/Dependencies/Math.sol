@@ -48,12 +48,6 @@ library Math {
         return decMul(_base, y);
   }
 
-    /* Converts the magnitude of an int to a uint
-    TODO:  check validity for num in region (num > 2**255) or (num < -(2**255) ) */
-    function _intToUint(int _num) internal pure returns (uint) {
-        return (_num >= 0) ? uint(_num) : uint(-_num); 
-    }
-
     function _getAbsoluteDifference(uint _a, uint _b) internal pure returns (uint) {
         return (_a >= _b) ? _a.sub(_b) : _b.sub(_a);
     }
