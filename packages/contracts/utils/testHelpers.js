@@ -33,8 +33,6 @@ const TimeValues = {
   MINUTES_IN_ONE_MONTH: 43200
 }
 
-// TODO: Make classes for function export
-
 class TestHelper {
 
   static dec(val, scale) {

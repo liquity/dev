@@ -148,7 +148,6 @@ contract('BorrowerOperations', async accounts => {
     const CLVwithdrawal_B = await th.getActualDebtFromComposite(dec(100, 18), contracts)
     const CLVwithdrawal_C = await th.getActualDebtFromComposite(dec(180, 18), contracts)
 
-    console.log(`CLVwithdrawal_C ${CLVwithdrawal_C}`)
     await borrowerOperations.openLoan(CLVwithdrawal_A, alice, { from: alice, value: dec(15, 'ether') })
     await borrowerOperations.openLoan(CLVwithdrawal_B, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openLoan(CLVwithdrawal_C, carol, { from: carol, value: dec(1, 'ether') })
@@ -415,7 +414,6 @@ contract('BorrowerOperations', async accounts => {
       assert.include(err.message, "revert")
     }
   })
-
 
   it("withdrawColl(): reverts when requested ETH withdrawal is > the trove's collateral", async () => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
@@ -730,8 +728,6 @@ contract('BorrowerOperations', async accounts => {
     const baseRate_2 = await cdpManager.baseRate()
     assert.isTrue(baseRate_2.lt(baseRate_1))
 
-    // console.log(`baseRate_2: ${baseRate_2}`)
-
     // 1 hour passes
     th.fastForwardTime(3600, web3.currentProvider)
 
@@ -934,7 +930,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(F_LQTY_After.gt(F_LQTY_Before))
   })
 
-  it("withdrawCLV(): Borrowing at non-zero base rate sends (CLVDebtIncrease - CLVFee) to the user", async () => {
+  it("withdrawCLV(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), { from: owner })
@@ -972,11 +968,9 @@ contract('BorrowerOperations', async accounts => {
     const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
     assert.isTrue(gtStaking_CLVBalance_After.gt(gtStaking_CLVBalance_Before))
 
-    // Check D's CLV balance now equals their requested CLV, minus the fee
-    const expectedCLVBalance_D = CLVRequest_D.sub(gtStaking_CLVBalance_After)
+    // Check D's CLV balance now equals their requested CLV
     const CLVBalance_D = await clvToken.balanceOf(D)
-
-    assert.isTrue(expectedCLVBalance_D.eq(CLVBalance_D))
+    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
 
   it("withdrawCLV(): Borrowing at zero base rate does not change CLV balance of GT staking contract", async () => {
@@ -1373,7 +1367,7 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.adjustLoan(0, dec(37, 18), D, { from: D })
+    await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check baseRate has decreased
     const baseRate_2 = await cdpManager.baseRate()
@@ -1384,7 +1378,7 @@ contract('BorrowerOperations', async accounts => {
 
      // E adjusts loan
      await borrowerOperations.openLoan(0, E, { from: E, value: dec(2, 'ether') })
-     await borrowerOperations.adjustLoan(0, dec(37, 15), E, { from: D })
+     await borrowerOperations.adjustLoan(0, dec(37, 15), true, E, { from: D })
 
     const baseRate_3 = await cdpManager.baseRate()
     assert.isTrue(baseRate_3.lt(baseRate_2))
@@ -1406,7 +1400,7 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.adjustLoan(0, dec(37, 18), D, { from: D })
+    await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check baseRate is still 0
     const baseRate_2 = await cdpManager.baseRate()
@@ -1417,7 +1411,7 @@ contract('BorrowerOperations', async accounts => {
 
     // E adjusts loan
     await borrowerOperations.openLoan(0, E, { from: E, value: dec(2, 'ether') })
-    await borrowerOperations.adjustLoan(0, dec(37, 15), E, { from: D })
+    await borrowerOperations.adjustLoan(0, dec(37, 15), true, E, { from: D })
 
     const baseRate_3 = await cdpManager.baseRate()
     assert.equal(baseRate_3, '0')
@@ -1537,7 +1531,7 @@ contract('BorrowerOperations', async accounts => {
 
    // D adjusts loan
    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-   await borrowerOperations.adjustLoan(0, dec(37, 18), D, { from: D })
+   await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check GT CLV balance after has increased
     const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
@@ -1575,14 +1569,14 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.adjustLoan(0, dec(37, 18), D, { from: D })
+    await borrowerOperations.adjustLoan(0, dec(37, 18),  true, D, { from: D })
 
     // Check GT contract CLV fees-per-unit-staked has increased
     const F_LQTY_After = await gtStaking.F_LQTY()
     assert.isTrue(F_LQTY_After.gt(F_LQTY_Before))
   })
 
-  it("adjustLoan(): Borrowing at non-zero base rate sends (CLVDebtIncrease - CLVFee) to the user", async () => {
+  it("adjustLoan(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), { from: owner })
@@ -1614,17 +1608,15 @@ contract('BorrowerOperations', async accounts => {
      // D adjusts loan
      await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
      const CLVRequest_D = th.toBN(dec(40, 18))
-     await borrowerOperations.adjustLoan(0, CLVRequest_D, D, { from: D })
+     await borrowerOperations.adjustLoan(0, CLVRequest_D, true,  D, { from: D })
 
     // Check GT staking CLV balance has increased
     const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
     assert.isTrue(gtStaking_CLVBalance_After.gt(gtStaking_CLVBalance_Before))
 
-    // Check D's CLV balance now equals their requested CLV, minus the fee
-    const expectedCLVBalance_D = CLVRequest_D.sub(gtStaking_CLVBalance_After)
+    // Check D's CLV balance now equals their requested CLV
     const CLVBalance_D = await clvToken.balanceOf(D)
-
-    assert.isTrue(expectedCLVBalance_D.eq(CLVBalance_D))
+    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
 
   it("adjustLoan(): Borrowing at zero base rate does not change CLV balance of GT staking contract", async () => {
@@ -1647,7 +1639,7 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.adjustLoan(0, dec(37, 18), D, { from: D })
+    await borrowerOperations.adjustLoan(0, dec(37, 18),  true, D, { from: D })
 
     // Check GT CLV balance after == 0
     const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
@@ -1674,7 +1666,7 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.adjustLoan(0, dec(37, 18), D, { from: D })
+    await borrowerOperations.adjustLoan(0, dec(37, 18), true,  D, { from: D })
 
     // Check GT CLV balance after == 0
     const F_LQTY_After = await gtStaking.F_LQTY()
@@ -1698,7 +1690,7 @@ contract('BorrowerOperations', async accounts => {
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     const CLVRequest_D = th.toBN(dec(40, 18))
-    await borrowerOperations.adjustLoan(0, CLVRequest_D, D, { from: D })
+    await borrowerOperations.adjustLoan(0, CLVRequest_D, true,  D, { from: D })
 
     // Check D's CLV balance now equals their requested CLV
     const CLVBalance_D = await clvToken.balanceOf(D)
@@ -1711,10 +1703,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
     // Alice coll and debt increase(+1 ETH, +50CLV)
-    await borrowerOperations.adjustLoan(0, dec(50, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
 
     try {
-      const txCarol = await borrowerOperations.adjustLoan(0, dec(50, 18), carol, { from: carol, value: dec(1, 'ether') })
+      const txCarol = await borrowerOperations.adjustLoan(0, dec(50, 18), true,  carol, { from: carol, value: dec(1, 'ether') })
       assert.fail(txCarol)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1727,7 +1719,7 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
-    const txAlice = await borrowerOperations.adjustLoan(0, dec(50, 18), alice, { from: alice, value: dec(1, 'ether') })
+    const txAlice = await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
     assert.isTrue(txAlice.receipt.status)
 
     await priceFeed.setPrice(dec(100, 18))
@@ -1736,7 +1728,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check operation impossible when system is in Recovery Mode
     try {
-      const txBob = await borrowerOperations.adjustLoan(0, dec(50, 18), bob, { from: bob, value: dec(1, 'ether') })
+      const txBob = await borrowerOperations.adjustLoan(0, dec(50, 18), true,  bob, { from: bob, value: dec(1, 'ether') })
       assert.fail(txBob)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1756,7 +1748,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Bob attempts an operation that would bring the TCR below the CCR
     try {
-      const txBob = await borrowerOperations.adjustLoan(0, dec(1, 18), bob, { from: bob })
+      const txBob = await borrowerOperations.adjustLoan(0, dec(1, 18), true,  bob, { from: bob })
       assert.fail(txBob)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1769,13 +1761,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Check Bob can make an adjustment that fully repays his debt
-    const txBob = await borrowerOperations.adjustLoan(0, mv.negative_100e18, bob, { from: bob, value: dec(1, 'ether') })
+    const txBob = await borrowerOperations.adjustLoan(0, dec(100, 18),  false, bob, { from: bob, value: dec(1, 'ether') })
     assert.isTrue(txBob.receipt.status)
 
     // Carol attempts an adjustment that would repay more than her debt
     try {
-      const txCarol = await borrowerOperations.adjustLoan(0, mv.negative_101e18, carol, { from: carol })
-      assert.fail(txCarol)
+      const txCarol = await borrowerOperations.adjustLoan(0, dec(101, 18), false,  carol, { from: carol })
+      assert.isFalse(txCarol.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
     }
@@ -1787,13 +1779,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(1, 'ether') })
 
     // Check Bob can make an adjustment that fully withdraws his ETH
-    const txBob = await borrowerOperations.adjustLoan(dec(1, 'ether'), 0, bob, { from: bob })
+    const txBob = await borrowerOperations.adjustLoan(dec(1, 'ether'), 0, true,  bob, { from: bob })
     assert.isTrue(txBob.receipt.status)
 
     // Carol attempts an adjustment that would withdraw more than her ETH
     try {
-      const txCarol = await borrowerOperations.adjustLoan('1000000000000000001', 0, carol, { from: carol })
-      assert.fail(txCarol)
+      const txCarol = await borrowerOperations.adjustLoan('1000000000000000001', 0, true,  carol, { from: carol })
+      assert.isFalse(txCarol.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
     }
@@ -1809,14 +1801,14 @@ contract('BorrowerOperations', async accounts => {
 
     // Alice decreases coll by 1 ETH and increass debt by 100 CLV. 
     // New ICR would be: ((2+1) * 100) / (100 + 100) = 300/200 = 150%, 
-    const txAlice = await borrowerOperations.adjustLoan(0, dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    const txAlice = await borrowerOperations.adjustLoan(0, dec(100, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
     assert.isTrue(txAlice.receipt.status)
 
     // Bob attempts to decrease coll  by 1 ETH and increase debt by 200 CLV. 
     // New ICR would be: ((2+1) * 100) / (100 + 200) = 300/300 = 100%, below the MCR.
     try {
-      const txBob = await borrowerOperations.adjustLoan(0, dec(200, 18), bob, { from: bob, value: dec(1, 'ether') })
-      assert.fail(txBob)
+      const txBob = await borrowerOperations.adjustLoan(0, dec(200, 18), true,  bob, { from: bob, value: dec(1, 'ether') })
+      assert.isFalse(txBob.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
     }
@@ -1834,7 +1826,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePoolCollBefore, '110000000000000000000')
 
     // Alice adjusts loan. No coll change, and a debt increase (+50CLV)
-    await borrowerOperations.adjustLoan(0, dec(50, 18), alice, { from: alice, value: 0 })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: 0 })
 
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
     const activePoolCollAfter = (await activePool.getETH()).toString()
@@ -1854,8 +1846,8 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debtBefore, dec(100, 18))
     assert.equal(activePoolDebtBefore, dec(100, 18))
 
-    // Alice adjusts loan. No coll change, and a debt increase (+50CLV)
-    await borrowerOperations.adjustLoan(0, 0, alice, { from: alice, value: dec(1, 'ether') })
+    // Alice adjusts loan. No coll change, no debt change
+    await borrowerOperations.adjustLoan(0, 0, true,  alice, { from: alice, value: dec(1, 'ether') })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
@@ -1877,7 +1869,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(collBefore, dec(1, 'ether'))
 
     // Alice adjusts loan. Coll and debt increase(+1 ETH, +50CLV)
-    await borrowerOperations.adjustLoan(0, dec(50, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
@@ -1899,7 +1891,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(collBefore, dec(1, 'ether'))
 
     // Alice adjusts loan coll and debt decrease (-0.5 ETH, -50CLV)
-    await borrowerOperations.adjustLoan(dec(500, 'finney'), mv.negative_50e18, alice, { from: alice })
+    await borrowerOperations.adjustLoan(dec(500, 'finney'), dec(50, 18), false,  alice, { from: alice })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
@@ -1920,7 +1912,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(collBefore, dec(1, 'ether'))
 
     // Alice adjusts loan - coll increase and debt decrease (+0.5 ETH, -50CLV)
-    await borrowerOperations.adjustLoan(0, mv.negative_50e18, alice, { from: alice, value: dec(500, 'finney') })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), false, alice, { from: alice, value: dec(500, 'finney') })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
@@ -1942,7 +1934,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(collBefore, dec(1, 'ether'))
 
     // Alice adjusts loan - coll decrease and debt increase (0.1 ETH, 10CLV)
-    await borrowerOperations.adjustLoan('100000000000000000', dec(10, 18), alice, { from: alice })
+    await borrowerOperations.adjustLoan('100000000000000000', dec(10, 18), true, alice, { from: alice })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
@@ -1963,7 +1955,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(totalStakesBefore, '101000000000000000000')
 
     // Alice adjusts loan - coll and debt increase (+1 ETH, +50 CLV)
-    await borrowerOperations.adjustLoan(0, dec(50, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
 
     const stakeAfter = ((await cdpManager.CDPs(alice))[2]).toString()
     const totalStakesAfter = await cdpManager.totalStakes();
@@ -1984,7 +1976,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(totalStakesBefore, '101000000000000000000')
 
     // Alice adjusts loan - coll decrease and debt decrease
-    await borrowerOperations.adjustLoan(dec(500, 'finney'), mv.negative_50e18, alice, { from: alice })
+    await borrowerOperations.adjustLoan(dec(500, 'finney'), dec(50, 18), false,  alice, { from: alice })
 
     const stakeAfter = ((await cdpManager.CDPs(alice))[2]).toString()
     const totalStakesAfter = await cdpManager.totalStakes();
@@ -2002,7 +1994,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(alice_CLVTokenBalance_Before, dec(100, 18))
 
     // Alice adjusts loan - coll decrease and debt decrease
-    await borrowerOperations.adjustLoan(dec(100, 'finney'), mv.negative_10e18, alice, { from: alice })
+    await borrowerOperations.adjustLoan(dec(100, 'finney'), dec(10, 18), false, alice, { from: alice })
 
     // check after
     const alice_CLVTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
@@ -2018,7 +2010,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(alice_CLVTokenBalance_Before, dec(100, 18))
 
     // Alice adjusts loan - coll increase and debt increase
-    await borrowerOperations.adjustLoan(0, dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(100, 18),  true,  alice, { from: alice, value: dec(1, 'ether') })
 
     // check after
     const alice_CLVTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
@@ -2036,7 +2028,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_RawEther_Before, '101000000000000000000')
 
     // Alice adjusts loan - coll decrease and debt decrease
-    await borrowerOperations.adjustLoan(dec(100, 'finney'), mv.negative_10e18, alice, { from: alice })
+    await borrowerOperations.adjustLoan(dec(100, 'finney'), dec(10, 18), false, alice, { from: alice })
 
     const activePool_ETH_After = await activePool.getETH()
     const activePool_RawEther_After = await web3.eth.getBalance(activePool.address)
@@ -2055,7 +2047,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_RawEther_Before, '101000000000000000000')
 
     // Alice adjusts loan - coll increase and debt increase
-    await borrowerOperations.adjustLoan(0, dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(100, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     const activePool_ETH_After = (await activePool.getETH()).toString()
     const activePool_RawEther_After = (await web3.eth.getBalance(activePool.address)).toString()
@@ -2071,8 +2063,8 @@ contract('BorrowerOperations', async accounts => {
     const activePool_CLVDebt_Before = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_CLVDebt_Before, dec(100, 18))
 
-    // Alice adjusts loan - coll increase and debt increase
-    await borrowerOperations.adjustLoan(0, mv.negative_50e18, alice, { from: alice, value: dec(1, 'ether') })
+    // Alice adjusts loan - coll increase and debt decrease
+    await borrowerOperations.adjustLoan(0, dec(50, 18), false,  alice, { from: alice, value: dec(1, 'ether') })
 
     const activePool_CLVDebt_After = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_CLVDebt_After, dec(50, 18))
@@ -2087,7 +2079,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_CLVDebt_Before, dec(100, 18))
 
     // Alice adjusts loan - coll increase and debt increase
-    await borrowerOperations.adjustLoan(0, dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(100, 18),  true, alice, { from: alice, value: dec(1, 'ether') })
 
     const activePool_CLVDebt_After = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_CLVDebt_After, dec(200, 18))
@@ -2103,7 +2095,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(status_Before, 1)  // 1: Active
     assert.isTrue(isInSortedList_Before)
 
-    await borrowerOperations.adjustLoan(dec(1, 'ether'), mv.negative_100e18, alice, { from: alice })
+    await borrowerOperations.adjustLoan(dec(1, 'ether'), dec(100, 18), false, alice, { from: alice })
 
     const status_After = (await cdpManager.CDPs(alice))[3]
     const isInSortedList_After = await sortedCDPs.contains(alice)
@@ -2120,7 +2112,7 @@ contract('BorrowerOperations', async accounts => {
     const aliceColl_Before = (await cdpManager.CDPs(alice))[1].toString()
     assert.equal(aliceColl_Before, dec(1, 'ether'))
 
-    await borrowerOperations.adjustLoan(dec(1, 'ether'), dec(100, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.adjustLoan(dec(1, 'ether'), dec(100, 18),  true,  alice, { from: alice, value: dec(3, 'ether') })
 
     const aliceColl_After = (await cdpManager.CDPs(alice))[1].toString()
     assert.equal(aliceColl_After, dec(4, 'ether'))
@@ -2462,10 +2454,6 @@ contract('BorrowerOperations', async accounts => {
     const defaultPool_ETH = await defaultPool.getETH()
     const defaultPool_CLVDebt = await defaultPool.getCLVDebt()
 
-    console.log(`defaultPool_ETH: ${defaultPool_ETH}`)
-    console.log(`defaultPool_CLVDebt: ${defaultPool_CLVDebt}`)
-    console.log(`CLVwithdrawal_C: ${CLVwithdrawal_C}`)
-
     // Carol's liquidated coll (1 ETH) and drawn debt should have entered the Default Pool
     assert.isAtMost(th.getDifference(defaultPool_ETH, liquidatedColl_C), 100)
     assert.isAtMost(th.getDifference(defaultPool_CLVDebt, liquidatedDebt_C), 100)
@@ -2521,8 +2509,6 @@ contract('BorrowerOperations', async accounts => {
     // Check baseRate has decreased
     const baseRate_2 = await cdpManager.baseRate()
     assert.isTrue(baseRate_2.lt(baseRate_1))
-
-    // console.log(`baseRate_2: ${baseRate_2}`)
 
     // 1 hour passes
     th.fastForwardTime(3600, web3.currentProvider)
@@ -2751,7 +2737,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(F_LQTY_After.gt(F_LQTY_Before))
   })
 
-  it("openLoan(): Borrowing at non-zero base rate sends (CLVDebtIncrease - CLVFee) to the user", async () => {
+  it("openLoan(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
     // time fast-forwards 1 year, and owner stakes 1 GT
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(gtStaking.address, dec(1, 18), { from: owner })
@@ -2788,11 +2774,9 @@ contract('BorrowerOperations', async accounts => {
     const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
     assert.isTrue(gtStaking_CLVBalance_After.gt(gtStaking_CLVBalance_Before))
 
-    // Check D's CLV balance now equals their requested CLV, minus the fee
-    const expectedCLVBalance_D = CLVRequest_D.sub(gtStaking_CLVBalance_After)
+    // Check D's CLV balance now equals their requested CLV
     const CLVBalance_D = await clvToken.balanceOf(D)
-
-    assert.isTrue(expectedCLVBalance_D.eq(CLVBalance_D))
+    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
 
   it("openLoan(): Borrowing at zero base rate does not change CLV balance of GT staking contract", async () => {
@@ -2998,8 +2982,6 @@ contract('BorrowerOperations', async accounts => {
       assert.include(err.message, 'revert')
     }
   })
-
-
 
   it("openLoan(): Can open a loan with zero debt when system is in recovery mode", async () => {
     // --- SETUP ---
@@ -3242,7 +3224,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = 0
       const debtChange = 0
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange,  true,  debtChange,  true,  price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
@@ -3254,7 +3236,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = 0
       const debtChange = dec(50, 18)
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange,  true, debtChange, true,  price)).toString()
       assert.isAtMost(th.getDifference(newICR, '1333333333333333333'), 100)
     })
 
@@ -3264,9 +3246,9 @@ contract('BorrowerOperations', async accounts => {
       const initialColl = dec(1, 'ether')
       const initialDebt = await th.getActualDebtFromComposite(dec(100, 18), contracts)
       const collChange = 0
-      const debtChange = mv.negative_50e18
+      const debtChange = dec(50, 18)
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true,  debtChange, false, price)).toString()
       assert.equal(newICR, '4000000000000000000')
     })
 
@@ -3278,7 +3260,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(1, 'ether')
       const debtChange = 0
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true,  debtChange,  true,  price)).toString()
       assert.equal(newICR, '4000000000000000000')
     })
 
@@ -3287,10 +3269,10 @@ contract('BorrowerOperations', async accounts => {
       price = await priceFeed.getPrice()
       const initialColl = dec(1, 'ether')
       const initialDebt = await th.getActualDebtFromComposite(dec(100, 18), contracts)
-      const collChange = mv.negative_5e17
+      const collChange = dec(5, 17)
       const debtChange = 0
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false, debtChange,  true, price)).toString()
       assert.equal(newICR, '1000000000000000000')
     })
 
@@ -3299,10 +3281,10 @@ contract('BorrowerOperations', async accounts => {
       price = await priceFeed.getPrice()
       const initialColl = dec(1, 'ether')
       const initialDebt = await th.getActualDebtFromComposite(dec(100, 18), contracts)
-      const collChange = mv.negative_5e17
-      const debtChange = mv.negative_50e18
+      const collChange = dec(5, 17)
+      const debtChange = dec(50, 18)
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false,  debtChange, false, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
@@ -3314,7 +3296,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(1, 'ether')
       const debtChange = dec(100, 18)
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange,  true, debtChange, true,  price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
@@ -3324,9 +3306,9 @@ contract('BorrowerOperations', async accounts => {
       const initialColl = dec(1, 'ether')
       const initialDebt = await th.getActualDebtFromComposite(dec(100, 18), contracts)
       const collChange = dec(1, 'ether')
-      const debtChange = mv.negative_50e18
+      const debtChange = dec(50, 18)
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange,  true, debtChange, false, price)).toString()
       assert.equal(newICR, '8000000000000000000')
     })
 
@@ -3335,10 +3317,10 @@ contract('BorrowerOperations', async accounts => {
       price = await priceFeed.getPrice()
       const initialColl = dec(1, 'ether')
       const initialDebt = await th.getActualDebtFromComposite(dec(100, 18), contracts)
-      const collChange = mv.negative_5e17
+      const collChange = dec(5, 17)
       const debtChange = dec(100, 18)
 
-      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, debtChange, price)).toString()
+      const newICR = (await borrowerOpsTester.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false, debtChange, true,  price)).toString()
       assert.equal(newICR, '500000000000000000')
     })
   })
@@ -3369,13 +3351,10 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = 0
       const debtChange = 0
-      const newTCR = await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price)
+      const newTCR = await borrowerOpsTester.getNewTCRFromTroveChange(collChange, true, debtChange, true, price)
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
         .div(troveDebt.add(liquidatedDebt))
-
-      console.log(`newTCR: ${newTCR}`)
-      console.log(`expectedTCR: ${expectedTCR}`)
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3401,7 +3380,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = 0
       const debtChange = dec(200, 18)
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, true, debtChange, true,  price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
         .div(troveDebt.add(liquidatedDebt).add(th.toBN(debtChange)))
@@ -3428,8 +3407,8 @@ contract('BorrowerOperations', async accounts => {
       const price = await priceFeed.getPrice()
       // --- TEST ---
       const collChange = 0
-      const debtChange = mv.negative_100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const debtChange = dec(100, 18)
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, true,  debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
         .div(troveDebt.add(liquidatedDebt).sub(th.toBN(dec(100, 18))))
@@ -3457,7 +3436,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = dec(2, 'ether')
       const debtChange = 0
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange,  true, debtChange, true,  price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(collChange))).mul(price)
         .div(troveDebt.add(liquidatedDebt))
@@ -3484,9 +3463,9 @@ contract('BorrowerOperations', async accounts => {
       const price = await priceFeed.getPrice()
 
       // --- TEST ---
-      const collChange = mv.negative_1e18
+      const collChange = dec(1, 18)
       const debtChange = 0
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, false, debtChange,  true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 'ether')))).mul(price)
         .div(troveDebt.add(liquidatedDebt))
@@ -3513,9 +3492,9 @@ contract('BorrowerOperations', async accounts => {
       const price = await priceFeed.getPrice()
 
       // --- TEST ---
-      const collChange = mv.negative_1e18
-      const debtChange = mv.negative_100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const collChange = dec(1, 18)
+      const debtChange = dec( 100, 18)
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, false, debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 'ether')))).mul(price)
         .div(troveDebt.add(liquidatedDebt).sub(th.toBN(dec(100, 18))))
@@ -3544,7 +3523,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = dec(1, 'ether')
       const debtChange = dec(100, 18)
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange,  true, debtChange, true,  price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(dec(1, 'ether')))).mul(price)
         .div(troveDebt.add(liquidatedDebt).add(th.toBN(dec(100, 18))))
@@ -3572,8 +3551,8 @@ contract('BorrowerOperations', async accounts => {
 
       // --- TEST ---
       const collChange = dec(1, 'ether')
-      const debtChange = mv.negative_100e18
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const debtChange = dec(100, 18)
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, true,  debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(dec(1, 'ether')))).mul(price)
         .div(troveDebt.add(liquidatedDebt).sub(th.toBN(dec(100, 18))))
@@ -3600,9 +3579,9 @@ contract('BorrowerOperations', async accounts => {
       const price = await priceFeed.getPrice()
 
       // --- TEST ---
-      const collChange = mv.negative_1e18
+      const collChange = dec(1, 18)
       const debtChange = dec(200, 18)
-      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, debtChange, price))
+      const newTCR = (await borrowerOpsTester.getNewTCRFromTroveChange(collChange, false, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 18)))).mul(price)
         .div(troveDebt.add(liquidatedDebt).add(th.toBN(debtChange)))
