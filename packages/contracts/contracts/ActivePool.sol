@@ -45,24 +45,26 @@ contract ActivePool is Ownable, IPool {
 
     // --- Contract setters ---
 
-    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
+    function setAddresses(
+        address _poolManagerAddress,
+        address _cdpManagerAddress,
+        address _defaultPoolAddress,
+        address _stabilityPoolAddress
+    )
+        external
+        onlyOwner
+    {
         poolManagerAddress = _poolManagerAddress;
-        emit PoolManagerAddressChanged(_poolManagerAddress);
-    }
-
-     function setCDPManagerAddress(address _cdpManagerAddress) external onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
-    }
-
-    function setDefaultPoolAddress(address _defaultPoolAddress) external onlyOwner {
-        defaultPoolAddress = _defaultPoolAddress; 
-        emit DefaultPoolAddressChanged(defaultPoolAddress);
-    }
-
-    function setStabilityPoolAddress(address _stabilityPoolAddress) external onlyOwner {
+        defaultPoolAddress = _defaultPoolAddress;
         stabilityPoolAddress = _stabilityPoolAddress;
+
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit DefaultPoolAddressChanged(defaultPoolAddress);
         emit StabilityPoolAddressChanged(stabilityPoolAddress);
+
+        _renounceOwnership();
     }
 
     // --- Getters for public variables. Required by IPool interface ---

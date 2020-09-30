@@ -1,6 +1,5 @@
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 
 const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
@@ -48,12 +47,6 @@ contract('CDPManager', async accounts => {
   let borrowerOperations
 
   let contracts
-  let cdpManagerTester
-
-  before(async () => {
-    cdpManagerTester = await CDPManagerTester.new()
-    CDPManagerTester.setAsDeployed(cdpManagerTester)
-  })
 
   beforeEach(async () => {
     contracts = await deployLiquity()
@@ -67,9 +60,7 @@ contract('CDPManager', async accounts => {
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
-    hintHelpers = contracts.hintHelpers
 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)

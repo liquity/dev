@@ -34,19 +34,22 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     // --- Contract setters ---
 
-    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
+    function setAddresses(
+        address _poolManagerAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress
+    )
+        external
+        onlyOwner
+    {
         poolManagerAddress = _poolManagerAddress;
-        emit PoolManagerAddressChanged(poolManagerAddress);
-    }
-
-    function setActivePoolAddress(address _activePoolAddress) external onlyOwner {
         activePoolAddress = _activePoolAddress;
+        defaultPoolAddress = _defaultPoolAddress;
+
+        emit PoolManagerAddressChanged(poolManagerAddress);
         emit ActivePoolAddressChanged(activePoolAddress);
-    }
-    
-    function setDefaultPoolAddress(address _defaultPoolAddress) external onlyOwner {
-        defaultPoolAddress = _defaultPoolAddress; 
-        emit DefaultPoolAddressChanged(defaultPoolAddress);
+
+        _renounceOwnership();
     }
 
     // --- Getters for public variables. Required by IPool interface ---

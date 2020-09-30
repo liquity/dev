@@ -28,22 +28,26 @@ contract HintHelpers is LiquityBase, Ownable {
 
     // --- Dependency setters ---
 
-    function setPriceFeed(address _priceFeedAddress) external onlyOwner {
+    function setAddresses(
+        address _priceFeedAddress,
+        address _sortedCDPsAddress,
+        address _cdpManagerAddress
+    )
+        external
+        onlyOwner
+    {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(priceFeedAddress);
-        emit PriceFeedAddressChanged(_priceFeedAddress);
-    }
-
-    function setSortedCDPs(address _sortedCDPsAddress) external onlyOwner {
         sortedCDPsAddress = _sortedCDPsAddress;
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
-    }
-
-    function setCDPManager(address _cdpManagerAddress) external onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
+
+        emit PriceFeedAddressChanged(_priceFeedAddress);
+        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
+
+        _renounceOwnership();
     }
 
     // --- Functions ---

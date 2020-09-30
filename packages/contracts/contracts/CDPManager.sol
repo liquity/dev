@@ -196,51 +196,45 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Dependency setters ---
 
-    function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
+    function setAddresses(
+        address _borrowerOperationsAddress,
+        address _poolManagerAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress,
+        address _stabilityPoolAddress,
+        address _priceFeedAddress,
+        address _clvTokenAddress,
+        address _sortedCDPsAddress
+    )
+        external
+        onlyOwner
+    {
         borrowerOperationsAddress = _borrowerOperationsAddress;
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-    }
-
-    function setPoolManager(address _poolManagerAddress) external onlyOwner {
         poolManagerAddress = _poolManagerAddress;
         poolManager = IPoolManager(_poolManagerAddress);
-        emit PoolManagerAddressChanged(_poolManagerAddress);
-    }
-
-    function setActivePool(address _activePoolAddress) external onlyOwner {
         activePoolAddress = _activePoolAddress;
         activePool = IPool(_activePoolAddress);
-        emit ActivePoolAddressChanged(_activePoolAddress);
-    }
-
-    function setDefaultPool(address _defaultPoolAddress) external onlyOwner {
         defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(_defaultPoolAddress);
-        emit DefaultPoolAddressChanged(_defaultPoolAddress);
-    }
-
-    function setStabilityPool(address _stabilityPoolAddress) external onlyOwner {
         stabilityPoolAddress = _stabilityPoolAddress;
         stabilityPool = IStabilityPool(_stabilityPoolAddress);
-        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
-    }
-
-    function setPriceFeed(address _priceFeedAddress) external onlyOwner {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(priceFeedAddress);
-        emit PriceFeedAddressChanged(_priceFeedAddress);
-    }
-
-    function setCLVToken(address _clvTokenAddress) external onlyOwner {
         clvTokenAddress = _clvTokenAddress;
         clvToken = ICLVToken(_clvTokenAddress);
-        emit CLVTokenAddressChanged(_clvTokenAddress);
-    }
-
-    function setSortedCDPs(address _sortedCDPsAddress) external onlyOwner {
         sortedCDPsAddress = _sortedCDPsAddress;
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
+
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit PriceFeedAddressChanged(_priceFeedAddress);
+        emit CLVTokenAddressChanged(_clvTokenAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
+
+        _renounceOwnership();
     }
 
     // --- Getters ---

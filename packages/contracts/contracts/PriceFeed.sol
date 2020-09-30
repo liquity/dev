@@ -41,25 +41,27 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     // --- Dependency setters ---
 
-    function setCDPManagerAddress(address _cdpManagerAddress) external onlyOwner {
+    function setAddresses(
+        address _cdpManagerAddress,
+        address _poolManagerAddress,
+        address _priceAggregatorAddress,
+        address _priceAggregatorAddressTestnet
+    )
+        external
+        onlyOwner
+    {
         cdpManagerAddress = _cdpManagerAddress;
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
-    }
-
-    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
         poolManagerAddress = _poolManagerAddress;
-        emit PoolManagerAddressChanged(_poolManagerAddress);
-    }
-
-    // Mainnet Chainlink address setter
-    function setAggregator(address _priceAggregatorAddress) external onlyOwner {
+        // Mainnet Chainlink address setter
         priceAggregatorAddress = _priceAggregatorAddress;
         priceAggregator = IDeployedAggregator(_priceAggregatorAddress);
-    }
+        // Testnet Chainlink address setter
+        priceAggregator_Testnet = AggregatorInterface(_priceAggregatorAddressTestnet);
 
-    // Testnet Chainlink address setter
-    function setAggregator_Testnet(address _priceAggregatorAddress) external onlyOwner {
-        priceAggregator_Testnet = AggregatorInterface(_priceAggregatorAddress);
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+
+        _renounceOwnership();
     }
 
     // --- Functions ---

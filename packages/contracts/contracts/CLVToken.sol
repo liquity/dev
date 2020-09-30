@@ -39,6 +39,8 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
         poolManagerAddress =  _poolManagerAddress;
         emit PoolManagerAddressChanged(_poolManagerAddress);
+
+        _renounceOwnership();
     }
 
     function mint(address _account, uint256 _amount) external onlyPoolManager {
