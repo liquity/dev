@@ -1,11 +1,12 @@
 import { Signer } from "@ethersproject/abstract-signer";
 import { ContractTransaction, ContractFactory, Overrides } from "@ethersproject/contracts";
+import { AddressZero } from "@ethersproject/constants";
 
 import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "../src/contracts";
 
 let silent = true;
 
-const ZERO_ADDRESS = "0x" + "0".repeat(40);
+const ropstenAggregator = "0x8468b2bDCE073A157E560AA4D9CcF6dB1DB98507";
 
 export const setSilent = (s: boolean) => {
   silent = s;
@@ -92,6 +93,7 @@ const connectContracts = async (
   }
 
   const txCount = await deployer.provider.getTransactionCount(deployer.getAddress());
+  const network = await deployer.provider.getNetwork();
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce => clvToken.setPoolManagerAddress(poolManager.address, { ...overrides, nonce }),
@@ -115,10 +117,16 @@ const connectContracts = async (
       }),
 
     nonce =>
-      priceFeed.setAddresses(cdpManager.address, poolManager.address, ZERO_ADDRESS, ZERO_ADDRESS, {
-        ...overrides,
-        nonce
-      }),
+      priceFeed.setAddresses(
+        cdpManager.address,
+        poolManager.address,
+        AddressZero,
+        network.name === "ropsten" ? ropstenAggregator : AddressZero,
+        {
+          ...overrides,
+          nonce
+        }
+      ),
 
     nonce =>
       cdpManager.setAddresses(

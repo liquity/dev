@@ -11,7 +11,7 @@ import { NetworkConfig } from "@nomiclabs/buidler/types";
 import { Decimal } from "@liquity/decimal";
 
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
-import { abi, addressesOf, connectToContracts, LiquityDeployment } from ".";
+import { abi, addressesOf, LiquityDeployment } from ".";
 
 dotenv.config();
 
@@ -36,8 +36,6 @@ const generateRandomAccounts = (numberOfAccounts: number) => {
 
 const deployerAccount = process.env.DEPLOYER_PRIVATE_KEY || Wallet.createRandom().privateKey;
 const devChainRichAccount = "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7";
-
-const ropstenAggregator = "0x8468b2bDCE073A157E560AA4D9CcF6dB1DB98507";
 
 const infuraApiKey = "ad9cef41c9c844a7b54d10be24d416e5";
 
@@ -113,25 +111,6 @@ task("deploy", "Deploys the contracts to the network")
     console.log();
     console.log({ [bre.network.name]: deployment });
     console.log();
-
-    if (bre.network.name === "ropsten") {
-      const { priceFeed, cdpManager, poolManager } = connectToContracts(
-        deployment.addresses,
-        deployer
-      );
-
-      console.log("Hooking up PriceFeed with price aggregator...");
-
-      const ZERO_ADDRESS = "0x" + "0".repeat(40);
-      const tx = await priceFeed.setAddresses(
-        cdpManager.address,
-        poolManager.address,
-        ZERO_ADDRESS,
-        ropstenAggregator,
-        overrides
-      );
-      await tx.wait();
-    }
   });
 
 export default config;
