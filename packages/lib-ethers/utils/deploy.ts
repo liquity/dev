@@ -5,7 +5,7 @@ import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "
 
 let silent = true;
 
-const ZERO_ADDRESS = '0x' + '0'.repeat(40)
+const ZERO_ADDRESS = "0x" + "0".repeat(40);
 
 export const setSilent = (s: boolean) => {
   silent = s;
@@ -96,82 +96,80 @@ const connectContracts = async (
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce => clvToken.setPoolManagerAddress(poolManager.address, { ...overrides, nonce }),
 
-    nonce => poolManager.setAddresses(
-      borrowerOperations.address,
-      cdpManager.address,
-      priceFeed.address,
-      clvToken.address,
-      stabilityPool.address,
-      activePool.address,
-      defaultPool.address,
-      { ...overrides, nonce }
-    ),
+    nonce =>
+      poolManager.setAddresses(
+        borrowerOperations.address,
+        cdpManager.address,
+        priceFeed.address,
+        clvToken.address,
+        stabilityPool.address,
+        activePool.address,
+        defaultPool.address,
+        { ...overrides, nonce }
+      ),
 
-    nonce => sortedCDPs.setParams(
-      10000000,
-      cdpManager.address,
-      borrowerOperations.address,
-      { ...overrides, nonce }
-    ),
+    nonce =>
+      sortedCDPs.setParams(10000000, cdpManager.address, borrowerOperations.address, {
+        ...overrides,
+        nonce
+      }),
 
-    nonce => priceFeed.setAddresses(
-      cdpManager.address,
-      poolManager.address,
-      ZERO_ADDRESS,
-      ZERO_ADDRESS,
-      { ...overrides, nonce }
-    ),
+    nonce =>
+      priceFeed.setAddresses(cdpManager.address, poolManager.address, ZERO_ADDRESS, ZERO_ADDRESS, {
+        ...overrides,
+        nonce
+      }),
 
-    nonce => cdpManager.setAddresses(
-      borrowerOperations.address,
-      poolManager.address,
-      activePool.address,
-      defaultPool.address,
-      stabilityPool.address,
-      priceFeed.address,
-      clvToken.address,
-      sortedCDPs.address,
-      { ...overrides, nonce }
-    ),
+    nonce =>
+      cdpManager.setAddresses(
+        borrowerOperations.address,
+        poolManager.address,
+        activePool.address,
+        defaultPool.address,
+        stabilityPool.address,
+        priceFeed.address,
+        clvToken.address,
+        sortedCDPs.address,
+        { ...overrides, nonce }
+      ),
 
-    nonce => borrowerOperations.setAddresses(
-      cdpManager.address,
-      poolManager.address,
-      activePool.address,
-      defaultPool.address,
-      priceFeed.address,
-      sortedCDPs.address,
-      { ...overrides, nonce }
-    ),
+    nonce =>
+      borrowerOperations.setAddresses(
+        cdpManager.address,
+        poolManager.address,
+        activePool.address,
+        defaultPool.address,
+        priceFeed.address,
+        sortedCDPs.address,
+        { ...overrides, nonce }
+      ),
 
-    nonce => stabilityPool.setAddresses(
-      poolManager.address,
-      activePool.address,
-      defaultPool.address,
-      { ...overrides, nonce }
-    ),
+    nonce =>
+      stabilityPool.setAddresses(poolManager.address, activePool.address, defaultPool.address, {
+        ...overrides,
+        nonce
+      }),
 
-    nonce => activePool.setAddresses(
-      poolManager.address,
-      cdpManager.address,
-      defaultPool.address,
-      stabilityPool.address,
-      { ...overrides, nonce }
-    ),
+    nonce =>
+      activePool.setAddresses(
+        poolManager.address,
+        cdpManager.address,
+        defaultPool.address,
+        stabilityPool.address,
+        { ...overrides, nonce }
+      ),
 
-    nonce => defaultPool.setAddresses(
-      poolManager.address,
-      activePool.address,
-      stabilityPool.address,
-      { ...overrides, nonce }
-    ),
+    nonce =>
+      defaultPool.setAddresses(poolManager.address, activePool.address, stabilityPool.address, {
+        ...overrides,
+        nonce
+      }),
 
-    nonce => hintHelpers.setAddresses(
-      priceFeed.address,
-      sortedCDPs.address,
-      cdpManager.address,
-      { ...overrides, nonce }
-    ),
+    nonce =>
+      hintHelpers.setAddresses(priceFeed.address, sortedCDPs.address, cdpManager.address, {
+        ...overrides,
+        nonce
+      })
   ];
 
   const txs = await Promise.all(connections.map((connect, i) => connect(txCount + i)));

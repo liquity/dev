@@ -115,11 +115,14 @@ task("deploy", "Deploys the contracts to the network")
     console.log();
 
     if (bre.network.name === "ropsten") {
-      const { priceFeed, cdpManager, poolManager } = connectToContracts(deployment.addresses, deployer);
+      const { priceFeed, cdpManager, poolManager } = connectToContracts(
+        deployment.addresses,
+        deployer
+      );
 
       console.log("Hooking up PriceFeed with price aggregator...");
 
-      const ZERO_ADDRESS = '0x' + '0'.repeat(40)
+      const ZERO_ADDRESS = "0x" + "0".repeat(40);
       const tx = await priceFeed.setAddresses(
         cdpManager.address,
         poolManager.address,
