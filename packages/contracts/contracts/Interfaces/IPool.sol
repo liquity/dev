@@ -27,6 +27,4 @@ interface IPool {
     function increaseCLVDebt(uint _amount) external;
 
     function decreaseCLVDebt(uint _amount) external;
-
-    function getRawETHBalance() external view returns (uint);
 }
