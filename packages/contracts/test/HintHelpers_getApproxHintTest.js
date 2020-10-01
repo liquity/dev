@@ -65,7 +65,7 @@ contract('CDPManager', async accounts => {
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
       await borrowerOperations.openLoan(0, account, { from: account, value: coll })
-      await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
+      await borrowerOperations.withdrawCLV('190000000000000000000', account, { from: account })
   
       amountFinney += 10
     }

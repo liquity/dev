@@ -145,11 +145,11 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawCLV('2000000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('2000000000000000000000', { from: whale })
-      // 2 CDPs opened, each withdraws 180 CLV
+      // 2 CDPs opened, each withdraws 160 CLV
       await borrowerOperations.openLoan(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_2, { from: defaulter_2 })
 
       // Alice makes CDP and withdraws 100 CLV
       await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
@@ -193,13 +193,13 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV('1850000000000000000000', alice, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
 
-      // 3 CDPs opened. Two users withdraw 180 CLV each
+      // 3 CDPs opened. Two users withdraw 160 CLV each
       await borrowerOperations.openLoan(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(0, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_3, { from: defaulter_3 })
 
       // --- TEST ---
 
@@ -611,11 +611,11 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
 
-      // 2 CDPs opened, 180 CLV withdrawn
+      // 2 CDPs opened, 160 CLV withdrawn
       await borrowerOperations.openLoan(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_2, { from: defaulter_2 })
 
       // --- TEST ---
 
@@ -664,11 +664,11 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
 
-      // 2 CDPs opened, 170 CLV withdrawn
+      // 2 CDPs opened, 160 CLV withdrawn
       await borrowerOperations.openLoan(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_2, { from: defaulter_2 })
 
       // --- TEST ---
 
@@ -707,11 +707,11 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
 
-      // 2 CDPs opened, 180 CLV withdrawn
+      // 2 CDPs opened, 160 CLV withdrawn
       await borrowerOperations.openLoan(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_2, { from: defaulter_2 })
 
       // --- TEST ---
 
@@ -811,11 +811,11 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
 
-      // 2 CDPs opened, 180 CLV withdrawn
+      // 2 CDPs opened, 160 CLV withdrawn
       await borrowerOperations.openLoan(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_2, { from: defaulter_2 })
 
       // --- TEST ---
 
@@ -945,12 +945,12 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.openLoan(0, accounts[999], { from: whale, value: dec(100, 'ether') })
 
       // Future defaulter opens loan
-      await borrowerOperations.openLoan(dec(100, 18), accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(dec(90, 18), accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
 
       // 6 Accounts open loans and provide to SP
       const depositors = [alice, bob, carol, dennis, erin, flyn]
-      for (account of depositors) {
-        await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(1, 'ether') })
+      for (let account of depositors) {
+        await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(105, 16) })
         await poolManager.provideToSP(dec(100, 18), { from: account })
       }
 
@@ -1553,9 +1553,9 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
 
-      // 1 CDP opened, 180 CLV withdrawn
+      // 1 CDP opened, 160 CLV withdrawn
       await borrowerOperations.openLoan(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_1, { from: defaulter_1 })
 
       // --- TEST ---
 
@@ -1660,9 +1660,9 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
 
-      // 1 CDP opened, 170 CLV withdrawn
+      // 1 CDP opened, 160 CLV withdrawn
       await borrowerOperations.openLoan(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(170, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawCLV(dec(160, 18), defaulter_1, { from: defaulter_1 })
 
       // --- TEST ---
 
@@ -1791,7 +1791,7 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSPtoCDP(): caller can withdraw full deposit and ETH gain to their trove during Recovery Mode", async () => {
       // --- SETUP ---
 
-      await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(dec(90, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // A, B, C open loans 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
