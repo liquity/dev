@@ -102,6 +102,7 @@ contract GTStaking {
         _sendETHGainToUser(msg.sender, ETHGain);
     }
 
+    // Unstake the GT and send the it back to the caller, along with their accumulated LQTY & ETH gains 
     function unstake(uint _amount) external {
         uint currentStake = stakes[msg.sender];
 
