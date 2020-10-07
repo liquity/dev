@@ -17,15 +17,44 @@ export const createRandomWallets = (numberOfWallets: number, provider: Provider)
   return accounts;
 };
 
+export const createRandomTrove = (price: Decimal) => {
+  let collateral: Decimal, debt: Decimal;
+  let randomValue = truncateLastDigits(benford(1000));
+
+  if (Math.random() < 0.5) {
+    collateral = Decimal.from(randomValue);
+
+    const maxDebt = parseInt(
+      price
+        .mul(collateral)
+        .div(1.1)
+        .toString(0)
+    );
+
+    debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
+  } else {
+    debt = Decimal.from(100 * randomValue);
+    collateral = Decimal.from(
+      debt
+        .div(price)
+        .mul(10 + benford(20))
+        .div(10)
+        .toString(1)
+    );
+  }
+
+  return new Trove({ collateral, debt });
+};
+
 export const getListOfTroves = async (liquity: ReadableLiquity) =>
   liquity.getFirstTroves(0, await liquity.getNumberOfTroves());
 
 export const getListOfTroveOwners = async (liquity: ReadableLiquity) =>
   getListOfTroves(liquity).then(troves => troves.map(([owner]) => owner));
 
-export const tinyDifference = Decimal.from("0.000000001");
+const tinyDifference = Decimal.from("0.000000001");
 
-export const sortedByICR = async (
+const sortedByICR = async (
   liquity: ReadableLiquity,
   listOfTroves: (readonly [string, TroveWithPendingRewards])[],
   price: Decimalish
@@ -80,6 +109,26 @@ export const listOfTrovesShouldBeEqual = (
   });
 };
 
+export const checkTroveOrdering = async (
+  liquity: ReadableLiquity,
+  price: Decimal,
+  listOfTroves: (readonly [string, TroveWithPendingRewards])[],
+  previousListOfTroves?: (readonly [string, TroveWithPendingRewards])[]
+) => {
+  if (!(await sortedByICR(liquity, listOfTroves, price))) {
+    if (previousListOfTroves) {
+      console.log();
+      console.log("// List of Troves before:");
+      await dumpTroves(liquity, previousListOfTroves, price);
+      console.log();
+      console.log("// List of Troves after:");
+    }
+
+    await dumpTroves(liquity, listOfTroves, price);
+    throw new Error("ordering is broken");
+  }
+};
+
 export const checkSubgraph = async (subgraph: SubgraphLiquity, l1Liquity: ReadableLiquity) => {
   const l1NumberOfTroves = await l1Liquity.getNumberOfTroves();
   const subgraphNumberOfTroves = await subgraph.getNumberOfTroves();
@@ -130,7 +179,7 @@ export const checkSubgraph = async (subgraph: SubgraphLiquity, l1Liquity: Readab
 
 export const shortenAddress = (address: string) => address.substr(0, 6) + "..." + address.substr(-4);
 
-export const troveToString = (
+const troveToString = (
   address: string,
   troveWithPendingRewards: TroveWithPendingRewards,
   totalRedistributed: Trove,
@@ -151,7 +200,7 @@ export const troveToString = (
   );
 };
 
-export const dumpTroves = async (
+const dumpTroves = async (
   liquity: ReadableLiquity,
   listOfTroves: (readonly [string, TroveWithPendingRewards])[],
   price: Decimalish
@@ -184,7 +233,7 @@ export const dumpTroves = async (
 
 export const benford = (max: number) => Math.floor(Math.exp(Math.log(max) * Math.random()));
 
-export const truncateLastDigits = (n: number) => {
+const truncateLastDigits = (n: number) => {
   if (n > 100000) {
     return 1000 * Math.floor(n / 1000);
   } else if (n > 10000) {
