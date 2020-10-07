@@ -1,11 +1,8 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -17,20 +14,21 @@ contract('Gas compensation tests', async accounts => {
     alice, bob, carol, dennis, erin, flyn, graham, harriet, ida,
     defaulter_1, defaulter_2, defaulter_3, defaulter_4, whale] = accounts;
 
-  let priceFeed
-  let clvToken
-  let poolManager
-  let sortedCDPs
-  let cdpManager
-  let nameRegistry
-  let activePool
-  let stabilityPool
-  let defaultPool
-  let functionCaller
-  let borrowerOperations
-
-  let cdpManagerTester
-  let borrowerOperationsTester
+  
+    let priceFeed
+    let clvToken
+    let poolManager
+    let sortedCDPs
+    let cdpManager
+    let activePool
+    let stabilityPool
+    let defaultPool
+    let borrowerOperations
+    let hintHelpers
+  
+    let contracts
+    let cdpManagerTester
+    let borrowerOperationsTester
 
   const logICRs = (ICRList) => {
     for (let i = 0; i < ICRList.length; i++) {
@@ -47,22 +45,28 @@ contract('Gas compensation tests', async accounts => {
   })
 
   beforeEach(async () => {
-    const contracts = await deployLiquity()
+    contracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
-    nameRegistry = contracts.nameRegistry
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
+    hintHelpers = contracts.hintHelpers
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    gtStaking = GTContracts.gtStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
+
+    await deploymentHelper.connectCoreContracts(contracts)
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
   // --- Test flat minimum $10 compensation amount in ETH  ---

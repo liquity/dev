@@ -1,10 +1,6 @@
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
-
 const th = testHelpers.TestHelper
 const mv = testHelpers.MoneyValues
 
@@ -24,7 +20,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   let borrowerOperations
 
   before(async () => {
-    const contracts = await deployLiquity()
+    const contracts = await deploymentHelpers.deployLiquityCore()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -38,8 +34,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    await deploymentHelpers.connectCoreContracts(contracts)
   })
 
   describe('CDPManager', async accounts => {

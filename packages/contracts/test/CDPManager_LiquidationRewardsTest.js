@@ -29,7 +29,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   let borrowerOperations
 
   beforeEach(async () => {
-    const contracts = await deployLiquity()
+    const contracts = await deploymentHelpers.deployLiquityCore()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -43,8 +43,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    
+   await deploymentHelpers.connectCoreContracts(contracts)
   })
 
   it("redistribution: A, B Open. B Liquidated. C, D Open. D Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {

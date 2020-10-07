@@ -24,7 +24,7 @@ contract('PoolManager', async accounts => {
   let borrowerOperations
 
   beforeEach(async () => {
-    const contracts = await deployLiquity()
+    const contracts = await deploymentHelpers.deployLiquityCore()
    
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -38,8 +38,8 @@ contract('PoolManager', async accounts => {
     functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    
+   await deploymentHelpers.connectCoreContracts(contracts)
 
     await poolManager.setBorrowerOperations(mockBorrowerOperationsAddress, { from: owner })
     await poolManager.setCDPManager(mockCDPManagerAddress, { from: owner })
@@ -153,45 +153,45 @@ contract('PoolManager', async accounts => {
     assert.equal(alice_CLVBalance_Before, 0)
 
     // withdrawCLV()
-    await poolManager.withdrawCLV(alice, 100, { from: mockBorrowerOperationsAddress })
+    await poolManager.withdrawCLV(alice, 100, 1, { from: mockBorrowerOperationsAddress })
 
     // Check CLV balances after - both should increase.
     // Outstanding CLV is issued to alice, and corresponding CLV debt recorded in activePool
     const activePool_CLVBalance_After = await activePool.getCLVDebt({ from: poolManager.address })
     const alice_CLVBalance_After = await clvToken.balanceOf(alice)
 
-    assert.equal(activePool_CLVBalance_After, 100)
-    assert.equal(alice_CLVBalance_After, 100)
+    assert.equal(activePool_CLVBalance_After.toString(), '101')
+    assert.equal(alice_CLVBalance_After.toString(), '100')
   })
 
   it('repayCLV: decreases the CLV of ActivePool by the correct amount', async () => {
     // --- SETUP ---
     // issue CLV debt to alice and record in activePool
-    await poolManager.withdrawCLV(alice, 100, { from: mockBorrowerOperationsAddress })
+    await poolManager.withdrawCLV(alice, 100, 1, { from: mockBorrowerOperationsAddress })
 
     const activePool_CLVBalance_Before = await activePool.getCLVDebt({ from: poolManager.address })
     const alice_CLVBalance_Before = await clvToken.balanceOf(alice)
-    assert.equal(activePool_CLVBalance_Before, 100)
-    assert.equal(alice_CLVBalance_Before, 100)
+    assert.equal(activePool_CLVBalance_Before.toString(), '101')
+    assert.equal(alice_CLVBalance_Before.toString(), '100')
 
     // --- TEST ---
     // repayCLV()
     await poolManager.repayCLV(alice, 100, { from: mockBorrowerOperationsAddress })
 
-    // Check repayed CLV is wiped from activePool
+    // Check repayed CLV is wiped from activePool, leaving only the fee
     const activePool_CLVBalance_After = await activePool.getCLVDebt({ from: poolManager.address })
-    assert.equal(activePool_CLVBalance_After, 0)
+    assert.equal(activePool_CLVBalance_After, 1)
   })
 
   it('repayCLV: decreases the user CLV balance by the correct amount', async () => {
     // --- SETUP ---
     // issue CLV debt to alice and record in activePool
-    await poolManager.withdrawCLV(alice, 100, { from: mockBorrowerOperationsAddress })
+    await poolManager.withdrawCLV(alice, 100, 1, { from: mockBorrowerOperationsAddress })
 
     const activePool_CLVBalance_Before = await activePool.getCLVDebt({ from: poolManager.address })
     const alice_CLVBalance_Before = await clvToken.balanceOf(alice)
-    assert.equal(activePool_CLVBalance_Before, 100)
-    assert.equal(alice_CLVBalance_Before, 100)
+    assert.equal(activePool_CLVBalance_Before.toString(), '101')
+    assert.equal(alice_CLVBalance_Before.toString(), '100')
 
     // --- TEST ---
     // repayCLV()
@@ -201,7 +201,6 @@ contract('PoolManager', async accounts => {
     const alice_CLVBalance_After = await clvToken.balanceOf(alice)
     assert.equal(alice_CLVBalance_After, 0)
   })
-
 
   it('liquidate(): decreases the CLV, ETH and raw ether of ActivePool by the correct amount', async () => {
     // --- SETUP ---

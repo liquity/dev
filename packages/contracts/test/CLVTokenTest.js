@@ -29,7 +29,7 @@ contract('CLVToken', async accounts => {
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
-      const contracts = await deployLiquity()
+      const contracts = await deploymentHelpers.deployLiquityCore()
 
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
@@ -43,8 +43,8 @@ contract('CLVToken', async accounts => {
       functionCaller = contracts.functionCaller
       borrowerOperations = contracts.borrowerOperations
   
-      const contractAddresses = getAddresses(contracts)
-      await connectContracts(contracts, contractAddresses)
+      
+     await deploymentHelpers.connectCoreContracts(contracts)
       
       // add CDPs for three test users
       await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })

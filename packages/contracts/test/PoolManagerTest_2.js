@@ -1,9 +1,5 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -32,15 +28,12 @@ contract('PoolManager', async accounts => {
   let poolManager
   let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
   let borrowerOperations
 
   let gasPriceInWei
-
 
   describe("Stability Pool Mechanisms", async () => {
 
@@ -49,22 +42,28 @@ contract('PoolManager', async accounts => {
     })
 
     beforeEach(async () => {
-      const contracts = await deployLiquity()
-
+      contracts = await deploymentHelper.deployLiquityCore()
+      const GTContracts = await deploymentHelper.deployGTContracts()
+  
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
       poolManager = contracts.poolManager
       sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
-      nameRegistry = contracts.nameRegistry
       activePool = contracts.activePool
       stabilityPool = contracts.stabilityPool
       defaultPool = contracts.defaultPool
-      functionCaller = contracts.functionCaller
       borrowerOperations = contracts.borrowerOperations
-
-      const contractAddresses = getAddresses(contracts)
-      await connectContracts(contracts, contractAddresses)
+      hintHelpers = contracts.hintHelpers
+  
+      gtStaking = GTContracts.gtStaking
+      growthToken = GTContracts.growthToken
+      communityIssuance = GTContracts.communityIssuance
+      lockupContractFactory = GTContracts.lockupContractFactory
+  
+      await deploymentHelper.connectCoreContracts(contracts)
+      await deploymentHelper.connectGTContracts(GTContracts)
+      await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
     })
 
     // increases recorded CLV at Stability Pool

@@ -62,8 +62,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    
+   await deploymentHelpers.connectCoreContracts(contracts)
   })
 
   it("checkRecoveryMode(): Returns true if TCR falls below CCR", async () => {
