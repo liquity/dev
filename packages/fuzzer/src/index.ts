@@ -16,18 +16,9 @@ import {
   checkTroveOrdering,
   connectUsers,
   createRandomWallets,
-  getListOfTroveOwners,
-  getListOfTroves,
-  listDifference,
-  shortenAddress
+  getListOfTroves
 } from "./utils";
-import {
-  closeTrove,
-  liquidateTroves,
-  openRandomTrove,
-  redeemRandomAmount,
-  setRandomPrice
-} from "./actions";
+import { Fixture } from "./fixture";
 
 dotenv.config();
 
@@ -133,20 +124,7 @@ yargs
         addresses
       );
 
-      let price = await deployerLiquity.getPrice();
-      let numberOfTroves = await deployerLiquity.getNumberOfTroves();
-
-      let funderTrove = await funderLiquity.getTrove();
-      if (funderTrove.isEmpty) {
-        await funderLiquity.openTrove(new Trove({ collateral: 10000, debt: 1000000 }), {
-          price,
-          numberOfTroves
-        });
-
-        numberOfTroves++;
-      }
-
-      let totalNumberOfLiquidations = 0;
+      const fixture = await Fixture.setup(deployerLiquity, funderLiquity, funder);
 
       let previousListOfTroves:
         | (readonly [string, TroveWithPendingRewards])[]
@@ -156,25 +134,20 @@ yargs
         console.log();
         console.log(`// Round #${i}`);
 
-        price = await setRandomPrice(deployerLiquity, price);
-
-        const numberOfLiquidatedTroves = await liquidateTroves(deployerLiquity, 30);
-        totalNumberOfLiquidations += numberOfLiquidatedTroves;
-        numberOfTroves -= numberOfLiquidatedTroves;
+        const price = await fixture.setRandomPrice();
+        await fixture.liquidateTroves(30);
 
         for (const liquity of randomLiquities) {
           if (Math.random() < 0.5) {
             const trove = await liquity.getTrove();
 
             if (trove.isEmpty) {
-              await openRandomTrove(liquity, funder, price, numberOfTroves);
-              numberOfTroves++;
+              await fixture.openRandomTrove(liquity);
             } else {
-              await closeTrove(liquity, trove, funderLiquity, price, numberOfTroves);
-              numberOfTroves--;
+              await fixture.closeTrove(liquity, trove);
             }
           } else {
-            await redeemRandomAmount(liquity, funderLiquity, price, numberOfTroves);
+            await fixture.redeemRandomAmount(liquity);
           }
 
           const quiBalance = await liquity.getQuiBalance();
@@ -182,6 +155,7 @@ yargs
 
           const listOfTroves = await getListOfTroves(deployerLiquity);
           await checkTroveOrdering(deployerLiquity, price, listOfTroves, previousListOfTroves);
+
           previousListOfTroves = listOfTroves;
         }
 
@@ -193,7 +167,7 @@ yargs
       }
 
       const total = await funderLiquity.getTotal();
-      numberOfTroves = await funderLiquity.getNumberOfTroves();
+      const numberOfTroves = await funderLiquity.getNumberOfTroves();
 
       console.log();
       console.log(`Number of Troves: ${numberOfTroves}`);
@@ -201,7 +175,7 @@ yargs
 
       fs.appendFileSync(
         "chaos.csv",
-        `${numberOfTroves},${totalNumberOfLiquidations},${total.collateral}\n`
+        `${numberOfTroves},${fixture.totalNumberOfLiquidations},${total.collateral}\n`
       );
     }
   )
