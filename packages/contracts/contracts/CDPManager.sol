@@ -427,6 +427,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         // When Pool can fully absorb the trove's debt, perform a full offset
         if (_entireCDPDebt <= _CLVInPool) {
             V.collGasCompensation = _getCollGasCompensation(_entireCDPColl);
+            V.CLVGasCompensation = CLV_GAS_COMPENSATION;
 
             V.debtToOffset = _entireCDPDebt;
             V.collToSendToSP = _entireCDPColl.sub(V.collGasCompensation);
@@ -439,21 +440,25 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         offset as much as possible, and do not redistribute the remainder.
         Gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. */
         else if (_entireCDPDebt > _CLVInPool) {
-            V.debtToOffset = _CLVInPool;
+            // Partially liquidated pool can’t fall under gas compensation amount of debt
+            V.partialNewDebt = Math._max(_entireCDPDebt.sub(_CLVInPool), CLV_GAS_COMPENSATION);
+            // V.partialNewDebt >= _entireCDPDebt - _CLVInPool =>
+            // _entireCDPDebt - V.partialNewDebt <= _entireCDPDebt - (_entireCDPDebt - _CLVInPool) =>
+            // _entireCDPDebt - V.partialNewDebt <= _CLVInPool =>
+            // V.debtToOffset <= _CLVInPool
+            V.debtToOffset = _entireCDPDebt.sub(V.partialNewDebt);
             uint collFraction = _entireCDPColl.mul(V.debtToOffset).div(_entireCDPDebt);
             V.collGasCompensation = _getCollGasCompensation(collFraction);
+            // CLV gas compensation remains untouched, so minimum debt rests assured
+            V.CLVGasCompensation = 0;
             
             V.collToSendToSP = collFraction.sub(V.collGasCompensation);
             V.collToRedistribute = 0;
             V.debtToRedistribute = 0;
 
             V.partialAddr = _user;
-            V.partialNewDebt = _entireCDPDebt.sub(V.debtToOffset);
             V.partialNewColl = _entireCDPColl.sub(collFraction);
         }
-
-        // CLV gas compensation remains untouched, so minimum debt rests assured
-        V.CLVGasCompensation = 0;
     }
 
     /* Liquidate a sequence of troves. Closes a maximum number of n under-collateralized CDPs, 
@@ -765,6 +770,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint newDebt = (CDPs[_cdpUser].debt).sub(V.CLVLot);
         uint newColl = (CDPs[_cdpUser].coll).sub(V.ETHLot);
 
+        // V.CLVLot <= CDPs[_cdpUser].debt - CLV_GAS_COMPENSATION =>
+        // newDebt = CDPs[_cdpUser].debt - V.CLVLot >=
+        //  >= CDPs[_cdpUser].debt - (CDPs[_cdpUser].debt - CLV_GAS_COMPENSATION)
+        //  = CLV_GAS_COMPENSATION
         if (newDebt == CLV_GAS_COMPENSATION) {
             // No debt left in the CDP (except for the gas compensation), therefore the trove is closed
             _removeStake(_cdpUser);
