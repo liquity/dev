@@ -236,9 +236,10 @@ class TestHelper {
       if (liquidationTx.logs[i].event === "Liquidation") {
         const liquidatedDebt = liquidationTx.logs[i].args[0]
         const liquidatedColl = liquidationTx.logs[i].args[1]
-        const gasComp = liquidationTx.logs[i].args[2]
+        const collGasComp = liquidationTx.logs[i].args[2]
+        const clvGasComp = liquidationTx.logs[i].args[3]
 
-        return [liquidatedDebt, liquidatedColl, gasComp]
+        return [liquidatedDebt, liquidatedColl, collGasComp, clvGasComp]
       }
     }
 

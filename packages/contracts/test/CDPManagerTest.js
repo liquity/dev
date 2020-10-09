@@ -1396,7 +1396,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(TCR_After.gte(TCR_Before))
   })
 
-  it("liquidateCDPs(): A liquidation sequence of pure redistributions does decreases the TCR due to gas compensation", async () => {
+  it("liquidateCDPs(): A liquidation sequence of pure redistributions decreases the TCR due to gas compensation", async () => {
     await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(7, 'ether') })
@@ -1440,7 +1440,7 @@ contract('CDPManager', async accounts => {
     // check system sized reduced to 5 troves
     assert.equal((await sortedCDPs.getSize()).toString(), '5')
 
-    // Check that the liquidation sequence has not reduced the TCR
+    // Check that the liquidation sequence has reduced the TCR
     const TCR_After = await cdpManager.getTCR()
     // ((100+1+7+2+20)+(1+2+3+4)*0.995)*100/(2010+10+10+10+10+101+257+328+480)
     assert.isAtMost(th.getDifference(TCR_After, '4351679104477611300'), 1000)
