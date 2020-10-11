@@ -367,6 +367,7 @@ contract('Gas compensation tests', async accounts => {
 
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    console.log((await stabilityPool.getETH()).toString())
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_A = web3.utils.toBN(await web3.eth.getBalance(liquidator))
     await cdpManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
@@ -380,10 +381,10 @@ contract('Gas compensation tests', async accounts => {
     const CLVinSP_A = await stabilityPool.getCLV()
     assert.isTrue(CLVinSP_A.lte(CLVinSP_0))
 
-    // Check ETH in SP has not changed due to the liquidation
+    console.log((await stabilityPool.getETH()).toString())
+    // Check ETH in SP has received the liquidation
     const ETHinSP_A = await stabilityPool.getETH()
-    console.log(ETHinSP_A.toString())
-    assert.equal(ETHinSP_A, '0')
+    assert.equal(ETHinSP_A, dec(995, 15)) // 1 ETH - 0.5%
 
     // --- Price drops to 3 ---
     await priceFeed.setPrice(dec(3, 18))
@@ -405,17 +406,17 @@ contract('Gas compensation tests', async accounts => {
     await cdpManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
     const liquidatorBalance_after_B = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
-    // Check liquidator's balance increases by B's entire coll, 2 ETH
+    // Check liquidator's balance increases by B's 0.5% of coll, 2 ETH
     const compensationReceived_B = (liquidatorBalance_after_B.sub(liquidatorBalance_before_B)).toString()
-    assert.equal(compensationReceived_B, dec(2, 'ether'))
+    assert.equal(compensationReceived_B, dec(10, 15)) // 0.5% of 2 ETH
 
     // Check SP CLV has decreased due to the liquidation of B
     const CLVinSP_B = await stabilityPool.getCLV()
     assert.isTrue(CLVinSP_B.lt(CLVinSP_A))
 
-    // Check ETH in SP has not changed due to the liquidation of B
+    // Check ETH in SP has received the liquidation
     const ETHinSP_B = await stabilityPool.getETH()
-    assert.equal(ETHinSP_B, '0')
+    assert.equal(ETHinSP_B, dec(2985, 15)) // (1 + 2 ETH) * 0.995
 
 
     // --- Price drops to 3 ---
@@ -438,9 +439,9 @@ contract('Gas compensation tests', async accounts => {
     await cdpManager.liquidate(carol, { from: liquidator, gasPrice: 0 })
     const liquidatorBalance_after_C = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
-    // Check liquidator's balance increases by C's entire coll, 2 ETH
+    // Check liquidator's balance increases by C's 0.5% of coll, 3 ETH
     const compensationReceived_C = (liquidatorBalance_after_C.sub(liquidatorBalance_before_C)).toString()
-    assert.equal(compensationReceived_C, dec(3, 'ether'))
+    assert.equal(compensationReceived_C, dec(15, 15))
 
     // Check SP CLV has decreased due to the liquidation of C
     const CLVinSP_C = await stabilityPool.getCLV()
@@ -448,7 +449,7 @@ contract('Gas compensation tests', async accounts => {
 
     // Check ETH in SP has not changed due to the lquidation of C
     const ETHinSP_C = await stabilityPool.getETH()
-    assert.equal(ETHinSP_C, '0')
+    assert.equal(ETHinSP_C, dec(5970, 15)) // (1+2+3 ETH) * 0.995
   })
 
   it('gas compensation from pool-offset liquidations: 0.5% collateral < $10 in value. Compensates $10 worth of collateral, liquidates the remainder', async () => {
@@ -502,30 +503,19 @@ contract('Gas compensation tests', async accounts => {
     await cdpManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
     const liquidatorBalance_after_A = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
-    let collGasCompensation = await cdpManagerTester.getCollGasCompensation(price_1)
-    assert.isAtMost(th.getDifference(collGasCompensation, '999994999999999967'), 1000)
-
     // Check liquidator's balance increases by 0.5% of coll
-    console.log(liquidatorBalance_before_A.toString())
-    console.log(liquidatorBalance_after_A.toString())
-    console.log(collGasCompensation.toString())
     const compensationReceived_A = (liquidatorBalance_after_A.sub(liquidatorBalance_before_A)).toString()
-    console.log(compensationReceived_A.toString())
-    assert.equal(compensationReceived_A, collGasCompensation)
+    assert.equal(compensationReceived_A, _0pt5percent_aliceColl)
 
     // Check SP CLV has decreased due to the liquidation of A
     const CLVinSP_A = await stabilityPool.getCLV()
     assert.isTrue(CLVinSP_A.lt(CLVinSP_0))
 
     // Check ETH in SP has increased by the remainder of B's coll
-    const collRemainder_A = aliceColl.sub(collGasCompensation)
+    const collRemainder_A = aliceColl.sub(_0pt5percent_aliceColl)
     const ETHinSP_A = await stabilityPool.getETH()
 
     const SPETHIncrease_A = ETHinSP_A.sub(ETHinSP_0)
-
-    console.log(`SPETHIncrease_A: ${SPETHIncrease_A}`)
-    console.log(`ETHinSP_A: ${ETHinSP_A}`)
-    console.log(`collRemainder_A: ${collRemainder_A}`)
 
     assert.isAtMost(th.getDifference(SPETHIncrease_A, collRemainder_A), 1000)
 
@@ -554,7 +544,6 @@ contract('Gas compensation tests', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
     const bobICR = await cdpManager.getCurrentICR(bob, price_2)
-    console.log(`bobICR: ${bobICR}`)
     assert.isTrue(bobICR.lte(mv._MCR))
 
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
@@ -562,28 +551,19 @@ contract('Gas compensation tests', async accounts => {
     await cdpManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
     const liquidatorBalance_after_B = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
-    collGasCompensation = await cdpManagerTester.getCollGasCompensation(price_2)
-    console.log(`10_worthOfETH: ${collGasCompensation}`)
-    assert.isAtMost(th.getDifference(collGasCompensation, '666666666666666666'), 1000)
-
     // Check liquidator's balance increases by $10 worth of coll
     const compensationReceived_B = (liquidatorBalance_after_B.sub(liquidatorBalance_before_B)).toString()
-    assert.equal(compensationReceived_B, collGasCompensation)
+    assert.equal(compensationReceived_B, _0pt5percent_bobColl)
 
     // Check SP CLV has decreased due to the liquidation of B
     const CLVinSP_B = await stabilityPool.getCLV()
-    console.log(`CLVinSP_B:${CLVinSP_B}`)
     assert.isTrue(CLVinSP_B.lt(CLVinSP_A))
 
     // Check ETH in SP has increased by the remainder of B's coll
-    const collRemainder_B = bobColl.sub(collGasCompensation)
+    const collRemainder_B = bobColl.sub(_0pt5percent_bobColl)
     const ETHinSP_B = await stabilityPool.getETH()
 
     const SPETHIncrease_B = ETHinSP_B.sub(ETHinSP_A)
-
-    console.log(`SPETHIncrease_B: ${SPETHIncrease_B}`)
-    console.log(`ETHinSP_B: ${ETHinSP_B}`)
-    console.log(`collRemainder_B: ${collRemainder_B}`)
 
     assert.isAtMost(th.getDifference(SPETHIncrease_B, collRemainder_B), 1000)
   })
@@ -825,18 +805,13 @@ contract('Gas compensation tests', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
     const aliceICR = await cdpManager.getCurrentICR(alice, price_1)
-    console.log(`aliceICR: ${aliceICR}`)
     assert.isTrue(aliceICR.lt(mv._MCR))
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidationTxA = await cdpManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
 
-    let collGasCompensation = await cdpManagerTester.getCollGasCompensation(price_1)
-    console.log(`10_worthOfETH: ${collGasCompensation}`)
-    assert.isAtMost(th.getDifference(collGasCompensation, '999994999999999967'), 1000)
-
-    const expectedGasComp_A = collGasCompensation
-    const expectedLiquidatedColl_A = aliceColl.sub(collGasCompensation)
+    const expectedGasComp_A = _0pt5percent_aliceColl
+    const expectedLiquidatedColl_A = aliceColl.sub(expectedGasComp_A)
     const expectedLiquidatedDebt_A =  aliceDebt
 
     const loggedLiquidatedDebt_A = liquidationTxA.logs[1].args[0]
@@ -873,18 +848,13 @@ contract('Gas compensation tests', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
     const bobICR = await cdpManager.getCurrentICR(bob, price_2)
-    console.log(`bobICR: ${bobICR}`)
     assert.isTrue(bobICR.lte(mv._MCR))
 
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives
     const liquidationTxB = await cdpManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
    
-    collGasCompensation = await cdpManagerTester.getCollGasCompensation(price_2)
-    console.log(`10_worthOfETH: ${collGasCompensation}`)
-    assert.isAtMost(th.getDifference(collGasCompensation, '666666666666666666'), 1000)
-
-    const expectedGasComp_B = collGasCompensation
-    const expectedLiquidatedColl_B = bobColl.sub(collGasCompensation)
+    const expectedGasComp_B = _0pt5percent_bobColl
+    const expectedLiquidatedColl_B = bobColl.sub(expectedGasComp_B)
     const expectedLiquidatedDebt_B =  bobDebt
 
     const loggedLiquidatedDebt_B = liquidationTxB.logs[1].args[0]

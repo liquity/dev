@@ -1855,7 +1855,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("openLoan(): with non-zero debt, reverts when system is in recovery mode", async () => {
+  it("openLoan(): with ICR > 150%, reverts when system is in recovery mode", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(3, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(3, 'ether') })
@@ -1873,9 +1873,10 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice('150000000000000000000');
 
     try {
-      const txData = await borrowerOperations.openLoan('50000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+      const txData = await borrowerOperations.openLoan('101000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
       assert.fail(txData)
     } catch (err) {
+      console.log(err)
       assert.include(err.message, 'revert')
     }
   })
