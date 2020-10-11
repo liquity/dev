@@ -72,13 +72,8 @@ contract('CDPManager', async accounts => {
     cdpManager = contracts.cdpManager
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
-
-    gtStaking = GTContracts.gtStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
-
-    await deploymentHelper.connectCoreContracts(contracts)
+  
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts.gtStaking.address)
     await deploymentHelper.connectGTContracts(GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
 

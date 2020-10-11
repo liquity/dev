@@ -20,6 +20,8 @@ GT contracts consist of only those contracts related to the Growth Token:the tok
 and lockup, staking and community issuance coreContracts. */
 
 class DeploymentHelper {
+  static ZERO_ADDRESS = '0x' + '0'.repeat(40)
+
   static async deployLiquityCore() {
     const cmdLineArgs = process.argv
     const frameworkPath = cmdLineArgs[1]
@@ -156,88 +158,111 @@ class DeploymentHelper {
     return GTContracts
   }
 
-  // Connect core contracts to their dependencies
-  static async connectCoreContracts(coreContracts) {
-    // set contracts in the CLVToken contract
-    await coreContracts.clvToken.setPoolManagerAddress(coreContracts.poolManager.address)
-    await coreContracts.clvToken.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
+  // Connect contracts to their dependencies
+  static async connectCoreContracts(contracts, gtStakingAddress = this.ZERO_ADDRESS) {
+
+    // set PoolManager address in the CLVToken contract
+    await contracts.clvToken.setAddresses(
+      contracts.poolManager.address,
+      contracts.borrowerOperations.address
+    )
 
     // set contracts in the PoolManager
-    await coreContracts.poolManager.setBorrowerOperations(coreContracts.borrowerOperations.address)
-    await coreContracts.poolManager.setCDPManager(coreContracts.cdpManager.address)
-    await coreContracts.poolManager.setCLVToken(coreContracts.clvToken.address)
-    await coreContracts.poolManager.setPriceFeed(coreContracts.priceFeed.address)
-    await coreContracts.poolManager.setStabilityPool(coreContracts.stabilityPool.address)
-    await coreContracts.poolManager.setActivePool(coreContracts.activePool.address)
-    await coreContracts.poolManager.setDefaultPool(coreContracts.defaultPool.address)
+    await contracts.poolManager.setAddresses(
+      contracts.borrowerOperations.address,
+      contracts.cdpManager.address,
+      contracts.priceFeed.address,
+      contracts.clvToken.address,
+      contracts.stabilityPool.address,
+      contracts.activePool.address,
+      contracts.defaultPool.address
+    )
 
     // set CDPManager addr in SortedCDPs
-    await coreContracts.sortedCDPs.setCDPManager(coreContracts.cdpManager.address)
-    await coreContracts.sortedCDPs.setBorrowerOperations(coreContracts.borrowerOperations.address)
+    await contracts.sortedCDPs.setParams(
+      1e6,
+      contracts.cdpManager.address,
+      contracts.borrowerOperations.address
+    )
 
     // set contract addresses in the FunctionCaller 
-    await coreContracts.functionCaller.setCDPManagerAddress(coreContracts.cdpManager.address)
-    await coreContracts.functionCaller.setSortedCDPsAddress(coreContracts.sortedCDPs.address)
+    await contracts.functionCaller.setCDPManagerAddress(contracts.cdpManager.address)
+    await contracts.functionCaller.setSortedCDPsAddress(contracts.sortedCDPs.address)
 
-    // set CDPManager addr in PriceFeed
-    await coreContracts.priceFeed.setCDPManagerAddress(coreContracts.cdpManager.address)
+    // set contract addresses in PriceFeed
+    await contracts.priceFeed.setAddresses(
+      contracts.cdpManager.address,
+      contracts.poolManager.address,
+      this.ZERO_ADDRESS,
+      this.ZERO_ADDRESS
+    )
 
     // set contracts in the CDP Manager
-    await coreContracts.cdpManager.setSortedCDPs(coreContracts.sortedCDPs.address)
-    await coreContracts.cdpManager.setPoolManager(coreContracts.poolManager.address)
-    await coreContracts.cdpManager.setPriceFeed(coreContracts.priceFeed.address)
-    await coreContracts.cdpManager.setCLVToken(coreContracts.clvToken.address)
-    await coreContracts.cdpManager.setActivePool(coreContracts.activePool.address)
-    await coreContracts.cdpManager.setDefaultPool(coreContracts.defaultPool.address)
-    await coreContracts.cdpManager.setStabilityPool(coreContracts.stabilityPool.address)
-    await coreContracts.cdpManager.setBorrowerOperations(coreContracts.borrowerOperations.address)
+    await contracts.cdpManager.setAddresses(
+      contracts.borrowerOperations.address,
+      contracts.poolManager.address,
+      contracts.activePool.address,
+      contracts.defaultPool.address,
+      contracts.stabilityPool.address,
+      contracts.priceFeed.address,
+      contracts.clvToken.address,
+      contracts.sortedCDPs.address,
+      gtStakingAddress
+    )
 
     // set contracts in BorrowerOperations 
-    await coreContracts.borrowerOperations.setSortedCDPs(coreContracts.sortedCDPs.address)
-    await coreContracts.borrowerOperations.setPoolManager(coreContracts.poolManager.address)
-    await coreContracts.borrowerOperations.setPriceFeed(coreContracts.priceFeed.address)
-    await coreContracts.borrowerOperations.setActivePool(coreContracts.activePool.address)
-    await coreContracts.borrowerOperations.setDefaultPool(coreContracts.defaultPool.address)
-    await coreContracts.borrowerOperations.setCDPManager(coreContracts.cdpManager.address)
-    await coreContracts.borrowerOperations.setCLVToken(coreContracts.clvToken.address)
+    await contracts.borrowerOperations.setAddresses(
+      contracts.cdpManager.address,
+      contracts.poolManager.address,
+      contracts.activePool.address,
+      contracts.defaultPool.address,
+      contracts.priceFeed.address,
+      contracts.sortedCDPs.address,
+      contracts.clvToken.address,
+      gtStakingAddress
+    )
 
     // set contracts in the Pools
-    await coreContracts.stabilityPool.setPoolManagerAddress(coreContracts.poolManager.address)
-    await coreContracts.stabilityPool.setActivePoolAddress(coreContracts.activePool.address)
-    await coreContracts.stabilityPool.setDefaultPoolAddress(coreContracts.defaultPool.address)
+    await contracts.stabilityPool.setAddresses(
+      contracts.poolManager.address,
+      contracts.activePool.address,
+      contracts.defaultPool.address
+    )
 
-    await coreContracts.activePool.setPoolManagerAddress(coreContracts.poolManager.address)
-    await coreContracts.activePool.setCDPManagerAddress(coreContracts.cdpManager.address)
-    await coreContracts.activePool.setStabilityPoolAddress(coreContracts.stabilityPool.address)
-    await coreContracts.activePool.setDefaultPoolAddress(coreContracts.defaultPool.address)
+    await contracts.activePool.setAddresses(
+      contracts.poolManager.address,
+      contracts.cdpManager.address,
+      contracts.defaultPool.address,
+      contracts.stabilityPool.address
+    )
 
-    await coreContracts.defaultPool.setPoolManagerAddress(coreContracts.poolManager.address)
-    await coreContracts.defaultPool.setStabilityPoolAddress(coreContracts.stabilityPool.address)
-    await coreContracts.defaultPool.setActivePoolAddress(coreContracts.activePool.address)
+    await contracts.defaultPool.setAddresses(
+      contracts.poolManager.address,
+      contracts.activePool.address,
+      contracts.stabilityPool.address
+    )
 
     // set contracts in HintHelpers
-    await coreContracts.hintHelpers.setPriceFeed(coreContracts.priceFeed.address)
-    await coreContracts.hintHelpers.setCDPManager(coreContracts.cdpManager.address)
-    await coreContracts.hintHelpers.setSortedCDPs(coreContracts.sortedCDPs.address)
+    await contracts.hintHelpers.setAddresses(
+      contracts.priceFeed.address,
+      contracts.sortedCDPs.address,
+      contracts.cdpManager.address
+    )
   }
 
   static async connectGTContracts(GTContracts) {
-      // Set GrowthToken address in LCF, GTStaking, and CI
-      await GTContracts.gtStaking.setGrowthTokenAddress(GTContracts.growthToken.address)
-      await GTContracts.lockupContractFactory.setGrowthTokenAddress(GTContracts.growthToken.address)
-      await GTContracts.communityIssuance.setGrowthTokenAddress(GTContracts.growthToken.address)
-  }
-  
-  static async connectGTContractsToCore(GTContracts, coreContracts) {
-    // Set CDPM and BorrowerOps in GTStaking
-    await GTContracts.gtStaking.setCLVTokenAddress(coreContracts.clvToken.address)
-    await GTContracts.gtStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
-    await GTContracts.gtStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
+    // Set GrowthToken address in LCF, GTStaking, and CI
+    await GTContracts.gtStaking.setGrowthTokenAddress(GTContracts.growthToken.address)
+    await GTContracts.lockupContractFactory.setGrowthTokenAddress(GTContracts.growthToken.address)
+    await GTContracts.communityIssuance.setGrowthTokenAddress(GTContracts.growthToken.address)
+}
 
-    // Set GTStaking in BorrowerOps and CDPM
-    await coreContracts.borrowerOperations.setGTStaking(GTContracts.gtStaking.address)
-    await coreContracts.cdpManager.setGTStaking(GTContracts.gtStaking.address)
-  }
+static async connectGTContractsToCore(GTContracts, coreContracts) {
+  // Set CDPM and BorrowerOps in GTStaking
+  await GTContracts.gtStaking.setCLVTokenAddress(coreContracts.clvToken.address)
+  await GTContracts.gtStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
+  await GTContracts.gtStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
+}
 }
 
 module.exports = DeploymentHelper

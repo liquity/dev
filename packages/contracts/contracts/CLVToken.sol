@@ -32,16 +32,22 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
 
     // --- Functions ---
 
-    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
-        poolManagerAddress =  _poolManagerAddress;
-        emit PoolManagerAddressChanged(_poolManagerAddress);
-    }
-
-    function setBorrowerOperationsAddress(address _borrowerOperationsAddress) external onlyOwner {
+     function setAddresses(
+        address _poolManagerAddress,
+        address _borrowerOperationsAddress
+    )
+        external
+        onlyOwner
+    {
         borrowerOperationsAddress = _borrowerOperationsAddress;
+        poolManagerAddress = _poolManagerAddress;
+       
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        
+        _renounceOwnership();
     }
-
+  
     function mint(address _account, uint256 _amount) external  {
         _requireCallerIsPMorBO();
         _mint(_account, _amount); 
@@ -70,7 +76,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
 
     function _requireCallerIsPMorBO() internal view {
         require(_msgSender() == poolManagerAddress || _msgSender() == borrowerOperationsAddress, 
-        "CLVToken: Caller is not the PM or CDPM");
+        "CLVToken: Caller is not the PM or BO");
     }
 
    // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---

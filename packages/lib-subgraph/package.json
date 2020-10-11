@@ -6,7 +6,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "apollo": "apollo",
-    "codegen": "apollo client:codegen --target=typescript --outputFlat types",
+    "codegen": "run-s codegen:*",
+    "codegen:clean": "rimraf types",
+    "codegen:run": "apollo client:codegen --target=typescript --outputFlat types",
     "prepare": "tsc --project tsconfig.dist.json"
   },
   "peerDependencies": {
@@ -17,10 +19,13 @@
     "@liquity/decimal": "^0.0.1",
     "@liquity/lib-base": "^0.0.1",
     "apollo": "^2.30.3",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.2",
     "typescript": "^3.9.5"
   },
   "dependencies": {
     "@apollo/client": "^3.2.0",
+    "@ethersproject/address": "^5.0.4",
     "cross-fetch": "^3.0.6",
     "graphql": "^15.3.0"
   }

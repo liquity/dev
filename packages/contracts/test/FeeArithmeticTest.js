@@ -353,8 +353,8 @@ contract('Fee arithmetic tests', async accounts => {
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
 
-    await deploymentHelper.connectCoreContracts(contracts)
     await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(contracts, gtStaking.address)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
@@ -721,7 +721,6 @@ contract('Fee arithmetic tests', async accounts => {
         let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
         expected = BNConverter.makeBN(expected)
 
-        console.log(`expected: ${expected}`)
         const res = await mathTester.callDecPow(base, exponent)
 
         const error = expected.sub(res).abs()
@@ -748,7 +747,6 @@ contract('Fee arithmetic tests', async accounts => {
         let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
         expected = BNConverter.makeBN(expected)
 
-        console.log(`expected: ${expected}`)
         const res = await mathTester.callDecPow(base, exponent)
 
         const error = expected.sub(res).abs()
@@ -775,7 +773,6 @@ contract('Fee arithmetic tests', async accounts => {
         let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
         expected = BNConverter.makeBN(expected)
 
-        console.log(`expected: ${expected}`)
         const res = await mathTester.callDecPow(base, exponent)
 
         const error = expected.sub(res).abs()

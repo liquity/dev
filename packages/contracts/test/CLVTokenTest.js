@@ -1,50 +1,50 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
-
-const getDifference = testHelpers.getDifference
-const moneyVals = testHelpers.MoneyValues
 const dec = testHelpers.TestHelper.dec
 
-contract('CLVToken', async accounts => {
-  /* mockPool is an EOA, temporarily used to call PoolManager functions.
-  TODO: Replace with a mockPool contract, and later complete transactions from EOA -> CDPManager -> PoolManager -> CLVToken.
-  */
+const CLVTokenTester = artifacts.require('CLVTokenTester')
+const PoolManagerTester = artifacts.require('PoolManagerTester')
 
-  const [owner, mockPool, alice, bob, carol] = accounts;
+contract('CLVToken', async accounts => {
+  const [owner, alice, bob, carol] = accounts;
   let priceFeed
   let clvToken
   let poolManager
   let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
   let borrowerOperations
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
-      const contracts = await deploymentHelpers.deployLiquityCore()
-
+      contracts = await deploymentHelper.deployLiquityCore()
+      contracts.clvToken = await CLVTokenTester.new()
+      contracts.poolManager = await PoolManagerTester.new()
+      
+      const GTContracts = await deploymentHelper.deployGTContracts()
+  
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
       poolManager = contracts.poolManager
       sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
-      nameRegistry = contracts.nameRegistry
       activePool = contracts.activePool
       stabilityPool = contracts.stabilityPool
       defaultPool = contracts.defaultPool
-      functionCaller = contracts.functionCaller
       borrowerOperations = contracts.borrowerOperations
+      hintHelpers = contracts.hintHelpers
   
-      
-     await deploymentHelpers.connectCoreContracts(contracts)
+      gtStaking = GTContracts.gtStaking
+      growthToken = GTContracts.growthToken
+      communityIssuance = GTContracts.communityIssuance
+      lockupContractFactory = GTContracts.lockupContractFactory
+  
+      await deploymentHelper.connectCoreContracts(contracts, gtStaking.address)
+      await deploymentHelper.connectGTContracts(GTContracts)
+      await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
       
       // add CDPs for three test users
       await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
@@ -72,32 +72,26 @@ contract('CLVToken', async accounts => {
       assert.equal(total, 300)
     })
 
-    it('setPoolAddress(): sets a new pool address', async () => {
-      const newPoolManagerAddr = '0x8f0483125FCb9aaAEFA9209D8E9d7b9C8B9Fb90F'
-      await clvToken.setPoolManagerAddress(newPoolManagerAddr, { from: owner })
+    it('setPoolAddress(): gets pool address', async () => {
       const poolManagerAddress = await clvToken.poolManagerAddress()
-      assert.equal(newPoolManagerAddr, poolManagerAddress)
+      assert.equal(poolManagerAddress, poolManager.address)
     })
 
     it('mint(): issues correct amount of tokens to the given address', async () => {
-      await clvToken.setPoolManagerAddress(mockPool, { from: owner })
-
       const alice_balanceBefore = await clvToken.balanceOf(alice)
       assert.equal(alice_balanceBefore, 150)
 
-      await clvToken.mint(alice, 100, { from: mockPool })
+      await poolManager.clvMint(alice, 100)
 
       const alice_BalanceAfter = await clvToken.balanceOf(alice)
       assert.equal(alice_BalanceAfter, 250)
     })
 
     it('burn(): burns correct amount of tokens from the given address', async () => {
-      await clvToken.setPoolManagerAddress(mockPool, { from: owner })
-
       const alice_balanceBefore = await clvToken.balanceOf(alice)
       assert.equal(alice_balanceBefore, 150)
 
-      await clvToken.burn(alice, 70, { from: mockPool })
+      await poolManager.clvBurn(alice, 70)
 
       const alice_BalanceAfter = await clvToken.balanceOf(alice)
       assert.equal(alice_BalanceAfter, 80)
@@ -105,14 +99,12 @@ contract('CLVToken', async accounts => {
 
     // TODO: Rewrite this test - it should check the actual poolManager's balance.
     it('sendToPool(): changes balances of Stability pool and user by the correct amounts', async () => {
-      await clvToken.setPoolManagerAddress(mockPool, { from: owner })
-
       const stabilityPool_BalanceBefore = await clvToken.balanceOf(stabilityPool.address)
       const bob_BalanceBefore = await clvToken.balanceOf(bob)
       assert.equal(stabilityPool_BalanceBefore, 0)
       assert.equal(bob_BalanceBefore, 100)
 
-      await clvToken.sendToPool(bob, stabilityPool.address, 75, { from: mockPool })
+      await poolManager.clvSendToPool(bob, stabilityPool.address, 75)
 
       const stabilityPool_BalanceAfter = await clvToken.balanceOf(stabilityPool.address)
       const bob_BalanceAfter = await clvToken.balanceOf(bob)
@@ -122,8 +114,7 @@ contract('CLVToken', async accounts => {
 
     it('returnFromPool(): changes balances of Stability pool and user by the correct amounts', async () => {
       /// --- SETUP --- give pool 100 CLV
-      await clvToken.setPoolManagerAddress(mockPool, { from: owner })
-      await clvToken.mint(stabilityPool.address, 100, { from: mockPool })  
+      await poolManager.clvMint(stabilityPool.address, 100)
       
       /// --- TEST --- 
       const stabilityPool_BalanceBefore = await clvToken.balanceOf(stabilityPool.address)
@@ -131,7 +122,7 @@ contract('CLVToken', async accounts => {
       assert.equal(stabilityPool_BalanceBefore, 100)
       assert.equal(bob_BalanceBefore, 100)
 
-      await clvToken.returnFromPool(stabilityPool.address, bob, 75, { from: mockPool })
+      await poolManager.clvReturnFromPool(stabilityPool.address, bob, 75)
 
       const stabilityPool_BalanceAfter = await clvToken.balanceOf(stabilityPool.address)
       const bob_BalanceAfter = await clvToken.balanceOf(bob)

@@ -39,7 +39,6 @@
     "buidler-ethers-v5": "^0.2.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "colors": "^1.4.0",
     "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
     "ethers": "^5.0.2",

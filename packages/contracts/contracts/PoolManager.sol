@@ -99,46 +99,42 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Dependency setters ---
 
-    function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
+    function setAddresses(
+        address _borrowerOperationsAddress,
+        address _cdpManagerAddress,
+        address _priceFeedAddress,
+        address _CLVAddress,
+        address _stabilityPoolAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress
+    )
+        external
+        onlyOwner
+    {
         borrowerOperationsAddress = _borrowerOperationsAddress;
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-    }
-
-    function setCDPManager(address _cdpManagerAddress) external onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
-    }
-
-     function setPriceFeed(address _priceFeedAddress) external onlyOwner {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(_priceFeedAddress);
-        emit PriceFeedAddressChanged(_priceFeedAddress);
-    }
-
-    function setCLVToken(address _CLVAddress) external onlyOwner {
         clvAddress = _CLVAddress;
         CLV = ICLVToken(_CLVAddress);
-        emit CLVTokenAddressChanged(_CLVAddress);
-    }
-
-    function setStabilityPool(address _stabilityPoolAddress) external onlyOwner {
         stabilityPoolAddress = _stabilityPoolAddress;
         stabilityPool = IStabilityPool(stabilityPoolAddress);
-        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
-    }
-
-    function setActivePool(address _activePoolAddress) external onlyOwner {
         activePoolAddress = _activePoolAddress;
         activePool = IPool(activePoolAddress);
-        emit ActivePoolAddressChanged(_activePoolAddress);
-    }
-
-    function setDefaultPool(address _defaultPoolAddress) external onlyOwner {
         defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(defaultPoolAddress);
+
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit PriceFeedAddressChanged(_priceFeedAddress);
+        emit CLVTokenAddressChanged(_CLVAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
+
+        _renounceOwnership();
     }
 
     // --- Getters ---

@@ -1,9 +1,5 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -48,7 +44,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   let contracts
 
   beforeEach(async () => {
-    contracts = await deployLiquity()
+    contracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -62,8 +59,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
 
-    
-   await deploymentHelpers.connectCoreContracts(contracts)
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts.gtStaking.address)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
   it("checkRecoveryMode(): Returns true if TCR falls below CCR", async () => {

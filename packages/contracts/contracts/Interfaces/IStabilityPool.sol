@@ -21,12 +21,12 @@ interface IStabilityPool {
     
     function getCLV() external view returns (uint);
 
-    function setPoolManagerAddress(address _poolManagerAddress) external;
+    function setAddresses(
+        address _poolManagerAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress
+    ) external;
 
-    function setActivePoolAddress(address _activePoolAddress) external;
-
-    function setDefaultPoolAddress(address _defaultPoolAddress) external;
-    
     function sendETH(address _account, uint _amount) external;
 
     function increaseCLV(uint _amount) external;

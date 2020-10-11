@@ -19,19 +19,16 @@ interface IBorrowerOperations {
 
     // --- Functions ---
 
-    function setCDPManager(address _CDPManagerAddress) external;
-
-    function setPoolManager(address _poolManagerAddress) external;
-
-     function setActivePool(address _activePoolAddress) external; 
-
-    function setDefaultPool(address _defaultPoolAddress) external;
-
-    function setPriceFeed(address _priceFeedAddress) external;
-
-    function setSortedCDPs(address _sortedCDPsAddress) external;
-
-    function setGTStaking(address _gtStakingAddress) external;
+    function setAddresses(
+        address _cdpManagerAddress,
+        address _poolManagerAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress,
+        address _priceFeedAddress,
+        address _sortedCDPsAddress,
+        address _clvTokenAddress,
+        address _gtStakingAddress
+    ) external;
 
     function openLoan(uint _CLVAmount, address _hint) external payable;
 

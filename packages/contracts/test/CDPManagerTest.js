@@ -1,6 +1,7 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -38,6 +39,8 @@ contract('CDPManager', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
+    contracts.clvToken = await CLVTokenTester.new()
+    
     const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
@@ -56,7 +59,7 @@ contract('CDPManager', async accounts => {
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
 
-    await deploymentHelper.connectCoreContracts(contracts)
+    await deploymentHelper.connectCoreContracts(contracts, gtStaking.address)
     await deploymentHelper.connectGTContracts(GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
@@ -76,9 +79,7 @@ contract('CDPManager', async accounts => {
     // Alice withdraws to 180 CLV, lowering her ICR to 1.11
     const A_CLVWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
 
-    console.log(`A_CLVWithdrawal ${A_CLVWithdrawal}`)
     await borrowerOperations.withdrawCLV(A_CLVWithdrawal, alice, { from: alice })
-
 
     const ICR_AfterWithdrawal = await cdpManager.getCurrentICR(alice, price)
     assert.isAtMost(th.getDifference(ICR_AfterWithdrawal, '1111111111111111111'), 100)
@@ -2609,14 +2610,10 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if there is zero outstanding system debt", async () => {
-    // --- SETUP --- mock Alice as poolManager address in CLVTokenContract to ilegally mint CLV to Bob
-    await clvToken.setPoolManagerAddress(alice)
-    await clvToken.mint(bob, dec(100, 18), { from: alice })
+    // --- SETUP --- illegally mint CLV to Bob
+    await clvToken.unprotectedMint(bob, dec(100, 18))
 
     assert.equal((await clvToken.balanceOf(bob)), dec(100, 18))
-
-    // Set poolManager in clvToken back to correct address
-    await clvToken.setPoolManagerAddress(poolManager.address)
 
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(30, 'ether') })
@@ -2652,14 +2649,10 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if caller's tries to redeem more than the outstanding system debt", async () => {
-    // --- SETUP --- mock Alice as poolManager address in CLVTokenContract to ilegally mint CLV to Bob
-    await clvToken.setPoolManagerAddress(alice)
-    await clvToken.mint(bob, '101000000000000000000', { from: alice })
+    // --- SETUP --- illegally mint CLV to Bob
+    await clvToken.unprotectedMint(bob, '101000000000000000000')
 
     assert.equal((await clvToken.balanceOf(bob)), '101000000000000000000')
-
-    // Set poolManager in clvToken back to correct address
-    await clvToken.setPoolManagerAddress(poolManager.address)
 
     await borrowerOperations.openLoan(dec(50, 18), carol, { from: carol, value: dec(30, 'ether') })
     await borrowerOperations.openLoan(dec(50, 18), dennis, { from: dennis, value: dec(40, 'ether') })

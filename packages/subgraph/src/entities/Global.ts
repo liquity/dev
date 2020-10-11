@@ -19,6 +19,10 @@ export function getGlobal(): Global {
     newGlobal.changeCount = 0;
     newGlobal.liquidationCount = 0;
     newGlobal.redemptionCount = 0;
+    newGlobal.numberOfOpenTroves = 0;
+    newGlobal.numberOfLiquidatedTroves = 0;
+    newGlobal.numberOfTrovesClosedByOwner = 0;
+    newGlobal.totalNumberOfTroves = 0;
     newGlobal.rawTotalRedistributedCollateral = BIGINT_ZERO;
     newGlobal.rawTotalRedistributedDebt = BIGINT_ZERO;
 
@@ -61,5 +65,29 @@ export function updateTotalRedistributed(L_ETH: BigInt, L_CLVDebt: BigInt): void
 
   global.rawTotalRedistributedCollateral = L_ETH;
   global.rawTotalRedistributedDebt = L_CLVDebt;
+  global.save();
+}
+
+export function increaseNumberOfOpenTroves(): void {
+  let global = getGlobal();
+
+  global.numberOfOpenTroves++;
+  global.totalNumberOfTroves++;
+  global.save();
+}
+
+export function increaseNumberOfLiquidatedTroves(): void {
+  let global = getGlobal();
+
+  global.numberOfLiquidatedTroves++;
+  global.numberOfOpenTroves--;
+  global.save();
+}
+
+export function increaseNumberOfTrovesClosedByOwner(): void {
+  let global = getGlobal();
+
+  global.numberOfTrovesClosedByOwner++;
+  global.numberOfOpenTroves--;
   global.save();
 }

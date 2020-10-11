@@ -8,6 +8,11 @@ type Global @entity {
   liquidationCount: Int!
   redemptionCount: Int!
 
+  numberOfOpenTroves: Int!
+  numberOfLiquidatedTroves: Int!
+  numberOfTrovesClosedByOwner: Int!
+  totalNumberOfTroves: Int!
+
   "Total redistributed per-stake collateral"
   rawTotalRedistributedCollateral: BigInt!
 
@@ -78,14 +83,14 @@ type Trove @entity {
   rawDebt: BigInt!
   rawStake: BigInt!
 
-  "Collateral divided by debt. Can be used to sort by collateral ratio."
-  rawCollateralPerDebt: BigInt!
-
   "The value of total redistributed per-stake collateral the last time rewards were applied"
   rawSnapshotOfTotalRedistributedCollateral: BigInt!
 
   "The value of total redistributed per-stake debt the last time rewards were applied"
   rawSnapshotOfTotalRedistributedDebt: BigInt!
+
+  "Ordering by this field will result in the same ordering as collateral ratio (except reversed)"
+  collateralRatioSortKey: BigInt
 }
 
 type StabilityDeposit @entity {

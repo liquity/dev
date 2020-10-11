@@ -70,30 +70,19 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
     // --- Dependency setters --- 
 
-    function setCDPManager(address _CDPManagerAddress) external onlyOwner {
-        CDPManagerAddress = _CDPManagerAddress;
-        cdpManager = ICDPManager(_CDPManagerAddress);
-        emit CDPManagerAddressChanged(_CDPManagerAddress);
-    }
-
-    function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
-        borrowerOperationsAddress = _borrowerOperationsAddress;
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-    }
-
-    constructor() public {
-        data.maxSize = 10000000;
-    }
-
-    /*
-     * @dev Set the maximum size of the list
-     * @param _size Maximum size
-     */
-    function setMaxSize(uint256 _size) external onlyOwner {
-        // New max size must be greater than old max size
-        require(_size > data.maxSize);
+    function setParams(uint256 _size, address _CDPManagerAddress, address _borrowerOperationsAddress) external onlyOwner {
+        require(_size > 0, "SortedCDPs: Size can’t be zero");
 
         data.maxSize = _size;
+
+        CDPManagerAddress = _CDPManagerAddress;
+        cdpManager = ICDPManager(_CDPManagerAddress);
+        borrowerOperationsAddress = _borrowerOperationsAddress;
+
+        emit CDPManagerAddressChanged(_CDPManagerAddress);
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+
+        _renounceOwnership();
     }
 
     /*

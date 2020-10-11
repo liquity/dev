@@ -28,23 +28,17 @@ interface ICDPManager {
 
     // --- Functions ---
 
-    function setBorrowerOperations(address _borrowerOperationsAddress) external;
-
-    function setPoolManager(address _poolManagerAddress) external;
-
-    function setActivePool(address _activePoolAddress) external; 
-
-    function setDefaultPool(address _defaultPoolAddress) external;
-
-    function setStabilityPool(address _stabilityPoolAddress) external;
-
-    function setCLVToken(address _clvTokenAddress) external;
-
-    function setPriceFeed(address _priceFeedAddress) external;
-
-    function setSortedCDPs(address _sortedCDPsAddress) external;
-
-    function setGTStaking(address _gtStakingAddress) external;
+    function setAddresses(
+        address _borrowerOperationsAddress,
+        address _poolManagerAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress,
+        address _stabilityPoolAddress,
+        address _priceFeedAddress,
+        address _clvTokenAddress,
+        address _sortedCDPsAddress,
+        address _gtStakingAddress
+    ) external;
 
     function getCDPOwnersCount() external view returns (uint);
 

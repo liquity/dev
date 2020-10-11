@@ -61,8 +61,9 @@ contract('PoolManager', async accounts => {
       communityIssuance = GTContracts.communityIssuance
       lockupContractFactory = GTContracts.lockupContractFactory
   
-      await deploymentHelper.connectCoreContracts(contracts)
+      
       await deploymentHelper.connectGTContracts(GTContracts)
+      await deploymentHelper.connectCoreContracts(contracts, gtStaking.address)
       await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
     })
 
@@ -188,7 +189,6 @@ contract('PoolManager', async accounts => {
     it("provideToSP(), multiple deposits: updates user's deposit and snapshots", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
       await borrowerOperations.withdrawCLV('1850000000000000000000', alice, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
@@ -607,7 +607,6 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSP(): partial retrieval - retrieves correct CLV amount and the entire ETH Gain, and updates deposit", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
@@ -661,7 +660,6 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSP(): partial retrieval - leaves the correct amount of CLV in the Stability Pool", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
@@ -705,7 +703,6 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSP(): full retrieval - leaves the correct amount of CLV in the Stability Pool", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
@@ -759,8 +756,6 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSP(): Subsequent deposit and withdrawal attempt from same account, with no intermediate liquidations, withdraws zero ETH", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
-
       await borrowerOperations.openLoan('1850000000000000000000', whale, { from: whale, value: dec(50, 'ether') })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
 
@@ -812,7 +807,6 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSP(): it correctly updates the user's CLV and ETH snapshots of entitled reward per unit staked", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
@@ -860,8 +854,6 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSP(): decreases StabilityPool ETH", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
-
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
@@ -1557,8 +1549,6 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSPtoCDP(): Applies CLVLoss to user's deposit, and redirects ETH reward to user's CDP", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
-
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
@@ -1615,8 +1605,6 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSPtoCDP(): Subsequent deposit and withdrawal attempt from same account, with no intermediate liquidations, withdraws zero ETH", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
-
       await borrowerOperations.openLoan('1850000000000000000000', whale, { from: whale, value: dec(50, 'ether') })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })
 
@@ -1668,8 +1656,6 @@ contract('PoolManager', async accounts => {
     it("withdrawFromSPtoCDP(): decreases StabilityPool ETH and increases activePool ETH", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
-      await poolManager.setCDPManager(cdpManager.address, { from: owner })
-
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawCLV('1850000000000000000000', whale, { from: whale })
       await poolManager.provideToSP('1850000000000000000000', { from: whale })

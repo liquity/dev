@@ -90,52 +90,46 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Dependency setters --- 
 
-    function setCDPManager(address _cdpManagerAddress) external onlyOwner {
+    function setAddresses(
+        address _cdpManagerAddress,
+        address _poolManagerAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress,
+        address _priceFeedAddress,
+        address _sortedCDPsAddress,
+        address _clvTokenAddress,
+        address _gtStakingAddress
+    )
+        external
+        onlyOwner
+    {
         cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
-    }
-
-    function setPoolManager(address _poolManagerAddress) external onlyOwner {
         poolManagerAddress = _poolManagerAddress;
         poolManager = IPoolManager(_poolManagerAddress);
-        emit PoolManagerAddressChanged(_poolManagerAddress);
-    }
-
-    function setActivePool(address _activePoolAddress) external onlyOwner {
         activePoolAddress = _activePoolAddress;
         activePool = IPool(_activePoolAddress);
-        emit ActivePoolAddressChanged(_activePoolAddress);
-    }
-
-    function setDefaultPool(address _defaultPoolAddress) external onlyOwner {
         defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(_defaultPoolAddress);
-        emit DefaultPoolAddressChanged(_defaultPoolAddress);
-    }
-
-    function setPriceFeed(address _priceFeedAddress) external onlyOwner {
         priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(priceFeedAddress);
-        emit PriceFeedAddressChanged(_priceFeedAddress);
-    }
-
-    function setSortedCDPs(address _sortedCDPsAddress) external onlyOwner {
         sortedCDPsAddress = _sortedCDPsAddress;
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
-    }
-
-    function setGTStaking(address _gtStakingAddress) external onlyOwner {
-        gtStakingAddress = _gtStakingAddress;
-        gtStaking = IGTStaking(_gtStakingAddress);
-        emit GTStakingAddressChanged(_gtStakingAddress);
-    }
-
-    function setCLVToken(address _clvTokenAddress) external onlyOwner {
         clvTokenAddress = _clvTokenAddress;
         clvToken = ICLVToken(_clvTokenAddress);
+        gtStakingAddress = _gtStakingAddress;
+        gtStaking = IGTStaking(_gtStakingAddress);
+
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
+        emit PriceFeedAddressChanged(_priceFeedAddress);
+        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
+        emit GTStakingAddressChanged(_gtStakingAddress);
+
+        _renounceOwnership();
     }
 
     // --- Borrower Trove Operations ---

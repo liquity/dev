@@ -1,6 +1,5 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 
 
 const th = testHelpers.TestHelper
@@ -45,12 +44,6 @@ contract('CDPManager', async accounts => {
   let borrowerOperations
 
   let contracts
-  let cdpManagerTester
-
-  before(async () => {
-    cdpManagerTester = await CDPManagerTester.new()
-    CDPManagerTester.setAsDeployed(cdpManagerTester)
-  })
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
@@ -65,15 +58,14 @@ contract('CDPManager', async accounts => {
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
     borrowerOperations = contracts.borrowerOperations
-    hintHelpers = contracts.hintHelpers
 
     gtStaking = GTContracts.gtStaking
     growthToken = GTContracts.growthToken
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
 
-    await deploymentHelper.connectCoreContracts(contracts)
     await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(contracts, gtStaking.address)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 

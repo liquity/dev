@@ -1,16 +1,11 @@
 import fetch from "cross-fetch";
-import {
-  gql,
-  ApolloClient,
-  InMemoryCache,
-  NormalizedCacheObject,
-  HttpLink,
-  ApolloQueryResult,
-  DocumentNode
-} from "@apollo/client";
+import { gql, ApolloClient, InMemoryCache, NormalizedCacheObject, HttpLink } from "@apollo/client";
+import { getAddress } from "@ethersproject/address";
 import { BigNumber } from "@ethersproject/bignumber";
 
 import { Decimal } from "@liquity/decimal";
+
+import { Query } from "./Query";
 
 import {
   ReadableLiquity,
@@ -19,12 +14,12 @@ import {
   StabilityDeposit
 } from "@liquity/lib-base";
 
-import { TroveStatus } from "../types/globalTypes";
-import { TotalRedistributed } from "../types/TotalRedistributed";
+import { OrderDirection } from "../types/globalTypes";
+import { Global } from "../types/Global";
+import { TroveRawFields } from "../types/TroveRawFields";
 import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
-import { Price } from "../types/Price";
-import { Total } from "../types/Total";
-import { TokensInStabilityPool } from "../types/TokensInStabilityPool";
+import { Troves, TrovesVariables } from "../types/Troves";
+import { BlockNumberDummy, BlockNumberDummyVariables } from "../types/BlockNumberDummy";
 
 const normalizeAddress = (address?: string) => {
   if (address === undefined) {
@@ -36,53 +31,93 @@ const normalizeAddress = (address?: string) => {
 
 const decimalify = (bigNumberString: string) => new Decimal(BigNumber.from(bigNumberString));
 
-class Query<T, U, V = undefined> {
-  query: DocumentNode;
-  mapResult: (result: ApolloQueryResult<U>) => T;
+const queryGlobal = gql`
+  query Global {
+    global(id: "only") {
+      id
+      numberOfOpenTroves
+      rawTotalRedistributedCollateral
+      rawTotalRedistributedDebt
 
-  constructor(query: DocumentNode, mapResult: (result: ApolloQueryResult<U>) => T) {
-    this.query = query;
-    this.mapResult = mapResult;
-  }
-
-  get(client: ApolloClient<unknown>, variables?: V) {
-    return client
-      .query<U, V>({ query: this.query, variables })
-      .then(result => this.mapResult(result));
-  }
-
-  watch(client: ApolloClient<unknown>, onChanged: (value: T) => void, variables?: V) {
-    const subscription = client
-      .watchQuery<U, V>({ query: this.query, variables })
-      .subscribe(result => onChanged(this.mapResult(result)));
-
-    return () => subscription.unsubscribe();
-  }
-}
-
-const totalRedistributed = new Query<Trove, TotalRedistributed>(
-  gql`
-    query TotalRedistributed {
-      global(id: "only") {
-        rawTotalRedistributedCollateral
-        rawTotalRedistributedDebt
+      currentSystemState {
+        id
+        price
+        totalCollateral
+        totalDebt
+        tokensInStabilityPool
       }
     }
-  `,
-  ({ data: { global } }) => {
-    if (global) {
-      const { rawTotalRedistributedCollateral, rawTotalRedistributedDebt } = global;
-
-      return new Trove({
-        collateral: decimalify(rawTotalRedistributedCollateral),
-        debt: decimalify(rawTotalRedistributedDebt),
-        virtualDebt: 0
-      });
-    } else {
-      return new Trove({ virtualDebt: 0 });
-    }
   }
+`;
+
+const numberOfTroves = new Query<number, Global>(
+  queryGlobal,
+  ({ data: { global } }) => global?.numberOfOpenTroves ?? 0
 );
+
+const totalRedistributed = new Query<Trove, Global>(queryGlobal, ({ data: { global } }) => {
+  if (global) {
+    const { rawTotalRedistributedCollateral, rawTotalRedistributedDebt } = global;
+
+    return new Trove({
+      collateral: decimalify(rawTotalRedistributedCollateral),
+      debt: decimalify(rawTotalRedistributedDebt),
+      virtualDebt: 0
+    });
+  } else {
+    return new Trove({ virtualDebt: 0 });
+  }
+});
+
+const price = new Query<Decimal, Global>(queryGlobal, ({ data: { global } }) =>
+  Decimal.from(global?.currentSystemState?.price ?? 200)
+);
+
+const total = new Query<Trove, Global>(queryGlobal, ({ data: { global } }) => {
+  if (global?.currentSystemState) {
+    const { totalCollateral, totalDebt } = global.currentSystemState;
+
+    return new Trove({
+      collateral: totalCollateral,
+      debt: totalDebt,
+      virtualDebt: 0
+    });
+  } else {
+    return new Trove({ virtualDebt: 0 });
+  }
+});
+
+const tokensInStabilityPool = new Query<Decimal, Global>(queryGlobal, ({ data: { global } }) =>
+  Decimal.from(global?.currentSystemState?.tokensInStabilityPool ?? 0)
+);
+
+const troveRawFields = gql`
+  fragment TroveRawFields on Trove {
+    rawCollateral
+    rawDebt
+    rawStake
+    rawSnapshotOfTotalRedistributedCollateral
+    rawSnapshotOfTotalRedistributedDebt
+  }
+`;
+
+const troveFromRawFields = ({
+  rawCollateral,
+  rawDebt,
+  rawStake,
+  rawSnapshotOfTotalRedistributedCollateral,
+  rawSnapshotOfTotalRedistributedDebt
+}: TroveRawFields) =>
+  new TroveWithPendingRewards({
+    collateral: decimalify(rawCollateral),
+    debt: decimalify(rawDebt),
+    stake: decimalify(rawStake),
+
+    snapshotOfTotalRedistributed: {
+      collateral: decimalify(rawSnapshotOfTotalRedistributedCollateral),
+      debt: decimalify(rawSnapshotOfTotalRedistributedDebt)
+    }
+  });
 
 const troveWithoutRewards = new Query<
   TroveWithPendingRewards,
@@ -92,99 +127,64 @@ const troveWithoutRewards = new Query<
   gql`
     query TroveWithoutRewards($address: ID!) {
       user(id: $address) {
+        id
         currentTrove {
-          status
-          rawCollateral
-          rawDebt
-          rawStake
-          rawSnapshotOfTotalRedistributedCollateral
-          rawSnapshotOfTotalRedistributedDebt
+          id
+          ...TroveRawFields
         }
       }
     }
+    ${troveRawFields}
   `,
   ({ data: { user } }) => {
-    if (user?.currentTrove?.status === TroveStatus.open) {
-      const {
-        rawCollateral,
-        rawDebt,
-        rawStake,
-        rawSnapshotOfTotalRedistributedCollateral,
-        rawSnapshotOfTotalRedistributedDebt
-      } = user.currentTrove;
-
-      return new TroveWithPendingRewards({
-        collateral: decimalify(rawCollateral),
-        debt: decimalify(rawDebt),
-        stake: decimalify(rawStake),
-
-        snapshotOfTotalRedistributed: {
-          collateral: decimalify(rawSnapshotOfTotalRedistributedCollateral),
-          debt: decimalify(rawSnapshotOfTotalRedistributedDebt)
-        }
-      });
+    if (user?.currentTrove) {
+      return troveFromRawFields(user.currentTrove);
     } else {
       return new TroveWithPendingRewards();
     }
   }
 );
 
-const price = new Query<Decimal, Price>(
+const troves = new Query<(readonly [string, TroveWithPendingRewards])[], Troves, TrovesVariables>(
   gql`
-    query Price {
-      global(id: "only") {
-        currentSystemState {
-          price
+    query Troves($orderDirection: OrderDirection!, $startIdx: Int!, $numberOfTroves: Int!) {
+      troves(
+        where: { status: open }
+        orderBy: collateralRatioSortKey
+        orderDirection: $orderDirection
+        skip: $startIdx
+        first: $numberOfTroves
+      ) {
+        id
+        owner {
+          id
         }
+        ...TroveRawFields
       }
     }
+    ${troveRawFields}
   `,
-  ({ data: { global } }) => Decimal.from(global?.currentSystemState?.price ?? 200)
+  ({ data: { troves } }) =>
+    troves.map(
+      ({ owner: { id }, ...rawFields }) => [getAddress(id), troveFromRawFields(rawFields)] as const
+    )
 );
 
-const total = new Query<Trove, Total>(
+const blockNumberDummy = new Query<void, BlockNumberDummy, BlockNumberDummyVariables>(
   gql`
-    query Total {
-      global(id: "only") {
-        currentSystemState {
-          totalCollateral
-          totalDebt
-        }
+    query BlockNumberDummy($blockNumber: Int!) {
+      globals(block: { number: $blockNumber }) {
+        id
       }
     }
   `,
-  ({ data: { global } }) => {
-    if (global?.currentSystemState) {
-      const { totalCollateral, totalDebt } = global.currentSystemState;
-
-      return new Trove({
-        collateral: totalCollateral,
-        debt: totalDebt,
-        virtualDebt: 0
-      });
-    } else {
-      return new Trove({ virtualDebt: 0 });
-    }
-  }
-);
-
-const tokensInStabilityPool = new Query<Decimal, TokensInStabilityPool>(
-  gql`
-    query TokensInStabilityPool {
-      global(id: "only") {
-        currentSystemState {
-          tokensInStabilityPool
-        }
-      }
-    }
-  `,
-  ({ data: { global } }) => Decimal.from(global?.currentSystemState?.tokensInStabilityPool ?? 0)
+  () => {}
 );
 
 export class SubgraphLiquity implements ReadableLiquity {
   private client: ApolloClient<NormalizedCacheObject>;
 
-  constructor(uri: string, pollInterval?: number) {
+  constructor(uri = "http://localhost:8000/subgraphs/name/liquity/subgraph", pollInterval = 4000) {
     this.client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new HttpLink({ fetch, uri }),
@@ -226,11 +226,11 @@ export class SubgraphLiquity implements ReadableLiquity {
   }
 
   getNumberOfTroves(): Promise<number> {
-    throw new Error("Method not implemented.");
+    return numberOfTroves.get(this.client);
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void): () => void {
-    throw new Error("Method not implemented.");
+    return numberOfTroves.watch(this.client, onNumberOfTrovesChanged);
   }
 
   getPrice() {
@@ -276,17 +276,31 @@ export class SubgraphLiquity implements ReadableLiquity {
     throw new Error("Method not implemented.");
   }
 
-  getLastTroves(
-    startIdx: number,
-    numberOfTroves: number
-  ): Promise<(readonly [string, TroveWithPendingRewards])[]> {
-    throw new Error("Method not implemented.");
+  getFirstTroves(startIdx: number, numberOfTroves: number) {
+    return troves.get(this.client, {
+      startIdx,
+      numberOfTroves,
+      orderDirection: OrderDirection.asc
+    });
   }
 
-  getFirstTroves(
-    startIdx: number,
-    numberOfTroves: number
-  ): Promise<(readonly [string, TroveWithPendingRewards])[]> {
-    throw new Error("Method not implemented.");
+  getLastTroves(startIdx: number, numberOfTroves: number) {
+    return troves.get(this.client, {
+      startIdx,
+      numberOfTroves,
+      orderDirection: OrderDirection.desc
+    });
+  }
+
+  async waitForBlock(blockNumber: number) {
+    for (;;) {
+      try {
+        await blockNumberDummy.get(this.client, { blockNumber });
+      } catch {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
+      }
+      return;
+    }
   }
 }

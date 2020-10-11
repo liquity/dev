@@ -29,20 +29,16 @@ interface IPoolManager {
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
     // --- Functions ---
-    function setBorrowerOperations(address _borrowerOperationsAddress) external;
+    function setAddresses(
+        address _borrowerOperationsAddress,
+        address _cdpManagerAddress,
+        address _priceFeedAddress,
+        address _CLVAddress,
+        address _stabilityPoolAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress
+    ) external;
 
-    function setCDPManager(address _cdpManagerAddress) external;
-
-    function setPriceFeed(address _priceFeedAddress) external;
-
-    function setCLVToken(address _CLVAddress) external;
-
-    function setStabilityPool(address _stabilityPoolAddress) external;
-
-    function setActivePool(address _activePoolAddress) external;
-
-    function setDefaultPool(address _defaultPoolAddress) external;
-    
     function getBalance() external view returns (uint);
     
     function getActiveDebt() external view returns (uint);

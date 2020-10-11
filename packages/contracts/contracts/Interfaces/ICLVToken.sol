@@ -6,7 +6,10 @@ interface ICLVToken {
     event CLVTokenBalanceUpdated(address _user, uint _amount);
 
     // --- Functions ---
-    function setPoolManagerAddress(address _poolManagerAddress) external;
+    function setAddresses(
+        address _poolManagerAddress,
+        address _borrowerOperationsAddress
+    ) external;
 
     function mint(address _account, uint256 _amount) external;
 

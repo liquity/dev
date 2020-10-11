@@ -6,6 +6,7 @@ import { Decimal, Difference, Percent } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { Trove, StabilityDeposit } from "@liquity/lib-base";
 import { EthersLiquity } from "@liquity/lib-ethers";
+import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
 import { useLiquityStore } from "./hooks/BlockPolledLiquityStore";
@@ -62,6 +63,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
     liquity,
     store: storeState.value,
     EthersLiquity,
+    SubgraphLiquity,
     Trove,
     StabilityDeposit,
     Decimal,

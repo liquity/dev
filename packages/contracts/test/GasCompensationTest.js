@@ -64,8 +64,8 @@ contract('Gas compensation tests', async accounts => {
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
 
-    await deploymentHelper.connectCoreContracts(contracts)
     await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(contracts, gtStaking.address) 
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 

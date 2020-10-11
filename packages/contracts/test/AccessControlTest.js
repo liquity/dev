@@ -1,14 +1,11 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CLVTokenData = artifacts.require("./CLVTokenData.sol")
-const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
-const CustomDurationLockupContract = artifacts.require(("./CustomDurationLockupContract.sol"))
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
 
 const dec = th.dec
-
 
 contract('All Liquity functions with intra-system access control restrictions', async accounts => {
 
@@ -46,8 +43,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
 
-    await deploymentHelper.connectCoreContracts(coreContracts)
     await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, gtStaking.address)
     await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
 
     th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
@@ -486,7 +483,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PM or CDPM")
+        assert.include(err.message, "Caller is not the PM or BO")
       }
     })
 

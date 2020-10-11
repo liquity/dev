@@ -47,4 +47,17 @@ contract CDPManagerTester is CDPManager {
     // function callGetRedemptionFee(uint _ETHDrawn, uint _price) external view returns (uint) {
     //     _getRedemptionFee(_ETHDrawn, _price);
     // }  
+
+    function pmLiquidate(uint _CLV, uint _ETH) external {
+        poolManager.liquidate(_CLV, _ETH);
+    }
+
+    function pmRedeemCollateral(address _account, uint _CLV, uint _ETH) external {
+        poolManager.redeemCollateral(_account, _CLV, _ETH);
+    }
+
+    function pmMovePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external {
+        poolManager.movePendingTroveRewardsToActivePool(_CLV, _ETH);
+    }
 }
+
