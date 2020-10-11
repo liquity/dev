@@ -1,14 +1,12 @@
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
-const testHelpers = require("../utils/testHelpers.js")
+const { TestHelper: th, MoneyValues: mv, assertRevert } = require("../utils/testHelpers.js")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 
 const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
-const th = testHelpers.TestHelper
 const dec = th.dec
-const mv = testHelpers.MoneyValues
 
 contract('BorrowerOperations', async accounts => {
 
@@ -413,14 +411,16 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("withdrawColl(): reverts when requested ETH withdrawal is > the trove's collateral", async () => {
+  it("withdrawColl(): reverts when requested ETH withdrawal is >= the trove's collateral", async () => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(1, 'ether') })
 
     // Carol withdraws exactly all her collateral
-    const txCarol = await borrowerOperations.withdrawColl('1000000000000000000', carol, { from: carol })
-    assert.isTrue(txCarol.receipt.status)
+    await assertRevert(
+      borrowerOperations.withdrawColl('1000000000000000000', carol, { from: carol }),
+      'BorrowerOps: An operation that would result in ICR < MCR is not permitted'
+    )
 
     // Bob attempts to withdraw 1 wei more than his collateral
     try {
@@ -485,19 +485,18 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("withdrawColl(): allows a user to completely withdraw all collateral from their CDP", async () => {
+  it("withdrawColl(): doesn’t allow a user to completely withdraw all collateral from their CDP (due to gas compensation)", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(100, 'finney') })
 
     // Alice attempts to withdraw all collateral
-    const txData = await borrowerOperations.withdrawColl(dec(100, 'finney'), alice, { from: alice })
-
-    // check withdrawal was successful
-    txStatus = txData.receipt.status
-    assert.isTrue(txStatus)
+    await assertRevert(
+      borrowerOperations.withdrawColl(dec(100, 'finney'), alice, { from: alice }),
+      'BorrowerOps: An operation that would result in ICR < MCR is not permitted'
+    )
   })
 
-  it("withdrawColl(): closes the CDP when the user withdraws all collateral", async () => {
+  it("withdrawColl(): cannot withdraw all collateral (due to gas compensation)", async () => {
     // Open CDPs
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
@@ -509,14 +508,10 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(await sortedCDPs.contains(alice))
 
     // Withdraw all the collateral in the CDP
-    await borrowerOperations.withdrawColl(dec(1, 'ether'), alice, { from: alice })
-
-    // Check CDP is closed
-    const alice_CDP_After = await cdpManager.CDPs(alice)
-    const status_After = alice_CDP_After[3]
-    assert.equal(status_After, 2)
-    assert.isFalse(await sortedCDPs.contains(alice))
-
+    await assertRevert(
+      borrowerOperations.withdrawColl(dec(1, 'ether'), alice, { from: alice }),
+      'BorrowerOps: An operation that would result in ICR < MCR is not permitted'
+    )
   })
 
   it("withdrawColl(): leaves the CDP active when the user withdraws less than all the collateral", async () => {
@@ -1065,14 +1060,16 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("adjustLoan(): reverts when attempted ETH withdrawal is > the trove's collateral", async () => {
+  it("adjustLoan(): reverts when attempted ETH withdrawal is >= the trove's collateral", async () => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(1, 'ether') })
 
     // Check Bob can make an adjustment that fully withdraws his ETH
-    const txBob = await borrowerOperations.adjustLoan(dec(1, 'ether'), 0, bob, { from: bob })
-    assert.isTrue(txBob.receipt.status)
+    await assertRevert(
+      borrowerOperations.adjustLoan(dec(1, 'ether'), 0, bob, { from: bob }),
+      'BorrowerOps: An operation that would result in ICR < MCR is not permitted'
+    )
 
     // Carol attempts an adjustment that would withdraw more than her ETH
     try {
@@ -1377,7 +1374,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_CLVDebt_After, dec(220, 18))
   })
 
-  it("adjustLoan(): Closes the CDP if  new coll = 0 and new debt = 0", async () => {
+  it("adjustLoan(): new coll = 0 and new debt = 0 as not allowed, as there’s the gas compensation pending", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
     await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
 
@@ -1387,13 +1384,10 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(status_Before, 1)  // 1: Active
     assert.isTrue(isInSortedList_Before)
 
-    await borrowerOperations.adjustLoan(dec(1, 'ether'), mv.negative_eth('90'), alice, { from: alice })
-
-    const status_After = (await cdpManager.CDPs(alice))[3]
-    const isInSortedList_After = await sortedCDPs.contains(alice)
-
-    assert.equal(status_After, 2) //2: Closed
-    assert.isFalse(isInSortedList_After)
+    await assertRevert(
+      borrowerOperations.adjustLoan(dec(1, 'ether'), mv.negative_eth('90'), alice, { from: alice }),
+      'BorrowerOps: An operation that would result in ICR < MCR is not permitted'
+    )
   })
 
 
@@ -1907,9 +1901,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-
-
-  it("openLoan(): Can open a loan with zero debt when system is in recovery mode", async () => {
+  it("openLoan(): Can open a loan with zero debt (plus gas comp) when system is in recovery mode, if ICR > 150%", async () => {
     // --- SETUP ---
     //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(3, 'ether') })
@@ -1925,6 +1917,10 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
+    await assertRevert(
+      borrowerOperations.openLoan(dec(80, 18), carol, { from: carol, value: dec(1, 'ether') }),
+      'BorrowerOps: In Recovery Mode new loans must have ICR > CCR'
+    )
     const txCarol = await borrowerOperations.openLoan('0', carol, { from: carol, value: dec(1, 'ether') })
     assert.isTrue(txCarol.receipt.status)
 

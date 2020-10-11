@@ -1991,7 +1991,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(TCR_After.gte(TCR_Before))
   })
 
-  it("liquidateCDPs(): A liquidation sequence of pure redistributions decreases the TCR, due to gas compensation", async () => {
+  it("liquidateCDPs(): A liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5%", async () => {
     await borrowerOperations.openLoan(dec(400, 18), whale, { from: whale, value: dec(5, 'ether') })
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(2, 'ether') })
@@ -2034,6 +2034,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // ((5+1+2+3)+(1+2+3+4)*0.995)*100/(410+10+10+10+101+257+328+480)
     assert.isAtMost(th.getDifference(TCR_After, '1304483188044831987'), 1000)
     assert.isTrue(TCR_Before.gte(TCR_After))
+    assert.isTrue(TCR_After.gte(TCR_Before.mul(th.toBN(995)).div(th.toBN(1000))))
   })
 
   it("liquidateCDPs(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {

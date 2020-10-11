@@ -109,9 +109,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             require(ICR > CCR, "BorrowerOps: In Recovery Mode new loans must have ICR > CCR");
         } else {
             _requireICRisAboveMCR(ICR);
+            _requireNewTCRisAboveCCR(int(msg.value), int(_CLVAmount), price);
         }
-
-        _requireNewTCRisAboveCCR(int(msg.value), int(_CLVAmount), price);
 
         // Update loan properties
         cdpManager.setCDPStatus(user, 1);
