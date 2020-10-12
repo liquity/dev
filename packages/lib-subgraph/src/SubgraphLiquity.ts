@@ -62,10 +62,9 @@ const totalRedistributed = new Query<Trove, Global>(queryGlobal, ({ data: { glob
     return new Trove({
       collateral: decimalify(rawTotalRedistributedCollateral),
       debt: decimalify(rawTotalRedistributedDebt),
-      virtualDebt: 0
     });
   } else {
-    return new Trove({ virtualDebt: 0 });
+    return new Trove({ debt: 0 });
   }
 });
 
@@ -80,10 +79,9 @@ const total = new Query<Trove, Global>(queryGlobal, ({ data: { global } }) => {
     return new Trove({
       collateral: totalCollateral,
       debt: totalDebt,
-      virtualDebt: 0
     });
   } else {
-    return new Trove({ virtualDebt: 0 });
+    return new Trove({ debt: 0 });
   }
 });
 
