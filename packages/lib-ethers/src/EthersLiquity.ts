@@ -134,7 +134,7 @@ export class EthersLiquity implements ReadableLiquity, HintedLiquity<ContractTra
       this.cdpManager.L_CLVDebt({ ...overrides }).then(decimalify)
     ]);
 
-    return new Trove({ collateral, debt, virtualDebt: 0 });
+    return new Trove({ collateral, debt });
   }
 
   watchTotalRedistributed(onTotalRedistributedChanged: (totalRedistributed: Trove) => void) {
@@ -175,7 +175,7 @@ export class EthersLiquity implements ReadableLiquity, HintedLiquity<ContractTra
         }
       });
     } else {
-      return new TroveWithPendingRewards();
+      return new TroveWithPendingRewards({ debt: 0, snapshotOfTotalRedistributed: { debt: 0 } });
     }
   }
 
@@ -252,7 +252,7 @@ export class EthersLiquity implements ReadableLiquity, HintedLiquity<ContractTra
     overrides?: EthersTransactionOverrides
   ) {
     return this.borrowerOperations.openLoan(
-      trove.debt.bigNumber,
+      trove.netDebt.bigNumber,
       await this._findHint(trove, optionalParams),
       { value: trove.collateral.bigNumber, ...overrides }
     );
@@ -403,8 +403,7 @@ export class EthersLiquity implements ReadableLiquity, HintedLiquity<ContractTra
 
     return new Trove({
       collateral: activeCollateral.add(liquidatedCollateral),
-      debt: activeDebt.add(closedDebt),
-      virtualDebt: 0
+      debt: activeDebt.add(closedDebt)
     });
   }
 
