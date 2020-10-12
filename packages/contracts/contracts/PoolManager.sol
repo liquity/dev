@@ -261,6 +261,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
+    // It’s called by CDPManager when after redemption there’s only gas compensation left as debt
     function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external onlyCDPManager {
         // Update Active Pool CLV, and send ETH to account
         CLV.burn(GAS_POOL_ADDRESS, _CLV);
