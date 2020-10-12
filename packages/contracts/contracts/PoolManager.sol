@@ -18,6 +18,8 @@ contract PoolManager is Ownable, IPoolManager {
     using SafeMath for uint;
     using SafeMath128 for uint128;
 
+    address constant public GAS_POOL_ADDRESS = 0x00000000000000000000000000000000000009A5;
+
     // --- Connected contract declarations ---
 
     IBorrowerOperations public borrowerOperations;
@@ -40,8 +42,6 @@ contract PoolManager is Ownable, IPoolManager {
 
     IPool public defaultPool;
     address public defaultPoolAddress;
-
-    address public gasPoolAddress;
    // --- Data structures ---
    
     mapping (address => uint) public initialDeposits;
@@ -91,7 +91,6 @@ contract PoolManager is Ownable, IPoolManager {
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    event GasPoolAddressChanged(address _newGasPoolAddress);
 
     event UserSnapshotUpdated(uint _P, uint _S);
     event P_Updated(uint _P);
@@ -127,8 +126,7 @@ contract PoolManager is Ownable, IPoolManager {
         address _CLVAddress,
         address _stabilityPoolAddress,
         address _activePoolAddress,
-        address _defaultPoolAddress,
-        address _gasPoolAddress
+        address _defaultPoolAddress
     )
     external
     onlyOwner
@@ -147,7 +145,6 @@ contract PoolManager is Ownable, IPoolManager {
         activePool = IPool(activePoolAddress);
         defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(defaultPoolAddress);
-        gasPoolAddress = _gasPoolAddress;
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
@@ -156,7 +153,6 @@ contract PoolManager is Ownable, IPoolManager {
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
-        emit GasPoolAddressChanged(_gasPoolAddress);
 
         _renounceOwnership();
     }
@@ -228,15 +224,15 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     function lockCLVGasCompensation(uint _CLV) external onlyBorrowerOperations {
-        _withdrawCLV(gasPoolAddress, _CLV);
+        _withdrawCLV(GAS_POOL_ADDRESS, _CLV);
     }
 
     function refundCLVGasCompensation(uint _CLV) external onlyBorrowerOperations {
-        _repayCLV(gasPoolAddress, _CLV);
+        _repayCLV(GAS_POOL_ADDRESS, _CLV);
     }
 
     function sendCLVGasCompensation(address _user, uint _CLV) external onlyCDPManager {
-        CLV.returnFromPool(gasPoolAddress, _user, _CLV);
+        CLV.returnFromPool(GAS_POOL_ADDRESS, _user, _CLV);
     }
 
     // Update the Active Pool and the Default Pool when a CDP gets closed
@@ -267,7 +263,7 @@ contract PoolManager is Ownable, IPoolManager {
     // Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
     function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external onlyCDPManager {
         // Update Active Pool CLV, and send ETH to account
-        CLV.burn(gasPoolAddress, _CLV);
+        CLV.burn(GAS_POOL_ADDRESS, _CLV);
         activePool.decreaseCLVDebt(_CLV);
 
         activePool.sendETH(_account, _ETH);

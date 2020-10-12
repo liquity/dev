@@ -21,7 +21,6 @@ contract('PoolManager', async accounts => {
   let activePool
   let stabilityPool
   let defaultPool
-  let gasPool
   let functionCaller
   let borrowerOperations
   let contractAddresses
@@ -41,7 +40,6 @@ contract('PoolManager', async accounts => {
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
-    gasPool = contracts.gasPool
     functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
 
@@ -61,7 +59,6 @@ contract('PoolManager', async accounts => {
         contractAddresses.StabilityPool,
         contractAddresses.ActivePool,
         contractAddresses.DefaultPool,
-        contractAddresses.GasPool,
         { from: owner }
       ),
       'Ownable: caller is not the owner'
@@ -104,9 +101,9 @@ contract('PoolManager', async accounts => {
     assert.equal(contractAddresses.DefaultPool, recordedAddress)
   })
 
-  it('gasPoolAddress(): gets the gasPool address', async () => {
-    const recordedAddress = await poolManager.gasPoolAddress()
-    assert.equal(contractAddresses.GasPool, recordedAddress)
+  it('GAS_POOL_ADDRESS(): gets the gasPool address', async () => {
+    const recordedAddress = await poolManager.GAS_POOL_ADDRESS()
+    assert.equal('0x00000000000000000000000000000000000009A5', recordedAddress)
   })
 
   it('getActiveDebt(): returns the total CLV balance of the ActivePool', async () => {

@@ -36,8 +36,7 @@ interface IPoolManager {
         address _CLVAddress,
         address _stabilityPoolAddress,
         address _activePoolAddress,
-        address _defaultPoolAddress,
-        address _gasPoolAddress
+        address _defaultPoolAddress
     ) external;
 
     function getBalance() external view returns (uint);

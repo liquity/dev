@@ -6,7 +6,6 @@ const CLVToken = artifacts.require("./CLVToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const GasPool = artifacts.require("./GasPool.sol")
 const FunctionCaller = artifacts.require("./TestContracts/FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
@@ -34,7 +33,6 @@ const deployLiquityBuidler = async () => {
   const activePool = await ActivePool.new()
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
-  const gasPool = await GasPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
   const hintHelpers = await HintHelpers.new()
@@ -47,7 +45,6 @@ const deployLiquityBuidler = async () => {
   CDPManager.setAsDeployed(cdpManager)
   ActivePool.setAsDeployed(activePool)
   StabilityPool.setAsDeployed(stabilityPool)
-  GasPool.setAsDeployed(gasPool)
   FunctionCaller.setAsDeployed(functionCaller)
   BorrowerOperations.setAsDeployed(borrowerOperations)
   HintHelpers.setAsDeployed(hintHelpers)
@@ -61,7 +58,6 @@ const deployLiquityBuidler = async () => {
     activePool,
     stabilityPool,
     defaultPool,
-    gasPool,
     functionCaller,
     borrowerOperations,
     hintHelpers
@@ -78,7 +74,6 @@ const deployLiquityTruffle = async () => {
   const activePool = await ActivePool.new()
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
-  const gasPool = await GasPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
   const hintHelpers = await HintHelpers.new()
@@ -92,7 +87,6 @@ const deployLiquityTruffle = async () => {
     activePool,
     stabilityPool,
     defaultPool,
-    gasPool,
     functionCaller,
     borrowerOperations,
     hintHelpers
@@ -112,7 +106,6 @@ const getAddresses = (contracts) => {
     StabilityPool: contracts.stabilityPool.address,
     ActivePool: contracts.activePool.address,
     DefaultPool: contracts.defaultPool.address,
-    GasPool: contracts.gasPool.address,
     FunctionCaller: contracts.functionCaller.address,
     HintHelpers: contracts.hintHelpers.address
   }
@@ -131,8 +124,7 @@ const connectContracts = async (contracts, addresses) => {
     addresses.CLVToken,
     addresses.StabilityPool,
     addresses.ActivePool,
-    addresses.DefaultPool,
-    addresses.GasPool
+    addresses.DefaultPool
   )
 
   // set CDPManager addr in SortedCDPs
@@ -194,11 +186,6 @@ const connectContracts = async (contracts, addresses) => {
     addresses.PoolManager,
     addresses.ActivePool,
     addresses.StabilityPool
-  )
-
-  await contracts.gasPool.setAddresses(
-    addresses.PoolManager,
-    addresses.CLVToken
   )
 
   // set contracts in HintHelpers
