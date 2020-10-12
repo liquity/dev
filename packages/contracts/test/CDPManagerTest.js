@@ -72,7 +72,6 @@ contract('CDPManager', async accounts => {
     // Alice withdraws to 180 CLV, lowering her ICR to 1.11
     const A_CLVWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
 
-    console.log(`A_CLVWithdrawal ${A_CLVWithdrawal}`)
     await borrowerOperations.withdrawCLV(A_CLVWithdrawal, alice, { from: alice })
 
 
@@ -639,7 +638,6 @@ contract('CDPManager', async accounts => {
       .mul(price)
       .div(entireSystemDebtBefore)
 
-    console.log(`expectedTCR_1, TCR_1 ${expectedTCR_1}, ${TCR_1}`)
     assert.isTrue(expectedTCR_1.eq(TCR_1))
 
     const liquidationTx_2 = await cdpManager.liquidate(defaulter_2)

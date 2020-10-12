@@ -142,7 +142,6 @@ contract('BorrowerOperations', async accounts => {
     const CLVwithdrawal_B = th.toBN(dec(90, 18))
     const CLVwithdrawal_C = th.toBN(dec(170, 18))
 
-    console.log(`CLVwithdrawal_C ${CLVwithdrawal_C}`)
     await borrowerOperations.openLoan(CLVwithdrawal_A, alice, { from: alice, value: dec(15, 'ether') })
     await borrowerOperations.openLoan(CLVwithdrawal_B, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openLoan(CLVwithdrawal_C, carol, { from: carol, value: dec(1, 'ether') })
@@ -1740,10 +1739,6 @@ contract('BorrowerOperations', async accounts => {
     const defaultPool_ETH = await defaultPool.getETH()
     const defaultPool_CLVDebt = await defaultPool.getCLVDebt()
 
-    console.log(`defaultPool_ETH: ${defaultPool_ETH}`)
-    console.log(`defaultPool_CLVDebt: ${defaultPool_CLVDebt}`)
-    console.log(`CLVwithdrawal_C: ${CLVwithdrawal_C}`)
-
     // Carol's liquidated coll (1 ETH) and drawn debt should have entered the Default Pool
     assert.isAtMost(th.getDifference(defaultPool_ETH, liquidatedColl_C), 100)
     assert.isAtMost(th.getDifference(defaultPool_CLVDebt, liquidatedDebt_C), 100)
@@ -2281,9 +2276,6 @@ contract('BorrowerOperations', async accounts => {
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
                           .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt))
-
-      console.log(`newTCR: ${newTCR}`)
-      console.log(`expectedTCR: ${expectedTCR}`)
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
