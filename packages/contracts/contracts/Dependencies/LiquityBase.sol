@@ -15,9 +15,6 @@ contract LiquityBase {
     // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public  CCR = 1500000000000000000; // 150%
 
-    // The minimum value of collateral allowed for a new deposit, in USD.
-    uint constant public MIN_COLL_IN_USD = 20000000000000000000; // $20 with 18 decimals
-
     // Amount of CLV to be locked in gas pool on opening loans
     uint constant public CLV_GAS_COMPENSATION = 10e18;
 

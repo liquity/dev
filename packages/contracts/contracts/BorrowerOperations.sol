@@ -12,8 +12,6 @@ import "./Dependencies/console.sol";
 
 contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
-    uint constant public MIN_COLL_IN_USD = 20000000000000000000;
-   
     // --- Connected contract declarations ---
 
     ICDPManager public cdpManager;
