@@ -101,6 +101,11 @@ contract('PoolManager', async accounts => {
     assert.equal(contractAddresses.DefaultPool, recordedAddress)
   })
 
+  it('GAS_POOL_ADDRESS(): gets the gasPool address', async () => {
+    const recordedAddress = await poolManager.GAS_POOL_ADDRESS()
+    assert.equal('0x00000000000000000000000000000000000009A5', recordedAddress)
+  })
+
   it('getActiveDebt(): returns the total CLV balance of the ActivePool', async () => {
     const actualActiveDebt = await activePool.getCLVDebt({ from: poolManager.address })
     const returnedActiveDebt = await poolManager.getActiveDebt()

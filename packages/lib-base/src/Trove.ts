@@ -3,7 +3,6 @@ import { Decimal, Decimalish, Difference } from "@liquity/decimal";
 interface Trovish {
   readonly collateral?: Decimalish;
   readonly debt?: Decimalish;
-  readonly virtualDebt?: Decimalish;
 }
 
 export type TroveChange = {
@@ -14,37 +13,29 @@ export type TroveChange = {
 export class Trove {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
-  // public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(10);
-  public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(0);
+  /**
+   * Amount automatically minted and assigned to gas compensation pool for eact Trove opened, it counts towards collateral ratio (lowers it).
+   */
+  public static readonly CLV_GAS_COMPENSATION: Decimal = Decimal.from(10);
 
   readonly collateral: Decimal;
   readonly debt: Decimal;
 
-  /**
-   * Imaginary debt that doesn't need to be repaid, but counts towards collateral ratio (lowers it).
-   *
-   * When performing arithmetic on Troves (addition or subtraction of 2 Troves, multiplication by a
-   * scalar), the virtual debt of the Trove on the left side of the operation will be copied to the
-   * resulting Trove.
-   */
-  readonly virtualDebt: Decimal;
-
-  constructor({ collateral = 0, debt = 0, virtualDebt = Trove.DEFAULT_VIRTUAL_DEBT }: Trovish = {}) {
+  constructor({ collateral = 0, debt = Trove.CLV_GAS_COMPENSATION }: Trovish = {}) {
     this.collateral = Decimal.from(collateral);
     this.debt = Decimal.from(debt);
-    this.virtualDebt = Decimal.from(virtualDebt);
   }
 
   get isEmpty() {
     return this.collateral.isZero && this.debt.isZero;
   }
 
-  get compositeDebt() {
-    return this.debt.nonZero?.add(this.virtualDebt) ?? this.debt;
+  get netDebt() {
+    return this.debt.nonZero?.sub(Trove.CLV_GAS_COMPENSATION) ?? this.debt;
   }
 
   collateralRatio(price: Decimalish): Decimal {
-    return this.collateral.mulDiv(price, this.compositeDebt);
+    return this.collateral.mulDiv(price, this.debt);
   }
 
   collateralRatioIsBelowMinimum(price: Decimalish) {
@@ -59,9 +50,6 @@ export class Trove {
     return (
       `{ collateral: ${this.collateral}` +
       `, debt: ${this.debt}` +
-      (this.collateral.nonZero && this.virtualDebt.nonZero
-        ? `, virtualDebt: ${this.virtualDebt}`
-        : "") +
       " }"
     );
   }
@@ -74,7 +62,6 @@ export class Trove {
     return new Trove({
       collateral: this.collateral.add(collateral),
       debt: this.debt.add(debt),
-      virtualDebt: this.virtualDebt
     });
   }
 
@@ -90,7 +77,6 @@ export class Trove {
     return new Trove({
       collateral: this.collateral.sub(collateral),
       debt: this.debt.sub(debt),
-      virtualDebt: this.virtualDebt
     });
   }
 
@@ -106,7 +92,6 @@ export class Trove {
     return new Trove({
       collateral: this.collateral.mul(multiplier),
       debt: this.debt.mul(multiplier),
-      virtualDebt: this.virtualDebt
     });
   }
 
@@ -114,7 +99,6 @@ export class Trove {
     return new Trove({
       collateral,
       debt: this.debt,
-      virtualDebt: this.virtualDebt
     });
   }
 
@@ -122,7 +106,6 @@ export class Trove {
     return new Trove({
       collateral: this.collateral,
       debt,
-      virtualDebt: this.virtualDebt
     });
   }
 
@@ -184,7 +167,7 @@ export class TroveWithPendingRewards extends Trove {
 
   constructor({
     collateral = 0,
-    debt = 0,
+    debt = Trove.CLV_GAS_COMPENSATION,
     stake = 0,
     snapshotOfTotalRedistributed
   }: TrovishWithPendingRewards = {}) {
@@ -193,7 +176,6 @@ export class TroveWithPendingRewards extends Trove {
     this.stake = Decimal.from(stake);
     this.snapshotOfTotalRedistributed = new Trove({
       ...snapshotOfTotalRedistributed,
-      virtualDebt: 0
     });
   }
 

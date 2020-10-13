@@ -18,6 +18,8 @@ contract PoolManager is Ownable, IPoolManager {
     using SafeMath for uint;
     using SafeMath128 for uint128;
 
+    address constant public GAS_POOL_ADDRESS = 0x00000000000000000000000000000000000009A5;
+
     // --- Connected contract declarations ---
 
     IBorrowerOperations public borrowerOperations;
@@ -40,7 +42,6 @@ contract PoolManager is Ownable, IPoolManager {
 
     IPool public defaultPool;
     address public defaultPoolAddress;
-   
    // --- Data structures ---
    
     mapping (address => uint) public initialDeposits;
@@ -90,7 +91,7 @@ contract PoolManager is Ownable, IPoolManager {
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    
+
     event UserSnapshotUpdated(uint _P, uint _S);
     event P_Updated(uint _P);
     event S_Updated(uint _S);
@@ -127,8 +128,8 @@ contract PoolManager is Ownable, IPoolManager {
         address _activePoolAddress,
         address _defaultPoolAddress
     )
-        external
-        onlyOwner
+    external
+    onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
@@ -204,16 +205,36 @@ contract PoolManager is Ownable, IPoolManager {
     
     // Issue the specified amount of CLV to _account and increases the total active debt
     function withdrawCLV(address _account, uint _CLV) external onlyBorrowerOperations {
-        activePool.increaseCLVDebt(_CLV);  
-        CLV.mint(_account, _CLV);  
+        _withdrawCLV(_account, _CLV);
+    }
+
+    function _withdrawCLV(address _account, uint _CLV) internal {
+        activePool.increaseCLVDebt(_CLV);
+        CLV.mint(_account, _CLV);
     }
     
     // Burn the specified amount of CLV from _account and decreases the total active debt
     function repayCLV(address _account, uint _CLV) external onlyBorrowerOperations {
+        _repayCLV(_account, _CLV);
+    }
+
+    function _repayCLV(address _account, uint _CLV) internal {
         activePool.decreaseCLVDebt(_CLV);
         CLV.burn(_account, _CLV);
-    }           
-    
+    }
+
+    function lockCLVGasCompensation(uint _CLV) external onlyBorrowerOperations {
+        _withdrawCLV(GAS_POOL_ADDRESS, _CLV);
+    }
+
+    function refundCLVGasCompensation(uint _CLV) external onlyBorrowerOperations {
+        _repayCLV(GAS_POOL_ADDRESS, _CLV);
+    }
+
+    function sendCLVGasCompensation(address _user, uint _CLV) external onlyCDPManager {
+        CLV.returnFromPool(GAS_POOL_ADDRESS, _user, _CLV);
+    }
+
     // Update the Active Pool and the Default Pool when a CDP gets closed
     function liquidate(uint _CLV, uint _ETH) external onlyCDPManager {
         // Transfer the debt & coll from the Active Pool to the Default Pool
@@ -237,6 +258,24 @@ contract PoolManager is Ownable, IPoolManager {
         activePool.decreaseCLVDebt(_CLV);  
 
         activePool.sendETH(_account, _ETH); 
+    }
+
+    /*
+      Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
+     * It’s called by CDPManager when after redemption there’s only gas compensation left as debt
+     */
+    function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external onlyCDPManager {
+        /*
+         * This is called by CDPManager when the redemption drains all the trove and there’s only the gas compensation left.
+         * The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left correspond to the remaining collateral.
+         * In order to close the trove, the user should get the CLV refunded and use them to repay and close it,
+         * but instead we do that all in one step.
+         */
+        CLV.burn(GAS_POOL_ADDRESS, _CLV);
+        // Update Active Pool CLV, and send ETH to account
+        activePool.decreaseCLVDebt(_CLV);
+
+        activePool.sendETH(_account, _ETH);
     }
 
     // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV

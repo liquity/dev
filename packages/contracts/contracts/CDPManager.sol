@@ -125,7 +125,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     struct LiquidationValues {
         uint entireCDPDebt;
         uint entireCDPColl;
-        uint gasCompensation;
+        uint collGasCompensation;
+        uint CLVGasCompensation;
         uint debtToOffset;
         uint collToSendToSP;
         uint debtToRedistribute;
@@ -138,7 +139,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     struct LiquidationTotals {
         uint totalCollInSequence;
         uint totalDebtInSequence;
-        uint totalGasCompensation;
+        uint totalCollGasCompensation;
+        uint totalCLVGasCompensation;
         uint totalDebtToOffset;
         uint totalCollToSendToSP;
         uint totalDebtToRedistribute;
@@ -172,7 +174,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
     event SizeListAddressChanged(uint _sizeRange, address _sizeListAddress);
-    event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _gasCompensation);
+    event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _collGasCompensation, uint _CLVGasCompensation);
     event Redemption(uint _attemptedCLVAmount, uint _actualCLVAmount, uint _ETHSent);
 
     enum CDPManagerOperation {
@@ -264,8 +266,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         LiquidationValues memory V;
 
         V = (L.recoveryModeAtStart == true)
-            ? _liquidateRecoveryMode(_user, ICR, L.price, L.CLVInPool)
-            : _liquidateNormalMode(_user, ICR, L.price, L.CLVInPool);
+            ? _liquidateRecoveryMode(_user, ICR, L.CLVInPool)
+            : _liquidateNormalMode(_user, ICR, L.CLVInPool);
 
         poolManager.offset(V.debtToOffset, V.collToSendToSP);
         _redistributeDebtAndColl(V.debtToRedistribute, V.collToRedistribute);
@@ -278,17 +280,22 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
 
         L.liquidatedDebt = V.entireCDPDebt.sub(V.partialNewDebt);
-        L.liquidatedColl = V.entireCDPColl.sub(V.gasCompensation).sub(V.partialNewColl);
-        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, V.gasCompensation);
+        L.liquidatedColl = V.entireCDPColl.sub(V.collGasCompensation).sub(V.partialNewColl);
+        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, V.collGasCompensation, V.CLVGasCompensation);
 
-        // Send gas compensation ETH to caller
-        (bool success, ) = _msgSender().call.value(V.gasCompensation)("");
+        address payable msgSender = _msgSender();
+        // Send CLV gas compensation to caller (only if not partial)
+        if (V.CLVGasCompensation > 0) {
+            poolManager.sendCLVGasCompensation(msgSender, V.CLVGasCompensation);
+        }
+        // Send ETH gas compensation to caller
+        (bool success, ) = msgSender.call.value(V.collGasCompensation)("");
         _requireETHSentSuccessfully(success);
     }
 
     // --- Inner liquidation functions ---
 
-    function _liquidateNormalMode(address _user, uint _ICR, uint _price, uint _CLVInPool) internal
+    function _liquidateNormalMode(address _user, uint _ICR, uint _CLVInPool) internal
     returns (LiquidationValues memory V)
     {
         LocalVariables_InnerSingleLiquidateFunction memory L;
@@ -304,8 +311,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
         _removeStake(_user);
 
-        V.gasCompensation = _getGasCompensation(V.entireCDPColl, _price);
-        uint collToLiquidate = V.entireCDPColl.sub(V.gasCompensation);
+        V.collGasCompensation = _getCollGasCompensation(V.entireCDPColl);
+        V.CLVGasCompensation = CLV_GAS_COMPENSATION;
+        uint collToLiquidate = V.entireCDPColl.sub(V.collGasCompensation);
 
         (V.debtToOffset,
         V.collToSendToSP,
@@ -313,7 +321,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, collToLiquidate, _CLVInPool);
 
         // Move the gas compensation ETH to the CDPManager
-        activePool.sendETH(address(this), V.gasCompensation);
+        activePool.sendETH(address(this), V.collGasCompensation);
 
         _closeCDP(_user);
         emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInNormalMode);
@@ -321,7 +329,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return V;
     }
 
-    function _liquidateRecoveryMode(address _user, uint _ICR, uint _price, uint _CLVInPool) internal
+    function _liquidateRecoveryMode(address _user, uint _ICR, uint _CLVInPool) internal
     returns (LiquidationValues memory V)
     {
         LocalVariables_InnerSingleLiquidateFunction memory L;
@@ -333,8 +341,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.pendingDebtReward,
         L.pendingCollReward) = _getEntireDebtAndColl(_user);
 
-        V.gasCompensation = _getGasCompensation(V.entireCDPColl, _price);
-        L.collToLiquidate = V.entireCDPColl.sub(V.gasCompensation);
+        V.collGasCompensation = _getCollGasCompensation(V.entireCDPColl);
+        // in case of partial, it will be overriden to zero below
+        V.CLVGasCompensation = CLV_GAS_COMPENSATION;
+        L.collToLiquidate = V.entireCDPColl.sub(V.collGasCompensation);
 
         // If ICR <= 100%, purely redistribute the CDP across all active CDPs
         if (_ICR <= _100pct) {
@@ -372,7 +382,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _applyPendingRewards(_user);
             _removeStake(_user);
 
-            V = _getPartialOffsetVals(_user, V.entireCDPDebt, V.entireCDPColl, _price, _CLVInPool);
+            V = _getPartialOffsetVals(_user, V.entireCDPDebt, V.entireCDPColl, _CLVInPool);
 
             _closeCDP(_user);
         } 
@@ -383,7 +393,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
 
         // Move the gas compensation ETH to the CDPManager
-        activePool.sendETH(address(this), V.gasCompensation);
+        activePool.sendETH(address(this), V.collGasCompensation);
 
         return V;
     }
@@ -407,7 +417,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    function _getPartialOffsetVals(address _user, uint _entireCDPDebt, uint _entireCDPColl, uint _price, uint _CLVInPool) internal
+    function _getPartialOffsetVals(address _user, uint _entireCDPDebt, uint _entireCDPColl, uint _CLVInPool) internal
     returns
     (LiquidationValues memory V) {
 
@@ -416,10 +426,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         // When Pool can fully absorb the trove's debt, perform a full offset
         if (_entireCDPDebt <= _CLVInPool) {
-            V.gasCompensation = _getGasCompensation(_entireCDPColl, _price);
+            V.collGasCompensation = _getCollGasCompensation(_entireCDPColl);
+            V.CLVGasCompensation = CLV_GAS_COMPENSATION;
 
             V.debtToOffset = _entireCDPDebt;
-            V.collToSendToSP = _entireCDPColl.sub(V.gasCompensation);
+            V.collToSendToSP = _entireCDPColl.sub(V.collGasCompensation);
             V.debtToRedistribute = 0;
             V.collToRedistribute = 0;
 
@@ -429,16 +440,23 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         offset as much as possible, and do not redistribute the remainder.
         Gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. */
         else if (_entireCDPDebt > _CLVInPool) {
-            V.debtToOffset = _CLVInPool;
+            // Partially liquidated pool can’t fall under gas compensation amount of debt
+            V.partialNewDebt = Math._max(_entireCDPDebt.sub(_CLVInPool), CLV_GAS_COMPENSATION);
+            // V.partialNewDebt >= _entireCDPDebt - _CLVInPool =>
+            // _entireCDPDebt - V.partialNewDebt <= _entireCDPDebt - (_entireCDPDebt - _CLVInPool) =>
+            // _entireCDPDebt - V.partialNewDebt <= _CLVInPool =>
+            // V.debtToOffset <= _CLVInPool
+            V.debtToOffset = _entireCDPDebt.sub(V.partialNewDebt);
             uint collFraction = _entireCDPColl.mul(V.debtToOffset).div(_entireCDPDebt);
-            V.gasCompensation = _getGasCompensation(collFraction, _price);
+            V.collGasCompensation = _getCollGasCompensation(collFraction);
+            // CLV gas compensation remains untouched, so minimum debt rests assured
+            V.CLVGasCompensation = 0;
             
-            V.collToSendToSP = collFraction.sub(V.gasCompensation);
+            V.collToSendToSP = collFraction.sub(V.collGasCompensation);
             V.collToRedistribute = 0;
             V.debtToRedistribute = 0;
 
             V.partialAddr = _user;
-            V.partialNewDebt = _entireCDPDebt.sub(V.debtToOffset);
             V.partialNewColl = _entireCDPColl.sub(collFraction);
         }
     }
@@ -473,11 +491,16 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                                         L.price);
 
         L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
-        L.liquidatedColl = T.totalCollInSequence.sub(T.totalGasCompensation).sub(T.partialNewColl);
-        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalGasCompensation);
+        L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
+        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalCollGasCompensation, T.totalCLVGasCompensation);
 
-        // Send gas compensation ETH to caller
-        (bool success, ) = _msgSender().call.value(T.totalGasCompensation)("");
+        address payable msgSender = _msgSender();
+        // Send CLV gas compensation to caller
+        if (T.totalCLVGasCompensation > 0) {
+            poolManager.sendCLVGasCompensation(msgSender, T.totalCLVGasCompensation);
+        }
+        // Send ETH gas compensation to caller
+        (bool success, ) = msgSender.call.value(T.totalCollGasCompensation)("");
         _requireETHSentSuccessfully(success);
     }
 
@@ -503,7 +526,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Break the loop if ICR is greater than MCR and Stability Pool is empty
                 if (L.ICR >= MCR && L.remainingCLVInPool == 0) {break;}
 
-                V = _liquidateRecoveryMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInPool);
 
                 // Update aggregate trackers
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
@@ -519,7 +542,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInPool);
 
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
 
@@ -548,7 +571,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             L.ICR = _getCurrentICR(L.user, _price);
             
             if (L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInPool);
 
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
 
@@ -594,11 +617,16 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                                         L.price);
 
         L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
-        L.liquidatedColl = T.totalCollInSequence.sub(T.totalGasCompensation).sub(T.partialNewColl);
-        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalGasCompensation);
+        L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
+        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalCollGasCompensation, T.totalCLVGasCompensation);
 
-        // Send gas compensation ETH to caller
-        (bool success, ) = _msgSender().call.value(T.totalGasCompensation)("");
+        address payable msgSender = _msgSender();
+        // Send CLV gas compensation to caller
+        if (T.totalCLVGasCompensation > 0) {
+            poolManager.sendCLVGasCompensation(msgSender, T.totalCLVGasCompensation);
+        }
+        // Send ETH gas compensation to caller
+        (bool success, ) = _msgSender().call.value(T.totalCollGasCompensation)("");
         _requireETHSentSuccessfully(success);
     }
 
@@ -625,7 +653,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Skip this trove if ICR is greater than MCR and Stability Pool is empty
                 if (L.ICR >= MCR && L.remainingCLVInPool == 0) {continue;}
 
-                V = _liquidateRecoveryMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInPool);
 
                 // Update aggregate trackers
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
@@ -641,7 +669,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInPool);
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
 
                 // Add liquidation values to their respective running totals
@@ -664,7 +692,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             L.ICR = _getCurrentICR(L.user, _price);
             
             if (L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, _price, L.remainingCLVInPool);
+                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInPool);
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
 
                 // Add liquidation values to their respective running totals
@@ -679,7 +707,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     internal pure returns(LiquidationTotals memory T2) {
 
         // Tally gas compensation
-        T2.totalGasCompensation = T1.totalGasCompensation.add(V.gasCompensation);
+        T2.totalCollGasCompensation = T1.totalCollGasCompensation.add(V.collGasCompensation);
+        T2.totalCLVGasCompensation = T1.totalCLVGasCompensation.add(V.CLVGasCompensation);
 
         // Tally the total initial debt and coll of troves impacted by the sequence
         T2.totalDebtInSequence = T1.totalDebtInSequence.add(V.entireCDPDebt);
@@ -731,8 +760,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     )
         internal returns (SingleRedemptionValues memory V)
     {
-        // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP
-        V.CLVLot = Math._min(_maxCLVamount, CDPs[_cdpUser].debt);
+        // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP minus the gas compensation
+        V.CLVLot = Math._min(_maxCLVamount, CDPs[_cdpUser].debt.sub(CLV_GAS_COMPENSATION));
         
         // Get the ETHLot of equivalent value in USD
         V.ETHLot = V.CLVLot.mul(1e18).div(_price);
@@ -741,13 +770,18 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint newDebt = (CDPs[_cdpUser].debt).sub(V.CLVLot);
         uint newColl = (CDPs[_cdpUser].coll).sub(V.ETHLot);
 
-        if (newDebt == 0) {
-            // No debt left in the CDP, therefore new ICR must be "infinite".
-            // Passing zero as hint will cause sortedCDPs to descend the list from the head, which is the correct insert position.
-            sortedCDPs.reInsert(_cdpUser, 2**256 - 1, _price, address(0), address(0));
+        // V.CLVLot <= CDPs[_cdpUser].debt - CLV_GAS_COMPENSATION =>
+        // newDebt = CDPs[_cdpUser].debt - V.CLVLot >=
+        //  >= CDPs[_cdpUser].debt - (CDPs[_cdpUser].debt - CLV_GAS_COMPENSATION) =>
+        //  newDebt >= CLV_GAS_COMPENSATION
+        if (newDebt == CLV_GAS_COMPENSATION) {
+            // No debt left in the CDP (except for the gas compensation), therefore the trove is closed
+            _removeStake(_cdpUser);
+            _closeCDP(_cdpUser);
+            poolManager.redeemCloseLoan(_cdpUser, CLV_GAS_COMPENSATION, newColl);
+
         } else {
-            uint compositeDebt = _getCompositeDebt(newDebt);
-            uint newICR = Math._computeCR(newColl, compositeDebt, _price);
+            uint newICR = Math._computeCR(newColl, newDebt, _price);
 
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
             // certainly result in running out of gas.
@@ -758,11 +792,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             }
 
             sortedCDPs.reInsert(_cdpUser, newICR, _price, _partialRedemptionHint, _partialRedemptionHint);
+
+            CDPs[_cdpUser].debt = newDebt;
+            CDPs[_cdpUser].coll = newColl;
+            _updateStakeAndTotalStakes(_cdpUser);
         }
 
-        CDPs[_cdpUser].debt = newDebt;
-        CDPs[_cdpUser].coll = newColl;
-        _updateStakeAndTotalStakes(_cdpUser);
 
         emit CDPUpdated(
                         _cdpUser,
@@ -793,8 +828,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     Note that if _amount is very large, this function can run out of gas. This can be easily avoided by splitting the total _amount
     in appropriate chunks and calling the function multiple times.
 
-    All CDPs that are redeemed from -- with the likely exception of the last one -- will end up with no debt left, therefore they will be
-    reinsterted at the top of the sortedCDPs list. If the last CDP does have some remaining debt, the reinsertion could be anywhere in the
+    All CDPs that are redeemed from -- with the likely exception of the last one -- will end up with no debt left, therefore they will be closed
+    If the last CDP does have some remaining debt, the reinsertion could be anywhere in the
     list, therefore it requires a hint. A frontend should use getRedemptionHints() to calculate what the ICR of this CDP will be
     after redemption, and pass a hint for its position in the sortedCDPs list along with the ICR value that the hint was found for.
 
@@ -826,6 +861,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint price = priceFeed.getPrice();
         address currentCDPuser;
 
+        // TODO: This is to jump into the first non undercollaterallized trove, right?
         if (_isValidFirstRedemptionHint(_firstRedemptionHint, price)) {
             currentCDPuser = _firstRedemptionHint;
         } else {
@@ -880,9 +916,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint currentETH = CDPs[_user].coll.add(pendingETHReward); 
         uint currentCLVDebt = CDPs[_user].debt.add(pendingCLVDebtReward); 
 
-        uint compositeCLVDebt = _getCompositeDebt(currentCLVDebt);
-       
-        uint ICR = Math._computeCR(currentETH, compositeCLVDebt, _price);  
+        uint ICR = Math._computeCR(currentETH, currentCLVDebt, _price);
         return ICR;
     }
 

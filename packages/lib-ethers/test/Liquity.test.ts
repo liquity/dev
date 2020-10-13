@@ -264,7 +264,7 @@ describe("EthersLiquity", () => {
         new StabilityDeposit({
           deposit: 10,
           depositAfterLoss: 0,
-          pendingCollateralGain: "0.05725641025641025"
+          pendingCollateralGain: "0.0569701282051282" // multiplied by 0.995
         })
       );
     });
@@ -274,7 +274,7 @@ describe("EthersLiquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: "2.110695726495726496",
+          collateral: "2.110142247863247862",
           debt: "129.333333333333333332"
         })
       );
@@ -287,7 +287,7 @@ describe("EthersLiquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: "2.167952136752136746",
+          collateral: "2.167112376068376062",
           debt: "129.333333333333333332"
         })
       );
@@ -313,7 +313,7 @@ describe("EthersLiquity", () => {
         await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 100 }));
         await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 100 }));
 
-        await liquity.openTrove(new Trove({ collateral: 10, debt: 1400 }));
+        await liquity.openTrove(new Trove({ collateral: 10, debt: 1410 }));
         await liquity.depositQuiInStabilityPool(100);
 
         price = Decimal.from(190);
@@ -327,12 +327,14 @@ describe("EthersLiquity", () => {
         await liquity.liquidateUpTo(40);
 
         trove = await liquity.getTrove();
-        expect(trove).to.deep.equal(new Trove({ collateral: "9.285714285714285715", debt: 1300 }));
+        // 10 * 1310 / 1410
+        expect(trove).to.deep.equal(new Trove({ collateral: "9.290780141843971632", debt: 1310 }));
       });
 
       describe("after depositing some more tokens", () => {
         before(async () => {
           await liquity.depositQuiInStabilityPool(1300);
+          await otherLiquities[0].depositQuiInStabilityPool(10);
         });
 
         it("should liquidate more of the bottom Trove", async () => {
@@ -360,7 +362,7 @@ describe("EthersLiquity", () => {
         await deployerLiquity.setPrice(price);
 
         // Use this account to print QUI
-        await liquity.openTrove(new Trove({ collateral: 10, debt: 500 }));
+        await liquity.openTrove(new Trove({ collateral: 10, debt: 510 }));
 
         // otherLiquities[0-2] will be independent stability depositors
         await liquity.sendQui(otherLiquities[0].userAddress!, 300);
@@ -415,19 +417,20 @@ describe("EthersLiquity", () => {
 
       await sendToEach(otherUsers, 1.1);
 
-      await liquity.openTrove(new Trove({ collateral: 20, debt: 100 }));
-      await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 10 }));
-      await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 20 }));
-      await otherLiquities[2].openTrove(new Trove({ collateral: 1, debt: 30 }));
+      await liquity.openTrove(new Trove({ collateral: 20, debt: 110 }));
+      await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 20 }));
+      await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 30 }));
+      await otherLiquities[2].openTrove(new Trove({ collateral: 1, debt: 40 }));
     });
 
     it("should find hints for redemption", async () => {
       const redemptionHints = await liquity._findRedemptionHints(Decimal.from(55));
 
+      // 30 would be redeemed from otherLiquities[2], 20 from otherLiquities[1], 5 from otherLiquities[0] (as there are 10 for gas compensation in each)
       expect(redemptionHints).to.deep.equal([
         otherLiquities[2].userAddress!,
         liquity.userAddress!,
-        Decimal.from("39")
+        Decimal.from("13") // (1 ETH * 200 - 5) / (20 - 5) = 13 (subtracting 5 for the redemption to otherLiquities[0])
       ]);
     });
 
@@ -446,9 +449,9 @@ describe("EthersLiquity", () => {
 
       expect((await liquity.getQuiBalance()).toString()).to.equal("45");
 
-      expect((await otherLiquities[0].getTrove()).debt.toString()).to.equal("5");
-      expect((await otherLiquities[1].getTrove()).debt.toString()).to.equal("0");
-      expect((await otherLiquities[2].getTrove()).debt.toString()).to.equal("0");
+      expect((await otherLiquities[0].getTrove()).netDebt.toString()).to.equal("5");
+      expect((await otherLiquities[1].getTrove()).netDebt.toString()).to.equal("0");
+      expect((await otherLiquities[2].getTrove()).netDebt.toString()).to.equal("0");
     });
   });
 });

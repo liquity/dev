@@ -61,11 +61,19 @@ interface IPoolManager {
     
     function repayCLV(address _account, uint _CLV) external;
 
+    function lockCLVGasCompensation(uint _CLV) external;
+
+    function refundCLVGasCompensation(uint _CLV) external;
+
+    function sendCLVGasCompensation(address _user, uint _CLV) external;
+
     function liquidate(uint _CLV, uint _ETH) external;
   
     function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external;
 
     function redeemCollateral(address _account, uint _CLV, uint _ETH) external;
+
+    function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external;
 
     // --- StabilityPool Functions ---
     function provideToSP(uint _amount) external;

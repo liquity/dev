@@ -72,7 +72,7 @@ contract HintHelpers is LiquityBase, Ownable {
         firstRedemptionHint = currentCDPuser;
 
         while (currentCDPuser != address(0) && remainingCLV > 0) {
-            uint CLVDebt = cdpManager.getCDPDebt(currentCDPuser)
+            uint CLVDebt = _getNetDebt(cdpManager.getCDPDebt(currentCDPuser))
                                      .add(cdpManager.getPendingCLVDebtReward(currentCDPuser));
 
             if (CLVDebt > remainingCLV) {

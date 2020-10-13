@@ -214,7 +214,8 @@ type Liquidation @entity {
 
   liquidatedDebt: BigDecimal!
   liquidatedCollateral: BigDecimal!
-  gasCompensation: BigDecimal!
+  collGasCompensation: BigDecimal!
+  tokenGasCompensation: BigDecimal!
 
   troveChanges: [TroveChange!]! @derivedFrom(field: "liquidation")
 }

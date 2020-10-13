@@ -67,8 +67,8 @@ contract('CLVToken', async accounts => {
     })
 
     it('_totalSupply(): gets the total supply', async () => {
-      const total = (await clvToken._totalSupply()).toNumber()
-      assert.equal(total, 300)
+      const total = (await clvToken._totalSupply()).toString()
+      assert.equal(total, '30000000000000000300') // 300 + 30e18 for gas compensation
     })
 
     it('setPoolAddress(): gets pool address', async () => {
