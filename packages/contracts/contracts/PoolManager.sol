@@ -7,6 +7,7 @@ import './Interfaces/ICDPManager.sol';
 import './Interfaces/IStabilityPool.sol';
 import './Interfaces/IPriceFeed.sol';
 import './Interfaces/ICLVToken.sol';
+import "./Interfaces/IGTStaking.sol";
 import './Dependencies/Math.sol';
 import './Dependencies/SafeMath.sol';
 import './Dependencies/SafeMath128.sol';
@@ -40,17 +41,32 @@ contract PoolManager is Ownable, IPoolManager {
 
     IPool public defaultPool;
     address public defaultPoolAddress;
+
+    ICommunityIssuance public communityIssuance;
+    address public communityIssuanceAddress;
    
    // --- Data structures ---
    
     mapping (address => uint) public initialDeposits;
 
-    struct Snapshot {
-        uint S;
-        uint P;
+    struct FrontEnd {
+        uint kickbackRate;
+        bool active;
+    }
+
+    struct Snapshots { 
+        uint P; 
+        uint S; 
+        uint G; 
         uint128 scale;
         uint128 epoch;
     }
+
+    mapping (address => FrontEnd) public frontEnds;
+    mapping (address => uint) public totalTaggedDeposits;
+
+    
+    mapping (address => Snapshots) public frontEndSnapshots;
 
     /* Product 'P': Running product by which to multiply an initial deposit, in order to find the current compounded deposit, 
     given a series of liquidations, each of which cancel some CLV debt with the deposit. 
@@ -73,9 +89,10 @@ contract PoolManager is Ownable, IPoolManager {
     - The inner mapping records the sum S at different scales
     - The outer mapping records the (scale => sum) mappings, for different epochs. */
     mapping (uint => mapping(uint => uint)) public epochToScaleToSum;
+    mapping (uint => mapping(uint => uint)) public epochToScaleToG;
 
-    // Map users to their individual snapshot structs
-    mapping (address => Snapshot) public snapshot;
+    // Map depositors to their individual snapshot structs
+    mapping (address => Snapshots) public depositSnapshots;
 
     // Error trackers for the error correction in the offset calculation
     uint public lastETHError_Offset;
@@ -91,10 +108,10 @@ contract PoolManager is Ownable, IPoolManager {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     
-    event UserSnapshotUpdated(uint _P, uint _S);
+    event DepositSnapshotUpdated(uint _P, uint _S);
     event P_Updated(uint _P);
     event S_Updated(uint _S);
-    event UserDepositChanged(address indexed _user, uint _amount);
+    event DepositChanged(address indexed _user, uint _amount);
     event ETHGainWithdrawn(address indexed _user, uint _ETH, uint _CLVLoss);
 
     // --- Dependency setters ---
@@ -106,7 +123,8 @@ contract PoolManager is Ownable, IPoolManager {
         address _CLVAddress,
         address _stabilityPoolAddress,
         address _activePoolAddress,
-        address _defaultPoolAddress
+        address _defaultPoolAddress,
+        address _communityIssuanceAddress
     )
         external
         onlyOwner
@@ -125,6 +143,8 @@ contract PoolManager is Ownable, IPoolManager {
         activePool = IPool(activePoolAddress);
         defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(defaultPoolAddress);
+        communityIssuanceAddress = _communityIssuanceAddress;
+        communityIssuance = ICommunityIssuance(_communityIssuanceAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
@@ -235,116 +255,210 @@ contract PoolManager is Ownable, IPoolManager {
         stabilityPool.increaseCLV(_amount);
     }
 
-    // --- Reward calculator functions ---
+    // --- Reward calculator functions for depositor and front end ---
 
-    function getCurrentETHGain(address _user) external view returns (uint) {
-        return _getCurrentETHGain(_user);
+    function getDepositorETHGain(address _depositor) external view returns (uint) {
+        return _getDepositorETHGain(_depositor);
     }
 
     /* Return the ETH gain earned by the deposit. Given by the formula:  E = d0 * (S - S(0))/P(0)
     where S(0) and P(0) are the depositor's snapshots of the sum S and product P, respectively. */
-    function _getCurrentETHGain(address _user) internal view returns (uint) {
-        uint initialDeposit = initialDeposits[_user];
+    function _getDepositorETHGain(address _depositor) internal view returns (uint) {
+        uint initialDeposit = initialDeposits[_depositor];
 
         if (initialDeposit == 0) { return 0; }
 
-        uint snapshot_S = snapshot[_user].S;  
-        uint snapshot_P = snapshot[_user].P;
-        uint scaleSnapshot = snapshot[_user].scale;
-        uint epochSnapshot = snapshot[_user].epoch;
+        uint snapshots = depositSnapshots[_depositor];
 
-        uint ETHGain;
+        uint ETHGain = _getETHGainFromSnapshots(initialDeposit, snapshots);
+    }
 
-        /* Grab the reward sum from the epoch at which the deposit was made. The reward may span up to 
+    function _getETHGainFromSnapshots(uint initialDeposit, Snapshots memory snapshots) internal view returns (uint) {
+         /* Grab the reward sum from the epoch at which the stake was made. The reward may span up to 
         one scale change.  
         If it does, the second portion of the reward is scaled by 1e18. 
         If the reward spans no scale change, the second portion will be 0. */
-        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(snapshot_S);
-        uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
+        uint firstPortion = epochToScaleToSum[snapshots.epoch][snapshots.scale].sub(snapshots.S);
+        uint secondPortion = epochToScaleToSum[snapshots.epoch][snapshots.scale.add(1)].div(1e18);
 
-        ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(snapshot_P).div(1e18);
+        uint ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(snapshots.P).div(1e18);
         
         return ETHGain;
     }
 
-    function getCompoundedCLVDeposit(address _user) external view returns (uint) {
-        return _getCompoundedCLVDeposit(_user);
+    function getDepositorLQTYGain(address _depositor) external view returns (uint) {
+        return _getDepositorLQTYGain(_depositor);
+    }
+
+    /* Return the LQTY gain earned by the deposit. Given by the formula:  E = d0 * (G - G(0))/P(0)
+    where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively. 
+    
+    d0 is the last recorded deposit value. */
+    function _getDepositorLQTYGain(address _depositor) internal view returns (uint) {
+        uint initialDeposit = initialDeposits[_depositor];
+        if (initialDeposit == 0) { return 0; }
+
+        uint snapshots = depositSnapshots[_depositor];  
+      
+        uint LQTYGain = _getLQTYGainFromSnapshots(initialDeposit, snapshots);
+        return LQTYGain;
+    }
+
+    /* Return the LQTY gain earned by the front end. Given by the formula:  E = D0 * (G - G(0))/P(0)
+    where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively.
+
+    D0 is the last recorded value of the front end's total tagged deposits. */
+    function _getFrontEndLQTYGain(address _frontEnd) internal view returns (uint) {
+        uint frontEndStake = totalTaggedDeposits[_frontEnd];
+        if (frontEndStake == 0) { return 0; }
+
+        uint snapshots = frontEndSnapshots[_frontEnd];  
+      
+        uint LQTYGain = _getLQTYGainFromSnapshots(frontEndStake, snapshots);
+        return LQTYGain;
+    }
+
+    function _getLQTYGainFromSnapshots(uint initialStake, Snapshots memory snapshots) internal view returns (uint) {
+         /* Grab the reward sum from the epoch at which the stake was made. The reward may span up to 
+        one scale change.  
+        If it does, the second portion of the reward is scaled by 1e18. 
+        If the reward spans no scale change, the second portion will be 0. */
+        uint firstPortion = epochToScaleToG[snapshots.epoch][snapshots.scale].sub(snapshots.G);
+        uint secondPortion = epochToScaleToG[snapshots.epoch][snapshots.scale.add(1)].div(1e18);
+
+        uint LQTYGain = initialStake.mul(firstPortion.add(secondPortion)).div(snapshots.P).div(1e18);
+        
+        return LQTYGain;
+    }
+
+    // --- Compounded deposit and compounded front end stake ---
+
+    function getCompoundedCLVDeposit(address _depositor) external view returns (uint) {
+        return _getCompoundedCLVDeposit(_depositor);
     }
 
     /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
     where P(0) is the depositor's snapshot of the product P. */
-    function _getCompoundedCLVDeposit(address _user) internal view returns (uint) {
-        uint initialDeposit = initialDeposits[_user];
-
+    function _getCompoundedCLVDeposit(address _depositor) internal view returns (uint) {
+        uint initialDeposit = initialDeposits[_depositor];
         if (initialDeposit == 0) { return 0; }
 
-        uint snapshot_P = snapshot[_user].P; 
-        uint128 scaleSnapshot = snapshot[_user].scale;
-        uint128 epochSnapshot = snapshot[_user].epoch;
-        
-        // If deposit was made before a pool-emptying event, then it has been fully cancelled with debt -- so, return 0
-        if (epochSnapshot < currentEpoch) { return 0; }
+        uint snapshots = depositSnapshots[_depositor]; 
+       
+        uint compoundedDeposit = _getCompoundedStakeFromSnapshots(initialDeposit, snapshots);
+        return compoundedDeposit;
+    }
 
-        uint compoundedDeposit;
-        uint128 scaleDiff = currentScale.sub(scaleSnapshot);
+     function getCompoundedFrontEndStake(address _frontEnd) external view returns (uint) {
+        return _getCompoundedFrontEndStake(_frontEnd);
+    }
+
+    /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
+    where P(0) is the depositor's snapshot of the product P. */
+    function _getCompoundedFrontEndStake(address _frontEnd) internal view returns (uint) {
+        uint frontEndStake = totalTaggedDeposits[_frontEnd];
+        if (frontEndStake == 0) { return 0; }
+
+        uint snapshots = frontEndSnapshots[_frontEnd]; 
+       
+        uint compoundedFrontEndStake = _getCompoundedStakeFromSnapshots(frontEndStake, snapshots);
+        return compoundedFrontEndStake;
+    }
+
+    function _getCompoundedStakeFromSnapshots(uint initialStake, Snapshots memory snapshots) internal view {
+        // If stake was made before a pool-emptying event, then it has been fully cancelled with debt -- so, return 0
+        if (snapshots.epoch < currentEpoch) {return 0;}
+
+        uint compoundedStake;
+        uint128 scaleDiff = currentScale.sub(snapshots.scale);
     
-        /* Compute the compounded deposit. If a scale change in P was made during the deposit's lifetime, 
-        account for it. If more than one scale change was made, then the deposit has decreased by a factor of 
+        /* Compute the compounded stake. If a scale change in P was made during the stake's lifetime, 
+        account for it. If more than one scale change was made, then the stake has decreased by a factor of 
         at least 1e-18 -- so return 0.*/
         if (scaleDiff == 0) { 
-            compoundedDeposit = initialDeposit.mul(P).div(snapshot_P);
+            compoundedStake = initialStake.mul(P).div(snapshots.P);
         } else if (scaleDiff == 1) {
-            compoundedDeposit = initialDeposit.mul(P).div(snapshot_P).div(1e18);
+            compoundedStake = initialStake.mul(P).div(snapshots.P).div(1e18);
         } else {
-            compoundedDeposit = 0;
+            compoundedStake = 0;
         }
 
-        // If compounded deposit is less than a billionth of the initial deposit, return 0
-        if (compoundedDeposit < initialDeposit.div(1e9)) { return 0; }
+        // If compounded stake is less than a billionth of the initial deposit, return 0
+        if (compoundedStake < initialStake.div(1e9)) {return 0;}
 
-        return compoundedDeposit;
+        return compoundedStake;
     }
 
     // --- Sender functions for CLV deposits and ETH gains ---
 
-    function _sendETHGainToUser(address _address, uint ETHGain) internal {
-        stabilityPool.sendETH(_address, ETHGain);
+    function _sendETHGainToDepositor(address _depositor, uint ETHGain) internal {
+        stabilityPool.sendETH(_depositor, ETHGain);
     }
     
-    // Send ETHGain to CDP. Send in two steps: StabilityPool -> PoolManager -> user's CDP
-    function _sendETHGainToCDP(address _address, uint _ETHGain, address _hint) internal {
+    // Send ETHGain to depositor's CDP. Send in two steps: StabilityPool -> PoolManager -> depositor's CDP
+    function _sendETHGainToCDP(address _depositor, uint _ETHGain, address _hint) internal {
         stabilityPool.sendETH(address(this), _ETHGain); 
-        borrowerOperations.addColl.value(_ETHGain)(_address, _hint); 
+        borrowerOperations.addColl.value(_ETHGain)(_depositor, _hint); 
     }
 
     // Send CLV to user and decrease CLV in Pool
-    function _sendCLVToUser(address _address, uint CLVWithdrawal) internal {
+    function _sendCLVToDepositor(address _depositor, uint CLVWithdrawal) internal {
         uint CLVinPool = stabilityPool.getCLV();
         assert(CLVWithdrawal <= CLVinPool);
 
-        CLV.returnFromPool(stabilityPoolAddress, _address, CLVWithdrawal); 
+        CLV.returnFromPool(stabilityPoolAddress, _depositor, CLVWithdrawal); 
         stabilityPool.decreaseCLV(CLVWithdrawal);
+    }
+
+    // --- Front end functionality ---
+
+    function registerFrontEnd(uint _kickbackRate) external {
+        _requireFrontEndNotRegistered(msg.sender);
+        _requireValidKickbackRate(_kickbackRate);
+
+        frontEnds[msg.sender].kickbackRate = _kickbackRate;
+        frontEnds[msg.sender].active = true;
+    }
+
+    function withdrawFrontEndLQTYGain() external {
+        _requireFrontEndIsRegistered(msg.sender);
+        
+        // Get LQTY gain
+        uint LQTYGain = _getFrontEndLQTYGain(msg.sender);
+
+        // Update front end's compounded stake
+        uint compoundedFrontEndStake = _getCompoundedFrontEndStake(msg.sender);
+        totalTaggedDeposits[msg.sender] = compoundedFrontEndStake;
+
+        // Update front end's snapshots
+        frontEndSnapshots[msg.sender].P = P;
+        frontEndSnapshots[msg.sender].G = epochToScaleToG[currentEpoch][currentScale];
+        frontEndSnapshots[msg.sender].scale = currentScale;
+        frontEndSnapshots[msg.sender].epoch = currentEpoch;
+
+        // send LQTY to the front end
+        communityIssuance.sendLQTY(msg.sender, LQTYGain);
     }
 
     // --- Stability Pool Deposit Functionality --- 
 
     // Record a new deposit
-    function _updateDeposit(address _address, uint _amount) internal {
+    function _updateDeposit(address _depositor, uint _amount) internal {
         if (_amount == 0) {
-            initialDeposits[_address] = 0;
-            emit UserSnapshotUpdated(snapshot[_address].P, snapshot[_address].S);
+            initialDeposits[_depositor] = 0;
+            emit DepositSnapshotUpdated(depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
             return;
         }
 
-        initialDeposits[_address] = _amount;
+        initialDeposits[_depositor] = _amount;
     
         // Record new individual snapshots of the running product P and sum S for the user
-        snapshot[_address].P = P;
-        snapshot[_address].S = epochToScaleToSum[currentEpoch][currentScale];
-        snapshot[_address].scale = currentScale;
-        snapshot[_address].epoch = currentEpoch;
+        depositSnapshots[_depositor].P = P;
+        depositSnapshots[_depositor].S = epochToScaleToSum[currentEpoch][currentScale];
+        depositSnapshots[_depositor].scale = currentScale;
+        depositSnapshots[_depositor].epoch = currentEpoch;
 
-        emit UserSnapshotUpdated(snapshot[_address].P, snapshot[_address].S);
+        emit DepositSnapshotUpdated(depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
     }
  
     // --- External StabilityPool Functions ---
@@ -359,22 +473,22 @@ contract PoolManager is Ownable, IPoolManager {
             _sendCLVtoStabilityPool(user, _amount);
             _updateDeposit(user, _amount);
         
-            emit UserDepositChanged(user, _amount);
+            emit DepositChanged(user, _amount);
 
         } else { // If user already has a deposit, make a new composite deposit and retrieve their ETH gain
             uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
             uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
-            uint ETHGain = _getCurrentETHGain(user);
+            uint ETHGain = _getDepositorETHGain(user);
 
             uint newDeposit = compoundedCLVDeposit.add(_amount);
 
             _sendCLVtoStabilityPool(user, _amount);
             _updateDeposit(user, newDeposit);
 
-            _sendETHGainToUser(user, ETHGain);
+            _sendETHGainToDepositor(user, ETHGain);
             
             emit ETHGainWithdrawn(user, ETHGain, CLVLoss);
-            emit UserDepositChanged(user, newDeposit); 
+            emit DepositChanged(user, newDeposit); 
         }
     }
 
@@ -392,15 +506,15 @@ contract PoolManager is Ownable, IPoolManager {
         uint initialDeposit = initialDeposits[user];
         uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
-        uint ETHGain = _getCurrentETHGain(user);
+        uint ETHGain = _getDepositorETHGain(user);
 
         uint CLVtoWithdraw = Math._min(_amount, compoundedCLVDeposit);
         uint CLVremainder = compoundedCLVDeposit.sub(CLVtoWithdraw);
 
-        _sendCLVToUser(user, CLVtoWithdraw);
+        _sendCLVToDepositor(user, CLVtoWithdraw);
         _updateDeposit(user, CLVremainder);
       
-        _sendETHGainToUser(user, ETHGain);
+        _sendETHGainToDepositor(user, ETHGain);
 
         emit ETHGainWithdrawn(user, ETHGain, CLVLoss);
         emit UserDepositChanged(user, CLVremainder); 
@@ -418,7 +532,7 @@ contract PoolManager is Ownable, IPoolManager {
         uint initialDeposit = initialDeposits[_user];
         uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_user);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
-        uint ETHGain = _getCurrentETHGain(_user);
+        uint ETHGain = _getDepositorETHGain(_user);
        
         // Update the recorded deposit value, and deposit snapshots
         _updateDeposit(_user, compoundedCLVDeposit);
@@ -538,6 +652,18 @@ contract PoolManager is Ownable, IPoolManager {
 
     function _requireUserHasTrove(address _user) internal view {
         require(cdpManager.getCDPStatus(_user) == 1, "CDPManager: caller must have an active trove to withdraw ETHGain to");
+    }
+
+    function _requireFrontEndNotRegistered(address _address) internal view {
+        require(frontEnds[_address].active == false, "CommunityIssuance: must not already be an active front end");
+    }
+
+    function _requireFrontEndIsRegistered(address _address) internal view {
+        require(frontEnds[_address].active == true, "CommunityIssuance: must be an active front end");
+    }
+
+    function  _requireValidKickbackRate(uint _kickbackRate) internal pure {
+        require (_kickbackRate >= 0 && _kickbackRate <= 1e18, "CommunityIssuance: Kickback rate must be in range [0,1]");
     }
 
     // --- Fallback function ---

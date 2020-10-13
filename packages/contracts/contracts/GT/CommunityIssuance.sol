@@ -76,8 +76,9 @@ contract CommunityIssuance {
     }
 
     /* Get 1-f^(-t).
-    f: is the issuance factor that determines the shape of the curve
-    t: is time passed since last LQTY issuance event  */
+    f: issuance factor that determines the shape of the curve
+    t:  time passed since last LQTY issuance event 
+    */
     function _getCumulativeIssuanceFraction() internal view returns (uint) {
         uint timePassed = block.timestamp.sub(deploymentTime);
 
@@ -91,7 +92,7 @@ contract CommunityIssuance {
     function sendLQTY(address _account, uint _LQTYamount) external returns (uint) {
         _requireCallerIsPoolManager();
         _requireContractIsActive();
-        
+
         growthToken.transfer(_account, _LQTYamount);
     }
 
