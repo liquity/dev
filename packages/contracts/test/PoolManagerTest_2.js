@@ -935,7 +935,7 @@ contract('PoolManager', async accounts => {
       await poolManager.withdrawFromSP(dec(100, 18), { from: flyn })
       assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
 
-      const totalDeposits = (await stabilityPool.totalCLVDeposits()).toString()
+      const totalDeposits = (await stabilityPool.getCLV()).toString()
 
       assert.isAtMost(th.getDifference(totalDeposits, '0'), 1000)
     })

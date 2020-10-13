@@ -39,8 +39,6 @@ interface IPoolManager {
         address _defaultPoolAddress
     ) external;
 
-    function getBalance() external view returns (uint);
-    
     function getActiveDebt() external view returns (uint);
     
     function getActiveColl() external view returns (uint);

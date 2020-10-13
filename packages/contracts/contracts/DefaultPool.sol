@@ -11,8 +11,8 @@ contract DefaultPool is Ownable, IPool {
     address public poolManagerAddress;
     address public stabilityPoolAddress;
     address public activePoolAddress;
-    uint256 public ETH;  // deposited ether tracker
-    uint256 public CLVDebt;  // total outstanding CDP debt
+    uint256 internal ETH;  // deposited ether tracker
+    uint256 internal CLVDebt;  // total outstanding CDP debt
 
     // --- Modifiers ---
 

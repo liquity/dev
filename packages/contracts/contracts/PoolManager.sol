@@ -29,10 +29,8 @@ contract PoolManager is Ownable, IPoolManager {
     ICDPManager public cdpManager;
 
     IPriceFeed public priceFeed;
-    address public priceFeedAddress;
 
     ICLVToken public CLV;
-    address public clvAddress;
 
     IStabilityPool public stabilityPool;
     address public stabilityPoolAddress;
@@ -135,16 +133,14 @@ contract PoolManager is Ownable, IPoolManager {
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
         cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
-        priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(_priceFeedAddress);
-        clvAddress = _CLVAddress;
         CLV = ICLVToken(_CLVAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
-        stabilityPool = IStabilityPool(stabilityPoolAddress);
+        stabilityPool = IStabilityPool(_stabilityPoolAddress);
         activePoolAddress = _activePoolAddress;
-        activePool = IPool(activePoolAddress);
+        activePool = IPool(_activePoolAddress);
         defaultPoolAddress = _defaultPoolAddress;
-        defaultPool = IPool(defaultPoolAddress);
+        defaultPool = IPool(_defaultPoolAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
@@ -159,11 +155,6 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Getters ---
 
-    // Return the current ETH balance of the PoolManager contract
-    function getBalance() external view returns (uint) {
-        return address(this).balance;
-    } 
-    
     // Return the total active debt (in CLV) in the system
     function getActiveDebt() external view returns (uint) {
         return activePool.getCLVDebt();
@@ -235,7 +226,7 @@ contract PoolManager is Ownable, IPoolManager {
         CLV.returnFromPool(GAS_POOL_ADDRESS, _user, _CLV);
     }
 
-    // Update the Active Pool and the Default Pool when a CDP gets closed
+    // Update the Active Pool and the Default Pool when a CDP gets liquidated
     function liquidate(uint _CLV, uint _ETH) external onlyCDPManager {
         // Transfer the debt & coll from the Active Pool to the Default Pool
         defaultPool.increaseCLVDebt(_CLV);
