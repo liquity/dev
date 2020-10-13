@@ -16,7 +16,9 @@ import {
   checkTroveOrdering,
   connectUsers,
   createRandomWallets,
-  getListOfTroves
+  dumpTroves,
+  getListOfTroves,
+  shortenAddress
 } from "./utils";
 import { Fixture } from "./fixture";
 
@@ -130,12 +132,18 @@ yargs
         | (readonly [string, TroveWithPendingRewards])[]
         | undefined = undefined;
 
+      console.log();
+      console.log("// Keys");
+      randomUsers.forEach(user =>
+        console.log(`[${shortenAddress(user.address)}]: ${user.privateKey}`)
+      );
+
       for (let i = 1; i <= numberOfRounds; ++i) {
         console.log();
         console.log(`// Round #${i}`);
 
         const price = await fixture.setRandomPrice();
-        await fixture.liquidateTroves(30);
+        await fixture.liquidateRandomNumberOfTroves();
 
         for (const liquity of randomLiquities) {
           if (Math.random() < 0.5) {
@@ -147,11 +155,14 @@ yargs
               await fixture.closeTrove(liquity, trove);
             }
           } else {
-            await fixture.redeemRandomAmount(liquity);
+            if (Math.random() < 0.5) {
+              await fixture.redeemRandomAmount(liquity);
+            } else {
+              await fixture.depositRandomAmountInStabilityPool(liquity);
+            }
           }
 
-          const quiBalance = await liquity.getQuiBalance();
-          await liquity.sendQui(funderLiquity.userAddress!, quiBalance, { gasPrice: 0 });
+          await fixture.sweepQui(liquity);
 
           const listOfTroves = await getListOfTroves(deployerLiquity);
           await checkTroveOrdering(deployerLiquity, price, listOfTroves, previousListOfTroves);
@@ -188,7 +199,7 @@ yargs
       const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder], addresses);
 
       const initialPrice = await deployerLiquity.getPrice();
-      const initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
+      let initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
 
       let [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
 
@@ -203,6 +214,34 @@ yargs
           });
 
           trove = await funderLiquity.getTrove();
+        }
+
+        const quiBalance = await funderLiquity.getQuiBalance();
+
+        if (quiBalance.lt(trove.debt)) {
+          const [randomUser] = createRandomWallets(1, provider);
+          const randomLiquity = await Liquity.connect(addresses, randomUser);
+
+          const quiNeeded = trove.debt.sub(quiBalance);
+          const tempTrove = new Trove({
+            collateral: quiNeeded.div(initialPrice).mul(3),
+            debt: quiNeeded
+          });
+
+          await funder.sendTransaction({
+            to: randomUser.address,
+            value: tempTrove.collateral.bigNumber
+          });
+
+          await randomLiquity.openTrove(
+            tempTrove,
+            { price: initialPrice, numberOfTroves: initialNumberOfTroves },
+            { gasPrice: 0 }
+          );
+
+          initialNumberOfTroves++;
+
+          await randomLiquity.sendQui(funder.address, quiNeeded, { gasPrice: 0 });
         }
 
         await funderLiquity.repayQui(trove.debt, {
@@ -272,6 +311,14 @@ yargs
     await checkSubgraph(subgraph, deployerLiquity);
 
     console.log("Subgraph looks fine.");
+  })
+
+  .command("dump-troves", "Dump list of Troves.", {}, async () => {
+    const deployerLiquity = await Liquity.connect(addresses, deployer);
+
+    const listOfTroves = await getListOfTroves(deployerLiquity);
+    const price = await deployerLiquity.getPrice();
+    await dumpTroves(deployerLiquity, listOfTroves, price);
   })
 
   .demandCommand()

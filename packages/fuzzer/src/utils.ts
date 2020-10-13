@@ -2,7 +2,7 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { Provider } from "@ethersproject/abstract-provider";
 import { Wallet } from "@ethersproject/wallet";
 
-import { Decimal, Decimalish, Percent } from "@liquity/decimal";
+import { Decimal, Decimalish, Difference, Percent } from "@liquity/decimal";
 import { Trove, TroveWithPendingRewards, ReadableLiquity } from "@liquity/lib-base";
 import { EthersLiquity as Liquity, LiquityContractAddresses } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
@@ -129,50 +129,60 @@ export const checkTroveOrdering = async (
   }
 };
 
+const numbersEqual = (a: number, b: number) => a === b;
+const decimalsEqual = (a: Decimal, b: Decimal) => a.eq(b);
+const trovesEqual = (a: Trove, b: Trove) => a.equals(b);
+
+const trovesRoughlyEqual = (troveA: Trove, troveB: Trove) =>
+  [
+    [troveA.collateral, troveB.collateral],
+    [troveA.debt, troveB.debt]
+  ].every(([a, b]) => Difference.between(a, b).absoluteValue?.lt(tinyDifference));
+
+class EqualityCheck<T> {
+  private name: string;
+  private get: (l: ReadableLiquity) => Promise<T>;
+  private equals: (a: T, b: T) => boolean;
+
+  constructor(
+    name: string,
+    get: (l: ReadableLiquity) => Promise<T>,
+    equals: (a: T, b: T) => boolean
+  ) {
+    this.name = name;
+    this.get = get;
+    this.equals = equals;
+  }
+
+  async allEqual(liquities: ReadableLiquity[]) {
+    const [a, ...rest] = await Promise.all(liquities.map(l => this.get(l)));
+
+    if (!rest.every(b => this.equals(a, b))) {
+      throw new Error(`Mismatch in ${this.name}`);
+    }
+  }
+}
+
+const checks = [
+  new EqualityCheck("numberOfTroves", l => l.getNumberOfTroves(), numbersEqual),
+  new EqualityCheck("price", l => l.getPrice(), decimalsEqual),
+  new EqualityCheck("total", l => l.getTotal(), trovesRoughlyEqual),
+  new EqualityCheck("totalRedistributed", l => l.getTotalRedistributed(), trovesEqual),
+  new EqualityCheck("tokensInStabilityPool", l => l.getQuiInStabilityPool(), decimalsEqual)
+];
+
 export const checkSubgraph = async (subgraph: SubgraphLiquity, l1Liquity: ReadableLiquity) => {
-  const l1NumberOfTroves = await l1Liquity.getNumberOfTroves();
-  const subgraphNumberOfTroves = await subgraph.getNumberOfTroves();
-
-  if (l1NumberOfTroves !== subgraphNumberOfTroves) {
-    throw new Error("Mismatch between L1 and subgraph numberOfTroves");
-  }
-
-  const l1Price = await l1Liquity.getPrice();
-  const subgraphPrice = await subgraph.getPrice();
-
-  if (!l1Price.eq(subgraphPrice)) {
-    throw new Error("Mismatch between L1 and subgraph price");
-  }
-
-  const l1Total = await l1Liquity.getTotal();
-  const subgraphTotal = await subgraph.getTotal();
-
-  if (!l1Total.equals(subgraphTotal)) {
-    throw new Error("Mismatch between L1 and subgraph total");
-  }
-
-  const l1TotalRedistributed = await l1Liquity.getTotalRedistributed();
-  const subgraphTotalRedistributed = await subgraph.getTotalRedistributed();
-
-  if (!l1TotalRedistributed.equals(subgraphTotalRedistributed)) {
-    throw new Error("Mismatch between L1 and subgraph totalRedistributed");
-  }
-
-  const l1TokensInStabilityPool = await l1Liquity.getQuiInStabilityPool();
-  const subgraphTokensInStabilityPool = await subgraph.getQuiInStabilityPool();
-
-  if (!l1TokensInStabilityPool.eq(subgraphTokensInStabilityPool)) {
-    throw new Error("Mismatch between L1 and subgraph tokensInStabilityPool");
-  }
+  await Promise.all(checks.map(check => check.allEqual([subgraph, l1Liquity])));
 
   const l1ListOfTroves = await getListOfTroves(l1Liquity);
   const subgraphListOfTroves = await getListOfTroves(subgraph);
   listOfTrovesShouldBeEqual(l1ListOfTroves, subgraphListOfTroves);
 
-  if (!(await sortedByICR(subgraph, subgraphListOfTroves, l1Price))) {
+  const price = await l1Liquity.getPrice();
+  if (!(await sortedByICR(subgraph, subgraphListOfTroves, price))) {
     console.log();
     console.log("// List of Troves returned by subgraph:");
-    await dumpTroves(subgraph, subgraphListOfTroves, l1Price);
+    await dumpTroves(subgraph, subgraphListOfTroves, price);
     throw new Error("subgraph sorting broken");
   }
 };
@@ -200,7 +210,7 @@ const troveToString = (
   );
 };
 
-const dumpTroves = async (
+export const dumpTroves = async (
   liquity: ReadableLiquity,
   listOfTroves: (readonly [string, TroveWithPendingRewards])[],
   price: Decimalish
@@ -220,6 +230,7 @@ const dumpTroves = async (
       nextTrove
         .applyRewards(totalRedistributed)
         .collateralRatio(price)
+        .sub(tinyDifference)
         .gt(currentTrove.applyRewards(totalRedistributed).collateralRatio(price))
     ) {
       console.log(`!! ${troveToString(nextOwner, nextTrove, totalRedistributed, price)}`.red);

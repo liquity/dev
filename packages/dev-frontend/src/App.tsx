@@ -1,11 +1,12 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
 import { Flex, Spinner, Heading, Text, ThemeProvider, Container } from "theme-ui";
+import { Wallet } from "@ethersproject/wallet";
 
 import { Decimal, Difference, Percent } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { Trove, StabilityDeposit } from "@liquity/lib-base";
-import { EthersLiquity } from "@liquity/lib-ethers";
+import { addressesOf, EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
@@ -26,6 +27,11 @@ import { Footer } from "./components/Footer";
 import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
+
+if (window.ethereum) {
+  // Silence MetaMask warning in console
+  Object.assign(window.ethereum, { autoRefreshOnNetworkChange: false });
+}
 
 if (process.env.REACT_APP_DEMO_MODE === "true") {
   const ethereum = new DisposableWalletProvider(
@@ -60,15 +66,17 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   Object.assign(window, {
     provider,
     contracts,
-    liquity,
+    addresses: addressesOf(contracts),
     store: storeState.value,
-    EthersLiquity,
+    liquity,
+    Liquity,
     SubgraphLiquity,
     Trove,
     StabilityDeposit,
     Decimal,
     Difference,
-    Percent
+    Percent,
+    Wallet
   });
 
   const {

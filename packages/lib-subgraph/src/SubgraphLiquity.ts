@@ -297,7 +297,7 @@ export class SubgraphLiquity implements ReadableLiquity {
       try {
         await blockNumberDummy.get(this.client, { blockNumber });
       } catch {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 100));
         continue;
       }
       return;

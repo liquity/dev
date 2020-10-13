@@ -1,6 +1,6 @@
 import { Signer } from "@ethersproject/abstract-signer";
 
-import { Decimal } from "@liquity/decimal";
+import { Decimal, Decimalish } from "@liquity/decimal";
 import { Trove } from "@liquity/lib-base";
 import { EthersLiquity as Liquity } from "@liquity/lib-ethers";
 
@@ -53,6 +53,21 @@ export class Fixture {
     return new Fixture(deployerLiquity, funderLiquity, funder, price, numberOfTroves);
   }
 
+  private async sendQuiFromFunder(toAddress: string, amount: Decimalish) {
+    while ((await this.funderLiquity.getQuiBalance()).lt(amount)) {
+      const trove = await this.funderLiquity.getTrove();
+      const finalTrove = trove.add({ collateral: 10000, debt: 1000000 });
+
+      await this.funderLiquity.changeTrove(trove.whatChanged(finalTrove), {
+        trove,
+        price: this.price,
+        numberOfTroves: this.numberOfTroves
+      });
+    }
+
+    await this.funderLiquity.sendQui(toAddress, amount);
+  }
+
   async setRandomPrice() {
     this.price = this.price.add(100 * Math.random() + 150).div(2);
     console.log(`[deployer] setPrice(${this.price})`);
@@ -61,9 +76,13 @@ export class Fixture {
     return this.price;
   }
 
-  async liquidateTroves(maximumNumberOfTrovesToLiquidate: number) {
+  async liquidateRandomNumberOfTroves() {
+    const quiInStabilityPoolBefore = await this.deployerLiquity.getQuiInStabilityPool();
+    console.log(`// Stability Pool balance: ${quiInStabilityPoolBefore}`);
+
     const trovesBefore = await getListOfTroveOwners(this.deployerLiquity);
 
+    const maximumNumberOfTrovesToLiquidate = Math.floor(50 * Math.random()) + 1;
     console.log(`[deployer] liquidateUpTo(${maximumNumberOfTrovesToLiquidate})`);
     await this.deployerLiquity.liquidateUpTo(maximumNumberOfTrovesToLiquidate);
 
@@ -78,6 +97,9 @@ export class Fixture {
 
     this.numberOfTroves -= liquidatedTroves.length;
     this.totalNumberOfLiquidations += liquidatedTroves.length;
+
+    const quiInStabilityPoolAfter = await this.deployerLiquity.getQuiInStabilityPool();
+    console.log(`// Stability Pool balance: ${quiInStabilityPoolAfter}`);
   }
 
   async openRandomTrove(liquity: Liquity) {
@@ -129,7 +151,7 @@ export class Fixture {
       total = await liquity.getTotal();
     }
 
-    await this.funderLiquity.sendQui(liquity.userAddress!, trove.debt);
+    await this.sendQuiFromFunder(liquity.userAddress!, trove.debt);
 
     console.log(`[${shortenAddress(liquity.userAddress!)}] closeTrove()`);
     await liquity.closeTrove({ gasPrice: 0 });
@@ -138,9 +160,9 @@ export class Fixture {
   }
 
   async redeemRandomAmount(liquity: Liquity) {
-    const exchangedQui = benford(5000);
+    const exchangedQui = benford(100000);
 
-    await this.funderLiquity.sendQui(liquity.userAddress!, exchangedQui);
+    await this.sendQuiFromFunder(liquity.userAddress!, exchangedQui);
 
     console.log(`[${shortenAddress(liquity.userAddress!)}] redeemCollateral(${exchangedQui})`);
     await liquity.redeemCollateral(
@@ -148,5 +170,22 @@ export class Fixture {
       { price: this.price, numberOfTroves: this.numberOfTroves },
       { gasPrice: 0 }
     );
+  }
+
+  async depositRandomAmountInStabilityPool(liquity: Liquity) {
+    const depositedQui = benford(10000);
+
+    await this.sendQuiFromFunder(liquity.userAddress!, depositedQui);
+
+    console.log(
+      `[${shortenAddress(liquity.userAddress!)}] depositQuiInStabilityPool(${depositedQui})`
+    );
+
+    await liquity.depositQuiInStabilityPool(depositedQui, { gasPrice: 0 });
+  }
+
+  async sweepQui(liquity: Liquity) {
+    const quiBalance = await liquity.getQuiBalance();
+    await liquity.sendQui(this.funderLiquity.userAddress!, quiBalance, { gasPrice: 0 });
   }
 }
