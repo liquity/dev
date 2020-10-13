@@ -772,8 +772,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         // V.CLVLot <= CDPs[_cdpUser].debt - CLV_GAS_COMPENSATION =>
         // newDebt = CDPs[_cdpUser].debt - V.CLVLot >=
-        //  >= CDPs[_cdpUser].debt - (CDPs[_cdpUser].debt - CLV_GAS_COMPENSATION)
-        //  = CLV_GAS_COMPENSATION
+        //  >= CDPs[_cdpUser].debt - (CDPs[_cdpUser].debt - CLV_GAS_COMPENSATION) =>
+        //  newDebt >= CLV_GAS_COMPENSATION
         if (newDebt == CLV_GAS_COMPENSATION) {
             // No debt left in the CDP (except for the gas compensation), therefore the trove is closed
             _removeStake(_cdpUser);

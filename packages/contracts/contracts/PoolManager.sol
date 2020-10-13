@@ -260,11 +260,19 @@ contract PoolManager is Ownable, IPoolManager {
         activePool.sendETH(_account, _ETH); 
     }
 
-    // Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
-    // It’s called by CDPManager when after redemption there’s only gas compensation left as debt
+    /*
+      Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
+     * It’s called by CDPManager when after redemption there’s only gas compensation left as debt
+     */
     function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external onlyCDPManager {
-        // Update Active Pool CLV, and send ETH to account
+        /*
+         * This is called by CDPManager when the redemption drains all the trove and there’s only the gas compensation left.
+         * The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left correspond to the remaining collateral.
+         * In order to close the trove, the user should get the CLV refunded and use them to repay and close it,
+         * but instead we do that all in one step.
+         */
         CLV.burn(GAS_POOL_ADDRESS, _CLV);
+        // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLVDebt(_CLV);
 
         activePool.sendETH(_account, _ETH);
