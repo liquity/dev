@@ -22,7 +22,7 @@ export function getCurrentLiquidation(event: ethereum.Event): Liquidation {
     newLiquidation.liquidatedCollateral = DECIMAL_ZERO;
     newLiquidation.liquidatedDebt = DECIMAL_ZERO;
     newLiquidation.collGasCompensation = DECIMAL_ZERO;
-    newLiquidation.CLVGasCompensation = DECIMAL_ZERO;
+    newLiquidation.tokenGasCompensation = DECIMAL_ZERO;
     newLiquidation.save();
 
     let global = getGlobal();
@@ -46,7 +46,7 @@ export function finishCurrentLiquidation(
   currentLiquidation.liquidatedCollateral = decimalize(_liquidatedColl);
   currentLiquidation.liquidatedDebt = decimalize(_liquidatedDebt);
   currentLiquidation.collGasCompensation = decimalize(_collGasCompensation);
-  currentLiquidation.CLVGasCompensation = decimalize(_CLVGasCompensation);
+  currentLiquidation.tokenGasCompensation = decimalize(_CLVGasCompensation);
   currentLiquidation.save();
 
   let global = getGlobal();

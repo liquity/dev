@@ -426,11 +426,11 @@ describe("EthersLiquity", () => {
     it("should find hints for redemption", async () => {
       const redemptionHints = await liquity._findRedemptionHints(Decimal.from(55));
 
-      // 30 would be redeemed from 1st one, 20 from 2nd one, 5 from 3rd one (as there are 10 for gas compensation in each)
+      // 30 would be redeemed from otherLiquities[2], 20 from otherLiquities[1], 5 from otherLiquities[0] (as there are 10 for gas compensation in each)
       expect(redemptionHints).to.deep.equal([
         otherLiquities[2].userAddress!,
         liquity.userAddress!,
-        Decimal.from("13") // 1 ETH * 200 / 15 = 13.3333
+        Decimal.from("13") // (1 ETH * 200 - 5) / (20 - 5) = 13 (subtracting 5 for the redemption to otherLiquities[0])
       ]);
     });
 
