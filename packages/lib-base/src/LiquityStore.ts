@@ -143,7 +143,7 @@ export abstract class LiquityStore<T = {}> {
   protected abstract reduceExtra(oldExtraState: T, extraStateUpdate: Partial<T>): T;
 
   private notify(...args: Parameters<LiquityStoreListener<T>>) {
-    this.listeners.forEach(listener => listener(...args));
+    [...this.listeners].forEach(listener => listener(...args));
   }
 
   subscribe(listener: LiquityStoreListener<T>) {
