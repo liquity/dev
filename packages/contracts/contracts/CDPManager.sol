@@ -1047,17 +1047,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         sortedCDPs.remove(_user);
     }
 
-    // Update the snapshots of system stakes & system collateral
-    function _updateSystemSnapshots() internal {
-        totalStakesSnapshot = totalStakes;
-
-        /* The total collateral snapshot is the sum of all active collateral and all pending rewards
-       (ActivePool ETH + DefaultPool ETH), immediately after the liquidation occurs. */
-        uint activeColl = activePool.getETH();
-        uint liquidatedColl = defaultPool.getETH();
-        totalCollateralSnapshot = activeColl.add(liquidatedColl);
-    }
-
     // Updates snapshots of system stakes and system collateral, excluding a given collateral remainder from the calculation
     function _updateSystemSnapshots_excludeCollRemainder(uint _collRemainder) internal {
         totalStakesSnapshot = totalStakes;
