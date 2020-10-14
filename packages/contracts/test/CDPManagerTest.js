@@ -413,7 +413,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(bob_isInSortedList)
   })
 
-  it("liquidate(): reverts if trove is non-existent", async () => {
+  it("liquidate(): skips if trove is non-existent", async () => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(10, 'ether') })
 
@@ -424,17 +424,15 @@ contract('CDPManager', async accounts => {
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
-    try {
-      const txCarol = await cdpManager.batchLiquidateTroves([carol])
+    const txCarol = await cdpManager.batchLiquidateTroves([carol])
+    assert.isTrue(txCarol.receipt.status)
 
-      assert.isFalse(txCarol.receipt.status)
-    } catch (err) {
-      assert.include(err.message, "revert")
-      assert.include(err.message, "Trove does not exist or is closed")
-    }
+    // Check other troves remain untouched
+    assert.equal((await cdpManager.CDPs(alice))[0].toString(), dec(10, 18))
+    assert.equal((await cdpManager.CDPs(bob))[0].toString(), dec(110, 18))
   })
 
-  it("liquidate(): reverts if trove has been closed", async () => {
+  it("liquidate(): skips if trove has been closed", async () => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(dec(180, 18), bob, { from: bob, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
@@ -445,8 +443,8 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Carol liquidated, and her trove is closed
-    const txCarol_L1 = await cdpManager.batchLiquidateTroves([carol])
-    assert.isTrue(txCarol_L1.receipt.status)
+    const txCarolClose = await borrowerOperations.closeLoan({ from: carol })
+    assert.isTrue(txCarolClose.receipt.status)
 
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -455,14 +453,13 @@ contract('CDPManager', async accounts => {
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
-    try {
-      const txCarol_L2 = await cdpManager.batchLiquidateTroves([carol])
+    const txCarol_L2 = await cdpManager.batchLiquidateTroves([carol])
 
-      assert.isFalse(txCarol_L2.receipt.status)
-    } catch (err) {
-      assert.include(err.message, "revert")
-      assert.include(err.message, "Trove does not exist or is closed")
-    }
+    assert.isTrue(txCarol_L2.receipt.status)
+
+    // Check other troves remain untouched
+    assert.equal((await cdpManager.CDPs(alice))[0].toString(), dec(10, 18))
+    assert.equal((await cdpManager.CDPs(bob))[0].toString(), dec(190, 18))
   })
 
   it("liquidate(): does nothing if trove has >= 110% ICR", async () => {
@@ -714,13 +711,8 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Attempt to liquidate Dennis
-    try {
-      const txDennis = await cdpManager.batchLiquidateTroves([dennis])
-      assert.isFalse(txDennis.receipt.status)
-    } catch (err) {
-      assert.include(err.message, "revert")
-      assert.include(err.message, "Trove does not exist or is closed")
-    }
+    const txDennis = await cdpManager.batchLiquidateTroves([dennis])
+    assert.isTrue(txDennis.receipt.status)
 
     // Check Dennis' SP deposit does not change after liquidation attempt
     const dennis_Deposit_After = (await poolManager.getCompoundedCLVDeposit(dennis)).toString()

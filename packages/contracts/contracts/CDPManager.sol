@@ -589,8 +589,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.i = 0;
          for (L.i = 0; L.i < troveArrayLength; L.i++) {
              L.user = _troveArray[L.i];
-             _requireCDPisActive(L.user);
 
+            // If the trove is empty, ICR will be MAX UINT so it will be skipped
             L.ICR = _getCurrentICR(L.user, _price);
 
             // Attempt to close trove
@@ -635,7 +635,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         
         for (L.i = 0; L.i < troveArrayLength; L.i++) {
             L.user = _troveArray[L.i];
-            _requireCDPisActive(L.user);
+            // If the trove is empty, ICR will be MAX UINT so it will be skipped
             L.ICR = _getCurrentICR(L.user, _price);
             
             if (L.ICR < MCR) {
