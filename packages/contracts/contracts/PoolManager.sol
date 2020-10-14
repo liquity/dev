@@ -177,7 +177,7 @@ contract PoolManager is Ownable, IPoolManager {
     
     // Return the total CLV in the Stability Pool
     function getStabilityPoolCLV() external view returns (uint) {
-        return stabilityPool.getCLV();
+        return stabilityPool.getTotalCLVDeposits();
     }
     
     // --- Pool interaction functions ---
@@ -359,7 +359,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Send CLV to user and decrease CLV in Pool
     function _sendCLVToUser(address _address, uint CLVWithdrawal) internal {
-        uint CLVinPool = stabilityPool.getCLV();
+        uint CLVinPool = stabilityPool.getTotalCLVDeposits();
         assert(CLVWithdrawal <= CLVinPool);
 
         CLV.returnFromPool(stabilityPoolAddress, _address, CLVWithdrawal); 
@@ -480,7 +480,7 @@ contract PoolManager is Ownable, IPoolManager {
     payable 
     onlyCDPManager 
     {    
-        uint totalCLVDeposits = stabilityPool.getCLV(); 
+        uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
         if (totalCLVDeposits == 0 || _debtToOffset == 0) { return; }
         
         (uint ETHGainPerUnitStaked,

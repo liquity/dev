@@ -349,7 +349,7 @@ contract('Gas compensation tests', async accounts => {
     await poolManager.provideToSP(dec(1000, 18), { from: dennis })
     await poolManager.provideToSP(dec(1000, 18), { from: erin })
 
-    const CLVinSP_0 = await stabilityPool.getCLV()
+    const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
 
     // --- Price drops to 9.99 ---
     await priceFeed.setPrice('9990000000000000000')
@@ -377,7 +377,7 @@ contract('Gas compensation tests', async accounts => {
     assert.equal(compensationReceived_A, dec(5, 15))
 
     // Check SP CLV has decreased due to the liquidation 
-    const CLVinSP_A = await stabilityPool.getCLV()
+    const CLVinSP_A = await stabilityPool.getTotalCLVDeposits()
     assert.isTrue(CLVinSP_A.lte(CLVinSP_0))
 
     // Check ETH in SP has received the liquidation
@@ -409,7 +409,7 @@ contract('Gas compensation tests', async accounts => {
     assert.equal(compensationReceived_B, dec(10, 15)) // 0.5% of 2 ETH
 
     // Check SP CLV has decreased due to the liquidation of B
-    const CLVinSP_B = await stabilityPool.getCLV()
+    const CLVinSP_B = await stabilityPool.getTotalCLVDeposits()
     assert.isTrue(CLVinSP_B.lt(CLVinSP_A))
 
     // Check ETH in SP has received the liquidation
@@ -442,7 +442,7 @@ contract('Gas compensation tests', async accounts => {
     assert.equal(compensationReceived_C, dec(15, 15))
 
     // Check SP CLV has decreased due to the liquidation of C
-    const CLVinSP_C = await stabilityPool.getCLV()
+    const CLVinSP_C = await stabilityPool.getTotalCLVDeposits()
     assert.isTrue(CLVinSP_C.lt(CLVinSP_B))
 
     // Check ETH in SP has not changed due to the lquidation of C
@@ -466,7 +466,7 @@ contract('Gas compensation tests', async accounts => {
     await poolManager.provideToSP(dec(1, 23), { from: dennis })
     await poolManager.provideToSP(dec(1, 23), { from: erin })
 
-    const CLVinSP_0 = await stabilityPool.getCLV()
+    const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
 
     // --- Price drops to 199.999 ---
@@ -506,7 +506,7 @@ contract('Gas compensation tests', async accounts => {
     assert.equal(compensationReceived_A, _0pt5percent_aliceColl)
 
     // Check SP CLV has decreased due to the liquidation of A
-    const CLVinSP_A = await stabilityPool.getCLV()
+    const CLVinSP_A = await stabilityPool.getTotalCLVDeposits()
     assert.isTrue(CLVinSP_A.lt(CLVinSP_0))
 
     // Check ETH in SP has increased by the remainder of B's coll
@@ -554,7 +554,7 @@ contract('Gas compensation tests', async accounts => {
     assert.equal(compensationReceived_B, _0pt5percent_bobColl)
 
     // Check SP CLV has decreased due to the liquidation of B
-    const CLVinSP_B = await stabilityPool.getCLV()
+    const CLVinSP_B = await stabilityPool.getTotalCLVDeposits()
     assert.isTrue(CLVinSP_B.lt(CLVinSP_A))
 
     // Check ETH in SP has increased by the remainder of B's coll
@@ -582,7 +582,7 @@ contract('Gas compensation tests', async accounts => {
     await poolManager.provideToSP(dec(1, 23), { from: dennis })
     await poolManager.provideToSP(dec(1, 23), { from: erin })
 
-    const CLVinSP_0 = await stabilityPool.getCLV()
+    const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
 
     await priceFeed.setPrice(dec(200, 18))
@@ -619,7 +619,7 @@ contract('Gas compensation tests', async accounts => {
     assert.equal(compensationReceived_A, _0pt5percent_aliceColl)
 
     // Check SP CLV has decreased due to the liquidation of A 
-    const CLVinSP_A = await stabilityPool.getCLV()
+    const CLVinSP_A = await stabilityPool.getTotalCLVDeposits()
     assert.isTrue(CLVinSP_A.lt(CLVinSP_0))
 
     // Check ETH in SP has increased by the remainder of A's coll
@@ -662,7 +662,7 @@ contract('Gas compensation tests', async accounts => {
     assert.equal(compensationReceived_B, _0pt5percent_bobColl)
 
     // Check SP CLV has decreased due to the liquidation of B
-    const CLVinSP_B = await stabilityPool.getCLV()
+    const CLVinSP_B = await stabilityPool.getTotalCLVDeposits()
     assert.isTrue(CLVinSP_B.lt(CLVinSP_A))
 
     // Check ETH in SP has increased by the remainder of B's coll
@@ -691,7 +691,7 @@ contract('Gas compensation tests', async accounts => {
     await poolManager.provideToSP(dec(1000, 18), { from: dennis })
     await poolManager.provideToSP(dec(1000, 18), { from: erin })
 
-    const CLVinSP_0 = await stabilityPool.getCLV()
+    const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
 
     // --- Price drops to 9.99 ---
     await priceFeed.setPrice('9990000000000000000')
@@ -774,7 +774,7 @@ contract('Gas compensation tests', async accounts => {
     await poolManager.provideToSP(dec(1, 23), { from: dennis })
     await poolManager.provideToSP(dec(1, 23), { from: erin })
 
-    const CLVinSP_0 = await stabilityPool.getCLV()
+    const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
 
     // --- Price drops to 199.999 ---
@@ -881,7 +881,7 @@ contract('Gas compensation tests', async accounts => {
     await poolManager.provideToSP(dec(1, 23), { from: dennis })
     await poolManager.provideToSP(dec(1, 23), { from: erin })
 
-    const CLVinSP_0 = await stabilityPool.getCLV()
+    const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
 
     await priceFeed.setPrice(dec(200, 18))
@@ -984,7 +984,7 @@ contract('Gas compensation tests', async accounts => {
     await poolManager.provideToSP(dec(1, 23), { from: erin })
     await poolManager.provideToSP(dec(1, 23), { from: flyn })
 
-    const CLVinSP_0 = await stabilityPool.getCLV()
+    const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
 
     // price drops to 200 
     await priceFeed.setPrice(dec(200, 18))
@@ -1068,7 +1068,7 @@ contract('Gas compensation tests', async accounts => {
     const liquidatorBalance_after = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check CLV in SP has decreased
-    const CLVinSP_1 = await stabilityPool.getCLV()
+    const CLVinSP_1 = await stabilityPool.getTotalCLVDeposits()
     assert.isTrue(CLVinSP_1.lt(CLVinSP_0))
 
     // Check liquidator's balance has increased by the expected compensation amount
@@ -1202,7 +1202,7 @@ contract('Gas compensation tests', async accounts => {
     await poolManager.provideToSP(dec(1, 23), { from: erin })
     await poolManager.provideToSP(dec(1, 23), { from: flyn })
 
-    const CLVinSP_0 = await stabilityPool.getCLV()
+    const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
 
     // price drops to 200 
     await priceFeed.setPrice(dec(200, 18))

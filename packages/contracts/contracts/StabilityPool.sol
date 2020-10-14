@@ -58,7 +58,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         return ETH;
     }
 
-    function getCLV() external view returns (uint) {
+    function getTotalCLVDeposits() external view returns (uint) {
         return totalCLVDeposits;
     }
 

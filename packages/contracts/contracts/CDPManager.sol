@@ -244,7 +244,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         LocalVariables_OuterLiquidationFunction memory L;
         L.price = priceFeed.getPrice();
-        L.CLVInPool = stabilityPool.getCLV();
+        L.CLVInPool = stabilityPool.getTotalCLVDeposits();
         L.recoveryModeAtStart = _checkRecoveryMode();
 
         uint ICR = _getCurrentICR(_user, L.price);
@@ -455,7 +455,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         LiquidationTotals memory T;
 
         L.price = priceFeed.getPrice();
-        L.CLVInPool = stabilityPool.getCLV();
+        L.CLVInPool = stabilityPool.getTotalCLVDeposits();
         L.recoveryModeAtStart = _checkRecoveryMode();
      
         // Perform the appropriate liquidation sequence - tally values and obtain their totals
@@ -581,7 +581,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         LiquidationTotals memory T;
 
         L.price = priceFeed.getPrice();
-        L.CLVInPool = stabilityPool.getCLV();
+        L.CLVInPool = stabilityPool.getTotalCLVDeposits();
         L.recoveryModeAtStart = _checkRecoveryMode();
         
         // Perform the appropriate liquidation sequence - tally values and obtain their totals
