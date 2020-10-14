@@ -1,6 +1,5 @@
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const CLVTokenData = artifacts.require("./CLVTokenData.sol")
 const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
@@ -504,70 +503,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
-      }
-    })
-  })
-
-
-  describe('CLVTokenData', async accounts => {
-
-    //   // --- onlyCLVTokenAddress ---
-
-    // setBalance
-    it("setBalance(): reverts when called by an account that is not CLVToken", async () => {
-      const tokenDataAddress = await clvToken.tokenDataAddress();
-      const clvTokenData = await CLVTokenData.at(tokenDataAddress)
-
-      // Attempt call from alice
-      try {
-        txAlice = await clvTokenData.setBalance(bob, 100, { from: alice })
-        assert.fail(txAlice)
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-    })
-
-    // addToBalance
-    it("addToBalance(): reverts when called by an account that is not CLVToken", async () => {
-      const tokenDataAddress = await clvToken.tokenDataAddress();
-      const clvTokenData = await CLVTokenData.at(tokenDataAddress)
-
-      // Attempt call from alice
-      try {
-        txAlice = await clvTokenData.addToBalance(bob, 100, { from: alice })
-        assert.fail(txAlice)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CLVToken contract")
-      }
-    })
-
-    // subFromBalance
-    it("subFromBalance(): reverts when called by an account that is not CLVToken", async () => {
-      const tokenDataAddress = await clvToken.tokenDataAddress();
-      const clvTokenData = await CLVTokenData.at(tokenDataAddress)
-
-      // Attempt call from alice
-      try {
-        txAlice = await clvTokenData.subFromBalance(bob, 100, { from: alice })
-        assert.fail(txAlice)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CLVToken contract")
-      }
-    })
-
-    // setAllowance
-    it("setAllowance(): reverts when called by an account that is not CLVToken", async () => {
-      const tokenDataAddress = await clvToken.tokenDataAddress();
-      const clvTokenData = await CLVTokenData.at(tokenDataAddress)
-
-      // Attempt call from alice
-      try {
-        txAlice = await clvTokenData.setAllowance(bob, carol, 100, { from: alice })
-        assert.fail(txAlice)
-      } catch (err) {
-        assert.include(err.message, "revert")
       }
     })
   })

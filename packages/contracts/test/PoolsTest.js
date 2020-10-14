@@ -34,17 +34,17 @@ contract('StabilityPool', async accounts => {
     assert.equal(recordedETHBalance, 0)
   })
 
-  it('getCLV(): gets the recorded CLV balance', async () => {
-    const recordedETHBalance = await stabilityPool.getCLV({ from: mockPoolManagerAddress })
+  it('getTotalCLVDeposits(): gets the recorded CLV balance', async () => {
+    const recordedETHBalance = await stabilityPool.getTotalCLVDeposits({ from: mockPoolManagerAddress })
     assert.equal(recordedETHBalance, 0)
   })
   
   it('increaseCLV(): increases the recorded CLV balance by the correct amount', async () => {
-    const recordedCLV_balanceBefore = await stabilityPool.getCLV({ from: mockPoolManagerAddress })
+    const recordedCLV_balanceBefore = await stabilityPool.getTotalCLVDeposits({ from: mockPoolManagerAddress })
     assert.equal(recordedCLV_balanceBefore, 0)
 
     await stabilityPool.increaseCLV(100, { from: mockPoolManagerAddress })
-    const recordedCLV_balanceAfter = await stabilityPool.getCLV({ from: mockPoolManagerAddress })
+    const recordedCLV_balanceAfter = await stabilityPool.getTotalCLVDeposits({ from: mockPoolManagerAddress })
     assert.equal(recordedCLV_balanceAfter, 100)
   })
   // Decrease
@@ -52,11 +52,11 @@ contract('StabilityPool', async accounts => {
     // start the pool on 100 wei
     await stabilityPool.increaseCLV(100, { from: mockPoolManagerAddress })
 
-    const recordedCLV_balanceBefore = await stabilityPool.getCLV({ from: mockPoolManagerAddress })
+    const recordedCLV_balanceBefore = await stabilityPool.getTotalCLVDeposits({ from: mockPoolManagerAddress })
     assert.equal(recordedCLV_balanceBefore, 100)
 
     await stabilityPool.decreaseCLV(100, { from: mockPoolManagerAddress })
-    const recordedCLV_balanceAfter = await stabilityPool.getCLV({ from: mockPoolManagerAddress })
+    const recordedCLV_balanceAfter = await stabilityPool.getTotalCLVDeposits({ from: mockPoolManagerAddress })
     assert.equal(recordedCLV_balanceAfter, 0)
   })
 

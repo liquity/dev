@@ -1126,7 +1126,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await cdpManager.liquidate(bob, { from: owner })
 
     //Check SP CLV has been completely emptied
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Check Bob remains active
     assert.isTrue(await sortedCDPs.contains(bob))
@@ -1165,7 +1165,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await cdpManager.liquidate(carol)
 
     //Check SP CLV has been completely emptied
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Check Carol's collateral and debt has reduced from the partial liquidation
     const carol_Coll_After = (await cdpManager.CDPs(carol))[1]
@@ -1316,7 +1316,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_ICR.gte(mv._MCR))
 
     // Confirm SP is empty
-    const CLVinSP = (await stabilityPool.getCLV()).toString()
+    const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
     assert.equal(CLVinSP, '0')
 
     // Attempt to liquidate bob
@@ -1974,7 +1974,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const TCR_Before = await cdpManager.getTCR()
 
     // Check Stability Pool has 500 CLV
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(500, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(500, 18))
 
     await cdpManager.liquidateCDPs(8)
 
@@ -1984,7 +1984,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse((await sortedCDPs.contains(defaulter_4)))
 
     // Check Stability Pool has been emptied by the liquidations
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Check that the liquidation sequence has improved the TCR
     const TCR_After = await cdpManager.getTCR()
@@ -2018,7 +2018,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isAtMost(th.getDifference(TCR_Before, '1307596513075965027'), 1000)
 
     // Check pool is empty before liquidation
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Liquidate
     await cdpManager.liquidateCDPs(8)
@@ -2133,7 +2133,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 0 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Attempt liqudation sequence
     await cdpManager.liquidateCDPs(10)
@@ -2169,7 +2169,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 0 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Attempt liqudation sequence
     const liquidationTx = await cdpManager.liquidateCDPs(10)
@@ -2210,7 +2210,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 180 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(180, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(180, 18))
 
     // Attempt liqudation sequence
     const liquidationTx = await cdpManager.liquidateCDPs(10)
@@ -2265,7 +2265,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 220 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(220, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(220, 18))
 
     // Attempt liqudation sequence
     const liquidationTx = await cdpManager.liquidateCDPs(10)
@@ -2359,7 +2359,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
     // Check 780 CLV in Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(780, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(780, 18))
 
     // *** Check A, B, C ICRs 100<ICR<110
     const alice_ICR = await cdpManager.getCurrentICR(alice, price)
@@ -2409,7 +2409,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     Total remaining deposits: 280 CLV
     Total ETH gain: 5 ETH */
 
-    const CLVinSP = (await stabilityPool.getCLV()).toString()
+    const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
     const ETHinSP = (await stabilityPool.getETH()).toString()
 
     // Check remaining CLV Deposits and ETH gain, for whale and depositors whose troves were liquidated
@@ -2430,7 +2430,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isAtMost(th.getDifference(bob_ETHGain, '1849679487179487047'), 2000)
 
     // Check total remaining deposits and ETH gain in Stability Pool
-    const total_CLVinSP = (await stabilityPool.getCLV()).toString()
+    const total_CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
     const total_ETHinSP = (await stabilityPool.getETH()).toString()
 
     assert.isAtMost(th.getDifference(total_CLVinSP, dec(280, 18)), 1000)
@@ -2460,7 +2460,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
     // Check CLV and ETH in Pool  before
-    const CLVinSP_Before = (await stabilityPool.getCLV()).toString()
+    const CLVinSP_Before = (await stabilityPool.getTotalCLVDeposits()).toString()
     const ETHinSP_Before = (await stabilityPool.getETH()).toString()
     assert.equal(CLVinSP_Before, dec(800, 18))
     assert.equal(ETHinSP_Before, '0')
@@ -2482,7 +2482,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '1')
 
     // Check CLV and ETH in Pool after
-    const CLVinSP_After = (await stabilityPool.getCLV()).toString()
+    const CLVinSP_After = (await stabilityPool.getTotalCLVDeposits()).toString()
     const ETHinSP_After = (await stabilityPool.getETH()).toString()
     assert.equal(CLVinSP_Before, CLVinSP_After)
     assert.equal(ETHinSP_Before, ETHinSP_After)
@@ -3302,7 +3302,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 0 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     const trovesToLiquidate = [alice, bob, carol, dennis]
 
@@ -3345,7 +3345,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 180 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(180, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(180, 18))
 
     const trovesToLiquidate = [freddy, greta, alice, bob, carol, dennis, whale]
 
@@ -3402,7 +3402,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 220 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(220, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(220, 18))
 
     const trovesToLiquidate = [freddy, greta, alice, bob, carol, dennis, whale]
 

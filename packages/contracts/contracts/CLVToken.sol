@@ -1,7 +1,6 @@
 pragma solidity 0.5.16;
 
 import "./Interfaces/ICLVToken.sol";
-import "./CLVTokenData.sol";
 import "./Dependencies/IERC20.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
@@ -9,18 +8,18 @@ import "./Dependencies/console.sol";
 
 contract CLVToken is IERC20, ICLVToken, Ownable {
     using SafeMath for uint256;
-    
+
+    string constant internal NAME = "LUSD";
+    string constant internal SYMBOL = "LUSD";
+    uint8 constant internal DECIMALS = 18;
+
+    // User data for CLV token
+    mapping (address => uint256) public balances;
+    mapping (address => mapping (address => uint256)) public allowances;
+
     address public poolManagerAddress;
 
     uint256 public _totalSupply;
-
-    CLVTokenData public clvTokenData;
-    address public tokenDataAddress;
-
-    constructor() public {
-        clvTokenData = new CLVTokenData();
-        tokenDataAddress = address(clvTokenData);
-    }    
 
     // --- Events ---
 
@@ -59,7 +58,27 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         _transfer(_poolAddress, _receiver, _amount);
     }
 
-   // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---
+    // --- Balance functions ---
+
+    function getBalance(address _account) external view returns (uint) {
+        return balanceOf(_account);
+    }
+
+    function _addToBalance(address _account, uint256 _value) internal {
+        balances[_account] = balances[_account].add(_value);
+    }
+
+    function _subFromBalance(address _account, uint256 _value) internal {
+        balances[_account] = balances[_account].sub(_value, 'ERC20: subtracted amount exceeds balance');
+    }
+
+    // --- Allowance functions ---
+
+    function getAllowance(address _owner, address _spender) public view returns (uint) {
+        return allowances[_owner][_spender];
+    }
+
+    // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---
 
    /**
  * @dev Implementation of the {IERC20} interface.
@@ -89,7 +108,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     /**
      * @dev See {IERC20-totalSupply}.
      */
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() external view returns (uint256) {
         return _totalSupply;
     }
 
@@ -97,8 +116,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      * @dev See {IERC20-balanceOf}.
      */
     function balanceOf(address account) public view returns (uint256) {
-        uint balance = clvTokenData.getBalance(account); 
-        return balance; 
+        return balances[account];
     }
 
     /**
@@ -109,7 +127,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public returns (bool) {
+    function transfer(address recipient, uint256 amount) external returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
@@ -117,8 +135,8 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view returns (uint256) {
-        return clvTokenData.getAllowance(owner, spender);
+    function allowance(address owner, address spender) external view returns (uint256) {
+        return getAllowance(owner, spender);
     }
 
     /**
@@ -128,7 +146,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 amount) public returns (bool) {
+    function approve(address spender, uint256 amount) external returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
@@ -145,9 +163,9 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      * - the caller must have allowance for `sender`'s tokens of at least
      * `amount`.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool) {
         _transfer(sender, recipient, amount);
-        uint newAllowance = clvTokenData.getAllowance(sender, _msgSender()).sub(amount, "ERC20: transfer amount exceeds allowance");
+        uint newAllowance = getAllowance(sender, _msgSender()).sub(amount, "ERC20: transfer amount exceeds allowance");
         _approve(sender, _msgSender(), newAllowance);
         return true;
     }
@@ -164,8 +182,8 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
-        uint newAllowance = clvTokenData.getAllowance(_msgSender(),spender).add(addedValue);
+    function increaseAllowance(address spender, uint256 addedValue) external returns (bool) {
+        uint newAllowance = getAllowance(_msgSender(),spender).add(addedValue);
         _approve(_msgSender(), spender, newAllowance);
         return true;
     }
@@ -184,8 +202,8 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
-        uint newAllowance = clvTokenData.getAllowance(_msgSender(), spender).sub(subtractedValue, "ERC20: decreased allowance below zero");
+    function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool) {
+        uint newAllowance = getAllowance(_msgSender(), spender).sub(subtractedValue, "ERC20: decreased allowance below zero");
         _approve(_msgSender(), spender, newAllowance);
         return true;
     }
@@ -208,8 +226,8 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        clvTokenData.subFromBalance(sender, amount);
-        clvTokenData.addToBalance(recipient, amount);
+        _subFromBalance(sender, amount);
+        _addToBalance(recipient, amount);
         emit Transfer(sender, recipient, amount);
     }
 
@@ -226,7 +244,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         require(account != address(0), "ERC20: mint to the zero address");
 
         _totalSupply = _totalSupply.add(amount);
-        clvTokenData.addToBalance(account, amount);
+        _addToBalance(account, amount);
         emit Transfer(address(0), account, amount);
     }
 
@@ -243,7 +261,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      */
     function _burn(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: burn from the zero address");  
-        clvTokenData.subFromBalance(account, amount);  
+        _subFromBalance(account, amount);
         
         _totalSupply = _totalSupply.sub(amount);  
 
@@ -267,19 +285,21 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
-        clvTokenData.setAllowance(owner, spender, amount);
+        allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
 
-    /**
-     * @dev Destroys `amount` tokens from `account`.`amount` is then deducted
-     * from the caller's allowance.
-     *
-     * See {_burn} and {_approve}.
-     */
-    function _burnFrom(address account, uint256 amount) internal {
-        _burn(account, amount);
-        uint newAllowance = clvTokenData.getAllowance(account, _msgSender()).sub(amount, "ERC20: burn amount exceeds allowance");
-        _approve(account, _msgSender(), newAllowance);
+    // --- Optional functions ---
+
+    function name() external view returns (string memory) {
+        return NAME;
+    }
+
+    function symbol() external view returns (string memory) {
+        return SYMBOL;
+    }
+
+    function decimals() external view returns (uint8) {
+        return DECIMALS;
     }
 }

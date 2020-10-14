@@ -76,13 +76,13 @@ contract('PoolManager', async accounts => {
     assert.equal(contractAddresses.CDPManager, recordedCDPMAddress)
   })
 
-  it('priceFeedAddress(): gets the priceFeed  address', async () => {
-    const recordedAddress = await poolManager.priceFeedAddress()
+  it('priceFeed(): gets the priceFeed  address', async () => {
+    const recordedAddress = await poolManager.priceFeed()
     assert.equal(contractAddresses.PriceFeed, recordedAddress)
   })
 
-  it('clvAddress(): gets the clv address', async () => {
-    const recordedAddress = await poolManager.clvAddress()
+  it('CLV(): gets the clv address', async () => {
+    const recordedAddress = await poolManager.CLV()
     assert.equal(contractAddresses.CLVToken, recordedAddress)
   })
 

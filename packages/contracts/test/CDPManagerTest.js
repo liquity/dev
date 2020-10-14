@@ -1367,7 +1367,7 @@ contract('CDPManager', async accounts => {
     const TCR_Before = await cdpManager.getTCR()
 
     // Check pool has 500 CLV
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(500, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(500, 18))
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -1376,7 +1376,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidateCDPs(10)
 
     // Check pool has been emptied by the liquidations
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Check all defaulters have been liquidated
     assert.isFalse((await sortedCDPs.contains(defaulter_1)))
@@ -1419,7 +1419,7 @@ contract('CDPManager', async accounts => {
     assert.isAtMost(th.getDifference(TCR_Before, '4353233830845771200'), 1000)
 
     // Check pool is empty before liquidation
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -1463,7 +1463,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check 800 CLV in Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(800, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(800, 18))
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -1525,7 +1525,7 @@ contract('CDPManager', async accounts => {
     assert.isAtMost(th.getDifference(bob_ETHGain, '1865625000000000000'), 1000)
 
     // Check total remaining deposits and ETH gain in Stability Pool
-    const total_CLVinSP = (await stabilityPool.getCLV()).toString()
+    const total_CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
     const total_ETHinSP = (await stabilityPool.getETH()).toString()
 
     assert.isAtMost(th.getDifference(total_CLVinSP, dec(270, 18)), 1000)
@@ -2212,7 +2212,7 @@ contract('CDPManager', async accounts => {
     const dennis_ETHGain_before = (await poolManager.getCurrentETHGain(dennis)).toString()
 
     // Check the remaining CLV and ETH in Stability Pool after liquidation is non-zero
-    const CLVinSP = await stabilityPool.getCLV()
+    const CLVinSP = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP = await stabilityPool.getETH()
     assert.isTrue(CLVinSP.gte(mv._zeroBN))
     assert.isTrue(ETHinSP.gte(mv._zeroBN))

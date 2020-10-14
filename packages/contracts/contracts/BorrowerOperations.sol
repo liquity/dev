@@ -15,23 +15,17 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- Connected contract declarations ---
 
     ICDPManager public cdpManager;
-    address public cdpManagerAddress;
 
     IPoolManager public poolManager;
-    address public poolManagerAddress;
 
     IPool public activePool;
-    address public activePoolAddress;
 
     IPool public defaultPool;
-    address public defaultPoolAddress;
 
     IPriceFeed public priceFeed;
-    address public priceFeedAddress;
 
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
-    address public sortedCDPsAddress;
 
     // --- Events --- 
 
@@ -68,17 +62,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         external
         onlyOwner
     {
-        cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
-        poolManagerAddress = _poolManagerAddress;
         poolManager = IPoolManager(_poolManagerAddress);
-        activePoolAddress = _activePoolAddress;
         activePool = IPool(_activePoolAddress);
-        defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(_defaultPoolAddress);
-        priceFeedAddress = _priceFeedAddress;
-        priceFeed = IPriceFeed(priceFeedAddress);
-        sortedCDPsAddress = _sortedCDPsAddress;
+        priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
 
         emit CDPManagerAddressChanged(_cdpManagerAddress);
@@ -156,6 +144,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     function withdrawColl(uint _amount, address _hint) external {
         address user = _msgSender();
         _requireCDPisActive(user);
+        _requireNonZeroAmount(_amount);
         _requireNotInRecoveryMode();
        
         uint price = priceFeed.getPrice();
@@ -220,6 +209,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     function repayCLV(uint _amount, address _hint) external {
         address user = _msgSender();
         _requireCDPisActive(user);
+        _requireNonZeroAmount(_amount);
 
         uint price = priceFeed.getPrice();
         cdpManager.applyPendingRewards(user);
@@ -435,8 +425,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- Recovery Mode and TCR functions ---
 
     function _checkRecoveryMode() internal view returns (bool) {
-        uint price = priceFeed.getPrice();
-        uint TCR = _getTCR(price);
+        uint TCR = _getTCR();
         
         if (TCR < CCR) {
             return true;
@@ -445,7 +434,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
     }
     
-    function _getTCR(uint _price) internal view returns (uint TCR) { 
+    function _getTCR() internal view returns (uint TCR) {
+        uint price = priceFeed.getPrice();
         uint activeColl = activePool.getETH();
         uint activeDebt = activePool.getCLVDebt();
         uint liquidatedColl = defaultPool.getETH();
@@ -454,7 +444,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt); 
 
-        TCR = Math._computeCR(totalCollateral, totalDebt, _price); 
+        TCR = Math._computeCR(totalCollateral, totalDebt, price);
 
         return TCR;
     }

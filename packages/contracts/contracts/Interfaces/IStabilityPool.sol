@@ -19,7 +19,7 @@ interface IStabilityPool {
     // --- Functions ---
     function getETH() external view returns (uint);
     
-    function getCLV() external view returns (uint);
+    function getTotalCLVDeposits() external view returns (uint);
 
     function setAddresses(
         address _poolManagerAddress,

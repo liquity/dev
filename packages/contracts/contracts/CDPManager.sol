@@ -19,26 +19,19 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     address public borrowerOperationsAddress;
 
     IPoolManager public poolManager;
-    address public poolManagerAddress;
 
     IPool public activePool;
-    address public activePoolAddress;
 
     IPool public defaultPool;
-    address public defaultPoolAddress;
 
     ICLVToken public clvToken;
-    address public clvTokenAddress;
 
     IPriceFeed public priceFeed;
-    address public priceFeedAddress;
 
     IStabilityPool public stabilityPool;
-    address public stabilityPoolAddress;
 
     // A doubly linked list of CDPs, sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
-    address public sortedCDPsAddress;
 
     // --- Data structures ---
 
@@ -212,19 +205,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
-        poolManagerAddress = _poolManagerAddress;
         poolManager = IPoolManager(_poolManagerAddress);
-        activePoolAddress = _activePoolAddress;
         activePool = IPool(_activePoolAddress);
-        defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(_defaultPoolAddress);
-        stabilityPoolAddress = _stabilityPoolAddress;
         stabilityPool = IStabilityPool(_stabilityPoolAddress);
-        priceFeedAddress = _priceFeedAddress;
-        priceFeed = IPriceFeed(priceFeedAddress);
-        clvTokenAddress = _clvTokenAddress;
+        priceFeed = IPriceFeed(_priceFeedAddress);
         clvToken = ICLVToken(_clvTokenAddress);
-        sortedCDPsAddress = _sortedCDPsAddress;
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
@@ -258,7 +244,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         LocalVariables_OuterLiquidationFunction memory L;
         L.price = priceFeed.getPrice();
-        L.CLVInPool = stabilityPool.getCLV();
+        L.CLVInPool = stabilityPool.getTotalCLVDeposits();
         L.recoveryModeAtStart = _checkRecoveryMode();
 
         uint ICR = _getCurrentICR(_user, L.price);
@@ -469,7 +455,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         LiquidationTotals memory T;
 
         L.price = priceFeed.getPrice();
-        L.CLVInPool = stabilityPool.getCLV();
+        L.CLVInPool = stabilityPool.getTotalCLVDeposits();
         L.recoveryModeAtStart = _checkRecoveryMode();
      
         // Perform the appropriate liquidation sequence - tally values and obtain their totals
@@ -595,7 +581,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         LiquidationTotals memory T;
 
         L.price = priceFeed.getPrice();
-        L.CLVInPool = stabilityPool.getCLV();
+        L.CLVInPool = stabilityPool.getTotalCLVDeposits();
         L.recoveryModeAtStart = _checkRecoveryMode();
         
         // Perform the appropriate liquidation sequence - tally values and obtain their totals
@@ -1052,9 +1038,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (totalCollateralSnapshot == 0) {
             stake = _coll;
         } else {
+            assert(totalStakesSnapshot > 0);
             stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot);
         }
-     return stake;
+        return stake;
     }
 
     function _redistributeDebtAndColl(uint _debt, uint _coll) internal {
