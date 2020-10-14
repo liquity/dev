@@ -159,7 +159,7 @@ class DeploymentHelper {
   }
 
   // Connect contracts to their dependencies
-  static async connectCoreContracts(contracts, gtStakingAddress = this.ZERO_ADDRESS) {
+  static async connectCoreContracts(contracts, GTContracts) {
 
     // set PoolManager address in the CLVToken contract
     await contracts.clvToken.setAddresses(
@@ -175,7 +175,8 @@ class DeploymentHelper {
       contracts.clvToken.address,
       contracts.stabilityPool.address,
       contracts.activePool.address,
-      contracts.defaultPool.address
+      contracts.defaultPool.address,
+      GTContracts.communityIssuance.address
     )
 
     // set CDPManager addr in SortedCDPs
@@ -207,7 +208,7 @@ class DeploymentHelper {
       contracts.priceFeed.address,
       contracts.clvToken.address,
       contracts.sortedCDPs.address,
-      gtStakingAddress
+      GTContracts.gtStaking.address
     )
 
     // set contracts in BorrowerOperations 
@@ -219,7 +220,7 @@ class DeploymentHelper {
       contracts.priceFeed.address,
       contracts.sortedCDPs.address,
       contracts.clvToken.address,
-      gtStakingAddress
+      GTContracts.gtStaking.address
     )
 
     // set contracts in the Pools

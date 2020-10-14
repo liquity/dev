@@ -61,14 +61,13 @@ contract('PoolManager', async accounts => {
       communityIssuance = GTContracts.communityIssuance
       lockupContractFactory = GTContracts.lockupContractFactory
   
-      
       await deploymentHelper.connectGTContracts(GTContracts)
-      await deploymentHelper.connectCoreContracts(contracts, gtStaking.address)
+      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
       await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
     })
 
     // increases recorded CLV at Stability Pool
-    it("provideToSP(): increases the Stability Pool CLV balance", async () => {
+    it.only("provideToSP(): increases the Stability Pool CLV balance", async () => {
       // --- SETUP --- Give Alice 200 CLV
       await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.withdrawCLV(200, alice, { from: alice })
@@ -90,25 +89,25 @@ contract('PoolManager', async accounts => {
       assert.equal(stabilityPool_CLV_After, 200)
     })
 
-    it("provideToSP(): updates the user's deposit record in PoolManager", async () => {
+    it.only("provideToSP(): updates the user's deposit record in PoolManager", async () => {
       // --- SETUP --- give Alice 200 CLV
       await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.withdrawCLV(200, alice, { from: alice })
 
       // --- TEST ---
       // check user's deposit record before
-      const alice_depositRecord_Before = await poolManager.initialDeposits(alice)
+      const alice_depositRecord_Before = (await poolManager.deposits(alice))[0]
       assert.equal(alice_depositRecord_Before, 0)
 
       // provideToSP()
       await poolManager.provideToSP(200, { from: alice })
 
       // check user's deposit record after
-      const alice_depositRecord_After = await poolManager.initialDeposits(alice)
+      const alice_depositRecord_After = (await poolManager.deposits(alice))[0]
       assert.equal(alice_depositRecord_After, 200)
     })
 
-    it("provideToSP(): reduces the user's CLV balance by the correct amount", async () => {
+    it.only("provideToSP(): reduces the user's CLV balance by the correct amount", async () => {
       // --- SETUP --- Give Alice 200 CLV
       await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.withdrawCLV(200, alice, { from: alice })
@@ -228,7 +227,7 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.withdrawCLV(alice_topUp_1, alice, { from: alice })
       await poolManager.provideToSP(alice_topUp_1, { from: alice })
 
-      const alice_newDeposit_1 = (await poolManager.initialDeposits(alice)).toString()
+      const alice_newDeposit_1 = ((await poolManager.deposits(alice))[0]).toString()
       assert.equal(alice_compoundedDeposit_1.add(alice_topUp_1), alice_newDeposit_1)
 
       // get system reward terms
@@ -584,8 +583,8 @@ contract('PoolManager', async accounts => {
 
       await poolManager.provideToSP(dec(100, 18), { from: alice })
 
-      const alice_initialDeposit = (await poolManager.initialDeposits(alice)).toString()
-      const bob_initialDeposit = (await poolManager.initialDeposits(bob)).toString()
+      const alice_initialDeposit = ((await poolManager.deposits(alice))[0]).toString()
+      const bob_initialDeposit = ((await poolManager.deposits(bob))[0]).toString()
 
       assert.equal(alice_initialDeposit, dec(100, 18))
       assert.equal(bob_initialDeposit, '0')
@@ -649,7 +648,7 @@ contract('PoolManager', async accounts => {
       const expectedNewDeposit_A = (compoundedCLVDeposit_A.sub(th.toBN(dec(90, 18))))
 
       // check Alice's deposit has been updated to equal her compounded deposit minus her withdrawal */
-      const newDeposit = (await poolManager.initialDeposits(alice)).toString()
+      const newDeposit = ((await poolManager.deposits(alice))[0]).toString()
       assert.isAtMost(th.getDifference(newDeposit, expectedNewDeposit_A), 1000)
 
       // Expect Alice has withdrawn all ETH gain
@@ -923,17 +922,17 @@ contract('PoolManager', async accounts => {
 
       // All depositors attempt to withdraw
       await poolManager.withdrawFromSP(dec(100, 18), { from: alice })
-      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
+      assert.equal(((await poolManager.deposits(alice))[0]).toString(), '0')
       await poolManager.withdrawFromSP(dec(100, 18), { from: bob })
-      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
+      assert.equal(((await poolManager.deposits(alice))[0]).toString(), '0')
       await poolManager.withdrawFromSP(dec(100, 18), { from: carol })
-      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
+      assert.equal(((await poolManager.deposits(alice))[0]).toString(), '0')
       await poolManager.withdrawFromSP(dec(100, 18), { from: dennis })
-      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
+      assert.equal(((await poolManager.deposits(alice))[0]).toString(), '0')
       await poolManager.withdrawFromSP(dec(100, 18), { from: erin })
-      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
+      assert.equal(((await poolManager.deposits(alice))[0]).toString(), '0')
       await poolManager.withdrawFromSP(dec(100, 18), { from: flyn })
-      assert.equal((await poolManager.initialDeposits(alice)).toString(), '0')
+      assert.equal(((await poolManager.deposits(alice))[0]).toString(), '0')
 
       const totalDeposits = (await stabilityPool.totalCLVDeposits()).toString()
 
@@ -1018,9 +1017,9 @@ contract('PoolManager', async accounts => {
       assert.isTrue(ETHinSP.gt(mv._zeroBN))
 
       // Carol withdraws her Stability deposit 
-      assert.equal((await poolManager.initialDeposits(carol)).toString(), dec(300, 18))
+      assert.equal(((await poolManager.deposits(carol))[0]).toString(), dec(300, 18))
       await poolManager.withdrawFromSP(dec(300, 18), { from: carol })
-      assert.equal((await poolManager.initialDeposits(carol)).toString(), '0')
+      assert.equal(((await poolManager.deposits(carol))[0]).toString(), '0')
 
       const alice_CLVDeposit_After = (await poolManager.getCompoundedCLVDeposit(alice)).toString()
       const bob_CLVDeposit_After = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
@@ -1068,9 +1067,9 @@ contract('PoolManager', async accounts => {
       const TCR_Before = (await cdpManager.getTCR()).toString()
 
       // Carol withdraws her Stability deposit 
-      assert.equal((await poolManager.initialDeposits(carol)).toString(), dec(300, 18))
+      assert.equal(((await poolManager.deposits(carol))[0]).toString(), dec(300, 18))
       await poolManager.withdrawFromSP(dec(300, 18), { from: carol })
-      assert.equal((await poolManager.initialDeposits(carol)).toString(), '0')
+      assert.equal(((await poolManager.deposits(carol))[0]).toString(), '0')
 
       const activeDebt_After = (await activePool.getCLVDebt()).toString()
       const defaultedDebt_After = (await defaultPool.getCLVDebt()).toString()
@@ -1120,9 +1119,9 @@ contract('PoolManager', async accounts => {
       const carol_ICR_Before = (await cdpManager.getCurrentICR(carol, price)).toString()
 
       // Carol withdraws her Stability deposit 
-      assert.equal((await poolManager.initialDeposits(carol)).toString(), dec(300, 18))
+      assert.equal(((await poolManager.deposits(carol))[0]).toString(), dec(300, 18))
       await poolManager.withdrawFromSP(dec(300, 18), { from: carol })
-      assert.equal((await poolManager.initialDeposits(carol)).toString(), '0')
+      assert.equal(((await poolManager.deposits(carol))[0]).toString(), '0')
 
       const whale_Debt_After = (await cdpManager.CDPs(whale))[0].toString()
       const alice_Debt_After = (await cdpManager.CDPs(alice))[0].toString()
@@ -1499,8 +1498,8 @@ contract('PoolManager', async accounts => {
 
       await poolManager.provideToSP(dec(100, 18), { from: alice })
 
-      const alice_initialDeposit = (await poolManager.initialDeposits(alice)).toString()
-      const bob_initialDeposit = (await poolManager.initialDeposits(bob)).toString()
+      const alice_initialDeposit = ((await poolManager.deposits(alice))[0]).toString()
+      const bob_initialDeposit = ((await poolManager.deposits(bob))[0]).toString()
 
       assert.equal(alice_initialDeposit, dec(100, 18))
       assert.equal(bob_initialDeposit, '0')
@@ -1526,9 +1525,9 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(100, 18), { from: bob })
       await poolManager.provideToSP(dec(100, 18), { from: carol })
 
-      const alice_initialDeposit = (await poolManager.initialDeposits(alice)).toString()
-      const bob_initialDeposit = (await poolManager.initialDeposits(bob)).toString()
-      const carol_initialDeposit = (await poolManager.initialDeposits(carol)).toString()
+      const alice_initialDeposit = ((await poolManager.deposits(alice))[0]).toString()
+      const bob_initialDeposit = ((await poolManager.deposits(bob))[0]).toString()
+      const carol_initialDeposit = ((await poolManager.deposits(carol))[0]).toString()
 
       assert.equal(alice_initialDeposit, dec(100, 18))
       assert.equal(bob_initialDeposit, dec(100, 18))
@@ -1590,7 +1589,7 @@ contract('PoolManager', async accounts => {
       await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
 
       // check Alice's CLVLoss has been applied to her deposit expectedCompoundedDeposit_A
-      alice_deposit_afterDefault = (await poolManager.initialDeposits(alice))
+      alice_deposit_afterDefault = ((await poolManager.deposits(alice))[0])
       assert.isAtMost(th.getDifference(alice_deposit_afterDefault, expectedCompoundedDeposit_A), 1000)
 
       // check alice's CDP recorded ETH has increased by the expected reward amount
