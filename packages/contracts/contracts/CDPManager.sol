@@ -274,9 +274,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         V.debtToRedistribute,
         V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, collToLiquidate, _CLVInPool);
 
-        // Move the gas compensation ETH to the CDPManager
-        activePool.sendETH(address(this), V.collGasCompensation);
-
         _closeCDP(_user);
         emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInNormalMode);
 
@@ -345,9 +342,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             LiquidationValues memory zeroVals;
             return zeroVals;
         }
-
-        // Move the gas compensation ETH to the CDPManager
-        activePool.sendETH(address(this), V.collGasCompensation);
 
         return V;
     }
@@ -438,7 +432,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _redistributeDebtAndColl(T.totalDebtToRedistribute, T.totalCollToRedistribute);
 
         // Update system snapshots and the final partially liquidated trove, if there is one
-        _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl);
+        _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl.add(T.totalCollGasCompensation));
         _updatePartiallyLiquidatedTrove(T.partialAddr,
                                         T.partialNewDebt,
                                         T.partialNewColl,
@@ -453,9 +447,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (T.totalCLVGasCompensation > 0) {
             poolManager.sendCLVGasCompensation(msgSender, T.totalCLVGasCompensation);
         }
+
         // Send ETH gas compensation to caller
-        (bool success, ) = msgSender.call.value(T.totalCollGasCompensation)("");
-        _requireETHSentSuccessfully(success);
+        activePool.sendETH(msgSender, T.totalCollGasCompensation);
     }
 
     function _getTotalFromLiquidationSequence_RecoveryMode(uint _price, uint _CLVInPool, uint _n) internal 
@@ -564,7 +558,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _redistributeDebtAndColl(T.totalDebtToRedistribute, T.totalCollToRedistribute);
 
         // Update system snapshots and the final partially liquidated trove, if there is one
-        _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl);
+        _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl.add(T.totalCollGasCompensation));
         _updatePartiallyLiquidatedTrove(T.partialAddr,
                                         T.partialNewDebt,
                                         T.partialNewColl,
@@ -580,8 +574,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             poolManager.sendCLVGasCompensation(msgSender, T.totalCLVGasCompensation);
         }
         // Send ETH gas compensation to caller
-        (bool success, ) = _msgSender().call.value(T.totalCollGasCompensation)("");
-        _requireETHSentSuccessfully(success);
+        activePool.sendETH(msgSender, T.totalCollGasCompensation);
     }
 
     function _getTotalFromBatchLiquidate_RecoveryMode(uint _price, uint _CLVInPool, address[] memory _troveArray) internal 
@@ -1052,17 +1045,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
  
         _removeCDPOwner(_user, CDPOwnersArrayLength);
         sortedCDPs.remove(_user);
-    }
-
-    // Update the snapshots of system stakes & system collateral
-    function _updateSystemSnapshots() internal {
-        totalStakesSnapshot = totalStakes;
-
-        /* The total collateral snapshot is the sum of all active collateral and all pending rewards
-       (ActivePool ETH + DefaultPool ETH), immediately after the liquidation occurs. */
-        uint activeColl = activePool.getETH();
-        uint liquidatedColl = defaultPool.getETH();
-        totalCollateralSnapshot = activeColl.add(liquidatedColl);
     }
 
     // Updates snapshots of system stakes and system collateral, excluding a given collateral remainder from the calculation
