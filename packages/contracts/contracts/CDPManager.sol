@@ -240,43 +240,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     /* Single liquidation function. Closes the CDP of the specified user if its individual 
     collateral ratio is lower than the minimum collateral ratio. */
     function liquidate(address _user) external {
-        _requireCDPisActive(_user);
-
-        LocalVariables_OuterLiquidationFunction memory L;
-        L.price = priceFeed.getPrice();
-        L.CLVInPool = stabilityPool.getTotalCLVDeposits();
-        L.recoveryModeAtStart = _checkRecoveryMode();
-
-        uint ICR = _getCurrentICR(_user, L.price);
-
-        LiquidationValues memory V;
-
-        V = (L.recoveryModeAtStart == true)
-            ? _liquidateRecoveryMode(_user, ICR, L.CLVInPool)
-            : _liquidateNormalMode(_user, ICR, L.CLVInPool);
-
-        poolManager.offset(V.debtToOffset, V.collToSendToSP);
-        _redistributeDebtAndColl(V.debtToRedistribute, V.collToRedistribute);
-
-        _updateSystemSnapshots_excludeCollRemainder(V.partialNewColl);
-        _updatePartiallyLiquidatedTrove(V.partialAddr,
-                                        V.partialNewDebt,
-                                        V.partialNewColl,
-                                        L.price);
-
-
-        L.liquidatedDebt = V.entireCDPDebt.sub(V.partialNewDebt);
-        L.liquidatedColl = V.entireCDPColl.sub(V.collGasCompensation).sub(V.partialNewColl);
-        emit Liquidation(L.liquidatedDebt, L.liquidatedColl, V.collGasCompensation, V.CLVGasCompensation);
-
-        address payable msgSender = _msgSender();
-        // Send CLV gas compensation to caller (only if not partial)
-        if (V.CLVGasCompensation > 0) {
-            poolManager.sendCLVGasCompensation(msgSender, V.CLVGasCompensation);
-        }
-        // Send ETH gas compensation to caller
-        (bool success, ) = msgSender.call.value(V.collGasCompensation)("");
-        _requireETHSentSuccessfully(success);
+        address[] memory users = new address[](1);
+        users[0] = _user;
+        batchLiquidateTroves(users);
     }
 
     // --- Inner liquidation functions ---
@@ -574,7 +540,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     /* Attempt to liquidate a custom set of troves provided by the caller.  Stops if a partial liquidation is 
     performed, and thus leaves optimization of the order troves up to the caller.  */
-    function batchLiquidateTroves(address[] calldata _troveArray) external {
+    function batchLiquidateTroves(address[] memory _troveArray) public {
         require(_troveArray.length != 0, "CDPManager: Calldata address array must not be empty");
         
         LocalVariables_OuterLiquidationFunction memory L;
@@ -631,6 +597,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.i = 0;
          for (L.i = 0; L.i < troveArrayLength; L.i++) {
              L.user = _troveArray[L.i];
+             _requireCDPisActive(L.user);
+
             L.ICR = _getCurrentICR(L.user, _price);
 
             // Attempt to close trove
@@ -675,6 +643,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         
         for (L.i = 0; L.i < troveArrayLength; L.i++) {
             L.user = _troveArray[L.i];
+            _requireCDPisActive(L.user);
             L.ICR = _getCurrentICR(L.user, _price);
             
             if (L.ICR < MCR) {
