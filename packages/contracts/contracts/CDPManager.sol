@@ -237,14 +237,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- CDP Liquidation functions ---
 
-    /* Single liquidation function. Closes the CDP of the specified user if its individual 
-    collateral ratio is lower than the minimum collateral ratio. */
-    function liquidate(address _user) external {
-        address[] memory users = new address[](1);
-        users[0] = _user;
-        batchLiquidateTroves(users);
-    }
-
     // --- Inner liquidation functions ---
 
     function _liquidateNormalMode(address _user, uint _ICR, uint _CLVInPool) internal
@@ -540,7 +532,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     /* Attempt to liquidate a custom set of troves provided by the caller.  Stops if a partial liquidation is 
     performed, and thus leaves optimization of the order troves up to the caller.  */
-    function batchLiquidateTroves(address[] memory _troveArray) public {
+    function batchLiquidateTroves(address[] calldata _troveArray) external {
         require(_troveArray.length != 0, "CDPManager: Calldata address array must not be empty");
         
         LocalVariables_OuterLiquidationFunction memory L;

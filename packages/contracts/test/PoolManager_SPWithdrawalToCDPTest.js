@@ -94,7 +94,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Defaulter liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
 
       // Check depositors' compounded deposit is 66.66 CLV and ETH Gain is 0.33 ETH
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -135,8 +135,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Two defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // Check depositors' compounded deposit is 33.33 CLV and ETH Gain is 0.66 ETH
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -179,9 +179,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Three defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
-      await cdpManager.liquidate(defaulter_3, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
 
       // Check depositors' compounded deposit is 0 CLV and ETH Gain is 1 ETH
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice,  { from: alice })
@@ -222,8 +222,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // Check depositors' compounded deposit is 0 CLV and ETH Gain is 1 ETH
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -265,9 +265,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Three defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
-      await cdpManager.liquidate(defaulter_3, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
 
       // Check depositors' compounded deposit is 80 CLV and ETH Gain is 0.2 ETH
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -313,8 +313,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Three defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // Depositors attempt to withdraw everything
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -361,9 +361,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Three defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
-      await cdpManager.liquidate(defaulter_3, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
 
       // Depositors attempt to withdraw everything
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -419,9 +419,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Three defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
-      await cdpManager.liquidate(defaulter_3, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
 
       // Depositors attempt to withdraw everything
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -467,15 +467,15 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // First two defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // Dennis opens a loan and provides to SP
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
       await poolManager.provideToSP(dec(100, 18), { from: dennis })
 
       // Third defaulter liquidated
-      await cdpManager.liquidate(defaulter_3, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
@@ -525,16 +525,16 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // First two defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // Dennis opens a loan and provides to SP
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
       await poolManager.provideToSP(dec(100, 18), { from: dennis })
 
       // Third and fourth defaulters liquidated
-      await cdpManager.liquidate(defaulter_3, { from: owner });
-      await cdpManager.liquidate(defaulter_4, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_4], { from: owner });
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
@@ -595,16 +595,16 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // First two defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // Dennis opens a loan and provides 250 CLV
       await borrowerOperations.openLoan(dec(250, 18), dennis, { from: dennis, value: dec(100, 'ether') })
       await poolManager.provideToSP(dec(250, 18), { from: dennis })
 
       // Last two defaulters liquidated
-      await cdpManager.liquidate(defaulter_3, { from: owner });
-      await cdpManager.liquidate(defaulter_4, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_4], { from: owner });
 
       // Each depositor withdraws as much as possible
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -656,8 +656,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // First two defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
@@ -667,8 +667,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '497500000000000000'), 1000)
 
       // Two more defaulters are liquidated
-      await cdpManager.liquidate(defaulter_3, { from: owner });
-      await cdpManager.liquidate(defaulter_4, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_4], { from: owner });
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
@@ -729,8 +729,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // First two defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
        // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSP(dec(5000, 18), { from: dennis })
@@ -741,8 +741,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '1224615384615384661'), 1000000000)
 
       // Two more defaulters are liquidated
-      await cdpManager.liquidate(defaulter_3, { from: owner });
-      await cdpManager.liquidate(defaulter_4, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_4], { from: owner });
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
@@ -788,14 +788,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // First two defaulters liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // Carol makes deposit
       await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(2, 'ether') })
       await poolManager.provideToSP(dec(100, 18), { from: carol })
 
-      await cdpManager.liquidate(defaulter_3, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSP(dec(5000, 18), { from: dennis })
@@ -804,7 +804,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '829166666666666667'), 1000)
 
-      await cdpManager.liquidate(defaulter_4, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_4], { from: owner });
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob,{ from: bob })
@@ -854,7 +854,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Defaulter 1 liquidated. 200 CLV fully offset with pool.
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
 
       // Carol, Dennis each deposit 100 CLV
       const depositors_2 = [carol, dennis]
@@ -864,7 +864,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       }
 
       // Defaulter 2 liquidated. 100 CLV offset
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // await borrowerOperations.openLoan(dec(1, 18), account, { from: erin, value: dec(2, 'ether') })
       // await poolManager.provideToSP(dec(1, 18), { from: erin })
@@ -924,7 +924,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Defaulter 1 liquidated. 200 CLV fully offset with pool.
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
 
       // Carol, Dennis, Erin each deposit 100, 200, 300 CLV respectively
       await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(100, 'ether') })
@@ -937,7 +937,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await poolManager.provideToSP(dec(300, 18), { from: erin })
 
       // Defaulter 2 liquidated. 100 CLV offset
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // await borrowerOperations.openLoan(dec(1, 18), account, { from: flyn, value: dec(2, 'ether') })
       // await poolManager.provideToSP(dec(1, 18), { from: flyn })
@@ -996,11 +996,11 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Defaulter 1, 2  and 3 liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
 
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
-      await cdpManager.liquidate(defaulter_3, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
 
@@ -1049,7 +1049,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       }
 
       // Defaulter 1 liquidated. 200 CLV fully offset with pool.
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
 
       // Carol, Dennis each deposit 100 CLV
       const depositors_2 = [carol, dennis]
@@ -1059,7 +1059,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       }
 
       // Defaulter 2 liquidated. 100 CLV offset
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // Erin, Flyn each deposit 100 CLV
       const depositors_3 = [erin, flyn]
@@ -1069,7 +1069,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       }
 
       // Defaulter 3 liquidated. 100 CLV offset
-      await cdpManager.liquidate(defaulter_3, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
 
       // Graham, Harriet each deposit 100 CLV
       const depositors_4 = [graham, harriet]
@@ -1079,7 +1079,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       }
 
       // Defaulter 4 liquidated. 100 CLV offset
-      await cdpManager.liquidate(defaulter_4, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_4], { from: owner });
 
       // await borrowerOperations.withdrawCLV(dec(1, 18), whale, { from: whale })
       // await poolManager.provideToSP(dec(1, 18), { from: whale })
@@ -1154,7 +1154,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Defaulter 1 liquidated.  Value of P reduced to 9.
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
       assert.equal((await poolManager.P()).toString(), '9')
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -1166,7 +1166,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await poolManager.provideToSP(dec(100, 18), { from: bob })
 
       // Defaulter 2 liquidated.  90 CLV liquidated. P altered by a factor of (1-90/100) = 0.1.  Scale changed.
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
  
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
       const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
@@ -1204,7 +1204,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Defaulter 1 liquidated.  Value of P reduced to 9.
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
       assert.equal((await poolManager.P()).toString(), '9')
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -1219,7 +1219,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await poolManager.provideToSP(dec(300, 18), { from: dennis })
 
       // 540 CLV liquidated.  P altered by a factor of (1-540/600) = 0.1. Scale changed.
-      const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
+      const txL2 = await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
       assert.isTrue(txL2.receipt.status)
 
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
@@ -1277,7 +1277,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
-      const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
+      const txL1 = await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
@@ -1286,7 +1286,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
       await poolManager.provideToSP(dec(100, 18), { from: bob })
       // Defaulter 2 liquidated
-      const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
+      const txL2 = await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
       assert.isTrue(txL2.receipt.status)
 
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
@@ -1323,7 +1323,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
-      const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
+      const txL1 = await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
@@ -1340,7 +1340,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await poolManager.provideToSP(dec(300, 18), { from: dennis })
 
       // Defaulter 2 liquidated
-      const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
+      const txL2 = await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
       assert.isTrue(txL2.receipt.status)
 
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
@@ -1400,7 +1400,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await poolManager.provideToSP(dec(100, 18), { from: alice })
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
-      const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
+      const txL1 = await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
       assert.isTrue(txL1.receipt.status)
 
       // B deposits 100CLV
@@ -1408,21 +1408,21 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await poolManager.provideToSP(dec(100, 18), { from: bob })
 
       // Defaulter 2 liquidated
-      const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
+      const txL2 = await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
       assert.isTrue(txL2.receipt.status)
 
       await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(100, 'ether') })
       await poolManager.provideToSP(dec(100, 18), { from: carol })
 
       // Defaulter 3 liquidated
-      const txL3 = await cdpManager.liquidate(defaulter_3, { from: owner });
+      const txL3 = await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner });
       assert.isTrue(txL3.receipt.status)
 
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(100, 'ether') })
       await poolManager.provideToSP(dec(100, 18), { from: dennis })
 
       // Defaulter 4 liquidated
-      const txL4 = await cdpManager.liquidate(defaulter_4, { from: owner });
+      const txL4 = await cdpManager.batchLiquidateTroves([defaulter_4], { from: owner });
       assert.isTrue(txL4.receipt.status)
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -1474,7 +1474,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(1, 27));
 
       // Defaulter liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
@@ -1533,7 +1533,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(1, 27));
 
       // Defaulter liquidated
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner });
 
       const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
       const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })

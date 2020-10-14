@@ -152,7 +152,7 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // Close Carol's CDP, liquidating her 1 ether and 180CLV.
-    const tx = await cdpManager.liquidate(carol, { from: owner });
+    const tx = await cdpManager.batchLiquidateTroves([carol], { from: owner });
     const liquidatedDebt_C = th.getEmittedLiquidatedDebt(tx)
     const liquidatedColl_C = th.getEmittedLiquidatedColl(tx)
 
@@ -239,7 +239,7 @@ contract('BorrowerOperations', async accounts => {
   //   await priceFeed.setPrice('100000000000000000000');
 
   //   // close Carol's CDP, liquidating her 5 ether and 900CLV.
-  //   await cdpManager.liquidate(carol, { from: owner });
+  //   await cdpManager.batchLiquidateTroves([carol], { from: owner });
 
   //   // dennis tops up his loan by 1 ETH
   //   await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: dec(1, 'ether') })
@@ -341,7 +341,7 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Bob gets liquidated
-    await cdpManager.liquidate(bob)
+    await cdpManager.batchLiquidateTroves([bob])
 
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -625,7 +625,7 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    const liquidationTx_C = await cdpManager.liquidate(carol, { from: owner });
+    const liquidationTx_C = await cdpManager.batchLiquidateTroves([carol], { from: owner });
     const [liquidatedDebt_C, liquidatedColl_C, gasComp_C] = th.getEmittedLiquidationValues(liquidationTx_C)
 
     const L_ETH = await cdpManager.L_ETH()
@@ -1527,7 +1527,7 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob)
+    await cdpManager.batchLiquidateTroves([bob])
     assert.isFalse(await sortedCDPs.contains(bob))
 
     // Price bounces back
@@ -1547,7 +1547,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(L_CLVDebt_A_Snapshot.gt(th.toBN('0')))
 
     // Liquidate Carol
-    await cdpManager.liquidate(carol)
+    await cdpManager.batchLiquidateTroves([carol])
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Get Alice's pending reward snapshots after Carol's liquidation. Check above 0
@@ -1709,7 +1709,7 @@ contract('BorrowerOperations', async accounts => {
     const price = await priceFeed.getPrice()
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV. Alice and Bob earn rewards.
-    const liquidationTx = await cdpManager.liquidate(carol, { from: owner });
+    const liquidationTx = await cdpManager.batchLiquidateTroves([carol], { from: owner });
     const [liquidatedDebt_C, liquidatedColl_C, gasComp_C] = th.getEmittedLiquidationValues(liquidationTx)
     // Dennis opens a new CDP with 10 Ether, withdraws CLV and sends 135 CLV to Alice, and 45 CLV to Bob.
 
@@ -2035,7 +2035,7 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice(dec(100, 18));
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    const liquidationTx = await cdpManager.liquidate(carol, { from: owner });
+    const liquidationTx = await cdpManager.batchLiquidateTroves([carol], { from: owner });
     const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
     /* with total stakes = 10 ether, after liquidation, L_ETH should equal 1/10 ether per-ether-staked,
@@ -2260,7 +2260,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([bob])
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -2290,7 +2290,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([bob])
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -2319,7 +2319,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([bob])
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -2347,7 +2347,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([bob])
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -2375,7 +2375,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([bob])
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -2404,7 +2404,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([bob])
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -2433,7 +2433,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([bob])
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -2462,7 +2462,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([bob])
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -2491,7 +2491,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([bob])
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)

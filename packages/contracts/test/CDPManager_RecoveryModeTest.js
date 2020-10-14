@@ -196,7 +196,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(bob_ICR, '750000000000000000')
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     const bob_Stake_After = (await cdpManager.CDPs(bob))[2]
     const totalStakes_After = await cdpManager.totalStakes()
@@ -227,7 +227,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(recoveryMode)
 
     // Dennis is liquidated
-    await cdpManager.liquidate(dennis, { from: owner })
+    await cdpManager.batchLiquidateTroves([dennis], { from: owner })
 
     const totalStakesSnaphot_before = (await cdpManager.totalStakesSnapshot()).toString()
     const totalCollateralSnapshot_before = (await cdpManager.totalCollateralSnapshot()).toString()
@@ -236,7 +236,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(totalCollateralSnapshot_before, dec(8985, 15)) // 6 + 3*0.995
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     const totalStakesSnaphot_After = (await cdpManager.totalStakesSnapshot())
     const totalCollateralSnapshot_After = (await cdpManager.totalCollateralSnapshot())
@@ -277,7 +277,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(bob_ICR, '750000000000000000')
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     // check Bob's CDP is successfully closed, and removed from sortedList
     const bob_CDPStatus_After = (await cdpManager.CDPs(bob))[3]
@@ -318,7 +318,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(recoveryMode)
 
     // liquidate bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     // check SP rewards-per-unit-staked after liquidation - should be no increase
     const P_After = (await poolManager.P()).toString()
@@ -359,7 +359,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(bob_ICR, '1050000000000000000')
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     const bob_Stake_After = (await cdpManager.CDPs(bob))[2]
     const totalStakes_After = await cdpManager.totalStakes()
@@ -395,7 +395,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(recoveryMode)
 
     // Dennis is liquidated
-    await cdpManager.liquidate(dennis, { from: owner })
+    await cdpManager.batchLiquidateTroves([dennis], { from: owner })
 
     /*
     Prior to Dennis liquidation, total stakes and total collateral were each 27 ether. 
@@ -418,7 +418,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_ICR.gt(_100percent))
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     /* After Bob's liquidation, Bob's stake (21 ether) should be removed from total stakes, 
     but his collateral should remain in the system (*0.995). */
@@ -457,7 +457,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(bob_ICR, '1050000000000000000')
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     // check Bob's CDP is successfully closed, and removed from sortedList
     const bob_CDPStatus_After = (await cdpManager.CDPs(bob))[3]
@@ -514,7 +514,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     After offsetting 390 CLV and 4.074525 ether, the remainders - 1610 CLV and 16.820475 ether - should be redistributed to all active CDPs.
    */
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     const aliceExpectedDeposit = await poolManager.getCompoundedCLVDeposit(alice)
     const aliceExpectedETHGain = await poolManager.getCurrentETHGain(alice)
@@ -569,7 +569,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(dennis_ICR, '1333333333333333333')
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     // Check that Pool rewards don't change
     const P_Before = (await poolManager.P()).toString()
@@ -628,7 +628,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     /* Check accrued Stability Pool rewards after. Total Pool deposits was 1490 CLV, Alice sole depositor.
     As liquidated debt (250 CLV) was completely offset
@@ -679,7 +679,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     // check stake and totalStakes after
     const bob_Stake_After = (await cdpManager.CDPs(bob))[2]
@@ -724,7 +724,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     const totalStakesSnaphot_After = (await cdpManager.totalStakesSnapshot())
     const totalCollateralSnapshot_After = (await cdpManager.totalCollateralSnapshot())
@@ -770,7 +770,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     // Check Bob's CDP is closed after liquidation
     const bob_CDPStatus_After = (await cdpManager.CDPs(bob))[3]
@@ -814,13 +814,13 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Troves are ordered by ICR, low to high: A, B, C, D.
 
     // Liquidate out of ICR order: D, B, C.  Confirm Recovery Mode is active prior to each.
-    const liquidationTx_D = await cdpManager.liquidate(dennis)
+    const liquidationTx_D = await cdpManager.batchLiquidateTroves([dennis])
 
     assert.isTrue(await cdpManager.checkRecoveryMode())
-    const liquidationTx_B = await cdpManager.liquidate(bob)
+    const liquidationTx_B = await cdpManager.batchLiquidateTroves([bob])
 
     assert.isTrue(await cdpManager.checkRecoveryMode())
-    const liquidationTx_C = await cdpManager.liquidate(carol)
+    const liquidationTx_C = await cdpManager.batchLiquidateTroves([carol])
 
     // Check transactions all succeeded
     assert.isTrue(liquidationTx_D.receipt.status)
@@ -872,7 +872,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_CDP_isInSortedList_Before)
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     /* Since the pool only contains 100 CLV, and Bob's pre-liquidation debt was 250 CLV, 
     expect Bob's loan to only be partially offset, and remain active after liquidation */
@@ -914,7 +914,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_CDP_isInSortedList_Before)
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     /* Since the pool only contains 100 CLV, and Bob's pre-liquidation debt was 250 CLV, 
     expect Bob's loan to only be partially offset, and remain active after liquidation */
@@ -962,7 +962,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(recoveryMode)
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     /*  Since Bob's debt (250 CLV) is larger than all CLV in the Stability Pool, Liquidation should offset 
     a portion Bob's debt and coll with the Stability Pool, and leave remainders of debt and coll in his CDP. Specifically:
@@ -1022,7 +1022,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(totalCollateralSnapshot_Before, 0)
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     /* After liquidation, totalStakes snapshot should equal Alice's stake (20 ether) + Dennis stake (2 ether) = 22 ether.
 
@@ -1058,7 +1058,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(recoveryMode)
 
     // Liquidate Bob. 100 CLV should be offset
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     /* check Stability Pool rewards.  After Bob's liquidation:
     - amount of CLV offset with Stability Pool should be 100 CLV
@@ -1123,7 +1123,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(bob, price)).gt(mv._MCR))
 
     // L1: Liquidate Bob. 100 CLV should be offset
-    await cdpManager.liquidate(bob, { from: owner })
+    await cdpManager.batchLiquidateTroves([bob], { from: owner })
 
     //Check SP CLV has been completely emptied
     assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
@@ -1162,7 +1162,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gt(mv._MCR))
 
     // L2: Liquidate Carol. 50 CLV should be offset
-    await cdpManager.liquidate(carol)
+    await cdpManager.batchLiquidateTroves([carol])
 
     //Check SP CLV has been completely emptied
     assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
@@ -1212,7 +1212,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const entireSystemCollBefore = await cdpManager.getEntireSystemColl()
     const entireSystemDebtBefore = await cdpManager.getEntireSystemDebt()
 
-    await cdpManager.liquidate(alice)
+    await cdpManager.batchLiquidateTroves([alice])
 
     // Expect system debt reduced by 250 CLV and system coll 2.5 ETH
     const entireSystemCollAfter = await cdpManager.getEntireSystemColl()
@@ -1248,7 +1248,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(activeTrovesCount_Before, 1)
 
     // Liquidate the trove
-    await cdpManager.liquidate(alice, { from: owner })
+    await cdpManager.batchLiquidateTroves([alice], { from: owner })
 
     // Check Alice's trove has not been removed
     const activeTrovesCount_After = await cdpManager.getCDPOwnersCount()
@@ -1284,7 +1284,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(activeTrovesCount_Before, 2)
 
     // Liquidate the trove
-    await cdpManager.liquidate(alice, { from: owner })
+    await cdpManager.batchLiquidateTroves([alice], { from: owner })
 
     // Check Alice's trove is removed, and bob remains
     const activeTrovesCount_After = await cdpManager.getCDPOwnersCount()
@@ -1320,7 +1320,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(CLVinSP, '0')
 
     // Attempt to liquidate bob
-    await cdpManager.liquidate(bob)
+    await cdpManager.batchLiquidateTroves([bob])
 
     // check A, B, C remain active
     assert.isTrue((await sortedCDPs.contains(bob)))
@@ -1350,7 +1350,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     try {
-      const txCarol = await cdpManager.liquidate(carol)
+      const txCarol = await cdpManager.batchLiquidateTroves([carol])
 
       assert.isFalse(txCarol.receipt.status)
     } catch (err) {
@@ -1373,7 +1373,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
     // Carol liquidated, and her trove is closed
-    const txCarol_L1 = await cdpManager.liquidate(carol)
+    const txCarol_L1 = await cdpManager.batchLiquidateTroves([carol])
     assert.isTrue(txCarol_L1.receipt.status)
 
     // Check Carol's trove is closed
@@ -1381,7 +1381,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(await cdpManager.getCDPStatus(carol), 2)
 
     try {
-      const txCarol_L2 = await cdpManager.liquidate(carol)
+      const txCarol_L2 = await cdpManager.batchLiquidateTroves([carol])
 
       assert.isFalse(txCarol_L2.receipt.status)
     } catch (err) {
@@ -1420,7 +1420,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(carol_ICR_Before.lte(mv._MCR))
 
     // Liquidate defaulter. 30 CLV and 0.3 ETH is distributed uniformly between A, B and C. Each receive 10 CLV, 0.1 ETH
-    await cdpManager.liquidate(defaulter_1)
+    await cdpManager.batchLiquidateTroves([defaulter_1])
 
     const alice_ICR_After = await cdpManager.getCurrentICR(alice, price)
     const bob_ICR_After = await cdpManager.getCurrentICR(bob, price)
@@ -1446,9 +1446,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_rawICR.gte(mv._MCR))
 
     //liquidate A, B, C
-    await cdpManager.liquidate(alice)
-    await cdpManager.liquidate(bob)
-    await cdpManager.liquidate(carol)
+    await cdpManager.batchLiquidateTroves([alice])
+    await cdpManager.batchLiquidateTroves([bob])
+    await cdpManager.batchLiquidateTroves([carol])
 
     /*  Since there is 0 CLV in the stability Pool, A, with ICR >110%, should stay active.
     Check Alice stays active, Carol gets liquidated, and Bob gets liquidated 
@@ -1480,7 +1480,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
     // Carol gets liquidated
-    await cdpManager.liquidate(carol)
+    await cdpManager.batchLiquidateTroves([carol])
 
     // Check Dennis' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
     const dennis_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(dennis)).toString()
@@ -1490,7 +1490,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // Attempt to liquidate Dennis
     try {
-      const txDennis = await cdpManager.liquidate(dennis)
+      const txDennis = await cdpManager.batchLiquidateTroves([dennis])
       assert.isFalse(txDennis.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1525,9 +1525,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
 
     // Liquidate A, B and C
-    await cdpManager.liquidate(alice)
-    await cdpManager.liquidate(bob)
-    await cdpManager.liquidate(carol)
+    await cdpManager.batchLiquidateTroves([alice])
+    await cdpManager.batchLiquidateTroves([bob])
+    await cdpManager.batchLiquidateTroves([carol])
 
     // Confirm A, B, C closed
     assert.isFalse(await sortedCDPs.contains(alice))
@@ -2067,7 +2067,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(carol_ICR_Before.lte(mv._MCR))
 
     // Liquidate defaulter. 30 CLV and 0.3 ETH is distributed uniformly between A, B and C. Each receive 10 CLV, 0.1 ETH
-    await cdpManager.liquidate(defaulter_1)
+    await cdpManager.batchLiquidateTroves([defaulter_1])
 
     const alice_ICR_After = await cdpManager.getCurrentICR(alice, price)
     const bob_ICR_After = await cdpManager.getCurrentICR(bob, price)

@@ -159,8 +159,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // CDPs are closed
-      await cdpManager.liquidate(defaulter_1, { from: owner })
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner });
 
       // --- TEST ---
       const P = (await poolManager.P())  // expected: 0.18 CLV
@@ -218,8 +218,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.liquidate(defaulter_2, { from: owner }) // 180 CLV closed
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })  // 180 CLV closed
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner }) // 180 CLV closed
 
       const alice_compoundedDeposit_1 = await poolManager.getCompoundedCLVDeposit(alice)
 
@@ -248,7 +248,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP('427000000000000000000', { from: bob })
 
       // Defaulter 3 CDP is closed
-      await cdpManager.liquidate(defaulter_3, { from: owner })
+      await cdpManager.batchLiquidateTroves([defaulter_3], { from: owner })
 
       const alice_compoundedDeposit_2 = await poolManager.getCompoundedCLVDeposit(alice)
 
@@ -338,8 +338,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Defaulters are liquidated
-      await cdpManager.liquidate(defaulter_1)
-      await cdpManager.liquidate(defaulter_2)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
+      await cdpManager.batchLiquidateTroves([defaulter_2])
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
@@ -403,8 +403,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Defaulters are liquidated
-      await cdpManager.liquidate(defaulter_1)
-      await cdpManager.liquidate(defaulter_2)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
+      await cdpManager.batchLiquidateTroves([defaulter_2])
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
@@ -535,7 +535,7 @@ contract('PoolManager', async accounts => {
       const price = await priceFeed.getPrice()
 
       // Liquidate bob
-      await cdpManager.liquidate(bob)
+      await cdpManager.batchLiquidateTroves([bob])
 
       // Check Bob's trove has been removed from the system
       assert.isFalse(await sortedCDPs.contains(bob))
@@ -628,8 +628,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 170 CLV drawn are closed
-      const liquidationTX_1 = await cdpManager.liquidate(defaulter_1, { from: owner })  // 170 CLV closed
-      const liquidationTX_2 = await cdpManager.liquidate(defaulter_2, { from: owner }) // 170 CLV closed
+      const liquidationTX_1 = await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })  // 170 CLV closed
+      const liquidationTX_2 = await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner }) // 170 CLV closed
       
       const [liquidatedDebt_1] = await th.getEmittedLiquidationValues(liquidationTX_1)
       const [liquidatedDebt_2] = await th.getEmittedLiquidationValues(liquidationTX_2)
@@ -684,8 +684,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 170 CLV drawn are closed
-      const liquidationTX_1 = await cdpManager.liquidate(defaulter_1, { from: owner })  // 170 CLV closed
-      const liquidationTX_2 = await cdpManager.liquidate(defaulter_2, { from: owner }) // 170 CLV closed
+      const liquidationTX_1 = await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })  // 170 CLV closed
+      const liquidationTX_2 = await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner }) // 170 CLV closed
       
       const [liquidatedDebt_1] = await th.getEmittedLiquidationValues(liquidationTX_1)
       const [liquidatedDebt_2] = await th.getEmittedLiquidationValues(liquidationTX_2)
@@ -727,8 +727,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 170 CLV drawn are closed
-      const liquidationTX_1 = await cdpManager.liquidate(defaulter_1, { from: owner })  // 170 CLV closed
-      const liquidationTX_2 = await cdpManager.liquidate(defaulter_2, { from: owner }) // 170 CLV closed
+      const liquidationTX_1 = await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })  // 170 CLV closed
+      const liquidationTX_2 = await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner }) // 170 CLV closed
       
       const [liquidatedDebt_1] = await th.getEmittedLiquidationValues(liquidationTX_1)
       const [liquidatedDebt_2] = await th.getEmittedLiquidationValues(liquidationTX_2)
@@ -773,8 +773,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.liquidate(defaulter_2, { from: owner }) // 180 CLV closed
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })  // 180 CLV closed
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner }) // 180 CLV closed
 
       // Alice retrieves all of her entitled CLV:
       await poolManager.withdrawFromSP(dec(150, 18), { from: alice })
@@ -835,8 +835,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.liquidate(defaulter_2, { from: owner }); // 180 CLV closed
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })  // 180 CLV closed
+      await cdpManager.batchLiquidateTroves([defaulter_2], { from: owner }); // 180 CLV closed
 
       // Alice retrieves part of her entitled CLV: 90 CLV
       await poolManager.withdrawFromSP('90000000000000000000', { from: alice })
@@ -874,7 +874,7 @@ contract('PoolManager', async accounts => {
 
       // defaulter's CDP is closed.
 
-      const liquidationTx_1=  await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      const liquidationTx_1=  await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })  // 180 CLV closed
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx_1)
 
       //Get ActivePool and StabilityPool Ether before retrieval:
@@ -919,7 +919,7 @@ contract('PoolManager', async accounts => {
       }
 
       await priceFeed.setPrice(dec(100, 18))
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
 
       // All depositors attempt to withdraw
       await poolManager.withdrawFromSP(dec(100, 18), { from: alice })
@@ -955,7 +955,7 @@ contract('PoolManager', async accounts => {
       }
 
       await priceFeed.setPrice(dec(100, 18))
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
 
       /* From a distribution of 100 CLV, each depositor receives
       CLVLoss = 16.666666666666666666 CLV
@@ -1000,8 +1000,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Defaulters are liquidated
-      await cdpManager.liquidate(defaulter_1)
-      await cdpManager.liquidate(defaulter_2)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
+      await cdpManager.batchLiquidateTroves([defaulter_2])
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
@@ -1056,8 +1056,8 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Defaulters are liquidated
-      await cdpManager.liquidate(defaulter_1)
-      await cdpManager.liquidate(defaulter_2)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
+      await cdpManager.batchLiquidateTroves([defaulter_2])
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
@@ -1204,7 +1204,7 @@ contract('PoolManager', async accounts => {
       assert.isFalse(await cdpManager.checkRecoveryMode())
 
       // Defaulter 1 liquidated, full offset
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
 
       // Dennis opens loan and deposits to Stability Pool
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
@@ -1255,7 +1255,7 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Liquidate defaulter 1
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
 
       const alice_CLV_Balance_Before = await clvToken.balanceOf(alice)
       const bob_CLV_Balance_Before = await clvToken.balanceOf(bob)
@@ -1310,7 +1310,7 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Liquidate defaulter 1
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
 
       const bob_CLV_Balance_Before = await clvToken.balanceOf(bob)
       assert.equal(bob_CLV_Balance_Before.toString(), dec(150, 18))
@@ -1359,7 +1359,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(await cdpManager.checkRecoveryMode())
 
       // Liquidate defaulter 1
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       const alice_CLV_Balance_Before = await clvToken.balanceOf(alice)
@@ -1446,7 +1446,7 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Liquidate defaulter 1. Empties the Pool
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1467,7 +1467,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(1, 22), {from: whale})
 
       // Liquidation 2
-      await cdpManager.liquidate(defaulter_2)
+      await cdpManager.batchLiquidateTroves([defaulter_2])
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
       // Check Alice and Bob have not received ETH gain from liquidation 2 while their deposit was 0
@@ -1478,7 +1478,7 @@ contract('PoolManager', async accounts => {
       assert.equal(bob_ETHGain_1, bob_ETHGain_2)
 
       // Liquidation 3
-      await cdpManager.liquidate(defaulter_3)
+      await cdpManager.batchLiquidateTroves([defaulter_3])
       assert.isFalse(await sortedCDPs.contains(defaulter_3))
 
        // Check Alice and Bob have not received ETH gain from liquidation 3 while their deposit was 0
@@ -1573,7 +1573,7 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // Defaulter's CDP is closed
-      const liquidationTx_1 = await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      const liquidationTx_1 = await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })  // 180 CLV closed
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx_1)
      
       const ETHGain_A = await poolManager.getCurrentETHGain(alice)
@@ -1627,7 +1627,7 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // defaulter's CDP is closed.
-      await cdpManager.liquidate(defaulter_1, { from: owner })
+      await cdpManager.batchLiquidateTroves([defaulter_1], { from: owner })
 
       // Alice sends her ETH Gains to her CDP
       await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -1676,7 +1676,7 @@ contract('PoolManager', async accounts => {
 
       // defaulter's CDP is closed.
      
-      const liquidationTx = await cdpManager.liquidate(defaulter_1)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([defaulter_1])
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
       // Expect alice to be entitled to 150/2000 of the liquidated coll
@@ -1717,7 +1717,7 @@ contract('PoolManager', async accounts => {
       }
 
       await priceFeed.setPrice(dec(100, 18))
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
 
       // All depositors attempt to withdraw
       const tx1 = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
@@ -1749,7 +1749,7 @@ contract('PoolManager', async accounts => {
       }
 
       await priceFeed.setPrice(dec(100, 18))
-      const liquidationTx = await cdpManager.liquidate(defaulter_1)
+      const liquidationTx = await cdpManager.batchLiquidateTroves([defaulter_1])
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
 
@@ -1820,7 +1820,7 @@ contract('PoolManager', async accounts => {
 
        // Liquidate defaulter 1
        assert.isTrue(await sortedCDPs.contains(defaulter_1))
-       await cdpManager.liquidate(defaulter_1)
+       await cdpManager.batchLiquidateTroves([defaulter_1])
        assert.isFalse(await sortedCDPs.contains(defaulter_1))
  
       const alice_ETHGain_Before = await poolManager.getCurrentETHGain(alice)
@@ -1869,7 +1869,7 @@ contract('PoolManager', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       //Liquidate defaulter 1
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       // D attempts to withdraw his ETH gain to CDP
@@ -1899,7 +1899,7 @@ contract('PoolManager', async accounts => {
       assert.isFalse(await cdpManager.checkRecoveryMode())
 
       // Defaulter 1 liquidated, full offset
-      await cdpManager.liquidate(defaulter_1)
+      await cdpManager.batchLiquidateTroves([defaulter_1])
 
       // Dennis opens loan and deposits to Stability Pool
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })

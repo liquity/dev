@@ -59,7 +59,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
     // L1: B liquidated
-    const txB = await cdpManager.liquidate(bob)
+    const txB = await cdpManager.batchLiquidateTroves([bob])
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -77,7 +77,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
     // L2: D Liquidated
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await cdpManager.batchLiquidateTroves([dennis])
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -122,7 +122,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
     // L1: C liquidated
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await cdpManager.batchLiquidateTroves([carol])
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -141,7 +141,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
     // L2: F Liquidated
-    const txF = await cdpManager.liquidate(freddy)
+    const txF = await cdpManager.batchLiquidateTroves([freddy])
     assert.isTrue(txF.receipt.status)
     assert.isFalse(await sortedCDPs.contains(freddy))
 
@@ -194,7 +194,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(1, 18))
 
     // L1: A liquidated
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await cdpManager.batchLiquidateTroves([alice])
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
@@ -207,7 +207,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(1, 18))
 
     // L2: B Liquidated
-    const txB = await cdpManager.liquidate(bob)
+    const txB = await cdpManager.batchLiquidateTroves([bob])
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -220,7 +220,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(1, 18))
 
     // L3: C Liquidated
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await cdpManager.batchLiquidateTroves([carol])
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -233,7 +233,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(1, 18))
 
     // L4: D Liquidated
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await cdpManager.batchLiquidateTroves([dennis])
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -246,7 +246,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(1, 18))
 
     // L5: E Liquidated
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await cdpManager.batchLiquidateTroves([erin])
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
@@ -302,7 +302,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await cdpManager.batchLiquidateTroves([carol])
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -319,7 +319,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Alice
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await cdpManager.batchLiquidateTroves([alice])
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
@@ -346,7 +346,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await cdpManager.batchLiquidateTroves([carol])
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -363,7 +363,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate D
-    const txA = await cdpManager.liquidate(dennis)
+    const txA = await cdpManager.batchLiquidateTroves([dennis])
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -422,7 +422,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await cdpManager.batchLiquidateTroves([dennis])
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -456,7 +456,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await cdpManager.batchLiquidateTroves([erin])
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
@@ -510,7 +510,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await cdpManager.batchLiquidateTroves([dennis])
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -548,7 +548,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await cdpManager.batchLiquidateTroves([erin])
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
@@ -602,7 +602,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await cdpManager.batchLiquidateTroves([carol])
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -619,7 +619,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Alice
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await cdpManager.batchLiquidateTroves([alice])
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
@@ -650,7 +650,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await cdpManager.batchLiquidateTroves([carol])
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -667,7 +667,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate D
-    const txA = await cdpManager.liquidate(dennis)
+    const txA = await cdpManager.batchLiquidateTroves([dennis])
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -731,7 +731,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await cdpManager.batchLiquidateTroves([dennis])
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -765,7 +765,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await cdpManager.batchLiquidateTroves([erin])
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
@@ -819,7 +819,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await cdpManager.batchLiquidateTroves([dennis])
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -872,7 +872,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await cdpManager.batchLiquidateTroves([erin])
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
@@ -926,7 +926,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(1, 18))
 
     // Liquidate A
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await cdpManager.batchLiquidateTroves([alice])
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
@@ -946,7 +946,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(1, 18))
 
     // Liquidate B
-    const txB = await cdpManager.liquidate(bob)
+    const txB = await cdpManager.batchLiquidateTroves([bob])
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -964,7 +964,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice(dec(1, 18))
 
     // Liquidate F
-    const txF = await cdpManager.liquidate(freddy)
+    const txF = await cdpManager.batchLiquidateTroves([freddy])
     assert.isTrue(txF.receipt.status)
     assert.isFalse(await sortedCDPs.contains(freddy))
 
@@ -1021,7 +1021,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice('1')
 
     // Liquidate A
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await cdpManager.batchLiquidateTroves([alice])
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
@@ -1045,7 +1045,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice('1')
 
     // Liquidate B
-    const txB = await cdpManager.liquidate(bob)
+    const txB = await cdpManager.batchLiquidateTroves([bob])
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -1070,7 +1070,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     await priceFeed.setPrice('1')
 
     // Liquidate F
-    const txF = await cdpManager.liquidate(freddy)
+    const txF = await cdpManager.batchLiquidateTroves([freddy])
     assert.isTrue(txF.receipt.status)
     assert.isFalse(await sortedCDPs.contains(freddy))
 

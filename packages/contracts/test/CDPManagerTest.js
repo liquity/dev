@@ -85,7 +85,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // close CDP
-    await cdpManager.liquidate(alice, { from: owner });
+    await cdpManager.batchLiquidateTroves([alice], { from: owner });
 
     // check the CDP is successfully closed, and removed from sortedList
     const status = (await cdpManager.CDPs(alice))[3]
@@ -123,7 +123,7 @@ contract('CDPManager', async accounts => {
 
     /* close Bob's CDP. Should liquidate his 1 ether and 180CLV, 
     leaving 10 ether and 100 CLV debt in the ActivePool. */
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.batchLiquidateTroves([bob], { from: owner });
 
     // check ActivePool ETH and CLV debt 
     const activePool_ETH_After = (await activePool.getETH()).toString()
@@ -161,7 +161,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // close Bob's CDP
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.batchLiquidateTroves([bob], { from: owner });
 
     // check after
     const defaultPool_ETH_After = (await defaultPool.getETH()).toString()
@@ -196,7 +196,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Close Bob's CDP
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.batchLiquidateTroves([bob], { from: owner });
 
     // check totalStakes after
     const totalStakes_After = (await cdpManager.totalStakes()).toString()
@@ -226,7 +226,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Liquidate carol
-    await cdpManager.liquidate(carol)
+    await cdpManager.batchLiquidateTroves([carol])
 
     // Check Carol no longer has an active trove
     assert.isFalse(await sortedCDPs.contains(carol))
@@ -292,7 +292,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // close Bob's CDP.  His 1*0.995 ether and 180 CLV should be added to the DefaultPool.
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.batchLiquidateTroves([bob], { from: owner });
 
     /* check snapshots after. Total stakes should be equal to the  remaining stake then the system: 
     10 ether, Alice's stake.
@@ -325,7 +325,7 @@ contract('CDPManager', async accounts => {
 
     // close Carol's CDP.  
     assert.isTrue(await sortedCDPs.contains(carol))
-    await cdpManager.liquidate(carol, { from: owner });
+    await cdpManager.batchLiquidateTroves([carol], { from: owner });
     assert.isFalse(await sortedCDPs.contains(carol))
 
     /* Alice and Bob have the same active stakes. totalStakes in the system is (10 + 10) = 20 ether.
@@ -352,7 +352,7 @@ contract('CDPManager', async accounts => {
 
     // close Bob's CDP 
     assert.isTrue(await sortedCDPs.contains(bob))
-    await cdpManager.liquidate(bob, { from: owner });
+    await cdpManager.batchLiquidateTroves([bob], { from: owner });
     assert.isFalse(await sortedCDPs.contains(bob))
 
     /* Alice now has all the active stake. totalStakes in the system is now 10 ether.
@@ -400,7 +400,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Liquidate the trove
-    await cdpManager.liquidate(alice, { from: owner })
+    await cdpManager.batchLiquidateTroves([alice], { from: owner })
 
     // Check Alice's trove is removed, and bob remains
     const activeTrovesCount_After = await cdpManager.getCDPOwnersCount()
@@ -425,7 +425,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     try {
-      const txCarol = await cdpManager.liquidate(carol)
+      const txCarol = await cdpManager.batchLiquidateTroves([carol])
 
       assert.isFalse(txCarol.receipt.status)
     } catch (err) {
@@ -445,7 +445,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Carol liquidated, and her trove is closed
-    const txCarol_L1 = await cdpManager.liquidate(carol)
+    const txCarol_L1 = await cdpManager.batchLiquidateTroves([carol])
     assert.isTrue(txCarol_L1.receipt.status)
 
     assert.isFalse(await sortedCDPs.contains(carol))
@@ -456,7 +456,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     try {
-      const txCarol_L2 = await cdpManager.liquidate(carol)
+      const txCarol_L2 = await cdpManager.batchLiquidateTroves([carol])
 
       assert.isFalse(txCarol_L2.receipt.status)
     } catch (err) {
@@ -482,7 +482,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Attempt to liquidate bob
-    await cdpManager.liquidate(bob)
+    await cdpManager.batchLiquidateTroves([bob])
 
     // Check bob active, check whale active
     assert.isTrue((await sortedCDPs.contains(bob)))
@@ -524,16 +524,16 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // All defaulters liquidated
-    await cdpManager.liquidate(defaulter_1)
+    await cdpManager.batchLiquidateTroves([defaulter_1])
     assert.isFalse((await sortedCDPs.contains(defaulter_1)))
 
-    await cdpManager.liquidate(defaulter_2)
+    await cdpManager.batchLiquidateTroves([defaulter_2])
     assert.isFalse((await sortedCDPs.contains(defaulter_2)))
 
-    await cdpManager.liquidate(defaulter_3)
+    await cdpManager.batchLiquidateTroves([defaulter_3])
     assert.isFalse((await sortedCDPs.contains(defaulter_3)))
 
-    await cdpManager.liquidate(defaulter_4)
+    await cdpManager.batchLiquidateTroves([defaulter_4])
     assert.isFalse((await sortedCDPs.contains(defaulter_4)))
 
     // Price bounces back
@@ -572,22 +572,22 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Check TCR improves with each liquidation that is offset with Pool
-    await cdpManager.liquidate(defaulter_1)
+    await cdpManager.batchLiquidateTroves([defaulter_1])
     assert.isFalse((await sortedCDPs.contains(defaulter_1)))
     const TCR_2 = await cdpManager.getTCR()
     assert.isTrue(TCR_2.gte(TCR_1))
 
-    await cdpManager.liquidate(defaulter_2)
+    await cdpManager.batchLiquidateTroves([defaulter_2])
     assert.isFalse((await sortedCDPs.contains(defaulter_2)))
     const TCR_3 = await cdpManager.getTCR()
     assert.isTrue(TCR_3.gte(TCR_2))
 
-    await cdpManager.liquidate(defaulter_3)
+    await cdpManager.batchLiquidateTroves([defaulter_3])
     assert.isFalse((await sortedCDPs.contains(defaulter_3)))
     const TCR_4 = await cdpManager.getTCR()
     assert.isTrue(TCR_4.gte(TCR_4))
 
-    await cdpManager.liquidate(defaulter_4)
+    await cdpManager.batchLiquidateTroves([defaulter_4])
     assert.isFalse((await sortedCDPs.contains(defaulter_4)))
     const TCR_5 = await cdpManager.getTCR()
     assert.isTrue(TCR_5.gte(TCR_5))
@@ -627,7 +627,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Check TCR does not decrease with each liquidation 
-    const liquidationTx_1 = await cdpManager.liquidate(defaulter_1)
+    const liquidationTx_1 = await cdpManager.batchLiquidateTroves([defaulter_1])
     const [liquidatedDebt_1, liquidatedColl_1, gasComp_1] = th.getEmittedLiquidationValues(liquidationTx_1)
     assert.isFalse((await sortedCDPs.contains(defaulter_1)))
     const TCR_1 = await cdpManager.getTCR()
@@ -640,7 +640,7 @@ contract('CDPManager', async accounts => {
 
     assert.isTrue(expectedTCR_1.eq(TCR_1))
 
-    const liquidationTx_2 = await cdpManager.liquidate(defaulter_2)
+    const liquidationTx_2 = await cdpManager.batchLiquidateTroves([defaulter_2])
     const [liquidatedDebt_2, liquidatedColl_2, gasComp_2] = th.getEmittedLiquidationValues(liquidationTx_2)
     assert.isFalse((await sortedCDPs.contains(defaulter_2)))
 
@@ -654,7 +654,7 @@ contract('CDPManager', async accounts => {
 
     assert.isTrue(expectedTCR_2.eq(TCR_2))
 
-    const liquidationTx_3 = await cdpManager.liquidate(defaulter_3)
+    const liquidationTx_3 = await cdpManager.batchLiquidateTroves([defaulter_3])
     const [liquidatedDebt_3, liquidatedColl_3, gasComp_3] = th.getEmittedLiquidationValues(liquidationTx_3)
     assert.isFalse((await sortedCDPs.contains(defaulter_3)))
 
@@ -670,7 +670,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(expectedTCR_3.eq(TCR_3))
 
 
-    const liquidationTx_4 = await cdpManager.liquidate(defaulter_4)
+    const liquidationTx_4 = await cdpManager.batchLiquidateTroves([defaulter_4])
     const [liquidatedDebt_4, liquidatedColl_4, gasComp_4] = th.getEmittedLiquidationValues(liquidationTx_4)
     assert.isFalse((await sortedCDPs.contains(defaulter_4)))
 
@@ -700,7 +700,7 @@ contract('CDPManager', async accounts => {
 
     // Carol gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    const liquidationTX_C = await cdpManager.liquidate(carol)
+    const liquidationTX_C = await cdpManager.batchLiquidateTroves([carol])
     const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTX_C)
 
     assert.isFalse(await sortedCDPs.contains(carol))
@@ -715,7 +715,7 @@ contract('CDPManager', async accounts => {
 
     // Attempt to liquidate Dennis
     try {
-      const txDennis = await cdpManager.liquidate(dennis)
+      const txDennis = await cdpManager.batchLiquidateTroves([dennis])
       assert.isFalse(txDennis.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -739,7 +739,7 @@ contract('CDPManager', async accounts => {
 
     // Carol gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    const liquidationTX_C = await cdpManager.liquidate(carol)
+    const liquidationTX_C = await cdpManager.batchLiquidateTroves([carol])
     const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTX_C)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -758,7 +758,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Attempt to liquidate Bob
-    await cdpManager.liquidate(bob)
+    await cdpManager.batchLiquidateTroves([bob])
 
     // Confirm Bob's trove is still active
     assert.isTrue(await sortedCDPs.contains(bob))
@@ -781,7 +781,7 @@ contract('CDPManager', async accounts => {
 
     // Carol gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(carol)
+    await cdpManager.batchLiquidateTroves([carol])
 
     // Check Bob' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
     const bob_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
@@ -796,7 +796,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
     // Liquidate Bob. 200 CLV and 2 ETH is liquidated
-    await cdpManager.liquidate(bob)
+    await cdpManager.batchLiquidateTroves([bob])
 
     // Confirm Bob's trove has been closed
     assert.isFalse(await sortedCDPs.contains(bob))
@@ -839,15 +839,15 @@ contract('CDPManager', async accounts => {
     const activeCLVDebt_0 = await activePool.getCLVDebt()
     const defaultCLVDebt_0 = await defaultPool.getCLVDebt()
 
-    await cdpManager.liquidate(alice)
+    await cdpManager.batchLiquidateTroves([alice])
     const activeCLVDebt_A = await activePool.getCLVDebt()
     const defaultCLVDebt_A = await defaultPool.getCLVDebt()
 
-    await cdpManager.liquidate(bob)
+    await cdpManager.batchLiquidateTroves([bob])
     const activeCLVDebt_B = await activePool.getCLVDebt()
     const defaultCLVDebt_B = await defaultPool.getCLVDebt()
 
-    await cdpManager.liquidate(carol)
+    await cdpManager.batchLiquidateTroves([carol])
 
     // Confirm A, B, C closed
     assert.isFalse(await sortedCDPs.contains(alice))
@@ -902,7 +902,7 @@ contract('CDPManager', async accounts => {
     B receives (30 * 1/4) = 7.5 CLV, and (0.3*1/4) = 0.075 ETH
     C receives (30 * 1/4) = 7.5 CLV, and (0.3*1/4) = 0.075 ETH
     */
-    await cdpManager.liquidate(defaulter_1)
+    await cdpManager.batchLiquidateTroves([defaulter_1])
 
     const alice_ICR_After = await cdpManager.getCurrentICR(alice, price)
     const bob_ICR_After = await cdpManager.getCurrentICR(bob, price)
@@ -934,9 +934,9 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
     // Liquidate Alice, Bob, Carol
-    await cdpManager.liquidate(alice)
-    await cdpManager.liquidate(bob)
-    await cdpManager.liquidate(carol)
+    await cdpManager.batchLiquidateTroves([alice])
+    await cdpManager.batchLiquidateTroves([bob])
+    await cdpManager.batchLiquidateTroves([carol])
 
     /* Check Alice stays active, Carol gets liquidated, and Bob gets liquidated 
    (because his pending rewards bring his ICR < MCR) */
@@ -1144,7 +1144,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(carol_ICR_Before.lte(mv._MCR))
 
     // Liquidate defaulter. 30 CLV and 0.3 ETH is distributed uniformly between A, B and C. Each receive 10 CLV, 0.1 ETH
-    await cdpManager.liquidate(defaulter_1)
+    await cdpManager.batchLiquidateTroves([defaulter_1])
 
     const alice_ICR_After = await cdpManager.getCurrentICR(alice, price)
     const bob_ICR_After = await cdpManager.getCurrentICR(bob, price)
@@ -2197,7 +2197,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(await sortedCDPs.contains(flyn))
 
     // Liquidate Flyn
-    await cdpManager.liquidate(flyn)
+    await cdpManager.batchLiquidateTroves([flyn])
     assert.isFalse(await sortedCDPs.contains(flyn))
 
     // Price bounces back, bringing B, C, D back above MCR
@@ -2643,7 +2643,7 @@ contract('CDPManager', async accounts => {
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
 
-    await cdpManager.liquidate(defaulter_1)
+    await cdpManager.batchLiquidateTroves([defaulter_1])
 
     // Confirm defaulter_1 liquidated
     assert.isFalse(await sortedCDPs.contains(defaulter_1))
@@ -2672,7 +2672,7 @@ contract('CDPManager', async accounts => {
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
 
-    await cdpManager.liquidate(defaulter_1)
+    await cdpManager.batchLiquidateTroves([defaulter_1])
 
     // Confirm defaulter_1 liquidated
     assert.isFalse(await sortedCDPs.contains(defaulter_1))

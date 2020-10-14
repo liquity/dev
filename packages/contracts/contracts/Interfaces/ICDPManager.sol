@@ -45,8 +45,6 @@ interface ICDPManager {
 
     function getCurrentICR(address _user, uint _price) external view returns (uint);
 
-    function liquidate(address _user) external;
-
     function liquidateCDPs(uint _n) external;
 
     function batchLiquidateTroves(address[] calldata _troveArray) external;

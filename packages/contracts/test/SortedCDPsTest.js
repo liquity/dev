@@ -204,7 +204,7 @@ contract('CDPManager', async accounts => {
     const price_2 = await priceFeed.getPrice()
 
     // Liquidate a trove
-    await cdpManager.liquidate(defaulter_1)
+    await cdpManager.batchLiquidateTroves([defaulter_1])
     assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
     // Check troves are ordered
