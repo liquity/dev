@@ -13,16 +13,22 @@ export const LiquityStoreProvider: React.FC<LiquityStoreProviderProps> = ({
   loader,
   children
 }) => {
-  const [loaded, setLoaded] = useState(false);
+  const [loadedStore, setLoadedStore] = useState<LiquityStore>();
 
   useEffect(() => {
-    store.onLoaded = () => setLoaded(true);
-    return store.start();
+    store.onLoaded = () => setLoadedStore(store);
+    const stop = store.start();
+
+    return () => {
+      store.onLoaded = undefined;
+      setLoadedStore(undefined);
+      stop();
+    };
   }, [store]);
 
-  if (!loaded) {
+  if (!loadedStore) {
     return <>{loader}</>;
   }
 
-  return <LiquityStoreContext.Provider value={store}>{children}</LiquityStoreContext.Provider>;
+  return <LiquityStoreContext.Provider value={loadedStore}>{children}</LiquityStoreContext.Provider>;
 };
