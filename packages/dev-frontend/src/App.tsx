@@ -6,11 +6,11 @@ import { Wallet } from "@ethersproject/wallet";
 import { Decimal, Difference, Percent } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { Trove, StabilityDeposit } from "@liquity/lib-base";
-import { addressesOf, EthersLiquity as Liquity } from "@liquity/lib-ethers";
+import { addressesOf, BlockPolledLiquityStore, EthersLiquity as Liquity } from "@liquity/lib-ethers";
+import { LiquityStoreProvider } from "@liquity/lib-react";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
-import { useLiquityStore } from "./hooks/BlockPolledLiquityStore";
 import { WalletConnector } from "./components/WalletConnector";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
 import { TroveManager } from "./components/TroveManager";
@@ -55,19 +55,15 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, provider, liquity, contracts, contractsVersion, deploymentDate } = useLiquity();
-  const storeState = useLiquityStore(provider, account, liquity);
-
-  if (!storeState.loaded) {
-    return <>{loader}</>;
-  }
+  const { account, provider, liquity, contracts } = useLiquity();
+  const store = new BlockPolledLiquityStore(provider, account, liquity);
 
   // For console tinkering ;-)
   Object.assign(window, {
     provider,
     contracts,
     addresses: addressesOf(contracts),
-    store: storeState.value,
+    store,
     liquity,
     Liquity,
     SubgraphLiquity,
@@ -79,71 +75,29 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
     Wallet
   });
 
-  const {
-    blockTag,
-    etherBalance,
-    quiBalance,
-    numberOfTroves,
-    price,
-    troveWithoutRewards,
-    totalRedistributed,
-    trove,
-    total,
-    deposit,
-    quiInStabilityPool
-  } = storeState.value;
-
   return (
-    <>
+    <LiquityStoreProvider {...{ store, loader }}>
       <Header>
-        <UserAccount {...{ account, etherBalance, quiBalance }} />
-
-        <SystemStatsPopup
-          {...{
-            numberOfTroves,
-            price,
-            total,
-            quiInStabilityPool,
-            contractsVersion,
-            deploymentDate,
-            etherBalance,
-            quiBalance
-          }}
-        />
+        <UserAccount />
+        <SystemStatsPopup />
       </Header>
 
       <Container variant="main">
         <Container variant="columns">
           <Container variant="left">
-            <TroveManager
-              {...{ liquity, troveWithoutRewards, trove, price, total, quiBalance, numberOfTroves }}
-            />
-            <StabilityDepositManager
-              {...{ liquity, deposit, trove, price, quiBalance, numberOfTroves }}
-            />
-            <RedemptionManager {...{ liquity, price, quiBalance, numberOfTroves }} />
+            <TroveManager />
+            <StabilityDepositManager />
+            <RedemptionManager />
           </Container>
 
           <Container variant="right">
-            <SystemStats
-              {...{
-                numberOfTroves,
-                price,
-                total,
-                quiInStabilityPool,
-                contractsVersion,
-                deploymentDate
-              }}
-            />
-            <PriceManager {...{ liquity, price }} />
-            <LiquidationManager {...{ liquity }} />
+            <SystemStats />
+            <PriceManager />
+            <LiquidationManager />
           </Container>
         </Container>
 
-        <RiskiestTroves
-          pageSize={10}
-          {...{ liquity, price, totalRedistributed, numberOfTroves, blockTag }}
-        />
+        <RiskiestTroves pageSize={10} />
       </Container>
 
       <Footer>
@@ -151,7 +105,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
       </Footer>
 
       <TransactionMonitor />
-    </>
+    </LiquityStoreProvider>
   );
 };
 

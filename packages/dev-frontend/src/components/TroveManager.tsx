@@ -1,39 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
-import { Decimal, Percent } from "@liquity/decimal";
-import { Trove } from "@liquity/lib-base";
-import { EthersLiquity } from "@liquity/lib-ethers";
+import { Percent } from "@liquity/decimal";
+import { LiquityStoreState, Trove } from "@liquity/lib-base";
+import { useSelector } from "@liquity/lib-react";
+
 import { usePrevious } from "../hooks/usePrevious";
+import { useLiquity } from "../hooks/LiquityContext";
 import { TroveEditor } from "./TroveEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
 
 type TroveActionProps = {
-  liquity: EthersLiquity;
   original: Trove;
   edited: Trove;
   changePending: boolean;
   setChangePending: (isPending: boolean) => void;
-  price: Decimal;
-  total: Trove;
-  quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
 const mcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO).toString(0);
 const ccrPercent = new Percent(Trove.CRITICAL_COLLATERAL_RATIO).toString(0);
 
-const TroveAction: React.FC<TroveActionProps> = ({
-  liquity,
-  original,
-  edited,
-  changePending,
-  setChangePending,
+const selectForTroveAction = ({ price, total, quiBalance, numberOfTroves }: LiquityStoreState) => ({
   price,
   total,
   quiBalance,
   numberOfTroves
+});
+
+const TroveAction: React.FC<TroveActionProps> = ({
+  original,
+  edited,
+  changePending,
+  setChangePending
 }) => {
+  const { numberOfTroves, price, quiBalance, total } = useSelector(selectForTroveAction);
+  const { liquity } = useLiquity();
+
   const myTransactionId = "trove";
   const myTransactionState = useMyTransactionState(myTransactionId);
   const { collateralDifference, debtDifference } = original.whatChanged(edited);
@@ -175,25 +177,14 @@ const TroveAction: React.FC<TroveActionProps> = ({
   );
 };
 
-type TroveManagerProps = {
-  liquity: EthersLiquity;
-  troveWithoutRewards: Trove;
-  trove: Trove;
-  price: Decimal;
-  total: Trove;
-  quiBalance: Decimal;
-  numberOfTroves: number;
-};
-
-export const TroveManager: React.FC<TroveManagerProps> = ({
-  liquity,
+const select = ({ trove, troveWithoutRewards }: LiquityStoreState) => ({
   troveWithoutRewards,
-  trove,
-  price,
-  total,
-  quiBalance,
-  numberOfTroves
-}) => {
+  trove
+});
+
+export const TroveManager: React.FC = () => {
+  const { trove, troveWithoutRewards } = useSelector(select);
+
   const previousTroveWithoutRewards = usePrevious(troveWithoutRewards);
   const [original, setOriginal] = useState(trove);
   const [edited, setEdited] = useState(trove);
@@ -220,28 +211,10 @@ export const TroveManager: React.FC<TroveManagerProps> = ({
     <>
       <TroveEditor
         title={original.isEmpty ? "Open a new Liquity Trove" : "My Liquity Trove"}
-        {...{
-          original,
-          edited,
-          setEdited,
-          changePending,
-          price
-        }}
+        {...{ original, edited, setEdited, changePending }}
       />
 
-      <TroveAction
-        {...{
-          liquity,
-          original,
-          edited,
-          changePending,
-          setChangePending,
-          price,
-          total,
-          quiBalance,
-          numberOfTroves
-        }}
-      />
+      <TroveAction {...{ original, edited, changePending, setChangePending }} />
     </>
   );
 };

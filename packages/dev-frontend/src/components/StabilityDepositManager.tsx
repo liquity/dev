@@ -1,35 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
-import { Decimal } from "@liquity/decimal";
-import { StabilityDeposit, Trove } from "@liquity/lib-base";
-import { EthersLiquity } from "@liquity/lib-ethers";
+import { StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
+import { useSelector } from "@liquity/lib-react";
+
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
+import { useLiquity } from "../hooks/LiquityContext";
 
 type StabilityDepositActionProps = {
-  liquity: EthersLiquity;
   originalDeposit: StabilityDeposit;
   editedDeposit: StabilityDeposit;
   changePending: boolean;
   setChangePending: (isPending: boolean) => void;
-  trove: Trove;
-  price: Decimal;
-  quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
-const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
-  liquity,
-  originalDeposit,
-  editedDeposit,
-  changePending,
-  setChangePending,
+const select = ({ trove, price, quiBalance, numberOfTroves }: LiquityStoreState) => ({
   trove,
   price,
   quiBalance,
   numberOfTroves
+});
+
+const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
+  originalDeposit,
+  editedDeposit,
+  changePending,
+  setChangePending
 }) => {
+  const { trove, price, quiBalance, numberOfTroves } = useSelector(select);
+  const { liquity } = useLiquity();
+
   const myTransactionId = "stability-deposit";
   const myTransactionState = useMyTransactionState(/^stability-deposit-/);
   const difference = originalDeposit.calculateDifference(editedDeposit);
@@ -120,23 +121,10 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   );
 };
 
-type StabilityDepositManagerProps = {
-  liquity: EthersLiquity;
-  deposit: StabilityDeposit;
-  trove: Trove;
-  price: Decimal;
-  quiBalance: Decimal;
-  numberOfTroves: number;
-};
+const selectDeposit = ({ deposit }: LiquityStoreState) => deposit;
 
-export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = ({
-  liquity,
-  deposit,
-  trove,
-  price,
-  quiBalance,
-  numberOfTroves
-}) => {
+export const StabilityDepositManager: React.FC = () => {
+  const deposit = useSelector(selectDeposit);
   const [originalDeposit, setOriginalDeposit] = useState(deposit);
   const [editedDeposit, setEditedDeposit] = useState(deposit);
   const [changePending, setChangePending] = useState(false);
@@ -166,17 +154,7 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
       />
 
       <StabilityDepositAction
-        {...{
-          liquity,
-          originalDeposit,
-          editedDeposit,
-          changePending,
-          setChangePending,
-          trove,
-          price,
-          quiBalance,
-          numberOfTroves
-        }}
+        {...{ originalDeposit, editedDeposit, changePending, setChangePending }}
       />
     </>
   );

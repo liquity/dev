@@ -2,33 +2,37 @@ import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
-import { EthersLiquity } from "@liquity/lib-ethers";
+import { LiquityStoreState } from "@liquity/lib-base";
+import { useSelector } from "@liquity/lib-react";
+
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { EditableRow } from "./Editor";
 import { Icon } from "./Icon";
+import { useLiquity } from "../hooks/LiquityContext";
 
 type RedemptionActionProps = {
-  liquity: EthersLiquity;
-  price: Decimal;
   exchangedQui: Decimal;
   setExchangedQui: (exchangedQui: Decimal) => void;
   changePending: boolean;
   setChangePending: (isPending: boolean) => void;
-  quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
-const RedemptionAction: React.FC<RedemptionActionProps> = ({
-  liquity,
+const selectForRedemptionAction = ({ price, quiBalance, numberOfTroves }: LiquityStoreState) => ({
   price,
+  quiBalance,
+  numberOfTroves
+});
+
+const RedemptionAction: React.FC<RedemptionActionProps> = ({
   exchangedQui,
   setExchangedQui,
   changePending,
-  setChangePending,
-  quiBalance,
-  numberOfTroves
+  setChangePending
 }) => {
+  const { price, quiBalance, numberOfTroves } = useSelector(selectForRedemptionAction);
+  const { liquity } = useLiquity();
+
   const myTransactionId = "redemption";
   const myTransactionState = useMyTransactionState(myTransactionId);
   const tentativelyConfirmed =
@@ -73,19 +77,10 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   );
 };
 
-type RedemptionManagerProps = {
-  liquity: EthersLiquity;
-  price: Decimal;
-  quiBalance: Decimal;
-  numberOfTroves: number;
-};
+const selectPrice = ({ price }: LiquityStoreState) => price;
 
-export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
-  liquity,
-  price,
-  quiBalance,
-  numberOfTroves
-}) => {
+export const RedemptionManager: React.FC = () => {
+  const price = useSelector(selectPrice);
   const zero = Decimal.from(0);
   const [exchangedQui, setExchangedQui] = useState(zero);
   const [changePending, setChangePending] = useState(false);
@@ -135,18 +130,7 @@ export const RedemptionManager: React.FC<RedemptionManagerProps> = ({
         </Box>
       </Card>
 
-      <RedemptionAction
-        {...{
-          liquity,
-          price,
-          exchangedQui,
-          setExchangedQui,
-          changePending,
-          setChangePending,
-          quiBalance,
-          numberOfTroves
-        }}
-      />
+      <RedemptionAction {...{ exchangedQui, setExchangedQui, changePending, setChangePending }} />
     </>
   );
 };
