@@ -76,15 +76,13 @@ interface ICDPManager {
 
     function removeStake(address _user) external;
 
-    function getCDPStatus(address _user) external view returns (uint);
-    
+    function isCDPActive(address _user) external view returns (bool);
+
     function getCDPStake(address _user) external view returns (uint);
 
     function getCDPDebt(address _user) external view returns (uint);
 
     function getCDPColl(address _user) external view returns (uint);
-
-    function setCDPStatus(address _user, uint num) external;
 
     function increaseCDPColl(address _user, uint _collIncrease) external returns (uint);
 

@@ -99,7 +99,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
 
         // Update loan properties
-        cdpManager.setCDPStatus(user, 1);
         cdpManager.increaseCDPColl(user, msg.value);
         cdpManager.increaseCDPDebt(user, compositeDebt);
         
@@ -332,13 +331,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- 'Require' wrapper functions ---
 
     function _requireCDPisActive(address _user) internal view {
-        uint status = cdpManager.getCDPStatus(_user);
-        require(status == 1, "BorrowerOps: CDP does not exist or is closed");
+        require(cdpManager.isCDPActive(_user), "BorrowerOps: CDP does not exist or is closed");
     }
 
     function _requireCDPisNotActive(address _user) internal view {
-        uint status = cdpManager.getCDPStatus(_user);
-        require(status != 1, "BorrowerOps: CDP is active");
+        require(!cdpManager.isCDPActive(_user), "BorrowerOps: CDP is active");
     }
 
     function _requireNotInRecoveryMode() internal view {

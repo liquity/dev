@@ -35,14 +35,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Data structures ---
 
-    enum Status { nonExistent, active, closed }
-
     // Store the necessary data for a Collateralized Debt Position (CDP)
     struct CDP {
         uint debt;
         uint coll;
         uint stake;
-        Status status;
         uint128 arrayIndex;
     }
 
@@ -682,8 +679,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         CDPs[_user].debt = _newDebt;
         CDPs[_user].coll = _newColl;
-        CDPs[_user].status = Status.active;
-    
+
         _updateCDPRewardSnapshots(_user);
         _updateStakeAndTotalStakes(_user);
         
@@ -942,7 +938,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     function hasPendingRewards(address _user) public view returns (bool) {
-        require(uint(CDPs[_user].status) == 1, "CDPManager: User does not have an active trove");
+        _requireCDPisActive(_user);
         return _hasPendingRewards(_user);
     }
     
@@ -1036,7 +1032,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint CDPOwnersArrayLength = CDPOwners.length;
         _requireMoreThanOneTroveInSystem(CDPOwnersArrayLength);
         
-        CDPs[_user].status = Status.closed;
         CDPs[_user].coll = 0;
         CDPs[_user].debt = 0;
         
@@ -1074,7 +1069,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     /* Remove a CDP owner from the CDPOwners array, not preserving order. Removing owner 'B' does the following: 
     [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. */
     function _removeCDPOwner(address _user, uint CDPOwnersArrayLength) internal {
-        require(CDPs[_user].status == Status.closed, "CDPManager: CDP is still active");
+        require(CDPs[_user].coll == 0, "CDPManager: CDP is still active");
 
         uint128 index = CDPs[_user].arrayIndex;   
         uint length = CDPOwnersArrayLength;
@@ -1159,7 +1154,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // --- 'require' wrapper functions ---
 
     function _requireCDPisActive(address _user) internal view {
-        require(CDPs[_user].status == Status.active, "CDPManager: Trove does not exist or is closed");
+        require(CDPs[_user].coll > 0, "CDPManager: Trove does not exist or is closed");
     }
 
     function _requireCLVBalanceCoversRedemption(address _user, uint _amount) internal view {
@@ -1176,8 +1171,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Trove property getters ---
 
-    function getCDPStatus(address _user) external view returns (uint) {
-        return uint(CDPs[_user].status);
+    function isCDPActive(address _user) external view returns (bool) {
+        return CDPs[_user].coll > 0;
     }
 
     function getCDPStake(address _user) external view returns (uint) {
@@ -1193,10 +1188,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     // --- Trove property setters --- 
-
-    function setCDPStatus(address _user, uint _num) external onlyBorrowerOperations {
-        CDPs[_user].status = Status(_num);
-    }
 
     function increaseCDPColl(address _user, uint _collIncrease) external onlyBorrowerOperations returns (uint) {
         uint newColl = CDPs[_user].coll.add(_collIncrease);

@@ -562,8 +562,8 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     function _requireUserHasTrove(address _user) internal view {
-        require(cdpManager.getCDPStatus(_user) == 1, "CDPManager: caller must have an active trove to withdraw ETHGain to");
+        require(cdpManager.isCDPActive(_user), "CDPManager: caller must have an active trove to withdraw ETHGain to");
     }
 
     function () external payable onlyStabilityPoolorActivePool {}
-}    
+}
