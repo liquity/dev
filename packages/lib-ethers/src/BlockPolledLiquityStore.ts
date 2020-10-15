@@ -54,7 +54,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
   start() {
     this.get().then(state => {
       if (!this.loaded) {
-        this.load(state);
+        this.load(state, {});
       }
     });
 
