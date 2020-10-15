@@ -46,7 +46,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         adjustLoan
     }
 
-    event CDPCreated(address indexed _user, uint arrayIndex);
+    event CDPCreated(address indexed _user);
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
 
     // --- Dependency setters --- 
@@ -106,8 +106,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint stake = cdpManager.updateStakeAndTotalStakes(user); 
         
         sortedCDPs.insert(user, ICR, price, _hint, _hint); 
-        uint arrayIndex = cdpManager.addCDPOwnerToArray(user);
-        emit CDPCreated(user, arrayIndex);
+        emit CDPCreated(user);
         
         // Tell PM to move the ether to the Active Pool, and mint CLV to the borrower
         poolManager.addColl.value(msg.value)(); 

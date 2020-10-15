@@ -218,7 +218,7 @@ contract('CDPManager', async accounts => {
     // Drop price
     await priceFeed.setPrice(dec(100, 18))
 
-    const arrayLength_Before = await cdpManager.getCDPOwnersCount()
+    const arrayLength_Before = await cdpManager.CDPOwnersNumber()
     assert.equal(arrayLength_Before, 6)
 
     // Confirm system is not in Recovery Mode
@@ -231,40 +231,8 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Check length of array has decreased by 1
-    const arrayLength_After = await cdpManager.getCDPOwnersCount()
+    const arrayLength_After = await cdpManager.CDPOwnersNumber()
     assert.equal(arrayLength_After, 5)
-
-    /* After Carol is removed from array, the last element (Erin's address) should have been moved to fill 
-    the empty slot left by Carol, and the array length decreased by one.  The final CDPOwners array should be:
-  
-    [W, A, B, E, D] 
-
-    Check all remaining troves in the array are in the correct order */
-    const trove_0 = await cdpManager.CDPOwners(0)
-    const trove_1 = await cdpManager.CDPOwners(1)
-    const trove_2 = await cdpManager.CDPOwners(2)
-    const trove_3 = await cdpManager.CDPOwners(3)
-    const trove_4 = await cdpManager.CDPOwners(4)
-
-    assert.equal(trove_0, whale)
-    assert.equal(trove_1, alice)
-    assert.equal(trove_2, bob)
-    assert.equal(trove_3, erin)
-    assert.equal(trove_4, dennis)
-
-    // Check correct indices recorded on the active trove structs
-    const whale_arrayIndex = (await cdpManager.CDPs(whale))[4]
-    const alice_arrayIndex = (await cdpManager.CDPs(alice))[4]
-    const bob_arrayIndex = (await cdpManager.CDPs(bob))[4]
-    const dennis_arrayIndex = (await cdpManager.CDPs(dennis))[4]
-    const erin_arrayIndex = (await cdpManager.CDPs(erin))[4]
-
-    // [W, A, B, E, D] 
-    assert.equal(whale_arrayIndex, 0)
-    assert.equal(alice_arrayIndex, 1)
-    assert.equal(bob_arrayIndex, 2)
-    assert.equal(erin_arrayIndex, 3)
-    assert.equal(dennis_arrayIndex, 4)
   })
 
 
@@ -391,7 +359,7 @@ contract('CDPManager', async accounts => {
     const alice_ICR = (await cdpManager.getCurrentICR(alice, price)).toString()
     assert.equal(alice_ICR, '1050000000000000000')
 
-    const activeTrovesCount_Before = await cdpManager.getCDPOwnersCount()
+    const activeTrovesCount_Before = await cdpManager.CDPOwnersNumber()
 
     assert.equal(activeTrovesCount_Before, 2)
 
@@ -402,7 +370,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(alice, { from: owner })
 
     // Check Alice's trove is removed, and bob remains
-    const activeTrovesCount_After = await cdpManager.getCDPOwnersCount()
+    const activeTrovesCount_After = await cdpManager.CDPOwnersNumber()
     assert.equal(activeTrovesCount_After, 1)
 
     const alice_isInSortedList = await sortedCDPs.contains(alice)
@@ -1033,7 +1001,7 @@ contract('CDPManager', async accounts => {
 
     await cdpManager.liquidateCDPs(3)
 
-    const CDPOwnersArrayLength = await cdpManager.getCDPOwnersCount()
+    const CDPOwnersArrayLength = await cdpManager.CDPOwnersNumber()
     assert.equal(CDPOwnersArrayLength, '3')
 
     // Check Alice, Bob, Carol troves have been closed

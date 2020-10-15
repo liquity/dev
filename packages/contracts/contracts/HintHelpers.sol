@@ -98,19 +98,18 @@ contract HintHelpers is LiquityBase, Ownable {
     transmission depends on getApproxHint() - it is only used to generate hints for efficient list traversal. In this case, 
     there is no profitable exploit.
     */
-    function getApproxHint(uint _CR, uint _numTrials) external view returns (address) {
-        uint arrayLength = cdpManager.getCDPOwnersCount();
-        if (arrayLength == 0 ) { return address(0); } 
-
+    function getApproxHint(uint _CR, address[] calldata _candidates) external view returns (address) {
+        uint arrayLength = _candidates.length;
         uint price = priceFeed.getPrice();
-        address hintAddress = sortedCDPs.getLast();
+
+        address hintAddress = _candidates[0];
         uint closestICR = cdpManager.getCurrentICR(hintAddress, price);
         uint diff = Math._getAbsoluteDifference(_CR, closestICR);
+
         uint i = 1;
 
-        while (i < _numTrials) {
-            uint arrayIndex = _getRandomArrayIndex(block.timestamp.add(i), arrayLength);
-            address currentAddress = cdpManager.getTroveFromCDPOwnersArray(arrayIndex);
+        while (i < arrayLength) {
+            address currentAddress = _candidates[i];
             uint currentICR = cdpManager.getCurrentICR(currentAddress, price);
 
             // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer

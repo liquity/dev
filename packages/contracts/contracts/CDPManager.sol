@@ -40,7 +40,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint debt;
         uint coll;
         uint stake;
-        uint128 arrayIndex;
     }
 
     mapping (address => CDP) public CDPs;
@@ -68,8 +67,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // Object containing the ETH and CLV snapshots for a given active CDP
     struct RewardSnapshot { uint ETH; uint CLVDebt;}
 
-    // Array of all active CDP addresses - used to compute “approx hint” for list insertion
-    address[] public CDPOwners;
+    // Number of all active CDP addresses - used to compute “approx hint” for list insertion
+    uint public CDPOwnersNumber;
 
     // Error trackers for the trove redistribution calculation
     uint public lastETHError_Redistribution;
@@ -175,7 +174,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         redeemCollateral
     }
 
-    event CDPCreated(address indexed _user, uint arrayIndex);
+    event CDPCreated(address indexed _user);
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, CDPManagerOperation operation);
     event CDPLiquidated(address indexed _user, uint _debt, uint _coll, CDPManagerOperation operation);
 
@@ -222,16 +221,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _renounceOwnership();
     }
 
-    // --- Getters ---
-
-    function getCDPOwnersCount() external view returns (uint) {
-        return CDPOwners.length;
-    }
-
-    function getTroveFromCDPOwnersArray(uint _index) external view returns (address) {
-        return CDPOwners[_index];
-    }
-
     // --- CDP Liquidation functions ---
 
     /* Single liquidation function. Closes the CDP of the specified user if its individual 
@@ -252,7 +241,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         LocalVariables_InnerSingleLiquidateFunction memory L;
 
         // If ICR >= MCR, or is last trove, don't liquidate
-        if (_ICR >= MCR || CDPOwners.length <= 1) {return V;}
+        if (_ICR >= MCR || CDPOwnersNumber <= 1) {return V;}
 
         (V.entireCDPDebt,
         V.entireCDPColl,
@@ -282,7 +271,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     {
         LocalVariables_InnerSingleLiquidateFunction memory L;
         // If is last trove, don't liquidate
-        if (CDPOwners.length <= 1) {return V;}
+        if (CDPOwnersNumber <= 1) {return V;}
 
         (V.entireCDPDebt,
         V.entireCDPColl,
@@ -685,10 +674,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         
         uint ICR = _getCurrentICR(_user, _price);
 
-        // Insert to sorted list and add to CDPOwners array
+        // Insert to sorted list
         sortedCDPs.insert(_user, ICR, _price, _user, _user);
-        _addCDPOwnerToArray(_user);
-        
+        CDPOwnersNumber++;
+
         emit CDPUpdated(_user, _newDebt, _newColl, CDPs[_user].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
     }
 
@@ -1029,8 +1018,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     function _closeCDP(address _user) internal {
-        uint CDPOwnersArrayLength = CDPOwners.length;
-        _requireMoreThanOneTroveInSystem(CDPOwnersArrayLength);
+        _requireMoreThanOneTroveInSystem();
         
         CDPs[_user].coll = 0;
         CDPs[_user].debt = 0;
@@ -1038,7 +1026,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         rewardSnapshots[_user].ETH = 0;
         rewardSnapshots[_user].CLVDebt = 0;
  
-        _removeCDPOwner(_user, CDPOwnersArrayLength);
+        CDPOwnersNumber--;
+
         sortedCDPs.remove(_user);
     }
 
@@ -1050,40 +1039,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint liquidatedColl = defaultPool.getETH();
         totalCollateralSnapshot = activeColl.sub(_collRemainder).add(liquidatedColl);
     }
-  
-    // Push the owner's address to the CDP owners list, and record the corresponding array index on the CDP struct
-    function addCDPOwnerToArray(address _user) external onlyBorrowerOperations returns (uint index) {
-        return _addCDPOwnerToArray(_user);
-    }
 
-    function _addCDPOwnerToArray(address _user) internal returns (uint128 index) {
-        require(CDPOwners.length < 2**128 - 1, "CDPManager: CDPOwners array has maximum size of 2^128 - 1");
-        
-        // Push the user to the array, and convert the returned length to index of the new element, as a uint128
-        index = uint128(CDPOwners.push(_user).sub(1));
-        CDPs[_user].arrayIndex = index;
-
-        return index;
-    }
-
-    /* Remove a CDP owner from the CDPOwners array, not preserving order. Removing owner 'B' does the following: 
-    [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. */
-    function _removeCDPOwner(address _user, uint CDPOwnersArrayLength) internal {
-        require(CDPs[_user].coll == 0, "CDPManager: CDP is still active");
-
-        uint128 index = CDPs[_user].arrayIndex;   
-        uint length = CDPOwnersArrayLength;
-        uint idxLast = length.sub(1);
-
-        assert(index <= idxLast); 
-
-        address addressToMove = CDPOwners[idxLast];
-       
-        CDPOwners[index] = addressToMove;   
-        CDPs[addressToMove].arrayIndex = index;   
-        CDPOwners.length--;  
-    }
-  
     // --- Recovery Mode and TCR functions ---
 
     function checkRecoveryMode() external view returns (bool) {
@@ -1165,8 +1121,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         require(_success, "CDPManager: Failed to send ETH to msg.sender");
     }
 
-    function _requireMoreThanOneTroveInSystem(uint CDPOwnersArrayLength) internal view {
-        require (CDPOwnersArrayLength > 1 && sortedCDPs.getSize() > 1, "CDPManager: Only one trove in the system");
+    function _requireMoreThanOneTroveInSystem() internal view {
+        // TODO:
+        require (CDPOwnersNumber > 1 && sortedCDPs.getSize() > 1, "CDPManager: Only one trove in the system");
     }
 
     // --- Trove property getters ---
@@ -1190,7 +1147,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // --- Trove property setters --- 
 
     function increaseCDPColl(address _user, uint _collIncrease) external onlyBorrowerOperations returns (uint) {
-        uint newColl = CDPs[_user].coll.add(_collIncrease);
+        uint oldColl = CDPs[_user].coll;
+        if (oldColl == 0 && _collIncrease > 0) {
+            CDPOwnersNumber++;
+        }
+        uint newColl = oldColl.add(_collIncrease);
         CDPs[_user].coll = newColl;
         return newColl;
     }

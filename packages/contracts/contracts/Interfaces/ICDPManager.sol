@@ -20,7 +20,7 @@ interface ICDPManager {
 
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
-    event CDPCreated(address indexed _user, uint arrayIndex);
+    event CDPCreated(address indexed _user);
 
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, uint8 operation);
 
@@ -38,10 +38,6 @@ interface ICDPManager {
         address _clvTokenAddress,
         address _sortedCDPsAddress
     ) external;
-
-    function getCDPOwnersCount() external view returns (uint);
-
-    function getTroveFromCDPOwnersArray(uint _index) external view returns (address);
 
     function getCurrentICR(address _user, uint _price) external view returns (uint);
 
@@ -63,8 +59,6 @@ interface ICDPManager {
     function updateStakeAndTotalStakes(address _user) external returns (uint);
 
     function updateCDPRewardSnapshots(address _user) external;
-
-    function addCDPOwnerToArray(address _user) external returns (uint index);
 
     function applyPendingRewards(address _user) external;
 
