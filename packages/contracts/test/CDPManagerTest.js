@@ -88,8 +88,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(alice, { from: owner });
 
     // check the CDP is successfully closed, and removed from sortedList
-    const status = (await cdpManager.CDPs(alice))[3]
-    assert.equal(status, 2)  // status enum  2 corresponds to "Closed"
+    assert.equal((await cdpManager.CDPs(alice))[0], 0)
     const alice_CDP_isInSortedList = await sortedCDPs.contains(alice)
     assert.isFalse(alice_CDP_isInSortedList)
   })
@@ -417,7 +416,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(10, 'ether') })
 
-    assert.equal(await cdpManager.getCDPStatus(carol), 0) // check trove non-existent
+    assert.isFalse(await cdpManager.isCDPActive(carol)) // check trove non-existent
 
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -450,7 +449,7 @@ contract('CDPManager', async accounts => {
 
     assert.isFalse(await sortedCDPs.contains(carol))
 
-    assert.equal(await cdpManager.getCDPStatus(carol), 2)  // check trove closed
+    assert.isFalse(await cdpManager.isCDPActive(carol))  // check trove closed
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -800,8 +799,7 @@ contract('CDPManager', async accounts => {
 
     // Confirm Bob's trove has been closed
     assert.isFalse(await sortedCDPs.contains(bob))
-    const bob_Trove_Status = ((await cdpManager.CDPs(bob))[3]).toString()
-    assert.equal(bob_Trove_Status, 2) // check closed
+    assert.equal((await cdpManager.CDPs(bob))[0], 0)
 
     /* Alice's CLV Loss = (300 / 400) * 210 = 157.5 CLV
        Alice's ETH gain = (300 / 400) * 2*0.995 = 1.4925 ETH
@@ -945,9 +943,9 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Check trove statuses - A active (1),  B and C closed (2)
-    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '1')
-    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
+    assert.notEqual((await cdpManager.CDPs(alice))[0], 0)
+    assert.equal((await cdpManager.CDPs(bob))[0], 0)
+    assert.equal((await cdpManager.CDPs(carol))[0], 0)
   })
 
   it('liquidateCDPs(): closes every CDP with ICR < MCR, when n > number of undercollateralized troves', async () => {
@@ -1004,11 +1002,11 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(flyn))
 
     // Check all troves A-E are now closed
-    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(erin))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(flyn))[3].toString(), '2')
+    assert.equal((await cdpManager.CDPs(alice))[0], 0)
+    assert.equal((await cdpManager.CDPs(bob))[0], 0)
+    assert.equal((await cdpManager.CDPs(carol))[0], 0)
+    assert.equal((await cdpManager.CDPs(erin))[0], 0)
+    assert.equal((await cdpManager.CDPs(flyn))[0], 0)
 
     // Check sorted list has been reduced to length 4 
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
@@ -1039,13 +1037,9 @@ contract('CDPManager', async accounts => {
     assert.equal(CDPOwnersArrayLength, '3')
 
     // Check Alice, Bob, Carol troves have been closed
-    const aliceCDPStatus = (await cdpManager.getCDPStatus(alice)).toString()
-    const bobCDPStatus = (await cdpManager.getCDPStatus(bob)).toString()
-    const carolCDPStatus = (await cdpManager.getCDPStatus(carol)).toString()
-
-    assert.equal(aliceCDPStatus, '2')
-    assert.equal(bobCDPStatus, '2')
-    assert.equal(carolCDPStatus, '2')
+    assert.isFalse(await cdpManager.isCDPActive(alice))
+    assert.isFalse(await cdpManager.isCDPActive(bob))
+    assert.isFalse(await cdpManager.isCDPActive(carol))
 
     //  Check Alice, Bob, and Carol's trove are no longer in the sorted list
     const alice_isInSortedList = await sortedCDPs.contains(alice)
@@ -1057,11 +1051,8 @@ contract('CDPManager', async accounts => {
     assert.isFalse(carol_isInSortedList)
 
     // Check Dennis, Erin still have active troves
-    const dennisCDPStatus = (await cdpManager.getCDPStatus(dennis)).toString()
-    const erinCDPStatus = (await cdpManager.getCDPStatus(erin)).toString()
-
-    assert.equal(dennisCDPStatus, '1')
-    assert.equal(erinCDPStatus, '1')
+    assert.isTrue(await cdpManager.isCDPActive(dennis))
+    assert.isTrue(await cdpManager.isCDPActive(erin))
 
     // Check Dennis, Erin still in sorted list
     const dennis_isInSortedList = await sortedCDPs.contains(dennis)
@@ -1183,9 +1174,9 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // check trove statuses - A active (1),  B and C closed (2)
-    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '1')
-    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
+    assert.notEqual((await cdpManager.CDPs(alice))[0], 0)
+    assert.equal((await cdpManager.CDPs(bob))[0], 0)
+    assert.equal((await cdpManager.CDPs(carol))[0], 0)
   })
 
   it("liquidateCDPs(): does nothing if n = 0", async () => {
@@ -1581,9 +1572,9 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Check all troves A-C are now closed
-    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
+    assert.equal((await cdpManager.CDPs(alice))[0], 0)
+    assert.equal((await cdpManager.CDPs(bob))[0], 0)
+    assert.equal((await cdpManager.CDPs(carol))[0], 0)
 
     // Check sorted list has been reduced to length 3
     assert.equal((await sortedCDPs.getSize()).toString(), '3')
@@ -1629,8 +1620,8 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(bob))
 
     // Check all troves A-B are now closed
-    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
+    assert.equal((await cdpManager.CDPs(alice))[0], 0)
+    assert.equal((await cdpManager.CDPs(bob))[0], 0)
 
     // Confirm troves C-E remain in the system
     assert.isTrue(await sortedCDPs.contains(carol))
@@ -1638,9 +1629,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(await sortedCDPs.contains(erin))
 
     // Check all troves C-E are still active
-    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '1')
-    assert.equal((await cdpManager.CDPs(dennis))[3].toString(), '1')
-    assert.equal((await cdpManager.CDPs(erin))[3].toString(), '1')
+    assert.notEqual((await cdpManager.CDPs(carol))[0], 0)
+    assert.notEqual((await cdpManager.CDPs(dennis))[0], 0)
+    assert.notEqual((await cdpManager.CDPs(erin))[0], 0)
 
     // Check sorted list has been reduced to length 4
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
@@ -1693,8 +1684,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(await sortedCDPs.contains(whale))
 
     // Check all troves D-E and whale remain active
-    assert.equal((await cdpManager.CDPs(dennis))[3].toString(), '1')
-    assert.equal((await cdpManager.CDPs(erin))[3].toString(), '1')
+    assert.notEqual((await cdpManager.CDPs(dennis))[0], 0)
+    assert.notEqual((await cdpManager.CDPs(erin))[0], 0)
+
     assert.isTrue(await sortedCDPs.contains(whale))
 
     // Check sorted list has been reduced to length 3
@@ -1744,7 +1736,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
     await borrowerOperations.openLoan(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
-    assert.equal(await cdpManager.getCDPStatus(carol), 0) // check trove non-existent
+    assert.isFalse(await cdpManager.isCDPActive(carol)) // check trove non-existent
 
     // Check full sorted list size is 6
     assert.equal((await sortedCDPs.getSize()).toString(), '5')
@@ -1781,15 +1773,15 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(bob))
 
     // Check all troves A-B are now closed
-    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
+    assert.equal((await cdpManager.CDPs(alice))[0], 0)
+    assert.equal((await cdpManager.CDPs(bob))[0], 0)
 
     // Check sorted list has been reduced to length 3
     assert.equal((await sortedCDPs.getSize()).toString(), '3')
 
     // Confirm trove C non-existent
     assert.isFalse(await sortedCDPs.contains(carol))
-    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '0')
+    assert.equal((await cdpManager.CDPs(carol))[0], 0)
 
     // Check Stability pool has only been reduced by A-B
     assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(150, 18))
@@ -1828,7 +1820,7 @@ contract('CDPManager', async accounts => {
 
     assert.isFalse(await sortedCDPs.contains(carol))
 
-    assert.equal(await cdpManager.getCDPStatus(carol), 2)  // check trove closed
+    assert.isFalse(await cdpManager.isCDPActive(carol))  // check trove closed
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -1853,9 +1845,9 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(bob))
 
     // Check all troves A-C are now closed
-    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
+    assert.equal((await cdpManager.CDPs(alice))[0], 0)
+    assert.equal((await cdpManager.CDPs(bob))[0], 0)
+    assert.equal((await cdpManager.CDPs(carol))[0], 0)
 
     // Check sorted list has been reduced to length 3
     assert.equal((await sortedCDPs.getSize()).toString(), '3')
@@ -1997,12 +1989,9 @@ contract('CDPManager', async accounts => {
     assert.equal(carol_Debt, 0)
 
     // check Alice, Bob and Carol troves are closed
-    const alice_Status = await cdpManager.getCDPStatus(alice)
-    const bob_Status = await cdpManager.getCDPStatus(bob)
-    const carol_Status = await cdpManager.getCDPStatus(carol)
-    assert.equal(alice_Status, 2)
-    assert.equal(bob_Status, 2)
-    assert.equal(carol_Status, 2)
+    assert.isFalse(await cdpManager.isCDPActive(alice))
+    assert.isFalse(await cdpManager.isCDPActive(bob))
+    assert.isFalse(await cdpManager.isCDPActive(carol))
 
     // check debt and coll of Dennis, Erin has not been impacted by redemption
     const dennis_Debt = await cdpManager.getCDPDebt(dennis)
