@@ -31,16 +31,16 @@
 \textbf{Core Proofs}
 
 \begin{itemize}
-  \item Proof: $ICR_1=ICR_2$ in simple case. $1^{st}$ order, 1 past liquidation. Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
-  \item Proof: $ICR_1=ICR_2$ in general case. $1^{st}$ order, M past liquidations. Evolves to $2^{nd}$ order - 1 new stake, 1 subsequent liquidation
+  \item Proof 1: $ICR_1=ICR_2$ in simple case. $1^{st}$ order, 1 past liquidation. Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
+  \item Proof 2: $ICR_1=ICR_2$ in general case. $1^{st}$ order, M past liquidations. Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
 \end{itemize}
 
 \bigskip
 \textbf{Extensions}
 
 \begin{itemize}
-  \item Proof: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
-  \item Proof: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
+  \item Proof 3: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
+  \item Proof 4: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
   \item Show $2^{nd}$ order system is equivalent to first order 
   \item Show that $n^{th}$ order system is equivalent to first order
 \end{itemize}
@@ -84,7 +84,7 @@ We capture this in a system evolution function:
 \bigskip
 Let $S_1$ define a system of CDPs with past liquidations, in which all active CDPs have received reward shares from all past liquidations. $S_1$ is a first-order system, and contains only first-order stakes. Each stake $s_i$ is equal to it’s collateral $c_i$, and \textit{totalStakes} $= \sum s_i = \sum c_i$.\\
 
-Let $S_2$ define an evolution of S1, i.e. $S_2 = f(S_1)$. $S_2$ is a system with past liquidations, with \textit{totalStakes} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of a newly added $CDP_j$.$S_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
+Let $S_2$ define an evolution of S1, i.e. $S_2 = f(S_1)$. $S_2$ is a system with past liquidations, with \textit{totalStakes} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added $CDP_j$. $S_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
 
 In general, $S_n$ is a system with n sequential pairs, each consisting of a CDP creation period and a liquidation period. CDP's made in a given CDP creation period t have experienced only those liquidations that occurred in liquidation period t or greater.
 
@@ -102,7 +102,7 @@ To correct for the advantage gained by later stakes over earlier stakes, we intr
 \end{equation}
 
 \bigskip
-Where $totalCollateral_\emptyset$ and $totalCollateral_\emptyset$ are the respective snapshots of the total stakes and total collateral in the system, taken immediately after the last liquidation event.
+Where $totalStakes_\emptyset$ and $totalCollateral_\emptyset$ are the respective snapshots of the total stakes and total collateral in the system, taken immediately after the last liquidation event. Note that with this terminology, the total collateral includes the total stakes, and therefore $totalCollateral_\emptyset \ge totalStakes_\emptyset$
 
 \bigskip
 \textbf{At First-Order, Stake Equals Initial Collateral}
@@ -142,24 +142,24 @@ Each initial $CDP_i$ has collateral $c_i$ and debt $d_i$.\\
 
 Then, the first liquidation occurs: $CDP_j$ with collateral $c_j$, debt $d_j$, is redistributed. The total number of active CDPs reduces from $n+1$ to $n$.\\
 
-Each remaining active $CDP_i$ earns a collateral reward $x_i$, which is, proportional to the liquidated collateral $c_j$, and $CDP_i$’s stake as a share of total stakes:
+Each remaining active $CDP_i$ earns a collateral reward $x_i$, which is proportional to the liquidated collateral $c_j$, and $CDP_i$’s stake as a share of total stakes:
 
 \begin{equation} 
-    x_i=\frac{c_j \cdot s_i}{\sum\limits^n_{i=1}s_i}
+    x_i=\frac{c_j \cdot s_i}{\sum\limits^{n+1}_{\substack{i=1\\i \ne j}}s_i}
 \end{equation}
 
 \bigskip
 By equation 3), the property of a first-order system, $s_i$ equals $c_i$:
 
-\begin{equation} 
-    x_i=\frac{c_j \cdot c_i}{\sum\limits^n_{i=1}c_i}
+\begin{equation}
+    x_i=\frac{c_j \cdot c_i}{\sum\limits^{n+1}_{\substack{i=1\\i \ne j}}c_i}
 \end{equation}
 
 \bigskip
 For simplicity, let:
 
 \begin{equation} 
-    C_n=\sum^n_{i=1}(c_i)
+    C_n=\sum^{n+1}_{\substack{i=1\\i \ne j}}(c_i)
 \end{equation}
 
 \bigskip
@@ -168,7 +168,7 @@ There are now $n$ CDPs in the system.\\
 Let the sum of accumulated rewards over all active CDPs be given by: 
 
 \begin{equation} 
-    X_n=\sum^n_{i=1}x_i
+    X_n=\sum^{n+1}_{\substack{i=1\\i \ne j}}x_i
 \end{equation}
 
 \bigskip
@@ -181,6 +181,9 @@ Note that after the liquidation, the system snapshots update:
 \begin{equation} 
     totalCollateral_\emptyset=C_n+X_n
 \end{equation}
+
+\bigskip
+(Note also that $X_n=c_j$ and therefore $totalCollateral_\emptyset=C_n+c_j=C_{n+1}$)
 
 \bigskip
 Now, a fresh CDP is added, $CDP_F$, with collateral $c_F$.  Let the ICR of $CDP_F$ equal the ICR of an active first-order $CDP_G$:
@@ -244,11 +247,11 @@ The event causes $CDP_Z$’s collateral and debt ($c_Z$ and $d_Z$) to be redistr
 For simplicity, let :
 
 \begin{equation} 
-    a=\frac{c_z}{totalStakes}
+    a=\frac{c_Z+x_Z}{totalStakes}
 \end{equation}
 
 \begin{equation} 
-    b=\frac{d_z}{totalStakes}
+    b=\frac{d_Z+y_Z}{totalStakes}
 \end{equation}
 
 \bigskip
@@ -285,10 +288,10 @@ Now, substituting in the expression for F’s collateral, 14), we obtain:
 \end{equation}
 
 \bigskip
-Consider the term, $x_\mathsmaller{G}$, which represents the total accumulated past reward of $CDP_G$ before liquidation of $CDP_z$.  Since $CDP_j$ was the only previous liquidation:
+Consider the term, $x_\mathsmaller{G}$, which represents the total accumulated past reward of $CDP_G$ before liquidation of $CDP_Z$.  Since $CDP_j$ was the only previous liquidation:
 
 \begin{equation} 
-    x_\mathsmaller{G}=\frac{s_\mathsmaller{G}c_j}{\sum\limits^n_{i=1}s_i}
+    x_\mathsmaller{G}=\frac{s_\mathsmaller{G}c_j}{\sum\limits^{n+1}_{\substack{i=1\\i \ne j}}s_i}
 \end{equation}
 
 \bigskip
@@ -306,7 +309,7 @@ By the same token, the total accumulated rewards for all active CDPs, from liqui
 \end{equation}
 
 \bigskip
-Substituting these expressions for $x_g$ and $X_n$ in to 23), yields:
+Substituting these expressions for $x_\mathsmaller{G}$ and $X_n$ into 23), yields:
 
 \begin{equation} 
         s_\mathsmaller{F}=\frac{k(c_\mathsmaller{G}C_n+c_\mathsmaller{G}c_j)}{C_n+c_j}
@@ -334,7 +337,7 @@ We now compare ICRs of $CDP_F$ and $CDP_G$, after liquidation of $CDP_Z$.
 \end{equation}
 
 \begin{equation} 
-    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_g+r_{c\mathsmaller{G}}}{d_\mathsmaller{G}+y_\mathsmaller{G}+r_{d\mathsmaller{G}}}
+    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+r_{c\mathsmaller{G}}}{d_\mathsmaller{G}+y_\mathsmaller{G}+r_{d\mathsmaller{G}}}
 \end{equation}
 
 \bigskip
@@ -349,7 +352,7 @@ Using 20), the individual rewards as functions of stakes:
 \end{equation}
 
 \bigskip
-Now, substituting our definitions for $s_g$ (21 ) and $s_F$ (29):
+Now, substituting our definitions for $s_\mathsmaller{G}$ (21) and $s_F$ (29):
 
 \begin{equation} 
     ICR_{F \; After}=\frac{c_\mathsmaller{F}+akc_\mathsmaller{G}}{d_\mathsmaller{F}+bkc_\mathsmaller{G}}
@@ -363,7 +366,7 @@ Now, substituting our definitions for $s_g$ (21 ) and $s_F$ (29):
 Using identities 14) for $c_F$, and 15) for $d_F$:
 
 \begin{equation} 
-    ICR_{F \; After}=\frac{k(c_\mathsmaller{G}x_\mathsmaller{G}+ac_\mathsmaller{G})}{k(d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G})}
+    ICR_{F \; After}=\frac{k(c_\mathsmaller{G} + x_\mathsmaller{G}+ac_\mathsmaller{G})}{k(d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G})}
 \end{equation}
 
 \begin{equation} 
@@ -374,7 +377,7 @@ Using identities 14) for $c_F$, and 15) for $d_F$:
 Cancelling $k$:
 
 \begin{equation} 
-        ICR_{K \; After}=\frac{c_\mathsmaller{G}x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
+        ICR_{F \; After}=\frac{c_\mathsmaller{G} + x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
 \end{equation}
 
 \begin{equation} 
@@ -385,7 +388,7 @@ Cancelling $k$:
 Thus:
 
 \begin{equation} 
-    ICR_{K \; After}=ICR_{G \; After}
+    ICR_{F \; After}=ICR_{G \; After}
 \end{equation}
 
 \bigskip
@@ -405,11 +408,13 @@ We now extend the above proof to cover the following event sequence:
 \bigskip
 In other words, a first-order system of $n+m$ CDPs undergoes $m$ CDP liquidations, before evolving to second-order.  All other conditions remain the same.\\
 
-Consider the $m$ past liquidations from the point of view of an active first-order $CDP_i$. As per 2), the stake of $CDP_i$ is $si = ci$.\\
+Consider the $m$ past liquidations from the point of view of an active first-order $CDP_i$. As per 2), the stake of $CDP_i$ is $s_i = c_i$.\\
 
 $CDP_i$ earns total accumulated reward, $x_i$  the sum of its rewards from $m$ liquidations.\\
 
-With each liquidation, $l_j$ collateral is removed from the system. Again, as per 2), stake equals collateral. Thus, the $totalStakes$ denominator in each liquidation is reduced by $l_j$, where $j$ denotes the index of the liquidated CDP.\\ 
+With each liquidation, $c_j$ collateral is removed from the system. Again, as per 2), stake equals collateral. Thus, the $totalStakes$ numerator in each liquidation is reduced by $c_j$, where $j$ denotes the index of the liquidated CDP.\\ 
+
+(Let’s assume $n+1 ... n+m$ are the liquidated CDPs and $1 ... n$ are the ones staying, for simplicity)\\
 
 Let
 
@@ -421,25 +426,25 @@ Let
 and
 
 \begin{equation} 
-    L_m=\sum\limits^m_{j=1}l_j
+    L_m=\sum\limits^m_{j=1}c_{n+j}
 \end{equation}
 
 \bigskip
-We now sum all reward events, noting that the liquidated CDP’s collateral is removed from the $totalStakes$ denominator at each reward:
+We now sum all reward events, noting that the liquidated CDP’s collateral is removed from the $totalStakes$ numerator at each reward:
 
 \begin{equation} 
-    x_i=c_i\left\{\left[\frac{(l_1+x_1}{C_{n+m}-L_1)}\right]+\left[\frac{(l_2+x_2}{C_{n+m}-L_2)}\right]+\left[\frac{(l_3+x_3}{C_{n+m}-L_3)}\right]+...+\left[\frac{(l_m+x_m}{C_{n+m}-L_m)}\right]\right\}
+    x_i=c_i\left[\frac{c_{n+1}+x_{n+1}}{C_{n+m}-L_1}+\frac{c_{n+2}+x_{n+2}}{C_{n+m}-L_2}+\frac{c_{n+3}+x_{n+3}}{C_{n+m}-L_3}+...+\frac{c_{n+m}+x_{n+m}}{C_{n+m}-L_m}\right]
 \end{equation}
 
 \bigskip
 i.e.
 
 \begin{equation} 
-    x_i=c_i\sum\limits^m_{j=1}\left[\frac{(l_j+x_j)}{\sum\limits^{n+m}_{i=1}c_i-\sum\limits^j_{p=1}l_p}\right]
+    x_i=c_i\sum\limits^m_{j=1}\frac{c_{n+j}+x_{n+j}}{\sum\limits^{n+m}_{i=1}c_i-\sum\limits^j_{p=1}c_{n+p}}
 \end{equation}
 
 \bigskip
-(Note, that for liquidation of a given $CDP_j$, the redistributed collateral is the sum of its collateral $l_j$ plus it’s accumulated collateral reward $x_j$  which has itself been earned from liquidations $[1, 2, 3, … j-1]$.  Thus, liquidations have a “roll-up” effect - though, it is not important for our result.)\\
+(Note, that for liquidation of a given $CDP_j$, the redistributed collateral is the sum of its collateral $c_{n+j}$ plus it’s accumulated collateral reward $x_{n+j}$ which has itself been earned from liquidations $[n+1, n+2, n+3, … n+j-1]$.  Thus, liquidations have a “roll-up” effect - though, it is not important for our result. Actually, it can also be proved that $x_i=c_i\frac{L_m}{C_n}$)\\
 
 We label the main sum expression $H$.\\
 
@@ -461,6 +466,9 @@ Summing over all $n$ active CDPs gives the total accumulated rewards for active 
 \end{equation}
 
 \bigskip
+(Note: It can also be proved that $X_n=L_m$)
+
+\bigskip
 Now, a fresh CDP is added, $CDP_F$, with collateral $c_F$.  Let the ICR of $CDP_F$ equal the ICR of an active first-order $CDP_G$.\\
 
 Now, $CDP_Z$ liquidates. Upon liquidation, the second-order $CDP_F$ and the first-order $CDP_G$ earn the following collateral rewards:
@@ -478,11 +486,11 @@ Now, $CDP_Z$ liquidates. Upon liquidation, the second-order $CDP_F$ and the firs
 where
 
 \begin{equation} 
-    a=\frac{c_z+x_z}{totalStakes}
+    a=\frac{c_Z+x_Z}{totalStakes}
 \end{equation}
 
 \begin{equation} 
-    b=\frac{d_z+y_z}{totalStakes}
+    b=\frac{d_Z+y_Z}{totalStakes}
 \end{equation}
 
 \bigskip
@@ -498,7 +506,7 @@ Again, we now seek $s_F$ as a linear function of $c_G$.\\
 The stake $s_\mathsmaller{F}$ can be derived in exactly the same manner as in the simple case. By our corrected stakes rule, and the fact that $ICR_F = ICR_G$, we obtain:
 
 \begin{equation} 
-    s_\mathsmaller{F}=\frac{k(c_G+x_G)C_n}{C_n+H_n}
+    s_\mathsmaller{F}=\frac{k(c_G+x_G)C_n}{C_n+X_n}
 \end{equation}
 
 \begin{center}
@@ -534,25 +542,25 @@ We obtain the same result for $s_F$ as in the single liquidation case 29) .Compa
 \end{equation}
 
 \bigskip
-\subsection*{EXTENSION 1. Arbitrary Number of Liquidation Events At Current System Order}
+\subsection*{EXTENSION PROOF 3. Arbitrary Number of Liquidation Events At Current System Order}
 
 If instead of a single liquidation event at a given system order, we have $P$ liquidation events, it is clear that ICR equality holds across all $P$ events:\\
 
 Since ICR equality holds across one liquidation event, it will hold across the next, and thus hold for all.\\
 
-Liquidation events do not alter the stakes that earn shares of liquidated collateral and debt - and for a given stake, the individual CDP reward term $x_i$ given in 4) depends only reward sizes and the total stakes.
+Liquidation events do not alter the stakes that earn shares of liquidated collateral and debt - and for a given stake, the individual CDP reward term $x_i$ given in 4) depends only on reward sizes and the total stakes.
 
 \bigskip
-\subsection*{EXTENSION 2. Arbitrary Number of CDPs Added Between Liquidation Events}
+\subsection*{EXTENSION PROOF 4. Arbitrary Number of CDPs Added Between Liquidation Events}
 
 With $N$ second-order CDPs added between consecutive liquidation events, the stake $s_F$ of any given second-order CDP is given by 1): 
 
 \begin{equation} 
-    s_i=\frac{c_i \cdot totalStakes_\emptyset}{totalColateral_\emptyset}
+    s_F=\frac{c_F \cdot totalStakes_\emptyset}{totalColateral_\emptyset}
 \end{equation}
 
 \bigskip
-The snapshots of the system state after the last liquidation event ($totalStakes_\emptyset$, $totalColateral_\emptyset$) remain constant until the next liquidation. It is clear that all $N$ second-order stakes $s_i$ have been corrected by the same constant factor.\\
+The snapshots of the system state after the last liquidation event ($totalStakes_\emptyset$, $totalColateral_\emptyset$) remain constant until the next liquidation. It is clear that all $N$ second-order stakes $s_F$ have been corrected by the same constant factor.\\
 
 Thus, $s_F$ in the N second-order CDPs case is equal to $s_F$ in the single second-order CDP case.\\
 
@@ -631,7 +639,7 @@ Repeating the steps, it is clear that\\
 
 $S_N=f^{N-2}(S_1)$
 
-$S_N=f^{N-2}(S_1)$
+$S_N=f^{N-3}(S_1)$
 
 ...etc, \\
 
@@ -651,13 +659,7 @@ Having shown all nth order systems are equivalent to a first order system, we no
 \bigskip
 \textbf{CONCLUSION 2}
 
-\uline{In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order CDPs added after the last liquidation, ICR equality between an $N-1^{th}$ order CDP and $n^{th}$ order CDP holds across $P$ liquidation events.}
-
-
-
-
-
-
+\uline{In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order CDPs added after the last liquidation, ICR equality between an $(n-1)^{th}$ order CDP and $n^{th}$ order CDP holds across $P$ liquidation events.}
 
 
 \end{document}
