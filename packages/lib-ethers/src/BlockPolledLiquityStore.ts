@@ -2,13 +2,15 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Provider } from "@ethersproject/abstract-provider";
 
 import { Decimal } from "@liquity/decimal";
-import { LiquityStore, LiquityStoreState } from "@liquity/lib-base";
+import { LiquityStore, LiquityStoreState, LiquityStoreBaseState } from "@liquity/lib-base";
 
 import { EthersLiquity } from "./EthersLiquity";
 
 export type BlockPolledLiquityStoreExtraState = {
   blockTag?: number;
 };
+
+export type BlockPolledLiquityStoreState = LiquityStoreState<BlockPolledLiquityStoreExtraState>;
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
 type ResolvedValues<T> = { [P in keyof T]: Resolved<T[P]> };
@@ -35,7 +37,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     this.liquity = liquity;
   }
 
-  private get(blockTag?: number): Promise<LiquityStoreState> {
+  private get(blockTag?: number): Promise<LiquityStoreBaseState> {
     return promiseAllValues({
       accountBalance: this.provider.getBalance(this.account, blockTag).then(decimalify),
       quiBalance: this.liquity.getQuiBalance(this.account, { blockTag }),

@@ -12,7 +12,7 @@ export class StabilityDeposit {
   readonly depositAfterLoss: Decimal;
   readonly pendingCollateralGain: Decimal;
 
-  get isEmpty() {
+  get isEmpty(): boolean {
     return this.deposit.isZero && this.depositAfterLoss.isZero && this.pendingCollateralGain.isZero;
   }
 
@@ -26,7 +26,7 @@ export class StabilityDeposit {
     this.pendingCollateralGain = Decimal.from(pendingCollateralGain);
   }
 
-  toString() {
+  toString(): string {
     return (
       "{\n" +
       `  deposit: ${this.deposit},\n` +
@@ -36,7 +36,7 @@ export class StabilityDeposit {
     );
   }
 
-  equals(that: StabilityDeposit) {
+  equals(that: StabilityDeposit): boolean {
     return (
       this.deposit.eq(that.deposit) &&
       this.depositAfterLoss.eq(that.depositAfterLoss) &&
@@ -44,19 +44,22 @@ export class StabilityDeposit {
     );
   }
 
-  calculateDifference(that: StabilityDeposit) {
+  calculateDifference(that: StabilityDeposit): Difference | undefined {
     if (!that.depositAfterLoss.eq(this.depositAfterLoss)) {
       return Difference.between(that.depositAfterLoss, this.depositAfterLoss);
     }
   }
 
-  apply(difference?: Difference) {
+  apply(difference?: Difference): StabilityDeposit {
     if (difference?.positive) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return new StabilityDeposit({ deposit: this.depositAfterLoss.add(difference.absoluteValue!) });
     } else if (difference?.negative) {
       return new StabilityDeposit({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         deposit: difference.absoluteValue!.lt(this.depositAfterLoss)
-          ? this.depositAfterLoss.sub(difference.absoluteValue!)
+          ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.depositAfterLoss.sub(difference.absoluteValue!)
           : 0
       });
     } else {
