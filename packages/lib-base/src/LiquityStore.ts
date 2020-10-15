@@ -24,7 +24,7 @@ export type LiquityStoreState<T = unknown> = LiquityStoreBaseState & LiquityStor
 
 export type LiquityStoreListener<T = unknown> = (
   newState: LiquityStoreState<T>,
-  oldState?: LiquityStoreState<T>
+  oldState: LiquityStoreState<T>
 ) => void;
 
 const strictEquals = <T>(a: T, b: T) => a === b;
@@ -171,8 +171,6 @@ export abstract class LiquityStore<T = unknown> {
     if (this.onLoaded) {
       this.onLoaded();
     }
-
-    this.notify(Object.assign({}, this.baseState, this.derivedState, this.extraState));
   }
 
   protected update(

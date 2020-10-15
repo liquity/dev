@@ -31,7 +31,7 @@ export const useSelector = <P, T>(select: (state: LiquityStoreState<T>) => P): P
   useEffect(
     () =>
       store.subscribe((newState, oldState) => {
-        if (oldState === undefined || !equals(select(newState), select(oldState))) {
+        if (!equals(select(newState), select(oldState))) {
           rerender();
         }
       }),
