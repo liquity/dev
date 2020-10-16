@@ -53,6 +53,8 @@ export const logDescriptionToString = (
     } else if (typeof arg === "string") {
       return arg === "0x0000000000000000000000000000000000000000"
         ? "address(0)"
+        : arg === "0x00000000000000000000000000000000000009A5"
+        ? "gasPool"
         : names
         ? substituteName(arg, names)
         : arg;
