@@ -263,7 +263,10 @@ static async connectGTContractsToCore(GTContracts, coreContracts) {
   await GTContracts.gtStaking.setCLVTokenAddress(coreContracts.clvToken.address)
   await GTContracts.gtStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
   await GTContracts.gtStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
+  await GTContracts.communityIssuance.setPoolManagerAddress(coreContracts.poolManager.address)
+  await GTContracts.communityIssuance.activateContract();
 }
+
 }
 
 module.exports = DeploymentHelper

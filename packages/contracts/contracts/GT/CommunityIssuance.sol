@@ -9,9 +9,11 @@ contract CommunityIssuance {
 
     // --- Data ---
 
+    uint constant public SECONDS_IN_ONE_MINUTE = 60;
+    
     // Determines the curvature of the issuance curve
     uint constant public ISSUANCE_FACTOR = 2e18; 
-    
+
     address public communityIssuanceDeployer;
 
     address public growthTokenAddress;
@@ -80,7 +82,7 @@ contract CommunityIssuance {
     t:  time passed since last LQTY issuance event 
     */
     function _getCumulativeIssuanceFraction() internal view returns (uint) {
-        uint timePassed = block.timestamp.sub(deploymentTime);
+        uint timePassed = block.timestamp.sub(deploymentTime).div(SECONDS_IN_ONE_MINUTE);
 
         // f^(-t)
         uint power = Math._decPow(ISSUANCE_FACTOR, timePassed);
@@ -107,7 +109,7 @@ contract CommunityIssuance {
     }
 
     function _requireContractIsActive() internal view {
-        require(active == true, "CDLC: Contract must be inactive");
+        require(active == true, "CDLC: Contract must be active");
     }
 
     function _requireContractIsNotActive() internal view {

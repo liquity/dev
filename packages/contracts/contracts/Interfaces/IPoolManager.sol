@@ -59,6 +59,8 @@ interface IPoolManager {
     
     function repayCLV(address _account, uint _CLV) external;
 
+    function closeLoan(address _troveCloser, uint _debtRepayment, uint _collWithdrawal) external;
+
     function liquidate(uint _CLV, uint _ETH) external;
   
     function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external;
