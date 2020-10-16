@@ -607,50 +607,30 @@ Therefore any second order system is equivalent to a first order system that con
 
 \bigskip
 \textbf{N’th Order Systems Collapse to 1st Order}\\
+We prove it by induction. We have already proved for $n=1$ that $S_1=S_2$.
+Now we show that if it’s true for $n-1$ then it’s true for $n$, i.e.:
+
+\begin{equation}
+    S_{n-1} = S_n \Rightarrow S_n = S_{n+1}
+\end{equation}
+
 Recall our system evolution function: 
 
 \begin{equation} 
     f(S_N)=S_{N+1}
 \end{equation}
 
-\bigskip
-By definition, our $N$’th order system is the $N$’th evolution of a first order system:
+Therefore:
 
 \begin{equation} 
-    S_N=f^N(S_1)
+    S_{N+1} = f(S_N) = f(S_{n-1}) = S_N
 \end{equation}
 
 \bigskip
-And thus the $N-1^{th}$ evolution of a second-order system:
-
-\begin{equation} 
-    S_N=f^{N-1}(S_2)
-\end{equation}
-
-\bigskip
-By equivalence 61):
-
-\begin{equation} 
-    S_N=f^{N-1}(S_1)
-\end{equation}
-
-\bigskip
-Repeating the steps, it is clear that\\
-
-$S_N=f^{N-2}(S_1)$
-
-$S_N=f^{N-3}(S_1)$
-
-...etc, \\
-
-and finally:
+So, for every $N$, $S_N = S_{N-1}$, and for the transitive property of equivalence, we finally have:
 
 \begin{equation}
-    \begin{split}
-        S_N=f(S_1)\\
-        S_N=S_2\\
-        S_N=S_1
-    \end{split}
+    S_N=S_1
 \end{equation}
 
 \bigskip
