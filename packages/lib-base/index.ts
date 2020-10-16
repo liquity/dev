@@ -3,3 +3,4 @@ export * from "./src/StabilityDeposit";
 export * from "./src/ReadableLiquity";
 export * from "./src/TransactableLiquity";
 export * from "./src/HintedLiquity";
+export * from "./src/LiquityStore";

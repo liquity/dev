@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Percent, Difference } from "@liquity/decimal";
-import { Trove } from "@liquity/lib-base";
+import { Percent, Difference } from "@liquity/decimal";
+import { Trove, LiquityStoreState } from "@liquity/lib-base";
+import { useSelector } from "@liquity/lib-react";
+
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Icon } from "./Icon";
@@ -13,17 +15,19 @@ type TroveEditorProps = {
   edited: Trove;
   setEdited: (trove: Trove) => void;
   changePending: boolean;
-  price: Decimal;
 };
+
+const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const TroveEditor: React.FC<TroveEditorProps> = ({
   title,
   original,
   edited,
   setEdited,
-  changePending,
-  price
+  changePending
 }) => {
+  const price = useSelector(selectPrice);
+
   const editingState = useState<string>();
 
   const { collateralDifference, debtDifference } = original.whatChanged(edited);

@@ -5,37 +5,37 @@ import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Card, Button, Text, Box, Heading, Flex, Styled } from "theme-ui";
 
-import { Decimal, Percent } from "@liquity/decimal";
+import { Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib-base";
-import { EthersLiquity } from "@liquity/lib-ethers";
+import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
+
 import { shortenAddress } from "../utils/shortenAddress";
+import { useLiquity } from "../hooks/LiquityContext";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
 import { Icon } from "./Icon";
 import { Tooltip } from "./Tooltip";
 import { Abbreviation } from "./Abbreviation";
+import { useSelector } from "@liquity/lib-react";
 
 const rowHeight = "40px";
 
 type RiskiestTrovesProps = {
   pageSize: number;
-  liquity: EthersLiquity;
-  numberOfTroves: number;
-  price: Decimal;
-  totalRedistributed: Trove;
-  blockTag?: number;
 };
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
 
-export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
-  pageSize,
-  liquity,
+const select = ({
   numberOfTroves,
   price,
   totalRedistributed,
   blockTag
-}) => {
+}: BlockPolledLiquityStoreState) => ({ numberOfTroves, price, totalRedistributed, blockTag });
+
+export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
+  const { blockTag, numberOfTroves, price, totalRedistributed } = useSelector(select);
+  const { liquity } = useLiquity();
   type Troves = Resolved<ReturnType<typeof liquity.getLastTroves>>;
 
   const [loading, setLoading] = useState(true);

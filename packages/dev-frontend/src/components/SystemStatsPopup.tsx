@@ -1,12 +1,17 @@
 import React, { useState, useRef } from "react";
 import { Container, Flex, Button } from "theme-ui";
 
+import { LiquityStoreState } from "@liquity/lib-base";
+
 import { Icon } from "./Icon";
-import { SystemStats, SystemStatsProps } from "./SystemStats";
+import { SystemStats } from "./SystemStats";
+import { useSelector } from "@liquity/lib-react";
 
-type SystemStatsPopupProps = Omit<Required<SystemStatsProps>, "variant">;
+const select = ({ total, price }: LiquityStoreState) => ({ total, price });
 
-export const SystemStatsPopup: React.FC<SystemStatsPopupProps> = ({ total, price, ...rest }) => {
+export const SystemStatsPopup: React.FC = () => {
+  const { price, total } = useSelector(select);
+
   const [systemStatsOpen, setSystemStatsOpen] = useState(false);
   const systemStatsOverlayRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +58,7 @@ export const SystemStatsPopup: React.FC<SystemStatsPopupProps> = ({ total, price
             }
           }}
         >
-          <SystemStats variant="infoPopup" {...{ total, price, ...rest }} />
+          <SystemStats variant="infoPopup" showBalances />
         </Container>
       )}
     </>
