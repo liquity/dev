@@ -90,7 +90,6 @@ contract StabilityPool is Ownable, IStabilityPool {
     }
 
     function () external payable onlyPoolManagerOrPool {
-        require(msg.data.length == 0);
         ETH = ETH.add(msg.value);
     }
 }

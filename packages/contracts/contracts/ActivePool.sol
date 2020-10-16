@@ -102,7 +102,6 @@ contract ActivePool is Ownable, IPool {
     }
 
     function () external payable onlyPoolManagerOrPool {
-        require(msg.data.length == 0);
         ETH = ETH.add(msg.value);
     }
 }
