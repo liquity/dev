@@ -1000,6 +1000,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (totalCollateralSnapshot == 0) {
             stake = _coll;
         } else {
+            /* The following condition holds true for 2 reasons:
+             * Because don’t allow to close or liquidate the last trove.
+             * Because when we close or liquidate a trove, we redistribute the pending rewards,
+             * so if all troves were closed/liquidated, rewards would’ve been emptied
+             * and totalCollateralSnapshot would be zero too.
+             */
             assert(totalStakesSnapshot > 0);
             stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot);
         }
