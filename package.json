@@ -29,6 +29,7 @@
     "prepare:decimal": "yarn workspace @liquity/decimal prepare",
     "prepare:lib-base": "yarn workspace @liquity/lib-base prepare",
     "prepare:lib-ethers": "yarn workspace @liquity/lib-ethers prepare",
+    "prepare:lib-react": "yarn workspace @liquity/lib-react prepare",
     "prepare:lib-subgraph": "yarn workspace @liquity/lib-subgraph prepare",
     "prepare:providers": "yarn workspace @liquity/providers prepare",
     "prepare:subgraph": "yarn workspace @liquity/subgraph prepare",
