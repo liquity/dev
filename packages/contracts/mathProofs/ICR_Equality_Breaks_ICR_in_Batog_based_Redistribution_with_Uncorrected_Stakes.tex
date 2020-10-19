@@ -17,36 +17,38 @@
 \date{September 2020}
 \maketitle
 
-\subsection*{\textbf{Overview of Proof}}
+\tableofcontents
 
+\section{Intro: TODO}
 
 \begin{itemize}
-  \item Background
-  \item Problem - with uncorrected stakes, rewards can break CDP ordering
-  \item Proposed solution: corrected stake
-  \item Terminology
+\item We are building a system that needs to keep CDPs in order to allow efficient redemptions in ascending order of collateral ratio.
+\item Given that we also do redistributions, we need to ensure that redistributions do not break ordering.
+\item It turns out that redistributing in proportion to collateral size maintains ordering.
+\item It is obvious that redistributing in proportion to collateral size in a push-based manner does not scale, i.e. is of O(n).
+\item We know from earlier research that there are scalable O(1) ways to assign proportional rewards as long as the basis for the rewards ("stakes") does not change over time. In other words, the method presented in the paper does not compound the reward.
+\item We thus need to extend original Batog approach to make it so that subsequent collateral changes to CDPs are accounted for by correcting their stakes, to make sure they do not receive disproportionate rewards due to the fact that the existing CDPs stake does not take pending rewards from past liquidations into account.
+\item We show that the corrected stake approach preserves ordering.
 \end{itemize}
 
 \bigskip
-\textbf{Core Proofs}
+\textbf{Core Proof}
 
 \begin{itemize}
-  \item Proof 1: $ICR_1=ICR_2$ in simple case. $1^{st}$ order, 1 past liquidation. Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
-  \item Proof 2: $ICR_1=ICR_2$ in general case. $1^{st}$ order, M past liquidations. Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
+  \item Proof: $ICR_1=ICR_2$ in general case. $1^{st}$ order, M past liquidations. Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
 \end{itemize}
 
 \bigskip
 \textbf{Extensions}
 
 \begin{itemize}
-  \item Proof 3: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
-  \item Proof 4: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
+  \item Proof: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
+  \item Proof: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
   \item Show $2^{nd}$ order system is equivalent to first order 
   \item Show that $n^{th}$ order system is equivalent to first order
 \end{itemize}
 
-\bigskip
-\subsection*{\textbf{Background}}
+\section{Background}
 
 Previously, we showed that rewards proportional to collateral in a system of CDPs ordered by ICR preserves ordering across reward events. This assumed that rewards are proportional to the total collateral of the CDP.\\
 
@@ -54,8 +56,7 @@ In reality, the redistributions are implemented with a Batog pull-based mechanis
 
 However, the ICR of a CDP is always computed as the ratio of it’s total collateral to its total debt. That is, the terms in a CDP’s ICR calculation \textbf{do} include all its previous accumulated rewards.
 
-\bigskip
-\subsection*{\textbf{The Problem: Rewards Can Break CDP Ordering}}
+\section{The Problem: Rewards Can Break CDP Ordering}
 
 As the system undergoes reward events, a given CDP’s ratio of initial collateral to its total collateral shrinks. Rewards are based on a smaller and smaller share of the total collateral. This is fine, as long as all active CDPs have experienced all reward events - in this case, ordering is maintained.\\
 
@@ -65,8 +66,7 @@ This means that across a reward event, a ‘fresh’ CDP’s \textit{proportiona
 
 This discrepancy can break CDP ordering.\\
 
-\bigskip
-\textbf{System Order Terminology}
+\section{System Order Terminology}
 
 We introduce the notion of \textit{system order}. In general, a system of CDPs increases from order N to order N+1 when the following sequence of events occurs:
 
@@ -88,8 +88,7 @@ Let $S_2$ define an evolution of S1, i.e. $S_2 = f(S_1)$. $S_2$ is a system with
 
 In general, $S_n$ is a system with n sequential pairs, each consisting of a CDP creation period and a liquidation period. CDP's made in a given CDP creation period t have experienced only those liquidations that occurred in liquidation period t or greater.
 
-\bigskip
-\subsection*{\textbf{Corrected Stake Approach}}
+\section{Corrected Stake Approach}
 
 To correct for the advantage gained by later stakes over earlier stakes, we introduce a corrected stake:
 
@@ -104,8 +103,7 @@ To correct for the advantage gained by later stakes over earlier stakes, we intr
 \bigskip
 Where $totalStakes_\emptyset$ and $totalCollateral_\emptyset$ are the respective snapshots of the total stakes and total collateral in the system, taken immediately after the last liquidation event. Note that with this terminology, the total collateral includes the total stakes, and therefore $totalCollateral_\emptyset \ge totalStakes_\emptyset$
 
-\bigskip
-\textbf{At First-Order, Stake Equals Initial Collateral}
+\subsection{At First-Order, Stake Equals Initial Collateral}
 
 For first-order systems, all CDPs were added before any liquidation events occurred. The snapshot $totalCollateral_\emptyset$ is equal to 0. Therefore:
 
@@ -114,8 +112,7 @@ For first-order systems, all CDPs were added before any liquidation events occur
 \end{equation}
 for all $s_i$, $c_i$ in an $S_1$ system.
 
-\bigskip
-\textbf{Intuition Behind Choice of Corrected Stake, $s_i$}
+\subsection{Intuition Behind Choice of Corrected Stake}
 
 The corrected stake $s_i$ is chosen such that it earns rewards from liquidations equivalent to a CDP that would have accumulated $c_i$ total collateral by the time the fresh $CDP_i$ was created.\\
 
@@ -123,278 +120,9 @@ The corrected stake effectively models the fresh CDP’s collateral $c_i$ as a t
 
 We now prove that ICR equality is maintained with rewards proportional to corrected stakes - starting with the simplest case, and progressively generalizing.
 
-\bigskip
-\subsection*{\textbf{PROOF 1. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second-Order System}}
+\section{Corrected Stake Preserves Equality}
 
-We consider the following event sequence:
-
-\begin{itemize}
-  \item $n+1$ CDPs are created
-  \item 1 CDP is liquidated
-  \item 1 fresh CDP is created
-  \item 1 old CDP is liquidated
-\end{itemize}
-
-\bigskip
-In other words, a first-order system of $n+1$ CDPs undergoes 1 liquidation, and then evolves to second-order.\\
-
-Each initial $CDP_i$ has collateral $c_i$ and debt $d_i$.\\
-
-Then, the first liquidation occurs: $CDP_j$ with collateral $c_j$, debt $d_j$, is redistributed. The total number of active CDPs reduces from $n+1$ to $n$.\\
-
-Each remaining active $CDP_i$ earns a collateral reward $x_i$, which is proportional to the liquidated collateral $c_j$, and $CDP_i$’s stake as a share of total stakes:
-
-\begin{equation} 
-    x_i=\frac{c_j \cdot s_i}{\sum\limits^{n+1}_{\substack{i=1\\i \ne j}}s_i}
-\end{equation}
-
-\bigskip
-By equation 3), the property of a first-order system, $s_i$ equals $c_i$:
-
-\begin{equation}
-    x_i=\frac{c_j \cdot c_i}{\sum\limits^{n+1}_{\substack{i=1\\i \ne j}}c_i}
-\end{equation}
-
-\bigskip
-For simplicity, let:
-
-\begin{equation} 
-    C_n=\sum^{n+1}_{\substack{i=1\\i \ne j}}(c_i)
-\end{equation}
-
-\bigskip
-There are now $n$ CDPs in the system.\\
-
-Let the sum of accumulated rewards over all active CDPs be given by: 
-
-\begin{equation} 
-    X_n=\sum^{n+1}_{\substack{i=1\\i \ne j}}x_i
-\end{equation}
-
-\bigskip
-Note that after the liquidation, the system snapshots update:
-
-\begin{equation} 
-    totalStakes_\emptyset=C_n
-\end{equation}
-
-\begin{equation} 
-    totalCollateral_\emptyset=C_n+X_n
-\end{equation}
-
-\bigskip
-(Note also that $X_n=c_j$ and therefore $totalCollateral_\emptyset=C_n+c_j=C_{n+1}$)
-
-\bigskip
-Now, a fresh CDP is added, $CDP_F$, with collateral $c_F$.  Let the ICR of $CDP_F$ equal the ICR of an active first-order $CDP_G$:
-
-\begin{equation} 
-    ICR_F=ICR_G
-\end{equation}
-
-\begin{equation} 
-    ICR_F=\frac{c_\mathsmaller{F}}{d_\mathsmaller{F}}
-\end{equation}
-
-\begin{equation} 
-    ICR_G=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}}
-\end{equation}
-
-\bigskip
-Where $c_F$, $d_F$ and $c_G$, $d_G$ are the collateral and debt values of $CDP_F$ and $CDP_G$ respectively.\\
-
-$x_G$, $y_G$ are the respective accumulated collateral and debt rewards for $CDP_G$ earned by its stake over its lifetime.\\
-
-The ICR equality identity 10) yields the following relation:
-
-\begin{equation} 
-        c_F=\frac{d_\mathsmaller{F}}{d_\mathsmaller{G}+y_\mathsmaller{G}}(c_\mathsmaller{G}+x_\mathsmaller{G})
-\end{equation}
-
-\bigskip
-i.e.
-
-\begin{equation} 
-    c_F=k(c_\mathsmaller{G}+x_\mathsmaller{G})
-\end{equation}
-
-\bigskip
-where
-
-\begin{equation} 
-    k=\frac{d_\mathsmaller{F}}{d_\mathsmaller{G}+y_\mathsmaller{G}}
-\end{equation}
-
-\bigskip
-$CDP_F$’s stake $s_F$ is given by the corrected stake rule 2), that is:
-
-\begin{equation} 
-    s_F=\frac{c_\mathsmaller{F} \cdot totalStakes_\emptyset}{totalColateral_\emptyset}
-\end{equation}
-
-\bigskip
-Which by 8) and 9) gives:
-
-\begin{equation} 
-    s_F=\frac{c_F \cdot C_n}{C_n+X_n}
-\end{equation}
-
-\bigskip
-Now, a new liquidation occurs: $CDP_Z$ liquidates. The system becomes second-order.\\
-
-The event causes $CDP_Z$’s collateral and debt ($c_Z$ and $d_Z$) to be redistributed between all active CDPs, proportional to their stake.\\
-
-For simplicity, let :
-
-\begin{equation} 
-    a=\frac{c_Z+x_Z}{totalStakes}
-\end{equation}
-
-\begin{equation} 
-    b=\frac{d_Z+y_Z}{totalStakes}
-\end{equation}
-
-\bigskip
-We define the collateral and debt rewards earned by $CDP_F$ and $CDP_G$ in the reward event:
-
-\begin{equation}
-    \begin{split}
-        r_{c\mathsmaller{F}}=as_\mathsmaller{F}\\
-        r_{d\mathsmaller{F}}=bs_\mathsmaller{F}\\
-        r_{c\mathsmaller{G}}=as_\mathsmaller{G}\\
-        r_{d\mathsmaller{G}}=bs_\mathsmaller{G}
-    \end{split}
-\end{equation}
-
-\bigskip
-And since $s_\mathsmaller{G}$ is a first-order stake:
-
-\begin{equation} 
-    s_\mathsmaller{G}=c_\mathsmaller{G}
-\end{equation}
-
-\bigskip
-To show ICR equivalence after the reward event, we must first obtain $s_F$ as a linear function of $c_G$. Recall our definition of $CDP_F$’s stake from 17):
-
-\begin{equation} 
-    s_\mathsmaller{F}=\frac{c_\mathsmaller{F} \cdot C_n}{(C_n+X_n)}
-\end{equation}
-
-\bigskip
-Now, substituting in the expression for F’s collateral, 14), we obtain:
-
-\begin{equation} 
-    s_\mathsmaller{F}=\frac{k(c_\mathsmaller{G}+x_\mathsmaller{G})C_n}{C_n+X_n}
-\end{equation}
-
-\bigskip
-Consider the term, $x_\mathsmaller{G}$, which represents the total accumulated past reward of $CDP_G$ before liquidation of $CDP_Z$.  Since $CDP_j$ was the only previous liquidation:
-
-\begin{equation} 
-    x_\mathsmaller{G}=\frac{s_\mathsmaller{G}c_j}{\sum\limits^{n+1}_{\substack{i=1\\i \ne j}}s_i}
-\end{equation}
-
-\bigskip
-And since all stakes $s_i$ were first order:
-
-\begin{equation} 
-    x_\mathsmaller{G}=\frac{c_\mathsmaller{G}c_j}{C_n}
-\end{equation}
-
-\bigskip
-By the same token, the total accumulated rewards for all active CDPs, from liquidation of $CDP_j$ must be:
-
-\begin{equation} 
-    X_n=c_j
-\end{equation}
-
-\bigskip
-Substituting these expressions for $x_\mathsmaller{G}$ and $X_n$ into 23), yields:
-
-\begin{equation} 
-        s_\mathsmaller{F}=\frac{k(c_\mathsmaller{G}C_n+c_\mathsmaller{G}c_j)}{C_n+c_j}
-\end{equation}
-
-\bigskip
-Factoring out $c_G$ from the numerator:
-
-\begin{equation} 
-    s_\mathsmaller{F}=\frac{k c_\mathsmaller{G}(C_n+c_j)}{(C_n+c_j)}
-\end{equation}
-
-\bigskip
-And cancelling, we obtain:
-
-\begin{equation} 
-    s_\mathsmaller{F}=kc_\mathsmaller{G}
-\end{equation}
-
-\bigskip
-We now compare ICRs of $CDP_F$ and $CDP_G$, after liquidation of $CDP_Z$.
-
-\begin{equation} 
-    ICR_{F \; After}=\frac{c_\mathsmaller{F}+r_{c\mathsmaller{F}}}{d_\mathsmaller{F}+r_{d\mathsmaller{F}}}
-\end{equation}
-
-\begin{equation} 
-    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+r_{c\mathsmaller{G}}}{d_\mathsmaller{G}+y_\mathsmaller{G}+r_{d\mathsmaller{G}}}
-\end{equation}
-
-\bigskip
-Using 20), the individual rewards as functions of stakes:
-
-\begin{equation} 
-    ICR_{F \; After}=\frac{c_F+as_F}{d_F+bs_F}
-\end{equation}
-
-\begin{equation} 
-    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+as_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bs_\mathsmaller{G}}
-\end{equation}
-
-\bigskip
-Now, substituting our definitions for $s_\mathsmaller{G}$ (21) and $s_F$ (29):
-
-\begin{equation} 
-    ICR_{F \; After}=\frac{c_\mathsmaller{F}+akc_\mathsmaller{G}}{d_\mathsmaller{F}+bkc_\mathsmaller{G}}
-\end{equation}
-
-\begin{equation} 
-    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
-\end{equation}
-
-\bigskip
-Using identities 14) for $c_F$, and 15) for $d_F$:
-
-\begin{equation} 
-    ICR_{F \; After}=\frac{k(c_\mathsmaller{G} + x_\mathsmaller{G}+ac_\mathsmaller{G})}{k(d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G})}
-\end{equation}
-
-\begin{equation} 
-    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
-\end{equation}
-
-\bigskip
-Cancelling $k$:
-
-\begin{equation} 
-        ICR_{F \; After}=\frac{c_\mathsmaller{G} + x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
-\end{equation}
-
-\begin{equation} 
-    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
-\end{equation}
-
-\bigskip
-Thus:
-
-\begin{equation} 
-    ICR_{F \; After}=ICR_{G \; After}
-\end{equation}
-
-\bigskip
-QED.
-
-\subsection*{PROOF 2. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations}
+\subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations}
 
 We now extend the above proof to cover the following event sequence:
 
@@ -450,7 +178,7 @@ We label the main sum expression $H$.\\
 
 Rewriting $CDP_i$’s accumulated reward:
 
-\begin{equation} 
+\begin{equation} \label{eq:45}
     x_i=Hc_i
 \end{equation}
 
@@ -461,24 +189,105 @@ Summing over all $n$ active CDPs gives the total accumulated rewards for active 
     X_n=\sum\limits^n_{i=1}Hc_i
 \end{equation}
 
-\begin{equation} 
+\begin{equation} \label{eq:47}
     X_n=H \; C_n
 \end{equation}
 
 \bigskip
-(Note: It can also be proved that $X_n=L_m$)
+Note that after the liquidation, the system snapshots update:
+
+\begin{equation} \label{eq:8}
+    totalStakes_\emptyset=C_n
+\end{equation}
+
+\begin{equation} \label{eq:9}
+    totalCollateral_\emptyset=C_n+X_n
+\end{equation}
+
+\bigskip
+(Note that it can also be proved that that $X_n=L_m$ and therefore $totalCollateral_\emptyset=C_n+L_m=C_{n+m}$)
 
 \bigskip
 Now, a fresh CDP is added, $CDP_F$, with collateral $c_F$.  Let the ICR of $CDP_F$ equal the ICR of an active first-order $CDP_G$.\\
 
 Now, $CDP_Z$ liquidates. Upon liquidation, the second-order $CDP_F$ and the first-order $CDP_G$ earn the following collateral rewards:
 
-\begin{equation}
+\begin{equation} \label{eq:10}
+    ICR_F=ICR_G
+\end{equation}
+
+\begin{equation} 
+    ICR_F=\frac{c_\mathsmaller{F}}{d_\mathsmaller{F}}
+\end{equation}
+
+\begin{equation} 
+    ICR_G=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}}
+\end{equation}
+
+\bigskip
+Where $c_F$, $d_F$ and $c_G$, $d_G$ are the collateral and debt values of $CDP_F$ and $CDP_G$ respectively.\\
+
+$x_G$, $y_G$ are the respective accumulated collateral and debt rewards for $CDP_G$ earned by its stake over its lifetime.\\
+
+The ICR equality identity \ref{eq:10} yields the following relation:
+
+\begin{equation} 
+        c_F=\frac{d_\mathsmaller{F}}{d_\mathsmaller{G}+y_\mathsmaller{G}}(c_\mathsmaller{G}+x_\mathsmaller{G})
+\end{equation}
+
+\bigskip
+i.e.
+
+\begin{equation} \label{eq:14}
+    c_F=k(c_\mathsmaller{G}+x_\mathsmaller{G})
+\end{equation}
+
+\bigskip
+where
+
+\begin{equation} \label{eq:15}
+    k=\frac{d_\mathsmaller{F}}{d_\mathsmaller{G}+y_\mathsmaller{G}}
+\end{equation}
+
+
+\bigskip
+$CDP_F$’s stake $s_F$ is given by the corrected stake rule 2), that is:
+
+\begin{equation} 
+    s_F=\frac{c_\mathsmaller{F} \cdot totalStakes_\emptyset}{totalColateral_\emptyset}
+\end{equation}
+
+\bigskip
+Which by \ref{eq:8} and \ref{eq:9} gives:
+
+\begin{equation} \label{eq:17}
+    s_F=\frac{c_F \cdot C_n}{C_n+X_n}
+\end{equation}
+
+\bigskip
+Now, a new liquidation occurs: $CDP_Z$ liquidates. The system becomes second-order.\\
+
+The event causes $CDP_Z$’s collateral and debt ($c_Z$ and $d_Z$) to be redistributed between all active CDPs, proportional to their stake.\\
+
+For simplicity, let :
+
+\begin{equation} 
+    a=\frac{c_Z+x_Z}{totalStakes}
+\end{equation}
+
+\begin{equation} 
+    b=\frac{d_Z+y_Z}{totalStakes}
+\end{equation}
+
+\bigskip
+We define the collateral and debt rewards earned by $CDP_F$ and $CDP_G$ in the reward event:
+
+\begin{equation} \label{eq:20}
     \begin{split}
-        r_{cF}=as_F\\
-        r_{dF}=bs_F\\
-        r_{cG}=as_G\\
-        r_{dG}=bs_G
+        r_{c\mathsmaller{F}}=as_\mathsmaller{F}\\
+        r_{d\mathsmaller{F}}=bs_\mathsmaller{F}\\
+        r_{c\mathsmaller{G}}=as_\mathsmaller{G}\\
+        r_{d\mathsmaller{G}}=bs_\mathsmaller{G}
     \end{split}
 \end{equation}
 
@@ -494,27 +303,29 @@ where
 \end{equation}
 
 \bigskip
-And since $s_G$ is a first-order stake:
+And since $s_\mathsmaller{G}$ is a first-order stake:
 
-\begin{equation} 
-    s_G=c_G
+\begin{equation} \label{eq:21}
+    s_\mathsmaller{G}=c_\mathsmaller{G}
 \end{equation}
 
 \bigskip
-Again, we now seek $s_F$ as a linear function of $c_G$.\\
-
-The stake $s_\mathsmaller{F}$ can be derived in exactly the same manner as in the simple case. By our corrected stakes rule, and the fact that $ICR_F = ICR_G$, we obtain:
+To show ICR equivalence after the reward event, we must first obtain $s_F$ as a linear function of $c_G$. Recall our definition of $CDP_F$’s stake from \ref{eq:17}:
 
 \begin{equation} 
-    s_\mathsmaller{F}=\frac{k(c_G+x_G)C_n}{C_n+X_n}
+    s_\mathsmaller{F}=\frac{c_\mathsmaller{F} \cdot C_n}{(C_n+X_n)}
 \end{equation}
 
-\begin{center}
-   \textit{(see steps 8-23 for this derivation)} 
-\end{center} 
+\bigskip
+Now, substituting in the expression for F’s collateral, \ref{eq:14}, we obtain:
+
+\begin{equation} 
+    s_\mathsmaller{F}=\frac{k(c_\mathsmaller{G}+x_\mathsmaller{G})C_n}{C_n+X_n}
+\end{equation}
+
 
 \bigskip
-Substituting in the expressions for accumulated reward $x_i$ from 45), and total accumulated reward $X_n$ from 47):
+Substituting in the expressions for accumulated reward $x_i$ from \ref{eq:45}, and total accumulated reward $X_n$ from \ref{eq:47}:
 
 \begin{equation} 
     s_\mathsmaller{F}=\frac{k(c_G+Hc_G)C_n}{C_n+HC_n}
@@ -530,19 +341,76 @@ And factorizing:
 \bigskip
 Canceling yields:
 
-\begin{equation} 
+\begin{equation} \label{eq:29}
     s_F=kc_G
 \end{equation}
 
 \bigskip
-We obtain the same result for $s_F$ as in the single liquidation case 29) .Comparing ICRs as per 30) and by following same steps thereafter, yields:
+We now compare ICRs of $CDP_F$ and $CDP_G$, after liquidation of $CDP_Z$.
+
+\begin{equation} 
+    ICR_{F \; After}=\frac{c_\mathsmaller{F}+r_{c\mathsmaller{F}}}{d_\mathsmaller{F}+r_{d\mathsmaller{F}}}
+\end{equation}
+
+\begin{equation} 
+    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+r_{c\mathsmaller{G}}}{d_\mathsmaller{G}+y_\mathsmaller{G}+r_{d\mathsmaller{G}}}
+\end{equation}
+
+\bigskip
+Using \ref{eq:20}, the individual rewards as functions of stakes:
+
+\begin{equation} 
+    ICR_{F \; After}=\frac{c_F+as_F}{d_F+bs_F}
+\end{equation}
+
+\begin{equation} 
+    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+as_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bs_\mathsmaller{G}}
+\end{equation}
+
+\bigskip
+Now, substituting our definitions for $s_\mathsmaller{G}$ \ref{eq:21} and $s_F$ \ref{eq:29}:
+
+\begin{equation} 
+    ICR_{F \; After}=\frac{c_\mathsmaller{F}+akc_\mathsmaller{G}}{d_\mathsmaller{F}+bkc_\mathsmaller{G}}
+\end{equation}
+
+\begin{equation} 
+    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
+\end{equation}
+
+\bigskip
+Using identities \ref{eq:14} for $c_F$, and \ref{eq:15} for $d_F$:
+
+\begin{equation} 
+    ICR_{F \; After}=\frac{k(c_\mathsmaller{G} + x_\mathsmaller{G}+ac_\mathsmaller{G})}{k(d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G})}
+\end{equation}
+
+\begin{equation} 
+    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
+\end{equation}
+
+\bigskip
+Cancelling $k$:
+
+\begin{equation} 
+        ICR_{F \; After}=\frac{c_\mathsmaller{G} + x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
+\end{equation}
+
+\begin{equation} 
+    ICR_{G \; After}=\frac{c_\mathsmaller{G}+x_\mathsmaller{G}+ac_\mathsmaller{G}}{d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G}}
+\end{equation}
+
+\bigskip
+Thus:
 
 \begin{equation} 
     ICR_{F \; After}=ICR_{G \; After}
 \end{equation}
 
 \bigskip
-\subsection*{EXTENSION PROOF 3. Arbitrary Number of Liquidation Events At Current System Order}
+QED.
+
+\subsection{EXTENSION PROOF. Arbitrary Number of Liquidation Events At Current System Order}
 
 If instead of a single liquidation event at a given system order, we have $P$ liquidation events, it is clear that ICR equality holds across all $P$ events:\\
 
@@ -550,8 +418,7 @@ Since ICR equality holds across one liquidation event, it will hold across the n
 
 Liquidation events do not alter the stakes that earn shares of liquidated collateral and debt - and for a given stake, the individual CDP reward term $x_i$ given in 4) depends only on reward sizes and the total stakes.
 
-\bigskip
-\subsection*{EXTENSION PROOF 4. Arbitrary Number of CDPs Added Between Liquidation Events}
+\subsection{EXTENSION PROOF. Arbitrary Number of CDPs Added Between Liquidation Events}
 
 With $N$ second-order CDPs added between consecutive liquidation events, the stake $s_F$ of any given second-order CDP is given by 1): 
 
@@ -564,18 +431,16 @@ The snapshots of the system state after the last liquidation event ($totalStakes
 
 Thus, $s_F$ in the N second-order CDPs case is equal to $s_F$ in the single second-order CDP case.\\
 
-As such, the logic of Proof 2 applies - and ICR equality between a second-order CDP and first-order CDP holds across a liquidation event, no matter how many fresh CDPs are added in between.
+As such, the logic of Main Proof applies - and ICR equality between a second-order CDP and first-order CDP holds across a liquidation event, no matter how many fresh CDPs are added in between.
 
-\newpage
-\bigskip
-\textbf{CONCLUSION 1}
+\subsection{CONCLUSION 1}
 
 \bigskip
-Combining Proof 2 with Extensions 1 \& 2 yields the following conclusion:\\
+Combining Main Proof with Extensions 1 \& 2 yields the following conclusion:\\
 
 \uline{In a second order system with $M$ previous liquidations, and $N$ second-order CDPs added after the last liquidation, ICR equality between a first-order CDP and second-order CDP holds across $P$ subsequent liquidation events.}\\
 
-\textbf{2nd Order Systems Collapse to 1st Order}\\
+\subsection{2nd Order Systems Collapse to 1st Order}
 We now show that a second-order system is equivalent to a first-order system.\\
 
 Consider a hypothetical first order $CDP_1$ and an actual second order $CDP_2$. Let both CDPs have identical ICR, and also let $CDP_1$’s total collateral and debt equal $CDP_2$’s initial collateral and initial debt respectively:
@@ -606,8 +471,7 @@ Therefore any second order system is equivalent to a first order system that con
     S_2=S_1
 \end{equation}
 
-\bigskip
-\textbf{N’th Order Systems Collapse to 1st Order}\\
+\subsection{N’th Order Systems Collapse to 1st Order}
 We prove it by induction. We have already proved for $n=1$ that $S_1=S_2$.
 Now we show that if it’s true for $n-1$ then it’s true for $n$, i.e.:
 
@@ -637,11 +501,11 @@ So, for every $N$, $S_N = S_{N-1}$, and for the transitive property of equivalen
 \bigskip
 Having shown all nth order systems are equivalent to a first order system, we now extend our previous conclusion to nth order systems:
 
-\bigskip
-\textbf{CONCLUSION 2}
+\subsection{CONCLUSION 2}
 
 \uline{In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order CDPs added after the last liquidation, ICR equality between an $(n-1)^{th}$ order CDP and $n^{th}$ order CDP holds across $P$ liquidation events.}
 
+\section{Corrected Stake Preserves Order}
 
 \end{document}
 
