@@ -46,7 +46,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       setChangePending(false);
     } else if (tentativelyConfirmed) {
-      setExchangedQui(Decimal.from(0));
+      setExchangedQui(Decimal.ZERO);
       setChangePending(false);
     }
   }, [myTransactionState.type, setChangePending, setExchangedQui, tentativelyConfirmed]);
@@ -81,8 +81,7 @@ const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const RedemptionManager: React.FC = () => {
   const price = useSelector(selectPrice);
-  const zero = Decimal.from(0);
-  const [exchangedQui, setExchangedQui] = useState(zero);
+  const [exchangedQui, setExchangedQui] = useState(Decimal.ZERO);
   const [changePending, setChangePending] = useState(false);
 
   const editingState = useState<string>();
@@ -98,7 +97,7 @@ export const RedemptionManager: React.FC = () => {
             <Button
               variant="titleIcon"
               sx={{ ":enabled:hover": { color: "danger" } }}
-              onClick={() => setExchangedQui(zero)}
+              onClick={() => setExchangedQui(Decimal.ZERO)}
             >
               <Icon name="history" size="lg" />
             </Button>
