@@ -1897,7 +1897,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("openLoan(): Can open a loan with zero debt (plus gas comp) when system is in recovery mode, if ICR > 150%", async () => {
+  it("openLoan(): Can open a loan with zero debt (plus gas comp) when system is in recovery mode, if ICR > 300%", async () => {
     // --- SETUP ---
     //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(3, 'ether') })
@@ -1915,7 +1915,7 @@ contract('BorrowerOperations', async accounts => {
 
     await assertRevert(
       borrowerOperations.openLoan(dec(80, 18), carol, { from: carol, value: dec(1, 'ether') }),
-      'BorrowerOps: In Recovery Mode new loans must have ICR > CCR'
+      'BorrowerOps: In Recovery Mode new loans must have ICR > R_MCR'
     )
     const txCarol = await borrowerOperations.openLoan('0', carol, { from: carol, value: dec(1, 'ether') })
     assert.isTrue(txCarol.receipt.status)
