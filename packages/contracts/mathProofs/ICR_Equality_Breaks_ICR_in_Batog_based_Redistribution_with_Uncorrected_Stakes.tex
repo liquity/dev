@@ -506,6 +506,181 @@ Having shown all nth order systems are equivalent to a first order system, we no
 \uline{In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order CDPs added after the last liquidation, ICR equality between an $(n-1)^{th}$ order CDP and $n^{th}$ order CDP holds across $P$ liquidation events.}
 
 \section{Corrected Stake Preserves Order}
+Here we show that ICR ordering is preserved with corrected stakes across a liquidation event.\\
+
+We make use of the first-order equivalence result, namely, that with corrected stakes:
+
+\begin{equation} 
+    S_N = S_1
+\end{equation}
+
+i.e:\\
+
+Any N’th order system of CDPs is equivalent to a first-order system of CDPs. For a given fresh CDP with stake $s_i$ and collateral $c_i$, the stake $s_i$ is equivalent to some hypothetical first-order stake $c_j$ which has accumulated collateral reward $x_j = (c_i - c_j)$ and debt reward $y_j = (d_i - d_j)$.\\
+
+Due to this equivalence between first and N’th-order systems, if ordering is preserved for first-order systems, it is preserved for N’th order systems.\\
+
+Now consider a first-order system of CDPs, with stakes equal to their initial collateral.\\
+
+Let $CDP_1$ and $CDP_2$ be CDPs with initial collateral $c_1$, $c_2$ accumulated collateral and debt rewards $x_1$, $y_1$ and $x_2$, $y_2$ respectively:\\
+
+\begin{equation} 
+    ICR_1=\frac{c_1+x_1}{d_1+x_1}
+\end{equation}
+
+\begin{equation} 
+    ICR_2=\frac{c_2+x_2}{d_2+y_2}
+\end{equation}
+
+Let their ICRs be such that:
+
+\begin{equation} 
+    ICR_1 > ICR_2
+\end{equation}
+
+\bigskip
+Since, a first-order CDP’s collateral and debt rewards are always in direct proportion to its initial collateral, we can write the accumulated rewards as:
+
+\begin{equation} 
+    x_1=Ac_1
+\end{equation}
+
+\begin{equation} 
+    x_2=Ac_2
+\end{equation}
+
+and
+
+\begin{equation} 
+    y_1=Bc_1
+\end{equation}
+
+\begin{equation} 
+    y_2=Bc_2
+\end{equation}
+
+\bigskip
+Where A is the sum of all ‘collateral rewards per unit staked’, and B is the sum of all ‘debt rewards per unit staked’. This yields ICRs:
+
+\begin{equation} 
+    ICR_1=c_1\frac{1+A}{d_1+Bc_1}
+\end{equation}
+
+\begin{equation} 
+    ICR_2=c_2\frac{1+A}{d_2+Bc_2}
+\end{equation}
+
+And the initial ICR inequality becomes:
+
+\begin{equation} 
+    c_1\frac{1+A}{d_1+Bc_1}>c_2\frac{1+A}{d_2+Bc_2}
+\end{equation}
+
+\bigskip
+Cross multiplying and cancelling the common denominator yields:
+
+\begin{equation} 
+    c_1\left(1+A\right)\left(d_2+Bc_2\right)>c_2\left(1+A\right)\left(d_1+Bc_1\right)
+\end{equation}
+
+Then expanding:
+
+\begin{equation} 
+    c_1\left(d_2+Bc_2\right)>c_2\left(d_1+Bc_1\right)
+\end{equation}
+
+\begin{equation} 
+    c_1d_2+Bc_1c_2 > c_2d_1+Bc_1c_2
+\end{equation}
+
+\bigskip
+And cancelling terms:
+
+\begin{equation}
+    c_1d_2 > c_2d_1
+\end{equation}
+
+\bigskip
+Finally yielding the result:
+
+\begin{equation} \label{eq:217}
+    \frac{d_2}{c_2}>\frac{d_1}{c_1}
+\end{equation}
+
+\bigskip
+We will later use this to prove that the inequality of ICRs holds across a liquidation event.\\
+
+Now consider a liquidation event occurs. Upon a CDP liquidation, $r_c$ collateral and $r_d$ debt are distributed to all active CDPs. Each active CDP earns rewards proportional to its initial collateral, thus:
+
+\begin{equation} 
+    ICR_{1After}=\frac{c_1\left(1+A\right)+ac_1}{d_1+Bc_1+bc_1}
+\end{equation}
+
+\begin{equation} 
+    ICR_{2After}=\frac{c_2\left(1+A\right)+ac_2}{d_2+Bc_2+bc_2}
+\end{equation}
+
+\bigskip
+Where:
+
+\begin{equation} 
+    a=\frac{r_c}{totalStakes}
+\end{equation}
+
+\begin{equation} 
+    b=\frac{r_d}{totalStakes}
+\end{equation}
+
+\bigskip
+Collecting terms:
+
+\begin{equation} 
+    ICR_1=\frac{c_1\left(1+a+A\right)}{d_1+\left(1+B\right)c_1}
+\end{equation}
+
+\begin{equation} 
+    ICR_2=\frac{c_2\left(1+a+A\right)}{d_2+\left(1+B\right)c_2}
+\end{equation}
+
+\bigskip
+And taking reciprocals:
+
+\begin{equation} 
+    \frac{1}{ICR_{1After}}=\frac{d_1+\left(1+B\right)c_1}{c_1\left(1+a+A\right)}
+\end{equation}
+
+\begin{equation} 
+    \frac{1}{ICR_{2After}}=\frac{d_2+\left(1+B\right)c_2}{c_2\left(1+a+A\right)}
+\end{equation}
+
+\bigskip
+Rearranging, and separating the constant term:
+
+\begin{equation} 
+    \frac{1}{ICR_{1After}}=\left[\frac{\frac{d_1}{c_1}}{1+a+A}\right]+\left[\frac{1+B}{1+a+A}\right]
+\end{equation}
+
+\begin{equation} 
+    \frac{1}{ICR_{2After}}=\left[\frac{\frac{d_2}{c_2}}{1+a+A}\right]+\left[\frac{1+B}{1+a+A}\right]
+\end{equation}
+
+\bigskip
+Recall our earlier result \ref{eq:217}: $\frac{d_1}{c_1}<\frac{d_2}{c_2}$. Thus:
+
+\begin{equation} 
+    \frac{1}{ICR_{1After}}<\frac{1}{ICR_{2After}}
+\end{equation}
+
+\bigskip
+Then taking reciprocals, finally yields:
+
+\begin{equation} 
+    ICR_{1After}>ICR_{2After}
+\end{equation}
+
+\bigskip
+Therefore, CDP ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in N’th order systems.
+
 
 \end{document}
 
