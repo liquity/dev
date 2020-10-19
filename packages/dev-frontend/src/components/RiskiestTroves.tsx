@@ -18,6 +18,8 @@ import { Tooltip } from "./Tooltip";
 import { Abbreviation } from "./Abbreviation";
 import { useSelector } from "@liquity/lib-react";
 
+const Table = Styled.table;
+
 const rowHeight = "40px";
 
 type RiskiestTrovesProps = {
@@ -161,9 +163,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
         </Box>
       ) : (
         <Box>
-          <Styled.table
-            sx={{ mt: 2, pl: [1, 4], width: "100%", textAlign: "center", lineHeight: 1.15 }}
-          >
+          <Table sx={{ mt: 2, pl: [1, 4], width: "100%", textAlign: "center", lineHeight: 1.15 }}>
             <colgroup>
               <col style={{ width: "50px" }} />
               <col />
@@ -288,7 +288,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                   )
               )}
             </tbody>
-          </Styled.table>
+          </Table>
         </Box>
       )}
     </Card>
