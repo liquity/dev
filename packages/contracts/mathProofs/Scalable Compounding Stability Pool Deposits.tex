@@ -83,7 +83,7 @@ For a deposit made between liquidations $[t, t+1]$, which is withdrawn between l
 We take a snapshot of the product at liquidation t, and calculate the compounded stake at liquidation $n$, with $t < n \leq s$, as:
 
 \begin{equation} 
-    d_n=d_0\prod^n_{i=t+1}{\left(1-\frac{q_i}{D_{i-1}}\right)}=d_t\frac{\displaystyle\prod^n_{i=1}{\left(1-\frac{q_i}{D_{i-1}}\right)}}{\displaystyle\prod^t_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)}
+    d_n=d_t\prod^n_{i=t+1}{\left(1-\frac{q_i}{D_{i-1}}\right)}=d_t\frac{\displaystyle\prod^n_{i=1}{\left(1-\frac{q_i}{D_{i-1}}\right)}}{\displaystyle\prod^t_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)}
 \end{equation}
 assuming that none of the terms of those products are zero, i.e., that it never
 happens that $q_i = D_{i-1}$ (see section 3.1 for the case when the pool is emptied).
@@ -118,11 +118,11 @@ E_n=d_0\left(\frac{e_1}{D_0}\right)+d_0\left(\frac{e_2}{D_1}\right)\prod^1_{i=1}
 \bigskip
 And factoring out the initial deposit, $d_0$:
 \begin{equation} 
-    E_n=d_0\sum^n_{k=1}\left[\frac{e_k}{D_{k-1}}\prod^{k-1}_{i=0}\left(1-\frac{q_i}{D_{i-1}}\right)\right]
+    E_n=d_0\sum^n_{k=1}\left[\frac{e_k}{D_{k-1}}\prod^{k-1}_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)\right]
 \end{equation}
 
 \bigskip
-Where the initial product term $\displaystyle\prod^0_{i=0}=1$.
+Where the initial product term $\displaystyle\prod^0_{i=1}=1$.
 
 \bigskip
 Thus, we have $E_n$ as a function of the initial deposit $d_0$, and the rewards and total deposits at
@@ -232,7 +232,7 @@ Upon a liquidation that would otherwise truncate $P$ to 0, {$S$} is first update
 \bigskip
 \underline{Making a deposit:}
 
-Record a snapshot of the current epoch for the deposit
+Record a snapshot of the current scale for the deposit
 
 \bigskip
 \underline{Liquidation:}
