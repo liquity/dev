@@ -2403,6 +2403,37 @@ contract('BorrowerOperations', async accounts => {
   })
 
   // --- closeLoan() with a LQTY-eligible deposit ---
+
+  it.only("closeLoan(): increases the LQTY reward sum G", async () => {
+     // Whale opens trove
+     await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+
+     // A, B, C open troves 
+     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
+     await borrowerOperations.openLoan(dec(80, 18), B, { from: B, value: dec(1, 'ether') })
+     await borrowerOperations.openLoan(dec(20, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A, B, C deposit to Stability Pool
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
+
+    const currentEpoch = await poolManager.currentEpoch()
+    const currentEpoch = await poolManager.currentScale()
+
+    const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
+
+    await th.fastForwardTime(th.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+    
+    await cdpManager.closeLoan({from: A})
+
+    const G_After = await poolManager.epochToScaleToG(currentEpoch, currentScale)
+
+    // Check LQTY reward sum G has increased
+
+    assert.isTrue(G_After.gt(G_Before))
+  })
+
   it.only("closeLoan(): with a prior eligible deposit, issues LQTY rewards to trove closer", async () => {
     // Whale opens trove
     await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })

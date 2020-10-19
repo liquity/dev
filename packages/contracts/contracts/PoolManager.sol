@@ -498,19 +498,6 @@ contract PoolManager is Ownable, IPoolManager {
         frontEnds[msg.sender].active = true;
     }
 
-    function withdrawFrontEndLQTYGain() external {
-        _requireFrontEndIsRegistered(msg.sender);
-        
-        uint LQTYGain = _getFrontEndLQTYGain(msg.sender);
-
-        // Update front end's compounded stake and make new snapshots
-        uint compoundedFrontEndStake = _getCompoundedFrontEndStake(msg.sender);
-        _updateFrontEndStake(msg.sender, compoundedFrontEndStake);
-
-        // send LQTY to the front end
-        communityIssuance.sendLQTY(msg.sender, LQTYGain);
-    }
-
     // --- Stability Pool Deposit Functionality --- 
 
     function isEligibleForLQTY(address _depositor) public view returns (bool) {
@@ -818,15 +805,11 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     function _requireFrontEndNotRegistered(address _address) internal view {
-        require(frontEnds[_address].active == false, "CommunityIssuance: must not already be an active front end");
-    }
-
-    function _requireFrontEndIsRegistered(address _address) internal view {
-        require(frontEnds[_address].active == true, "CommunityIssuance: must be an active front end");
+        require(frontEnds[_address].active == false, "PoolManager: must not already be an active front end");
     }
 
     function  _requireValidKickbackRate(uint _kickbackRate) internal pure {
-        require (_kickbackRate >= 0 && _kickbackRate <= 1e18, "CommunityIssuance: Kickback rate must be in range [0,1]");
+        require (_kickbackRate >= 0 && _kickbackRate <= 1e18, "PoolManager: Kickback rate must be in range [0,1]");
     }
 
     function _requireETHSentSuccessfully(bool _success) internal pure {
