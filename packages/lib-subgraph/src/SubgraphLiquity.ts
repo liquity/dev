@@ -9,6 +9,7 @@ import { Query } from "./Query";
 
 import {
   ReadableLiquity,
+  ObservableLiquity,
   TroveWithPendingRewards,
   Trove,
   StabilityDeposit
@@ -179,7 +180,7 @@ const blockNumberDummy = new Query<void, BlockNumberDummy, BlockNumberDummyVaria
   () => {}
 );
 
-export class SubgraphLiquity implements ReadableLiquity {
+export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   private client: ApolloClient<NormalizedCacheObject>;
 
   constructor(uri = "http://localhost:8000/subgraphs/name/liquity/subgraph", pollInterval = 4000) {

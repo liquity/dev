@@ -12,6 +12,7 @@ import {
   TroveChange,
   StabilityDeposit,
   ReadableLiquity,
+  ObservableLiquity,
   HintedTransactionOptionalParams,
   TroveChangeOptionalParams,
   StabilityDepositTransferOptionalParams,
@@ -81,7 +82,8 @@ export type EthersTransactionOverrides = PromisesOf<{
   gasPrice?: BigNumberish;
 }>;
 
-export class EthersLiquity implements ReadableLiquity, HintedLiquity<ContractTransaction> {
+export class EthersLiquity
+  implements ReadableLiquity, ObservableLiquity, HintedLiquity<ContractTransaction> {
   readonly userAddress?: string;
 
   private readonly cdpManager: CDPManager;
