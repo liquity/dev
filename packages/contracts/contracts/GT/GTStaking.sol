@@ -15,14 +15,14 @@ contract GTStaking {
     uint public totalGTStaked;
 
     uint public F_ETH;  // Running sum of ETH fees per-GT-staked
-    uint public F_LQTY; // Running sum of GT fees per-GT-staked
+    uint public F_LUSD; // Running sum of GT fees per-GT-staked
 
-    // User snapshots of F_ETH and F_LQTY, taken at the point at which their latest deposit was made
+    // User snapshots of F_ETH and F_LUSD, taken at the point at which their latest deposit was made
     mapping (address => Snapshot) snapshots; 
 
     struct Snapshot {
         uint F_ETH_Snapshot;
-        uint F_LQTY_Snapshot;
+        uint F_LUSD_Snapshot;
     }
     
     address public growthTokenAddress;
@@ -75,17 +75,17 @@ contract GTStaking {
 
     /* Staking expects that this StakingContract is allowed to spend at least _amount of 
     the caller's GT tokens.
-    If caller has a pre-existing stake, send any accumulated ETH and LQTY gains to them. */
+    If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. */
     function stake(uint _amount) external {
 
         uint currentStake = stakes[msg.sender];
 
         uint ETHGain;
-        uint LQTYGain;
-        // Grab any accumulated ETH and LQTY gains from the current stake
+        uint LUSDGain;
+        // Grab any accumulated ETH and LUSD gains from the current stake
         if (currentStake != 0) {
             ETHGain = _getPendingETHGain(msg.sender);
-            LQTYGain = _getPendingLQTYGain(msg.sender);
+            LUSDGain = _getPendingLUSDGain(msg.sender);
         }
     
        _updateUserSnapshots(msg.sender);
@@ -97,22 +97,22 @@ contract GTStaking {
         // Transfer GT from caller to this contract
         growthToken.transferFrom(msg.sender, address(this), _amount);
 
-        // Send accumulated LQTY and ETH gains to the caller
-        clvToken.transfer(msg.sender, LQTYGain);
+        // Send accumulated LUSD and ETH gains to the caller
+        clvToken.transfer(msg.sender, LUSDGain);
         _sendETHGainToUser(msg.sender, ETHGain);
     }
 
-    // Unstake the GT and send the it back to the caller, along with their accumulated LQTY & ETH gains 
+    // Unstake the GT and send the it back to the caller, along with their accumulated LUSD & ETH gains 
     function unstake(uint _amount) external {
         uint currentStake = stakes[msg.sender];
 
         uint ETHGain;
-        uint LQTYGain;
+        uint LUSDGain;
 
-        // Grab any accumulated ETH and LQTY gains from the current stake
+        // Grab any accumulated ETH and LUSD gains from the current stake
         if (currentStake != 0) {
             ETHGain = _getPendingETHGain(msg.sender);
-            LQTYGain = _getPendingLQTYGain(msg.sender);
+            LUSDGain = _getPendingLUSDGain(msg.sender);
         }
 
         _updateUserSnapshots(msg.sender);
@@ -124,8 +124,8 @@ contract GTStaking {
         // Transfer unstaked GT to user
         growthToken.transfer(msg.sender, _amount);
 
-        // Send accumulated LQTY and ETH gains to the caller
-        clvToken.transfer(msg.sender, LQTYGain);
+        // Send accumulated LUSD and ETH gains to the caller
+        clvToken.transfer(msg.sender, LUSDGain);
         _sendETHGainToUser(msg.sender, ETHGain);
     }
 
@@ -140,13 +140,13 @@ contract GTStaking {
         F_ETH = F_ETH.add(ETHFeePerGTStaked); 
     }
 
-    function addLQTYFee(uint _LQTYFee) external {
+    function addLUSDFee(uint _LUSDFee) external {
         _requireCallerIsBorrowerOperations();
-        uint LQTYFeePerGTStaked;
+        uint LUSDFeePerGTStaked;
         
-        if (totalGTStaked > 0) {LQTYFeePerGTStaked = _LQTYFee.mul(1e18).div(totalGTStaked);}
+        if (totalGTStaked > 0) {LUSDFeePerGTStaked = _LUSDFee.mul(1e18).div(totalGTStaked);}
         
-        F_LQTY = F_LQTY.add(LQTYFeePerGTStaked);
+        F_LUSD = F_LUSD.add(LUSDFeePerGTStaked);
     }
 
     // --- Pending reward functions ---
@@ -161,21 +161,21 @@ contract GTStaking {
         return ETHGain;
     }
 
-    function getPendingLQTYGain(address _user) external view returns (uint) {
-        return _getPendingLQTYGain(_user);
+    function getPendingLUSDGain(address _user) external view returns (uint) {
+        return _getPendingLUSDGain(_user);
     }
 
-    function _getPendingLQTYGain(address _user) internal view returns (uint) {
-        uint F_LQTY_Snapshot = snapshots[_user].F_LQTY_Snapshot;
-        uint LQTYGain = stakes[_user].mul(F_LQTY.sub(F_LQTY_Snapshot)).div(1e18);
-        return LQTYGain;
+    function _getPendingLUSDGain(address _user) internal view returns (uint) {
+        uint F_LUSD_Snapshot = snapshots[_user].F_LUSD_Snapshot;
+        uint LUSDGain = stakes[_user].mul(F_LUSD.sub(F_LUSD_Snapshot)).div(1e18);
+        return LUSDGain;
     }
 
     // --- Internal helper functions ---
 
     function _updateUserSnapshots(address _user) internal {
         snapshots[_user].F_ETH_Snapshot = F_ETH;
-        snapshots[_user].F_LQTY_Snapshot = F_LQTY;
+        snapshots[_user].F_LUSD_Snapshot = F_LUSD;
     }
 
     function _sendETHGainToUser(address _user, uint ETHGain) internal returns (bool) {

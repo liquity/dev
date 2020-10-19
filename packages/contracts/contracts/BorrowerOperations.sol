@@ -151,7 +151,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             cdpManager.decayBaseRate();
             
             // Send the CLVFee to GT staking contract
-            gtStaking.addLQTYFee(CLVFee);
+            gtStaking.addLUSDFee(CLVFee);
             clvToken.mint(gtStakingAddress, CLVFee);
         }
 
@@ -260,7 +260,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _requireNewTCRisAboveCCR(0, false, _CLVAmount, true, price);  // no coll change, debt increase
 
         // Send fee to GT staking contract
-        gtStaking.addLQTYFee(CLVFee);
+        gtStaking.addLUSDFee(CLVFee);
         clvToken.mint(gtStakingAddress, CLVFee);
 
         // Increase the CDP's debt
@@ -346,7 +346,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             L.rawDebtChange = L.rawDebtChange.add(L.CLVFee);
 
             // Send fee to GT staking contract 
-            gtStaking.addLQTYFee(L.CLVFee);
+            gtStaking.addLUSDFee(L.CLVFee);
             clvToken.mint(gtStakingAddress, L.CLVFee);
         }
      

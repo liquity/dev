@@ -19,8 +19,12 @@ contract('PoolManager', async accounts => {
   let defaultPool
   let borrowerOperations
 
+  let communityIssuance
+
   beforeEach(async () => {
     const contracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
+
     contracts.activePool = await ActivePoolTester.new()
     contracts.defaultPool = await DefaultPoolTester.new()
     contracts.clvToken = await CLVTokenTester.new()
@@ -39,9 +43,14 @@ contract('PoolManager', async accounts => {
     functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
 
+    communityIssuance = GTContracts.communityIssuance
+
     // Pre-fund BorrowerOperations contract with ETH
     await web3.eth.sendTransaction({value: dec(100, 'ether'), from: alice, to: borrowerOperations.address})
-    await deploymentHelper.connectCoreContracts(contracts)
+    
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
   it('can’t use setAddresses again', async () => {
@@ -54,6 +63,7 @@ contract('PoolManager', async accounts => {
         stabilityPool.address,
         activePool.address,
         defaultPool.address,
+        communityIssuance.address,
         { from: owner }
       ),
       'Ownable: caller is not the owner'

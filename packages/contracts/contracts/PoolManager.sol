@@ -59,8 +59,8 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     struct Snapshots { 
-        uint P; 
         uint S; 
+        uint P; 
         uint G; 
         uint128 scale;
         uint128 epoch;
@@ -228,7 +228,7 @@ contract PoolManager is Ownable, IPoolManager {
     /*closeLoan(): Repay the debt, and sends collateral back to the trove closer.
 
     If they have an LQTY-eligible deposit at point of closing, then also:
-
+    - Trigger a LQTY reward event
     - pay out their LQTY gain
     - pay pout their deposit's ETH gain
     - pay out their front end's LQTY gain (to their front end)
@@ -240,7 +240,9 @@ contract PoolManager is Ownable, IPoolManager {
         activePool.decreaseCLVDebt(_debtRepayment);
         CLV.burn(_troveCloser, _debtRepayment);
 
-        if (deposits[_troveCloser].eligibleForLQTY) {
+        if (isEligibleForLQTY(_troveCloser)) {
+             communityIssuance.issueLQTY();  // Trigger a LQTY reward event
+
             uint troveCloserETHGain = _getDepositorETHGain(_troveCloser);
             uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_troveCloser);
 
@@ -511,9 +513,18 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Stability Pool Deposit Functionality --- 
 
+    function isEligibleForLQTY(address _depositor) public view returns (bool) {
+        return deposits[_depositor].eligibleForLQTY;
+    }
+
+    function getFrontEndTag(address _depositor) public view returns (address) {
+        return deposits[_depositor].frontEndTag;
+    }
+    
     function _setTagAndEligibility(address _depositor, address _frontEndTag) internal {
         deposits[_depositor].frontEndTag = _frontEndTag;
            
+        // If depositor also has an active trove, make their deposit eligible for LQTY
         if (cdpManager.getCDPStatus(_depositor) == 1) {
             deposits[_depositor].eligibleForLQTY = true;
         } 
@@ -582,11 +593,12 @@ contract PoolManager is Ownable, IPoolManager {
         uint compoundedCLVDeposit = _getCompoundedCLVDeposit(depositor);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);  // Needed only for event log
 
-        if (deposits[depositor].eligibleForLQTY) {
+        if (isEligibleForLQTY(depositor)) {
+            // First pay out any LQTY gains 
             address frontEnd = deposits[depositor].frontEndTag;
             _payOutLQTYGains(depositor, frontEnd);
         
-            // Update frnt end stake
+            // Update front end stake
             uint compoundedFrontEndStake = _getCompoundedFrontEndStake(frontEnd);
             uint newFrontEndStake = compoundedFrontEndStake.add(_amount);
             _updateFrontEndStake(frontEnd, newFrontEndStake);
@@ -624,7 +636,8 @@ contract PoolManager is Ownable, IPoolManager {
         uint CLVtoWithdraw = Math._min(_amount, compoundedCLVDeposit);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
       
-        if (deposits[depositor].eligibleForLQTY) {
+        if (isEligibleForLQTY(depositor)) {
+            // First pay out any LQTY gains 
             address frontEnd = deposits[depositor].frontEndTag;
             _payOutLQTYGains(depositor, frontEnd);
         
@@ -676,7 +689,8 @@ contract PoolManager is Ownable, IPoolManager {
         uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_depositor);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
       
-        if (deposits[_depositor].eligibleForLQTY) {
+        if (isEligibleForLQTY(_depositor)) {
+            // First pay out any LQTY gains 
             address frontEnd = deposits[_depositor].frontEndTag;
             _payOutLQTYGains(_depositor, frontEnd);
         

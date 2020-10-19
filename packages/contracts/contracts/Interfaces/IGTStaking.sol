@@ -4,5 +4,5 @@ interface IGTStaking {
 
     function addETHFee() external payable; 
 
-    function addLQTYFee(uint _LQTYFee) external;  
+    function addLUSDFee(uint _LQTYFee) external;  
 }

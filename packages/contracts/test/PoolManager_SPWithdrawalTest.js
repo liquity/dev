@@ -1634,7 +1634,7 @@ contract('PoolManager - Withdrawal of stability deposit - Reward calculations', 
     const alice_ETHGainAfter2ndScaleChange = (await poolManager.getCurrentETHGain(alice)).toString()
     const scale_After = (await poolManager.currentScale()).toString()
 
-    const alice_scaleSnapshot = (await poolManager.snapshot(alice))[2].toString()
+    const alice_scaleSnapshot = (await poolManager.depositSnapshots(alice))[2].toString()
 
     assert.equal(alice_scaleSnapshot, '0')
     assert.equal(scale_Before, '1')

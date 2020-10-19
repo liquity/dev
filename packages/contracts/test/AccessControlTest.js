@@ -251,6 +251,17 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
 
     // --- onlyBorrowerOperations ---
+    it("closeLoan(): reverts when called by an account that is not BorrowerOperations", async () => {
+      // Attempt call from alice
+      try {
+        const txAlice = await poolManager.closeLoan({ from: alice, value: 100 })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
+      }
+    })
+
     // addColl
     it("addColl(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice

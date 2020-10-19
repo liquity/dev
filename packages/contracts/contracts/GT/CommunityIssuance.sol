@@ -12,7 +12,8 @@ contract CommunityIssuance {
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
     
     // Determines the curvature of the issuance curve
-    uint constant public ISSUANCE_FACTOR = 2e18; 
+    // TODO: sort out exponential function
+    uint constant public ISSUANCE_FACTOR = 1e18; 
 
     address public communityIssuanceDeployer;
 

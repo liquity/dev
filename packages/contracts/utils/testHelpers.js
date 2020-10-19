@@ -26,13 +26,17 @@ const MoneyValues = {
 }
 
 const TimeValues = {
-  SECONDS_IN_THREE_MONTHS: 7776000,
+  SECONDS_IN_ONE_MINUTE: 60, 
+  SECONDS_IN_ONE_HOUR: 3600,
+  SECONDS_IN_ONE_DAY: 86400,
   SECONDS_IN_ONE_MONTH: 2592000,
+  SECONDS_IN_THREE_MONTHS: 7776000,
   SECONDS_IN_ONE_YEAR: 31536000,
   MINUTES_IN_ONE_MONTH: 43200
 }
 
 class TestHelper {
+  static ZERO_ADDRESS = '0x' + '0'.repeat(40)
 
   static dec(val, scale) {
     let zerosCount
