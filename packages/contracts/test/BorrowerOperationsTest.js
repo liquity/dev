@@ -11,9 +11,9 @@ const timeValues = testHelpers.TimeValues
 contract('BorrowerOperations', async accounts => {
 
   const [
-    owner, alice, bob, carol, dennis, whale, 
-    A, B, C, D, E, 
-    defaulter_1,  defaulter_2,
+    owner, alice, bob, carol, dennis, whale,
+    A, B, C, D, E,
+    defaulter_1, defaulter_2,
     frontEnd_1, frontEnd_2, frontEnd_3] = accounts;
 
   let priceFeed
@@ -793,7 +793,7 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers a fee
-    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C})
+    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
 
     const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
 
@@ -808,10 +808,10 @@ contract('BorrowerOperations', async accounts => {
     const timeNow = await th.getLatestBlockTimestamp(web3)
     assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
 
-     // Borrower C triggers a fee
-     await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
+    // Borrower C triggers a fee
+    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
 
-     const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
 
     // Check that the last fee operation time DID update, as borrower's debt issuance occured
     // after minimum interval had passed 
@@ -819,7 +819,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("withdrawCLV(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
+  it("withdrawCLV(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -840,13 +840,13 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers a fee, before decay interval has passed
-    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C})
+    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
 
     // 1 minute pass
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers another fee
-    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C})
+    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
 
     // Check base rate has decreased even though Borrower tried to stop it decaying
     const baseRate_2 = await cdpManager.baseRate()
@@ -1376,9 +1376,9 @@ contract('BorrowerOperations', async accounts => {
     // 1 hour passes
     th.fastForwardTime(3600, web3.currentProvider)
 
-     // E adjusts loan
-     await borrowerOperations.openLoan(0, E, { from: E, value: dec(2, 'ether') })
-     await borrowerOperations.adjustLoan(0, dec(37, 15), true, E, { from: D })
+    // E adjusts loan
+    await borrowerOperations.openLoan(0, E, { from: E, value: dec(2, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(37, 15), true, E, { from: D })
 
     const baseRate_3 = await cdpManager.baseRate()
     assert.isTrue(baseRate_3.lt(baseRate_2))
@@ -1440,7 +1440,7 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers a fee
-    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C})
+    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
 
     const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
 
@@ -1456,9 +1456,9 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
 
     // Borrower C triggers a fee
-    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C})
+    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
 
-     const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
 
     // Check that the last fee operation time DID update, as borrower's debt issuance occured
     // after minimum interval had passed 
@@ -1466,7 +1466,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("adjustLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
+  it("adjustLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1487,13 +1487,13 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers a fee, before decay interval has passed
-    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C})
+    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
 
     // 1 minute pass
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers another fee
-    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C})
+    await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
 
     // Check base rate has decreased even though Borrower tried to stop it decaying
     const baseRate_2 = await cdpManager.baseRate()
@@ -1529,9 +1529,9 @@ contract('BorrowerOperations', async accounts => {
     const gtStaking_CLVBalance_Before = await clvToken.balanceOf(gtStaking.address)
     assert.equal(gtStaking_CLVBalance_Before, '0')
 
-   // D adjusts loan
-   await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-   await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
+    // D adjusts loan
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check GT CLV balance after has increased
     const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
@@ -1569,7 +1569,7 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.adjustLoan(0, dec(37, 18),  true, D, { from: D })
+    await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check GT contract CLV fees-per-unit-staked has increased
     const F_LUSD_After = await gtStaking.F_LUSD()
@@ -1605,10 +1605,10 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-     // D adjusts loan
-     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-     const CLVRequest_D = th.toBN(dec(40, 18))
-     await borrowerOperations.adjustLoan(0, CLVRequest_D, true,  D, { from: D })
+    // D adjusts loan
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    const CLVRequest_D = th.toBN(dec(40, 18))
+    await borrowerOperations.adjustLoan(0, CLVRequest_D, true, D, { from: D })
 
     // Check GT staking CLV balance has increased
     const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
@@ -1639,7 +1639,7 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.adjustLoan(0, dec(37, 18),  true, D, { from: D })
+    await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check GT CLV balance after == 0
     const gtStaking_CLVBalance_After = await clvToken.balanceOf(gtStaking.address)
@@ -1666,7 +1666,7 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.adjustLoan(0, dec(37, 18), true,  D, { from: D })
+    await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check GT CLV balance after == 0
     const F_LUSD_After = await gtStaking.F_LUSD()
@@ -1690,7 +1690,7 @@ contract('BorrowerOperations', async accounts => {
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     const CLVRequest_D = th.toBN(dec(40, 18))
-    await borrowerOperations.adjustLoan(0, CLVRequest_D, true,  D, { from: D })
+    await borrowerOperations.adjustLoan(0, CLVRequest_D, true, D, { from: D })
 
     // Check D's CLV balance now equals their requested CLV
     const CLVBalance_D = await clvToken.balanceOf(D)
@@ -1703,10 +1703,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
     // Alice coll and debt increase(+1 ETH, +50CLV)
-    await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     try {
-      const txCarol = await borrowerOperations.adjustLoan(0, dec(50, 18), true,  carol, { from: carol, value: dec(1, 'ether') })
+      const txCarol = await borrowerOperations.adjustLoan(0, dec(50, 18), true, carol, { from: carol, value: dec(1, 'ether') })
       assert.fail(txCarol)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1719,7 +1719,7 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
-    const txAlice = await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
+    const txAlice = await borrowerOperations.adjustLoan(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
     assert.isTrue(txAlice.receipt.status)
 
     await priceFeed.setPrice(dec(100, 18))
@@ -1728,7 +1728,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check operation impossible when system is in Recovery Mode
     try {
-      const txBob = await borrowerOperations.adjustLoan(0, dec(50, 18), true,  bob, { from: bob, value: dec(1, 'ether') })
+      const txBob = await borrowerOperations.adjustLoan(0, dec(50, 18), true, bob, { from: bob, value: dec(1, 'ether') })
       assert.fail(txBob)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1748,7 +1748,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Bob attempts an operation that would bring the TCR below the CCR
     try {
-      const txBob = await borrowerOperations.adjustLoan(0, dec(1, 18), true,  bob, { from: bob })
+      const txBob = await borrowerOperations.adjustLoan(0, dec(1, 18), true, bob, { from: bob })
       assert.fail(txBob)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1761,12 +1761,12 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Check Bob can make an adjustment that fully repays his debt
-    const txBob = await borrowerOperations.adjustLoan(0, dec(100, 18),  false, bob, { from: bob, value: dec(1, 'ether') })
+    const txBob = await borrowerOperations.adjustLoan(0, dec(100, 18), false, bob, { from: bob, value: dec(1, 'ether') })
     assert.isTrue(txBob.receipt.status)
 
     // Carol attempts an adjustment that would repay more than her debt
     try {
-      const txCarol = await borrowerOperations.adjustLoan(0, dec(101, 18), false,  carol, { from: carol })
+      const txCarol = await borrowerOperations.adjustLoan(0, dec(101, 18), false, carol, { from: carol })
       assert.isFalse(txCarol.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1779,12 +1779,12 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(1, 'ether') })
 
     // Check Bob can make an adjustment that fully withdraws his ETH
-    const txBob = await borrowerOperations.adjustLoan(dec(1, 'ether'), 0, true,  bob, { from: bob })
+    const txBob = await borrowerOperations.adjustLoan(dec(1, 'ether'), 0, true, bob, { from: bob })
     assert.isTrue(txBob.receipt.status)
 
     // Carol attempts an adjustment that would withdraw more than her ETH
     try {
-      const txCarol = await borrowerOperations.adjustLoan('1000000000000000001', 0, true,  carol, { from: carol })
+      const txCarol = await borrowerOperations.adjustLoan('1000000000000000001', 0, true, carol, { from: carol })
       assert.isFalse(txCarol.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1801,13 +1801,13 @@ contract('BorrowerOperations', async accounts => {
 
     // Alice decreases coll by 1 ETH and increass debt by 100 CLV. 
     // New ICR would be: ((2+1) * 100) / (100 + 100) = 300/200 = 150%, 
-    const txAlice = await borrowerOperations.adjustLoan(0, dec(100, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
+    const txAlice = await borrowerOperations.adjustLoan(0, dec(100, 18), true, alice, { from: alice, value: dec(1, 'ether') })
     assert.isTrue(txAlice.receipt.status)
 
     // Bob attempts to decrease coll  by 1 ETH and increase debt by 200 CLV. 
     // New ICR would be: ((2+1) * 100) / (100 + 200) = 300/300 = 100%, below the MCR.
     try {
-      const txBob = await borrowerOperations.adjustLoan(0, dec(200, 18), true,  bob, { from: bob, value: dec(1, 'ether') })
+      const txBob = await borrowerOperations.adjustLoan(0, dec(200, 18), true, bob, { from: bob, value: dec(1, 'ether') })
       assert.isFalse(txBob.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1826,7 +1826,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePoolCollBefore, '110000000000000000000')
 
     // Alice adjusts loan. No coll change, and a debt increase (+50CLV)
-    await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: 0 })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), true, alice, { from: alice, value: 0 })
 
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
     const activePoolCollAfter = (await activePool.getETH()).toString()
@@ -1847,7 +1847,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePoolDebtBefore, dec(100, 18))
 
     // Alice adjusts loan. No coll change, no debt change
-    await borrowerOperations.adjustLoan(0, 0, true,  alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, 0, true, alice, { from: alice, value: dec(1, 'ether') })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
@@ -1869,7 +1869,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(collBefore, dec(1, 'ether'))
 
     // Alice adjusts loan. Coll and debt increase(+1 ETH, +50CLV)
-    await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
@@ -1891,7 +1891,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(collBefore, dec(1, 'ether'))
 
     // Alice adjusts loan coll and debt decrease (-0.5 ETH, -50CLV)
-    await borrowerOperations.adjustLoan(dec(500, 'finney'), dec(50, 18), false,  alice, { from: alice })
+    await borrowerOperations.adjustLoan(dec(500, 'finney'), dec(50, 18), false, alice, { from: alice })
 
     const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
     const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
@@ -1955,7 +1955,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(totalStakesBefore, '101000000000000000000')
 
     // Alice adjusts loan - coll and debt increase (+1 ETH, +50 CLV)
-    await borrowerOperations.adjustLoan(0, dec(50, 18), true,  alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     const stakeAfter = ((await cdpManager.CDPs(alice))[2]).toString()
     const totalStakesAfter = await cdpManager.totalStakes();
@@ -1976,7 +1976,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(totalStakesBefore, '101000000000000000000')
 
     // Alice adjusts loan - coll decrease and debt decrease
-    await borrowerOperations.adjustLoan(dec(500, 'finney'), dec(50, 18), false,  alice, { from: alice })
+    await borrowerOperations.adjustLoan(dec(500, 'finney'), dec(50, 18), false, alice, { from: alice })
 
     const stakeAfter = ((await cdpManager.CDPs(alice))[2]).toString()
     const totalStakesAfter = await cdpManager.totalStakes();
@@ -2010,7 +2010,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(alice_CLVTokenBalance_Before, dec(100, 18))
 
     // Alice adjusts loan - coll increase and debt increase
-    await borrowerOperations.adjustLoan(0, dec(100, 18),  true,  alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(100, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     // check after
     const alice_CLVTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
@@ -2064,7 +2064,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_CLVDebt_Before, dec(100, 18))
 
     // Alice adjusts loan - coll increase and debt decrease
-    await borrowerOperations.adjustLoan(0, dec(50, 18), false,  alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(50, 18), false, alice, { from: alice, value: dec(1, 'ether') })
 
     const activePool_CLVDebt_After = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_CLVDebt_After, dec(50, 18))
@@ -2079,7 +2079,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_CLVDebt_Before, dec(100, 18))
 
     // Alice adjusts loan - coll increase and debt increase
-    await borrowerOperations.adjustLoan(0, dec(100, 18),  true, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.adjustLoan(0, dec(100, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     const activePool_CLVDebt_After = (await activePool.getCLVDebt()).toString()
     assert.equal(activePool_CLVDebt_After, dec(200, 18))
@@ -2112,7 +2112,7 @@ contract('BorrowerOperations', async accounts => {
     const aliceColl_Before = (await cdpManager.CDPs(alice))[1].toString()
     assert.equal(aliceColl_Before, dec(1, 'ether'))
 
-    await borrowerOperations.adjustLoan(dec(1, 'ether'), dec(100, 18),  true,  alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.adjustLoan(dec(1, 'ether'), dec(100, 18), true, alice, { from: alice, value: dec(3, 'ether') })
 
     const aliceColl_After = (await cdpManager.CDPs(alice))[1].toString()
     assert.equal(aliceColl_After, dec(4, 'ether'))
@@ -2413,18 +2413,18 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(20, 18), C, { from: C, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(dec(20, 18), frontEnd_3, {from: C})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
 
     await borrowerOperations.openLoan(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
     assert.isFalse(await cdpManager.checkRecoveryMode())
-    
+
     await th.fastForwardTime(timeValues, web3.currentProvider)
-  
+
     // Get A's current non-zero LQTY rewards
     const A_LQTYGain = await poolManager.getDepositorLQTYGain(A)
     assert.isTrue(A_LQTYGain.gt(th.toBN('0')))
@@ -2434,9 +2434,9 @@ contract('BorrowerOperations', async accounts => {
     assert.eq(A_LQTYBalanceBefore, '0')
 
     // Close loan
-    await borrowerOperations.closeLoan({from: A})
+    await borrowerOperations.closeLoan({ from: A })
     assert.isFalse(await sortedCDPs.contains(A))
-    
+
     // Check LQTY balance == previous pending LQTY rewards
     const A_LQTYBalanceAfter = await growthToken.balanceOf(A)
     assert.eq(A_LQTYBalanceAfter, A_LQTYGain)
@@ -2452,16 +2452,16 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(20, 18), C, { from: C, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(dec(20, 18), frontEnd_3, {from: C})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
 
     await borrowerOperations.openLoan(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
     assert.isFalse(await cdpManager.checkRecoveryMode())
-    
+
     await th.fastForwardTime(timeValues, web3.currentProvider)
 
     // Get A's current non-zero LQTY rewards
@@ -2473,9 +2473,9 @@ contract('BorrowerOperations', async accounts => {
     assert.eq(F1_LQTYBalanceBefore, '0')
 
     // Close loan
-    await borrowerOperations.closeLoan({from: A})
+    await borrowerOperations.closeLoan({ from: A })
     assert.isFalse(await sortedCDPs.contains(A))
-    
+
     // Check LQTY balance == previous pending LQTY rewards
     const F1_LQTYBalanceAfter = await growthToken.balanceOf(frontEnd_1)
     assert.eq(F1_LQTYBalanceAfter, F1_LQTYGain)
@@ -2492,10 +2492,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(10, 18), D, { from: D, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(dec(20, 18), frontEnd_3, {from: C})
-    await poolManager.provideToSP(dec(10, 18), {from: D})  // D deposits directly, not via front end
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
+    await poolManager.provideToSP(dec(10, 18), { from: D })  // D deposits directly, not via front end
 
     // Check deposits A, B, C, D  are eligible for LQTY rewards
     assert.isTrue(await poolManager.isEligibleForLQTY(A))
@@ -2504,10 +2504,10 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(await poolManager.isEligibleForLQTY(D))
 
     // Close troves A, B, C, D
-    await borrowerOperations.closeLoan({from: A})
-    await borrowerOperations.closeLoan({from: B})
-    await borrowerOperations.closeLoan({from: C})
-    await borrowerOperations.closeLoan({from: D})
+    await borrowerOperations.closeLoan({ from: A })
+    await borrowerOperations.closeLoan({ from: B })
+    await borrowerOperations.closeLoan({ from: C })
+    await borrowerOperations.closeLoan({ from: D })
     assert.isFalse(await sortedCDPs.contains(A))
     assert.isFalse(await sortedCDPs.contains(B))
     assert.isFalse(await sortedCDPs.contains(C))
@@ -2531,10 +2531,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(10, 18), D, { from: D, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(dec(20, 18), frontEnd_3, {from: C})
-  
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
+
     // Check deposits A, B, C are tagged correctly
     const A_taggedFrontEnd_Before = await poolManager.getFrontEndTag(A)
     const B_taggedFrontEnd_Before = await poolManager.getFrontEndTag(B)
@@ -2545,9 +2545,9 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(C_taggedFrontEnd_Before, frontEnd_3)
 
     // Close troves A, B, C
-    await borrowerOperations.closeLoan({from: A})
-    await borrowerOperations.closeLoan({from: B})
-    await borrowerOperations.closeLoan({from: C})
+    await borrowerOperations.closeLoan({ from: A })
+    await borrowerOperations.closeLoan({ from: B })
+    await borrowerOperations.closeLoan({ from: C })
     assert.isFalse(await sortedCDPs.contains(A))
     assert.isFalse(await sortedCDPs.contains(B))
     assert.isFalse(await sortedCDPs.contains(C))
@@ -2572,9 +2572,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(20, 18), C, { from: C, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(dec(20, 18), frontEnd_3, {from: C})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
 
     // Confirm A's deposit is eliglble for LQTY
     assert.isTrue(await poolManager.isEligibleForLQTY(A))
@@ -2584,9 +2584,9 @@ contract('BorrowerOperations', async accounts => {
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
     assert.isFalse(await cdpManager.checkRecoveryMode())
-    
+
     await th.fastForwardTime(timeValues, web3.currentProvider)
-  
+
     // Liquidate defaulter 1
     await cdpManager.liquidate(defaulter_1)
 
@@ -2597,11 +2597,11 @@ contract('BorrowerOperations', async accounts => {
     // Get A's trove collateral and ETH balance
     const A_troveCollateral = (await cdpManager.CDPs(A))[1]
     const A_ETHBalanceBefore = await web3.eth.getBalance(A)
-    
+
     // Close loan A
-    await borrowerOperations.closeLoan({from: A, gasPrice: 0})
+    await borrowerOperations.closeLoan({ from: A, gasPrice: 0 })
     assert.isFalse(await sortedCDPs.contains(A))
-  
+
     const A_ETHBalanceAfter = await web3.eth.getBalance(A)
     const A_ETHBalanceDiff = A_ETHBalanceAfter.sub(A_ETHBalanceBefore)
 
@@ -2618,49 +2618,49 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(80, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(20, 18), C, { from: C, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(10, 18), D, { from: D, value: dec(1, 'ether') })
-   
+
     const C_deposit = dec(20, 18)
     const D_deposit = dec(10, 18)
     // A, C deposit to Stability Pool via F1. B, D deposit via F2
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(C_deposit, frontEnd_1, {from: C})
-    await poolManager.provideToSP(D_deposit, frontEnd_2, {from: D})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(C_deposit, frontEnd_1, { from: C })
+    await poolManager.provideToSP(D_deposit, frontEnd_2, { from: D })
 
-   // Check deposits A, B, C are eligible for LQTY rewards
-   assert.isTrue(await poolManager.isEligibleForLQTY(A))
-   assert.isTrue(await poolManager.isEligibleForLQTY(B))
-   assert.isTrue(await poolManager.isEligibleForLQTY(C))
-   assert.isTrue(await poolManager.isEligibleForLQTY(D))
+    // Check deposits A, B, C are eligible for LQTY rewards
+    assert.isTrue(await poolManager.isEligibleForLQTY(A))
+    assert.isTrue(await poolManager.isEligibleForLQTY(B))
+    assert.isTrue(await poolManager.isEligibleForLQTY(C))
+    assert.isTrue(await poolManager.isEligibleForLQTY(D))
 
-   // Get F1 and F2 stakes
-   const F1_Stake_Before = await poolManager.getCompoundedFrontEndStake(frontEnd_1)
-   const F2_Stake_Before = await poolManager.getCompoundedFrontEndStake(frontEnd_2)
+    // Get F1 and F2 stakes
+    const F1_Stake_Before = await poolManager.getCompoundedFrontEndStake(frontEnd_1)
+    const F2_Stake_Before = await poolManager.getCompoundedFrontEndStake(frontEnd_2)
 
-   assert.isTrue(F1_Stake_Before.gt(th.toBN('0')))
-   assert.isTrue(F2_Stake_Before.gt(th.toBN('0')))
+    assert.isTrue(F1_Stake_Before.gt(th.toBN('0')))
+    assert.isTrue(F2_Stake_Before.gt(th.toBN('0')))
 
-   // Close trove C, D
-   await borrowerOperations.closeLoan({from: C})
-   await borrowerOperations.closeLoan({from: D})
-   assert.isFalse(await sortedCDPs.contains(C))
-   assert.isFalse(await sortedCDPs.contains(D))
-   
-   // Check deposits C, D are no longer eligible for LQTY rewards
-   assert.isFalse(await poolManager.isEligibleForLQTY(C))
-   assert.isFalse(await poolManager.isEligibleForLQTY(D))
+    // Close trove C, D
+    await borrowerOperations.closeLoan({ from: C })
+    await borrowerOperations.closeLoan({ from: D })
+    assert.isFalse(await sortedCDPs.contains(C))
+    assert.isFalse(await sortedCDPs.contains(D))
 
-   // Get F1 and F2 stakes
-   const F1_Stake_After = await poolManager.getCompoundedFrontEndStake(frontEnd_1)
-   const F2_Stake_After = await poolManager.getCompoundedFrontEndStake(frontEnd_2)
+    // Check deposits C, D are no longer eligible for LQTY rewards
+    assert.isFalse(await poolManager.isEligibleForLQTY(C))
+    assert.isFalse(await poolManager.isEligibleForLQTY(D))
 
-   const F1_Diff = F1_Stake_Before.sub(F1_Stake_After)
-   const F2_Diff = F2_Stake_Before.sub(F2_Stake_After)
+    // Get F1 and F2 stakes
+    const F1_Stake_After = await poolManager.getCompoundedFrontEndStake(frontEnd_1)
+    const F2_Stake_After = await poolManager.getCompoundedFrontEndStake(frontEnd_2)
 
-   // Check F1 has reduced by amount equal to C's deposit, and F2 has reduced by amount equal to D's deposit
-   assert.isTrue(F1_Diff, C_deposit)  
-   assert.isTrue(F2_Diff, D_deposit)
- })
+    const F1_Diff = F1_Stake_Before.sub(F1_Stake_After)
+    const F2_Diff = F2_Stake_Before.sub(F2_Stake_After)
+
+    // Check F1 has reduced by amount equal to C's deposit, and F2 has reduced by amount equal to D's deposit
+    assert.isTrue(F1_Diff, C_deposit)
+    assert.isTrue(F2_Diff, D_deposit)
+  })
 
   // --- closeLoan() with LQTY-ineligible deposit ---
 
@@ -2669,17 +2669,17 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), whale, { from: dennis, value: dec(10, 'ether') })
 
     // Whale transfers CLV to A 
-    await clvToken.transfer(A, dec(50, 18), {from: whale})
+    await clvToken.transfer(A, dec(50, 18), { from: whale })
 
     // A, deposits to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
 
     // Confirm A's deposit is ineliglble for LQTY
     assert.isFalse(await poolManager.isEligibleForLQTY(A))
 
     // C opens trove and makes SP deposit
     await borrowerOperations.openLoan(dec(20, 18), C, { from: C, value: dec(1, 'ether') })
-    await poolManager.provideToSP(dec(20, 18), frontEnd_3, {from: C})
+    await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
 
     await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
@@ -2697,11 +2697,11 @@ contract('BorrowerOperations', async accounts => {
     // Get A's trove collateral and ETH balance
     const A_troveCollateral = (await cdpManager.CDPs(A))[1]
     const A_ETHBalanceBefore = await web3.eth.getBalance(A)
-    
+
     // Close loan A
-    await borrowerOperations.closeLoan({from: A, gasPrice: 0})
+    await borrowerOperations.closeLoan({ from: A, gasPrice: 0 })
     assert.isFalse(await sortedCDPs.contains(A))
-  
+
     const A_ETHBalanceAfter = await web3.eth.getBalance(A)
     const A_ETHBalanceDiff = A_ETHBalanceAfter.sub(A_ETHBalanceBefore)
 
@@ -2726,9 +2726,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(dec(20, 18), frontEnd_3, {from: C})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
 
     // Check deposits A, B, C are eligible for LQTY rewards
     assert.isTrue(await poolManager.isEligibleForLQTY(A))
@@ -2736,9 +2736,9 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
     // Close trove A
-    await borrowerOperations.closeLoan({from: A})
+    await borrowerOperations.closeLoan({ from: A })
     assert.isFalse(await sortedCDPs.contains(A))
-   
+
     // Check deposits A is no longer eligible for LQTY rewards
     assert.isFalse(await poolManager.isEligibleForLQTY(A))
 
@@ -2754,7 +2754,7 @@ contract('BorrowerOperations', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currrentProvider)
 
     // D provides 1 CLV to the SP, which brings LQTY gains for all depositors up to date
-    await provideToSP(dec(1, 18), {from: D})
+    await provideToSP(dec(1, 18), { from: D })
 
     // Get current LQTY gains after time has passed
     const A_LQTYGain_After = await poolManager.getDepositorLQTYGain(A)
@@ -2776,16 +2776,16 @@ contract('BorrowerOperations', async accounts => {
     // A and B open troves and make SP deposits via F1 and F2 respectively
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(50, 18), B, { from: B, value: dec(1, 'ether') })
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(50, 18), frontEnd_2, {from: B})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(50, 18), frontEnd_2, { from: B })
 
     // Whale sends tokens to C and D
-    await clvToken.transfer(A, dec(20,18), {from: whale})
-    await clvToken.transfer(B, dec(10,18), {from: whale})
+    await clvToken.transfer(A, dec(20, 18), { from: whale })
+    await clvToken.transfer(B, dec(10, 18), { from: whale })
 
     // C and D make SP deposits via F1 and F2 respectively
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: C})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: D})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: C })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: D })
 
     // C and D open loans 
     await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(1, 'ether') })
@@ -2803,8 +2803,8 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(F2_Stake_Before.gt(th.toBN('0')))
 
     // Close trove C, D
-    await borrowerOperations.closeLoan({from: C})
-    await borrowerOperations.closeLoan({from: D})
+    await borrowerOperations.closeLoan({ from: C })
+    await borrowerOperations.closeLoan({ from: D })
     assert.isFalse(await sortedCDPs.contains(C))
     assert.isFalse(await sortedCDPs.contains(D))
 
@@ -2830,9 +2830,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(dec(20, 18), frontEnd_3, {from: C})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
 
     // Check deposits A, B, C are eligible for LQTY rewards
     assert.isTrue(await poolManager.isEligibleForLQTY(A))
@@ -2840,9 +2840,9 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
     // Close trove A
-    await borrowerOperations.closeLoan({from: A})
+    await borrowerOperations.closeLoan({ from: A })
     assert.isFalse(await sortedCDPs.contains(A))
-   
+
     // Check deposits A is no longer eligible for LQTY rewards
     assert.isFalse(await poolManager.isEligibleForLQTY(A))
 
@@ -2862,7 +2862,7 @@ contract('BorrowerOperations', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currrentProvider)
 
     // D provides 1 CLV to the SP, which brings LQTY gains for all depositors up to date
-    await provideToSP(dec(1, 18), {from: D})
+    await provideToSP(dec(1, 18), { from: D })
 
     // Get current LQTY gains after time has passed
     const F1_LQTYGain_After = await poolManager.getFrontEndLQTYGain(frontEnd_1)
@@ -2885,21 +2885,21 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(80, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
- 
+
     await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), defaulter_2, { from: defaulter_1, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(80, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(dec(50, 18), frontEnd_3, {from: C})
+    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(50, 18), frontEnd_3, { from: C })
 
     // Check deposits A, B, C are eligible for LQTY rewards
     assert.isTrue(await poolManager.isEligibleForLQTY(A))
     assert.isTrue(await poolManager.isEligibleForLQTY(B))
     assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
-    await priceFeed.setPrice(dec(100,18))
+    await priceFeed.setPrice(dec(100, 18))
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
     await cdpManager.liquidate(defaulter_1)
@@ -2914,7 +2914,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(C_ETHGain.gt(th.toBN('0')))
 
     // Close trove A
-    await borrowerOperations.closeLoan({from: A})
+    await borrowerOperations.closeLoan({ from: A })
     assert.isFalse(await sortedCDPs.contains(A))
 
     // Check deposits A is no longer eligible for LQTY rewards
@@ -3154,10 +3154,10 @@ contract('BorrowerOperations', async accounts => {
     const timeNow = await th.getLatestBlockTimestamp(web3)
     assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
 
-     // Borrower E triggers a fee
-     await borrowerOperations.openLoan(dec(1, 18), E, { from: E, value: dec(1, 'ether') })
+    // Borrower E triggers a fee
+    await borrowerOperations.openLoan(dec(1, 18), E, { from: E, value: dec(1, 'ether') })
 
-     const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
 
     // Check that the last fee operation time DID update, as borrower's debt issuance occured
     // after minimum interval had passed 
@@ -3165,7 +3165,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("openLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => { 
+  it("openLoan(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -3724,8 +3724,8 @@ contract('BorrowerOperations', async accounts => {
   })
 
   it("openLoan(): increases CLV debt in ActivePool by correct amount", async () => {
-    
-    
+
+
 
     const activePool_CLVDebt_Before = await activePool.getCLVDebt()
     assert.equal(activePool_CLVDebt_Before, 0)
@@ -3749,18 +3749,18 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("openLoan(): the caller's ineligible deposit remains ineligible for LQTY", async () => { 
+  it("openLoan(): the caller's ineligible deposit remains ineligible for LQTY", async () => {
     await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // Whale transfers CLV to A, B, C
-    await clvToken.transfer(A, dec(50, 18), {from: whale})
-    await clvToken.transfer(A, dec(60, 18), {from: whale})
-    await clvToken.transfer(A, dec(70, 18), {from: whale})
+    await clvToken.transfer(A, dec(50, 18), { from: whale })
+    await clvToken.transfer(A, dec(60, 18), { from: whale })
+    await clvToken.transfer(A, dec(70, 18), { from: whale })
 
     // A, B, C make deposits
-    await poolManager.provideToSP(dec(50, 18), frontEnd_1, {from: A})
-    await poolManager.provideToSP(dec(60, 18), frontEnd_2, {from: B})
-    await poolManager.provideToSP(dec(70, 18), th.ZERO_ADDRESS, {from: C})  //  C deposits directly, not via front end
+    await poolManager.provideToSP(dec(50, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(60, 18), frontEnd_2, { from: B })
+    await poolManager.provideToSP(dec(70, 18), th.ZERO_ADDRESS, { from: C })  //  C deposits directly, not via front end
 
     // Confirm A, B, C's deposits are ineligible for LQTY rewards
     assert.isFalse(await poolManager.isEligibleForLQTY(A))
@@ -3772,19 +3772,11 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(20, 18), whale, { from: B, value: dec(100, 'ether') })
     await borrowerOperations.openLoan(dec(30, 18), whale, { from: C, value: dec(100, 'ether') })
 
-
-
-
-
-
-
-
-
-
-
+    // Confirm A, B, C's deposits remain ineligible for LQTY rewards
+    assert.isFalse(await poolManager.isEligibleForLQTY(A))
+    assert.isFalse(await poolManager.isEligibleForLQTY(B))
+    assert.isFalse(await poolManager.isEligibleForLQTY(C))
   })
-
-
 
 
   //  --- getNewICRFromTroveChange ---
@@ -3800,7 +3792,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = 0
       const debtChange = 0
 
-      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange,  true,  debtChange,  true,  price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true, debtChange, true, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
@@ -3812,7 +3804,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = 0
       const debtChange = dec(50, 18)
 
-      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange,  true, debtChange, true,  price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true, debtChange, true, price)).toString()
       assert.isAtMost(th.getDifference(newICR, '1333333333333333333'), 100)
     })
 
@@ -3824,7 +3816,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = 0
       const debtChange = dec(50, 18)
 
-      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true,  debtChange, false, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true, debtChange, false, price)).toString()
       assert.equal(newICR, '4000000000000000000')
     })
 
@@ -3836,7 +3828,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(1, 'ether')
       const debtChange = 0
 
-      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true,  debtChange,  true,  price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true, debtChange, true, price)).toString()
       assert.equal(newICR, '4000000000000000000')
     })
 
@@ -3848,7 +3840,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(5, 17)
       const debtChange = 0
 
-      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false, debtChange,  true, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false, debtChange, true, price)).toString()
       assert.equal(newICR, '1000000000000000000')
     })
 
@@ -3860,7 +3852,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(5, 17)
       const debtChange = dec(50, 18)
 
-      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false,  debtChange, false, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false, debtChange, false, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
@@ -3872,7 +3864,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(1, 'ether')
       const debtChange = dec(100, 18)
 
-      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange,  true, debtChange, true,  price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true, debtChange, true, price)).toString()
       assert.equal(newICR, '2000000000000000000')
     })
 
@@ -3884,7 +3876,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(1, 'ether')
       const debtChange = dec(50, 18)
 
-      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange,  true, debtChange, false, price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, true, debtChange, false, price)).toString()
       assert.equal(newICR, '8000000000000000000')
     })
 
@@ -3896,7 +3888,7 @@ contract('BorrowerOperations', async accounts => {
       const collChange = dec(5, 17)
       const debtChange = dec(100, 18)
 
-      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false, debtChange, true,  price)).toString()
+      const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false, debtChange, true, price)).toString()
       assert.equal(newICR, '500000000000000000')
     })
   })
@@ -3956,7 +3948,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = 0
       const debtChange = dec(200, 18)
-      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true,  price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
         .div(troveDebt.add(liquidatedDebt).add(th.toBN(debtChange)))
@@ -3984,7 +3976,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = 0
       const debtChange = dec(100, 18)
-      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true,  debtChange, false, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
         .div(troveDebt.add(liquidatedDebt).sub(th.toBN(dec(100, 18))))
@@ -4012,7 +4004,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = dec(2, 'ether')
       const debtChange = 0
-      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange,  true, debtChange, true,  price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(collChange))).mul(price)
         .div(troveDebt.add(liquidatedDebt))
@@ -4041,7 +4033,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = dec(1, 18)
       const debtChange = 0
-      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, false, debtChange,  true, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, false, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 'ether')))).mul(price)
         .div(troveDebt.add(liquidatedDebt))
@@ -4069,7 +4061,7 @@ contract('BorrowerOperations', async accounts => {
 
       // --- TEST ---
       const collChange = dec(1, 18)
-      const debtChange = dec( 100, 18)
+      const debtChange = dec(100, 18)
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, false, debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 'ether')))).mul(price)
@@ -4099,7 +4091,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = dec(1, 'ether')
       const debtChange = dec(100, 18)
-      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange,  true, debtChange, true,  price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(dec(1, 'ether')))).mul(price)
         .div(troveDebt.add(liquidatedDebt).add(th.toBN(dec(100, 18))))
@@ -4128,7 +4120,7 @@ contract('BorrowerOperations', async accounts => {
       // --- TEST ---
       const collChange = dec(1, 'ether')
       const debtChange = dec(100, 18)
-      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true,  debtChange, false, price))
+      const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(dec(1, 'ether')))).mul(price)
         .div(troveDebt.add(liquidatedDebt).sub(th.toBN(dec(100, 18))))
