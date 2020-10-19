@@ -8,6 +8,7 @@ import { useSelector } from "@liquity/lib-react";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Icon } from "./Icon";
+import { COIN } from "../strings";
 
 type TroveEditorProps = {
   title: string;
@@ -83,7 +84,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           amount={edited.debt.prettify()}
           pendingAmount={pendingDebt?.prettify()}
           pendingColor={pendingDebt?.positive ? "danger" : "success"}
-          unit="LQTY"
+          unit={COIN}
           {...{ editingState }}
           editedAmount={edited.debt.toString(2)}
           setEditedAmount={(editedDebt: string) => setEdited(edited.setDebt(editedDebt))}

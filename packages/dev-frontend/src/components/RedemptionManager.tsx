@@ -10,6 +10,7 @@ import { LoadingOverlay } from "./LoadingOverlay";
 import { EditableRow } from "./Editor";
 import { Icon } from "./Icon";
 import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
 
 type RedemptionActionProps = {
   exchangedQui: Decimal;
@@ -68,10 +69,12 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     <Flex variant="layout.actions">
       <Transaction
         id={myTransactionId}
-        requires={[[quiBalance.gte(exchangedQui), "You don't have enough LQTY"]]}
+        requires={[[quiBalance.gte(exchangedQui), `You don't have enough ${COIN}`]]}
         {...{ send }}
       >
-        <Button sx={{ mx: 2 }}>Exchange {exchangedQui.prettify()} LQTY</Button>
+        <Button sx={{ mx: 2 }}>
+          Exchange {exchangedQui.prettify()} {COIN}
+        </Button>
       </Transaction>
     </Flex>
   );
@@ -92,7 +95,7 @@ export const RedemptionManager: React.FC = () => {
     <>
       <Card>
         <Heading>
-          Redeem Collateral with LQTY
+          Redeem Collateral with {COIN}
           {edited && !changePending && (
             <Button
               variant="titleIcon"
@@ -111,7 +114,7 @@ export const RedemptionManager: React.FC = () => {
             label="Exchange"
             inputId="redeem-exchange"
             amount={exchangedQui.prettify()}
-            unit="LQTY"
+            unit={COIN}
             {...{ editingState }}
             editedAmount={exchangedQui.toString(2)}
             setEditedAmount={editedQui => setExchangedQui(Decimal.from(editedQui))}

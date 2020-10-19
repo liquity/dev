@@ -7,6 +7,7 @@ import { useSelector } from "@liquity/lib-react";
 import { useLiquity } from "../hooks/LiquityContext";
 import { shortenAddress } from "../utils/shortenAddress";
 import { Icon } from "./Icon";
+import { COIN } from "../strings";
 
 const select = ({ accountBalance, quiBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -35,7 +36,9 @@ export const UserAccount: React.FC = () => {
           <Heading sx={{ fontSize: 1 }}>Balance</Heading>
           <Flex>
             <Text sx={{ mr: 3, fontSize: 1 }}>{accountBalance.prettify()} ETH</Text>
-            <Text sx={{ fontSize: 1 }}>{quiBalance.prettify()} LQTY</Text>
+            <Text sx={{ fontSize: 1 }}>
+              {quiBalance.prettify()} {COIN}
+            </Text>
           </Flex>
         </Flex>
       </Flex>

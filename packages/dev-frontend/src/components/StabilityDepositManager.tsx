@@ -7,6 +7,7 @@ import { useSelector } from "@liquity/lib-react";
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
 
 type StabilityDepositActionProps = {
   originalDeposit: StabilityDeposit;
@@ -52,18 +53,18 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
       ? difference.positive
         ? ([
             [
-              `Deposit ${difference.absoluteValue!.prettify()} LQTY${
+              `Deposit ${difference.absoluteValue!.prettify()} ${COIN}${
                 originalDeposit.pendingCollateralGain.nonZero
                   ? ` & withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
                   : ""
               }`,
               liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!),
-              [[quiBalance.gte(difference.absoluteValue!), "You don't have enough LQTY"]]
+              [[quiBalance.gte(difference.absoluteValue!), `You don't have enough ${COIN}`]]
             ]
           ] as const)
         : ([
             [
-              `Withdraw ${difference.absoluteValue!.prettify()} LQTY${
+              `Withdraw ${difference.absoluteValue!.prettify()} ${COIN}${
                 originalDeposit.pendingCollateralGain.nonZero
                   ? ` & ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
                   : ""

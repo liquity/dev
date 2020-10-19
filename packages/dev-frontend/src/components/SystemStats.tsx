@@ -6,6 +6,7 @@ import { LiquityStoreState } from "@liquity/lib-base";
 import { useSelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
 
 const selectBalances = ({ accountBalance, quiBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -19,7 +20,9 @@ const Balances: React.FC = () => {
     <Box sx={{ mb: 3 }}>
       <Heading>My Account Balances</Heading>
       <Text>ETH: {accountBalance.prettify(4)}</Text>
-      <Text>LQTY: {quiBalance.prettify()}</Text>
+      <Text>
+        {COIN}: {quiBalance.prettify()}
+      </Text>
     </Box>
   );
 };
@@ -58,9 +61,13 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Heading>Liquity System</Heading>
 
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
-      <Text>LQTY in circulation: {total.debt.shorten()}</Text>
+      <Text>
+        Total {COIN} supply: {total.debt.shorten()}
+      </Text>
       {quiInStabilityPoolPct && (
-        <Text>Fraction of LQTY in Stability Pool: {quiInStabilityPoolPct.toString(1)}</Text>
+        <Text>
+          Fraction of {COIN} in Stability Pool: {quiInStabilityPoolPct.toString(1)}
+        </Text>
       )}
       <Text>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Text>
       {total.collateralRatioIsBelowCritical(price) && (

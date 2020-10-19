@@ -9,6 +9,7 @@ import { usePrevious } from "../hooks/usePrevious";
 import { useLiquity } from "../hooks/LiquityContext";
 import { TroveEditor } from "./TroveEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
+import { COIN } from "../strings";
 
 type TroveActionProps = {
   original: Trove;
@@ -60,7 +61,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
           ? ([
               [
                 !total.collateralRatioIsBelowCritical(price),
-                "Can't borrow LQTY during recovery mode"
+                `Can't borrow ${COIN} during recovery mode`
               ],
               [
                 !total.add(edited).collateralRatioIsBelowCritical(price),
@@ -75,27 +76,27 @@ const TroveAction: React.FC<TroveActionProps> = ({
         liquity.closeTrove.bind(liquity),
         [
           [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
-          [quiBalance.gte(original.debt), "You don't have enough LQTY"]
+          [quiBalance.gte(original.debt), `You don't have enough ${COIN}`]
         ]
       ] as const)
     : ([
         collateralDifference && debtDifference
           ? collateralDifference.positive && debtDifference.positive
             ? `Deposit ${collateralDifference.absoluteValue!.prettify()} ETH & ` +
-              `borrow ${debtDifference.absoluteValue!.prettify()} LQTY`
+              `borrow ${debtDifference.absoluteValue!.prettify()} ${COIN}`
             : collateralDifference.negative && debtDifference.negative
-            ? `Repay ${debtDifference.absoluteValue!.prettify()} LQTY & ` +
+            ? `Repay ${debtDifference.absoluteValue!.prettify()} ${COIN} & ` +
               `withdraw ${collateralDifference.absoluteValue!.prettify()} ETH`
             : collateralDifference.positive
             ? `Deposit ${collateralDifference.absoluteValue!.prettify()} ETH & ` +
-              `repay ${debtDifference.absoluteValue!.prettify()} LQTY`
-            : `Borrow ${debtDifference.absoluteValue!.prettify()} LQTY & ` +
+              `repay ${debtDifference.absoluteValue!.prettify()} ${COIN}`
+            : `Borrow ${debtDifference.absoluteValue!.prettify()} ${COIN} & ` +
               `withdraw ${collateralDifference.absoluteValue!.prettify()} ETH`
           : collateralDifference
           ? `${collateralDifference.positive ? "Deposit" : "Withdraw"} ` +
             `${collateralDifference.absoluteValue!.prettify()} ETH`
           : `${debtDifference!.positive ? "Borrow" : "Repay"} ` +
-            `${debtDifference!.absoluteValue!.prettify()} LQTY`,
+            `${debtDifference!.absoluteValue!.prettify()} ${COIN}`,
 
         collateralDifference && debtDifference
           ? liquity.changeTrove.bind(
@@ -128,7 +129,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
             ? ([
                 [
                   !total.collateralRatioIsBelowCritical(price),
-                  "Can't borrow LQTY during recovery mode"
+                  `Can't borrow ${COIN} during recovery mode`
                 ],
                 [
                   !total
@@ -141,7 +142,7 @@ const TroveAction: React.FC<TroveActionProps> = ({
             : []),
           ...(debtDifference?.negative
             ? ([
-                [quiBalance.gte(debtDifference.absoluteValue!), "You don't have enough LQTY"]
+                [quiBalance.gte(debtDifference.absoluteValue!), `You don't have enough ${COIN}`]
               ] as const)
             : [])
         ]
