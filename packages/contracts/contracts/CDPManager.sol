@@ -280,7 +280,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return V;
     }
 
-    function _liquidateRecoveryMode(address _user, uint _ICR, uint _CLVInPool) internal
+    function _liquidateRecoveryMode(address _user, uint _ICR, uint _CLVInPool, uint _TCR) internal
     returns (LiquidationValues memory V)
     {
         LocalVariables_InnerSingleLiquidateFunction memory L;
@@ -323,9 +323,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _closeCDP(_user);
             emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
-        /* If 110% <= ICR < 150% and there is CLV in the Stability Pool, 
-        only offset it as much as possible (no redistribution) */
-        } else if ((_ICR >= MCR) && (_ICR < CCR)) {
+        /* If 110% <= ICR < current TCR (relative to previous liquidations from the current sequence including this liquidation) 
+         * and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution) */
+        } else if ((_ICR >= MCR) && (_ICR < _TCR)) {
             if (_CLVInPool == 0) {
                 LiquidationValues memory zeroVals;
                 return zeroVals;
@@ -462,7 +462,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.backToNormalMode = false;
         L.entireSystemDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());
         L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
-
+        
         L.i = 0;
         while (L.i < _n) {
             L.user = sortedCDPs.getLast();
@@ -472,9 +472,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             if (L.backToNormalMode == false) {
 
                 // Break the loop if ICR is greater than MCR and Stability Pool is empty
-                if (L.ICR >= MCR && L.remainingCLVInPool == 0) {break;}
+                if (L.ICR >= MCR && L.remainingCLVInPool == 0) { break; }
 
-                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInPool);
+                uint TCR = Math._computeCR(L.entireSystemColl, L.entireSystemDebt, _price); 
+
+                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInPool, TCR);
 
                 // Update aggregate trackers
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
@@ -500,7 +502,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             }  else break;  // break if the loop reaches a CDP with ICR >= MCR
 
             // Break the loop if it reaches the first CDP in the sorted list
-            if (L.user == sortedCDPs.getFirst()) {break;}
+            if (L.user == sortedCDPs.getFirst()) { break; }
+
             L.i++;
         }
     }
@@ -590,8 +593,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
 
         L.i = 0;
-         for (L.i = 0; L.i < troveArrayLength; L.i++) {
-             L.user = _troveArray[L.i];
+        for (L.i = 0; L.i < troveArrayLength; L.i++) {
+            L.user = _troveArray[L.i];
 
             L.ICR = _getCurrentICR(L.user, _price);
 
@@ -599,9 +602,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             if (L.backToNormalMode == false) {
 
                 // Skip this trove if ICR is greater than MCR and Stability Pool is empty
-                if (L.ICR >= MCR && L.remainingCLVInPool == 0) {continue;}
+                if (L.ICR >= MCR && L.remainingCLVInPool == 0) { continue; }
 
-                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInPool);
+                uint TCR = Math._computeCR(L.entireSystemColl, L.entireSystemDebt, _price); 
+
+                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInPool, TCR);
 
                 // Update aggregate trackers
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
@@ -612,10 +617,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 T = _addLiquidationValuesToTotals(T, V);
 
                 // Break the loop if it was a partial liquidation
-                if (V.partialAddr != address(0)) {break;}
+                if (V.partialAddr != address(0)) { break; }
 
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
+
             else if (L.backToNormalMode == true && L.ICR < MCR) {
                 V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInPool);
                 L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
@@ -662,11 +668,13 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         T2.totalDebtInSequence = T1.totalDebtInSequence.add(V.entireCDPDebt);
         T2.totalCollInSequence = T1.totalCollInSequence.add(V.entireCDPColl);
 
-        // Tally the debt and coll to offset and redistribute
+        // Tally the debt and coll to offset
         T2.totalDebtToOffset = T1.totalDebtToOffset.add(V.debtToOffset);
         T2.totalCollToSendToSP = T1.totalCollToSendToSP.add(V.collToSendToSP);
+        
+        // Tally the debt and coll to redistribute
         T2.totalDebtToRedistribute = T1.totalDebtToRedistribute.add(V.debtToRedistribute);
-        T2.totalCollToRedistribute =T1.totalCollToRedistribute .add(V.collToRedistribute);
+        T2.totalCollToRedistribute = T1.totalCollToRedistribute .add(V.collToRedistribute);
 
         // Assign the address of the partially liquidated trove and debt/coll values
         T2.partialAddr = V.partialAddr;
