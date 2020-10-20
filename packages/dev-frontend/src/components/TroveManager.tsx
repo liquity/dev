@@ -193,10 +193,23 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
     case "finishChange":
       return { ...state, changePending: false };
 
-    case "editTrove":
-      return { ...state, edited: action.edited };
+    case "editTrove": {
+      const { edited } = action;
+      const newState = { ...state, edited };
 
-    case "updateStore":
+      if (
+        state.original.isEmpty &&
+        state.edited.isEmpty &&
+        edited.collateral.nonZero &&
+        edited.debt.isZero
+      ) {
+        newState.edited = edited.setDebt(Trove.GAS_COMPENSATION_DEPOSIT);
+      }
+
+      return newState;
+    }
+
+    case "updateStore": {
       const { trove, troveWithoutRewards } = action.stateChange;
 
       const newState = {
@@ -216,6 +229,7 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
       }
 
       return newState;
+    }
   }
 };
 
