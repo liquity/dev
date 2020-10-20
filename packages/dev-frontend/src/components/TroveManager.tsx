@@ -159,8 +159,8 @@ const TroveAction: React.FC<TroveActionProps> = ({ original, edited, changePendi
             `Collateral ratio must be at least ${mcrPercent}`
           ],
           [
-            edited.collateral.isZero || edited.collateral.mul(price).gte(20),
-            "Collateral must be worth at least $20"
+            edited.isEmpty || edited.debt.gte(Trove.GAS_COMPENSATION_DEPOSIT),
+            `Need at least ${Trove.GAS_COMPENSATION_DEPOSIT} ${COIN} for gas compensation`
           ],
           ...extraRequirements
         ]}
