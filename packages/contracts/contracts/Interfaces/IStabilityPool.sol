@@ -23,8 +23,7 @@ interface IStabilityPool {
 
     function setAddresses(
         address _poolManagerAddress,
-        address _activePoolAddress,
-        address _defaultPoolAddress
+        address _activePoolAddress
     ) external;
 
     function sendETH(address _account, uint _amount) external;
