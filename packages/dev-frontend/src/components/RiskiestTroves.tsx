@@ -8,6 +8,7 @@ import { Card, Button, Text, Box, Heading, Flex, Styled } from "theme-ui";
 import { Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib-base";
 import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { shortenAddress } from "../utils/shortenAddress";
 import { useLiquity } from "../hooks/LiquityContext";
@@ -16,7 +17,7 @@ import { Transaction } from "./Transaction";
 import { Icon } from "./Icon";
 import { Tooltip } from "./Tooltip";
 import { Abbreviation } from "./Abbreviation";
-import { useSelector } from "@liquity/lib-react";
+import { COIN } from "../strings";
 
 const Table = Styled.table;
 
@@ -36,7 +37,7 @@ const select = ({
 }: BlockPolledLiquityStoreState) => ({ numberOfTroves, price, totalRedistributed, blockTag });
 
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
-  const { blockTag, numberOfTroves, price, totalRedistributed } = useSelector(select);
+  const { blockTag, numberOfTroves, price, totalRedistributed } = useLiquitySelector(select);
   const { liquity } = useLiquity();
   type Troves = Resolved<ReturnType<typeof liquity.getLastTroves>>;
 
@@ -181,7 +182,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                 </th>
                 <th>
                   Debt
-                  <Text sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>LQTY</Text>
+                  <Text sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>{COIN}</Text>
                 </th>
                 <th>
                   Coll.

@@ -3,13 +3,14 @@ import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { EditableRow } from "./Editor";
 import { Icon } from "./Icon";
 import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
 
 type RedemptionActionProps = {
   exchangedQui: Decimal;
@@ -30,7 +31,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   changePending,
   setChangePending
 }) => {
-  const { price, quiBalance, numberOfTroves } = useSelector(selectForRedemptionAction);
+  const { price, quiBalance, numberOfTroves } = useLiquitySelector(selectForRedemptionAction);
   const { liquity } = useLiquity();
 
   const myTransactionId = "redemption";
@@ -46,7 +47,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       setChangePending(false);
     } else if (tentativelyConfirmed) {
-      setExchangedQui(Decimal.from(0));
+      setExchangedQui(Decimal.ZERO);
       setChangePending(false);
     }
   }, [myTransactionState.type, setChangePending, setExchangedQui, tentativelyConfirmed]);
@@ -68,10 +69,12 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     <Flex variant="layout.actions">
       <Transaction
         id={myTransactionId}
-        requires={[[quiBalance.gte(exchangedQui), "You don't have enough LQTY"]]}
+        requires={[[quiBalance.gte(exchangedQui), `You don't have enough ${COIN}`]]}
         {...{ send }}
       >
-        <Button sx={{ mx: 2 }}>Exchange {exchangedQui.prettify()} LQTY</Button>
+        <Button sx={{ mx: 2 }}>
+          Exchange {exchangedQui.prettify()} {COIN}
+        </Button>
       </Transaction>
     </Flex>
   );
@@ -80,9 +83,8 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const RedemptionManager: React.FC = () => {
-  const price = useSelector(selectPrice);
-  const zero = Decimal.from(0);
-  const [exchangedQui, setExchangedQui] = useState(zero);
+  const price = useLiquitySelector(selectPrice);
+  const [exchangedQui, setExchangedQui] = useState(Decimal.ZERO);
   const [changePending, setChangePending] = useState(false);
 
   const editingState = useState<string>();
@@ -93,12 +95,12 @@ export const RedemptionManager: React.FC = () => {
     <>
       <Card>
         <Heading>
-          Redeem Collateral with LQTY
+          Redeem Collateral with {COIN}
           {edited && !changePending && (
             <Button
               variant="titleIcon"
               sx={{ ":enabled:hover": { color: "danger" } }}
-              onClick={() => setExchangedQui(zero)}
+              onClick={() => setExchangedQui(Decimal.ZERO)}
             >
               <Icon name="history" size="lg" />
             </Button>
@@ -112,7 +114,7 @@ export const RedemptionManager: React.FC = () => {
             label="Exchange"
             inputId="redeem-exchange"
             amount={exchangedQui.prettify()}
-            unit="LQTY"
+            unit={COIN}
             {...{ editingState }}
             editedAmount={exchangedQui.toString(2)}
             setEditedAmount={editedQui => setExchangedQui(Decimal.from(editedQui))}

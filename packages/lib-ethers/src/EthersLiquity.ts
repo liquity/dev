@@ -12,6 +12,7 @@ import {
   TroveChange,
   StabilityDeposit,
   ReadableLiquity,
+  ObservableLiquity,
   HintedTransactionOptionalParams,
   TroveChangeOptionalParams,
   StabilityDepositTransferOptionalParams,
@@ -81,7 +82,8 @@ export type EthersTransactionOverrides = PromisesOf<{
   gasPrice?: BigNumberish;
 }>;
 
-export class EthersLiquity implements ReadableLiquity, HintedLiquity<ContractTransaction> {
+export class EthersLiquity
+  implements ReadableLiquity, ObservableLiquity, HintedLiquity<ContractTransaction> {
   readonly userAddress?: string;
 
   private readonly cdpManager: CDPManager;
@@ -175,7 +177,7 @@ export class EthersLiquity implements ReadableLiquity, HintedLiquity<ContractTra
         }
       });
     } else {
-      return new TroveWithPendingRewards({ debt: 0, snapshotOfTotalRedistributed: { debt: 0 } });
+      return new TroveWithPendingRewards();
     }
   }
 
@@ -251,6 +253,13 @@ export class EthersLiquity implements ReadableLiquity, HintedLiquity<ContractTra
     optionalParams?: HintedTransactionOptionalParams,
     overrides?: EthersTransactionOverrides
   ) {
+    if (trove.debt.lt(Trove.GAS_COMPENSATION_DEPOSIT)) {
+      throw new Error(
+        `Trove must have at least ${Trove.GAS_COMPENSATION_DEPOSIT} debt ` +
+          "(used as gas compensation deposit)"
+      );
+    }
+
     return this.borrowerOperations.openLoan(
       trove.netDebt.bigNumber,
       await this._findHint(trove, optionalParams),

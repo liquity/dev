@@ -7,14 +7,15 @@ const MaxUint256 = BigNumber.from(
 export type Decimalish = Decimal | number | string;
 
 export class Decimal {
-  static readonly INFINITY = new Decimal(MaxUint256);
-
   static readonly PRECISION = 18;
   static readonly DIGITS = Decimal.getDigits(Decimal.PRECISION);
 
   private static readonly stringRepresentationFormat = /^[0-9]*(\.[0-9]*)?$/;
   private static readonly trailingZeros = /0*$/;
   private static readonly magnitudes = ["", "K", "M", "B", "T"];
+
+  static readonly INFINITY = new Decimal(MaxUint256);
+  static readonly ZERO = Decimal.from(0);
 
   readonly bigNumber: BigNumber;
 
@@ -249,7 +250,7 @@ export class Difference {
     } else if (d2.gt(d1)) {
       return new Difference({ sign: "-", absoluteValue: Decimal.from(d2).sub(d1) });
     } else {
-      return new Difference({ sign: "", absoluteValue: Decimal.from(0) });
+      return new Difference({ sign: "", absoluteValue: Decimal.ZERO });
     }
   }
 

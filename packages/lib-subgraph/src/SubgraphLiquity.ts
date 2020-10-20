@@ -9,6 +9,7 @@ import { Query } from "./Query";
 
 import {
   ReadableLiquity,
+  ObservableLiquity,
   TroveWithPendingRewards,
   Trove,
   StabilityDeposit
@@ -61,10 +62,10 @@ const totalRedistributed = new Query<Trove, Global>(queryGlobal, ({ data: { glob
 
     return new Trove({
       collateral: decimalify(rawTotalRedistributedCollateral),
-      debt: decimalify(rawTotalRedistributedDebt),
+      debt: decimalify(rawTotalRedistributedDebt)
     });
   } else {
-    return new Trove({ debt: 0 });
+    return new Trove();
   }
 });
 
@@ -78,10 +79,10 @@ const total = new Query<Trove, Global>(queryGlobal, ({ data: { global } }) => {
 
     return new Trove({
       collateral: totalCollateral,
-      debt: totalDebt,
+      debt: totalDebt
     });
   } else {
-    return new Trove({ debt: 0 });
+    return new Trove();
   }
 });
 
@@ -179,7 +180,7 @@ const blockNumberDummy = new Query<void, BlockNumberDummy, BlockNumberDummyVaria
   () => {}
 );
 
-export class SubgraphLiquity implements ReadableLiquity {
+export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   private client: ApolloClient<NormalizedCacheObject>;
 
   constructor(uri = "http://localhost:8000/subgraphs/name/liquity/subgraph", pollInterval = 4000) {

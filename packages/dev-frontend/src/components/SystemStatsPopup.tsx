@@ -5,12 +5,12 @@ import { LiquityStoreState } from "@liquity/lib-base";
 
 import { Icon } from "./Icon";
 import { SystemStats } from "./SystemStats";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 const select = ({ total, price }: LiquityStoreState) => ({ total, price });
 
 export const SystemStatsPopup: React.FC = () => {
-  const { price, total } = useSelector(select);
+  const { price, total } = useLiquitySelector(select);
 
   const [systemStatsOpen, setSystemStatsOpen] = useState(false);
   const systemStatsOverlayRef = useRef<HTMLDivElement>(null);

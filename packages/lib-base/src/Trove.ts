@@ -14,14 +14,15 @@ export class Trove {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
   /**
-   * Amount automatically minted and assigned to gas compensation pool for eact Trove opened, it counts towards collateral ratio (lowers it).
+   * Amount automatically minted and assigned to gas compensation pool for each Trove opened,
+   * it counts towards collateral ratio (lowers it).
    */
-  public static readonly CLV_GAS_COMPENSATION: Decimal = Decimal.from(10);
+  public static readonly GAS_COMPENSATION_DEPOSIT: Decimal = Decimal.from(10);
 
   readonly collateral: Decimal;
   readonly debt: Decimal;
 
-  constructor({ collateral = 0, debt = Trove.CLV_GAS_COMPENSATION }: Trovish = {}) {
+  constructor({ collateral = 0, debt = 0 }: Trovish = {}) {
     this.collateral = Decimal.from(collateral);
     this.debt = Decimal.from(debt);
   }
@@ -31,7 +32,11 @@ export class Trove {
   }
 
   get netDebt(): Decimal {
-    return this.debt.nonZero?.sub(Trove.CLV_GAS_COMPENSATION) ?? this.debt;
+    if (this.debt.lt(Trove.GAS_COMPENSATION_DEPOSIT)) {
+      throw new Error(`netDebt should not be used when debt < ${Trove.GAS_COMPENSATION_DEPOSIT}`);
+    }
+
+    return this.debt.sub(Trove.GAS_COMPENSATION_DEPOSIT);
   }
 
   collateralRatio(price: Decimalish): Decimal {
@@ -169,16 +174,14 @@ export class TroveWithPendingRewards extends Trove {
 
   constructor({
     collateral = 0,
-    debt = Trove.CLV_GAS_COMPENSATION,
+    debt = 0,
     stake = 0,
     snapshotOfTotalRedistributed
   }: TrovishWithPendingRewards = {}) {
     super({ collateral, debt });
 
     this.stake = Decimal.from(stake);
-    this.snapshotOfTotalRedistributed = new Trove({
-      ...snapshotOfTotalRedistributed
-    });
+    this.snapshotOfTotalRedistributed = new Trove({ ...snapshotOfTotalRedistributed });
   }
 
   applyRewards(totalRedistributed: Trove): Trove {

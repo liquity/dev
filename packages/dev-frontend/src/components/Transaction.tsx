@@ -176,7 +176,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
       if (hasMessage(error) && error.message.includes("User denied transaction signature")) {
         setTransactionState({ type: "cancelled", id });
       } else {
-        // console.error(error);
+        console.error(error);
 
         setTransactionState({
           type: "failed",
