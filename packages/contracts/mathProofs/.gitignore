@@ -1,2 +1,4 @@
 *.aux
 *.log
+*.toc
+auto/

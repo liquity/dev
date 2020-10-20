@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
 
 type StabilityDepositActionProps = {
   originalDeposit: StabilityDeposit;
@@ -28,7 +29,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   changePending,
   setChangePending
 }) => {
-  const { trove, price, quiBalance, numberOfTroves } = useSelector(select);
+  const { trove, price, quiBalance, numberOfTroves } = useLiquitySelector(select);
   const { liquity } = useLiquity();
 
   const myTransactionId = "stability-deposit";
@@ -52,18 +53,18 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
       ? difference.positive
         ? ([
             [
-              `Deposit ${difference.absoluteValue!.prettify()} LQTY${
+              `Deposit ${difference.absoluteValue!.prettify()} ${COIN}${
                 originalDeposit.pendingCollateralGain.nonZero
                   ? ` & withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
                   : ""
               }`,
               liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!),
-              [[quiBalance.gte(difference.absoluteValue!), "You don't have enough LQTY"]]
+              [[quiBalance.gte(difference.absoluteValue!), `You don't have enough ${COIN}`]]
             ]
           ] as const)
         : ([
             [
-              `Withdraw ${difference.absoluteValue!.prettify()} LQTY${
+              `Withdraw ${difference.absoluteValue!.prettify()} ${COIN}${
                 originalDeposit.pendingCollateralGain.nonZero
                   ? ` & ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
                   : ""
@@ -124,7 +125,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
 const selectDeposit = ({ deposit }: LiquityStoreState) => deposit;
 
 export const StabilityDepositManager: React.FC = () => {
-  const deposit = useSelector(selectDeposit);
+  const deposit = useLiquitySelector(selectDeposit);
   const [originalDeposit, setOriginalDeposit] = useState(deposit);
   const [editedDeposit, setEditedDeposit] = useState(deposit);
   const [changePending, setChangePending] = useState(false);

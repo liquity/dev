@@ -13,7 +13,7 @@ import {
   DEV_CHAIN_ID
 } from "@liquity/lib-ethers";
 
-type LiquityContext = {
+type LiquityContextValue = {
   account: string;
   provider: Provider;
   contracts: LiquityContracts;
@@ -24,7 +24,7 @@ type LiquityContext = {
   deploymentDate: number;
 };
 
-const LiquityContext = createContext<LiquityContext | undefined>(undefined);
+const LiquityContext = createContext<LiquityContextValue | undefined>(undefined);
 
 type LiquityProviderProps = {
   loader?: React.ReactNode;

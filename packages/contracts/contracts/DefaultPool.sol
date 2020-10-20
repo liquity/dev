@@ -9,7 +9,6 @@ contract DefaultPool is Ownable, IPool {
     using SafeMath for uint256;
 
     address public poolManagerAddress;
-    address public stabilityPoolAddress;
     address public activePoolAddress;
     uint256 internal ETH;  // deposited ether tracker
     uint256 internal CLVDebt;  // total outstanding CDP debt
@@ -21,12 +20,8 @@ contract DefaultPool is Ownable, IPool {
         _;
     }
 
-    modifier onlyPoolManagerOrPool {
-        require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == stabilityPoolAddress || 
-            _msgSender() == activePoolAddress, 
-            "DefaultPool: Caller is neither the PoolManager nor a Pool");
+    modifier onlyActivePool {
+        require(_msgSender() == activePoolAddress, "DefaultPool: Caller is not ActivePool");
         _;
     }
 
@@ -34,19 +29,16 @@ contract DefaultPool is Ownable, IPool {
 
     function setAddresses(
         address _poolManagerAddress,
-        address _activePoolAddress,
-        address _stabilityPoolAddress
+        address _activePoolAddress
     )
         external
         onlyOwner
     {
         poolManagerAddress = _poolManagerAddress;
         activePoolAddress = _activePoolAddress;
-        stabilityPoolAddress = _stabilityPoolAddress;
 
-        emit PoolManagerAddressChanged(poolManagerAddress);
-        emit ActivePoolAddressChanged(activePoolAddress);
-        emit StabilityPoolAddressChanged(stabilityPoolAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
 
         _renounceOwnership();
     }
@@ -85,8 +77,7 @@ contract DefaultPool is Ownable, IPool {
         return address(this).balance;
     }
 
-    function () external payable onlyPoolManagerOrPool {
-        require(msg.data.length == 0);
+    function () external payable onlyActivePool {
         ETH = ETH.add(msg.value);
     }
 }

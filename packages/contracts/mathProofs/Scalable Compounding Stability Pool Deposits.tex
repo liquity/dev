@@ -12,7 +12,7 @@
 \usepackage{enumitem}
 \newlist{terms}{description}{1}
 \begin{document}
-\title{\textbf{Compounding Decreasing LQTY Deposit and Corresponding ETH Gain}}
+\title{\textbf{Compounding Decreasing LUSD Deposit and Corresponding ETH Gain}}
 \date{} %remove automatic date creation
 \maketitle
 \begin{abstract}
@@ -22,28 +22,28 @@
 \end{abstract}
 
 \section{Derivation}
-For a pull-based implementation in Liquity’s Stability Pool, we must factor out the initial deposit, and track reward terms that are independent from the individual deposit values. We derive formulas for a compounding LQTY deposit and corresponding ETH gain as functions of the initial deposit, and involving a product $P$ and a sum $S$, which are in turn purely functions of the LQTY losses, ETH rewards and the total deposits.
+For a pull-based implementation in Liquity’s Stability Pool, we must factor out the initial deposit, and track reward terms that are independent from the individual deposit values. We derive formulas for a compounding LUSD deposit and corresponding ETH gain as functions of the initial deposit, and involving a product $P$ and a sum $S$, which are in turn purely functions of the LUSD losses, ETH rewards and the total deposits.
 
 \bigskip
 \raggedright %align to the left side
 
 \textbf{Terms}
 \begin{terms}
-    \item $d_i:$ A given user’s LQTY deposit at liquidation event \textit{i}\\
-    \item $q_i:$ The LQTY debt absorbed by the Stability Pool from liquidation \textit{i}\\
+    \item $d_i:$ A given user’s LUSD deposit at liquidation event \textit{i}\\
+    \item $q_i:$ The LUSD debt absorbed by the Stability Pool from liquidation \textit{i}\\
     \item $e_i:$ The ETH sent to the Stability Pool from liquidation \textit{i}\\
-    \item $D_i:$ Total LQTY deposits at liquidation \textit{i}
+    \item $D_i:$ Total LUSD deposits at liquidation \textit{i}
 \end{terms}
 
 \bigskip
 Let $d_0$ represent the user’s initial Stability Pool deposit. After the first liquidation, their new
 deposit $d_0$ is given by:\\
 \begin{equation} 
-    d_1=d_0-LQTYLoss
+    d_1=d_0-LUSDLoss
 \end{equation}
 
 \bigskip
-Liquidation “earns” a LQTY loss for the deposit proportional to the prior share of total deposits:
+Liquidation “earns” a LUSD loss for the deposit proportional to the prior share of total deposits:
 \begin{equation} 
     d_1=d_0-q_1\frac{d_0}{D_0}
 \end{equation}
@@ -77,33 +77,33 @@ And the general case for a compounded deposit:
 \begin{equation} 
     d_n=d_0\prod^n_{i=1}{\left(1-\frac{q_i}{D_{i-1}}\right)}
 \end{equation}
-\subsection{Deposits made at $t>0$}
+\subsection{Compounded deposit for initial deposit made at $t>0$}
 For a deposit made between liquidations $[t, t+1]$, which is withdrawn between liquidations $[s, s+1]$, rewards are earned from liquidations $t+1, t+2, \ldots, s$.
 
 We take a snapshot of the product at liquidation t, and calculate the compounded stake at liquidation $n$, with $t < n \leq s$, as:
 
 \begin{equation} 
-    d_n=d_0\prod^n_{i=t+1}{\left(1-\frac{q_i}{D_{i-1}}\right)}=d_t\frac{\displaystyle\prod^n_{i=1}{\left(1-\frac{q_i}{D_{i-1}}\right)}}{\displaystyle\prod^t_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)}
+    d_n=d_t\prod^n_{i=t+1}{\left(1-\frac{q_i}{D_{i-1}}\right)}=d_t\frac{\displaystyle\prod^n_{i=1}{\left(1-\frac{q_i}{D_{i-1}}\right)}}{\displaystyle\prod^t_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)}
 \end{equation}
 assuming that none of the terms of those products are zero, i.e., that it never
 happens that $q_i = D_{i-1}$ (see section 3.1 for the case when the pool is emptied).
 
 \bigskip
-Labelling the product term P:
+Labelling the product terms $P_k = \displaystyle\prod^k_{i=1}{\left(1-\frac{q_i}{D_{i-1}}\right)}$:
 
 \begin{equation} 
-d_n=d_t\frac{P}{P_0}
+d_n=d_t\frac{P_n}{P_t}
 \end{equation}
 
 \bigskip
-Where $P$ is the current product, and {$P_0$} is the snapshot of the product at the time when the user made the deposit.
+Where therefore $P_n$ is the current product, and {$P_t$} is the snapshot of the product at the time when the user made the deposit.
 
 \bigskip
 \subsection{Corresponding ETH Gain}
 
 \bigskip
-The LQTY deposit earns an ETH gain at each liquidation.
-At each liquidation i, the user’s LQTY deposit effectively decreases. Thus we can write the
+The LUSD deposit earns an ETH gain at each liquidation.
+At each liquidation i, the user’s LUSD deposit effectively decreases. Thus we can write the
 user’s corresponding cumulative ETH gain $E_{n}$, from a series of \textit{n} liquidations, as:
 \begin{equation} 
 E_n=d_0\left(\frac{e_1}{D_0}\right)+d_1\left(\frac{e_2}{D_1}\right)+d_2\left(\frac{e_3}{D_2}\right)+...+d_{n-1}\left(\frac{e_n}{D_{n-1}}\right)
@@ -118,45 +118,47 @@ E_n=d_0\left(\frac{e_1}{D_0}\right)+d_0\left(\frac{e_2}{D_1}\right)\prod^1_{i=1}
 \bigskip
 And factoring out the initial deposit, $d_0$:
 \begin{equation} 
-    E_n=d_0\sum^n_{k=1}\left[\frac{e_k}{D_{k-1}}\prod^{k-1}_{i=0}\left(1-\frac{q_i}{D_{i-1}}\right)\right]
+    E_n=d_0\sum^n_{k=1}\left[\frac{e_k}{D_{k-1}}\prod^{k-1}_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)\right] = d_0\sum^n_{k=1}\left[\frac{e_k}{D_{k-1}}P_{k-1}\right]
 \end{equation}
 
 \bigskip
-Where the initial product term $\displaystyle\prod^0_{i=0}=1$.
+Where the initial product term $\displaystyle\prod^0_{i=1}=1$.
 
 \bigskip
-Thus, we have $E_n$ as a function of the initial deposit $d_0$, and the rewards and total deposits at
-each liquidation.\\
-Let the summation $\displaystyle\sum^n_{k=1}[...]$ be denoted  {$S$}.
+Thus, we have $E_n$ as a function of the initial deposit $d_0$, and the rewards and total deposits at each liquidation.\\
+Let the summation $\displaystyle\sum^n_{k=1}[...]$ be denoted $S_n$.
 
 \bigskip
-\subsection{Deposits made at $t>0$}
+\subsection{ETH gain for initial deposit made at $t>0$}
 
 \bigskip
-For a deposit made between liquidations $[t, t+1]$, which is withdrawn between liquidations $[n, n
-+1]$, rewards are earned from liquidations $t+1, t+2, \ldots, n$.
+For a deposit made between liquidations $[t, t+1]$, which is withdrawn between liquidations $[s, s+1]$, rewards are earned from liquidations $t+1, t+2, \ldots, s$.
+
+We take a snapshot of the product at liquidation t, and calculate the compounded stake at liquidation $n$, with $t < n \leq s$, as:
 
 \bigskip
-To account for the deposit entering after liquidations have already begun, we correct the product
-terms in 13) to $\frac{P^k_{i = 1}}{P_0}$, as per 10).
-
-\bigskip
-We take a snapshot of the sum at liquidation $t$, labelling it {$S_0$}. Then, the ETH gain earned by the deposit at liquidation $n$ is:
+To account for the deposit entering after liquidations have already begun, we correct the product terms in 13) to $\frac{P_n}{P_t}$, as per 10):
 \begin{equation} 
-E_n=d_t\frac{(S-S_0)}{P_0}
+    E_n = d_t\sum^n_{k=t+1}\left[\frac{e_k}{D_{k-1}}\frac{P_{k-1}}{P_t}\right]
+\end{equation}
+
+\bigskip
+We take a snapshot of the sum at liquidation $t$, {$S_t$}. Then, the ETH gain earned by the deposit at liquidation $n$ is:
+\begin{equation} 
+E_n=d_t\frac{S_n-S_t}{P_t}
 \end{equation}
 
 \bigskip
 \section{Basic Implementation}
 \underline{Making a deposit:}
 
-Record deposit: deposit[user] = {$d_0$}\\
-Update total deposits: {$D = D + d_0$}\\
-Record product snapshot: {$P_0 = P$}\\
-Record sum snapshot: {$S_0 = S$}
+Record deposit: deposit[user] = {$d_t$}\\
+Update total deposits: {$D = D + d_t$}\\
+Record product snapshot: {$P_t = P$}\\
+Record sum snapshot: {$S_t = S$}
 
 \bigskip
-\underline{Upon each liquidation yielding LQTY debt ‘q’ offset with the Stability Pool and ETH gain ‘e’:}
+\underline{Upon each liquidation yielding LUSD debt ‘q’ offset with the Stability Pool and ETH gain ‘e’:}
 
 Update $S$: {$S = S + (\frac{e}{D})P$} (\textit{intuition: a deposit’s marginal ETH gain is equal to the deposit $\times$ ETH per unit staked $\times$ current correction factor)}\\
 Update $P$: {$P = P(1- (\frac{q}{D}))$}\\
@@ -165,8 +167,8 @@ Update total deposits: {$D = D - q$}
 \bigskip
 \underline{Withdrawing the deposit and ETH gain:}
 
-Compute final compounded LQTY deposit d: {$d = d_0\frac{P}{P_0}$}
-Compute final corresponding cumulative ETH gain $E$: {$E = d_0\frac{(S - S_0)}{P_0}$}\\
+Compute final compounded LUSD deposit d: {$d = d_t\frac{P}{P_t}$}\\
+Compute final corresponding cumulative ETH gain $E$: {$E = d_t\frac{(S - S_t)}{P_t}$}\\
 Send {$d$} and {$E$} to user\\
 Update deposit: deposit[user] = 0\\
 Update total deposits: {$D = D - d$}\\
@@ -232,7 +234,7 @@ Upon a liquidation that would otherwise truncate $P$ to 0, {$S$} is first update
 \bigskip
 \underline{Making a deposit:}
 
-Record a snapshot of the current epoch for the deposit
+Record a snapshot of the current scale for the deposit
 
 \bigskip
 \underline{Liquidation:}

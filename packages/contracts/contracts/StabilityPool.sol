@@ -9,7 +9,6 @@ contract StabilityPool is Ownable, IStabilityPool {
     using SafeMath for uint256;
 
     address public poolManagerAddress;
-    address public defaultPoolAddress;
     address public activePoolAddress;
     uint256 internal ETH;  // deposited ether tracker
     
@@ -23,12 +22,8 @@ contract StabilityPool is Ownable, IStabilityPool {
         _;
     }
 
-    modifier onlyPoolManagerOrPool {
-        require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == activePoolAddress || 
-            _msgSender() == defaultPoolAddress, 
-            "StabilityPool: Caller is neither the PoolManager nor a Pool");
+    modifier onlyActivePool {
+        require(_msgSender() == activePoolAddress, "StabilityPool: Caller is not ActivePool");
         _;
     }
 
@@ -36,18 +31,16 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     function setAddresses(
         address _poolManagerAddress,
-        address _activePoolAddress,
-        address _defaultPoolAddress
+        address _activePoolAddress
     )
         external
         onlyOwner
     {
         poolManagerAddress = _poolManagerAddress;
         activePoolAddress = _activePoolAddress;
-        defaultPoolAddress = _defaultPoolAddress;
 
-        emit PoolManagerAddressChanged(poolManagerAddress);
-        emit ActivePoolAddressChanged(activePoolAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
 
         _renounceOwnership();
     }
@@ -89,8 +82,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         return address(this).balance;
     }
 
-    function () external payable onlyPoolManagerOrPool {
-        require(msg.data.length == 0);
+    function () external payable onlyActivePool {
         ETH = ETH.add(msg.value);
     }
 }

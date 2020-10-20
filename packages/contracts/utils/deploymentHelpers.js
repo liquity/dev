@@ -171,21 +171,18 @@ const connectContracts = async (contracts, addresses) => {
   // set contracts in the Pools
   await contracts.stabilityPool.setAddresses(
     addresses.PoolManager,
-    addresses.ActivePool,
-    addresses.DefaultPool
+    addresses.ActivePool
   )
 
   await contracts.activePool.setAddresses(
     addresses.PoolManager,
     addresses.CDPManager,
-    addresses.DefaultPool,
-    addresses.StabilityPool
+    addresses.DefaultPool
   )
 
   await contracts.defaultPool.setAddresses(
     addresses.PoolManager,
-    addresses.ActivePool,
-    addresses.StabilityPool
+    addresses.ActivePool
   )
 
   // set contracts in HintHelpers

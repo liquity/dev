@@ -284,14 +284,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
 
     // fallback (payment)
-    it("fallback(): reverts when called by an account that is neither StabilityPool nor ActivePool", async () => {
+    it("fallback(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
         txAlice = await web3.eth.sendTransaction({ from: alice, to: poolManager.address, value: 100 })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither StabilityPool nor ActivePool")
+        assert.include(err.message, "Caller is not StabilityPool")
       }
     })
   })
@@ -339,14 +339,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
     // --- onlyPoolManagerOrPool ---
 
     // fallback (payment)	
-    it("fallback(): reverts when called by an account that is neither PoolManager nor a Pool", async () => {
+    it("fallback(): reverts when called by an account that is neither PoolManager nor Default Pool", async () => {
       // Attempt call from alice
       try {
         txAlice = await web3.eth.sendTransaction({ from: alice, to: activePool.address, value: 100 })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither the PoolManager nor a Pool")
+        assert.include(err.message, "ActivePool: Caller is neither the PoolManager nor Default Pool")
       }
     })
   })
@@ -391,14 +391,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
     // --- onlyPoolManagerOrPool ---
 
     // fallback (payment)	
-    it("fallback(): reverts when called by an account that is neither PoolManager nor a Pool", async () => {
+    it("fallback(): reverts when called by an account that is not the Active Pool", async () => {
       // Attempt call from alice
       try {
         txAlice = await web3.eth.sendTransaction({ from: alice, to: defaultPool.address, value: 100 })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither the PoolManager nor a Pool")
+        assert.include(err.message, "DefaultPool: Caller is not ActivePool")
       }
     })
   })
@@ -442,14 +442,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
     // --- onlyPoolManagerOrPool ---
 
     // fallback (payment)	
-    it("fallback(): reverts when called by an account that is neither PoolManager nor a Pool", async () => {
+    it("fallback(): reverts when called by an account that is not the Active Pool", async () => {
       // Attempt call from alice
       try {
         txAlice = await web3.eth.sendTransaction({ from: alice, to: stabilityPool.address, value: 100 })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither the PoolManager nor a Pool")
+        assert.include(err.message, "StabilityPool: Caller is not ActivePool")
       }
     })
   })

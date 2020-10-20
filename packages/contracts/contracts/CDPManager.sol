@@ -1235,8 +1235,4 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         CDPs[_user].debt = newDebt;
         return newDebt;
     }
-
-    function () external payable  {
-        require(msg.data.length == 0);
-    }
 }

@@ -7,10 +7,13 @@ common functions. */
 contract LiquityBase {
     using SafeMath for uint;
 
-    uint constant public _100pct = 1000000000000000000; // 1e18
+    uint constant public _100pct = 1000000000000000000; // 1e18 == 100%
 
     // Minimum collateral ratio for individual troves
     uint constant public MCR = 1100000000000000000; // 110%
+
+    // Minimum collateral ratio for individual troves
+    uint constant public R_MCR = 3000000000000000000; // 300%
 
     // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public  CCR = 1500000000000000000; // 150%

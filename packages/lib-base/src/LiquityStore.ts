@@ -22,10 +22,11 @@ export type LiquityStoreDerivedState = {
 
 export type LiquityStoreState<T = unknown> = LiquityStoreBaseState & LiquityStoreDerivedState & T;
 
-export type LiquityStoreListener<T = unknown> = (
-  newState: LiquityStoreState<T>,
-  oldState: LiquityStoreState<T>
-) => void;
+export type LiquityStoreListener<T = unknown> = (params: {
+  newState: LiquityStoreState<T>;
+  oldState: LiquityStoreState<T>;
+  stateChange: Partial<LiquityStoreState<T>>;
+}) => void;
 
 const strictEquals = <T>(a: T, b: T) => a === b;
 const eq = <T extends { eq(that: T): boolean }>(a: T, b: T) => a.eq(b);
@@ -37,6 +38,9 @@ const asserted = <T>(x?: T): T => {
 };
 
 const wrap = <A extends unknown[], R>(f: (...args: A) => R) => (...args: A) => f(...args);
+
+const difference = <T extends Record<string, unknown>>(a: T, b: T) =>
+  Object.fromEntries(Object.entries(a).filter(([key, value]) => value !== b[key])) as Partial<T>;
 
 export abstract class LiquityStore<T = unknown> {
   logging = true;
@@ -184,6 +188,10 @@ export abstract class LiquityStore<T = unknown> {
     this.extraState =
       extraStateUpdate && this.reduceExtra(asserted(this.extraState), extraStateUpdate);
 
-    this.notify(this.state, oldState);
+    this.notify({
+      newState: this.state,
+      oldState,
+      stateChange: difference(this.state, oldState)
+    });
   }
 }

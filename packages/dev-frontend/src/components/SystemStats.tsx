@@ -3,9 +3,10 @@ import { Card, Text, Heading, Link, Box } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
 
 const selectBalances = ({ accountBalance, quiBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -13,13 +14,15 @@ const selectBalances = ({ accountBalance, quiBalance }: LiquityStoreState) => ({
 });
 
 const Balances: React.FC = () => {
-  const { accountBalance, quiBalance } = useSelector(selectBalances);
+  const { accountBalance, quiBalance } = useLiquitySelector(selectBalances);
 
   return (
     <Box sx={{ mb: 3 }}>
       <Heading>My Account Balances</Heading>
       <Text>ETH: {accountBalance.prettify(4)}</Text>
-      <Text>LQTY: {quiBalance.prettify()}</Text>
+      <Text>
+        {COIN}: {quiBalance.prettify()}
+      </Text>
     </Box>
   );
 };
@@ -45,7 +48,7 @@ const select = ({ numberOfTroves, price, total, quiInStabilityPool }: LiquitySto
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
   const { contractsVersion, deploymentDate } = useLiquity();
-  const { numberOfTroves, price, quiInStabilityPool, total } = useSelector(select);
+  const { numberOfTroves, price, quiInStabilityPool, total } = useLiquitySelector(select);
 
   const quiInStabilityPoolPct =
     total.debt.nonZero && new Percent(quiInStabilityPool.div(total.debt));
@@ -58,9 +61,13 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Heading>Liquity System</Heading>
 
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
-      <Text>LQTY in circulation: {total.debt.shorten()}</Text>
+      <Text>
+        Total {COIN} supply: {total.debt.shorten()}
+      </Text>
       {quiInStabilityPoolPct && (
-        <Text>Fraction of LQTY in Stability Pool: {quiInStabilityPoolPct.toString(1)}</Text>
+        <Text>
+          Fraction of {COIN} in Stability Pool: {quiInStabilityPoolPct.toString(1)}
+        </Text>
       )}
       <Text>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Text>
       {total.collateralRatioIsBelowCritical(price) && (

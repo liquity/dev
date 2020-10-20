@@ -14,7 +14,10 @@
       "**/typescript",
       "**/eslint*",
       "**/@typescript-eslint/*",
-      "**/@graphprotocol/*"
+      "**/@graphprotocol/*",
+      "**/jest*",
+      "**/@babel/*",
+      "**/babel*"
     ]
   },
   "scripts": {
