@@ -90,7 +90,7 @@ We capture this in a system evolution function:
 \bigskip
 Let $S_1$ define a system of CDPs with past liquidations, in which all active CDPs have received reward shares from all past liquidations. $S_1$ is a first-order system, and contains only first-order stakes. Each stake $s_i$ is equal to it’s collateral $c_i$, and \textit{totalStakes} $= \sum s_i = \sum c_i$.\\
 
-Let $S_2$ define an evolution of S1, i.e. $S_2 = f(S_1)$. $S_2$ is a system with past liquidations, with \textit{totalStakes} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added $CDP_j$. $S_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
+Let $S_2$ define an evolution of $S_1$, i.e. $S_2 = f(S_1)$. $S_2$ is a system with past liquidations, with \textit{totalStakes} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added $CDP_j$. $S_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
 
 In general, $S_n$ is a system with n sequential pairs, each consisting of a CDP creation period and a liquidation period. CDP's made in a given CDP creation period t have experienced only those liquidations that occurred in liquidation period t or greater.
 
@@ -130,7 +130,7 @@ We now prove that ICR equality is maintained with rewards proportional to correc
 
 \subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations}
 
-We now extend the above proof to cover the following event sequence:
+We consider the following event sequence:
 
 \begin{itemize}
   \item $n+m$ CDPs are created
@@ -144,11 +144,11 @@ In other words, a first-order system of $n+m$ CDPs undergoes $m$ CDP liquidation
 
 Consider the $m$ past liquidations from the point of view of an active first-order $CDP_i$. As per 2), the stake of $CDP_i$ is $s_i = c_i$.\\
 
-$CDP_i$ earns total accumulated reward, $x_i$  the sum of its rewards from $m$ liquidations.\\
+$CDP_i$ earns total accumulated reward, $x_i$  the sum of its rewards from $m$ past liquidations.\\
 
 With each liquidation, $c_j$ collateral is removed from the system. Again, as per 2), stake equals collateral. Thus, the $totalStakes$ numerator in each liquidation is reduced by $c_j$, where $j$ denotes the index of the liquidated CDP.\\ 
 
-(Let’s assume $n+1, ..., n+m$ are the liquidated CDPs and $1, ..., n$ are the ones staying, for simplicity)\\
+(For simplicity, let’s assume that CDPs $n+1, ..., n+m$ are the liquidated CDPs and $1, ..., n$ are those that remain)\\
 
 Let
 
@@ -178,7 +178,7 @@ i.e.
 \end{equation}
 
 \bigskip
-(Note, that for liquidation of a given $CDP_j$, the redistributed collateral is the sum of its collateral $c_{n+j}$ plus it’s accumulated collateral reward $x_{n+j}$ which has itself been earned from liquidations $[n+1, n+2, n+3, … n+j-1]$.  Thus, liquidations have a “roll-up” effect - though, it is not important for our result. Actually, it can also be proved that $x_i=c_i\frac{L_m}{C_n}$)\\
+(Note, that for liquidation of a given $CDP_j$, the redistributed collateral is the sum of its collateral $c_{n+j}$ plus it’s accumulated collateral reward $x_{n+j}$ which has itself been earned from liquidations $[n+1, n+2, n+3, … n+j-1]$.  Thus, liquidations have a “roll-up” effect - though, it is not important for our result. In fact, it can also be proved that $x_i=c_i\frac{L_m}{C_n}$)\\
 
 We label the main sum expression $H$.\\
 
@@ -437,7 +437,7 @@ The snapshots of the system state after the last liquidation event ($totalStakes
 
 Thus, $s_F$ in the N second-order CDPs case is equal to $s_F$ in the single second-order CDP case.\\
 
-As such, the logic of Main Proof applies - and ICR equality between a second-order CDP and first-order CDP holds across a liquidation event, no matter how many fresh CDPs are added in between.
+As such, the logic of the Main Proof applies - and ICR equality between a second-order CDP and first-order CDP holds across a liquidation event, no matter how many fresh CDPs are added in between.
 
 \subsection{CONCLUSION 1}
 
