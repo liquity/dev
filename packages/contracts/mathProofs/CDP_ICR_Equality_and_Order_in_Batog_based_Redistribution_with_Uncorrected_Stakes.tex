@@ -30,9 +30,9 @@ In principle, redistribution in proportion to the collateral size of active CDPs
 
 However, in practice, it is clear that redistributing in a "push" based manner - iterating over all CDPs and updating their collateral and debt - does not scale, and has computational complexity of O(n). \\
 
-Previous work by Batog et al$^{1}$ derived a scalable O(1) method to assign proportional rewards, as long as the basis for the rewards ("stakes") do not change over time. Rewards are stored separately from the initial stakes, which do not compound: past accumulated rewards are not included in future reward calculations. \\
+Previous work by Batog et al$^{1}$ derived a scalable O(1) method to assign proportional rewards, as long as the basis for the rewards ("stakes") do not change over time. Rewards are stored separately from the initial stakes, which do not compound: past accumulated rewards are not included in future reward calculations. In Liquity, fresh CDPs (with no accumulated rewards) would gain a advantage in redistributions over older CDPs. \\
 
-However, in Liquity, a CDP's collateral ratio is always based on its entire collateral, which does include accumulated rewards. This discrepancy means that fresh CDPs (with no accumulated rewards) gain a advantage in redistributions over older CDPs, and the Batog reward distribution can break the ordering of CDPs. \\
+However, a CDP's collateral ratio is always based on its entire collateral, which does include accumulated rewards. This discrepancy means that the Batog reward distribution can break the ordering of CDPs by collateral ratio. \\
 
 To remedy this, we modify the original Batog approach by introducing a "corrected stake", to ensure fresh CDPs do not receive disproportionate rewards. We then show that this corrected stake preserves CDP ordering. \\
 
