@@ -15,35 +15,30 @@ export const useLiquityReducer = <S, A, T>(
   init: (storeState: LiquityStoreState<T>) => S
 ): [S, (action: A | LiquityStoreUpdate<T>) => void] => {
   const store = useLiquityStore<T>();
-  const state = useRef<S>();
+  const oldStore = useRef(store);
+  const state = useRef(init(store.state));
   const [, rerender] = useReducer(() => ({}), {});
 
   const dispatch = useCallback(
     (action: A | LiquityStoreUpdate<T>) => {
-      if (state.current) {
-        const newState = reduce(state.current, action);
-        if (!equals(newState, state.current)) {
-          state.current = newState;
-          rerender();
-        }
+      const newState = reduce(state.current, action);
+
+      if (!equals(newState, state.current)) {
+        state.current = newState;
+        rerender();
       }
     },
     [reduce]
   );
 
-  useEffect(() => {
-    const unsubscribe = store.subscribe(({ stateChange }) =>
-      dispatch({ type: "updateStore", stateChange })
-    );
+  useEffect(
+    () => store.subscribe(({ stateChange }) => dispatch({ type: "updateStore", stateChange })),
+    [store, dispatch]
+  );
 
-    return () => {
-      unsubscribe();
-      state.current = undefined;
-    };
-  }, [store, dispatch]);
-
-  if (state.current === undefined) {
+  if (oldStore.current !== store) {
     state.current = init(store.state);
+    oldStore.current = store;
   }
 
   return [state.current, dispatch];
