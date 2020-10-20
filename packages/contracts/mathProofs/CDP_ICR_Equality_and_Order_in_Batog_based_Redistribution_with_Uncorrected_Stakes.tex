@@ -19,17 +19,23 @@
 
 \tableofcontents
 
-\section{Intro: TODO}
+\section{Introduction}
 
-\begin{itemize}
-\item We are building a system that needs to keep CDPs in order to allow efficient redemptions in ascending order of collateral ratio.
-\item Given that we also do redistributions, we need to ensure that redistributions do not break ordering.
-\item It turns out that redistributing in proportion to collateral size maintains ordering.
-\item It is obvious that redistributing in proportion to collateral size in a push-based manner does not scale, i.e. is of O(n).
-\item We know from earlier research that there are scalable O(1) ways to assign proportional rewards as long as the basis for the rewards ("stakes") does not change over time. In other words, the method presented in the paper does not compound the reward.
-\item We thus need to extend original Batog approach to make it so that subsequent collateral changes to CDPs are accounted for by correcting their stakes, to make sure they do not receive disproportionate rewards due to the fact that the existing CDPs stake does not take pending rewards from past liquidations into account.
-\item We show that the corrected stake approach preserves ordering.
-\end{itemize}
+
+The Liquity protocol needs to keep CDPs ordered by their collateral ratio, to allow for efficient redemptions in ascending order of collateral ratio. \\
+
+One of our liquidation mechanisms redistributes the collateral and debt of a liquidated CDP between all remaining active CDPs. As such, we need to ensure that redistributions do not break CDP ordering. \\
+
+In principle, redistribution in proportion to the collateral size of active CDPs maintains ordering. \\
+
+However, in practice, it is clear that redistributing in a "push" based manner - iterating over all CDPs and updating their collateral and debt - does not scale, and has computational complexity of O(n). \\
+
+Previous work by Batog et al$^{1}$ derived a scalable O(1) method to assign proportional rewards, as long as the basis for the rewards ("stakes") do not change over time. Rewards are stored separately from the initial stakes, which do not compound: past accumulated rewards are not included in future reward calculations. \\
+
+However, in Liquity, a CDP's collateral ratio is always based on its entire collateral, which does include accumulated rewards. This discrepancy means that fresh CDPs (with no accumulated rewards) gain a advantage in redistributions over older CDPs, and the Batog reward distribution can break the ordering of CDPs. \\
+
+To remedy this, we modify the original Batog approach by introducing a "corrected stake", to ensure fresh CDPs do not receive disproportionate rewards. We then show that this corrected stake preserves CDP ordering. \\
+
 
 \bigskip
 \textbf{Core Proof}
@@ -50,11 +56,11 @@
 
 \section{Background}
 
-Previously, we showed that rewards proportional to collateral in a system of CDPs ordered by ICR preserves ordering across reward events. This assumed that rewards are proportional to the total collateral of the CDP.\\
+In a system of CDPs ordered by individual collateral ratio (ICR), it is straightforward to show that distributing the collateral and debt of a liquidated CDP to active CDPs, in proportion to the size of their collateral, preserves ICR ordering across reward events.\\
 
-In reality, the redistributions are implemented with a Batog pull-based mechanism, for computational efficiency.  In the Batog implementation, collateral and debt rewards are not compounded - they are stored separately from the CDPs initial collateral and debt, and are not included in future reward computations.  Each earned reward is based \textit{only} on the CDPs initial collateral “stake”.\\
+In practice, with a large system of CDPs on Ethereum, the redistributions must be implemented with a Batog pull-based mechanism for computational efficiency. In the Batog implementation, collateral and debt rewards are not compounded - they are stored separately from the CDPs initial collateral and debt, and are not included in future reward computations.  Each earned reward is based \textit{only} on the CDPs initial collateral “stake”.\\
 
-However, the ICR of a CDP is always computed as the ratio of it’s total collateral to its total debt. That is, the terms in a CDP’s ICR calculation \textbf{do} include all its previous accumulated rewards.
+However, the ICR of a CDP is always computed as the ratio of its total collateral to its total debt. That is, the terms in a CDP’s ICR calculation \textbf{do} include all its previous accumulated rewards.
 
 \section{The Problem: Rewards Can Break CDP Ordering}
 
@@ -62,7 +68,7 @@ As the system undergoes reward events, a given CDP’s ratio of initial collater
 
 However, a problem arises when a new CDP is created after active CDPs have received reward shares.  This “fresh” CDP has then experienced fewer rewards than the earlier CDPs, and thus, it receives a disproportionate share of subsequent rewards, relative to its total collateral.\\
 
-This means that across a reward event, a ‘fresh’ CDP’s \textit{proportional change} in ICR is different from the proportional change of the ICR of an older CDP, which has been in the system from the start.\\
+This means that across a reward event, a "fresh" CDP’s \textit{proportional change} in ICR is different from the proportional change of the ICR of an older CDP, which has been in the system from the start.\\
 
 This discrepancy can break CDP ordering.\\
 
@@ -681,6 +687,12 @@ Then taking reciprocals, finally yields:
 \bigskip
 Therefore, CDP ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in N’th order systems.
 
+\bigskip
+\subsection*{References}
+
+[1]  B. Batog, L. Boca, N. Johnson, “Scalable Reward Distribution on the Ethereum Blockchain”, 2018. 
+http://batog.info/papers/scalable-reward-distribution.pdf
+
+
 
 \end{document}
-
