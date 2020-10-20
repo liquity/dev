@@ -3,7 +3,7 @@ import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Percent, Difference } from "@liquity/decimal";
 import { Trove, LiquityStoreState } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -14,8 +14,8 @@ type TroveEditorProps = {
   title: string;
   original: Trove;
   edited: Trove;
-  setEdited: (trove: Trove) => void;
   changePending: boolean;
+  dispatch: (action: { type: "editTrove"; edited: Trove }) => void;
 };
 
 const selectPrice = ({ price }: LiquityStoreState) => price;
@@ -24,10 +24,10 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   title,
   original,
   edited,
-  setEdited,
-  changePending
+  changePending,
+  dispatch
 }) => {
-  const price = useSelector(selectPrice);
+  const price = useLiquitySelector(selectPrice);
 
   const editingState = useState<string>();
 
@@ -54,7 +54,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => setEdited(original)}
+            onClick={() => dispatch({ type: "editTrove", edited: original })}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -74,7 +74,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           {...{ editingState }}
           editedAmount={edited.collateral.toString(4)}
           setEditedAmount={(editedCollateral: string) =>
-            setEdited(edited.setCollateral(editedCollateral))
+            dispatch({ type: "editTrove", edited: edited.setCollateral(editedCollateral) })
           }
         ></EditableRow>
 
@@ -87,7 +87,9 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           unit={COIN}
           {...{ editingState }}
           editedAmount={edited.debt.toString(2)}
-          setEditedAmount={(editedDebt: string) => setEdited(edited.setDebt(editedDebt))}
+          setEditedAmount={(editedDebt: string) =>
+            dispatch({ type: "editTrove", edited: edited.setDebt(editedDebt) })
+          }
         />
 
         <StaticRow

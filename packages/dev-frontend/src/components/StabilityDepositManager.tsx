@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
@@ -29,7 +29,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   changePending,
   setChangePending
 }) => {
-  const { trove, price, quiBalance, numberOfTroves } = useSelector(select);
+  const { trove, price, quiBalance, numberOfTroves } = useLiquitySelector(select);
   const { liquity } = useLiquity();
 
   const myTransactionId = "stability-deposit";
@@ -125,7 +125,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
 const selectDeposit = ({ deposit }: LiquityStoreState) => deposit;
 
 export const StabilityDepositManager: React.FC = () => {
-  const deposit = useSelector(selectDeposit);
+  const deposit = useLiquitySelector(selectDeposit);
   const [originalDeposit, setOriginalDeposit] = useState(deposit);
   const [editedDeposit, setEditedDeposit] = useState(deposit);
   const [changePending, setChangePending] = useState(false);

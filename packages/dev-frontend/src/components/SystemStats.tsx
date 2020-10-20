@@ -3,7 +3,7 @@ import { Card, Text, Heading, Link, Box } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN } from "../strings";
@@ -14,7 +14,7 @@ const selectBalances = ({ accountBalance, quiBalance }: LiquityStoreState) => ({
 });
 
 const Balances: React.FC = () => {
-  const { accountBalance, quiBalance } = useSelector(selectBalances);
+  const { accountBalance, quiBalance } = useLiquitySelector(selectBalances);
 
   return (
     <Box sx={{ mb: 3 }}>
@@ -48,7 +48,7 @@ const select = ({ numberOfTroves, price, total, quiInStabilityPool }: LiquitySto
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
   const { contractsVersion, deploymentDate } = useLiquity();
-  const { numberOfTroves, price, quiInStabilityPool, total } = useSelector(select);
+  const { numberOfTroves, price, quiInStabilityPool, total } = useLiquitySelector(select);
 
   const quiInStabilityPoolPct =
     total.debt.nonZero && new Percent(quiInStabilityPool.div(total.debt));

@@ -3,7 +3,7 @@ import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
 import { Decimal } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -31,7 +31,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   changePending,
   setChangePending
 }) => {
-  const { price, quiBalance, numberOfTroves } = useSelector(selectForRedemptionAction);
+  const { price, quiBalance, numberOfTroves } = useLiquitySelector(selectForRedemptionAction);
   const { liquity } = useLiquity();
 
   const myTransactionId = "redemption";
@@ -83,7 +83,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const RedemptionManager: React.FC = () => {
-  const price = useSelector(selectPrice);
+  const price = useLiquitySelector(selectPrice);
   const [exchangedQui, setExchangedQui] = useState(Decimal.ZERO);
   const [changePending, setChangePending] = useState(false);
 

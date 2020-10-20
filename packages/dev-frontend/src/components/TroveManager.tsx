@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { Percent } from "@liquity/decimal";
 import { LiquityStoreState, Trove } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
-import { usePrevious } from "../hooks/usePrevious";
 import { useLiquity } from "../hooks/LiquityContext";
 import { TroveEditor } from "./TroveEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
@@ -15,7 +14,7 @@ type TroveActionProps = {
   original: Trove;
   edited: Trove;
   changePending: boolean;
-  setChangePending: (isPending: boolean) => void;
+  dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
 
 const mcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO).toString(0);
@@ -28,13 +27,8 @@ const selectForTroveAction = ({ price, total, quiBalance, numberOfTroves }: Liqu
   numberOfTroves
 });
 
-const TroveAction: React.FC<TroveActionProps> = ({
-  original,
-  edited,
-  changePending,
-  setChangePending
-}) => {
-  const { numberOfTroves, price, quiBalance, total } = useSelector(selectForTroveAction);
+const TroveAction: React.FC<TroveActionProps> = ({ original, edited, changePending, dispatch }) => {
+  const { numberOfTroves, price, quiBalance, total } = useLiquitySelector(selectForTroveAction);
   const { liquity } = useLiquity();
 
   const myTransactionId = "trove";
@@ -43,11 +37,11 @@ const TroveAction: React.FC<TroveActionProps> = ({
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
-      setChangePending(true);
+      dispatch({ type: "startChange" });
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
-      setChangePending(false);
+      dispatch({ type: "finishChange" });
     }
-  }, [myTransactionState.type, setChangePending]);
+  }, [myTransactionState.type, dispatch]);
 
   if (!collateralDifference && !debtDifference) {
     return null;
@@ -178,44 +172,64 @@ const TroveAction: React.FC<TroveActionProps> = ({
   );
 };
 
-const select = ({ trove, troveWithoutRewards }: LiquityStoreState) => ({
+const init = ({ trove, troveWithoutRewards }: LiquityStoreState) => ({
   troveWithoutRewards,
-  trove
+  original: trove,
+  edited: trove,
+  changePending: false
 });
 
-export const TroveManager: React.FC = () => {
-  const { trove, troveWithoutRewards } = useSelector(select);
+type TroveManagerState = ReturnType<typeof init>;
+type TroveManagerAction =
+  | LiquityStoreUpdate
+  | { type: "startChange" | "finishChange" }
+  | { type: "editTrove"; edited: Trove };
 
-  const previousTroveWithoutRewards = usePrevious(troveWithoutRewards);
-  const [original, setOriginal] = useState(trove);
-  const [edited, setEdited] = useState(trove);
-  const [changePending, setChangePending] = useState(false);
+const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveManagerState => {
+  switch (action.type) {
+    case "startChange":
+      return { ...state, changePending: true };
 
-  useEffect(() => {
-    setOriginal(trove);
+    case "finishChange":
+      return { ...state, changePending: false };
 
-    if (changePending && !troveWithoutRewards.equals(previousTroveWithoutRewards)) {
-      setEdited(trove);
-      setChangePending(false);
-    } else {
-      if (original.isEmpty !== edited.isEmpty) {
-        return;
+    case "editTrove":
+      return { ...state, edited: action.edited };
+
+    case "updateStore":
+      const { trove, troveWithoutRewards } = action.stateChange;
+
+      const newState = {
+        ...state,
+        ...(troveWithoutRewards ? { troveWithoutRewards } : {}),
+        ...(trove ? { original: trove } : {})
+      };
+
+      if (state.changePending && !newState.troveWithoutRewards?.equals(state.troveWithoutRewards)) {
+        newState.edited = newState.original;
+        newState.changePending = false;
+      } else {
+        if (!state.original.isEmpty && !state.edited.isEmpty) {
+          const change = state.original.whatChanged(state.edited);
+          newState.edited = newState.original.apply(change);
+        }
       }
 
-      const change = original.whatChanged(edited);
-      setEdited(trove.apply(change));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [troveWithoutRewards, trove]);
+      return newState;
+  }
+};
+
+export const TroveManager: React.FC = () => {
+  const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
 
   return (
     <>
       <TroveEditor
         title={original.isEmpty ? "Open a new Liquity Trove" : "My Liquity Trove"}
-        {...{ original, edited, setEdited, changePending }}
+        {...{ original, edited, changePending, dispatch }}
       />
 
-      <TroveAction {...{ original, edited, changePending, setChangePending }} />
+      <TroveAction {...{ original, edited, changePending, dispatch }} />
     </>
   );
 };

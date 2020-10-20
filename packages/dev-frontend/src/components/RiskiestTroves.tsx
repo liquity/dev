@@ -8,7 +8,7 @@ import { Card, Button, Text, Box, Heading, Flex, Styled } from "theme-ui";
 import { Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib-base";
 import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { shortenAddress } from "../utils/shortenAddress";
 import { useLiquity } from "../hooks/LiquityContext";
@@ -37,7 +37,7 @@ const select = ({
 }: BlockPolledLiquityStoreState) => ({ numberOfTroves, price, totalRedistributed, blockTag });
 
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
-  const { blockTag, numberOfTroves, price, totalRedistributed } = useSelector(select);
+  const { blockTag, numberOfTroves, price, totalRedistributed } = useLiquitySelector(select);
   const { liquity } = useLiquity();
   type Troves = Resolved<ReturnType<typeof liquity.getLastTroves>>;
 

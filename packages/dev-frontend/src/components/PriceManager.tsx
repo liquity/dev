@@ -4,7 +4,7 @@ import { Transaction } from "./Transaction";
 
 import { Decimal } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
 import { Icon } from "./Icon";
@@ -13,7 +13,7 @@ const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const PriceManager: React.FC = () => {
   const { liquity, oracleAvailable } = useLiquity();
-  const price = useSelector(selectPrice);
+  const price = useLiquitySelector(selectPrice);
   const [editedPrice, setEditedPrice] = useState(price.toString(2));
 
   useEffect(() => {

@@ -2,7 +2,7 @@ import React from "react";
 import { Text, Flex, Box, Heading } from "theme-ui";
 
 import { LiquityStoreState } from "@liquity/lib-base";
-import { useSelector } from "@liquity/lib-react";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
 import { shortenAddress } from "../utils/shortenAddress";
@@ -16,7 +16,7 @@ const select = ({ accountBalance, quiBalance }: LiquityStoreState) => ({
 
 export const UserAccount: React.FC = () => {
   const { account } = useLiquity();
-  const { accountBalance, quiBalance } = useSelector(select);
+  const { accountBalance, quiBalance } = useLiquitySelector(select);
 
   return (
     <Box sx={{ display: ["none", "flex"] }}>
