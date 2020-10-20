@@ -172,8 +172,7 @@ const TroveAction: React.FC<TroveActionProps> = ({ original, edited, changePendi
   );
 };
 
-const init = ({ trove, troveWithoutRewards }: LiquityStoreState) => ({
-  troveWithoutRewards,
+const init = ({ trove }: LiquityStoreState) => ({
   original: trove,
   edited: trove,
   changePending: false
@@ -210,25 +209,23 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
     }
 
     case "updateStore": {
-      const { trove, troveWithoutRewards } = action.stateChange;
+      const { original, edited, changePending } = state;
 
-      const newState = {
-        ...state,
-        ...(troveWithoutRewards ? { troveWithoutRewards } : {}),
-        ...(trove ? { original: trove } : {})
+      const {
+        newState: { trove },
+        stateChange: { troveWithoutRewards: changeCommitted }
+      } = action;
+
+      return {
+        original: trove,
+        edited:
+          (changePending || original.isEmpty) && changeCommitted
+            ? trove
+            : !original.isEmpty && edited.isEmpty
+            ? edited
+            : trove.apply(original.whatChanged(edited)),
+        changePending: changeCommitted ? false : changePending
       };
-
-      if (state.changePending && !newState.troveWithoutRewards?.equals(state.troveWithoutRewards)) {
-        newState.edited = newState.original;
-        newState.changePending = false;
-      } else {
-        if (!state.original.isEmpty && !state.edited.isEmpty) {
-          const change = state.original.whatChanged(state.edited);
-          newState.edited = newState.original.apply(change);
-        }
-      }
-
-      return newState;
     }
   }
 };

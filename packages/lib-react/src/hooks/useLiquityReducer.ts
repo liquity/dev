@@ -7,6 +7,8 @@ import { useLiquityStore } from "./useLiquityStore";
 
 export type LiquityStoreUpdate<T = unknown> = {
   type: "updateStore";
+  newState: LiquityStoreState<T>;
+  oldState: LiquityStoreState<T>;
   stateChange: Partial<LiquityStoreState<T>>;
 };
 
@@ -31,10 +33,10 @@ export const useLiquityReducer = <S, A, T>(
     [reduce]
   );
 
-  useEffect(
-    () => store.subscribe(({ stateChange }) => dispatch({ type: "updateStore", stateChange })),
-    [store, dispatch]
-  );
+  useEffect(() => store.subscribe(params => dispatch({ type: "updateStore", ...params })), [
+    store,
+    dispatch
+  ]);
 
   if (oldStore.current !== store) {
     state.current = init(store.state);
