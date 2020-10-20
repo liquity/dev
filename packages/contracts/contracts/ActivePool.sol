@@ -10,7 +10,6 @@ contract ActivePool is Ownable, IPool {
 
     address public poolManagerAddress;
     address public cdpManagerAddress;
-    address public stabilityPoolAddress;
     address public defaultPoolAddress;
     uint256 internal ETH;  // deposited ether tracker
     uint256 internal CLVDebt;
@@ -26,12 +25,11 @@ contract ActivePool is Ownable, IPool {
         _;
     }
 
-    modifier onlyPoolManagerOrPool {
+    modifier onlyPoolManagerOrDefaultPool {
         require(
             _msgSender() == poolManagerAddress || 
-            _msgSender() == stabilityPoolAddress || 
-            _msgSender() == defaultPoolAddress, 
-            "ActivePool: Caller is neither the PoolManager nor a Pool");
+            _msgSender() == defaultPoolAddress,
+            "ActivePool: Caller is neither the PoolManager nor Default Pool");
         _;
     }
 
@@ -48,8 +46,7 @@ contract ActivePool is Ownable, IPool {
     function setAddresses(
         address _poolManagerAddress,
         address _cdpManagerAddress,
-        address _defaultPoolAddress,
-        address _stabilityPoolAddress
+        address _defaultPoolAddress
     )
         external
         onlyOwner
@@ -57,12 +54,10 @@ contract ActivePool is Ownable, IPool {
         poolManagerAddress = _poolManagerAddress;
         cdpManagerAddress = _cdpManagerAddress;
         defaultPoolAddress = _defaultPoolAddress;
-        stabilityPoolAddress = _stabilityPoolAddress;
 
         emit PoolManagerAddressChanged(_poolManagerAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
-        emit DefaultPoolAddressChanged(defaultPoolAddress);
-        emit StabilityPoolAddressChanged(stabilityPoolAddress);
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
 
         _renounceOwnership();
     }
@@ -101,7 +96,7 @@ contract ActivePool is Ownable, IPool {
         return address(this).balance;
     }
 
-    function () external payable onlyPoolManagerOrPool {
+    function () external payable onlyPoolManagerOrDefaultPool {
         ETH = ETH.add(msg.value);
     }
 }

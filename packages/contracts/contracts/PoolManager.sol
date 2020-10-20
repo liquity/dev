@@ -108,10 +108,10 @@ contract PoolManager is Ownable, IPoolManager {
         _;
     }
 
-    modifier onlyStabilityPoolorActivePool {
+    modifier onlyStabilityPool {
         require(
-            _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, 
-            "PoolManager: Caller is neither StabilityPool nor ActivePool");
+            _msgSender() == stabilityPoolAddress,
+            "PoolManager: Caller is not StabilityPool");
         _;
     }
 
@@ -477,8 +477,7 @@ contract PoolManager is Ownable, IPoolManager {
     Only called from liquidation functions in CDPManager. */
     function offset(uint _debtToOffset, uint _collToAdd) 
     external 
-    payable 
-    onlyCDPManager 
+    onlyCDPManager
     {    
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
         if (totalCLVDeposits == 0 || _debtToOffset == 0) { return; }
@@ -565,5 +564,5 @@ contract PoolManager is Ownable, IPoolManager {
         require(cdpManager.getCDPStatus(_user) == 1, "CDPManager: caller must have an active trove to withdraw ETHGain to");
     }
 
-    function () external payable onlyStabilityPoolorActivePool {}
-}    
+    function () external payable onlyStabilityPool {}
+}
