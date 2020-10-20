@@ -7,7 +7,7 @@ common functions. */
 contract LiquityBase {
     using SafeMath for uint;
 
-    uint constant public _100pct = 1000000000000000000; // 1e18
+    uint constant public _100pct = 1000000000000000000; // 1e18 == 100%
 
     // Minimum collateral ratio for individual troves
     uint constant public MCR = 1100000000000000000; // 110%
