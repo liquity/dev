@@ -70,7 +70,10 @@ const TroveAction: React.FC<TroveActionProps> = ({ original, edited, changePendi
         liquity.closeTrove.bind(liquity),
         [
           [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
-          [quiBalance.gte(original.debt), `You don't have enough ${COIN}`]
+          [
+            quiBalance.add(Trove.GAS_COMPENSATION_DEPOSIT).gte(original.debt),
+            `You don't have enough ${COIN}`
+          ]
         ]
       ] as const)
     : ([
