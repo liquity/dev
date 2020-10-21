@@ -38,9 +38,75 @@ However, a problem arises when a new trove is created after active troves have r
 
 This discrepancy means that reward distribution described in $\cite{Batog}$ can break the ordering of troves by collateral ratio. To remedy this, we modify the original approach by introducing a "corrected stake", to ensure fresh troves do not receive disproportionate rewards. We then show that this corrected stake preserves trove ordering. \\
 
+
+\section{Scalable Reward Distribution with fixed stakes}
+A naive push-based implementation ("strawman approach") would iterate over all participants and compute the reward for each recipient $j$ separately whenever the system distributes rewards. Thus, at a reward event $t$, every recipient would receive the following reward share:
+
+\begin{equation} 
+    r_{j,t}=c_j*\frac{R_t}{C_t}
+\end{equation}
+
+where $R_t$ is the reward distributed at $t$, $r_{j,t}$ the reward share of recipient $j$, $c_j$ the stake of recipient $j$, and $C_t$ the sum of the stakes of all recipients, i.e. $\sum c_i$.
+
+Note that $c_j$ does not depend on $t$, and is thus fixed throughout multiple reward events.  \\
+
+Based on this prerequisite, $\cite{Batog}$ suggests a scalable $O(1)$ method of distributing such rewards by deferring the reward computation. The total reward share of $j$ from all reward events that occur between time $t_1$ and $t_2$ can be written as a sum of its reward shares with the (fixed) stake $c_j$ being factored out:
+
+\begin{equation}
+    \sum\limits_{t=t_1+1}^{t_2} r_{j,t} = c_j * \sum\limits_{t=t_1+1}^{t_2}\frac{R_t}{C_t}
+\end{equation}
+
+Let $S_t$ denote the sum of all rewards per total staked amount up to instant $t$:
+
+\begin{equation}
+   S_t = \sum\limits_{k=0}^{t}\frac{R_t}{C_t}
+\end{equation}
+
+Assuming stake $j$ is deposited at moment $t_1$ and then
+withdrawn at moment $t_2 > t_1$, we can use the sum $S_t$ to
+compute the total reward share for participant $j$ since
+
+
+\begin{equation} 
+    r_j = c_j *  \sum\limits_{t=t_1+1}^{t_2}\frac{R_t}{C_t}
+\end{equation}
+
+can be written as
+
+\begin{equation} 
+    r_j = c_j * (S_{t_2} - S_{t_1})
+\end{equation}
+
+As $S_t$ is monotonic, we can simply track the current (latest)
+value of $S$ as a running sum, and snapshot it whenever we expect it to be required for a later computation, i.e. whenever a participant changes its stake.
+
+To compute the total (accumulated) reward for participant $j$, we can then use following formula:
+
+\begin{equation} 
+    r_j = s_j * (S - S_{t_1})
+\end{equation}
+
 \bigskip
 
+\section{Corrected Stake Approach}
+In Liquity, the collateral and debt shares from liquidations proportionally depend on the collateral of the recipient troves, which may have accumulated collateral from prior liquidations. 
+
+To account for the total collateral of the recipient troves including accumulated rewards, the distribution must thus cope with changing stakes between two reward events. We introduce a corrected stake to correct for the advantage gained by later stakes over earlier stakes.
+
+\begin{equation}
+    s_i=
+        \begin{cases} 
+            c_i & for \;totalCollateral_\emptyset = 0\\
+            \frac{\mathlarger{c_i} \cdot \; totalStakes_\emptyset} {\;totalCollateral_\emptyset} & for \;totalCollateral_\emptyset>0
+        \end{cases}
+\end{equation}
+
+\bigskip
+Where $totalStakes_\emptyset$ and $totalCollateral_\emptyset$ are the respective snapshots of the total stakes and total collateral in the system, taken immediately after the last liquidation event. Note that with this terminology, the total collateral includes the total stakes, and therefore $totalCollateral_\emptyset \ge totalStakes_\emptyset$
+
 \section{Outline of the Proof}
+As mentioned above, we aim to prove that the corrected stake approach leaves the ordering of the troves by collateral ratio unchanged throughout all liquidations, regardless of any borrowers that change their troves' collateral between liquidation events.
+
 \subsection*{Notation}
 Let $ICR$ denote the ratio of a trove's total collateral (valued in USD) to its total debt (in LUSD), including all its previous accumulated rewards from past liquidations. Further, let $ICR_1$ denote the $ICR$ of a trove 1 and $ICR_2$ denote the $ICR$ of a trove 2. \\
 
@@ -80,20 +146,6 @@ Let $S_2$ define an evolution of $S_1$, i.e. $S_2 = f(S_1)$. $S_2$ is a system w
 
 In general, $S_n$ is a system with n sequential pairs, each consisting of a trove creation period and a liquidation period. trove's made in a given trove creation period t have experienced only those liquidations that occurred in liquidation period t or greater.
 
-\section{Corrected Stake Approach}
-
-To correct for the advantage gained by later stakes over earlier stakes, we introduce a corrected stake:
-
-\begin{equation}
-    s_i=
-        \begin{cases} 
-            c_i & for \;totalCollateral_\emptyset = 0\\
-            \frac{\mathlarger{c_i} \cdot \; totalStakes_\emptyset} {\;totalCollateral_\emptyset} & for \;totalCollateral_\emptyset>0
-        \end{cases}
-\end{equation}
-
-\bigskip
-Where $totalStakes_\emptyset$ and $totalCollateral_\emptyset$ are the respective snapshots of the total stakes and total collateral in the system, taken immediately after the last liquidation event. Note that with this terminology, the total collateral includes the total stakes, and therefore $totalCollateral_\emptyset \ge totalStakes_\emptyset$
 
 \subsection{At First-Order, Stake Equals Initial Collateral}
 
