@@ -325,7 +325,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         /* If 110% <= ICR < current TCR (relative to previous liquidations from the current sequence including this liquidation) 
          * and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution) */
-        } else if ((_ICR >= MCR) && (_ICR < _TCR)) {
+        } else if ((_ICR >= MCR) && (_ICR <= _TCR)) {
             if (_CLVInPool == 0) {
                 LiquidationValues memory zeroVals;
                 return zeroVals;
@@ -462,7 +462,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.backToNormalMode = false;
         L.entireSystemDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());
         L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
-        
+
         L.i = 0;
         while (L.i < _n) {
             L.user = sortedCDPs.getLast();
