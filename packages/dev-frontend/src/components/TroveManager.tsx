@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
-import { Percent } from "@liquity/decimal";
+import { Decimal, Decimalish, Percent } from "@liquity/decimal";
 import { LiquityStoreState, Trove } from "@liquity/lib-base";
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
@@ -175,16 +175,40 @@ const TroveAction: React.FC<TroveActionProps> = ({ original, edited, changePendi
 const init = ({ trove }: LiquityStoreState) => ({
   original: trove,
   edited: trove,
-  changePending: false
+  changePending: false,
+  debtDirty: false,
+  addedGasCompensation: false
 });
 
 type TroveManagerState = ReturnType<typeof init>;
 type TroveManagerAction =
   | LiquityStoreUpdate
-  | { type: "startChange" | "finishChange" }
-  | { type: "editTrove"; edited: Trove };
+  | {
+      type:
+        | "startChange"
+        | "finishChange"
+        | "revert"
+        | "addDebtCompensation"
+        | "removeDebtCompensation";
+    }
+  | { type: "setCollateral" | "setDebt"; newValue: Decimalish };
+
+const addDebtCompensation = (state: TroveManagerState) =>
+  reduce(state, { type: "addDebtCompensation" });
+
+const removeDebtCompensation = (state: TroveManagerState) =>
+  reduce(state, { type: "removeDebtCompensation" });
+
+const finishChange = (state: TroveManagerState) => reduce(state, { type: "finishChange" });
+
+const revert = (state: TroveManagerState) => reduce(state, { type: "revert" });
 
 const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveManagerState => {
+  // console.log(state);
+  // console.log(action);
+
+  const { original, edited, changePending, debtDirty, addedGasCompensation } = state;
+
   switch (action.type) {
     case "startChange":
       return { ...state, changePending: true };
@@ -192,40 +216,64 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
     case "finishChange":
       return { ...state, changePending: false };
 
-    case "editTrove": {
-      const { edited } = action;
-      const newState = { ...state, edited };
+    case "setCollateral": {
+      const newCollateral = Decimal.from(action.newValue);
 
-      if (
-        state.original.isEmpty &&
-        state.edited.isEmpty &&
-        edited.collateral.nonZero &&
-        edited.debt.isZero
-      ) {
-        newState.edited = edited.setDebt(Trove.GAS_COMPENSATION_DEPOSIT);
+      const newState = { ...state, edited: edited.setCollateral(newCollateral) };
+
+      if (!debtDirty) {
+        if (edited.isEmpty && newCollateral.nonZero) {
+          return addDebtCompensation(newState);
+        }
+        if (addedGasCompensation && newCollateral.isZero) {
+          return removeDebtCompensation(newState);
+        }
       }
 
       return newState;
     }
 
-    case "updateStore": {
-      const { original, edited, changePending } = state;
+    case "setDebt":
+      return { ...state, edited: edited.setDebt(action.newValue), debtDirty: true };
 
+    case "addDebtCompensation":
+      return {
+        ...state,
+        edited: edited.setDebt(Trove.GAS_COMPENSATION_DEPOSIT),
+        addedGasCompensation: true
+      };
+
+    case "removeDebtCompensation":
+      return {
+        ...state,
+        edited: edited.setDebt(0),
+        addedGasCompensation: false
+      };
+
+    case "revert":
+      return { ...state, edited: original, debtDirty: false, addedGasCompensation: false };
+
+    case "updateStore": {
       const {
         newState: { trove },
         stateChange: { troveWithoutRewards: changeCommitted }
       } = action;
 
-      return {
+      let newState = {
+        ...state,
         original: trove,
         edited:
-          (changePending || original.isEmpty) && changeCommitted
-            ? trove
-            : !original.isEmpty && edited.isEmpty
-            ? edited
-            : trove.apply(original.whatChanged(edited)),
-        changePending: changeCommitted ? false : changePending
+          !original.isEmpty && edited.isEmpty ? edited : trove.apply(original.whatChanged(edited))
       };
+
+      if ((changePending || original.isEmpty) && changeCommitted) {
+        newState = revert(newState);
+        if (changePending) {
+          newState = finishChange(newState);
+        }
+      }
+
+      return newState;
     }
   }
 };
