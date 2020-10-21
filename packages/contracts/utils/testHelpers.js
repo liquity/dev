@@ -66,6 +66,12 @@ class TestHelper {
     return Number(x_BN.sub(y_BN).abs())
   }
 
+  static zipToObject(array1, array2) {
+    let obj = {}
+    array1.forEach((element, idx) => obj[element] = array2[idx])
+    return obj
+  }
+
   static getGasMetrics(gasCostList) {
     const minGas = Math.min(...gasCostList)
     const maxGas = Math.max(...gasCostList)

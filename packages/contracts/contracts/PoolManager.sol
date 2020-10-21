@@ -647,11 +647,14 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     function _payOutLQTYGains(address _depositor, address _frontEnd) internal {
-        uint frontEndLQTYGain = _getFrontEndLQTYGain(_frontEnd);
-        uint depositorLQTYGain = _getDepositorLQTYGain(_depositor);
+        // Pay out front end's LQTY gain
+        if (_frontEnd != address(0)) {
+            uint frontEndLQTYGain = _getFrontEndLQTYGain(_frontEnd);
+            communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
+        }
         
-        // Pay out LQTY gains
-        communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
+        // Pay out depositor's LQTY gain
+        uint depositorLQTYGain = _getDepositorLQTYGain(_depositor);
         communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
     }
 

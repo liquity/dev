@@ -75,8 +75,6 @@ interface IPoolManager {
 
     function withdrawETHGainToTrove(address _depositor, address _hint) external;
 
-    function withdrawFrontEndLQTYGain() external;
-
     function registerFrontEnd(uint _kickbackRate) external;
 
     function offset(uint _debt, uint _coll) external payable;
