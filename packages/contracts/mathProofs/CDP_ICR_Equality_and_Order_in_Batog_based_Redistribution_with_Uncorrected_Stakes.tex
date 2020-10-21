@@ -22,31 +22,42 @@
 \section{Introduction}
 
 
-The Liquity protocol needs to keep CDPs ordered by their collateral ratio, to allow for efficient redemptions in ascending order of collateral ratio. \\
+The Liquity protocol $\cite{Whitepaper}$ issues a USD-pegged stablecoin LUSD that is redeemable at face value against ETH: any owner of LUSD can redeem their stablecoins for equivalent value in the underlying collateral at any time. The ETH paid to the redeemer is taken from the borrowers' collateralized debt positions ("troves") in ascending order of collateral ratio. In other words, the system uses the redeemed LUSD to repay the debt on the riskiest trove with the currently lowest individual collateral ratio, and transfers a corresponding amount of ETH from the trove to the redeemer. If the redeemed LUSD is larger than the debt on the riskiest trove, the system proceeds with the second riskiest trove, and so on. \\
 
-One of our liquidation mechanisms redistributes the collateral and debt of a liquidated CDP between all remaining active CDPs. As such, we need to ensure that redistributions do not break CDP ordering. \\
+To allow for efficient redemptions despite Ethereum's gas constraints, the system keeps troves ordered by ICR, so that it can iterate over the linked list starting from the bottom. It is not feasible to sort the list after every operation. \\
 
-In principle, redistribution in proportion to the collateral size of active CDPs maintains ordering. \\
+Given that Liquity's fallback liquidation mechanism redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be  ensured that redistributions do not break trove ordering. \\
 
-However, in practice, it is clear that redistributing in a "push" based manner - iterating over all CDPs and updating their collateral and debt - does not scale, and has computational complexity of O(n). \\
+In principle, redistribution in proportion to the collateral size of active troves maintains ordering, as can be easily shown. However, in practice, it is clear that redistributing in a "push" based manner - iterating over all troves and updating their collateral and debt - does not scale, and has computational complexity of $O(n)$. \\
 
-Previous work by Batog et al$^{1}$ derived a scalable O(1) method to assign proportional rewards, as long as the basis for the rewards ("stakes") do not change over time. Rewards are stored separately from the initial stakes, which do not compound: past accumulated rewards are not included in future reward calculations. In Liquity, fresh CDPs (with no accumulated rewards) would gain a advantage in redistributions over older CDPs. \\
+Previous work by Batog et al $\cite{Batog}$ derived a scalable $O(1)$ method to assign proportional rewards, as long as the basis for the rewards ("stakes") do not change over time. The method is "pull-based": instead of adjusting all recipient positions upon every reward event, the update is deferred to the moment at which an owners changes their position. In the described approach rewards are stored separately from the initial stakes, and do not compound. That is to say, past accumulated rewards are not included in future reward calculations. \\
 
-However, a CDP's collateral ratio is always based on its entire collateral, which does include accumulated rewards. This discrepancy means that the Batog reward distribution can break the ordering of CDPs by collateral ratio. \\
+It turns out that this approach thus cannot be applied to Liquity as is. As the system undergoes reward events, a given trove’s ratio of initial collateral to its total collateral shrinks. Rewards are based on a smaller and smaller share of the total collateral. This is fine, as long as all active troves have experienced all reward events - in this case, ordering is maintained. \\
 
-To remedy this, we modify the original Batog approach by introducing a "corrected stake", to ensure fresh CDPs do not receive disproportionate rewards. We then show that this corrected stake preserves CDP ordering. \\
+However, a problem arises when a new trove is created after active troves have received reward shares.  Such "fresh" troves (with no accumulated rewards) would thus gain an advantage in redistributions over older troves whose stakes may be smaller than their actual collateral due to the liquidations that have taken place in the meantime. In other words, a “fresh” trove that has experienced fewer rewards than the earlier troves would receive a disproportionate share of subsequent rewards relative to its collateral. Though, a trove's collateral ratio must always be based on its entire collateral, which does include accumulated rewards.  \\
 
+This discrepancy means that reward distribution described in $\cite{Batog}$ can break the ordering of troves by collateral ratio. To remedy this, we modify the original approach by introducing a "corrected stake", to ensure fresh troves do not receive disproportionate rewards. We then show that this corrected stake preserves trove ordering. \\
 
 \bigskip
-\textbf{Core Proof}
 
+\section{Outline of the Proof}
+\subsection*{Notation}
+Let $ICR$ denote the ratio of a trove's total collateral (valued in USD) to its total debt (in LUSD), including all its previous accumulated rewards from past liquidations. Further, let $ICR_1$ denote the $ICR$ of a trove 1 and $ICR_2$ denote the $ICR$ of a trove 2. \\
+
+We introduce the notion of \textit{system order}. In general, a system of troves increases from order $N$ to order $N+1$ when the following sequence of events occurs:
+
+\begin{itemize}
+  \item 1 or more new troves are created 
+  \item 1 or more troves are subsequently liquidated
+\end{itemize}
+
+\subsection*{Core Proof}
 \begin{itemize}
   \item Proof: $ICR_1=ICR_2$ in general case. $1^{st}$ order, M past liquidations. Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
 \end{itemize}
 
-\bigskip
-\textbf{Extensions}
 
+\subsection*{Extensions}
 \begin{itemize}
   \item Proof: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
   \item Proof: $ICR_1=ICR_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
@@ -54,45 +65,20 @@ To remedy this, we modify the original Batog approach by introducing a "correcte
   \item Show that $n^{th}$ order system is equivalent to first order
 \end{itemize}
 
-\section{Background}
 
-In a system of CDPs ordered by individual collateral ratio (ICR), it is straightforward to show that distributing the collateral and debt of a liquidated CDP to active CDPs, in proportion to the size of their collateral, preserves ICR ordering across reward events.\\
-
-In practice, with a large system of CDPs on Ethereum, the redistributions must be implemented with a Batog pull-based mechanism for computational efficiency. In the Batog implementation, collateral and debt rewards are not compounded - they are stored separately from the CDPs initial collateral and debt, and are not included in future reward computations.  Each earned reward is based \textit{only} on the CDPs initial collateral “stake”.\\
-
-However, the ICR of a CDP is always computed as the ratio of its total collateral to its total debt. That is, the terms in a CDP’s ICR calculation \textbf{do} include all its previous accumulated rewards.
-
-\section{The Problem: Rewards Can Break CDP Ordering}
-
-As the system undergoes reward events, a given CDP’s ratio of initial collateral to its total collateral shrinks. Rewards are based on a smaller and smaller share of the total collateral. This is fine, as long as all active CDPs have experienced all reward events - in this case, ordering is maintained.\\
-
-However, a problem arises when a new CDP is created after active CDPs have received reward shares.  This “fresh” CDP has then experienced fewer rewards than the earlier CDPs, and thus, it receives a disproportionate share of subsequent rewards, relative to its total collateral.\\
-
-This means that across a reward event, a "fresh" CDP’s \textit{proportional change} in ICR is different from the proportional change of the ICR of an older CDP, which has been in the system from the start.\\
-
-This discrepancy can break CDP ordering.\\
-
-\section{System Order Terminology}
-
-We introduce the notion of \textit{system order}. In general, a system of CDPs increases from order N to order N+1 when the following sequence of events occurs:
-
-\begin{itemize}
-  \item 1 or more new CDPs are created 
-  \item 1 or more CDPs are subsequently liquidated
-\end{itemize}
-
-We capture this in a system evolution function:
+\section{System Order Evolution}
+We capture the system order in a system evolution function:
 
 \begin{equation} 
     f(S_N)=S_{N+1}
 \end{equation}
 
 \bigskip
-Let $S_1$ define a system of CDPs with past liquidations, in which all active CDPs have received reward shares from all past liquidations. $S_1$ is a first-order system, and contains only first-order stakes. Each stake $s_i$ is equal to it’s collateral $c_i$, and \textit{totalStakes} $= \sum s_i = \sum c_i$.\\
+Let $S_1$ define a system of troves with past liquidations, in which all active troves have received reward shares from all past liquidations. $S_1$ is a first-order system, and contains only first-order stakes. Each stake $s_i$ is equal to it’s collateral $c_i$, and \textit{totalStakes} $= \sum s_i = \sum c_i$.\\
 
-Let $S_2$ define an evolution of $S_1$, i.e. $S_2 = f(S_1)$. $S_2$ is a system with past liquidations, with \textit{totalStakes} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added $CDP_j$. $S_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
+Let $S_2$ define an evolution of $S_1$, i.e. $S_2 = f(S_1)$. $S_2$ is a system with past liquidations, with \textit{totalStakes} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added $trove_j$. $S_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
 
-In general, $S_n$ is a system with n sequential pairs, each consisting of a CDP creation period and a liquidation period. CDP's made in a given CDP creation period t have experienced only those liquidations that occurred in liquidation period t or greater.
+In general, $S_n$ is a system with n sequential pairs, each consisting of a trove creation period and a liquidation period. trove's made in a given trove creation period t have experienced only those liquidations that occurred in liquidation period t or greater.
 
 \section{Corrected Stake Approach}
 
@@ -111,7 +97,7 @@ Where $totalStakes_\emptyset$ and $totalCollateral_\emptyset$ are the respective
 
 \subsection{At First-Order, Stake Equals Initial Collateral}
 
-For first-order systems, all CDPs were added before any liquidation events occurred. The snapshot $totalCollateral_\emptyset$ is equal to 0. Therefore:
+For first-order systems, all troves were added before any liquidation events occurred. The snapshot $totalCollateral_\emptyset$ is equal to 0. Therefore:
 
 \begin{equation} 
     s_i=c_i
@@ -120,9 +106,9 @@ for all $s_i$, $c_i$ in an $S_1$ system.
 
 \subsection{Intuition Behind Choice of Corrected Stake}
 
-The corrected stake $s_i$ is chosen such that it earns rewards from liquidations equivalent to a CDP that would have accumulated $c_i$ total collateral by the time the fresh $CDP_i$ was created.\\
+The corrected stake $s_i$ is chosen such that it earns rewards from liquidations equivalent to a trove that would have accumulated $c_i$ total collateral by the time the fresh $trove_i$ was created.\\
 
-The corrected stake effectively models the fresh CDP’s collateral $c_i$ as a total collateral, which includes ‘virtual’ accumulated rewards. The corrected stake earns rewards for the CDP as if the CDP was first-order, and had been in the system from the beginning - thus maintaining proportional reward growth.\\
+The corrected stake effectively models the fresh trove’s collateral $c_i$ as a total collateral, which includes ‘virtual’ accumulated rewards. The corrected stake earns rewards for the trove as if the trove was first-order, and had been in the system from the beginning - thus maintaining proportional reward growth.\\
 
 We now prove that ICR equality is maintained with rewards proportional to corrected stakes - starting with the simplest case, and progressively generalizing.
 
@@ -133,22 +119,22 @@ We now prove that ICR equality is maintained with rewards proportional to correc
 We consider the following event sequence:
 
 \begin{itemize}
-  \item $n+m$ CDPs are created
-  \item $m$ CDPs are liquidated
-  \item A fresh CDP is created
-  \item An old CDP is liquidated
+  \item $n+m$ troves are created
+  \item $m$ troves are liquidated
+  \item A fresh trove is created
+  \item An old trove is liquidated
 \end{itemize}
 
 \bigskip
-In other words, a first-order system of $n+m$ CDPs undergoes $m$ CDP liquidations, before evolving to second-order.  All other conditions remain the same.\\
+In other words, a first-order system of $n+m$ troves undergoes $m$ trove liquidations, before evolving to second-order.  All other conditions remain the same.\\
 
-Consider the $m$ past liquidations from the point of view of an active first-order $CDP_i$. As per 2), the stake of $CDP_i$ is $s_i = c_i$.\\
+Consider the $m$ past liquidations from the point of view of an active first-order $trove_i$. As per 2), the stake of $trove_i$ is $s_i = c_i$.\\
 
-$CDP_i$ earns total accumulated reward, $x_i$  the sum of its rewards from $m$ past liquidations.\\
+$trove_i$ earns total accumulated reward, $x_i$  the sum of its rewards from $m$ past liquidations.\\
 
-With each liquidation, $c_j$ collateral is removed from the system. Again, as per 2), stake equals collateral. Thus, the $totalStakes$ numerator in each liquidation is reduced by $c_j$, where $j$ denotes the index of the liquidated CDP.\\ 
+With each liquidation, $c_j$ collateral is removed from the system. Again, as per 2), stake equals collateral. Thus, the $totalStakes$ numerator in each liquidation is reduced by $c_j$, where $j$ denotes the index of the liquidated trove.\\ 
 
-(For simplicity, let’s assume that CDPs $n+1, ..., n+m$ are the liquidated CDPs and $1, ..., n$ are those that remain)\\
+(For simplicity, let’s assume that troves $n+1, ..., n+m$ are the liquidated troves and $1, ..., n$ are those that remain)\\
 
 Let
 
@@ -164,7 +150,7 @@ and
 \end{equation}
 
 \bigskip
-We now sum all reward events, noting that the liquidated CDP’s collateral is removed from the $totalStakes$ numerator at each reward:
+We now sum all reward events, noting that the liquidated trove’s collateral is removed from the $totalStakes$ numerator at each reward:
 
 \begin{equation} 
     x_i=c_i\left[\frac{c_{n+1}+x_{n+1}}{C_{n+m}-L_1}+\frac{c_{n+2}+x_{n+2}}{C_{n+m}-L_2}+\frac{c_{n+3}+x_{n+3}}{C_{n+m}-L_3}+...+\frac{c_{n+m}+x_{n+m}}{C_{n+m}-L_m}\right]
@@ -178,18 +164,18 @@ i.e.
 \end{equation}
 
 \bigskip
-(Note, that for liquidation of a given $CDP_j$, the redistributed collateral is the sum of its collateral $c_{n+j}$ plus it’s accumulated collateral reward $x_{n+j}$ which has itself been earned from liquidations $[n+1, n+2, n+3, … n+j-1]$.  Thus, liquidations have a “roll-up” effect - though, it is not important for our result. In fact, it can also be proved that $x_i=c_i\frac{L_m}{C_n}$)\\
+(Note, that for liquidation of a given $trove_j$, the redistributed collateral is the sum of its collateral $c_{n+j}$ plus it’s accumulated collateral reward $x_{n+j}$ which has itself been earned from liquidations $[n+1, n+2, n+3, … n+j-1]$.  Thus, liquidations have a “roll-up” effect - though, it is not important for our result. In fact, it can also be proved that $x_i=c_i\frac{L_m}{C_n}$)\\
 
 We label the main sum expression $H$.\\
 
-Rewriting $CDP_i$’s accumulated reward:
+Rewriting $trove_i$’s accumulated reward:
 
 \begin{equation} \label{eq:45}
     x_i=Hc_i
 \end{equation}
 
 \bigskip
-Summing over all $n$ active CDPs gives the total accumulated rewards for active CDPs in the system:
+Summing over all $n$ active troves gives the total accumulated rewards for active troves in the system:
 
 \begin{equation} 
     X_n=\sum\limits^n_{i=1}Hc_i
@@ -214,9 +200,9 @@ Note that after the liquidation, the system snapshots update:
 (Note that it can also be proved that that $X_n=L_m$ and therefore $totalCollateral_\emptyset=C_n+L_m=C_{n+m}$)
 
 \bigskip
-Now, a fresh CDP is added, $CDP_F$, with collateral $c_F$.  Let the ICR of $CDP_F$ equal the ICR of an active first-order $CDP_G$.\\
+Now, a fresh trove is added, $trove_F$, with collateral $c_F$.  Let the ICR of $trove_F$ equal the ICR of an active first-order $trove_G$.\\
 
-Now, $CDP_Z$ liquidates. Upon liquidation, the second-order $CDP_F$ and the first-order $CDP_G$ earn the following collateral rewards:
+Now, $trove_Z$ liquidates. Upon liquidation, the second-order $trove_F$ and the first-order $trove_G$ earn the following collateral rewards:
 
 \begin{equation} \label{eq:10}
     ICR_F=ICR_G
@@ -231,9 +217,9 @@ Now, $CDP_Z$ liquidates. Upon liquidation, the second-order $CDP_F$ and the firs
 \end{equation}
 
 \bigskip
-Where $c_F$, $d_F$ and $c_G$, $d_G$ are the collateral and debt values of $CDP_F$ and $CDP_G$ respectively.\\
+Where $c_F$, $d_F$ and $c_G$, $d_G$ are the collateral and debt values of $trove_F$ and $trove_G$ respectively.\\
 
-$x_G$, $y_G$ are the respective accumulated collateral and debt rewards for $CDP_G$ earned by its stake over its lifetime.\\
+$x_G$, $y_G$ are the respective accumulated collateral and debt rewards for $trove_G$ earned by its stake over its lifetime.\\
 
 The ICR equality identity \ref{eq:10} yields the following relation:
 
@@ -257,7 +243,7 @@ where
 
 
 \bigskip
-$CDP_F$’s stake $s_F$ is given by the corrected stake rule 2), that is:
+$trove_F$’s stake $s_F$ is given by the corrected stake rule 2), that is:
 
 \begin{equation} 
     s_F=\frac{c_\mathsmaller{F} \cdot totalStakes_\emptyset}{totalColateral_\emptyset}
@@ -271,9 +257,9 @@ Which by \ref{eq:8} and \ref{eq:9} gives:
 \end{equation}
 
 \bigskip
-Now, a new liquidation occurs: $CDP_Z$ liquidates. The system becomes second-order.\\
+Now, a new liquidation occurs: $trove_Z$ liquidates. The system becomes second-order.\\
 
-The event causes $CDP_Z$’s collateral and debt ($c_Z$ and $d_Z$) to be redistributed between all active CDPs, proportional to their stake.\\
+The event causes $trove_Z$’s collateral and debt ($c_Z$ and $d_Z$) to be redistributed between all active troves, proportional to their stake.\\
 
 For simplicity, let :
 
@@ -286,7 +272,7 @@ For simplicity, let :
 \end{equation}
 
 \bigskip
-We define the collateral and debt rewards earned by $CDP_F$ and $CDP_G$ in the reward event:
+We define the collateral and debt rewards earned by $trove_F$ and $trove_G$ in the reward event:
 
 \begin{equation} \label{eq:20}
     \begin{split}
@@ -316,7 +302,7 @@ And since $s_\mathsmaller{G}$ is a first-order stake:
 \end{equation}
 
 \bigskip
-To show ICR equivalence after the reward event, we must first obtain $s_F$ as a linear function of $c_G$. Recall our definition of $CDP_F$’s stake from \ref{eq:17}:
+To show ICR equivalence after the reward event, we must first obtain $s_F$ as a linear function of $c_G$. Recall our definition of $trove_F$’s stake from \ref{eq:17}:
 
 \begin{equation} 
     s_\mathsmaller{F}=\frac{c_\mathsmaller{F} \cdot C_n}{(C_n+X_n)}
@@ -352,7 +338,7 @@ Canceling yields:
 \end{equation}
 
 \bigskip
-We now compare ICRs of $CDP_F$ and $CDP_G$, after liquidation of $CDP_Z$.
+We now compare ICRs of $trove_F$ and $trove_G$, after liquidation of $trove_Z$.
 
 \begin{equation} 
     ICR_{F \; After}=\frac{c_\mathsmaller{F}+r_{c\mathsmaller{F}}}{d_\mathsmaller{F}+r_{d\mathsmaller{F}}}
@@ -422,11 +408,11 @@ If instead of a single liquidation event at a given system order, we have $P$ li
 
 Since ICR equality holds across one liquidation event, it will hold across the next, and thus hold for all.\\
 
-Liquidation events do not alter the stakes that earn shares of liquidated collateral and debt - and for a given stake, the individual CDP reward term $x_i$ given in 4) depends only on reward sizes and the total stakes.
+Liquidation events do not alter the stakes that earn shares of liquidated collateral and debt - and for a given stake, the individual trove reward term $x_i$ given in 4) depends only on reward sizes and the total stakes.
 
-\subsection{EXTENSION PROOF. Arbitrary Number of CDPs Added Between Liquidation Events}
+\subsection{EXTENSION PROOF. Arbitrary Number of troves Added Between Liquidation Events}
 
-With $N$ second-order CDPs added between consecutive liquidation events, the stake $s_F$ of any given second-order CDP is given by 1): 
+With $N$ second-order troves added between consecutive liquidation events, the stake $s_F$ of any given second-order trove is given by 1): 
 
 \begin{equation} 
     s_F=\frac{c_F \cdot totalStakes_\emptyset}{totalColateral_\emptyset}
@@ -435,21 +421,21 @@ With $N$ second-order CDPs added between consecutive liquidation events, the sta
 \bigskip
 The snapshots of the system state after the last liquidation event ($totalStakes_\emptyset$, $totalColateral_\emptyset$) remain constant until the next liquidation. It is clear that all $N$ second-order stakes $s_F$ have been corrected by the same constant factor.\\
 
-Thus, $s_F$ in the N second-order CDPs case is equal to $s_F$ in the single second-order CDP case.\\
+Thus, $s_F$ in the N second-order troves case is equal to $s_F$ in the single second-order trove case.\\
 
-As such, the logic of the Main Proof applies - and ICR equality between a second-order CDP and first-order CDP holds across a liquidation event, no matter how many fresh CDPs are added in between.
+As such, the logic of the Main Proof applies - and ICR equality between a second-order trove and first-order trove holds across a liquidation event, no matter how many fresh troves are added in between.
 
 \subsection{CONCLUSION 1}
 
 \bigskip
 Combining Main Proof with Extensions 1 \& 2 yields the following conclusion:\\
 
-\uline{In a second order system with $M$ previous liquidations, and $N$ second-order CDPs added after the last liquidation, ICR equality between a first-order CDP and second-order CDP holds across $P$ subsequent liquidation events.}\\
+\uline{In a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.}\\
 
 \subsection{2nd Order Systems Collapse to 1st Order}
 We now show that a second-order system is equivalent to a first-order system.\\
 
-Consider a hypothetical first order $CDP_1$ and an actual second order $CDP_2$. Let both CDPs have identical ICR, and also let $CDP_1$’s total collateral and debt equal $CDP_2$’s initial collateral and initial debt respectively:
+Consider a hypothetical first order $trove_1$ and an actual second order $trove_2$. Let both troves have identical ICR, and also let $trove_1$’s total collateral and debt equal $trove_2$’s initial collateral and initial debt respectively:
 
 \begin{equation} 
     c_1+x_1=c_2
@@ -509,7 +495,7 @@ Having shown all nth order systems are equivalent to a first order system, we no
 
 \subsection{CONCLUSION 2}
 
-\uline{In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order CDPs added after the last liquidation, ICR equality between an $(n-1)^{th}$ order CDP and $n^{th}$ order CDP holds across $P$ liquidation events.}
+\uline{In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.}
 
 \section{Corrected Stake Preserves Order}
 Here we show that ICR ordering is preserved with corrected stakes across a liquidation event.\\
@@ -522,13 +508,13 @@ We make use of the first-order equivalence result, namely, that with corrected s
 
 i.e:\\
 
-Any N’th order system of CDPs is equivalent to a first-order system of CDPs. For a given fresh CDP with stake $s_i$ and collateral $c_i$, the stake $s_i$ is equivalent to some hypothetical first-order stake $c_j$ which has accumulated collateral reward $x_j = (c_i - c_j)$ and debt reward $y_j = (d_i - d_j)$.\\
+Any N’th order system of troves is equivalent to a first-order system of troves. For a given fresh trove with stake $s_i$ and collateral $c_i$, the stake $s_i$ is equivalent to some hypothetical first-order stake $c_j$ which has accumulated collateral reward $x_j = (c_i - c_j)$ and debt reward $y_j = (d_i - d_j)$.\\
 
 Due to this equivalence between first and N’th-order systems, if ordering is preserved for first-order systems, it is preserved for N’th order systems.\\
 
-Now consider a first-order system of CDPs, with stakes equal to their initial collateral.\\
+Now consider a first-order system of troves, with stakes equal to their initial collateral.\\
 
-Let $CDP_1$ and $CDP_2$ be CDPs with initial collateral $c_1$, $c_2$ accumulated collateral and debt rewards $x_1$, $y_1$ and $x_2$, $y_2$ respectively:\\
+Let $trove_1$ and $trove_2$ be troves with initial collateral $c_1$, $c_2$ accumulated collateral and debt rewards $x_1$, $y_1$ and $x_2$, $y_2$ respectively:\\
 
 \begin{equation} 
     ICR_1=\frac{c_1+x_1}{d_1+x_1}
@@ -545,7 +531,7 @@ Let their ICRs be such that:
 \end{equation}
 
 \bigskip
-Since, a first-order CDP’s collateral and debt rewards are always in direct proportion to its initial collateral, we can write the accumulated rewards as:
+Since, a first-order trove’s collateral and debt rewards are always in direct proportion to its initial collateral, we can write the accumulated rewards as:
 
 \begin{equation} 
     x_1=Ac_1
@@ -616,7 +602,7 @@ Finally yielding the result:
 \bigskip
 We will later use this to prove that the inequality of ICRs holds across a liquidation event.\\
 
-Now consider a liquidation event occurs. Upon a CDP liquidation, $r_c$ collateral and $r_d$ debt are distributed to all active CDPs. Each active CDP earns rewards proportional to its initial collateral, thus:
+Now consider a liquidation event occurs. Upon a trove liquidation, $r_c$ collateral and $r_d$ debt are distributed to all active troves. Each active trove earns rewards proportional to its initial collateral, thus:
 
 \begin{equation} 
     ICR_{1After}=\frac{c_1\left(1+A\right)+ac_1}{d_1+Bc_1+bc_1}
@@ -685,14 +671,24 @@ Then taking reciprocals, finally yields:
 \end{equation}
 
 \bigskip
-Therefore, CDP ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in N’th order systems.
+Therefore, trove ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in N’th order systems.
 
 \bigskip
 \subsection*{References}
 
-[1]  B. Batog, L. Boca, N. Johnson, “Scalable Reward Distribution on the Ethereum Blockchain”, 2018. 
+\begin{thebibliography}{9}
+
+\bibitem{Whitepaper} 
+R. Lauko, R. Pardoe. 
+\textit{Liquity: Decentralized Borrowing Protocol (Whitepaper), 2020}. 
+https://docsend.com/view/bwiczmy
+
+\bibitem{Batog} 
+B. Batog, L. Boca, N. Johnson.
+\textit{Scalable Reward Distribution on the Ethereum Blockchain, 2018}. 
 http://batog.info/papers/scalable-reward-distribution.pdf
 
 
+\end{thebibliography}
 
 \end{document}

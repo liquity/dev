@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Percent, Difference } from "@liquity/decimal";
+import { Percent, Difference, Decimalish } from "@liquity/decimal";
 import { Trove, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -15,7 +15,9 @@ type TroveEditorProps = {
   original: Trove;
   edited: Trove;
   changePending: boolean;
-  dispatch: (action: { type: "editTrove"; edited: Trove }) => void;
+  dispatch: (
+    action: { type: "setCollateral" | "setDebt"; newValue: Decimalish } | { type: "revert" }
+  ) => void;
 };
 
 const selectPrice = ({ price }: LiquityStoreState) => price;
@@ -54,7 +56,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => dispatch({ type: "editTrove", edited: original })}
+            onClick={() => dispatch({ type: "revert" })}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -74,7 +76,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           {...{ editingState }}
           editedAmount={edited.collateral.toString(4)}
           setEditedAmount={(editedCollateral: string) =>
-            dispatch({ type: "editTrove", edited: edited.setCollateral(editedCollateral) })
+            dispatch({ type: "setCollateral", newValue: editedCollateral })
           }
         ></EditableRow>
 
@@ -88,7 +90,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           {...{ editingState }}
           editedAmount={edited.debt.toString(2)}
           setEditedAmount={(editedDebt: string) =>
-            dispatch({ type: "editTrove", edited: edited.setDebt(editedDebt) })
+            dispatch({ type: "setDebt", newValue: editedDebt })
           }
         />
 

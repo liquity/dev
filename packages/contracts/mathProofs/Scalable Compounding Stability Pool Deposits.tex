@@ -17,9 +17,17 @@
 \maketitle
 \begin{abstract}
     Scalability of Ethereum dApps is constrained by the gas costs of writing to storage. 
-    In previous work, Batog $^{1}$ and Solmaz $^{2}$ solved the problem of scalable reward distribution in a staking pool, distributing rewards in proportion to a staker’s share of total stakes with a “pull” based approach. Only a single running sum need be updated at each reward, sidestepping the need for an expensive $O(n)$ storage update for n stakers. However, their work stopped short of solving the problem for a compounding stake.
+    In previous work, Batog $\cite{Batog}$ and Solmaz $\cite{Solmaz}$ solved the problem of scalable reward distribution in a staking pool, distributing rewards in proportion to a staker’s share of total stakes with a “pull” based approach. Only a single running sum need be updated at each reward, sidestepping the need for an expensive $O(n)$ storage update for n stakers. However, their work stopped short of solving the problem for a compounding stake.
     Here we derive formulas for a scalable implementation of a compounding, decreasing Stability Pool deposit and its corresponding ETH gain. Thus, Liquity tracks the deposits and rewards of every depositor with only $O(1)$ complexity for each liquidation.
 \end{abstract}
+
+\section{Introduction}
+The Liquity protocol uses a Stability Pool as its primary mechanism to liquidate collateralized debt positions (called "troves") that fall below the minimum collateralization ratio of 110$\%$ $\cite{Whitepaper}$. Stability deposits (provided in LUSD) absorb and cancel the debt (in LUSD) from defaulted troves: 
+An amount of LUSD in the Stability Pool corresponding to the debt of the liquidated trove is burned from the pool’s balance, offsetting the debt. In return, Stability Pool depositors are rewarded with the acquisition of collateral (in ETH) from liquidated positions at a significant discount. The proportion of a stability depositor’s current deposit against the total LUSD in the pool determines the collateral share it receives from the liquidation. 
+
+The fact that liquidated troves decrease all deposits in the Stability Pool  leads to an implementation challenge: Due to Ethereum's block gas limit, it is not possible to iterate over all deposits in the Stability Pool for larger number of deposits. Such an operation has computational complexity of $O(n)$ and does not scale. 
+
+This paper presents a method to perform liquidations against the Stability Pool in a scalable manner with only $O(1)$ complexity. The method is "pull-based": Instead of adjusting all stability deposits upon every liquidation, the update is deferred to the moment at which an owner withdraws or tops up their deposit.
 
 \section{Derivation}
 For a pull-based implementation in Liquity’s Stability Pool, we must factor out the initial deposit, and track reward terms that are independent from the individual deposit values. We derive formulas for a compounding LUSD deposit and corresponding ETH gain as functions of the initial deposit, and involving a product $P$ and a sum $S$, which are in turn purely functions of the LUSD losses, ETH rewards and the total deposits.
@@ -281,14 +289,24 @@ $\_getCurrentETHGain()$
 
 $\_updateRewardSumAndProduct()$
 
-\bigskip
-\subsection*{References}
 
-[1]  B. Batog, L. Boca, N. Johnson, “Scalable Reward Distribution on the Ethereum Blockchain”, 2018. 
+\begin{thebibliography}{9}
+\bibitem{Batog} 
+B. Batog, L. Boca, N. Johnson.
+\textit{Scalable Reward Distribution on the Ethereum Blockchain, 2018}. 
 http://batog.info/papers/scalable-reward-distribution.pdf
 
-\bigskip
-[2] O. Solmaz, “Scalable Reward Distribution with Changing Stake Sizes”, 2019.
+\bibitem{Solmaz} 
+O. Solmaz. 
+\textit{Scalable Reward Distribution with Changing Stake Sizes”, 2019}. 
 https://solmaz.io/2019/02/24/scalable-reward-changing/
+
+\bibitem{Whitepaper} 
+R. Lauko, R. Pardoe. 
+\textit{Liquity: Decentralized Borrowing Protocol (Whitepaper), 2020}. 
+https://docsend.com/view/bwiczmy
+
+
+\end{thebibliography}
 
 \end{document}
