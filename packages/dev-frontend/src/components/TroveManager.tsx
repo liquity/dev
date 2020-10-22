@@ -28,15 +28,13 @@ type TroveManagerAction =
     }
   | { type: "setCollateral" | "setDebt"; newValue: Decimalish };
 
-const addDebtCompensation = (state: TroveManagerState) =>
-  reduce(state, { type: "addDebtCompensation" });
+const reduceWith = (action: TroveManagerAction) => (state: TroveManagerState): TroveManagerState =>
+  reduce(state, action);
 
-const removeDebtCompensation = (state: TroveManagerState) =>
-  reduce(state, { type: "removeDebtCompensation" });
-
-const finishChange = (state: TroveManagerState) => reduce(state, { type: "finishChange" });
-
-const revert = (state: TroveManagerState) => reduce(state, { type: "revert" });
+const addDebtCompensation = reduceWith({ type: "addDebtCompensation" });
+const removeDebtCompensation = reduceWith({ type: "removeDebtCompensation" });
+const finishChange = reduceWith({ type: "finishChange" });
+const revert = reduceWith({ type: "revert" });
 
 const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveManagerState => {
   // console.log(state);
