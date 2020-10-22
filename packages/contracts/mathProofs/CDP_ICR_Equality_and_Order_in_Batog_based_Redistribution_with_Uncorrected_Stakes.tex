@@ -62,7 +62,7 @@ Let $X_t$ denote the sum of all rewards per total staked amount up to instant $t
    S_t = \sum\limits_{k=0}^{t}\frac{R_t}{S_t}
 \end{equation}
 
-Assuming stake $j$ is deposited at moment $t_1$ and then
+Assuming stake $s_j$ is deposited at moment $t_1$ and then
 withdrawn at moment $t_2 > t_1$, we can use the sum $X_t$ to
 compute the total reward share for participant $j$ since
 
@@ -115,7 +115,7 @@ By extending the original formula from $\cite{Batog}$, we can thus express the c
         \end{cases}
 \end{equation}
 
-Note that $r_j$ can stand for the collateral or the debt share of a recipient trove since both of them can be represented as "rewards" through $R_t$.
+Note that $r_i$ can stand for the collateral or the debt share of a recipient trove since both of them can be represented as "rewards" through $R_t$.
 
 \section{Outline of the Proof}
 As mentioned above, we aim to prove that the corrected stake approach leaves the ordering of the troves by collateral ratio unchanged throughout all liquidations, regardless of any borrowers that change their troves' collateral between liquidation events.
