@@ -81,7 +81,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('ActivePool', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(activePool, 3)
+      await testSetAddresses(activePool, 2)
     })
   })
 

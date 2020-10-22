@@ -306,14 +306,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
     // --- onlyPoolManager ---
 
     // sendETH onlyPoolManager
-    it("sendETH(): reverts when called by an account that is not PoolManager or CDPM", async () => {
+    it("sendETH(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
         const txAlice = await activePool.sendETH(alice, 100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither the PoolManager nor CDPManager")
+        assert.include(err.message, "Caller is not the PoolManager")
       }
     })
 

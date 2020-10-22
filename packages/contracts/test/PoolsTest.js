@@ -91,7 +91,7 @@ contract('ActivePool', async accounts => {
   const [owner, mockPoolManagerAddress, alice] = accounts;
   beforeEach(async () => {
     activePool = await ActivePool.new()
-    await activePool.setAddresses(mockPoolManagerAddress, ZERO_ADDRESS, ZERO_ADDRESS)
+    await activePool.setAddresses(mockPoolManagerAddress, ZERO_ADDRESS)
   })
 
   it('poolManagerAddress(): gets the poolManager address', async () => {

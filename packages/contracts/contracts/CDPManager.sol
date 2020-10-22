@@ -469,14 +469,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
         emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalCollGasCompensation, T.totalCLVGasCompensation);
 
-        address payable msgSender = _msgSender();
-        // Send CLV gas compensation to caller
-        if (T.totalCLVGasCompensation > 0) {
-            poolManager.sendCLVGasCompensation(msgSender, T.totalCLVGasCompensation);
-        }
-
-        // Send ETH gas compensation to caller
-        activePool.sendETH(msgSender, T.totalCollGasCompensation);
+        // Send gas compensation to caller
+        poolManager.sendGasCompensation(_msgSender(), T.totalCLVGasCompensation, T.totalCollGasCompensation);
     }
 
     function _getTotalFromLiquidationSequence_RecoveryMode(
@@ -603,13 +597,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
         emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalCollGasCompensation, T.totalCLVGasCompensation);
 
-        address payable msgSender = _msgSender();
-        // Send CLV gas compensation to caller
-        if (T.totalCLVGasCompensation > 0) {
-            poolManager.sendCLVGasCompensation(msgSender, T.totalCLVGasCompensation);
-        }
-        // Send ETH gas compensation to caller
-        activePool.sendETH(msgSender, T.totalCollGasCompensation);
+        // Send gas compensation to caller
+        poolManager.sendGasCompensation(_msgSender(), T.totalCLVGasCompensation, T.totalCollGasCompensation);
     }
 
     function _getTotalFromBatchLiquidate_RecoveryMode(

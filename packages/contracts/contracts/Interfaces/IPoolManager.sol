@@ -33,16 +33,16 @@ interface IPoolManager {
         address _CLVAddress,
         address _stabilityPoolAddress,
         address _activePoolAddress,
-        address _defaultPoolAddress, 
+        address _defaultPoolAddress,
         address _communityIssuanceAddress
     ) external;
 
     function getActiveDebt() external view returns (uint);
-    
+
     function getActiveColl() external view returns (uint);
-    
+
     function getClosedDebt() external view returns (uint);
-    
+
     function getLiquidatedColl() external view returns (uint);
 
     function getStabilityPoolCLV() external view returns (uint);
@@ -64,17 +64,17 @@ interface IPoolManager {
     function withdrawColl(address _account, uint _ETH) external;
 
     function withdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) external;
-    
+
     function repayCLV(address _account, uint _CLV) external;
 
     function lockCLVGasCompensation(uint _CLVGasComp) external;
 
     function refundCLVGasCompensation(uint _CLVGasComp) external;
 
-    function sendCLVGasCompensation(address _user, uint _CLVGasComp) external;
+    function sendGasCompensation(address _user, uint _CLV, uint _ETH) external;
 
     function liquidate(uint _CLV, uint _ETH) external;
-  
+
     function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external;
 
     function redeemCollateral(address _account, uint _CLV, uint _ETH) external;
