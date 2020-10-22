@@ -175,7 +175,7 @@ const connectContracts = async (
       ),
 
     nonce =>
-      activePool.setAddresses(poolManager.address, cdpManager.address, defaultPool.address, {
+      activePool.setAddresses(poolManager.address, defaultPool.address, {
         ...overrides,
         nonce
       }),
