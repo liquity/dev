@@ -48,7 +48,7 @@ A naive push-based implementation ("strawman approach") would iterate over all p
 
 where $R_t$ is the reward distributed at $t$, $r_{j,t}$ the reward share of recipient $j$, $s_j$ the stake of recipient $j$, and $S_t$ the sum of the stakes of all recipients, i.e. $\sum s_i$.
 
-Note that $c_j$ does not depend on $t$, and is thus fixed throughout multiple reward events.  \\
+Note that $s_j$ does not depend on $t$, and is thus fixed throughout multiple reward events.  \\
 
 Based on this prerequisite, $\cite{Batog}$ suggests a scalable $O(1)$ method of distributing such rewards by deferring the reward computation. The total reward share of $j$ from all reward events that occur between time $t_1$ and $t_2$ can be written as a sum of its reward shares with the (fixed) stake $s_j$ being factored out:
 
@@ -56,14 +56,14 @@ Based on this prerequisite, $\cite{Batog}$ suggests a scalable $O(1)$ method of 
     \sum\limits_{t=t_1+1}^{t_2} r_{j,t} = s_j \cdot \sum\limits_{t=t_1+1}^{t_2}\frac{R_t}{S_t}
 \end{equation}
 
-Let $X_t$ denote the sum of all rewards per total staked amount up to instant $t$:
+Let $Q_t$ denote the sum of all rewards per total staked amount up to instant $t$:
 
 \begin{equation}
-   S_t = \sum\limits_{k=0}^{t}\frac{R_t}{S_t}
+   Q_t = \sum\limits_{k=0}^{t}\frac{R_t}{S_t}
 \end{equation}
 
 Assuming stake $s_j$ is deposited at moment $t_1$ and then
-withdrawn at moment $t_2 > t_1$, we can use the sum $X_t$ to
+withdrawn at moment $t_2 > t_1$, we can use the sum $Q_t$ to
 compute the total reward share for participant $j$ since
 
 
@@ -74,25 +74,26 @@ compute the total reward share for participant $j$ since
 can be written as
 
 \begin{equation} 
-    r_j = s_j \cdot (X_{t_2} - X_{t_1})
+    r_j = s_j \cdot (Q_{t_2} - Q_{t_1})
 \end{equation}
 
-As $X_t$ is monotonic, we can simply track the current (latest)
-value of $X$ as a running sum, and snapshot it whenever we expect it to be required for a later computation, i.e. whenever a participant changes its stake.
+As $Q_t$ is monotonic, we can simply track the current (latest)
+value of $Q$ as a running sum, and snapshot it whenever we expect it to be required for a later computation, i.e. whenever a participant changes their stake.
 
 To compute the total (accumulated) reward for participant $j$, we can then use following formula:
 
 \begin{equation} 
-    r_j = s_j \cdot (X - X_{t_1})
+    r_j = s_j \cdot (Q - Q_{t_1})
 \end{equation}
 
 \bigskip
 
 \section{Corrected Stake Approach}
-In Liquity, the collateral and debt shares from liquidations proportionally depend on the collateral of the recipient troves, which may have accumulated collateral from prior liquidations. 
+In Liquity, collateral and debt shares from liquidations are proportional to the entire collateral of the recipient troves. The redistribution must cope with the fact that some fraction of a trove's entire collateral is the accumulated reward from prior liquidations, and this fraction varies across troves. \\
 
-To account for the total collateral of the recipient troves including accumulated rewards, the distribution must thus cope with changing stakes between two reward events. We introduce a corrected stake to correct for the advantage gained by later stakes over earlier stakes.
+The "strawman" approach in 6, with rewards proportional to the initial stake, neglects this: it over-rewards fresh troves, and under-rewards older troves. \\
 
+We introduce a corrected stake to restore proportional reward distribution.
 \begin{equation}
     s_i=
         \begin{cases} 
@@ -110,8 +111,8 @@ By extending the original formula from $\cite{Batog}$, we can thus express the c
 \begin{equation}
     r_i=
         \begin{cases} 
-            c_i \cdot (X - X_{t_1}) & for \;totalCollateral_\emptyset = 0\\
-            c_i \cdot \frac{totalStakes_\emptyset} {\;totalCollateral_\emptyset} \cdot (X - X_{t_1}) & for \;totalCollateral_\emptyset>0
+            c_j \cdot (Q - Q_{t_1}) & for \;totalCollateral_\emptyset = 0\\
+            c_i \cdot \frac{totalStakes_\emptyset} {\;totalCollateral_\emptyset} \cdot (Q - Q_{t_1}) & for \;totalCollateral_\emptyset>0
         \end{cases}
 \end{equation}
 
