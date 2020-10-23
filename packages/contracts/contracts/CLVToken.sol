@@ -19,53 +19,57 @@ contract CLVToken is ICLVToken, Ownable {
     mapping (address => uint256) public balances;
     mapping (address => mapping (address => uint256)) public allowances;
 
-    address public poolManagerAddress;
     address public borrowerOperationsAddress;
+    address public cdpManagerAddress;
+    address public stabilityPoolAddress;
 
     uint256 public _totalSupply;
 
     // --- Events ---
 
-    event PoolManagerAddressChanged( address _newPoolManagerAddress);
-    event BorrowerOperationsAddressChanged( address _newBorrowerOperationsAddress);
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event StabilityPoolAddressChanged(address _stabilityPoolAddress);
     event CLVTokenBalanceUpdated(address _user, uint _amount);
 
     // --- Functions ---
 
-     function setAddresses(
-        address _poolManagerAddress,
-        address _borrowerOperationsAddress
+    function setAddresses(
+        address _borrowerOperationsAddress,
+        address _cdpManagerAddress,
+        address _stabilityPoolAddress
     )
-        external
-        override
-        onlyOwner
+    external
+    onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
-        poolManagerAddress = _poolManagerAddress;
-       
+        cdpManagerAddress = _cdpManagerAddress;
+        stabilityPoolAddress = _stabilityPoolAddress;
+
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-        emit PoolManagerAddressChanged(_poolManagerAddress);
-        
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+
         _renounceOwnership();
     }
-  
+
     function mint(address _account, uint256 _amount) external override {
-        _requireCallerIsPMorBO();
-        _mint(_account, _amount); 
+        _requireCallerIsBorrowerOperations();
+        _mint(_account, _amount);
     }
-    
+
     function burn(address _account, uint256 _amount) external override {
-        _requireCallerIsPoolManager();
-        _burn(_account, _amount); 
+        _requireCallerIsBOorCDPMorSP();
+        _burn(_account, _amount);
     }
-    
+
     function sendToPool(address _sender,  address _poolAddress, uint256 _amount) external override {
-        _requireCallerIsPoolManager();
+        _requireCallerIsStabilityPool();
         _transfer(_sender, _poolAddress, _amount);
     }
-    
+
     function returnFromPool(address _poolAddress, address _receiver, uint256 _amount) external override {
-        _requireCallerIsPoolManager();
+        _requireCallerIsCDPMorSP();
         _transfer(_poolAddress, _receiver, _amount);
     }
 
@@ -87,13 +91,28 @@ contract CLVToken is ICLVToken, Ownable {
 
     // --- 'require' functions ---
 
-    function _requireCallerIsPoolManager() internal view {
-        require(_msgSender() == poolManagerAddress, "CLVToken: Caller is not the PoolManager");
+    function _requireCallerIsBorrowerOperations internal view {
+        require(_msgSender() == borrowerOperationsAddress, "CLVToken: Caller is not BorrowerOperations");
     }
 
-    function _requireCallerIsPMorBO() internal view {
-        require(_msgSender() == poolManagerAddress || _msgSender() == borrowerOperationsAddress, 
-        "CLVToken: Caller is not the PM or BO");
+    function _requireCallerIsBOorCDPMorSP internal view {
+        address msgSender = _msgSender();
+        require(
+            msgSender == borrowerOperationsAddress ||
+            msgSender == cdpManagerAddress ||
+            msgSender == stabilityPoolAddress,
+            "CLVToken: Caller is neither BorrowerOperations nor CDPManager nor StabilityPool");
+    }
+
+    function _requireCallerIsStabilityPool internal view {
+        require(_msgSender() == stabilityPoolAddress, "CLVToken: Caller is not the StabilityPool");
+    }
+
+    function _requireCallerIsCDPMorSP internal view {
+        address msgSender = _msgSender();
+        require(
+            msgSender == cdpManagerAddress || msgSender == stabilityPoolAddress,
+            "CLVToken: Caller is neither CDPManager nor StabilityPool");
     }
 
     // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---
@@ -157,12 +176,12 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     function _burn(address account, uint256 amount) internal {
-        require(account != address(0), "ERC20: burn from the zero address");  
+        require(account != address(0), "ERC20: burn from the zero address");
         _subFromBalance(account, amount);
-        
-        _totalSupply = _totalSupply.sub(amount);  
 
-        emit Transfer(account, address(0), amount); 
+        _totalSupply = _totalSupply.sub(amount);
+
+        emit Transfer(account, address(0), amount);
     }
 
     function _approve(address owner, address spender, uint256 amount) internal {

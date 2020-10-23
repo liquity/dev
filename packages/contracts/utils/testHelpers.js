@@ -329,15 +329,6 @@ class TestHelper {
     throw ("The transaction logs do not contain a liquidation event")
   }
 
-  static getETHWithdrawnFromEvent(tx) {
-    for (let i = 0; i < tx.logs.length; i++) {
-      if (tx.logs[i].event === "ETHGainWithdrawn") {
-        return (tx.logs[i].args[1]).toString()
-      }
-    }
-    throw ("The transaction logs do not contain an ETHGainWithdrawn event")
-  }
-
   static getLUSDFeeFromLUSDBorrowingEvent(tx) {
     for (let i = 0; i < tx.logs.length; i++) {
       if (tx.logs[i].event === "LUSDBorrowingFeePaid") {
@@ -347,6 +338,29 @@ class TestHelper {
     throw ("The transaction logs do not contain an LUSDBorrowingFeePaid event")
   }
 
+  static getEventArgByIndex(tx, eventName, argIndex) {
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === eventName) {
+        return tx.logs[i].args[argIndex]
+      }
+    }
+    throw (`The transaction logs do not contain event ${eventName}`)
+  }
+
+  static getEventArgByName(tx, eventName, argName) {
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === eventName) {
+        const keys = Object.keys(tx.logs[i].args)
+        for (let j = 0; j < keys.length; j++) {
+          if (keys[j] === argName) {
+            return tx.logs[i].args[keys[j]]
+          }
+        }
+      }
+    }
+
+    throw (`The transaction logs do not contain event ${eventName} and arg ${argName}`)
+  }
 
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)

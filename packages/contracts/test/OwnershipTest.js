@@ -7,7 +7,6 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   const [owner, alice, bob] = accounts;
   let priceFeed
   let clvToken
-  let poolManager
   let sortedCDPs
   let cdpManager
   let activePool
@@ -22,7 +21,6 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
     activePool = contracts.activePool
@@ -51,13 +49,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('CDPManager', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(cdpManager, 9)
-    })
-  })
-
-  describe('PoolManager', async accounts => {
-    it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(poolManager, 8)
+      await testSetAddresses(cdpManager, 7)
     })
   })
 
@@ -75,20 +67,19 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('StabilityPool', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(stabilityPool, 3)
+      await testSetAddresses(stabilityPool, 4)
     })
   })
 
   describe('ActivePool', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(activePool, 3)
+      await testSetAddresses(activePool, 4)
     })
   })
 
   describe('CLVToken', async accounts => {
-    // setPoolManagerAddress
-    it("setPoolManagerAddress(): reverts when called by non-owner", async () => {
-      await testSetAddresses(clvToken, 2)
+    it("setAddresses(): reverts when called by non-owner", async () => {
+      await testSetAddresses(clvToken, 3)
     })
   })
 
@@ -109,7 +100,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('PriceFeed', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(priceFeed, 4)
+      await testSetAddresses(priceFeed, 3)
     })
   })
 })

@@ -10,24 +10,26 @@ import "./Dependencies/console.sol";
 contract DefaultPool is Ownable, IPool {
     using SafeMath for uint256;
 
-    address public poolManagerAddress;
+    address public cdpManagerAddress;
     address public activePoolAddress;
     uint256 internal ETH;  // deposited ether tracker
     uint256 internal CLVDebt;  // total outstanding CDP debt
 
+    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+
     // --- Dependency setters ---
 
     function setAddresses(
-        address _poolManagerAddress,
+        address _cdpManagerAddress,
         address _activePoolAddress
     )
         external
         onlyOwner
     {
-        poolManagerAddress = _poolManagerAddress;
+        cdpManagerAddress = _cdpManagerAddress;
         activePoolAddress = _activePoolAddress;
 
-        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
 
         _renounceOwnership();
@@ -46,25 +48,25 @@ contract DefaultPool is Ownable, IPool {
     // --- Pool functionality ---
 
     function sendETH(address _account, uint _amount) external override {
-        _requireCallerIsPoolManager();
-        ETH = ETH.sub(_amount); 
-         emit EtherSent(_account, _amount);  
+        _requireCallerIsCDPMananger();
+        ETH = ETH.sub(_amount);
+         emit EtherSent(_account, _amount);
 
-        (bool success, ) = _account.call{ value: _amount }("");  // use call.value()('') as per Consensys latest advice 
-        require(success, "DefaultPool: sending ETH failed");     
+        (bool success, ) = _account.call{ value: _amount }("");  // use call.value()('') as per Consensys latest advice
+        require(success, "DefaultPool: sending ETH failed");
     }
 
     function increaseCLVDebt(uint _amount) external override {
-        _requireCallerIsPoolManager();
+        _requireCallerIsCDPMananger();
         CLVDebt = CLVDebt.add(_amount);
     }
 
     function decreaseCLVDebt(uint _amount) external override {
-        _requireCallerIsPoolManager();
-        CLVDebt = CLVDebt.sub(_amount); 
+        _requireCallerIsCDPMananger();
+        CLVDebt = CLVDebt.sub(_amount);
     }
 
-    /* Returns the raw ether balance at DefaultPool address.  
+    /* Returns the raw ether balance at DefaultPool address.
     Not necessarily equal to the ETH state variable - ether can be forcibly sent to contracts. */
     function getRawETHBalance() external view override returns (uint) {
         return address(this).balance;
@@ -72,12 +74,12 @@ contract DefaultPool is Ownable, IPool {
 
     // --- 'require' functions ---
 
-    function _requireCallerIsPoolManager() internal view {
-        require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
+    function _requireCallerIsActivePool() internal view {
+        require(_msgSender() == activePoolAddress, "DefaultPool: Caller is not the ActivePool");
     }
 
-    function _requireCallerIsActivePool() internal view {
-        require( _msgSender() == activePoolAddress, "DefaultPool: Caller is not the ActivePool");
+    function _requireCallerIsCDPMananger internal view {
+        require(_msgSender() == cdpManagerAddress, "DefaultPool: Caller is not the CDPManager");
     }
 
     // --- Fallback function ---

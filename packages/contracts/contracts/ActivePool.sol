@@ -10,32 +10,37 @@ import "./Dependencies/console.sol";
 contract ActivePool is Ownable, IPool {
     using SafeMath for uint256;
 
-    address public poolManagerAddress;
+    address public borrowerOperationsAddress;
     address public cdpManagerAddress;
+    address public stabilityPoolAddress;
     address public defaultPoolAddress;
     uint256 internal ETH;  // deposited ether tracker
     uint256 internal CLVDebt;
 
     // --- Events ---
 
-    event CDPManagerAddressChanged(address _cdpManagerAddress);
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+    event CDPManagerAddressChanged(address _newCDPManagerAddress);
 
     // --- Contract setters ---
 
     function setAddresses(
-        address _poolManagerAddress,
+        address _borrowerOperationsAddress,
         address _cdpManagerAddress,
+        address _stabilityPoolAddress,
         address _defaultPoolAddress
     )
         external
         onlyOwner
     {
-        poolManagerAddress = _poolManagerAddress;
+        borrowerOperationsAddress = _borrowerOperationsAddress;
         cdpManagerAddress = _cdpManagerAddress;
+        stabilityPoolAddress = _stabilityPoolAddress;
         defaultPoolAddress = _defaultPoolAddress;
 
-        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
 
         _renounceOwnership();
@@ -53,26 +58,26 @@ contract ActivePool is Ownable, IPool {
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) external override {
-        _requireCallerIsPoolManagerOrCDPManager();
-        ETH = ETH.sub(_amount);  
-        emit EtherSent(_account, _amount);  
+    function sendETH(address _account, uint _amount) public override {
+        _requireCallerIsBOorCDPMorSP();
+        ETH = ETH.sub(_amount);
+        emit EtherSent(_account, _amount);
 
         (bool success, ) = _account.call{ value: _amount }("");
         require(success, "ActivePool: sending ETH failed");
     }
 
     function increaseCLVDebt(uint _amount) external override {
-        _requireCallerIsPoolManager();
-        CLVDebt  = CLVDebt.add(_amount); 
+        _requireCallerIsBOorCDPM();
+        CLVDebt  = CLVDebt.add(_amount);
     }
 
     function decreaseCLVDebt(uint _amount) external override {
-        _requireCallerIsPoolManager();
-        CLVDebt = CLVDebt.sub(_amount); 
+        _requireCallerIsBOorCDPMorSP();
+        CLVDebt = CLVDebt.sub(_amount);
     }
 
-    /* Returns the raw ether balance at ActivePool address.  
+    /* Returns the raw ether balance at ActivePool address.
     Not necessarily equal to the ETH state variable - ether can be forcibly sent to contracts. */
     function getRawETHBalance() external view override returns (uint) {
         return address(this).balance;
@@ -80,27 +85,38 @@ contract ActivePool is Ownable, IPool {
 
     // --- 'require' functions ---
 
-    function _requireCallerIsPoolManager() internal view {
-        require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
+    function _requireCallerIsBorrowerOperationsOrDefaultPool internal view {
+        address msgSender = _msgSender();
+        require(
+            msgSender == borrowerOperationsAddress ||
+            msgSender == defaultPoolAddress,
+            "ActivePool: Caller is neither BO nor Default Pool");
+        _;
     }
 
-     function _requireCallerIsPoolManagerOrDefaultPool() internal view {
+    function _requireCallerIsBOorCDPMorSP internal view {
+        address msgSender = _msgSender();
         require(
-            _msgSender() == poolManagerAddress || _msgSender() == defaultPoolAddress, 
-            "ActivePool: Caller is neither the PoolManager nor Default Pool");
+            msgSender == borrowerOperationsAddress ||
+            msgSender == cdpManagerAddress ||
+            msgSender == stabilityPoolAddress,
+            "ActivePool: Caller is neither BorrowerOperations nor CDPManager nor StabilityPool");
+        _;
     }
 
-    function _requireCallerIsPoolManagerOrCDPManager() internal view {
+    function _requireCallerIsBOorCDPM internal view {
+        address msgSender = _msgSender();
         require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == cdpManagerAddress, 
-            "ActivePool: Caller is neither the PoolManager nor CDPManager");
+            msgSender == borrowerOperationsAddress ||
+            msgSender == cdpManagerAddress,
+            "ActivePool: Caller is neither BorrowerOperations nor CDPManager");
+        _;
     }
 
     // --- Fallback function ---
 
     receive() external payable {
-        _requireCallerIsPoolManagerOrDefaultPool();
+        _requireCallerIsBorrowerOperationsOrDefaultPool();
         ETH = ETH.add(msg.value);
     }
 }

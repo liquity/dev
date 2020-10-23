@@ -6,9 +6,9 @@ import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/ICLVToken.sol";
 import "./Interfaces/IPool.sol";
+import './Interfaces/ICLVToken.sol';
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
-import "./Interfaces/IPoolManager.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
@@ -20,8 +20,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     ICDPManager public cdpManager;
 
-    IPoolManager public poolManager;
-
     IPool public activePool;
 
     IPool public defaultPool;
@@ -32,7 +30,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     address public lqtyStakingAddress;
 
     ICLVToken public clvToken;
-    address public clvTokenAddress;
 
 
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
@@ -61,9 +58,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- Events ---
 
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
-    event PoolManagerAddressChanged(address _newPoolManagerAddress);
     event ActivePoolAddressChanged(address _activePoolAddress);
     event DefaultPoolAddressChanged(address _defaultPoolAddress);
+    event CLVTokenAddressChanged(address _newCLVTokenAddress);
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
@@ -87,7 +84,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function setAddresses(
         address _cdpManagerAddress,
-        address _poolManagerAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _priceFeedAddress,
@@ -100,20 +96,18 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         onlyOwner
     {
         cdpManager = ICDPManager(_cdpManagerAddress);
-        poolManager = IPoolManager(_poolManagerAddress);
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        clvTokenAddress = _clvTokenAddress;
         clvToken = ICLVToken(_clvTokenAddress);
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
         emit CDPManagerAddressChanged(_cdpManagerAddress);
-        emit PoolManagerAddressChanged(_poolManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
+        emit CLVTokenAddressChanged(_clvTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
@@ -159,15 +153,17 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint arrayIndex = cdpManager.addCDPOwnerToArray(user);
         emit CDPCreated(user, arrayIndex);
 
+        // Tell PM to move the ether to the Active Pool, and mint CLV to the borrower
+
         // Send the fee to the staking contract
         clvToken.mint(lqtyStakingAddress, CLVFee);
         lqtyStaking.increaseF_LUSD(CLVFee);
 
-        // Tell PM to move the ether to the Active Pool, and mint the CLVAmount to the borrower
-        poolManager.addColl{value: msg.value}();
-        poolManager.withdrawCLV(user, _CLVAmount, CLVFee);
-
-        poolManager.lockCLVGasCompensation(CLV_GAS_COMPENSATION);
+        // Move the ether to the Active Pool, and mint the CLVAmount to the borrower
+        _activePoolAddColl(msg.value);
+        _withdrawCLV(user, _CLVAmount, CLVFee);
+        // Lock CLV gas compensation
+        _withdrawCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION, 0);
 
         emit CDPUpdated(user, rawDebt, msg.value, stake, BorrowerOperation.openLoan);
         emit LUSDBorrowingFeePaid(user, CLVFee);
@@ -189,8 +185,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);
 
         // Tell PM to move the ether to the Active Pool
+<<<<<<< variant A
         poolManager.addColl{ value: msg.value }();
 
+>>>>>>> variant B
+        _activePoolAddColl(msg.value);
+
+======= end
         uint debt = cdpManager.getCDPDebt(_user);
         emit CDPUpdated(_user, debt, newColl, stake, BorrowerOperation.addColl);
     }
@@ -224,7 +225,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
 
         // Remove _amount ETH from ActivePool and send it to the user
-        poolManager.withdrawColl(user, _collWithdrawal);
+        activePool.sendETH(user, _amount);
 
         emit CDPUpdated(user, debt, newColl, stake, BorrowerOperation.withdrawColl);
     }
@@ -264,7 +265,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
 
         // Mint the CLV amount (minus fee) to the borrower, and update the ActivePool
-        poolManager.withdrawCLV(user, _CLVAmount, CLVFee);
+        _withdrawCLV(user, _amount, CLVFee);
 
         uint stake = cdpManager.getCDPStake(user);
         emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.withdrawCLV);
@@ -292,7 +293,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
 
         // Burn the received amount of CLV from the user's balance, and remove it from the ActivePool
-        poolManager.repayCLV(user, _CLVamount);
+        _repayCLV(user, _CLVamount);
 
         uint coll = cdpManager.getCDPColl(user);
         uint stake = cdpManager.getCDPStake(user);
@@ -313,9 +314,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         cdpManager.closeCDP(user);
 
         // Tell PM to burn the debt from the user's balance, and send the collateral back to the user
-        poolManager.repayCLV(user, debt.sub(CLV_GAS_COMPENSATION));
-        poolManager.withdrawColl(user, coll);
-        poolManager.refundCLVGasCompensation(CLV_GAS_COMPENSATION);
+        _repayCLV(user, debt.sub(CLV_GAS_COMPENSATION));
+        activePool.sendETH(user, coll);
+        // Refund gas compensation
+        _repayCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION);
 
         emit CDPUpdated(user, 0, 0, 0, BorrowerOperation.closeLoan);
     }
@@ -389,11 +391,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     function _getCollChange(
-        uint _collReceived, 
+        uint _collReceived,
         uint _requestedCollWithdrawal
-    ) 
-        internal 
-        pure 
+    )
+        internal
+        pure
         returns(uint collChange, bool isCollIncrease)
     {
         if (_collReceived != 0) {
@@ -436,16 +438,36 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
     {
         if (_isDebtIncrease) {
-            poolManager.withdrawCLV(_user, _debtChange, _CLVFee);
+            _withdrawCLV(_user, _debtChange, _CLVFee);
         } else {
-            poolManager.repayCLV(_user, _debtChange);
+            _repayCLV(_user, _debtChange);
         }
 
         if (_isCollIncrease) {
-            poolManager.addColl{value: _collChange}();
+            _activePoolAddColl(_collChange);
         } else {
-            poolManager.withdrawColl(_user, (_collChange));
+            activePool.sendETH(_user, _collChange);
         }
+    }
+
+    // Add the received ETH to the total active collateral
+    function _activePoolAddColl(uint _amount) internal {
+        // Send ETH to Active Pool and increase its recorded ETH balance
+        (bool success, ) = address(activePool).call{value: _amount}("");
+        assert(success == true);
+    }
+
+    // Issue the specified amount of CLV to _account and increases the total active debt
+    function _withdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) internal {
+        uint totalCLVDrawn = _CLVAmount.add(_CLVFee);
+        activePool.increaseCLVDebt(totalCLVDrawn);
+        CLV.mint(_account, _CLVAmount);
+    }
+
+    // Burn the specified amount of CLV from _account and decreases the total active debt
+    function _repayCLV(address _account, uint _CLV) internal {
+        activePool.decreaseCLVDebt(_CLV);
+        CLV.burn(_account, _CLV);
     }
 
     // --- 'Require' wrapper functions ---

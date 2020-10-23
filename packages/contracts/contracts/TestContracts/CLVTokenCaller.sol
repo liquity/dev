@@ -2,10 +2,16 @@
 
 pragma solidity 0.6.11;
 
-import "../PoolManager.sol";
+import "../Interfaces/ICLVToken.sol";
 
 
-contract PoolManagerTester is PoolManager {
+contract CLVTokenCaller {
+    ICLVToken CLV;
+
+    constructor (ICLVToken _CLV) public {
+        CLV = _CLV;
+    }
+
     function clvMint(address _account, uint _amount) external {
         CLV.mint(_account, _amount);
     }
