@@ -52,7 +52,7 @@ export class Trove {
   }
 
   toString(): string {
-    return `{ collateral: ${this.collateral}` + `, debt: ${this.debt}` + " }";
+    return `{ collateral: ${this.collateral}, debt: ${this.debt} }`;
   }
 
   equals(that: Trove): boolean {
