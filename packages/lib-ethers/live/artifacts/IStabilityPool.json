@@ -116,21 +116,6 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getCLV",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [],
       "name": "getETH",
       "outputs": [
         {
@@ -147,6 +132,21 @@
       "constant": true,
       "inputs": [],
       "name": "getRawETHBalance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getTotalCLVDeposits",
       "outputs": [
         {
           "internalType": "uint256",
@@ -188,42 +188,6 @@
         }
       ],
       "name": "sendETH",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_activePoolAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setActivePoolAddress",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_defaultPoolAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setDefaultPoolAddress",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -236,9 +200,14 @@
           "internalType": "address",
           "name": "_poolManagerAddress",
           "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_activePoolAddress",
+          "type": "address"
         }
       ],
-      "name": "setPoolManagerAddress",
+      "name": "setAddresses",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
