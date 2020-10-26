@@ -6,6 +6,7 @@ const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
+const dec = th.dec
 const mv = testHelpers.MoneyValues
 
 contract("PoolManager", async accounts => {
@@ -103,7 +104,7 @@ contract("PoolManager", async accounts => {
       const CLVinSP = (await stabilityPool.getCLV()).toString()
 
       // Attempt to withdraw
-      const withdrawalTx = await poolManager.withdrawFromSP(mv._1e36, { from: depositor })
+      const withdrawalTx = await poolManager.withdrawFromSP(dec(1, 36), { from: depositor })
       
       const ETHinSPAfter = (await stabilityPool.getETH()).toString()
       const CLVinSPAfter = (await stabilityPool.getCLV()).toString()
@@ -164,7 +165,7 @@ contract("PoolManager", async accounts => {
     it("Defaulters' Collateral in range [1, 1e8]. SP Deposits in range [100, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: mv._500billion_Ether })
+      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: dec(5, 29) })
 
       const numberOfOps = 1000
       const defaulterAccounts = accounts.slice(1, numberOfOps)
@@ -205,7 +206,7 @@ contract("PoolManager", async accounts => {
         true)
 
       // price drops, all L liquidateable
-      await priceFeed.setPrice(mv._100e18);
+      await priceFeed.setPrice(dec(1, 18));
 
       // Random sequence of operations: liquidations and SP deposits
       for (i = 0; i < numberOfOps; i++) {
@@ -237,7 +238,7 @@ contract("PoolManager", async accounts => {
     it("Defaulters' Collateral in range [1, 10]. SP Deposits in range [1e8, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: mv._500billion_Ether })
+      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: dec(5, 29) })
 
       const numberOfOps = 1000
       const defaulterAccounts = accounts.slice(1, numberOfOps)
@@ -276,7 +277,7 @@ contract("PoolManager", async accounts => {
         depositorCLVProportionMax)
 
       // price drops, all L liquidateable
-      await priceFeed.setPrice(mv._100e18);
+      await priceFeed.setPrice(dec(100, 18));
 
       // Random sequence of operations: liquidations and SP deposits
       for (i = 0; i < numberOfOps; i++) {
@@ -308,7 +309,7 @@ contract("PoolManager", async accounts => {
     it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [100, 1000]. Every liquidation empties the Pool. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: mv._500billion_Ether })
+      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: dec(5, 29) })
 
       const numberOfOps = 1000
       const defaulterAccounts = accounts.slice(1, numberOfOps)
@@ -347,7 +348,7 @@ contract("PoolManager", async accounts => {
         depositorCLVProportionMax)
 
       // price drops, all L liquidateable
-      await priceFeed.setPrice(mv._100e18);
+      await priceFeed.setPrice(dec(100, 18));
 
       // Random sequence of operations: liquidations and SP deposits
       for (i = 0; i < numberOfOps; i++) {
@@ -379,7 +380,7 @@ contract("PoolManager", async accounts => {
     it.only("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [1e8 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: mv._500billion_Ether })
+      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: dec(5, 29) })
 
       // price drops, all L liquidateable
       const numberOfOps = 1000
@@ -419,7 +420,7 @@ contract("PoolManager", async accounts => {
         depositorCLVProportionMax)
 
       // price drops, all L liquidateable
-      await priceFeed.setPrice(mv._100e18);
+      await priceFeed.setPrice(dec(100, 18));
 
       // Random sequence of operations: liquidations and SP deposits
       for (i = 0; i < numberOfOps; i++) {

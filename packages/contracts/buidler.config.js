@@ -1,6 +1,7 @@
 usePlugin("@nomiclabs/buidler-truffle5");
 usePlugin("@nomiclabs/buidler-ethers");
 usePlugin("solidity-coverage");
+usePlugin("buidler-gas-reporter");
 
 const accounts = require("./buidlerAccountsList2k.js");
 
@@ -30,5 +31,8 @@ module.exports = {
     rpc: {
         host: "localhost",
         port: 8545
+    },
+    gasReporter: {
+        enabled: (process.env.REPORT_GAS) ? true : false
     }
 };

@@ -1,4 +1,4 @@
-import { Theme } from "theme-ui";
+import { Theme, ThemeUIStyleObject } from "theme-ui";
 
 const baseColors = {
   blue: "#1542cd",
@@ -27,15 +27,15 @@ const colors = {
   muted: "#eaebed"
 };
 
-const buttonBase = {
+const buttonBase: ThemeUIStyleObject = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
 
   ":enabled": { cursor: "pointer" }
-} as const;
+};
 
-const button = {
+const button: ThemeUIStyleObject = {
   ...buttonBase,
 
   px: "32px",
@@ -48,9 +48,9 @@ const button = {
   ":disabled": {
     opacity: 0.5
   }
-} as const;
+};
 
-const iconButton = {
+const iconButton: ThemeUIStyleObject = {
   ...buttonBase,
 
   padding: 0,
@@ -63,21 +63,21 @@ const iconButton = {
     color: "text",
     opacity: 0.25
   }
-} as const;
+};
 
 const cardHeadingFontSize = 18.7167;
 
-const cardGapX = [0, 3, 4] as const;
-const cardGapY = [3, 3, 4] as const;
+const cardGapX = [0, 3, 4];
+const cardGapY = [3, 3, 4];
 
-const card = {
+const card: ThemeUIStyleObject = {
   position: "relative",
   mt: cardGapY,
   border: 1,
   boxShadow: [1, null, 2]
-} as const;
+};
 
-const infoCard = {
+const infoCard: ThemeUIStyleObject = {
   ...card,
 
   padding: 3,
@@ -89,17 +89,17 @@ const infoCard = {
     mb: 2,
     fontSize: cardHeadingFontSize
   }
-} as const;
+};
 
-const formBase = {
+const formBase: ThemeUIStyleObject = {
   display: "block",
   width: "auto",
   flexShrink: 0,
   padding: 2,
   fontSize: 3
-} as const;
+};
 
-const formCell = {
+const formCell: ThemeUIStyleObject = {
   ...formBase,
 
   bg: "background",
@@ -107,9 +107,9 @@ const formCell = {
   borderColor: "muted",
   borderRadius: 0,
   boxShadow: [1, 2]
-} as const;
+};
 
-const overlay = {
+const overlay: ThemeUIStyleObject = {
   position: "absolute",
 
   left: 0,
@@ -118,9 +118,9 @@ const overlay = {
   height: "100%",
 
   zIndex: 2
-} as const;
+};
 
-const modalOverlay = {
+const modalOverlay: ThemeUIStyleObject = {
   position: "fixed",
 
   left: 0,
@@ -129,7 +129,7 @@ const modalOverlay = {
   height: "100vh",
 
   zIndex: 4
-} as const;
+};
 
 const theme: Theme = {
   breakpoints: ["48em", "52em", "64em"],

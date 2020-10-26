@@ -7,15 +7,15 @@ const CLVToken = artifacts.require("./CLVToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const DeciMath = artifacts.require("DeciMath")
-const ABDKMath64x64 = artifacts.require("ABDKMath64x64")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
+const HintHelpers = artifacts.require("./HintHelpers.sol")
 const deploymentHelpers = require("./deploymentHelpers.js")
+const testHelpers =  require("./testHelpers.js")
 
+const th = testHelpers.TestHelper
 const getAddresses = deploymentHelpers.getAddresses
 const connectContracts = deploymentHelpers.connectContracts
-
 
 contractABIs = [
     BorrowerOperations,
@@ -27,7 +27,8 @@ contractABIs = [
     ActivePool,
     StabilityPool, 
     DefaultPool,
-    FunctionCaller 
+    FunctionCaller,
+    HintHelpers
 ]
 
     const getGasFromContractDeployment = async (contractObject, name) => {
@@ -45,14 +46,13 @@ contractABIs = [
             console.log(`${contractABI.contractName}: ${bytecodeLength}`)
             // console.log(`${contractABI.contractName} deployed bytecode length: ${deployedBytecodeLength}`)
             }
+    
+    const getUSDCostFromGasCost = (deploymentGasTotal, gasPriceInGwei, ETHPrice) => {
+      const dollarCost = (deploymentGasTotal * gasPriceInGwei * ETHPrice) / 1e9
+      console.log(`At gas price ${gasPriceInGwei} GWei, and ETH Price $${ETHPrice} per ETH, the total cost of deployment in USD is: $${dollarCost}`)
+      }
 
 async function main() {
-
-    const deciMath = await DeciMath.new()
-    const abdkMath = await ABDKMath64x64.new()
-    DeciMath.setAsDeployed(deciMath)
-    ABDKMath64x64.setAsDeployed(abdkMath)
-
     const borrowerOperations = await BorrowerOperations.new()
     const priceFeed = await PriceFeed.new()
     const clvToken = await CLVToken.new()
@@ -63,6 +63,7 @@ async function main() {
     const stabilityPool = await StabilityPool.new()
     const defaultPool = await DefaultPool.new()
     const functionCaller = await FunctionCaller.new()
+    const hintHelpers = await HintHelpers.new()
 
     contracts = {
         borrowerOperations: borrowerOperations,
@@ -74,16 +75,22 @@ async function main() {
         activePool: activePool,
         stabilityPool: stabilityPool,
         defaultPool: defaultPool,
-        functionCaller: functionCaller
+        functionCaller: functionCaller,
+        hintHelpers: hintHelpers
       }
 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
 
     console.log(`Gas costs for deployments: `)
+    let totalGasCost = 0
     for (contractName of Object.keys(contracts)) {
-        await getGasFromContractDeployment(contracts[contractName], contractName);
+        const gasCost  = await getGasFromContractDeployment(contracts[contractName], contractName);
+        totalGasCost = totalGasCost + Number(gasCost)
     }
+    console.log(`Total deployment gas costs: ${totalGasCost}`)
+    getUSDCostFromGasCost(totalGasCost, 200, 400)
+   
     console.log(`\n`)
 
     console.log(`Contract bytecode lengths:`)

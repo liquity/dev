@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -8,23 +8,36 @@ import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
 /* 
-A sorted doubly linked list with nodes sorted in descending order, based on current ICRs of active CDPs. 
-Optionally accepts insert position hints.
+A sorted doubly linked list with nodes sorted in descending order.
+
+Nodes map to active CDPs in the system - the ID property is the address of a CDP owner. 
+Nodes are ordered according to their current individual collateral ratio (ICR).
+
+The list optionally accepts insert position hints.
 
 ICRs are computed dynamically at runtime, and not stored on the Node. This is because ICRs of active CDPs 
 change dynamically as liquidation events occur.
 
 The list relies on the fact that liquidation events preserve ordering: a liquidation decreases the ICRs of all active CDPs, 
 but maintains their order. A node inserted based on current ICR will maintain the correct position, 
-relative to it's peers, as rewards accumulate. Thus, Nodes remain sorted by current ICR.
+relative to it's peers, as rewards accumulate, as long as it's raw collateral and debt have not changed.
+Thus, Nodes remain sorted by current ICR.
 
-Nodes need only be re-inserted upon a CDP operation - when the owner adds or removes collateral or debt.
+Nodes need only be re-inserted upon a CDP operation - when the owner adds or removes collateral or debt 
+to their position.
 
 The list is a modification of the following audited SortedDoublyLinkedList:
 https://github.com/livepeer/protocol/blob/master/contracts/libraries/SortedDoublyLL.sol
 
-In our variant, keys have been removed, and all ICR checks in functions now compare an ICR argument to the current ICR, 
-calculated at runtime. Data is stored in the 'data' state variable.
+
+Changes made in the Liquity implementation:
+
+- Keys have been removed from nodes
+
+- Ordering checks for insertion are performed by comparing an ICR argument to the current ICR, calculated at runtime. 
+The list relies on the property that ordering by ICR is maintained as the ETH:USD price varies.
+
+- Public functions with parameters have been made internal to save gas, and given an external wrapper function for external access
 */
 contract SortedCDPs is Ownable, ISortedCDPs {
     using SafeMath for uint256;
@@ -32,10 +45,9 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     event CDPManagerAddressChanged(address _newCDPlManagerAddress);
     event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
 
-    IBorrowerOperations borrowerOperations;
     address public borrowerOperationsAddress;
 
-    ICDPManager cdpManager;
+    ICDPManager public cdpManager;
     address public CDPManagerAddress;
 
     // Information for a node in the list
@@ -54,7 +66,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         mapping (address => Node) nodes;     // Track the corresponding ids for each node in the list
     }
 
-    Data data;
+    Data public data;
 
     // --- Modifiers ---
 
@@ -77,31 +89,19 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
     // --- Dependency setters --- 
 
-    function setCDPManager(address _CDPManagerAddress) external onlyOwner {
-        CDPManagerAddress = _CDPManagerAddress;
-        cdpManager = ICDPManager(_CDPManagerAddress);
-        emit CDPManagerAddressChanged(_CDPManagerAddress);
-    }
-
-    function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
-        borrowerOperationsAddress = _borrowerOperationsAddress;
-        borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-    }
-
-    constructor() public {
-        data.maxSize = 10000000;
-    }
-
-    /*
-     * @dev Set the maximum size of the list
-     * @param _size Maximum size
-     */
-    function setMaxSize(uint256 _size) external onlyOwner {
-        // New max size must be greater than old max size
-        require(_size > data.maxSize);
+    function setParams(uint256 _size, address _CDPManagerAddress, address _borrowerOperationsAddress) external onlyOwner {
+        require(_size > 0, "SortedCDPs: Size can’t be zero");
 
         data.maxSize = _size;
+
+        CDPManagerAddress = _CDPManagerAddress;
+        cdpManager = ICDPManager(_CDPManagerAddress);
+        borrowerOperationsAddress = _borrowerOperationsAddress;
+
+        emit CDPManagerAddressChanged(_CDPManagerAddress);
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+
+        _renounceOwnership();
     }
 
     /*
@@ -112,7 +112,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _nextId Id of next node for the insert position
      */
 
-    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external onlyBorrowerOperations {
+    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external onlyBOorCDPM {
         _insert (_id, _ICR, _price, _prevId, _nextId);
     }
     
@@ -120,7 +120,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         // List must not be full
         require(!isFull());  
         // List must not already contain node
-        require(!contains(_id));  
+        require(!_contains(_id));  
         // Node id must not be null
         require(_id != address(0));  
         // ICR must be non-zero
@@ -129,10 +129,10 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address prevId = _prevId; 
         address nextId = _nextId; 
 
-        if (!validInsertPosition(_ICR, _price, prevId, nextId)) {
+        if (!_validInsertPosition(_ICR, _price, prevId, nextId)) {
             // Sender's hint was not a valid insert position
             // Use sender's hint to find a valid insert position
-            (prevId, nextId) = findInsertPosition(_ICR, _price, prevId, nextId);   
+            (prevId, nextId) = _findInsertPosition(_ICR, _price, prevId, nextId);   
         }
         
          data.nodes[_id].exists = true;  
@@ -172,7 +172,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      */
     function _remove(address _id) internal {
         // List must contain the node
-        require(contains(_id)); 
+        require(_contains(_id)); 
 
         if (data.size > 1) { 
             // List contains more than a single node
@@ -215,7 +215,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      */
     function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external onlyBOorCDPM {
         // List must contain the node
-        require(contains(_id));
+        require(_contains(_id));
 
         // Remove node from the list
         _remove(_id);
@@ -230,7 +230,11 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @dev Checks if the list contains a node
      * @param _transcoder Address of transcoder
      */
-    function contains(address _id) public view returns (bool) {
+    function contains(address _id) external view returns (bool) {
+       return _contains(_id);
+    }
+
+    function _contains(address _id) internal view returns (bool) {
         return data.nodes[_id].exists;
     }
 
@@ -298,7 +302,12 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view returns (bool) {
+    
+    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) external view returns (bool) {
+        return _validInsertPosition(_ICR, _price, _prevId, _nextId);
+    }
+
+    function _validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) internal view returns (bool) {
         if (_prevId == address(0) && _nextId == address(0)) {
             // `(null, null)` is a valid insert position if the list is empty
             return isEmpty();
@@ -331,7 +340,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address nextId = data.nodes[prevId].nextId;
 
         // Descend the list until we reach the end or until we find a valid insert position
-        while (prevId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
+        while (prevId != address(0) && !_validInsertPosition(_ICR, _price, prevId, nextId)) {
             prevId = data.nodes[prevId].nextId;
             nextId = data.nodes[prevId].nextId;
         }
@@ -354,7 +363,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address prevId = data.nodes[nextId].prevId;
 
         // Ascend the list until we reach the end or until we find a valid insertion point
-        while (nextId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
+        while (nextId != address(0) && !_validInsertPosition(_ICR, _price, prevId, nextId)) {
             nextId = data.nodes[nextId].prevId;
             prevId = data.nodes[nextId].prevId;
         }
@@ -368,19 +377,23 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view returns (address, address) {
+    function findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) external view returns (address, address) {
+        return _findInsertPosition(_ICR, _price, _prevId, _nextId);
+    }
+
+    function _findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) internal view returns (address, address) {
         address prevId = _prevId;
         address nextId = _nextId;
 
         if (prevId != address(0)) {
-            if (!contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId, _price)) {
+            if (!_contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId, _price)) {
                 // `prevId` does not exist anymore or now has a smaller ICR than the given ICR
                 prevId = address(0);
             }
         }
 
         if (nextId != address(0)) {
-            if (!contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId, _price)) {
+            if (!_contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId, _price)) {
                 // `nextId` does not exist anymore or now has a larger ICR than the given ICR
                 nextId = address(0);
             }

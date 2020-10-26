@@ -1,9 +1,10 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import "./CDPManager.sol";
 import "./SortedCDPs.sol";
 
+/*  Helper contract for grabbing CDP data for the front end. Not part of the core Liquity system. */
 contract MultiCDPGetter {
     struct CombinedCDPData {
         address owner;
@@ -16,8 +17,8 @@ contract MultiCDPGetter {
         uint snapshotCLVDebt;
     }
 
-    CDPManager cdpManager; // XXX CDPs missing from ICDPManager?
-    ISortedCDPs sortedCDPs;
+    CDPManager public cdpManager; // XXX CDPs missing from ICDPManager?
+    ISortedCDPs public sortedCDPs;
 
     constructor(CDPManager _cdpManager, ISortedCDPs _sortedCDPs) public {
         cdpManager = _cdpManager;

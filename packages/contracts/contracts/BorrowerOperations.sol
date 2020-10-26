@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -6,40 +6,28 @@ import "./Interfaces/IPool.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPoolManager.sol";
-import "./Dependencies/SafeMath.sol";
-import "./Math.sol";
+import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
-contract BorrowerOperations is Ownable, IBorrowerOperations {
-    using SafeMath for uint;
-
-    uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
-    uint constant public  CCR = 1500000000000000000; // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant public MIN_COLL_IN_USD = 20000000000000000000;
+contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Connected contract declarations ---
 
-    ICDPManager cdpManager;
-    address public cdpManagerAddress;
+    ICDPManager public cdpManager;
 
-    IPoolManager poolManager;
-    address public poolManagerAddress;
+    IPoolManager public poolManager;
 
-    IPool activePool;
-    address public activePoolAddress;
+    IPool public activePool;
 
-    IPool defaultPool;
-    address public defaultPoolAddress;
+    IPool public defaultPool;
 
-    IPriceFeed priceFeed;
-    address public priceFeedAddress;
+    IPriceFeed public priceFeed;
 
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
-    ISortedCDPs sortedCDPs;
-    address public sortedCDPsAddress;
+    ISortedCDPs public sortedCDPs;
 
-      // --- Events --- 
+    // --- Events --- 
 
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
     event PoolManagerAddressChanged(address _newPoolManagerAddress);
@@ -48,45 +36,47 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
+    enum BorrowerOperation {
+        openLoan,
+        closeLoan,
+        addColl,
+        withdrawColl,
+        withdrawCLV,
+        repayCLV,
+        adjustLoan
+    }
+
     event CDPCreated(address indexed _user, uint arrayIndex);
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
 
     // --- Dependency setters --- 
 
-    function setCDPManager(address _cdpManagerAddress) external onlyOwner {
-        cdpManagerAddress = _cdpManagerAddress;
+    function setAddresses(
+        address _cdpManagerAddress,
+        address _poolManagerAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress,
+        address _priceFeedAddress,
+        address _sortedCDPsAddress
+    )
+        external
+        onlyOwner
+    {
         cdpManager = ICDPManager(_cdpManagerAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
-    }
-
-    function setPoolManager(address _poolManagerAddress) external onlyOwner {
-        poolManagerAddress = _poolManagerAddress;
         poolManager = IPoolManager(_poolManagerAddress);
-        emit PoolManagerAddressChanged(_poolManagerAddress);
-    }
-
-    function setActivePool(address _activePoolAddress) external onlyOwner {
-        activePoolAddress = _activePoolAddress;
         activePool = IPool(_activePoolAddress);
-        emit ActivePoolAddressChanged(_activePoolAddress);
-    }
-
-    function setDefaultPool(address _defaultPoolAddress) external onlyOwner {
-        defaultPoolAddress = _defaultPoolAddress;
         defaultPool = IPool(_defaultPoolAddress);
-        emit DefaultPoolAddressChanged(_defaultPoolAddress);
-    }
-
-    function setPriceFeed(address _priceFeedAddress) external onlyOwner {
-        priceFeedAddress = _priceFeedAddress;
-        priceFeed = IPriceFeed(priceFeedAddress);
-        emit PriceFeedAddressChanged(_priceFeedAddress);
-    }
-
-    function setSortedCDPs(address _sortedCDPsAddress) external onlyOwner {
-        sortedCDPsAddress = _sortedCDPsAddress;
+        priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
+
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
+        emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
+
+        _renounceOwnership();
     }
 
     // --- Borrower Trove Operations ---
@@ -95,23 +85,25 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         address user = _msgSender(); 
         uint price = priceFeed.getPrice(); 
 
-        _requireValueIsGreaterThan20Dollars(msg.value, price);
+        _requireCDPisNotActive(user);
         
-        uint ICR = Math._computeICR (msg.value, _CLVAmount, price);  
+        uint compositeDebt = _getCompositeDebt(_CLVAmount);
+        assert(compositeDebt > 0);
+        uint ICR = Math._computeCR(msg.value, compositeDebt, price);  
 
-        if (_CLVAmount > 0) {
-            _requireNotInRecoveryMode();
+        if (_checkRecoveryMode()) {
+            require(ICR >= R_MCR, "BorrowerOps: In Recovery Mode new loans must have ICR >= R_MCR");
+        } else {
             _requireICRisAboveMCR(ICR);
-
-            _requireNewTCRisAboveCCR(int(msg.value), int(_CLVAmount), price); 
+            _requireNewTCRisAboveCCR(int(msg.value), int(_CLVAmount), price);
         }
-        
+
         // Update loan properties
         cdpManager.setCDPStatus(user, 1);
         cdpManager.increaseCDPColl(user, msg.value);
-        cdpManager.increaseCDPDebt(user, _CLVAmount);
+        cdpManager.increaseCDPDebt(user, compositeDebt);
         
-        cdpManager.updateRewardSnapshots(user); 
+        cdpManager.updateCDPRewardSnapshots(user); 
         uint stake = cdpManager.updateStakeAndTotalStakes(user); 
         
         sortedCDPs.insert(user, ICR, price, _hint, _hint); 
@@ -120,26 +112,18 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         
         // Tell PM to move the ether to the Active Pool, and mint CLV to the borrower
         poolManager.addColl.value(msg.value)(); 
-        poolManager.withdrawCLV(user, _CLVAmount); 
+        poolManager.withdrawCLV(user, _CLVAmount);
+        poolManager.lockCLVGasCompensation(CLV_GAS_COMPENSATION);
        
-        emit CDPUpdated(user, _CLVAmount, msg.value, stake); 
+        emit CDPUpdated(user, _CLVAmount, msg.value, stake, BorrowerOperation.openLoan);
     }
 
     // Send ETH as collateral to a CDP
     function addColl(address _user, address _hint) external payable {
-        bool isFirstCollDeposit = false;
+        _requireCDPisActive(_user);
 
         uint price = priceFeed.getPrice();
-        uint status = cdpManager.getCDPStatus(_user);
     
-        // If non-existent or closed, open a new trove
-        if (status == 0 || status == 2 ) {
-            _requireValueIsGreaterThan20Dollars(msg.value, price);
-
-            isFirstCollDeposit = true; 
-            cdpManager.setCDPStatus(_user, 1);
-        } 
-
         cdpManager.applyPendingRewards(_user);
        
         // Update the CDP's coll and stake
@@ -147,26 +131,20 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         uint stake = cdpManager.updateStakeAndTotalStakes(_user);
         uint newICR = cdpManager.getCurrentICR(_user, price);
    
-        if (isFirstCollDeposit) { 
-            sortedCDPs.insert(_user, newICR, price, _hint, _hint);
-            uint arrayIndex = cdpManager.addCDPOwnerToArray(_user);
-            emit CDPCreated(_user, arrayIndex);
-        } else {
-            sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);  
-        }
-
+        sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);  
+       
         // Tell PM to move the ether to the Active Pool
         poolManager.addColl.value(msg.value)();
   
         uint debt = cdpManager.getCDPDebt(_user);
-        emit CDPUpdated(_user, debt, newColl, stake);
+        emit CDPUpdated(_user, debt, newColl, stake, BorrowerOperation.addColl);
     }
     
     // Withdraw ETH collateral from a CDP
     function withdrawColl(uint _amount, address _hint) external {
         address user = _msgSender();
-        uint status = cdpManager.getCDPStatus(user);
-        _requireCDPisActive(status);
+        _requireCDPisActive(user);
+        _requireNonZeroAmount(_amount);
         _requireNotInRecoveryMode();
        
         uint price = priceFeed.getPrice();
@@ -175,7 +153,7 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         uint debt = cdpManager.getCDPDebt(user);
         uint coll = cdpManager.getCDPColl(user);
         
-        _requireCollAmountIsWithdrawable(coll, _amount, price);
+        _requireCollAmountIsWithdrawable(coll, _amount);
 
         uint newICR = _getNewICRFromTroveChange(coll, debt, -int(_amount), 0, price);
         _requireICRisAboveMCR(newICR);
@@ -193,14 +171,13 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         // Remove _amount ETH from ActivePool and send it to the user
         poolManager.withdrawColl(user, _amount);
 
-        emit CDPUpdated(user, debt, newColl, stake); 
+        emit CDPUpdated(user, debt, newColl, stake, BorrowerOperation.withdrawColl);
     }
     
     // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
     function withdrawCLV(uint _amount, address _hint) external {
         address user = _msgSender();
-        uint status = cdpManager.getCDPStatus(user);
-        _requireCDPisActive(status);
+        _requireCDPisActive(user);
         _requireNonZeroAmount(_amount); 
         _requireNotInRecoveryMode();
         
@@ -225,14 +202,14 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         poolManager.withdrawCLV(user, _amount);
         
         uint stake = cdpManager.getCDPStake(user);
-        emit CDPUpdated(user, newDebt, coll, stake); 
+        emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.withdrawCLV);
     }
     
     // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the debt accordingly
     function repayCLV(uint _amount, address _hint) external {
         address user = _msgSender();
-        uint status = cdpManager.getCDPStatus(user);
-        _requireCDPisActive(status);
+        _requireCDPisActive(user);
+        _requireNonZeroAmount(_amount);
 
         uint price = priceFeed.getPrice();
         cdpManager.applyPendingRewards(user);
@@ -253,13 +230,12 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         
         uint coll = cdpManager.getCDPColl(user);
         uint stake = cdpManager.getCDPStake(user);
-        emit CDPUpdated(user, newDebt, coll, stake); 
+        emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.repayCLV);
     }
 
     function closeLoan() external {
         address user = _msgSender();
-        uint status = cdpManager.getCDPStatus(user);
-        _requireCDPisActive(status);
+        _requireCDPisActive(user);
         _requireNotInRecoveryMode();
 
         cdpManager.applyPendingRewards(user);
@@ -271,27 +247,29 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         cdpManager.closeCDP(user);
     
         // Tell PM to burn the debt from the user's balance, and send the collateral back to the user
-        poolManager.repayCLV(user, debt);
+        poolManager.repayCLV(user, debt.sub(CLV_GAS_COMPENSATION));
         poolManager.withdrawColl(user, coll);
+        poolManager.refundCLVGasCompensation(CLV_GAS_COMPENSATION);
 
-        emit CDPUpdated(user, 0, 0, 0);
+        emit CDPUpdated(user, 0, 0, 0, BorrowerOperation.closeLoan);
     }
 
     /* If ether is sent, the operation is considered as an increase in ether, and the first parameter 
     _collWithdrawal is ignored  */
     function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable {
-        _requireCDPisActive(cdpManager.getCDPStatus(_msgSender()));
+        address user = _msgSender();
+        _requireCDPisActive(user);
         _requireNotInRecoveryMode();
         
         uint price = priceFeed.getPrice();
      
-        cdpManager.applyPendingRewards(_msgSender());
+        cdpManager.applyPendingRewards(user);
 
         // If Ether is sent, grab the amount. Otherwise, grab the specified collateral withdrawal
         int collChange = (msg.value != 0) ? int(msg.value) : -int(_collWithdrawal);
 
-        uint debt = cdpManager.getCDPDebt(_msgSender());
-        uint coll = cdpManager.getCDPColl(_msgSender());
+        uint debt = cdpManager.getCDPDebt(user);
+        uint coll = cdpManager.getCDPColl(user);
        
         uint newICR = _getNewICRFromTroveChange(coll, debt, collChange, _debtChange, price);
        
@@ -299,24 +277,24 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
         _requireICRisAboveMCR(newICR);
         _requireNewTCRisAboveCCR(collChange, _debtChange, price);
         _requireCLVRepaymentAllowed(debt, _debtChange);
-        _requireCollAmountIsWithdrawable(coll, _collWithdrawal, price);
+        _requireCollAmountIsWithdrawable(coll, _collWithdrawal);
 
         //  --- Effects --- 
-        (uint newColl, uint newDebt) = _updateTroveFromAdjustment(_msgSender(), collChange, _debtChange);
+        (uint newColl, uint newDebt) = _updateTroveFromAdjustment(user, collChange, _debtChange);
         
-        uint stake = cdpManager.updateStakeAndTotalStakes(_msgSender());
+        uint stake = cdpManager.updateStakeAndTotalStakes(user);
        
         // Close a CDP if it is empty, otherwise, re-insert it in the sorted list
         if (newDebt == 0 && newColl == 0) {
-            cdpManager.closeCDP(_msgSender());
+            cdpManager.closeCDP(user);
         } else {
-            sortedCDPs.reInsert(_msgSender(), newICR, price, _hint, _hint);
+            sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
         }
 
         //  --- Interactions ---
-        _moveTokensAndETHfromAdjustment(_msgSender(), collChange, _debtChange);   
+        _moveTokensAndETHfromAdjustment(user, collChange, _debtChange);   
     
-        emit CDPUpdated(_msgSender(), newDebt, newColl, stake); 
+        emit CDPUpdated(user, newDebt, newColl, stake, BorrowerOperation.adjustLoan);
     }
 
     // --- Helper functions --- 
@@ -353,8 +331,14 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
     
     // --- 'Require' wrapper functions ---
 
-    function _requireCDPisActive(uint status) internal pure {
+    function _requireCDPisActive(address _user) internal view {
+        uint status = cdpManager.getCDPStatus(_user);
         require(status == 1, "BorrowerOps: CDP does not exist or is closed");
+    }
+
+    function _requireCDPisNotActive(address _user) internal view {
+        uint status = cdpManager.getCDPStatus(_user);
+        require(status != 1, "BorrowerOps: CDP is active");
     }
 
     function _requireNotInRecoveryMode() internal view {
@@ -372,35 +356,24 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
 
     function _requireCLVRepaymentAllowed(uint _currentDebt, int _debtChange) internal pure {
         if (_debtChange < 0) {
-            require(Math._intToUint(_debtChange) <= _currentDebt, "BorrowerOps: Amount repaid must not be larger than the CDP's debt");
+            require(Math._intToUint(_debtChange) <= _currentDebt.sub(CLV_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the CDP's debt");
         }
-    }
-
-    function _requireValueIsGreaterThan20Dollars(uint _amount, uint _price) internal pure {
-         require(_getUSDValue(_amount, _price) >= MIN_COLL_IN_USD,  
-            "BorrowerOps: Collateral must have $USD value >= 20");
     }
 
     function _requireNonZeroAmount(uint _amount) internal pure {
         require(_amount > 0, "BorrowerOps: Amount must be larger than 0");
     }
 
-    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal, uint _price) 
+    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)
     internal 
     pure 
     {
-        if (_collWithdrawal > 0) {
-            require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
-            
-            uint newColl = _currentColl.sub(_collWithdrawal);
-            require(_getUSDValue(newColl, _price) >= MIN_COLL_IN_USD || newColl == 0,
-                "BorrowerOps: Remaining collateral must have $USD value >= 20, or be zero");
-        }
+        require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
     }
 
     // --- ICR and TCR checks ---
 
-    // Compute the new collateral ratio, considering the change in coll and debt. Assumes 0 pending rewards.
+    // Compute the new collateral ratio, considering the change in coll and debt. Assumes 0 pending rewards. 
     function _getNewICRFromTroveChange(uint _coll, uint _debt, int _collChange, int _debtChange, uint _price) 
     pure
     internal 
@@ -421,12 +394,13 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
             newDebt = _debt.sub(Math._intToUint(_debtChange));
         }
 
-        return Math._computeICR (newColl, newDebt, _price);
+        uint newICR = Math._computeCR(newColl, newDebt, _price);
+        return newICR;
     }
 
     function _getNewTCRFromTroveChange(int _collChange, int _debtChange, uint _price) internal view returns (uint) {
         uint totalColl = activePool.getETH().add(defaultPool.getETH());
-        uint totalDebt = activePool.getCLV().add(defaultPool.getCLV());
+        uint totalDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());
        
         if (_collChange > 0) {
             totalColl = totalColl.add(Math._intToUint(_collChange));
@@ -440,29 +414,38 @@ contract BorrowerOperations is Ownable, IBorrowerOperations {
             totalDebt = totalDebt.sub(Math._intToUint(_debtChange));
         }
 
-        uint newTCR = Math._computeICR (totalColl, totalDebt, _price);
+        uint newTCR = Math._computeCR(totalColl, totalDebt, _price);
         return newTCR;
     }
 
-    // --- Common helper functions, duplicated in CDPManager ---
+    function getCompositeDebt(uint _debt) external pure returns (uint) {
+        return _getCompositeDebt(_debt);
+    }
 
-    function _checkRecoveryMode() internal view returns (bool){
-        uint price = priceFeed.getPrice();
+    // --- Recovery Mode and TCR functions ---
 
-        uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getCLV();
-        uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getCLV();
-
-        uint totalCollateral = activeColl.add(liquidatedColl);
-        uint totalDebt = activeDebt.add(closedDebt); 
-
-        uint TCR = Math._computeICR (totalCollateral, totalDebt, price); 
+    function _checkRecoveryMode() internal view returns (bool) {
+        uint TCR = _getTCR();
         
         if (TCR < CCR) {
             return true;
         } else {
             return false;
         }
+    }
+    
+    function _getTCR() internal view returns (uint TCR) {
+        uint price = priceFeed.getPrice();
+        uint activeColl = activePool.getETH();
+        uint activeDebt = activePool.getCLVDebt();
+        uint liquidatedColl = defaultPool.getETH();
+        uint closedDebt = defaultPool.getCLVDebt();
+
+        uint totalCollateral = activeColl.add(liquidatedColl);
+        uint totalDebt = activeDebt.add(closedDebt); 
+
+        TCR = Math._computeCR(totalCollateral, totalDebt, price);
+
+        return TCR;
     }
 }

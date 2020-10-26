@@ -1,9 +1,4 @@
 {
-  "slither.solcPath": "",
-  "slither.hiddenDetectors": [],
-"eslint.workingDirectories": [
-    "packages/dev-frontend",
-    "packages/frontend"
-],
-"eslint.enable": true
+    "slither.solcPath": "",
+    "slither.hiddenDetectors": []
 }

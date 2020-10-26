@@ -18,15 +18,32 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.4
       entities:
+        - Global
+        - User
+        - Transaction
         - Trove
+        - TroveChange
+        - Redemption
+        - Liquidation
+        - SystemState
       abis:
         - name: CDPManager
-          file: ../lib/abi/CDPManager.json
+          file: ../lib-ethers/abi/CDPManager.json
       eventHandlers:
         - event: BorrowerOperationsAddressChanged(address)
           handler: handleBorrowerOperationsAddressChanged
-        - event: CDPUpdated(indexed address,uint256,uint256,uint256)
+        - event: PoolManagerAddressChanged(address)
+          handler: handlePoolManagerAddressChanged
+        - event: PriceFeedAddressChanged(address)
+          handler: handlePriceFeedAddressChanged
+        - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleCDPUpdated
+        - event: CDPLiquidated(indexed address,uint256,uint256,uint8)
+          handler: handleCDPLiquidated
+        - event: Liquidation(uint256,uint256,uint256,uint256)
+          handler: handleLiquidation
+        - event: Redemption(uint256,uint256,uint256)
+          handler: handleRedemption
 templates:
   - name: BorrowerOperations
     kind: ethereum/contract
@@ -39,12 +56,63 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.4
       entities:
+        - Global
+        - User
+        - Transaction
         - Trove
+        - TroveChange
+        - SystemState
       abis:
         - name: BorrowerOperations
-          file: ../lib/abi/BorrowerOperations.json
+          file: ../lib-ethers/abi/BorrowerOperations.json
         - name: CDPManager
-          file: ../lib/abi/CDPManager.json
+          file: ../lib-ethers/abi/CDPManager.json
       eventHandlers:
-        - event: CDPUpdated(indexed address,uint256,uint256,uint256)
+        - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleCDPUpdated
+  - name: PoolManager
+    kind: ethereum/contract
+    network: ropsten
+    source:
+      abi: PoolManager
+    mapping:
+      file: ./src/mappings/PoolManager.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - StabilityDeposit
+        - StabilityDepositChange
+        - SystemState
+      abis:
+        - name: PoolManager
+          file: ../lib-ethers/abi/PoolManager.json
+      eventHandlers:
+        - event: UserDepositChanged(indexed address,uint256)
+          handler: handleUserDepositChanged
+        - event: ETHGainWithdrawn(indexed address,uint256,uint256)
+          handler: handleETHGainWithdrawn
+  - name: PriceFeed
+    kind: ethereum/contract
+    network: ropsten
+    source:
+      abi: PriceFeed
+    mapping:
+      file: ./src/mappings/PriceFeed.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - Transaction
+        - PriceChange
+        - SystemState
+      abis:
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
+      eventHandlers:
+        - event: PriceUpdated(uint256)
+          handler: handlePriceUpdated

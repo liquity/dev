@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity >=0.5.16;
 
 interface IPriceFeed { 
     // --- Events ---
@@ -7,17 +7,18 @@ interface IPriceFeed {
     event PoolManagerAddressChanged(address _poolManagerAddress);
 
     // --- Functions ---
-    function setCDPManagerAddress(address _cdpManagerAddress) external;
-
-    function setPoolManagerAddress(address _poolManagerAddress) external;
+    function setAddresses(
+        address _cdpManagerAddress,
+        address _poolManagerAddress,
+        address _priceAggregatorAddress,
+        address _priceAggregatorAddressTestnet
+    ) external;
 
     function setPrice(uint _price) external returns (bool);
         
     function getPrice() external view returns (uint);
 
     // --- Chainlink Mainnet functions ---
-    function setAggregator(address _priceAggregatorAddress) external;
-
     function updatePrice() external returns (uint256);
 
     function getLatestPrice() external view returns (uint256);
@@ -28,8 +29,6 @@ interface IPriceFeed {
 
     // --- Chainlink Testnet functions --- 
     function updatePrice_Testnet() external returns (uint256);
-
-    function setAggregator_Testnet(address _priceAggregatorAddress_Testnet) external;
 
     function getLatestPrice_Testnet() external view returns (uint256);
 

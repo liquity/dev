@@ -6,12 +6,16 @@ module.exports = {
   },
 
   skipFiles: [
-    "ABDKMath64x64.sol",
-    "FunctionCaller.sol",
-    "Migrations.sol",
+    "TestContracts/",
     "MultiCDPGetter.sol",
-    "NameRegistry.sol",
-
-    "Interfaces"
+    "Migrations.sol",
+    "Interfaces/",
+    "Dependencies/Context.sol",
+    "Dependencies/IERC20.sol",
+    "Dependencies/Math.sol",
+    "Dependencies/Ownable.sol",
+    "Dependencies/SafeMath.sol",
+    "Dependencies/SafeMath128.sol",
+    "Dependencies/console.sol",
   ]
 };
