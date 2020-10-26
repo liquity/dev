@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity >=0.5.16;
 
 /* Interface for the mainnet deployed Chainlink aggregator reference contract. Differs from the aggregator interface
 in the Chainlink npm package */

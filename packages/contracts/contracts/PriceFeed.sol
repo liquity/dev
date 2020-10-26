@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 
 import "./Interfaces/ICDPManager.sol";
@@ -18,15 +18,13 @@ contract PriceFeed is Ownable, IPriceFeed {
     address public cdpManagerAddress;
     address public poolManagerAddress;
     
-    ICDPManager cdpManager;
-
     // Mainnet Chainlink aggregator
     address public priceAggregatorAddress;
-    IDeployedAggregator priceAggregator;
+    IDeployedAggregator public priceAggregator;
 
     // Testnet Chainlink aggregator
     address public priceAggregatorAddress_Testnet;
-    AggregatorInterface priceAggregator_Testnet;
+    AggregatorInterface public priceAggregator_Testnet;
 
     event PriceUpdated(uint256 _newPrice);
     event CDPManagerAddressChanged(address _cdpManagerAddress);
@@ -43,26 +41,27 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     // --- Dependency setters ---
 
-    function setCDPManagerAddress(address _cdpManagerAddress) external onlyOwner {
+    function setAddresses(
+        address _cdpManagerAddress,
+        address _poolManagerAddress,
+        address _priceAggregatorAddress,
+        address _priceAggregatorAddressTestnet
+    )
+        external
+        onlyOwner
+    {
         cdpManagerAddress = _cdpManagerAddress;
-        cdpManager = ICDPManager(_cdpManagerAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
-    }
-
-    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
         poolManagerAddress = _poolManagerAddress;
-        emit PoolManagerAddressChanged(_poolManagerAddress);
-    }
-
-    // Mainnet Chainlink address setter
-    function setAggregator(address _priceAggregatorAddress) external onlyOwner {
+        // Mainnet Chainlink address setter
         priceAggregatorAddress = _priceAggregatorAddress;
         priceAggregator = IDeployedAggregator(_priceAggregatorAddress);
-    }
+        // Testnet Chainlink address setter
+        priceAggregator_Testnet = AggregatorInterface(_priceAggregatorAddressTestnet);
 
-    // Testnet Chainlink address setter
-    function setAggregator_Testnet(address _priceAggregatorAddress) external onlyOwner {
-        priceAggregator_Testnet = AggregatorInterface(_priceAggregatorAddress);
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+
+        _renounceOwnership();
     }
 
     // --- Functions ---
@@ -71,10 +70,9 @@ contract PriceFeed is Ownable, IPriceFeed {
         return price;
     }
 
-    // --- DEVELOPMENT FUNCTIONALITY  ---
+    // --- DEVELOPMENT FUNCTIONALITY - TODO: remove before mainnet deployment.  ---
 
-    /* Manual external price setter. 
-    TODO: remove before mainnet deployment. */
+    // Manual external price setter. 
     function setPrice(uint256 _price) external returns (bool) {
         price = _price;
         emit PriceUpdated(price);

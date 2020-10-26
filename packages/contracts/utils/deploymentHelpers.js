@@ -6,8 +6,11 @@ const CLVToken = artifacts.require("./CLVToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const FunctionCaller = artifacts.require("./FunctionCaller.sol")
+const FunctionCaller = artifacts.require("./TestContracts/FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
+const HintHelpers = artifacts.require("./HintHelpers.sol")
+
+const ZERO_ADDRESS = '0x' + '0'.repeat(40)
 
 const deployLiquity = async ()=> {
   const cmdLineArgs = process.argv
@@ -32,6 +35,7 @@ const deployLiquityBuidler = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
+  const hintHelpers = await HintHelpers.new()
 
   DefaultPool.setAsDeployed(defaultPool)
   PriceFeed.setAsDeployed(priceFeed)
@@ -43,6 +47,7 @@ const deployLiquityBuidler = async () => {
   StabilityPool.setAsDeployed(stabilityPool)
   FunctionCaller.setAsDeployed(functionCaller)
   BorrowerOperations.setAsDeployed(borrowerOperations)
+  HintHelpers.setAsDeployed(hintHelpers)
 
   const contracts = {
     priceFeed,
@@ -54,7 +59,8 @@ const deployLiquityBuidler = async () => {
     stabilityPool,
     defaultPool,
     functionCaller,
-    borrowerOperations
+    borrowerOperations,
+    hintHelpers
   }
   return contracts
 }
@@ -70,6 +76,7 @@ const deployLiquityTruffle = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
+  const hintHelpers = await HintHelpers.new()
 
   const contracts = {
     priceFeed,
@@ -81,7 +88,8 @@ const deployLiquityTruffle = async () => {
     stabilityPool,
     defaultPool,
     functionCaller,
-    borrowerOperations
+    borrowerOperations,
+    hintHelpers
   }
 
   return contracts
@@ -98,7 +106,8 @@ const getAddresses = (contracts) => {
     StabilityPool: contracts.stabilityPool.address,
     ActivePool: contracts.activePool.address,
     DefaultPool: contracts.defaultPool.address,
-    FunctionCaller: contracts.functionCaller.address
+    FunctionCaller: contracts.functionCaller.address,
+    HintHelpers: contracts.hintHelpers.address
   }
 }
 
@@ -108,69 +117,88 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.clvToken.setPoolManagerAddress(addresses.PoolManager)
 
    // set contracts in the PoolManager
-  await contracts.poolManager.setBorrowerOperations(addresses.BorrowerOperations)
-  await contracts.poolManager.setCDPManagerAddress(addresses.CDPManager)
-  await contracts.poolManager.setCLVToken(addresses.CLVToken)
-  await contracts.poolManager.setPriceFeed(addresses.PriceFeed)
-  await contracts.poolManager.setStabilityPool(addresses.StabilityPool)
-  await contracts.poolManager.setActivePool(addresses.ActivePool)
-  await contracts.poolManager.setDefaultPool(addresses.DefaultPool)
+  await contracts.poolManager.setAddresses(
+    addresses.BorrowerOperations,
+    addresses.CDPManager,
+    addresses.PriceFeed,
+    addresses.CLVToken,
+    addresses.StabilityPool,
+    addresses.ActivePool,
+    addresses.DefaultPool
+  )
 
   // set CDPManager addr in SortedCDPs
-  await contracts.sortedCDPs.setCDPManager(addresses.CDPManager)
-  await contracts.sortedCDPs.setBorrowerOperations(addresses.BorrowerOperations)
+  await contracts.sortedCDPs.setParams(
+    1e6,
+    addresses.CDPManager,
+    addresses.BorrowerOperations
+  )
 
   // set contract addresses in the FunctionCaller 
   await contracts.functionCaller.setCDPManagerAddress(addresses.CDPManager)
   await contracts.functionCaller.setSortedCDPsAddress(addresses.SortedCDPs)
 
   // set CDPManager addr in PriceFeed
-  await contracts.priceFeed.setCDPManagerAddress(addresses.CDPManager)
+  await contracts.priceFeed.setAddresses(
+    addresses.CDPManager,
+    addresses.PoolManager,
+    ZERO_ADDRESS,
+    ZERO_ADDRESS
+  )
 
   // set contracts in the CDP Manager
-  await contracts.cdpManager.setCLVToken(addresses.CLVToken)
-  await contracts.cdpManager.setSortedCDPs(addresses.SortedCDPs)
-  await contracts.cdpManager.setPoolManager(addresses.PoolManager)
-  await contracts.cdpManager.setPriceFeed(addresses.PriceFeed)
-  await contracts.cdpManager.setActivePool(addresses.ActivePool)
-  await contracts.cdpManager.setDefaultPool(addresses.DefaultPool)
-  await contracts.cdpManager.setStabilityPool(addresses.StabilityPool)
-  await contracts.cdpManager.setBorrowerOperations(addresses.BorrowerOperations)
+  await contracts.cdpManager.setAddresses(
+    addresses.BorrowerOperations,
+    addresses.PoolManager,
+    addresses.ActivePool,
+    addresses.DefaultPool,
+    addresses.StabilityPool,
+    addresses.PriceFeed,
+    addresses.CLVToken,
+    addresses.SortedCDPs
+  )
 
   // set contracts in BorrowerOperations 
-  await contracts.borrowerOperations.setSortedCDPs(addresses.SortedCDPs)
-  await contracts.borrowerOperations.setPoolManager(addresses.PoolManager)
-  await contracts.borrowerOperations.setPriceFeed(addresses.PriceFeed)
-  await contracts.borrowerOperations.setActivePool(addresses.ActivePool)
-  await contracts.borrowerOperations.setDefaultPool(addresses.DefaultPool)
-  await contracts.borrowerOperations.setCDPManager(addresses.CDPManager)
+  await contracts.borrowerOperations.setAddresses(
+    addresses.CDPManager,
+    addresses.PoolManager,
+    addresses.ActivePool,
+    addresses.DefaultPool,
+    addresses.PriceFeed,
+    addresses.SortedCDPs
+  )
 
   // set contracts in the Pools
-  await contracts.stabilityPool.setPoolManagerAddress(addresses.PoolManager)
-  await contracts.stabilityPool.setActivePoolAddress(addresses.ActivePool)
-  await contracts.stabilityPool.setDefaultPoolAddress(addresses.DefaultPool)
+  await contracts.stabilityPool.setAddresses(
+    addresses.PoolManager,
+    addresses.ActivePool
+  )
 
-  await contracts.activePool.setPoolManagerAddress(addresses.PoolManager)
-  await contracts.activePool.setStabilityPoolAddress(addresses.StabilityPool)
-  await contracts.activePool.setDefaultPoolAddress(addresses.DefaultPool)
+  await contracts.activePool.setAddresses(
+    addresses.PoolManager,
+    addresses.CDPManager,
+    addresses.DefaultPool
+  )
 
-  await contracts.defaultPool.setPoolManagerAddress(addresses.PoolManager)
-  await contracts.defaultPool.setStabilityPoolAddress(addresses.StabilityPool)
-  await contracts.defaultPool.setActivePoolAddress(addresses.ActivePool)
-}
+  await contracts.defaultPool.setAddresses(
+    addresses.PoolManager,
+    addresses.ActivePool
+  )
 
-const connectEchidnaProxy = async (echidnaProxy, addresses) => {
-  echidnaProxy.setCDPManager(addresses.CDPManager)
-  echidnaProxy.setBorrowerOperations(addresses.BorrowerOperations)
-  echidnaProxy.setPoolManager(addresses.PoolManager)
+  // set contracts in HintHelpers
+  await contracts.hintHelpers.setAddresses(
+    addresses.PriceFeed,
+    addresses.SortedCDPs,
+    addresses.CDPManager
+  )
 }
 
 module.exports = {
-  connectEchidnaProxy: connectEchidnaProxy,
   getAddresses: getAddresses,
   deployLiquityBuidler: deployLiquityBuidler,
   deployLiquityTruffle: deployLiquityTruffle,
   deployLiquity: deployLiquity,
-  connectContracts: connectContracts
+  connectContracts: connectContracts,
+  ZERO_ADDRESS
 }
 

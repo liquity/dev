@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 
 import './Interfaces/IStabilityPool.sol';
 import "./Dependencies/SafeMath.sol";
@@ -9,12 +9,11 @@ contract StabilityPool is Ownable, IStabilityPool {
     using SafeMath for uint256;
 
     address public poolManagerAddress;
-    address public defaultPoolAddress;
     address public activePoolAddress;
-    uint256 public ETH;  // deposited ether tracker
+    uint256 internal ETH;  // deposited ether tracker
     
     // Total CLV held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.
-    uint256 public totalCLVDeposits; 
+    uint256 internal totalCLVDeposits;
 
     // --- Modifiers ---
 
@@ -23,30 +22,27 @@ contract StabilityPool is Ownable, IStabilityPool {
         _;
     }
 
-    modifier onlyPoolManagerOrPool {
-        require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == activePoolAddress || 
-            _msgSender() == defaultPoolAddress, 
-            "StabilityPool: Caller is neither the PoolManager nor a Pool");
+    modifier onlyActivePool {
+        require(_msgSender() == activePoolAddress, "StabilityPool: Caller is not ActivePool");
         _;
     }
 
     // --- Contract setters ---
 
-    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
+    function setAddresses(
+        address _poolManagerAddress,
+        address _activePoolAddress
+    )
+        external
+        onlyOwner
+    {
         poolManagerAddress = _poolManagerAddress;
-        emit PoolManagerAddressChanged(poolManagerAddress);
-    }
-
-    function setActivePoolAddress(address _activePoolAddress) external onlyOwner {
         activePoolAddress = _activePoolAddress;
-        emit ActivePoolAddressChanged(activePoolAddress);
-    }
-    
-    function setDefaultPoolAddress(address _defaultPoolAddress) external onlyOwner {
-        defaultPoolAddress = _defaultPoolAddress; 
-        emit DefaultPoolAddressChanged(defaultPoolAddress);
+
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
+
+        _renounceOwnership();
     }
 
     // --- Getters for public variables. Required by IPool interface ---
@@ -55,7 +51,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         return ETH;
     }
 
-    function getCLV() external view returns (uint) {
+    function getTotalCLVDeposits() external view returns (uint) {
         return totalCLVDeposits;
     }
 
@@ -63,11 +59,11 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     function sendETH(address _account, uint _amount) external onlyPoolManager {
         ETH = ETH.sub(_amount);
-        (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
-        assert(success == true);
-    
         emit ETHBalanceUpdated(ETH);
         emit EtherSent(_account, _amount);
+
+        (bool success, ) = _account.call.value(_amount)("");  // use call.value()('') as per Consensys latest advice 
+        require(success, "StabilityPool: sending ETH failed");
     }
 
     function increaseCLV(uint _amount) external onlyPoolManager () {
@@ -86,7 +82,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         return address(this).balance;
     }
 
-    function () external payable onlyPoolManagerOrPool {
+    function () external payable onlyActivePool {
         ETH = ETH.add(msg.value);
     }
 }

@@ -9,11 +9,11 @@ import { buildStyles, CircularProgressbarWithChildren } from "react-circular-pro
 import "react-circular-progressbar/dist/styles.css";
 
 import {
-  LiquityTransactionOverrides,
+  EthersTransactionOverrides,
   parseLogs,
   logDescriptionToString,
   contractsToInterfaces
-} from "@liquity/lib";
+} from "@liquity/lib-ethers";
 import { useLiquity } from "../hooks/LiquityContext";
 import { Tooltip, TooltipProps, Hoverable } from "./Tooltip";
 import { Icon } from "./Icon";
@@ -127,7 +127,7 @@ type ButtonlikeProps = {
 };
 
 export type TransactionFunction = (
-  overrides?: LiquityTransactionOverrides
+  overrides?: EthersTransactionOverrides
 ) => Promise<ContractTransaction>;
 
 type TransactionProps<C> = {
@@ -176,7 +176,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
       if (hasMessage(error) && error.message.includes("User denied transaction signature")) {
         setTransactionState({ type: "cancelled", id });
       } else {
-        // console.error(error);
+        console.error(error);
 
         setTransactionState({
           type: "failed",

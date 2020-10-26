@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity >=0.5.16;
 
 // Common interface for the CDP Manager.
 interface ICDPManager {
@@ -22,35 +22,36 @@ interface ICDPManager {
 
     event CDPCreated(address indexed _user, uint arrayIndex);
 
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake);
+    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, uint8 operation);
+
+    event CDPLiquidated(address indexed _user, uint _debt, uint _coll, uint8 operation);
 
     // --- Functions ---
 
-    function setPoolManager(address _poolManagerAddress) external;
-
-    function setPriceFeed(address _priceFeedAddress) external;
-
-    function setCLVToken(address _clvTokenAddress) external;
-
-    function setSortedCDPs(address _sortedCDPsAddress) external;
-
-    function setActivePool(address _activePoolAddress) external; 
-
-    function setDefaultPool(address _defaultPoolAddress) external;
+    function setAddresses(
+        address _borrowerOperationsAddress,
+        address _poolManagerAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress,
+        address _stabilityPoolAddress,
+        address _priceFeedAddress,
+        address _clvTokenAddress,
+        address _sortedCDPsAddress
+    ) external;
 
     function getCDPOwnersCount() external view returns (uint);
 
-    function getCurrentICR(address _user, uint _price) external view returns (uint);
+    function getTroveFromCDPOwnersArray(uint _index) external view returns (address);
 
-    function getApproxHint(uint CR, uint numTrials) external view returns (address);
+    function getCurrentICR(address _user, uint _price) external view returns (uint);
 
     function liquidate(address _user) external;
 
     function liquidateCDPs(uint _n) external;
 
-    function checkRecoveryMode() external view returns (bool);
+    function batchLiquidateTroves(address[] calldata _troveArray) external;
 
-    function getRedemptionHints(uint _CLVamount, uint _price) external view returns (address, uint);
+    function checkRecoveryMode() external view returns (bool);
 
     function redeemCollateral(
         uint _CLVAmount,
@@ -61,11 +62,15 @@ interface ICDPManager {
 
     function updateStakeAndTotalStakes(address _user) external returns (uint);
 
-    function updateRewardSnapshots(address _user) external;
+    function updateCDPRewardSnapshots(address _user) external;
 
     function addCDPOwnerToArray(address _user) external returns (uint index);
 
     function applyPendingRewards(address _user) external;
+
+    function getPendingETHReward(address _user) external view returns (uint);
+
+    function getPendingCLVDebtReward(address _user) external view returns (uint);
 
     function closeCDP(address _user) external;
 

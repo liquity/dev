@@ -6,25 +6,25 @@ import { useWeb3React } from "@web3-react/core";
 
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import {
-  Liquity,
+  EthersLiquity,
   deploymentOnNetwork,
   connectToContracts,
   LiquityContracts,
   DEV_CHAIN_ID
-} from "@liquity/lib";
+} from "@liquity/lib-ethers";
 
-type LiquityContext = {
+type LiquityContextValue = {
   account: string;
   provider: Provider;
   contracts: LiquityContracts;
-  liquity: Liquity;
+  liquity: EthersLiquity;
   devChain: boolean;
   oracleAvailable: boolean;
   contractsVersion: string;
   deploymentDate: number;
 };
 
-const LiquityContext = createContext<LiquityContext | undefined>(undefined);
+const LiquityContext = createContext<LiquityContextValue | undefined>(undefined);
 
 type LiquityProviderProps = {
   loader?: React.ReactNode;
@@ -40,7 +40,8 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   loader,
   unsupportedNetworkFallback
 }) => {
-  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
+  const { library: provider, account, chainId: buggyChainId } = useWeb3React<Web3Provider>();
+  const chainId = buggyChainId === 1337 ? DEV_CHAIN_ID : buggyChainId;
 
   useEffect(() => {
     if (provider && chainId) {
@@ -76,7 +77,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
 
   const { addresses, version: contractsVersion, deploymentDate } = deployment;
   const contracts = connectToContracts(addresses, provider.getSigner(account));
-  const liquity = new Liquity(contracts, account);
+  const liquity = new EthersLiquity(contracts, account);
   const devChain = chainId === DEV_CHAIN_ID;
   const oracleAvailable = chainId === 3;
 

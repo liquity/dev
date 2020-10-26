@@ -1,0 +1,29 @@
+{
+  "contractName": "Destructible",
+  "abi": [
+    {
+      "payable": true,
+      "stateMutability": "payable",
+      "type": "fallback"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address payable",
+          "name": "_receiver",
+          "type": "address"
+        }
+      ],
+      "name": "destruct",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b5060818061001e6000396000f3fe608060405260043610601c5760003560e01c80631beb261514601e575b005b348015602957600080fd5b50601c60048036036020811015603e57600080fd5b50356001600160a01b031680fffea265627a7a723158200787425fd645ab531bbfeec72c7973fd67bd97671344578e27a3fbe7c90d639964736f6c63430005100032",
+  "deployedBytecode": "0x608060405260043610601c5760003560e01c80631beb261514601e575b005b348015602957600080fd5b50601c60048036036020811015603e57600080fd5b50356001600160a01b031680fffea265627a7a723158200787425fd645ab531bbfeec72c7973fd67bd97671344578e27a3fbe7c90d639964736f6c63430005100032",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

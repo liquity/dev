@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity >=0.5.16;
 
 // Common interface for the ETH/CLV pools.
 interface IPoolManager {
@@ -29,22 +29,16 @@ interface IPoolManager {
     event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
 
     // --- Functions ---
-    function setBorrowerOperations(address _borrowerOperationsAddress) external;
+    function setAddresses(
+        address _borrowerOperationsAddress,
+        address _cdpManagerAddress,
+        address _priceFeedAddress,
+        address _CLVAddress,
+        address _stabilityPoolAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress
+    ) external;
 
-    function setCDPManagerAddress(address _cdpManagerAddress) external;
-
-    function setPriceFeed(address _priceFeedAddress) external;
-
-    function setCLVToken(address _CLVAddress) external;
-
-    function setStabilityPool(address _stabilityPoolAddress) external;
-
-    function setActivePool(address _activePoolAddress) external;
-
-    function setDefaultPool(address _defaultPoolAddress) external;
-    
-    function getBalance() external view returns (uint);
-    
     function getActiveDebt() external view returns (uint);
     
     function getActiveColl() external view returns (uint);
@@ -65,11 +59,19 @@ interface IPoolManager {
     
     function repayCLV(address _account, uint _CLV) external;
 
+    function lockCLVGasCompensation(uint _CLV) external;
+
+    function refundCLVGasCompensation(uint _CLV) external;
+
+    function sendCLVGasCompensation(address _user, uint _CLV) external;
+
     function liquidate(uint _CLV, uint _ETH) external;
   
-    function moveDistributionRewardsToActivePool(uint _CLV, uint _ETH) external;
+    function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external;
 
     function redeemCollateral(address _account, uint _CLV, uint _ETH) external;
+
+    function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external;
 
     // --- StabilityPool Functions ---
     function provideToSP(uint _amount) external;
@@ -78,5 +80,5 @@ interface IPoolManager {
 
     function withdrawFromSPtoCDP(address _user, address _hint) external;
 
-    function offset(uint _debt, uint _coll, uint CLVInPool) external payable returns (uint, uint);
+    function offset(uint _debt, uint _coll) external;
 }

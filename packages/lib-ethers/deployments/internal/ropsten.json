@@ -1,0 +1,18 @@
+{
+  "addresses": {
+    "activePool": "0x28Ff66B2E6Ea5FC3b683DfEf4bF27eCC86AAe30b",
+    "borrowerOperations": "0x8201320176d40488374F681E2D93288E368E8A14",
+    "cdpManager": "0x0cD7146c57b6Da5a14b663Db41c524e0d2deCf1c",
+    "clvToken": "0xB181aECAF995887c787d250f81A84e2c50613Fe2",
+    "defaultPool": "0xfFdD29E10464f458eAd131D10d647642D975AA9F",
+    "hintHelpers": "0x5eeD5A91A6C219FF1915C2C5C569719FC5092642",
+    "multiCDPgetter": "0x2b0d3Fa2878B650472e811d3907288b870123C5e",
+    "poolManager": "0xf6cDc39044dd404448e4e736c4135455778D223c",
+    "priceFeed": "0x9b5b1e076f5321314FaD499b3a847e5833492F10",
+    "sortedCDPs": "0x0b9965bc54cB6FC0b84D09CB1143AAdc26141A74",
+    "stabilityPool": "0xB181a8cDA30c68F6a9b998471dc45a086879E8aC"
+  },
+  "version": "1fe9301410a48ff1a8f3173d87d850621c561a2f",
+  "deploymentDate": 1603706601486,
+  "abiHash": "1222c9f972feddbb08667e79ee7806858ae1989a"
+}

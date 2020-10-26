@@ -5,36 +5,40 @@ import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Card, Button, Text, Box, Heading, Flex, Styled } from "theme-ui";
 
-import { Decimal, Percent } from "@liquity/decimal";
-import { Liquity, Trove } from "@liquity/lib";
+import { Percent } from "@liquity/decimal";
+import { Trove } from "@liquity/lib-base";
+import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
+import { useLiquitySelector } from "@liquity/lib-react";
+
 import { shortenAddress } from "../utils/shortenAddress";
+import { useLiquity } from "../hooks/LiquityContext";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
 import { Icon } from "./Icon";
 import { Tooltip } from "./Tooltip";
 import { Abbreviation } from "./Abbreviation";
+import { COIN } from "../strings";
+
+const Table = Styled.table;
 
 const rowHeight = "40px";
 
 type RiskiestTrovesProps = {
   pageSize: number;
-  liquity: Liquity;
-  numberOfTroves: number;
-  price: Decimal;
-  totalRedistributed: Trove;
-  blockTag?: number;
 };
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
 
-export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
-  pageSize,
-  liquity,
+const select = ({
   numberOfTroves,
   price,
   totalRedistributed,
   blockTag
-}) => {
+}: BlockPolledLiquityStoreState) => ({ numberOfTroves, price, totalRedistributed, blockTag });
+
+export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
+  const { blockTag, numberOfTroves, price, totalRedistributed } = useLiquitySelector(select);
+  const { liquity } = useLiquity();
   type Troves = Resolved<ReturnType<typeof liquity.getLastTroves>>;
 
   const [loading, setLoading] = useState(true);
@@ -160,9 +164,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
         </Box>
       ) : (
         <Box>
-          <Styled.table
-            sx={{ mt: 2, pl: [1, 4], width: "100%", textAlign: "center", lineHeight: 1.15 }}
-          >
+          <Table sx={{ mt: 2, pl: [1, 4], width: "100%", textAlign: "center", lineHeight: 1.15 }}>
             <colgroup>
               <col style={{ width: "50px" }} />
               <col />
@@ -180,7 +182,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                 </th>
                 <th>
                   Debt
-                  <Text sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>LQTY</Text>
+                  <Text sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>{COIN}</Text>
                 </th>
                 <th>
                   Coll.
@@ -252,9 +254,9 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                         {(collateralRatio => (
                           <Text
                             color={
-                              collateralRatio.gt(Liquity.CRITICAL_COLLATERAL_RATIO)
+                              collateralRatio.gt(Trove.CRITICAL_COLLATERAL_RATIO)
                                 ? "success"
-                                : collateralRatio.gt(Liquity.MINIMUM_COLLATERAL_RATIO)
+                                : collateralRatio.gt(Trove.MINIMUM_COLLATERAL_RATIO)
                                 ? "warning"
                                 : "danger"
                             }
@@ -287,7 +289,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({
                   )
               )}
             </tbody>
-          </Styled.table>
+          </Table>
         </Box>
       )}
     </Card>
