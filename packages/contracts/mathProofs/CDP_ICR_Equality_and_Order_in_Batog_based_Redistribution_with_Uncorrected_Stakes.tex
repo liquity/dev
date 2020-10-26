@@ -93,8 +93,9 @@ In Liquity, collateral and debt shares from liquidations are proportional to the
 
 The "strawman" approach in 6, with rewards proportional to the initial stake, neglects this: it over-rewards fresh troves, and under-rewards older troves. \\
 
-We introduce a corrected stake to restore proportional reward distribution.
-\begin{equation}
+We introduce a corrected stake to restore proportional reward distribution. \\
+
+\begin{equation} \label{eq:2}
     s_i=
         \begin{cases} 
             c_i & for \;totalCollateral_\emptyset = 0\\
@@ -192,15 +193,30 @@ We consider the following event sequence:
 \end{itemize}
 
 \bigskip
-In other words, a first-order system of $n+m$ troves undergoes $m$ trove liquidations, before evolving to second-order.  All other conditions remain the same.\\
+In other words, a first-order system of $n+m$ troves undergoes $m$ trove liquidations, before evolving to second-order.\\
 
-Consider the $m$ past liquidations from the point of view of an active first-order $trove_i$. As per 2), the stake of $trove_i$ is $s_i = c_i$.\\
+Consider the $m$ past liquidations from the point of view of an active first-order $trove_i$. As per (\ref{eq:2}), the stake of $trove_i$ is $s_i = c_i$.\\
 
-$trove_i$ earns total accumulated reward, $x_i$  the sum of its rewards from $m$ past liquidations.\\
+Let’s define the reward from liquidating $trove_k$ received by $trove_i$ as the pair $R_i^k = (x_i^k, y_i^k)$ where $x_i^k$ is the share of $trove_k$’s collateral received by $trove_i$ and $y_i^k$ is the share $trove_k$’s debt absorbed by $trove_i$.\\
 
-With each liquidation, $c_j$ collateral is removed from the system. Again, as per 2), stake equals collateral. Thus, the $totalStakes$ numerator in each liquidation is reduced by $c_j$, where $j$ denotes the index of the liquidated trove.\\ 
+Let’s call $x_i$ the total accumulated collateral from rewards earned by $trove_i$. At the end of the first-order stage this is the sum of its collateral rewards from $m$ past liquidations.\\
 
-(For simplicity, let’s assume that troves $n+1, ..., n+m$ are the liquidated troves and $1, ..., n$ are those that remain)\\
+(For simplicity, let’s assume that troves $n+1, ..., n+m$ are the liquidated troves, in that order, and $1, ..., n$ are those that remain)\\
+
+For a remaining trove:\\
+
+\begin{equation} \label{eq:collreward}
+  x_i = x_i^{n+1} + ... + x_i^{n+m} = \sum_{k=n+1}^{n+m}x_i^k = \sum_{j=1}^{m}x_i^{n+j}
+\end{equation}
+
+For a liquidated trove the sum would be truncated at the previous liquidated trove: \\
+
+\begin{equation}
+  x_i = x_i^{n+1} + ... + x_i^{i-1} = \sum_{k=n+1}^{i-1}x_i^k
+\end{equation}
+
+With each liquidation, $c_j$ collateral is removed from the system. Again, as per (\ref{eq:2}), stake equals collateral. Thus, the $totalStakes$ numerator in each liquidation is reduced by $c_j$, where $j$ denotes the index of the liquidated trove.\\ 
+
 
 Let
 
@@ -216,7 +232,15 @@ and
 \end{equation}
 
 \bigskip
-We now sum all reward events, noting that the liquidated trove’s collateral is removed from the $totalStakes$ numerator at each reward:
+We now sum all reward events, noting that the liquidated trove’s collateral is removed from the $totalStakes$ denominator at each reward. Getting back to (\ref{eq:collreward}), note that for each previous liquidated trove $n+j$, the share of collateral that corresponds to trove $i$ is: \\
+
+\begin{equation} 
+  x_i^j = \frac{c_i}{C_{n+m}-L_j}(c_{n+j}+x_{n+j})
+\end{equation}
+
+The denominator $C_{n+m}-L_j$ corresponds to the fact that the amount of total initial stakes has been reduced by the amount of liquidated collateral from  troves until $j$, $L_j$. The collateral to redistribute is $c_{n+j}+x_{n+j}$, which corresponds to the initial collateral of the liquidated trove, $c_{n+j}$, plus the collateral it has earned from previous liquidations, $x_{n+j}$. \\
+
+Therefore:\\
 
 \begin{equation} 
     x_i=c_i\left[\frac{c_{n+1}+x_{n+1}}{C_{n+m}-L_1}+\frac{c_{n+2}+x_{n+2}}{C_{n+m}-L_2}+\frac{c_{n+3}+x_{n+3}}{C_{n+m}-L_3}+...+\frac{c_{n+m}+x_{n+m}}{C_{n+m}-L_m}\right]
@@ -287,7 +311,7 @@ Where $c_F$, $d_F$ and $c_G$, $d_G$ are the collateral and debt values of $trove
 
 $x_G$, $y_G$ are the respective accumulated collateral and debt rewards for $trove_G$ earned by its stake over its lifetime.\\
 
-The ICR equality identity \ref{eq:10} yields the following relation:
+The ICR equality identity (\ref{eq:10}) yields the following relation:
 
 \begin{equation} 
         c_F=\frac{d_\mathsmaller{F}}{d_\mathsmaller{G}+y_\mathsmaller{G}}(c_\mathsmaller{G}+x_\mathsmaller{G})
@@ -309,14 +333,14 @@ where
 
 
 \bigskip
-$trove_F$’s stake $s_F$ is given by the corrected stake rule 2), that is:
+$trove_F$’s stake $s_F$ is given by the corrected stake rule (\ref{eq:2}), that is:
 
 \begin{equation} 
     s_F=\frac{c_\mathsmaller{F} \cdot totalStakes_\emptyset}{totalColateral_\emptyset}
 \end{equation}
 
 \bigskip
-Which by \ref{eq:8} and \ref{eq:9} gives:
+Which by (\ref{eq:8}) and (\ref{eq:9}) gives:
 
 \begin{equation} \label{eq:17}
     s_F=\frac{c_F \cdot C_n}{C_n+X_n}
@@ -368,14 +392,14 @@ And since $s_\mathsmaller{G}$ is a first-order stake:
 \end{equation}
 
 \bigskip
-To show ICR equivalence after the reward event, we must first obtain $s_F$ as a linear function of $c_G$. Recall our definition of $trove_F$’s stake from \ref{eq:17}:
+To show ICR equivalence after the reward event, we must first obtain $s_F$ as a linear function of $c_G$. Recall our definition of $trove_F$’s stake from (\ref{eq:17}):
 
 \begin{equation} 
     s_\mathsmaller{F}=\frac{c_\mathsmaller{F} \cdot C_n}{(C_n+X_n)}
 \end{equation}
 
 \bigskip
-Now, substituting in the expression for F’s collateral, \ref{eq:14}, we obtain:
+Now, substituting in the expression for F’s collateral, (\ref{eq:14}), we obtain:
 
 \begin{equation} 
     s_\mathsmaller{F}=\frac{k(c_\mathsmaller{G}+x_\mathsmaller{G})C_n}{C_n+X_n}
@@ -383,7 +407,7 @@ Now, substituting in the expression for F’s collateral, \ref{eq:14}, we obtain
 
 
 \bigskip
-Substituting in the expressions for accumulated reward $x_i$ from \ref{eq:45}, and total accumulated reward $X_n$ from \ref{eq:47}:
+Substituting in the expressions for accumulated reward $x_i$ from (\ref{eq:45}), and total accumulated reward $X_n$ from (\ref{eq:47}):
 
 \begin{equation} 
     s_\mathsmaller{F}=\frac{k(c_G+Hc_G)C_n}{C_n+HC_n}
@@ -415,7 +439,7 @@ We now compare ICRs of $trove_F$ and $trove_G$, after liquidation of $trove_Z$.
 \end{equation}
 
 \bigskip
-Using \ref{eq:20}, the individual rewards as functions of stakes:
+Using (\ref{eq:20}), the individual rewards as functions of stakes:
 
 \begin{equation} 
     ICR_{F \; After}=\frac{c_F+as_F}{d_F+bs_F}
@@ -426,7 +450,7 @@ Using \ref{eq:20}, the individual rewards as functions of stakes:
 \end{equation}
 
 \bigskip
-Now, substituting our definitions for $s_\mathsmaller{G}$ \ref{eq:21} and $s_F$ \ref{eq:29}:
+Now, substituting our definitions for $s_\mathsmaller{G}$ (\ref{eq:21}) and $s_F$ (\ref{eq:29}):
 
 \begin{equation} 
     ICR_{F \; After}=\frac{c_\mathsmaller{F}+akc_\mathsmaller{G}}{d_\mathsmaller{F}+bkc_\mathsmaller{G}}
@@ -437,7 +461,7 @@ Now, substituting our definitions for $s_\mathsmaller{G}$ \ref{eq:21} and $s_F$ 
 \end{equation}
 
 \bigskip
-Using identities \ref{eq:14} for $c_F$, and \ref{eq:15} for $d_F$:
+Using identities (\ref{eq:14}) for $c_F$, and (\ref{eq:15}) for $d_F$:
 
 \begin{equation} 
     ICR_{F \; After}=\frac{k(c_\mathsmaller{G} + x_\mathsmaller{G}+ac_\mathsmaller{G})}{k(d_\mathsmaller{G}+y_\mathsmaller{G}+bc_\mathsmaller{G})}
@@ -723,7 +747,7 @@ Rearranging, and separating the constant term:
 \end{equation}
 
 \bigskip
-Recall our earlier result \ref{eq:217}: $\frac{d_1}{c_1}<\frac{d_2}{c_2}$. Thus:
+Recall our earlier result (\ref{eq:217}): $\frac{d_1}{c_1}<\frac{d_2}{c_2}$. Thus:
 
 \begin{equation} 
     \frac{1}{ICR_{1After}}<\frac{1}{ICR_{2After}}
