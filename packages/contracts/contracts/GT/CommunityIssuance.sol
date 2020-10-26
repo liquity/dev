@@ -38,6 +38,7 @@ contract CommunityIssuance {
 
     constructor() public {
         communityIssuanceDeployer = msg.sender;
+        deploymentTime = block.timestamp;
     }
 
     function setGrowthTokenAddress(address _growthTokenAddress) external {
@@ -71,9 +72,13 @@ contract CommunityIssuance {
         _requireCallerIsPoolManager();
         _requireContractIsActive();
 
-        uint latestTotalLQTYIssued = supplyCap.mul(_getCumulativeIssuanceFraction());
+        uint latestTotalLQTYIssued = supplyCap.mul(_getCumulativeIssuanceFraction()).div(1e18);
         uint issuance = latestTotalLQTYIssued.sub(totalLQTYIssued);
         
+        // console.log("latestTotalLQTYIssued: %s", latestTotalLQTYIssued);
+        //  console.log("issuance: %s", issuance);
+        //   console.log("totalLQTYIssued: %s", totalLQTYIssued);
+
         totalLQTYIssued = latestTotalLQTYIssued;
         return issuance;
     }
@@ -83,19 +88,38 @@ contract CommunityIssuance {
     t:  time passed since last LQTY issuance event 
     */
     function _getCumulativeIssuanceFraction() internal view returns (uint) {
-        uint timePassed = block.timestamp.sub(deploymentTime).div(SECONDS_IN_ONE_MINUTE);
+        uint timePassedInMinutes = block.timestamp.sub(deploymentTime).div(SECONDS_IN_ONE_MINUTE);
 
-        // f^(-t)
-        uint power = Math._decPow(ISSUANCE_FACTOR, timePassed);
+        //  console.log("block.timestamp: %s", block.timestamp);
+        // console.log("deploymentTime: %s", deploymentTime);
+        // console.log("block.timestamp.sub(deploymentTime): %s", block.timestamp.sub(deploymentTime));
 
-        // 1-(1/(f^-t))
-        return (uint(1e18).sub(uint(1e18).div(power)));
+        // ***** Inverted exponential issuance curve
+
+        // // f^(-t)
+        // uint power = Math._decPow(ISSUANCE_FACTOR, timePassed);
+
+        // // 1-(1/(f^-t))
+        // return (uint(1e18).sub(uint(1e18).div(power)));
+
+        // *****
+
+        // ***** Dummy issuance - linear, 4 year schedule  ****
+
+        uint MINUTES_IN_FOUR_YEARS = 2102400;
+
+        uint fraction = timePassedInMinutes.mul(1e18).div(MINUTES_IN_FOUR_YEARS);
+        // console.log("timePassedInMinutes: %s", timePassedInMinutes);
+        // console.log("fraction: %s", fraction);
+        return fraction;
+        // *****
+
     } 
 
     function sendLQTY(address _account, uint _LQTYamount) external returns (uint) {
         _requireCallerIsPoolManager();
         _requireContractIsActive();
-
+        // console.log("transfer amount: %s", _LQTYamount );
         growthToken.transfer(_account, _LQTYamount);
     }
 

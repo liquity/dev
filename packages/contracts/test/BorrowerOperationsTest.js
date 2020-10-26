@@ -8,6 +8,10 @@ const dec = th.dec
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
+const ZERO_ADDRESS = th.ZERO_ADDRESS
+
+
+
 contract('BorrowerOperations', async accounts => {
 
   const [
@@ -15,6 +19,8 @@ contract('BorrowerOperations', async accounts => {
     A, B, C, D, E,
     defaulter_1, defaulter_2,
     frontEnd_1, frontEnd_2, frontEnd_3] = accounts;
+
+  const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
 
   let priceFeed
   let clvToken
@@ -2404,14 +2410,15 @@ contract('BorrowerOperations', async accounts => {
 
   // --- closeLoan() with a LQTY-eligible deposit ---
 
-  it.only("closeLoan(): increases the LQTY reward sum G", async () => {
-     // Whale opens trove
-     await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+  it("closeLoan(): increases the LQTY reward sum G", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
+    // Whale opens trove
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
-     // A, B, C open troves 
-     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
-     await borrowerOperations.openLoan(dec(80, 18), B, { from: B, value: dec(1, 'ether') })
-     await borrowerOperations.openLoan(dec(20, 18), C, { from: C, value: dec(1, 'ether') })
+    // A, B, C open troves 
+    await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(20, 18), C, { from: C, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
     await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
@@ -2419,24 +2426,35 @@ contract('BorrowerOperations', async accounts => {
     await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
 
     const currentEpoch = await poolManager.currentEpoch()
-    const currentEpoch = await poolManager.currentScale()
+    const currentScale = await poolManager.currentScale()
 
     const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
+    console.log(`G_Before: ${G_Before}`)
 
-    await th.fastForwardTime(th.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-    
-    await cdpManager.closeLoan({from: A})
+    console.log(`block.timstamp before ff: ${await th.getLatestBlockTimestamp(web3)}`)
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+    console.log(`block.timstamp after ff: ${await th.getLatestBlockTimestamp(web3)}`)
+
+    // Whale sends A CLV so that he may close his loan
+    await clvToken.transfer(A, dec(100, 18), { from: whale })
+
+    // check LQTY balance of communityIssuance:
+    console.log(`total supply: ${(await growthToken.balanceOf(communityIssuance.address)).toString()}`)
+
+    await borrowerOperations.closeLoan({ from: A })
 
     const G_After = await poolManager.epochToScaleToG(currentEpoch, currentScale)
 
+    console.log(`G_After: ${G_After}`)
     // Check LQTY reward sum G has increased
 
     assert.isTrue(G_After.gt(G_Before))
   })
 
-  it.only("closeLoan(): with a prior eligible deposit, issues LQTY rewards to trove closer", async () => {
+  it("closeLoan(): with a prior eligible deposit, issues LQTY rewards to trove closer", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2448,34 +2466,35 @@ contract('BorrowerOperations', async accounts => {
     await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
     await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
 
+    // Check A, B, C deposits are eligible for rewards
+    assert.isTrue(await poolManager.isEligibleForLQTY(A))
+    assert.isTrue(await poolManager.isEligibleForLQTY(B))
+    assert.isTrue(await poolManager.isEligibleForLQTY(C))
+
     await borrowerOperations.openLoan(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
-    // Price drops
-    await priceFeed.setPrice(dec(100, 18))
-    assert.isFalse(await cdpManager.checkRecoveryMode())
-
-    await th.fastForwardTime(timeValues, web3.currentProvider)
-
-    // Get A's current non-zero LQTY rewards
-    const A_LQTYGain = await poolManager.getDepositorLQTYGain(A)
-    assert.isTrue(A_LQTYGain.gt(th.toBN('0')))
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Check A's actual LQTY balance == 0
     const A_LQTYBalanceBefore = await growthToken.balanceOf(A)
-    assert.eq(A_LQTYBalanceBefore, '0')
+    assert.equal(A_LQTYBalanceBefore, '0')
+
+    // Whale sends A CLV so that he may close his loan
+    await clvToken.transfer(A, dec(100, 18), { from: whale })
 
     // Close loan
     await borrowerOperations.closeLoan({ from: A })
     assert.isFalse(await sortedCDPs.contains(A))
 
-    // Check LQTY balance == previous pending LQTY rewards
+    // Check LQTY balance has increased
     const A_LQTYBalanceAfter = await growthToken.balanceOf(A)
-    assert.eq(A_LQTYBalanceAfter, A_LQTYGain)
+    assert.isTrue(A_LQTYBalanceAfter.gt(A_LQTYBalanceBefore))
   })
 
-  it.only("closeLoan(): with a prior eligible deposit, issues LQTY rewards to deposit's front end'", async () => {
+  it("closeLoan(): with a prior eligible deposit, issues LQTY rewards to deposit's front end'", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2495,13 +2514,12 @@ contract('BorrowerOperations', async accounts => {
 
     await th.fastForwardTime(timeValues, web3.currentProvider)
 
-    // Get A's current non-zero LQTY rewards
-    const F1_LQTYGain = await poolManager.getFrontEndLQTYGain(frontEnd_1)
-    assert.isTrue(F1_LQTYGain.gt(th.toBN('0')))
-
     // Check A's actual LQTY balance == 0
     const F1_LQTYBalanceBefore = await growthToken.balanceOf(frontEnd_1)
-    assert.eq(F1_LQTYBalanceBefore, '0')
+    assert.equal(F1_LQTYBalanceBefore, '0')
+
+    // Whale sends A CLV so that he may close his loan
+    await clvToken.transfer(A, dec(100, 18), { from: whale })
 
     // Close loan
     await borrowerOperations.closeLoan({ from: A })
@@ -2509,12 +2527,13 @@ contract('BorrowerOperations', async accounts => {
 
     // Check LQTY balance == previous pending LQTY rewards
     const F1_LQTYBalanceAfter = await growthToken.balanceOf(frontEnd_1)
-    assert.eq(F1_LQTYBalanceAfter, F1_LQTYGain)
+    assert.isTrue(F1_LQTYBalanceAfter.eq(F1_LQTYBalanceBefore))
   })
 
-  it.only("closeLoan(): with a prior eligible deposit, makes deposit ineligible for GT", async () => {
+  it("closeLoan(): with a prior eligible deposit, makes deposit ineligible for GT", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2526,13 +2545,19 @@ contract('BorrowerOperations', async accounts => {
     await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
     await poolManager.provideToSP(dec(80, 18), frontEnd_2, { from: B })
     await poolManager.provideToSP(dec(20, 18), frontEnd_3, { from: C })
-    await poolManager.provideToSP(dec(10, 18), { from: D })  // D deposits directly, not via front end
+    await poolManager.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: D })  // D deposits directly, not via front end
 
     // Check deposits A, B, C, D  are eligible for LQTY rewards
     assert.isTrue(await poolManager.isEligibleForLQTY(A))
     assert.isTrue(await poolManager.isEligibleForLQTY(B))
     assert.isTrue(await poolManager.isEligibleForLQTY(C))
     assert.isTrue(await poolManager.isEligibleForLQTY(D))
+
+    // Whale sends A, B, C, D CLV so that they may close their loan
+    await clvToken.transfer(A, dec(100, 18), { from: whale })
+    await clvToken.transfer(B, dec(100, 18), { from: whale })
+    await clvToken.transfer(C, dec(100, 18), { from: whale })
+    await clvToken.transfer(D, dec(100, 18), { from: whale })
 
     // Close troves A, B, C, D
     await borrowerOperations.closeLoan({ from: A })
@@ -2551,9 +2576,10 @@ contract('BorrowerOperations', async accounts => {
     assert.isFalse(await poolManager.isEligibleForLQTY(D))
   })
 
-  it.only("closeLoan(): with a prior eligible deposit, de-tag front end from deposit", async () => {
+  it("closeLoan(): with a prior eligible deposit, de-tag front end from deposit", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2575,6 +2601,11 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(B_taggedFrontEnd_Before, frontEnd_2)
     assert.equal(C_taggedFrontEnd_Before, frontEnd_3)
 
+    // Whale sends A, B, C CLV so that they may close their loan
+    await clvToken.transfer(A, dec(100, 18), { from: whale })
+    await clvToken.transfer(B, dec(100, 18), { from: whale })
+    await clvToken.transfer(C, dec(100, 18), { from: whale })
+
     // Close troves A, B, C
     await borrowerOperations.closeLoan({ from: A })
     await borrowerOperations.closeLoan({ from: B })
@@ -2593,9 +2624,10 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(C_taggedFrontEnd_After, th.ZERO_ADDRESS)
   })
 
-  it.only("closeLoan(): with a prior eligible deposit, issues (ETHGain + collWithdrawal) to closer", async () => {
+  it("closeLoan(): with a prior eligible deposit, issues (ETHGain + collWithdrawal) to closer", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2623,26 +2655,30 @@ contract('BorrowerOperations', async accounts => {
 
     // Get A's deposit's current non-zero ETH gain 
     const A_ETHGain = await poolManager.getDepositorETHGain(A)
-    assert.isTrue(A_LQTYGain.gt(th.toBN('0')))
+    assert.isTrue(A_ETHGain.gt(th.toBN('0')))
 
     // Get A's trove collateral and ETH balance
     const A_troveCollateral = (await cdpManager.CDPs(A))[1]
-    const A_ETHBalanceBefore = await web3.eth.getBalance(A)
+    const A_ETHBalanceBefore = th.toBN(await web3.eth.getBalance(A))
+
+    // Whale sends A CLV so that they may close their loan
+    await clvToken.transfer(A, dec(100, 18), { from: whale })
 
     // Close loan A
     await borrowerOperations.closeLoan({ from: A, gasPrice: 0 })
     assert.isFalse(await sortedCDPs.contains(A))
 
-    const A_ETHBalanceAfter = await web3.eth.getBalance(A)
+    const A_ETHBalanceAfter = th.toBN(await web3.eth.getBalance(A))
     const A_ETHBalanceDiff = A_ETHBalanceAfter.sub(A_ETHBalanceBefore)
 
     // Expect A has been sent (ETHGain + troveCollateral) when they closed their loan
-    assert.eq(A_ETHBalanceDiff, (A_troveCollateral.add(A_ETHGain)))
+    assert.isTrue(A_ETHBalanceDiff.eq(A_troveCollateral.add(A_ETHGain)))
   })
 
-  it.only("closeLoan(): subtracts the trove closer's eligible deposit from the front end's stake", async () => {
+  it("closeLoan(): subtracts the trove closer's eligible deposit from the front end's stake", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2671,6 +2707,10 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(F1_Stake_Before.gt(th.toBN('0')))
     assert.isTrue(F2_Stake_Before.gt(th.toBN('0')))
 
+    // Whale sends C, D CLV so that they may close their loan
+    await clvToken.transfer(C, dec(100, 18), { from: whale })
+    await clvToken.transfer(D, dec(100, 18), { from: whale })
+
     // Close trove C, D
     await borrowerOperations.closeLoan({ from: C })
     await borrowerOperations.closeLoan({ from: D })
@@ -2689,21 +2729,32 @@ contract('BorrowerOperations', async accounts => {
     const F2_Diff = F2_Stake_Before.sub(F2_Stake_After)
 
     // Check F1 has reduced by amount equal to C's deposit, and F2 has reduced by amount equal to D's deposit
-    assert.isTrue(F1_Diff, C_deposit)
-    assert.isTrue(F2_Diff, D_deposit)
+    console.log(`F1_Stake_Before  ${F1_Stake_Before}`)
+    console.log(`F1_Stake_After  ${F1_Stake_After}`)
+    console.log(`F1_Diff  ${F1_Diff}`)
+    console.log(`C_deposit  ${C_deposit}`)
+
+    console.log(`F2_Stake_Before  ${F2_Stake_Before}`)
+    console.log(`F2_Stake_After  ${F2_Stake_After}`)
+    console.log(`F2_Diff  ${F2_Diff}`)
+    console.log(`D_deposit  ${D_deposit}`)
+
+    assert.equal(F1_Diff, C_deposit)
+    assert.equal(F2_Diff, D_deposit)
   })
 
   // --- closeLoan() with LQTY-ineligible deposit ---
 
-  it.only("closeLoan(): with a prior ineligible deposit, issues only the collWithdrawal to closer", async () => {
+  it("closeLoan(): with a prior ineligible deposit, issues only the collWithdrawal to closer", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(dec(100, 18), whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // Whale transfers CLV to A 
     await clvToken.transfer(A, dec(50, 18), { from: whale })
 
     // A, deposits to Stability Pool
-    await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+    await poolManager.provideToSP(dec(50, 18), frontEnd_1, { from: A })
 
     // Confirm A's deposit is ineliglble for LQTY
     assert.isFalse(await poolManager.isEligibleForLQTY(A))
@@ -2723,30 +2774,34 @@ contract('BorrowerOperations', async accounts => {
 
     // Get A's deposit's current non-zero ETH gain 
     const A_ETHGain_Before = await poolManager.getDepositorETHGain(A)
-    assert.isTrue(A_LQTYGain.gt(th.toBN('0')))
+    assert.isTrue(A_ETHGain_Before.gt(th.toBN('0')))
 
+    // A opens trove
+    await borrowerOperations.openLoan(dec(20, 18), A, { from: A, value: dec(1, 'ether') })
     // Get A's trove collateral and ETH balance
     const A_troveCollateral = (await cdpManager.CDPs(A))[1]
-    const A_ETHBalanceBefore = await web3.eth.getBalance(A)
+    const A_ETHBalanceBefore = th.toBN(await web3.eth.getBalance(A))
+    assert.isFalse(await poolManager.isEligibleForLQTY(A))
 
-    // Close loan A
+    // A then closes loan
     await borrowerOperations.closeLoan({ from: A, gasPrice: 0 })
     assert.isFalse(await sortedCDPs.contains(A))
 
-    const A_ETHBalanceAfter = await web3.eth.getBalance(A)
+    const A_ETHBalanceAfter = th.toBN(await web3.eth.getBalance(A))
     const A_ETHBalanceDiff = A_ETHBalanceAfter.sub(A_ETHBalanceBefore)
 
-    // Expect A has been sent (ETHGain + troveCollateral) when they closed their loan
-    assert.eq(A_ETHBalanceDiff, A_troveCollateral)
+    // Expect A has been sent troveCollateral when they closed their loan
+    assert.isTrue(A_ETHBalanceDiff.eq(A_troveCollateral))
 
     // Check A's deposit's ETH gain has not changed
     const A_ETHGain_After = await poolManager.getDepositorETHGain(A)
     assert.isTrue(A_ETHGain_After.eq(A_ETHGain_Before))
   })
 
-  it.only("closeLoan(): deposit that has become ineligible for LQTY earns no further LQTY rewards", async () => {
+  it("closeLoan(): deposit that has become ineligible for LQTY earns no further LQTY rewards", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2766,6 +2821,9 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(await poolManager.isEligibleForLQTY(B))
     assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
+    // Whale sends A CLV so that they may close their loan
+    await clvToken.transfer(A, dec(100, 18), { from: whale })
+
     // Close trove A
     await borrowerOperations.closeLoan({ from: A })
     assert.isFalse(await sortedCDPs.contains(A))
@@ -2774,7 +2832,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isFalse(await poolManager.isEligibleForLQTY(A))
 
     // Check deposits B and C are still eligible
-    assert.istrue(await poolManager.isEligibleForLQTY(B))
+    assert.isTrue(await poolManager.isEligibleForLQTY(B))
     assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
     // Get current LQTY gains
@@ -2782,16 +2840,18 @@ contract('BorrowerOperations', async accounts => {
     const B_LQTYGain_Before = await poolManager.getDepositorLQTYGain(B)
     const C_LQTYGain_Before = await poolManager.getDepositorLQTYGain(C)
 
-    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currrentProvider)
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // D provides 1 CLV to the SP, which brings LQTY gains for all depositors up to date
-    await provideToSP(dec(1, 18), { from: D })
+    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
 
     // Get current LQTY gains after time has passed
     const A_LQTYGain_After = await poolManager.getDepositorLQTYGain(A)
     const B_LQTYGain_After = await poolManager.getDepositorLQTYGain(B)
     const C_LQTYGain_After = await poolManager.getDepositorLQTYGain(C)
 
+    console.log(`A_LQTYGain_Before: ${A_LQTYGain_Before}`)
+    console.log(`A_LQTYGain_After: ${A_LQTYGain_After}`)
     // Check A's LQTY gain has not increased
     assert.isTrue(A_LQTYGain_After.eq(A_LQTYGain_Before))
 
@@ -2800,9 +2860,10 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(C_LQTYGain_After.gt(C_LQTYGain_Before))
   })
 
-  it.only("closeLoan(): with a prior ineligible deposit, doesn't alter a front end's stake", async () => {
+  it("closeLoan(): with a prior ineligible deposit, doesn't alter a front end's stake", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(dec(100, 18), whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A and B open troves and make SP deposits via F1 and F2 respectively
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2811,8 +2872,8 @@ contract('BorrowerOperations', async accounts => {
     await poolManager.provideToSP(dec(50, 18), frontEnd_2, { from: B })
 
     // Whale sends tokens to C and D
-    await clvToken.transfer(A, dec(20, 18), { from: whale })
-    await clvToken.transfer(B, dec(10, 18), { from: whale })
+    await clvToken.transfer(C, dec(100, 18), { from: whale })
+    await clvToken.transfer(D, dec(80, 18), { from: whale })
 
     // C and D make SP deposits via F1 and F2 respectively
     await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: C })
@@ -2833,13 +2894,17 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(F1_Stake_Before.gt(th.toBN('0')))
     assert.isTrue(F2_Stake_Before.gt(th.toBN('0')))
 
+    // Whale sends CLV so that they may close their loan
+    await clvToken.transfer(C, dec(100, 18), { from: whale })
+    await clvToken.transfer(D, dec(100, 18), { from: whale })
+
     // Close trove C, D
     await borrowerOperations.closeLoan({ from: C })
     await borrowerOperations.closeLoan({ from: D })
     assert.isFalse(await sortedCDPs.contains(C))
     assert.isFalse(await sortedCDPs.contains(D))
 
-    // Get stakes for F1 an F2
+    // Get stakes for F1 and F2
     const F1_Stake_After = await poolManager.getCompoundedFrontEndStake(frontEnd_1)
     const F2_Stake_After = await poolManager.getCompoundedFrontEndStake(frontEnd_2)
 
@@ -2848,9 +2913,10 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(F2_Stake_After.gt(th.toBN('0')))
   })
 
-  it.only("closeLoan(): front end that has “lost” a deposit earns no further LQTY gains from that deposit", async () => {
+  it("closeLoan(): front end that has “lost” a deposit earns no further LQTY gains from that deposit", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2870,6 +2936,9 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(await poolManager.isEligibleForLQTY(B))
     assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
+    // Whale sends CLV so that they may close their loan
+    await clvToken.transfer(A, dec(100, 18), { from: whale })
+
     // Close trove A
     await borrowerOperations.closeLoan({ from: A })
     assert.isFalse(await sortedCDPs.contains(A))
@@ -2878,11 +2947,17 @@ contract('BorrowerOperations', async accounts => {
     assert.isFalse(await poolManager.isEligibleForLQTY(A))
 
     // Check frontEnd 1's stake is now 0
-    const F1_Stake = await poolManager.getFrontEndStake(frontEnd_1)
-    assert.isTrue(F1_Stake.eq('0'))
+    const F1_Stake = await poolManager.frontEndStakes(frontEnd_1)
+    assert.equal(F1_Stake, '0')
+
+    // Check F2 and F3 stakes are > 0
+    const F2_Stake = await poolManager.frontEndStakes(frontEnd_2)
+    const F3_Stake = await poolManager.frontEndStakes(frontEnd_3)
+    assert.isTrue(F2_Stake.gt(th.toBN('0')))
+    assert.isTrue(F3_Stake.gt(th.toBN('0')))
 
     // Check deposits B and C are still eligible
-    assert.istrue(await poolManager.isEligibleForLQTY(B))
+    assert.isTrue(await poolManager.isEligibleForLQTY(B))
     assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
     // Get current LQTY gains for front ends
@@ -2890,10 +2965,10 @@ contract('BorrowerOperations', async accounts => {
     const F2_LQTYGain_Before = await poolManager.getFrontEndLQTYGain(frontEnd_2)
     const F3_LQTYGain_Before = await poolManager.getDepositorLQTYGain(frontEnd_3)
 
-    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currrentProvider)
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    // D provides 1 CLV to the SP, which brings LQTY gains for all depositors up to date
-    await provideToSP(dec(1, 18), { from: D })
+    // D provides 1 CLV to the SP, which brings earned LQTY gains for all stakers up to date
+    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
 
     // Get current LQTY gains after time has passed
     const F1_LQTYGain_After = await poolManager.getFrontEndLQTYGain(frontEnd_1)
@@ -2903,14 +2978,22 @@ contract('BorrowerOperations', async accounts => {
     // Check F1's LQTY gain has not increased
     assert.isTrue(F1_LQTYGain_After.eq(F1_LQTYGain_Before))
 
+    console.log( `F1_LQTYGain_Before: ${F1_LQTYGain_Before}`   )
+    console.log( `F2_LQTYGain_Before: ${F2_LQTYGain_Before}`   )
+    console.log( `F3_LQTYGain_Before: ${F3_LQTYGain_Before}`   )
+    console.log( `F1_LQTYGain_After: ${F1_LQTYGain_After}`   )
+    console.log( `F2_LQTYGain_After: ${F2_LQTYGain_After}`   )
+    console.log( `F3_LQTYGain_After: ${F3_LQTYGain_After}`   )
+   
     // Check B and C's LQTY gain has increased
     assert.isTrue(F2_LQTYGain_After.gt(F2_LQTYGain_Before))
     assert.isTrue(F3_LQTYGain_After.gt(F3_LQTYGain_Before))
   })
 
-  it.only("closeLoan(): deposit that has become ineligible for LQTY continues earning ETH gains", async () => {
+  it("closeLoan(): deposit that has become ineligible for LQTY continues earning ETH gains", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     // Whale opens trove
-    await borrowerOperations.openLoan(0, whale, { from: dennis, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2918,7 +3001,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(100, 18), defaulter_2, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
 
     // A, B, C deposit to Stability Pool
     await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
@@ -2940,9 +3023,12 @@ contract('BorrowerOperations', async accounts => {
     const B_ETHGain_Before = await poolManager.getDepositorETHGain(B)
     const C_ETHGain_Before = await poolManager.getDepositorETHGain(C)
 
-    assert.isTrue(A_ETHGain.gt(th.toBN('0')))
-    assert.isTrue(B_ETHGain.gt(th.toBN('0')))
-    assert.isTrue(C_ETHGain.gt(th.toBN('0')))
+    assert.isTrue(A_ETHGain_Before.gt(th.toBN('0')))
+    assert.isTrue(B_ETHGain_Before.gt(th.toBN('0')))
+    assert.isTrue(C_ETHGain_Before.gt(th.toBN('0')))
+
+    // Whale sends CLV so that they may close their loan
+    await clvToken.transfer(A, dec(100, 18), { from: whale })
 
     // Close trove A
     await borrowerOperations.closeLoan({ from: A })
@@ -2952,23 +3038,22 @@ contract('BorrowerOperations', async accounts => {
     assert.isFalse(await poolManager.isEligibleForLQTY(A))
 
     // Check deposits B and C are still eligible for LQTY
-    assert.istrue(await poolManager.isEligibleForLQTY(B))
+    assert.isTrue(await poolManager.isEligibleForLQTY(B))
     assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
     // 2nd liquidation
     await cdpManager.liquidate(defaulter_2)
 
     // Get current ETH gains
-    const A_ETHGain_Before = await poolManager.getDepositorETHGain(A)
-    const B_ETHGain_Before = await poolManager.getDepositorETHGain(B)
-    const C_ETHGain_Before = await poolManager.getDepositorETHGain(C)
+    const A_ETHGain_After = await poolManager.getDepositorETHGain(A)
+    const B_ETHGain_After = await poolManager.getDepositorETHGain(B)
+    const C_ETHGain_After = await poolManager.getDepositorETHGain(C)
 
     // Check  all ETH gains have increased 
     assert.isTrue(A_ETHGain_After.gt(A_ETHGain_Before))
-    assert.isTrue(A_ETHGain_After.gt(B_ETHGain_Before))
-    assert.isTrue(A_ETHGain_After.gt(C_ETHGain_Before))
+    assert.isTrue(B_ETHGain_After.gt(B_ETHGain_Before))
+    assert.isTrue(C_ETHGain_After.gt(C_ETHGain_Before))
   })
-
 
   it("closeLoan(): applies pending rewards", async () => {
     // --- SETUP ---
@@ -3780,7 +3865,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("openLoan(): the caller's ineligible deposit remains ineligible for LQTY", async () => {
+  it.only("openLoan(): the caller's ineligible deposit remains ineligible for LQTY", async () => {
     await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // Whale transfers CLV to A, B, C
@@ -3791,7 +3876,7 @@ contract('BorrowerOperations', async accounts => {
     // A, B, C make deposits
     await poolManager.provideToSP(dec(50, 18), frontEnd_1, { from: A })
     await poolManager.provideToSP(dec(60, 18), frontEnd_2, { from: B })
-    await poolManager.provideToSP(dec(70, 18), th.ZERO_ADDRESS, { from: C })  //  C deposits directly, not via front end
+    await poolManager.provideToSP(dec(70, 18), ZERO_ADDRESS, { from: C })  //  C deposits directly, not via front end
 
     // Confirm A, B, C's deposits are ineligible for LQTY rewards
     assert.isFalse(await poolManager.isEligibleForLQTY(A))

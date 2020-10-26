@@ -769,7 +769,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(105, 18), frontEnd_2, { from: B })
 
       // time passes
-      await th.fastForwardTime(th.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // C deposits. A, and B earn LQTY
       await poolManager.provideToSP(dec(5, 18), ZERO_ADDRESS, { from: B })
@@ -830,7 +830,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(105, 18), frontEnd_2, { from: B })
 
       // time passes
-      await th.fastForwardTime(th.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // C deposits. A, and B earn LQTY
       await poolManager.provideToSP(dec(5, 18), ZERO_ADDRESS, { from: B })
@@ -1314,7 +1314,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(105, 18), ZERO_ADDRESS, { from: D })
 
       // time passes
-      await th.fastForwardTime(th.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // C deposits. A,B,C,D earn LQTY
       await poolManager.provideToSP(dec(5, 18), ZERO_ADDRESS, { from: B })
