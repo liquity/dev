@@ -375,7 +375,8 @@ contract PoolManager is Ownable, IPoolManager {
         Snapshot storage userSnapshot = snapshot[_address];
         if (_amount == 0) {
             initialDeposits[_address] = 0;
-            emit UserSnapshotUpdated(userSnapshot.P, userSnapshot.S);
+            delete snapshot[_address];
+            emit UserSnapshotUpdated(0, 0);
             return;
         }
 
