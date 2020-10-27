@@ -38,8 +38,8 @@ For a pull-based implementation in Liquity’s Stability Pool, we must factor ou
 \textbf{Terms}
 \begin{terms}
     \item $d_i:$ A given user’s LUSD deposit at liquidation event \textit{i}\\
-    \item $q_i:$ The LUSD debt absorbed by the Stability Pool from liquidation \textit{i}\\
-    \item $e_i:$ The ETH sent to the Stability Pool from liquidation \textit{i}\\
+    \item $Q_i:$ The LUSD debt absorbed by the Stability Pool from liquidation \textit{i}\\
+    \item $E_i:$ The ETH sent to the Stability Pool from liquidation \textit{i}\\
     \item $D_i:$ Total LUSD deposits at liquidation \textit{i}
 \end{terms}
 
@@ -52,38 +52,38 @@ deposit $d_0$ is given by:\\
 
 \bigskip
 Liquidation “earns” a LUSD loss for the deposit proportional to the prior share of total deposits:
-\begin{equation} 
-    d_1=d_0-q_1\frac{d_0}{D_0}
+\begin{equation} \label{eq:2}
+    d_1=d_0-Q_1\frac{d_0}{D_0}
 \end{equation}
 \begin{equation} 
-    d_1=d_0\left(1-\frac{q_1}{D_0}\right)
+    d_1=d_0\left(1-\frac{Q_1}{D_0}\right)
 \end{equation}
 
 \bigskip
 Since the deposit compounds, the deposit value after liquidation 2 is a function of the previous deposit value:
 \begin{equation} 
-    d_2=d_1\left(\frac{1-q_2}{D_1}\right)
+    d_2=d_1\left(\frac{1-Q_2}{D_1}\right)
 \end{equation}
 
 \bigskip
-and substituting equation (2):
+and substituting equation (\ref{eq:2}):
 \begin{equation} 
-    d_2=d_0 \left(1-\frac{q_2}{D_1}\right) \left(1-\frac{q_1}{D_o} \right)
+    d_2=d_0 \left(1-\frac{Q_2}{D_1}\right) \left(1-\frac{Q_1}{D_o} \right)
 \end{equation}
 
 \bigskip
 Similarly:
 \begin{equation} 
-    d_3=d_2\left(1-\frac{q_3}{D_2}\right)
+    d_3=d_2\left(1-\frac{Q_3}{D_2}\right)
 \end{equation}
 \begin{equation} 
-    d_3=d_0\left(1-\frac{q_3}{D_2}\right)\left(1-\frac{q_2}{D_1}\right)\left(1-\frac{q_1}{D_0}\right)
+    d_3=d_0\left(1-\frac{Q_3}{D_2}\right)\left(1-\frac{Q_2}{D_1}\right)\left(1-\frac{Q_1}{D_0}\right)
 \end{equation}
 
 \bigskip
 And the general case for a compounded deposit:
-\begin{equation} 
-    d_n=d_0\prod^n_{i=1}{\left(1-\frac{q_i}{D_{i-1}}\right)}
+\begin{equation} \label{eq:8}
+    d_n=d_0\prod^n_{i=1}{\left(1-\frac{Q_i}{D_{i-1}}\right)}
 \end{equation}
 \subsection{Compounded deposit for initial deposit made at $t>0$}
 For a deposit made between liquidations $[t, t+1]$, which is withdrawn between liquidations $[s, s+1]$, rewards are earned from liquidations $t+1, t+2, \ldots, s$.
@@ -91,20 +91,20 @@ For a deposit made between liquidations $[t, t+1]$, which is withdrawn between l
 We take a snapshot of the product at liquidation t, and calculate the compounded stake at liquidation $n$, with $t < n \leq s$, as:
 
 \begin{equation} 
-    d_n=d_t\prod^n_{i=t+1}{\left(1-\frac{q_i}{D_{i-1}}\right)}=d_t\frac{\displaystyle\prod^n_{i=1}{\left(1-\frac{q_i}{D_{i-1}}\right)}}{\displaystyle\prod^t_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)}
+    d_n=d_t\prod^n_{i=t+1}{\left(1-\frac{Q_i}{D_{i-1}}\right)}=d_t\frac{\displaystyle\prod^n_{i=1}{\left(1-\frac{Q_i}{D_{i-1}}\right)}}{\displaystyle\prod^t_{i=1}\left(1-\frac{Q_i}{D_{i-1}}\right)}
 \end{equation}
 assuming that none of the terms of those products are zero, i.e., that it never
-happens that $q_i = D_{i-1}$ (see section 3.1 for the case when the pool is emptied).
+happens that $Q_i = D_{i-1}$ (see section 3.1 for the case when the pool is emptied).
 
 \bigskip
-Labelling the product terms $P_k = \displaystyle\prod^k_{i=1}{\left(1-\frac{q_i}{D_{i-1}}\right)}$:
+Labelling the product terms $P_k = \displaystyle\prod^k_{i=1}{\left(1-\frac{Q_i}{D_{i-1}}\right)}$:
 
-\begin{equation} 
+\begin{equation} \label{eq:10}
 d_n=d_t\frac{P_n}{P_t}
 \end{equation}
 
 \bigskip
-Where therefore $P_n$ is the current product, and {$P_t$} is the snapshot of the product at the time when the user made the deposit.
+Where therefore $P_n$ is the current product, and $P_t$ is the snapshot of the product at the time when the user made the deposit.
 
 \bigskip
 \subsection{Corresponding ETH Gain}
@@ -112,28 +112,28 @@ Where therefore $P_n$ is the current product, and {$P_t$} is the snapshot of the
 \bigskip
 The LUSD deposit earns an ETH gain at each liquidation.
 At each liquidation i, the user’s LUSD deposit effectively decreases. Thus we can write the
-user’s corresponding cumulative ETH gain $E_{n}$, from a series of \textit{n} liquidations, as:
+user’s corresponding cumulative ETH gain $e_{n}$, from a series of \textit{n} liquidations, as:
 \begin{equation} 
-E_n=d_0\left(\frac{e_1}{D_0}\right)+d_1\left(\frac{e_2}{D_1}\right)+d_2\left(\frac{e_3}{D_2}\right)+...+d_{n-1}\left(\frac{e_n}{D_{n-1}}\right)
+e_n=d_0\left(\frac{E_1}{D_0}\right)+d_1\left(\frac{E_2}{D_1}\right)+d_2\left(\frac{E_3}{D_2}\right)+...+d_{n-1}\left(\frac{E_n}{D_{n-1}}\right)
 \end{equation}
 
 \bigskip
-Then, using our expression for the deposit from equation (8):
+Then, using our expression for the deposit from equation (\ref{eq:8}):
 \begin{equation} 
-E_n=d_0\left(\frac{e_1}{D_0}\right)+d_0\left(\frac{e_2}{D_1}\right)\prod^1_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)+d_0\left(\frac{e_3}{D_2}\right)\prod^2_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)+...+d_0\left(\frac{e_n}{D_{n-1}}\right)\prod^{n-1}_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)
+e_n=d_0\left(\frac{E_1}{D_0}\right)+d_0\left(\frac{E_2}{D_1}\right)\prod^1_{i=1}\left(1-\frac{Q_i}{D_{i-1}}\right)+d_0\left(\frac{E_3}{D_2}\right)\prod^2_{i=1}\left(1-\frac{Q_i}{D_{i-1}}\right)+...+d_0\left(\frac{E_n}{D_{n-1}}\right)\prod^{n-1}_{i=1}\left(1-\frac{Q_i}{D_{i-1}}\right)
 \end{equation}
 
 \bigskip
 And factoring out the initial deposit, $d_0$:
-\begin{equation} 
-    E_n=d_0\sum^n_{k=1}\left[\frac{e_k}{D_{k-1}}\prod^{k-1}_{i=1}\left(1-\frac{q_i}{D_{i-1}}\right)\right] = d_0\sum^n_{k=1}\left[\frac{e_k}{D_{k-1}}P_{k-1}\right]
+\begin{equation} \label{eq:13}
+    e_n=d_0\sum^n_{k=1}\left[\frac{E_k}{D_{k-1}}\prod^{k-1}_{i=1}\left(1-\frac{Q_i}{D_{i-1}}\right)\right] = d_0\sum^n_{k=1}\left[\frac{E_k}{D_{k-1}}P_{k-1}\right]
 \end{equation}
 
 \bigskip
 Where the initial product term $\displaystyle\prod^0_{i=1}=1$.
 
 \bigskip
-Thus, we have $E_n$ as a function of the initial deposit $d_0$, and the rewards and total deposits at each liquidation.\\
+Thus, we have $e_n$ as a function of the initial deposit $d_0$, and the rewards and total deposits at each liquidation.\\
 Let the summation $\displaystyle\sum^n_{k=1}[...]$ be denoted $S_n$.
 
 \bigskip
@@ -145,61 +145,61 @@ For a deposit made between liquidations $[t, t+1]$, which is withdrawn between l
 We take a snapshot of the product at liquidation t, and calculate the compounded stake at liquidation $n$, with $t < n \leq s$, as:
 
 \bigskip
-To account for the deposit entering after liquidations have already begun, we correct the product terms in 13) to $\frac{P_n}{P_t}$, as per 10):
+To account for the deposit entering after liquidations have already begun, we correct the product terms in (\ref{eq:13}) to $\frac{P_n}{P_t}$, as per (\ref{eq:10}):
 \begin{equation} 
-    E_n = d_t\sum^n_{k=t+1}\left[\frac{e_k}{D_{k-1}}\frac{P_{k-1}}{P_t}\right]
+    e_n = d_t\sum^n_{k=t+1}\left[\frac{E_k}{D_{k-1}}\frac{P_{k-1}}{P_t}\right]
 \end{equation}
 
 \bigskip
-We take a snapshot of the sum at liquidation $t$, {$S_t$}. Then, the ETH gain earned by the deposit at liquidation $n$ is:
+We take a snapshot of the sum at liquidation $t$, $S_t$. Then, the ETH gain earned by the deposit at liquidation $n$ is:
 \begin{equation} 
-E_n=d_t\frac{S_n-S_t}{P_t}
+e_n=d_t\frac{S_n-S_t}{P_t}
 \end{equation}
 
 \bigskip
 \section{Basic Implementation}
 \underline{Making a deposit:}
 
-Record deposit: deposit[user] = {$d_t$}\\
-Update total deposits: {$D = D + d_t$}\\
-Record product snapshot: {$P_t = P$}\\
-Record sum snapshot: {$S_t = S$}
+Record deposit: deposit[user] = $d_t$\\
+Update total deposits: $D = D + d_t$\\
+Record product snapshot: $P_t = P$\\
+Record sum snapshot: $S_t = S$
 
 \bigskip
-\underline{Upon each liquidation yielding LUSD debt ‘q’ offset with the Stability Pool and ETH gain ‘e’:}
+\underline{Upon each liquidation yielding LUSD debt ‘Q’ offset with the Stability Pool and ETH gain ‘E’:}
 
-Update $S$: {$S = S + (\frac{e}{D})P$} (\textit{intuition: a deposit’s marginal ETH gain is equal to the deposit $\times$ ETH per unit staked $\times$ current correction factor)}\\
-Update $P$: {$P = P(1- (\frac{q}{D}))$}\\
-Update total deposits: {$D = D - q$}
+Update $S$: $S = S + \frac{E}{D}P$ (\textit{intuition: a deposit’s marginal ETH gain is equal to the deposit $\times$ ETH per unit staked $\times$ current correction factor)}\\
+Update $P$: $P = P(1 - \frac{Q}{D})$\\
+Update total deposits: $D = D - Q$
 
 \bigskip
 \underline{Withdrawing the deposit and ETH gain:}
 
-Compute final compounded LUSD deposit d: {$d = d_t\frac{P}{P_t}$}\\
-Compute final corresponding cumulative ETH gain $E$: {$E = d_t\frac{(S - S_t)}{P_t}$}\\
-Send {$d$} and {$E$} to user\\
+Compute final compounded LUSD deposit $d$: $d = d_t\frac{P}{P_t}$\\
+Compute final corresponding cumulative ETH gain $e$: $e = d_t\frac{S - S_t}{P_t}$\\
+Send $d$ and $e$ to user\\
 Update deposit: deposit[user] = 0\\
-Update total deposits: {$D = D - d$}\\
+Update total deposits: $D = D - d$\\
 
 \bigskip
 \section{Practical Implementation in Liquity}
 Two further considerations are needed for our implementation:
 \begin{enumerate}
     \item Liquidations that completely empty the Stability Pool
-    \item How to handle the eternally decreasing product {$P$}, without truncating to 0
+    \item How to handle the eternally decreasing product $P$, without truncating to 0
 \end{enumerate}
 
 \bigskip
 \subsection{Liquidations that completely empty the Pool}
 
 \bigskip
-\textbf{Problem}: Pool-emptying should reduce all deposits to 0, but we should not set {$P$} to 0. Doing so would break deposit computations for all future deposits: as {$P$} is a running product, all snapshots and future values would be 0.
+\textbf{Problem}: Pool-emptying should reduce all deposits to 0, but we should not set $P$ to 0. Doing so would break deposit computations for all future deposits: as $P$ is a running product, all snapshots and future values would be 0.
 
 \bigskip
-\textbf{Solution}: Complete pool-emptying is handled by tracking a “current epoch” variable. The ETH gain reward sum {$S$} for each epoch is stored in a mapping.
+\textbf{Solution}: Complete pool-emptying is handled by tracking a “current epoch” variable. The ETH gain reward sum $S$ for each epoch is stored in a mapping.
 
 \bigskip
-Upon a pool-emptying liquidation, {$S$} is first updated as usual, for the current epoch. Then, the current epoch is incremented by 1, and {$P$} and {$S$} terms are reset for the new epoch. By definition, deposits that were made in past epochs will have been completely cancelled with liquidated debt, and so reduced to 0.
+Upon a pool-emptying liquidation, $S$ is first updated as usual, for the current epoch. Then, the current epoch is incremented by 1, and $P$ and $S$ terms are reset for the new epoch. By definition, deposits that were made in past epochs will have been completely cancelled with liquidated debt, and so reduced to 0.
 
 \bigskip
 \underline{Making a deposit:}
@@ -209,8 +209,8 @@ Record a snapshot of the current epoch for the deposit
 \bigskip
 \underline{Liquidation that empties the Pool:}
 
-Compute the latest value of {$S$}, and store it for the current epoch.
-Increase the epoch by 1, and reset the product and sum ({$P$} = 1, {$S$} = 0).
+Compute the latest value of $S$, and store it for the current epoch.
+Increase the epoch by 1, and reset the product and sum ($P$ = 1, $S$ = 0).
 
 \bigskip
 \underline{Withdrawing Deposit:}
@@ -228,7 +228,7 @@ If the current epoch is greater than the deposit’s epoch snapshot, then the de
 \subsection{Eternally decreasing the product $P$, without truncating to 0}
 
 \bigskip
-At liquidation $i$, $P$ is multiplied by some new term $0 < p_i <1$. Thus in theory, $P$ is always decreasing, but should never reach 0. 
+At liquidation $i$, $P$ is multiplied by some new term $0 < P_i <1$. Thus in theory, $P$ is always decreasing, but should never reach 0. 
 
 \bigskip
 \textbf{Problem:} We cannot represent an arbitrarily small value in Solidity.  Eventually, division will truncate a small value to 0. If so, all future values of $P$ would be 0, and deposit computation would break.
@@ -237,7 +237,7 @@ At liquidation $i$, $P$ is multiplied by some new term $0 < p_i <1$. Thus in the
 \textbf{Solution:} use a “current scale” that allows $P$ to decrease indefinitely, but never reach 0. Each scale represents a division by 1e18.  
 
 \bigskip
-Upon a liquidation that would otherwise truncate $P$ to 0, {$S$} is first updated as usual, for the current scale. Then, the current scale is incremented by 1, and {$P$} is updated and scaled by 1e18.
+Upon a liquidation that would otherwise truncate $P$ to 0, $S$ is first updated as usual, for the current scale. Then, the current scale is incremented by 1, and $P$ is updated and scaled by 1e18.
 
 \bigskip
 \underline{Making a deposit:}
@@ -247,8 +247,8 @@ Record a snapshot of the current scale for the deposit
 \bigskip
 \underline{Liquidation:}
 
-Compute the latest value of {$S$}, and store it for the current scale.
-Liquidation {$L_i$} causes the product {$P$} to be multiplied by some new product factor {$p_i$}.  If {$p_i$} $\times$ {$P$} would be truncated to 0, instead do: $P = (P * p_i \times 1e18)$, and increment the current scale by 1.
+Compute the latest value of $S$, and store it for the current scale.
+Liquidation $L_i$ causes the product $P$ to be multiplied by some new product factor $P_i$.  If $P_i$ $\times$ $P$ would be truncated to 0, instead do: $P = (P * P_i \times 1e18)$, and increment the current scale by 1.
 
 \bigskip
 \underline{Withdrawing a deposit:}
@@ -262,10 +262,10 @@ If the number of scale changes is 0, compute the deposit and ETH gain as normal.
 Otherwise:
 
 \bigskip
-\textbf{Compounded deposit:} If a scale change in {$P$} was made during the deposit's lifetime, account for it in the deposit computation. If the deposit has decreased by a factor of $<$ 1e-18 (i.e. if more than one scale change was made) just return 0.
+\textbf{Compounded deposit:} If a scale change in $P$ was made during the deposit's lifetime, account for it in the deposit computation. If the deposit has decreased by a factor of $<$ 1e-18 (i.e. if more than one scale change was made) just return 0.
 
 \bigskip
-\textbf{ETH Gain:} Since the deposit may span up to one scale change, so too does the reward. In this case, obtain the ETH gain using the {$S$} sums from the two consecutive scales that the deposit spans. The reward from the second sum is scaled by 1e-18. The rewards from both scales are added to make the final ETH gain.
+\textbf{ETH Gain:} Since the deposit may span up to one scale change, so too does the reward. In this case, obtain the ETH gain using the $S$ sums from the two consecutive scales that the deposit spans. The reward from the second sum is scaled by 1e-18. The rewards from both scales are added to make the final ETH gain.
 
 \bigskip
 \section{Putting it all together}
@@ -274,7 +274,7 @@ Otherwise:
 The implementation relies on a nested mapping: epochToScaleToSum. 
 
 \bigskip
-The inner mapping stores the sum {$S$} at different scales, for a given epoch. The outer mapping stores the (scale $=>$ sum) mappings for each epoch.
+The inner mapping stores the sum $S$ at different scales, for a given epoch. The outer mapping stores the ($scale \Rightarrow sum$) mappings for each epoch.
 
 \bigskip
 This allows us to track the ETH reward terms at each scale and epoch.Thus we can correctly compute the ETH rewards for a compounding decreasing stake, taking account of periodic Pool-emptying, and getting around the limitations of Solidity arithmetic.
