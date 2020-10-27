@@ -486,79 +486,61 @@ However, gas costs in Ethereum are substantial. If the gas costs of our public l
 
 Our solution is to directly compensate liquidators for their gas costs, to incentivize prompt liquidations in both normal and extreme periods of high gas prices. Liquidators should be confident that they will at least break even by making liquidation transactions.
 
-Gas compensation is paid in ETH. A liquidation transaction draws ETH from the trove(s) it liquidates, and sends the compensation ETH to the caller, and liquidates the remainder.
+Gas compensation is paid in a mix of CLV and ETH. When a borrower first issues debt, some CLV is reserved for gas compensation. A liquidation transaction draws ETH from the trove(s) it liquidates, and sends the both the reserved CLV and the compensation ETH to the caller, and liquidates the remainder.
 
-When a liquidation transaction liquidates multiple troves, each trove contributes ETH towards the total compensation for the transaction.
+When a liquidation transaction liquidates multiple troves, each trove contributes CLV and ETH towards the total compensation for the transaction.
 
 Gas compensation per liquidated trove is given by the formula:
 
-Gas compensation = `max { $10 worth of ETH,  0.5% of trove’s collateral }`
+Gas compensation = `10 CLV + 0.5% of trove’s collateral`
 
 The intentions behind this formula are:
 - To ensure that smaller troves are liquidated promptly in normal times, at least
 - To ensure that larger troves are liquidated promptly even in extreme high gas price periods. The larger the trove, the stronger the incentive to liquidate it.
 
-### Virtual debt
+### Gas compensation Schedule
 
-Troves are assigned a virtual debt of 10 CLV. This is included in their individual collateral ratio (ICR) calculation: 
+When a borrower opens a loan, an additional 10 CLVDebt is issued, and 10 CLV is minted and sent to a dedicated gas compensation EOA - the "gas address".
 
-`ICR = $(collateral) / (actualDebt + virtualDebt) `
+When a borrower closes their active trove, this gas compensation is refunded: 10 CLV is burned from the gas address's balance, and the corresponding 10 CLV debt on the trove is cancelled.
 
-Where “$” represents the value in USD.
+The purpose of the 10 CLV debt is to provide a minimum level of gas compensation, regardless of the trove's collateral size or the current ETH price.
 
-The purpose of the virtual debt is to cover the minimum gas compensation in normal times, and ensure that compensation can be paid to liquidators without impacting the returns for the Stability Pool depositors.
+### Liquidation
 
-When a trove is liquidated, depositors earn the collateral surplus: i.e.  
+When a trove is liquidated, 0.5% of their collateral is sent to the liquidator, along with the 10 CLV reserved for gas compensation. Thus, a liquidator always receives `{10 CLV + 0.5% collateral}` per trove that they liquidate. The collateral remainder of the trove is then either offset, redistributed or a combination of both, depending on the amount of CLV in the Stability Pool.
 
-`$(collateral - gasCompensation) - actualDebt.`
+#### Edge case: Gas compensation in a partial liquidation in Recovery Mode
 
-When the gas compensation is equal in value to the virtual debt, depositors earn the same collateral surplus as they would if there was no gas compensation and no virtual debt.
+A trove can be partially liquidated under specific conditions:
 
-**Example:**
+- Recovery mode is active: TCR < 150%  
+- 110% <= trove ICR < 150%
+- trove debt > CLV in Stability Pool
 
-ETH:USD price: 100 $ per ETH
+In this case, a partial offset occurs: the CLV in the Stability Pool is offset with an equal amount of the trove's debt, which is a fraction of it's total debt. A corresponding fraction of the trove's collateral is liquidated (sent to the Stability Pool).
 
-LQTY:USD price: 1 $ per CLV (expected peg)
+The trove is left with some CLV Debt and collateral remaining.
 
-Trove Minimum Collateral Ratio: 110%
+For the purposes of a partial liquidation, only the amount (debt - 10) is considered. If the CLV in the Stability Pool is >= (debt - 10), a full liquidation
+is performed.
 
-| Trove A           |                                            |
-|-------------------|--------------------------------------------|
-| Trove collateral: | 1 ETH                                      |
-| Trove debt:       | 81 CLV                                     |
-| Virtual debt:     | 10 CLV                                     |
-| Effective ICR:    | (1 * 100) / (81 + 10) = 100 / 91 = 109.89% |
+In a partial liquidation, The ETH gas compensation is 0.5% of the _collateral fraction_ that corresponds to the partial offset.
 
-_-> Trove A is liquidated. Gas compensation is paid to the liquidator, the trove’s debt is fully offset with the CLV in the Stability Pool, and its remaining collateral is distributed to Stability depositors_
+### Gas compensation and redemptions
 
-Gas compensation paid to liquidator: ($10 worth of ETH) = 0.1 ETH
+When a trove is redeemed from, the redemption is made only against (debt - 10), not the entire debt.
 
-Debt offset with Stability Pool: 81 CLV 
-Collateral distributed to depositors: (1 - 0.1 ) = 0.9 ETH
-
-Net gain for the Stability Pool:  (0.9 * 100) - 81  = $9
-
-Thus, the $10 virtual debt allows the system to pay $10 worth of gas compensation out to the liquidator, and still yield an attractive net gain in value for the Stability depositors ( when the trove is liquidated at > 100% ICR).
+But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed:  the 10 CLV gas compensation is cancelled with its corresponding 10 CLV debt, and the ETH surplus in the trove is sent to the owner.
 
 
 ## Gas compensation Functionality
 
 Gas compensation functions are found in the parent _LiquityBase.sol_ contract:
 
-`_getGasCompensation(uint _entireColl, uint _price)`
+`_getCollGasCompensation(uint _entireColl)`
 
 `_getCompositeDebt(uint _debt)`
-
-
-## Enabling Gas Compensation In the Smart Contracts ##
-
-Gas compensation is currently **disabled**: that is, liquidations pay 0 ETH to the caller, and ICR calculations use 0 virtual debt. The reason for disabling is that the unit test suite was written before a gas compensation design was settled on, and thus many tests fail with it enabled. We are currently refactoring the test suite to decouple it from any specific gas compensation schedule.
-
-Currently, with gas compensation disabled, all unit tests (except gas compensation tests!) pass.
-
-The gas compensation and virtual debt functionality is simply commented out in the above two functions.
-
-To **enable** gas compensation, please un-comment the relevant gas compensation and virtual debt sections in the above two functions in _LiquityBase.sol_
 
 ## Redistributions and Corrected Stakes
 
