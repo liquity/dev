@@ -1,9 +1,12 @@
 import { BigNumber } from "@ethersproject/bignumber";
+import { AddressZero } from "@ethersproject/constants";
 import { Log } from "@ethersproject/abstract-provider";
 import { LogDescription, Interface } from "@ethersproject/abi";
 
 import { Decimal } from "@liquity/decimal";
 import { LiquityContracts } from "./contracts";
+
+const GAS_POOL_ADDRESS = "0x00000000000000000000000000000000000009A5";
 
 export const contractsToInterfaces = (contracts: LiquityContracts) => {
   return Object.entries(contracts).reduce<{ [address: string]: [string, Interface] }>(
@@ -36,32 +39,33 @@ export const parseLogs = (
 
 const VERY_BIG = BigNumber.from(10).pow(9);
 
-const substituteName = (address: string, names: { [address: string]: [string, Interface?] }) =>
-  address in names ? names[address][0] : address;
+const prettify = (arg: unknown, names?: { [address: string]: string }) => {
+  if (BigNumber.isBigNumber(arg)) {
+    if (arg.gte(VERY_BIG)) {
+      return new Decimal(arg).toString() + "e18";
+    } else {
+      return arg.toString();
+    }
+  } else if (typeof arg === "string") {
+    return arg === AddressZero
+      ? "address(0)"
+      : arg === GAS_POOL_ADDRESS
+      ? "gasPool"
+      : names && arg in names
+      ? names[arg]
+      : arg;
+  } else {
+    return String(arg);
+  }
+};
 
 export const logDescriptionToString = (
   logDescription: LogDescription,
-  names?: { [address: string]: [string, Interface?] }
+  names?: { [address: string]: string }
 ) => {
-  const prettyValues = logDescription.args.map(arg => {
-    if (BigNumber.isBigNumber(arg)) {
-      if (arg.gte(VERY_BIG)) {
-        return new Decimal(arg).toString() + "e18";
-      } else {
-        return arg.toString();
-      }
-    } else if (typeof arg === "string") {
-      return arg === "0x0000000000000000000000000000000000000000"
-        ? "address(0)"
-        : arg === "0x00000000000000000000000000000000000009A5"
-        ? "gasPool"
-        : names
-        ? substituteName(arg, names)
-        : arg;
-    } else {
-      return String(arg);
-    }
-  });
+  const prettyEntries = Object.entries(logDescription.args)
+    .filter(([key]) => !key.match(/^[0-9]/))
+    .map(([key, value]) => `${key}: ${prettify(value, names)}`);
 
-  return `${logDescription.name}(${prettyValues.join(", ")})`;
+  return `${logDescription.name}({ ${prettyEntries.join(", ")} })`;
 };

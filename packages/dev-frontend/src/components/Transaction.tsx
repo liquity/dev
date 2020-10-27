@@ -290,7 +290,15 @@ const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({
 export const TransactionMonitor: React.FC = () => {
   const { provider, contracts, account } = useLiquity();
   const [transactionState, setTransactionState] = useTransactionState();
+
   const interfaces = useMemo(() => contractsToInterfaces(contracts), [contracts]);
+  const names = useMemo(
+    () => ({
+      [account]: "user",
+      ...Object.fromEntries(Object.entries(interfaces).map(([address, [name]]) => [address, name]))
+    }),
+    [account, interfaces]
+  );
 
   const id = transactionState.type !== "idle" ? transactionState.id : undefined;
 
@@ -335,10 +343,7 @@ export const TransactionMonitor: React.FC = () => {
                     parsedLogs
                       .map(
                         ([contractName, logDescription]) =>
-                          `  ${contractName}.${logDescriptionToString(logDescription, {
-                            [account]: ["user"],
-                            ...interfaces
-                          })}`
+                          `  ${contractName}.${logDescriptionToString(logDescription, names)}`
                       )
                       .join("\n")
                 );
@@ -404,7 +409,16 @@ export const TransactionMonitor: React.FC = () => {
         }
       };
     }
-  }, [provider, account, interfaces, id, tx, numberOfConfirmationsToWait, setTransactionState]);
+  }, [
+    provider,
+    account,
+    interfaces,
+    names,
+    id,
+    tx,
+    numberOfConfirmationsToWait,
+    setTransactionState
+  ]);
 
   useEffect(() => {
     if (
