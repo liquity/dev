@@ -276,7 +276,13 @@ Summing over all $n$ active troves gives the total accumulated rewards for activ
 \end{equation}
 
 \bigskip
-Note that after the liquidation, the system snapshots update:
+Note that after $m$ liquidations, the system snapshots update from initially:
+
+\begin{equation}
+    totalStakes_\emptyset = totalCollateral_\emptyset = C_{n+m}
+\end{equation}
+
+to:
 
 \begin{equation} \label{eq:8}
     totalStakes_\emptyset=C_n
