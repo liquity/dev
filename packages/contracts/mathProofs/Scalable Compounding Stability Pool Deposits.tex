@@ -166,18 +166,18 @@ Record product snapshot: {$P_t = P$}\\
 Record sum snapshot: {$S_t = S$}
 
 \bigskip
-\underline{Upon each liquidation yielding LUSD debt ‘q’ offset with the Stability Pool and ETH gain ‘e’:}
+\underline{Upon each liquidation yielding LUSD debt ‘Q’ offset with the Stability Pool and ETH gain ‘E’:}
 
-Update $S$: {$S = S + (\frac{e}{D})P$} (\textit{intuition: a deposit’s marginal ETH gain is equal to the deposit $\times$ ETH per unit staked $\times$ current correction factor)}\\
-Update $P$: {$P = P(1- (\frac{q}{D}))$}\\
-Update total deposits: {$D = D - q$}
+Update $S$: {$S = S + \frac{E}{D}P$} (\textit{intuition: a deposit’s marginal ETH gain is equal to the deposit $\times$ ETH per unit staked $\times$ current correction factor)}\\
+Update $P$: {$P = P(1 - \frac{Q}{D})$}\\
+Update total deposits: {$D = D - Q$}
 
 \bigskip
 \underline{Withdrawing the deposit and ETH gain:}
 
 Compute final compounded LUSD deposit d: {$d = d_t\frac{P}{P_t}$}\\
-Compute final corresponding cumulative ETH gain $E$: {$E = d_t\frac{(S - S_t)}{P_t}$}\\
-Send {$d$} and {$E$} to user\\
+Compute final corresponding cumulative ETH gain $e$: {$e = d_t\frac{(S - S_t)}{P_t}$}\\
+Send {$d$} and {$e$} to user\\
 Update deposit: deposit[user] = 0\\
 Update total deposits: {$D = D - d$}\\
 
@@ -228,7 +228,7 @@ If the current epoch is greater than the deposit’s epoch snapshot, then the de
 \subsection{Eternally decreasing the product $P$, without truncating to 0}
 
 \bigskip
-At liquidation $i$, $P$ is multiplied by some new term $0 < p_i <1$. Thus in theory, $P$ is always decreasing, but should never reach 0. 
+At liquidation $i$, $P$ is multiplied by some new term $0 < P_i <1$. Thus in theory, $P$ is always decreasing, but should never reach 0. 
 
 \bigskip
 \textbf{Problem:} We cannot represent an arbitrarily small value in Solidity.  Eventually, division will truncate a small value to 0. If so, all future values of $P$ would be 0, and deposit computation would break.
@@ -248,7 +248,7 @@ Record a snapshot of the current scale for the deposit
 \underline{Liquidation:}
 
 Compute the latest value of {$S$}, and store it for the current scale.
-Liquidation {$L_i$} causes the product {$P$} to be multiplied by some new product factor {$p_i$}.  If {$p_i$} $\times$ {$P$} would be truncated to 0, instead do: $P = (P * p_i \times 1e18)$, and increment the current scale by 1.
+Liquidation {$L_i$} causes the product {$P$} to be multiplied by some new product factor {$P_i$}.  If {$P_i$} $\times$ {$P$} would be truncated to 0, instead do: $P = (P * P_i \times 1e18)$, and increment the current scale by 1.
 
 \bigskip
 \underline{Withdrawing a deposit:}
@@ -274,7 +274,7 @@ Otherwise:
 The implementation relies on a nested mapping: epochToScaleToSum. 
 
 \bigskip
-The inner mapping stores the sum {$S$} at different scales, for a given epoch. The outer mapping stores the (scale $=>$ sum) mappings for each epoch.
+The inner mapping stores the sum {$S$} at different scales, for a given epoch. The outer mapping stores the ($scale \Rightarrow sum$) mappings for each epoch.
 
 \bigskip
 This allows us to track the ETH reward terms at each scale and epoch.Thus we can correctly compute the ETH rewards for a compounding decreasing stake, taking account of periodic Pool-emptying, and getting around the limitations of Solidity arithmetic.
