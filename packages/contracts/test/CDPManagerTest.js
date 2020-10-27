@@ -1,6 +1,7 @@
 const deploymentHelpers = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 
 const deployLiquity = deploymentHelpers.deployLiquity
 const getAddresses = deploymentHelpers.getAddresses
@@ -35,13 +36,10 @@ contract('CDPManager', async accounts => {
   let contracts
   let cdpManagerTester
 
-  before(async () => {
-    cdpManagerTester = await CDPManagerTester.new()
-    CDPManagerTester.setAsDeployed(cdpManagerTester)
-  })
-
   beforeEach(async () => {
     contracts = await deployLiquity()
+    contracts.cdpManager = await CDPManagerTester.new()
+    contracts.clvToken = await CLVTokenTester.new()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -65,9 +63,8 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
     const price = await priceFeed.getPrice()
-    const ICR_Before = web3.utils.toHex(await cdpManager.getCurrentICR(alice, price))
-    const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-    assert.equal(ICR_Before, maxBytes32)
+    const ICR_Before = await cdpManager.getCurrentICR(alice, price)
+    assert.equal(ICR_Before, dec(20, 18))
 
     const MCR = (await cdpManager.MCR()).toString()
     assert.equal(MCR.toString(), '1100000000000000000')
@@ -75,7 +72,6 @@ contract('CDPManager', async accounts => {
     // Alice withdraws to 180 CLV, lowering her ICR to 1.11
     const A_CLVWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
 
-    console.log(`A_CLVWithdrawal ${A_CLVWithdrawal}`)
     await borrowerOperations.withdrawCLV(A_CLVWithdrawal, alice, { from: alice })
 
 
@@ -145,7 +141,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
 
     await borrowerOperations.withdrawCLV('1000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('170000000000000000000', bob, { from: bob })
 
     // --- TEST ---
 
@@ -172,8 +168,8 @@ contract('CDPManager', async accounts => {
     const defaultPool_RawEther_After = (await web3.eth.getBalance(defaultPool.address)).toString()
     const defaultPool_CLVDebt_After = (await defaultPool.getCLVDebt()).toString()
 
-    assert.equal(defaultPool_ETH_After, dec(1, 'ether'))
-    assert.equal(defaultPool_RawEther_After, dec(1, 'ether'))
+    assert.equal(defaultPool_ETH_After, dec(995, 15))
+    assert.equal(defaultPool_RawEther_After, dec(995, 15))
     assert.equal(defaultPool_CLVDebt_After, '180000000000000000000')
   })
 
@@ -279,7 +275,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
 
     await borrowerOperations.withdrawCLV('1000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('180000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('170000000000000000000', bob, { from: bob })
 
     // --- TEST ---
 
@@ -295,19 +291,19 @@ contract('CDPManager', async accounts => {
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
 
-    // close Bob's CDP.  His 1 ether and 180 CLV should be added to the DefaultPool.
+    // close Bob's CDP.  His 1*0.995 ether and 180 CLV should be added to the DefaultPool.
     await cdpManager.liquidate(bob, { from: owner });
 
     /* check snapshots after. Total stakes should be equal to the  remaining stake then the system: 
     10 ether, Alice's stake.
      
-    Total collateral should be equal to Alice's collateral (10 ether) plus her pending ETH reward (1 ether), earned
+    Total collateral should be equal to Alice's collateral (10 ether) plus her pending ETH reward (1*0.995 ether), earned
     from the liquidation of Bob's CDP */
     const totalStakesSnapshot_After = (await cdpManager.totalStakesSnapshot()).toString()
     const totalCollateralSnapshot_After = (await cdpManager.totalCollateralSnapshot()).toString()
 
     assert.equal(totalStakesSnapshot_After, dec(10, 'ether'))
-    assert.equal(totalCollateralSnapshot_After, dec(11, 'ether'))
+    assert.equal(totalCollateralSnapshot_After, dec(10995, 15))
   })
 
   it("liquidate(): updates the L_ETH and L_CLVDebt reward-per-unit-staked totals", async () => {
@@ -316,8 +312,8 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(1, 'ether') })
 
-    // Carol withdraws 180CLV, lowering her ICR to 1.11
-    await borrowerOperations.withdrawCLV('180000000000000000000', carol, { from: carol })
+    // Carol withdraws 170CLV, lowering her ICR to 1.11
+    await borrowerOperations.withdrawCLV('170000000000000000000', carol, { from: carol })
 
     // --- TEST ---
 
@@ -332,20 +328,20 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(carol, { from: owner });
     assert.isFalse(await sortedCDPs.contains(carol))
 
-    /* Alice and Bob have the  active stakes. totalStakes in the system is (10 + 10) = 20 ether.
+    /* Alice and Bob have the same active stakes. totalStakes in the system is (10 + 10) = 20 ether.
     
-    Carol's 1 ether and 180 CLV should be added to the DefaultPool. The system rewards-per-unit-staked should now be:
+    Carol's 1*0.995 ether and 180 CLV should be added to the DefaultPool. The system rewards-per-unit-staked should now be:
     
-    L_ETH = (1 / 20) = 0.05 ETH
+    L_ETH = (0.995 / 20) = 0.04975 ETH
     L_CLVDebt = (180 / 20) = 9 CLV */
     const L_ETH_AfterCarolLiquidated = await cdpManager.L_ETH()
     const L_CLVDebt_AfterCarolLiquidated = await cdpManager.L_CLVDebt()
 
-    assert.isAtMost(th.getDifference(L_ETH_AfterCarolLiquidated, '50000000000000000'), 100)
+    assert.isAtMost(th.getDifference(L_ETH_AfterCarolLiquidated, '49750000000000000'), 100)
     assert.isAtMost(th.getDifference(L_CLVDebt_AfterCarolLiquidated, '9000000000000000000'), 100)
 
-    // Bob now withdraws 800 CLV, bringing his ICR to 1.11
-    await borrowerOperations.withdrawCLV('800000000000000000000', bob, { from: bob })
+    // Bob now withdraws 790 CLV, bringing his ICR to 1.11
+    await borrowerOperations.withdrawCLV('790000000000000000000', bob, { from: bob })
 
     // Confirm system is in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -359,20 +355,20 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(bob, { from: owner });
     assert.isFalse(await sortedCDPs.contains(bob))
 
-    /* Alice now has the  active stake. totalStakes in the system is now 10 ether.
+    /* Alice now has all the active stake. totalStakes in the system is now 10 ether.
    
-   Bob's pending collateral reward (10 * 0.05 = 0.5 ETH) and debt reward (10 * 9 = 90 CLV) are applied to his CDP
+   Bob's pending collateral reward (10 * 0.05 * 0.995 = 0.4975 ETH) and debt reward (10 * 9 = 90 CLV) are applied to his CDP
    before his liquidation.
-   His total collateral (10 + 0.5 = 10.5 ETH) and debt (800 + 90 = 890 CLV) are then added to the DefaultPool. 
+   His total collateral (10 + 0.4975 = 10.4975 ETH)*0.995 and debt (800 + 90 = 890 CLV) are then added to the DefaultPool. 
    
    The system rewards-per-unit-staked should now be:
    
-   L_ETH = (1 / 20) + (10.5  / 10) = 1.10 ETH
+   L_ETH = (0.995 / 20) + (10.4975*0.995  / 10) = 1.09425125 ETH
    L_CLVDebt = (180 / 20) + (890 / 10) = 98 CLV */
     const L_ETH_AfterBobLiquidated = await cdpManager.L_ETH()
     const L_CLVDebt_AfterBobLiquidated = await cdpManager.L_CLVDebt()
 
-    assert.isAtMost(th.getDifference(L_ETH_AfterBobLiquidated, '1100000000000000000'), 100)
+    assert.isAtMost(th.getDifference(L_ETH_AfterBobLiquidated, '1094251250000000000'), 100)
     assert.isAtMost(th.getDifference(L_CLVDebt_AfterBobLiquidated, '98000000000000000000'), 100)
   })
 
@@ -489,38 +485,6 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidate(bob)
 
     // Check bob active, check whale active
-    assert.isTrue((await sortedCDPs.contains(bob)))
-    assert.isTrue((await sortedCDPs.contains(whale)))
-
-    const TCR_After = (await cdpManager.getTCR()).toString()
-    const listSize_After = (await sortedCDPs.getSize()).toString()
-
-    assert.equal(TCR_Before, TCR_After)
-    assert.equal(listSize_Before, listSize_After)
-  })
-
-  it("liquidate(): does nothing if trove has non-zero coll, zero debt, and infinite ICR", async () => {
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(10, 'ether') })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(10, 'ether') })
-
-    const TCR_Before = (await cdpManager.getTCR()).toString()
-    const listSize_Before = (await sortedCDPs.getSize()).toString()
-
-    await priceFeed.setPrice('0')
-    const price = await priceFeed.getPrice()
-
-    const bob_ICR = web3.utils.toHex(await cdpManager.getCurrentICR(bob, price))
-    const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-
-    assert.equal(bob_ICR, maxBytes32)
-
-    // Confirm system is not in Recovery Mode
-    assert.isFalse(await cdpManager.checkRecoveryMode());
-
-    // Attempt to liquidate bob
-    await cdpManager.liquidate(bob)
-
-    // check bob active, check whale active
     assert.isTrue((await sortedCDPs.contains(bob)))
     assert.isTrue((await sortedCDPs.contains(whale)))
 
@@ -674,7 +638,6 @@ contract('CDPManager', async accounts => {
       .mul(price)
       .div(entireSystemDebtBefore)
 
-    console.log(`expectedTCR_1, TCR_1 ${expectedTCR_1}, ${TCR_1}`)
     assert.isTrue(expectedTCR_1.eq(TCR_1))
 
     const liquidationTx_2 = await cdpManager.liquidate(defaulter_2)
@@ -811,7 +774,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(dec(300, 18), alice, { from: alice, value: dec(3, 'ether') })
     await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     //Bob provides 200 CLV to SP
     await poolManager.provideToSP(dec(200, 18), { from: bob })
@@ -824,7 +787,7 @@ contract('CDPManager', async accounts => {
     const bob_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
     const bob_ETHGain_Before = (await poolManager.getCurrentETHGain(bob)).toString()
     assert.isAtMost(th.getDifference(bob_Deposit_Before, dec(100, 18)), 1000)
-    assert.isAtMost(th.getDifference(bob_ETHGain_Before, dec(1, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(bob_ETHGain_Before, dec(995, 15)), 1000)
 
     // Alice provides 300 CLV to SP
     await poolManager.provideToSP(dec(300, 18), { from: alice })
@@ -840,18 +803,18 @@ contract('CDPManager', async accounts => {
     const bob_Trove_Status = ((await cdpManager.CDPs(bob))[3]).toString()
     assert.equal(bob_Trove_Status, 2) // check closed
 
-    /* Alice's CLV Loss = (300 / 400) * 200 = 150 CLV
-       Alice's ETH gain = (300 / 400) * 2 = 1.5 ETH
+    /* Alice's CLV Loss = (300 / 400) * 210 = 157.5 CLV
+       Alice's ETH gain = (300 / 400) * 2*0.995 = 1.4925 ETH
 
-       Bob's CLVLoss = (300 / 400) * 200 = 50 CLV
-       Bob's ETH gain = (300 / 400) * 2 = 0.5 ETH
+       Bob's CLVLoss = (100 / 400) * 210 = 52.5 CLV
+       Bob's ETH gain = (100 / 400) * 2*0.995 = 0.4975 ETH
 
-     Check Bob' SP deposit has been reduced to 50 CLV, and his ETH gain has increased to 1.5 ETH. */
+     Check Bob' SP deposit has been reduced to 47.5 CLV, and his ETH gain has increased to 1.5 ETH. */
     const bob_Deposit_After = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
     const bob_ETHGain_After = (await poolManager.getCurrentETHGain(bob)).toString()
 
-    assert.isAtMost(th.getDifference(bob_Deposit_After, dec(50, 18)), 1000)
-    assert.isAtMost(th.getDifference(bob_ETHGain_After, '1500000000000000000'), 1000)
+    assert.isAtMost(th.getDifference(bob_Deposit_After, dec(475, 17)), 1000)
+    assert.isAtMost(th.getDifference(bob_ETHGain_After, '1492500000000000000'), 1000)
   })
 
   it("liquidate(): does not alter the liquidated user's token balance", async () => {
@@ -989,19 +952,19 @@ contract('CDPManager', async accounts => {
 
   it('liquidateCDPs(): closes every CDP with ICR < MCR, when n > number of undercollateralized troves', async () => {
     // --- SETUP ---
-    await borrowerOperations.openLoan(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(dec(490, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // create 5 CDPs with varying ICRs
-    await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(110, 18), erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(180, 18), flyn, { from: flyn, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(290, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(170, 18), flyn, { from: flyn, value: dec(1, 'ether') })
 
     // G,H, I open high-ICR loans
-    await borrowerOperations.openLoan(dec(100, 18), graham, { from: graham, value: dec(100, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), harriet, { from: harriet, value: dec(100, 'ether') })
-    await borrowerOperations.openLoan(dec(300, 18), ida, { from: ida, value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), graham, { from: graham, value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), harriet, { from: harriet, value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(dec(290, 18), ida, { from: ida, value: dec(100, 'ether') })
 
     // Whale puts some tokens in Stability Pool
     await poolManager.provideToSP(dec(300, 18), { from: whale })
@@ -1155,12 +1118,12 @@ contract('CDPManager', async accounts => {
   })
 
   it("liquidateCDPs(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {
-    await borrowerOperations.openLoan(dec(50, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('90500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 CLV, 1 ETH
-    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('80500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 CLV, 1 ETH
+    await borrowerOperations.openLoan(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Defaulter opens with 30 CLV, 0.3 ETH
-    await borrowerOperations.openLoan(dec(30, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
+    await borrowerOperations.openLoan(dec(20, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -1189,9 +1152,9 @@ contract('CDPManager', async accounts => {
 
     /* After liquidation: 
 
-    Alice ICR: (1.1 * 100 / 60) = 183.33%
-    Bob ICR:(1.1 * 100 / 100.5) =  109.45%
-    Carol ICR: (1.1 * 100 ) 100%
+    Alice ICR: (1.0995 * 100 / 60) = 183.25%
+    Bob ICR:(1.0995 * 100 / 100.5) =  109.40%
+    Carol ICR: (1.0995 * 100 / 110 ) 99.95%
 
     Check Alice is above MCR, Bob below, Carol below. */
     assert.isTrue(alice_ICR_After.gte(mv._MCR))
@@ -1404,7 +1367,7 @@ contract('CDPManager', async accounts => {
     const TCR_Before = await cdpManager.getTCR()
 
     // Check pool has 500 CLV
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(500, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(500, 18))
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -1413,7 +1376,7 @@ contract('CDPManager', async accounts => {
     await cdpManager.liquidateCDPs(10)
 
     // Check pool has been emptied by the liquidations
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Check all defaulters have been liquidated
     assert.isFalse((await sortedCDPs.contains(defaulter_1)))
@@ -1429,17 +1392,17 @@ contract('CDPManager', async accounts => {
     assert.isTrue(TCR_After.gte(TCR_Before))
   })
 
-  it("liquidateCDPs(): A liquidation sequence of pure redistributions does not decrease the TCR", async () => {
+  it("liquidateCDPs(): A liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5%", async () => {
     await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(7, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(2, 'ether') })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: dec(20, 'ether') })
 
-    await borrowerOperations.openLoan('101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('247000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan('318000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan('470000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
     assert.isTrue((await sortedCDPs.contains(defaulter_1)))
     assert.isTrue((await sortedCDPs.contains(defaulter_2)))
@@ -1452,9 +1415,11 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     const TCR_Before = await cdpManager.getTCR()
+    // (100+1+7+2+20+1+2+3+4)*100/(2010+10+10+10+10+101+257+328+480)
+    assert.isAtMost(th.getDifference(TCR_Before, '4353233830845771200'), 1000)
 
     // Check pool is empty before liquidation
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -1471,9 +1436,12 @@ contract('CDPManager', async accounts => {
     // check system sized reduced to 5 troves
     assert.equal((await sortedCDPs.getSize()).toString(), '5')
 
-    // Check that the liquidation sequence has not reduced the TCR
+    // Check that the liquidation sequence has reduced the TCR
     const TCR_After = await cdpManager.getTCR()
-    assert.isTrue(TCR_After.gte(TCR_Before))
+    // ((100+1+7+2+20)+(1+2+3+4)*0.995)*100/(2010+10+10+10+10+101+257+328+480)
+    assert.isAtMost(th.getDifference(TCR_After, '4351679104477611300'), 1000)
+    assert.isTrue(TCR_Before.gte(TCR_After))
+    assert.isTrue(TCR_After.gte(TCR_Before.mul(th.toBN(995)).div(th.toBN(1000))))
   })
 
   it("liquidateCDPs(): Liquidating troves with SP deposits correctly impacts their SP deposit and ETH gain", async () => {
@@ -1495,7 +1463,7 @@ contract('CDPManager', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check 800 CLV in Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(800, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(800, 18))
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -1521,23 +1489,23 @@ contract('CDPManager', async accounts => {
 
     Then, liquidation hits A,B,C: 
 
-    Total liquidated debt = 100 + 300 + 100 = 500 CLV
-    Total liquidated ETH = 1 + 3 + 1 = 5 ETH
+    Total liquidated debt = 110 + 310 + 110 = 530 CLV
+    Total liquidated ETH = 1.1 + 3.1 + 1.1 = 5.3 ETH
 
-    Whale CLV Loss: 500 * (400/800) = 250 CLV
-    Alice CLV Loss:  500 *(100/800) = 62.5 CLV
-    Bob CLV Loss: 500 * (300/800) = 187.5 CLV
+    Whale CLV Loss: 530 * (400/800) = 265 CLV
+    Alice CLV Loss:  530 *(100/800) = 66.25 CLV
+    Bob CLV Loss: 530 * (300/800) = 198.75 CLV
 
-    Whale remaining deposit: (400 - 250) = 150 CLV
-    Alice remaining deposit: (100 - 62.5) = 37.5 CLV
-    Bob remaining deposit: (300 - 187.5) = 112.5 CLV
+    Whale remaining deposit: (400 - 265) = 135 CLV
+    Alice remaining deposit: (100 - 66.25) = 33.75 CLV
+    Bob remaining deposit: (300 - 198.75) = 101.25 CLV
 
-    Whale ETH Gain: 5 * (400/800) = 2.5 ETH
-    Alice ETH Gain: 5 *(100/800) = 0.625 ETH
-    Bob ETH Gain: 5 * (300/800) = 1.875 ETH
+    Whale ETH Gain: 5*0.995 * (400/800) = 2.4875 ETH
+    Alice ETH Gain: 5*0.995 *(100/800) = 0.621875 ETH
+    Bob ETH Gain: 5*0.995 * (300/800) = 1.865625 ETH
 
-    Total remaining deposits: 300 CLV
-    Total ETH gain: 5 ETH */
+    Total remaining deposits: 270 CLV
+    Total ETH gain: 4.975 ETH */
 
     // Check remaining CLV Deposits and ETH gain, for whale and depositors whose troves were liquidated
     const whale_Deposit_After = (await poolManager.getCompoundedCLVDeposit(whale)).toString()
@@ -1548,20 +1516,20 @@ contract('CDPManager', async accounts => {
     const alice_ETHGain = (await poolManager.getCurrentETHGain(alice)).toString()
     const bob_ETHGain = (await poolManager.getCurrentETHGain(bob)).toString()
 
-    assert.isAtMost(th.getDifference(whale_Deposit_After, dec(150, 18)), 1000)
-    assert.isAtMost(th.getDifference(alice_Deposit_After, '37500000000000000000'), 1000)
-    assert.isAtMost(th.getDifference(bob_Deposit_After, '112500000000000000000'), 1000)
+    assert.isAtMost(th.getDifference(whale_Deposit_After, dec(135, 18)), 1000)
+    assert.isAtMost(th.getDifference(alice_Deposit_After, '33750000000000000000'), 1000)
+    assert.isAtMost(th.getDifference(bob_Deposit_After, '101250000000000000000'), 1000)
 
-    assert.isAtMost(th.getDifference(whale_ETHGain, '2500000000000000000'), 1000)
-    assert.isAtMost(th.getDifference(alice_ETHGain, '625000000000000000'), 1000)
-    assert.isAtMost(th.getDifference(bob_ETHGain, '1875000000000000000'), 1000)
+    assert.isAtMost(th.getDifference(whale_ETHGain, '2487500000000000000'), 1000)
+    assert.isAtMost(th.getDifference(alice_ETHGain, '621875000000000000'), 1000)
+    assert.isAtMost(th.getDifference(bob_ETHGain, '1865625000000000000'), 1000)
 
     // Check total remaining deposits and ETH gain in Stability Pool
-    const total_CLVinSP = (await stabilityPool.getCLV()).toString()
+    const total_CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
     const total_ETHinSP = (await stabilityPool.getETH()).toString()
 
-    assert.isAtMost(th.getDifference(total_CLVinSP, dec(300, 18)), 1000)
-    assert.isAtMost(th.getDifference(total_ETHinSP, dec(5, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(total_CLVinSP, dec(270, 18)), 1000)
+    assert.isAtMost(th.getDifference(total_ETHinSP, dec(4975, 15)), 1000)
   })
 
 
@@ -1767,6 +1735,137 @@ contract('CDPManager', async accounts => {
     }
   })
 
+  it("batchLiquidateTroves(): skips if trove is non-existent", async () => {
+    // --- SETUP ---
+    await borrowerOperations.openLoan(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
+    await borrowerOperations.openLoan(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
+
+    assert.equal(await cdpManager.getCDPStatus(carol), 0) // check trove non-existent
+
+    // Check full sorted list size is 6
+    assert.equal((await sortedCDPs.getSize()).toString(), '5')
+
+    // Whale puts some tokens in Stability Pool
+    await poolManager.provideToSP(dec(500, 18), { from: whale })
+
+    // --- TEST ---
+
+    // Price drops to 1ETH:100CLV, reducing A, B, C ICR below MCR
+    await priceFeed.setPrice(dec(100, 18));
+    const price = await priceFeed.getPrice()
+
+    // Confirm system is not in Recovery Mode
+    assert.isFalse(await cdpManager.checkRecoveryMode());
+
+    // Confirm troves A-B are ICR < 110%
+    assert.isTrue((await cdpManager.getCurrentICR(alice, price)).lt(mv._MCR))
+    assert.isTrue((await cdpManager.getCurrentICR(bob, price)).lt(mv._MCR))
+
+    // Confirm D-E are ICR > 110%
+    assert.isTrue((await cdpManager.getCurrentICR(dennis, price)).gte(mv._MCR))
+    assert.isTrue((await cdpManager.getCurrentICR(erin, price)).gte(mv._MCR))
+
+    // Confirm Whale is ICR >= 110% 
+    assert.isTrue((await cdpManager.getCurrentICR(whale, price)).gte(mv._MCR))
+
+    // Liquidate - trove C in between the ones to be liquidated!
+    const liquidationArray = [alice, carol, bob, dennis, erin]
+    await cdpManager.batchLiquidateTroves(liquidationArray);
+
+    // Confirm troves A-B have been removed from the system
+    assert.isFalse(await sortedCDPs.contains(alice))
+    assert.isFalse(await sortedCDPs.contains(bob))
+
+    // Check all troves A-B are now closed
+    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '2')
+    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
+
+    // Check sorted list has been reduced to length 3
+    assert.equal((await sortedCDPs.getSize()).toString(), '3')
+
+    // Confirm trove C non-existent
+    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '0')
+
+    // Check Stability pool has only been reduced by A-B
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(150, 18))
+
+    // Confirm system is not in Recovery Mode
+    assert.isFalse(await cdpManager.checkRecoveryMode());
+  })
+
+  it("batchLiquidateTroves(): skips if a trove has been closed", async () => {
+// --- SETUP ---
+    await borrowerOperations.openLoan(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
+    await borrowerOperations.openLoan(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
+
+    assert.isTrue(await sortedCDPs.contains(carol))
+
+    // Check full sorted list size is 6
+    assert.equal((await sortedCDPs.getSize()).toString(), '6')
+
+    // Whale puts some tokens in Stability Pool
+    await poolManager.provideToSP(dec(500, 18), { from: whale })
+
+    // --- TEST ---
+
+    // Price drops to 1ETH:100CLV, reducing A, B, C ICR below MCR
+    await priceFeed.setPrice(dec(100, 18));
+    const price = await priceFeed.getPrice()
+
+    // Carol liquidated, and her trove is closed
+    const txCarolClose = await borrowerOperations.closeLoan({ from: carol })
+    assert.isTrue(txCarolClose.receipt.status)
+
+    assert.isFalse(await sortedCDPs.contains(carol))
+
+    assert.equal(await cdpManager.getCDPStatus(carol), 2)  // check trove closed
+
+    // Confirm system is not in Recovery Mode
+    assert.isFalse(await cdpManager.checkRecoveryMode());
+
+    // Confirm troves A-B are ICR < 110%
+    assert.isTrue((await cdpManager.getCurrentICR(alice, price)).lt(mv._MCR))
+    assert.isTrue((await cdpManager.getCurrentICR(bob, price)).lt(mv._MCR))
+
+    // Confirm D-E are ICR > 110%
+    assert.isTrue((await cdpManager.getCurrentICR(dennis, price)).gte(mv._MCR))
+    assert.isTrue((await cdpManager.getCurrentICR(erin, price)).gte(mv._MCR))
+
+    // Confirm Whale is ICR >= 110% 
+    assert.isTrue((await cdpManager.getCurrentICR(whale, price)).gte(mv._MCR))
+
+    // Liquidate - trove C in between the ones to be liquidated!
+    const liquidationArray = [alice, carol, bob, dennis, erin]
+    await cdpManager.batchLiquidateTroves(liquidationArray);
+
+    // Confirm troves A-B have been removed from the system
+    assert.isFalse(await sortedCDPs.contains(alice))
+    assert.isFalse(await sortedCDPs.contains(bob))
+
+    // Check all troves A-C are now closed
+    assert.equal((await cdpManager.CDPs(alice))[3].toString(), '2')
+    assert.equal((await cdpManager.CDPs(bob))[3].toString(), '2')
+    assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
+
+    // Check sorted list has been reduced to length 3
+    assert.equal((await sortedCDPs.getSize()).toString(), '3')
+
+    // Check Stability pool has only been reduced by A-B
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(150, 18))
+
+    // Confirm system is not in Recovery Mode
+    assert.isFalse(await cdpManager.checkRecoveryMode());
+  })
 
   // --- redemptions ---
 
@@ -1777,7 +1876,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan('20' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan('30' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
     // Dennis' CDP should be untouched by redemption, because its ICR will be < 110% after the price drop
-    await borrowerOperations.openLoan('180' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('170' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Drop the price
     const price = '100' + _18_zeros
@@ -1790,7 +1889,8 @@ contract('CDPManager', async accounts => {
     } = await hintHelpers.getRedemptionHints('55' + _18_zeros, price)
 
     assert.equal(firstRedemptionHint, carol)
-    assert.equal(partialRedemptionHintICR, '19' + _18_zeros)
+    // Alice trove’s ends up with 0.95 ETH and 5+10 CLV debt (10 for gas compensation)
+    assert.equal(partialRedemptionHintICR, '6333333333333333333')
   });
 
   it('redeemCollateral(): cancels the provided CLV with debt from CDPs with the lowest ICRs and sends an equivalent amount of Ether', async () => {
@@ -1850,8 +1950,8 @@ contract('CDPManager', async accounts => {
 
     /* check that Dennis' redeemed 20 CLV has been cancelled with debt from Bobs's CDP (8) and Carol's CDP (10).
     The remaining lot (2) is sent to Alice's CDP, who had the best ICR.
-    It leaves her with (3) CLV debt. */
-    assert.equal(alice_debt_After, '3' + _18_zeros)
+    It leaves her with (3) CLV debt + 10 for gas compensation. */
+    assert.equal(alice_debt_After, '13' + _18_zeros)
     assert.equal(bob_debt_After, '0')
     assert.equal(carol_debt_After, '0')
 
@@ -1896,23 +1996,20 @@ contract('CDPManager', async accounts => {
     assert.equal(bob_Debt, 0)
     assert.equal(carol_Debt, 0)
 
-    // Check ICR of Alice, Bob, Carol
-    const alice_ICR = web3.utils.toHex(await cdpManager.getCurrentICR(alice, price))
-    const bob_ICR = web3.utils.toHex(await cdpManager.getCurrentICR(bob, price))
-    const carol_ICR = web3.utils.toHex(await cdpManager.getCurrentICR(carol, price))
-
-    const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-
-    assert.equal(alice_ICR, maxBytes32)
-    assert.equal(bob_ICR, maxBytes32)
-    assert.equal(carol_ICR, maxBytes32)
+    // check Alice, Bob and Carol troves are closed
+    const alice_Status = await cdpManager.getCDPStatus(alice)
+    const bob_Status = await cdpManager.getCDPStatus(bob)
+    const carol_Status = await cdpManager.getCDPStatus(carol)
+    assert.equal(alice_Status, 2)
+    assert.equal(bob_Status, 2)
+    assert.equal(carol_Status, 2)
 
     // check debt and coll of Dennis, Erin has not been impacted by redemption
     const dennis_Debt = await cdpManager.getCDPDebt(dennis)
     const erin_Debt = await cdpManager.getCDPDebt(erin)
 
-    assert.equal(dennis_Debt, dec(10, 18))
-    assert.equal(erin_Debt, dec(10, 18))
+    assert.equal(dennis_Debt, dec(20, 18))
+    assert.equal(erin_Debt, dec(20, 18))
 
     const dennis_Coll = await cdpManager.getCDPColl(dennis)
     const erin_Coll = await cdpManager.getCDPColl(erin)
@@ -2026,7 +2123,7 @@ contract('CDPManager', async accounts => {
       '100' + _18_zeros,
       alice,
       '0x0000000000000000000000000000000000000000',
-      0,
+      dec(49975, 15), // (10 + 0.995 - 1)*100 / 20
       {
         from: carol,
         gasPrice: 0
@@ -2035,7 +2132,7 @@ contract('CDPManager', async accounts => {
 
     const carol_ETHBalance_After = web3.utils.toBN(await web3.eth.getBalance(carol))
     const receivedETH = carol_ETHBalance_After.sub(carol_ETHBalance_Before)
-    assert.equal(receivedETH, '1' + _18_zeros)
+    assert.equal(receivedETH, dec(1, 'ether'))
 
     const carol_CLVBalance_After = (await clvToken.balanceOf(carol)).toString()
     assert.equal(carol_CLVBalance_After, '0')
@@ -2069,20 +2166,20 @@ contract('CDPManager', async accounts => {
 
     // Bob's CDP was left untouched
     const { debt: bob_Debt_After } = await cdpManager.CDPs(bob)
-    assert.equal(bob_Debt_After, '100' + _18_zeros)
+    assert.equal(bob_Debt_After, '110' + _18_zeros)
   });
 
   it("redeemCollateral(): finds the last CDP with ICR == 110% even if there is more than one", async () => {
     // --- SETUP ---
 
-    await borrowerOperations.openLoan('100' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
 
-    await clvToken.transfer(dennis, '100' + _18_zeros, { from: alice })
-    await clvToken.transfer(dennis, '100' + _18_zeros, { from: bob })
-    await clvToken.transfer(dennis, '100' + _18_zeros, { from: carol })
+    await clvToken.transfer(dennis, '90' + _18_zeros, { from: alice })
+    await clvToken.transfer(dennis, '90' + _18_zeros, { from: bob })
+    await clvToken.transfer(dennis, '90' + _18_zeros, { from: carol })
 
     // This will put Dennis slightly below 110%, and everyone else exactly at 110%
     const price = '110' + _18_zeros
@@ -2101,7 +2198,7 @@ contract('CDPManager', async accounts => {
     // --- TEST --- 
 
     await cdpManager.redeemCollateral(
-      '300' + _18_zeros,
+      '270' + _18_zeros,
       carol, // try to trick redeemCollateral by passing a hint that doesn't exactly point to the
       // last CDP with ICR == 110% (which would be Alice's)
       '0x0000000000000000000000000000000000000000',
@@ -2246,7 +2343,7 @@ contract('CDPManager', async accounts => {
     const dennis_ETHGain_before = (await poolManager.getCurrentETHGain(dennis)).toString()
 
     // Check the remaining CLV and ETH in Stability Pool after liquidation is non-zero
-    const CLVinSP = await stabilityPool.getCLV()
+    const CLVinSP = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP = await stabilityPool.getETH()
     assert.isTrue(CLVinSP.gte(mv._zeroBN))
     assert.isTrue(ETHinSP.gte(mv._zeroBN))
@@ -2294,15 +2391,15 @@ contract('CDPManager', async accounts => {
     assert.equal(erin_balance_before, dec(400, 18))
 
     // B, C, D open loan
-    await borrowerOperations.openLoan(dec(600, 18), bob, { from: bob, value: dec(10, 'ether') })
-    await borrowerOperations.openLoan(dec(2000, 18), carol, { from: carol, value: dec(30, 'ether') })
-    await borrowerOperations.openLoan(dec(2000, 18), dennis, { from: dennis, value: dec(50, 'ether') })
+    await borrowerOperations.openLoan(dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1990, 18), carol, { from: carol, value: dec(30, 'ether') })
+    await borrowerOperations.openLoan(dec(1990, 18), dennis, { from: dennis, value: dec(50, 'ether') })
 
     // Get active debt and coll before redemption
     const activePool_debt_before = (await activePool.getCLVDebt()).toString()
     const activePool_coll_before = (await activePool.getETH()).toString()
 
-    assert.equal(activePool_debt_before, dec(5000, 18))
+    assert.equal(activePool_debt_before, dec(5020, 18))
     assert.equal(activePool_coll_before, dec(200, 'ether'))
 
     const price = await priceFeed.getPrice()
@@ -2328,7 +2425,7 @@ contract('CDPManager', async accounts => {
 
     // Check activePool debt reduced by  400 CLV
     const activePool_debt_after = (await activePool.getCLVDebt()).toString()
-    assert.equal(activePool_debt_after, '4600000000000000000000')
+    assert.equal(activePool_debt_after, '4620000000000000000000')
 
     /* Check ActivePool coll reduced by $400 worth of Ether: at ETH:USD price of $200, this should be 2 ETH.
 
@@ -2353,15 +2450,15 @@ contract('CDPManager', async accounts => {
     assert.equal(erin_balance_before, dec(400, 18))
 
     // B, C, D open loan
-    await borrowerOperations.openLoan(dec(600, 18), bob, { from: bob, value: dec(10, 'ether') })
-    await borrowerOperations.openLoan(dec(2000, 18), carol, { from: carol, value: dec(30, 'ether') })
-    await borrowerOperations.openLoan(dec(2000, 18), dennis, { from: dennis, value: dec(50, 'ether') })
+    await borrowerOperations.openLoan(dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1990, 18), carol, { from: carol, value: dec(30, 'ether') })
+    await borrowerOperations.openLoan(dec(1990, 18), dennis, { from: dennis, value: dec(50, 'ether') })
 
     // Get active debt and coll before redemption
     const activePool_debt_before = (await activePool.getCLVDebt()).toString()
     const activePool_coll_before = (await activePool.getETH()).toString()
 
-    assert.equal(activePool_debt_before, dec(5000, 18))
+    assert.equal(activePool_debt_before, dec(5020, 18))
     assert.equal(activePool_coll_before, dec(200, 'ether'))
 
     const price = await priceFeed.getPrice()
@@ -2478,15 +2575,15 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice opens loan and transfers 1000 CLV each to Erin, Flyn, Graham
-    await borrowerOperations.openLoan(dec(5000, 18), alice, { from: alice, value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(dec(4990, 18), alice, { from: alice, value: dec(100, 'ether') })
     await clvToken.transfer(erin, dec(1000, 18), { from: alice })
     await clvToken.transfer(flyn, dec(1000, 18), { from: alice })
     await clvToken.transfer(graham, dec(1000, 18), { from: alice })
 
     // B, C, D open loan
-    await borrowerOperations.openLoan(dec(600, 18), bob, { from: bob, value: dec(10, 'ether') })
-    await borrowerOperations.openLoan(dec(2000, 18), carol, { from: carol, value: dec(30, 'ether') })
-    await borrowerOperations.openLoan(dec(2000, 18), dennis, { from: dennis, value: dec(40, 'ether') })
+    await borrowerOperations.openLoan(dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(1090, 18), carol, { from: carol, value: dec(30, 'ether') })
+    await borrowerOperations.openLoan(dec(1090, 18), dennis, { from: dennis, value: dec(40, 'ether') })
 
     const price = await priceFeed.getPrice()
 
@@ -2589,14 +2686,10 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if there is zero outstanding system debt", async () => {
-    // --- SETUP --- mock Alice as poolManager address in CLVTokenContract to ilegally mint CLV to Bob
-    await clvToken.setPoolManagerAddress(alice)
-    await clvToken.mint(bob, dec(100, 18), { from: alice })
+    // --- SETUP --- illegally mint CLV to Bob
+    await clvToken.unprotectedMint(bob, dec(100, 18))
 
     assert.equal((await clvToken.balanceOf(bob)), dec(100, 18))
-
-    // Set poolManager in clvToken back to correct address
-    await clvToken.setPoolManagerAddress(poolManager.address)
 
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(30, 'ether') })
@@ -2632,17 +2725,13 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if caller's tries to redeem more than the outstanding system debt", async () => {
-    // --- SETUP --- mock Alice as poolManager address in CLVTokenContract to ilegally mint CLV to Bob
-    await clvToken.setPoolManagerAddress(alice)
-    await clvToken.mint(bob, '101000000000000000000', { from: alice })
+    // --- SETUP --- illegally mint CLV to Bob
+    await clvToken.unprotectedMint(bob, '101000000000000000000')
 
     assert.equal((await clvToken.balanceOf(bob)), '101000000000000000000')
 
-    // Set poolManager in clvToken back to correct address
-    await clvToken.setPoolManagerAddress(poolManager.address)
-
-    await borrowerOperations.openLoan(dec(50, 18), carol, { from: carol, value: dec(30, 'ether') })
-    await borrowerOperations.openLoan(dec(50, 18), dennis, { from: dennis, value: dec(40, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), carol, { from: carol, value: dec(30, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), dennis, { from: dennis, value: dec(40, 'ether') })
 
     assert.equal((await activePool.getCLVDebt()).toString(), dec(100, 18))
 
@@ -2730,19 +2819,6 @@ contract('CDPManager', async accounts => {
     assert.equal(carol_PendingETHReward, 0)
   })
 
-  // --- getCurrentICR ---
-
-  it("getCurrentICR(): Returns 2^256-1 if trove has non-zero coll and zero debt", async () => {
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
-
-    const price = await priceFeed.getPrice()
-
-    const whaleICR = web3.utils.toHex(await cdpManager.getCurrentICR(whale, price))
-    const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-
-    assert.equal(whaleICR, maxBytes32)
-  })
-
   // --- computeICR ---
 
   it("computeICR(): Returns 0 if trove's coll is worth 0", async () => {
@@ -2750,7 +2826,7 @@ contract('CDPManager', async accounts => {
     const coll = dec(1, 'ether')
     const debt = dec(100, 18)
 
-    const ICR = (await cdpManagerTester.computeICR(coll, debt, price)).toString()
+    const ICR = (await cdpManager.computeICR(coll, debt, price)).toString()
 
     assert.equal(ICR, 0)
   })
@@ -2760,7 +2836,7 @@ contract('CDPManager', async accounts => {
     const coll = dec(1, 'ether')
     const debt = dec(100, 18)
 
-    const ICR = (await cdpManagerTester.computeICR(coll, debt, price)).toString()
+    const ICR = (await cdpManager.computeICR(coll, debt, price)).toString()
 
     assert.equal(ICR, dec(1, 18))
   })
@@ -2770,7 +2846,7 @@ contract('CDPManager', async accounts => {
     const coll = dec(200, 'ether')
     const debt = dec(30, 18)
 
-    const ICR = (await cdpManagerTester.computeICR(coll, debt, price)).toString()
+    const ICR = (await cdpManager.computeICR(coll, debt, price)).toString()
 
     assert.isAtMost(th.getDifference(ICR, '666666666666666666666'), 1000)
   })
@@ -2780,7 +2856,7 @@ contract('CDPManager', async accounts => {
     const coll = '1350000000000000000000'
     const debt = '127000000000000000000'
 
-    const ICR = (await cdpManagerTester.computeICR(coll, debt, price))
+    const ICR = (await cdpManager.computeICR(coll, debt, price))
 
     assert.isAtMost(th.getDifference(ICR, '2657480314960630000000'), 1000000)
   })
@@ -2790,7 +2866,7 @@ contract('CDPManager', async accounts => {
     const coll = dec(1, 'ether')
     const debt = '54321000000000000000000'
 
-    const ICR = (await cdpManagerTester.computeICR(coll, debt, price)).toString()
+    const ICR = (await cdpManager.computeICR(coll, debt, price)).toString()
 
     assert.isAtMost(th.getDifference(ICR, '1840908672520756'), 1000)
   })
@@ -2801,7 +2877,7 @@ contract('CDPManager', async accounts => {
     const coll = dec(1, 'ether')
     const debt = 0
 
-    const ICR = web3.utils.toHex(await cdpManagerTester.computeICR(coll, debt, price))
+    const ICR = web3.utils.toHex(await cdpManager.computeICR(coll, debt, price))
     const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
 
     assert.equal(ICR, maxBytes32)
@@ -2813,8 +2889,8 @@ contract('CDPManager', async accounts => {
   it("checkRecoveryMode(): Returns true when TCR < 150%", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
 
     await priceFeed.setPrice('99999999999999999999')
 
@@ -2829,8 +2905,8 @@ contract('CDPManager', async accounts => {
   it("checkRecoveryMode(): Returns false when TCR == 150%", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
 
     await priceFeed.setPrice('100000000000000000001')
 
@@ -2845,8 +2921,8 @@ contract('CDPManager', async accounts => {
   it("checkRecoveryMode(): Returns false when TCR > 150%", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
 
     const TCR = (await cdpManager.getTCR()).toString()
 
@@ -2855,28 +2931,12 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode())
   })
 
-  //check max
-  it("checkRecoveryMode(): Returns false when TCR == maxBytes32", async () => {
-    await priceFeed.setPrice(dec(100, 18))
-
-    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(3, 'ether') })
-
-    const TCR = web3.utils.toHex(await cdpManager.getTCR()).toString()
-
-    const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-
-    assert.equal(TCR, maxBytes32)
-
-    assert.isFalse(await cdpManager.checkRecoveryMode())
-  })
-
   // check 0
   it("checkRecoveryMode(): Returns false when TCR == 0", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
 
     await priceFeed.setPrice(0)
 

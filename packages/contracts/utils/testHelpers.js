@@ -1,7 +1,6 @@
-
-const web3 = require('web3')
 const BN = require('bn.js')
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
+const Destructible = artifacts.require("./TestContracts/Destructible.sol")
 
 const MoneyValues = {
   negative_5e17: "-" + web3.utils.toWei('500', 'finney'),
@@ -10,6 +9,7 @@ const MoneyValues = {
   negative_50e18: "-" + web3.utils.toWei('50', 'ether'),
   negative_100e18: "-" + web3.utils.toWei('100', 'ether'),
   negative_101e18: "-" + web3.utils.toWei('101', 'ether'),
+  negative_eth: (amount) => "-" + web3.utils.toWei(amount, 'ether'),
 
   _zeroBN: web3.utils.toBN('0'),
   _1e18BN: web3.utils.toBN('1000000000000000000'),
@@ -236,9 +236,10 @@ class TestHelper {
       if (liquidationTx.logs[i].event === "Liquidation") {
         const liquidatedDebt = liquidationTx.logs[i].args[0]
         const liquidatedColl = liquidationTx.logs[i].args[1]
-        const gasComp = liquidationTx.logs[i].args[2]
+        const collGasComp = liquidationTx.logs[i].args[2]
+        const clvGasComp = liquidationTx.logs[i].args[3]
 
-        return [liquidatedDebt, liquidatedColl, gasComp]
+        return [liquidatedDebt, liquidatedColl, collGasComp, clvGasComp]
       }
     }
 
@@ -785,7 +786,28 @@ class TestHelper {
   }
 }
 
+const assertRevert = async (txPromise, message = undefined) => {
+  try {
+    const tx = await txPromise
+
+    assert.isFalse(tx.receipt.status)
+  } catch (err) {
+    assert.include(err.message, "revert")
+    if (message) {
+      assert.include(err.message, message)
+    }
+  }
+}
+
+const forceSendEth = async (from, receiver, value) => {
+  const destructible = await Destructible.new()
+  await web3.eth.sendTransaction({ to: destructible.address, from, value })
+  await destructible.destruct(receiver)
+}
+
 module.exports = {
   TestHelper: TestHelper,
-  MoneyValues: MoneyValues
+  MoneyValues: MoneyValues,
+  assertRevert,
+  forceSendEth
 }

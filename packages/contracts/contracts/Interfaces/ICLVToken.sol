@@ -31,4 +31,8 @@ interface ICLVToken {
     function increaseAllowance(address spender, uint256 addedValue) external returns (bool);
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool);
+
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
+    function decimals() external view returns (uint8);
 }

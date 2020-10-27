@@ -7,11 +7,7 @@ event SortedCDPsAddressChanged(address _sortedDoublyLLAddress);
 event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
 
 // --- Functions ---
-    function setCDPManager(address _CDPManagerAddress) external;
-
-    function setBorrowerOperations(address _borrowerOperationsAddress) external;
-
-    function setMaxSize(uint256 _size) external;
+    function setParams(uint256 _size, address _CDPManagerAddress, address _borrowerOperationsAddress) external;
 
     function insert(address _id, uint256 _ICR, uint price, address _prevId, address _nextId) external;
 

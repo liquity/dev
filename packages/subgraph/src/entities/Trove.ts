@@ -2,18 +2,17 @@ import { ethereum, Address, BigInt } from "@graphprotocol/graph-ts";
 
 import { Trove, TroveChange } from "../../generated/schema";
 
-import {
-  decimalize,
-  BIGINT_SCALING_FACTOR,
-  BIGINT_ZERO,
-  BIGINT_MAX_UINT256,
-  DECIMAL_ZERO
-} from "../utils/bignumbers";
+import { decimalize, BIGINT_SCALING_FACTOR, BIGINT_ZERO, DECIMAL_ZERO } from "../utils/bignumbers";
 import { calculateCollateralRatio } from "../utils/collateralRatio";
 
 import { isLiquidation, isRedemption } from "../types/TroveOperation";
 
-import { getChangeSequenceNumber } from "./Global";
+import {
+  getChangeSequenceNumber,
+  increaseNumberOfLiquidatedTroves,
+  increaseNumberOfOpenTroves,
+  increaseNumberOfTrovesClosedByOwner
+} from "./Global";
 import { initChange, finishChange } from "./Change";
 import { getCurrentPrice, updateSystemStateByTroveChange } from "./SystemState";
 import { getCurrentLiquidation } from "./Liquidation";
@@ -34,6 +33,8 @@ function getCurrentTroveOfOwner(_user: Address): Trove {
     currentTrove.debt = DECIMAL_ZERO;
     owner.currentTrove = currentTrove.id;
     owner.save();
+
+    increaseNumberOfOpenTroves();
   } else {
     currentTrove = Trove.load(owner.currentTrove) as Trove;
   }
@@ -118,10 +119,10 @@ export function updateTrove(
   trove.rawSnapshotOfTotalRedistributedCollateral = snapshotETH;
   trove.rawSnapshotOfTotalRedistributedDebt = snapshotCLVDebt;
 
-  if (_debt != BIGINT_ZERO) {
-    trove.rawCollateralPerDebt = (_coll * BIGINT_SCALING_FACTOR) / _debt;
+  if (stake != BIGINT_ZERO) {
+    trove.collateralRatioSortKey = (_debt * BIGINT_SCALING_FACTOR) / stake - snapshotCLVDebt;
   } else {
-    trove.rawCollateralPerDebt = BIGINT_MAX_UINT256;
+    trove.collateralRatioSortKey = null;
   }
 
   if (_coll == BIGINT_ZERO) {
@@ -129,8 +130,10 @@ export function updateTrove(
 
     if (isLiquidation(operation)) {
       trove.status = "closedByLiquidation";
+      increaseNumberOfLiquidatedTroves();
     } else {
       trove.status = "closedByOwner";
+      increaseNumberOfTrovesClosedByOwner();
     }
   }
 

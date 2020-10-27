@@ -1,34 +1,37 @@
 import React, { useState, useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
-import { Decimal } from "@liquity/decimal";
-import { Liquity, StabilityDeposit, Trove } from "@liquity/lib";
+import { StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
+import { useLiquitySelector } from "@liquity/lib-react";
+
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { Transaction, useMyTransactionState } from "./Transaction";
+import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
 
 type StabilityDepositActionProps = {
-  liquity: Liquity;
   originalDeposit: StabilityDeposit;
   editedDeposit: StabilityDeposit;
   changePending: boolean;
   setChangePending: (isPending: boolean) => void;
-  trove: Trove;
-  price: Decimal;
-  quiBalance: Decimal;
-  numberOfTroves: number;
 };
 
-const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
-  liquity,
-  originalDeposit,
-  editedDeposit,
-  changePending,
-  setChangePending,
+const select = ({ trove, price, quiBalance, numberOfTroves }: LiquityStoreState) => ({
   trove,
   price,
   quiBalance,
   numberOfTroves
+});
+
+const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
+  originalDeposit,
+  editedDeposit,
+  changePending,
+  setChangePending
 }) => {
+  const { trove, price, quiBalance, numberOfTroves } = useLiquitySelector(select);
+  const { liquity } = useLiquity();
+
   const myTransactionId = "stability-deposit";
   const myTransactionState = useMyTransactionState(/^stability-deposit-/);
   const difference = originalDeposit.calculateDifference(editedDeposit);
@@ -50,18 +53,18 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
       ? difference.positive
         ? ([
             [
-              `Deposit ${difference.absoluteValue!.prettify()} LQTY${
+              `Deposit ${difference.absoluteValue!.prettify()} ${COIN}${
                 originalDeposit.pendingCollateralGain.nonZero
                   ? ` & withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
                   : ""
               }`,
               liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!),
-              [[quiBalance.gte(difference.absoluteValue!), "You don't have enough LQTY"]]
+              [[quiBalance.gte(difference.absoluteValue!), `You don't have enough ${COIN}`]]
             ]
           ] as const)
         : ([
             [
-              `Withdraw ${difference.absoluteValue!.prettify()} LQTY${
+              `Withdraw ${difference.absoluteValue!.prettify()} ${COIN}${
                 originalDeposit.pendingCollateralGain.nonZero
                   ? ` & ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
                   : ""
@@ -119,23 +122,10 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   );
 };
 
-type StabilityDepositManagerProps = {
-  liquity: Liquity;
-  deposit: StabilityDeposit;
-  trove: Trove;
-  price: Decimal;
-  quiBalance: Decimal;
-  numberOfTroves: number;
-};
+const selectDeposit = ({ deposit }: LiquityStoreState) => deposit;
 
-export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = ({
-  liquity,
-  deposit,
-  trove,
-  price,
-  quiBalance,
-  numberOfTroves
-}) => {
+export const StabilityDepositManager: React.FC = () => {
+  const deposit = useLiquitySelector(selectDeposit);
   const [originalDeposit, setOriginalDeposit] = useState(deposit);
   const [editedDeposit, setEditedDeposit] = useState(deposit);
   const [changePending, setChangePending] = useState(false);
@@ -165,17 +155,7 @@ export const StabilityDepositManager: React.FC<StabilityDepositManagerProps> = (
       />
 
       <StabilityDepositAction
-        {...{
-          liquity,
-          originalDeposit,
-          editedDeposit,
-          changePending,
-          setChangePending,
-          trove,
-          price,
-          quiBalance,
-          numberOfTroves
-        }}
+        {...{ originalDeposit, editedDeposit, changePending, setChangePending }}
       />
     </>
   );

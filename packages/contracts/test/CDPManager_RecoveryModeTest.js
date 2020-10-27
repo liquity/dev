@@ -72,8 +72,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(3, 'ether') })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV(dec(400, 18), alice, { from: alice })
-    await borrowerOperations.withdrawCLV(dec(400, 18), bob, { from: bob })
+    await borrowerOperations.withdrawCLV(dec(390, 18), alice, { from: alice })
+    await borrowerOperations.withdrawCLV(dec(390, 18), bob, { from: bob })
 
     const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, dec(15, 17))
@@ -99,8 +99,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
 
     // Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
     const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -124,8 +124,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _10_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
 
-    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
     // --- TEST ---
     const recoveryMode_Before = await cdpManager.checkRecoveryMode();
@@ -143,8 +143,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
     const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -170,8 +170,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
     const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -212,9 +212,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is ~150%
-    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
-    await borrowerOperations.withdrawCLV('400000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('390000000000000000000', dennis, { from: dennis })
 
     const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -233,7 +233,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const totalCollateralSnapshot_before = (await cdpManager.totalCollateralSnapshot()).toString()
 
     assert.equal(totalStakesSnaphot_before, _6_Ether)
-    assert.equal(totalCollateralSnapshot_before, _9_Ether)
+    assert.equal(totalCollateralSnapshot_before, dec(8985, 15)) // 6 + 3*0.995
 
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
@@ -242,8 +242,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const totalCollateralSnapshot_After = (await cdpManager.totalCollateralSnapshot())
 
     assert.equal(totalStakesSnaphot_After, _3_Ether)
-    // total collateral should always be 9, as all liquidations in this test case are full redistributions
-    assert.equal(totalCollateralSnapshot_After, _9_Ether)
+    // total collateral should always be 9 minus gas compensations, as all liquidations in this test case are full redistributions
+    assert.isAtMost(th.getDifference(totalCollateralSnapshot_After, '8962537499999999820'), 1000) // 3 + 4.5*0.995 + 1.5*0.995^2
   })
 
   it("liquidate(), with ICR < 100%: closes the CDP and removes it from the CDP array", async () => {
@@ -252,8 +252,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
     const TCR = (await cdpManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -294,12 +294,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is 150%
-    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('400000000000000000000', bob, { from: bob })
-    await borrowerOperations.withdrawCLV('400000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawCLV('390000000000000000000', dennis, { from: dennis })
 
     // Alice deposits to SP
-    await poolManager.provideToSP('400000000000000000000', { from: alice })
+    await poolManager.provideToSP('390000000000000000000', { from: alice })
 
     // check rewards-per-unit-staked before
     const P_Before = (await poolManager.P()).toString()
@@ -333,12 +333,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _3_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _21_Ether })
 
-    //  Bob withdraws 2000 CLV, bringing his ICR to 210%
-    await borrowerOperations.withdrawCLV('2000000000000000000000', bob, { from: bob })
+    //  Bob withdraws 1990 CLV, bringing his ICR to 210%
+    await borrowerOperations.withdrawCLV('1990000000000000000000', bob, { from: bob })
 
-    // Total TCR = 24*200/2000 = 240%
+    // Total TCR = 24*200/2010 = 240%
     const TCR = (await cdpManager.getTCR()).toString()
-    assert.equal(TCR, '2400000000000000000')
+    assert.isAtMost(th.getDifference(TCR, '2388059701492537101'), 1000)
 
     const bob_Stake_Before = (await cdpManager.CDPs(bob))[2]
     const totalStakes_Before = await cdpManager.totalStakes()
@@ -375,11 +375,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Dennis withdraw such that their ICR is ~150%
-    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('400000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('390000000000000000000', dennis, { from: dennis })
 
-    //  Bob withdraws 2000 CLV, bringing his ICR to 210%
-    await borrowerOperations.withdrawCLV('2000000000000000000000', bob, { from: bob })
+    //  Bob withdraws 1990 CLV, bringing his ICR to 210%
+    await borrowerOperations.withdrawCLV('1990000000000000000000', bob, { from: bob })
 
     const totalStakesSnaphot_1 = (await cdpManager.totalStakesSnapshot()).toString()
     const totalCollateralSnapshot_1 = (await cdpManager.totalCollateralSnapshot()).toString()
@@ -401,12 +401,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     Prior to Dennis liquidation, total stakes and total collateral were each 27 ether. 
   
     Check snapshots. Dennis' liquidated collateral is distributed and remains in the system. His 
-    stake is removed, leaving 27 ether total collateral, and 24 ether total stakes. */
+    stake is removed, leaving 24+3*0.995 ether total collateral, and 24 ether total stakes. */
 
     const totalStakesSnaphot_2 = (await cdpManager.totalStakesSnapshot()).toString()
     const totalCollateralSnapshot_2 = (await cdpManager.totalCollateralSnapshot()).toString()
     assert.equal(totalStakesSnaphot_2, _24_Ether)
-    assert.equal(totalCollateralSnapshot_2, _27_Ether)
+    assert.equal(totalCollateralSnapshot_2, dec(26985, 15)) // 24 + 3*0.995
 
     // check Bob's ICR is now in range 100% < ICR 110%
     const _110percent = web3.utils.toBN('1100000000000000000')
@@ -421,11 +421,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await cdpManager.liquidate(bob, { from: owner })
 
     /* After Bob's liquidation, Bob's stake (21 ether) should be removed from total stakes, 
-    but his collateral should remain in the system. */
+    but his collateral should remain in the system (*0.995). */
     const totalStakesSnaphot_3 = (await cdpManager.totalStakesSnapshot())
     const totalCollateralSnapshot_3 = (await cdpManager.totalCollateralSnapshot())
     assert.equal(totalStakesSnaphot_3, _3_Ether)
-    assert.equal(totalCollateralSnapshot_3, _27_Ether)   // total collateral should always be 9, as all liquidations in this test case are full redistributions
+    // total collateral should always be 27 minus gas compensations, as all liquidations in this test case are full redistributions
+    assert.isAtMost(th.getDifference(totalCollateralSnapshot_3, '26866940624999998021'), 2000) // 3 + 3*3/24*0.995 + (21+3*21/24*0.995)*0.995
   })
 
   it("liquidate(), with 100% < ICR < 110%: closes the CDP and removes it from the CDP array", async () => {
@@ -433,8 +434,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _3_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _21_Ether })
 
-    //  Bob withdraws 2000 CLV, bringing his ICR to 210%
-    await borrowerOperations.withdrawCLV('2000000000000000000000', bob, { from: bob })
+    //  Bob withdraws 1990 CLV, bringing his ICR to 210%
+    await borrowerOperations.withdrawCLV('1990000000000000000000', bob, { from: bob })
 
     const bob_CDPStatus_Before = (await cdpManager.CDPs(bob))[3]
     const bob_CDP_isInSortedList_Before = await sortedCDPs.contains(bob)
@@ -472,14 +473,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Dennis withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV('400000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('400000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('390000000000000000000', dennis, { from: dennis })
 
-    // Alice deposits 400CLV to the Stability Pool
-    await poolManager.provideToSP('400000000000000000000', { from: alice })
+    // Alice deposits 390CLV to the Stability Pool
+    await poolManager.provideToSP('390000000000000000000', { from: alice })
 
-    // Bob withdraws 2000 CLV, bringing his ICR to 210%
-    await borrowerOperations.withdrawCLV('2000000000000000000000', bob, { from: bob })
+    // Bob withdraws 1990 CLV, bringing his ICR to 210%
+    await borrowerOperations.withdrawCLV('1990000000000000000000', bob, { from: bob })
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
@@ -495,7 +496,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // check pool CLV before liquidation
     const stabilityPoolCLV_Before = (await poolManager.getStabilityPoolCLV()).toString()
-    assert.equal(stabilityPoolCLV_Before, '400000000000000000000')
+    assert.equal(stabilityPoolCLV_Before, '390000000000000000000')
 
     // check Pool reward term before liquidation
     const P_Before = (await poolManager.P()).toString()
@@ -504,13 +505,13 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     /* Now, liquidate Bob. Liquidated coll is 21 ether, and liquidated debt is 2000 CLV.
     
-    With 400 CLV in the StabilityPool, 400 CLV should be offset with the pool, leaving 0 in the pool.
+    With 390 CLV in the StabilityPool, 390 CLV should be offset with the pool, leaving 0 in the pool.
   
     Stability Pool rewards for alice should be:
-    CLVLoss: 400CLV
-    ETHGain: (400 / 2000) * 21 = 4.2 ether
+    CLVLoss: 390CLV
+    ETHGain: (390 / 2000) * 21*0.995 = 4.074525 ether
 
-    After offsetting 400 CLV and 4.2 ether, the remainders - 1600 CLV and 16.8 ether - should be redistributed to all active CDPs.
+    After offsetting 390 CLV and 4.074525 ether, the remainders - 1610 CLV and 16.820475 ether - should be redistributed to all active CDPs.
    */
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
@@ -519,22 +520,22 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const aliceExpectedETHGain = await poolManager.getCurrentETHGain(alice)
 
     assert.equal(aliceExpectedDeposit.toString(), 0)
-    assert.equal(aliceExpectedETHGain.toString(), '4200000000000000000')
+    assert.equal(aliceExpectedETHGain.toString(), '4074525000000000000')
 
-    /* Now, check redistribution to active CDPs. Remainders of 1600 CLV and 16.8 ether are distributed.
+    /* Now, check redistribution to active CDPs. Remainders of 1610 CLV and 16.82 ether are distributed.
     
     Now, only Alice and Dennis have a stake in the system - 3 ether each, thus total stakes is 6 ether.
   
     Rewards-per-unit-staked from the redistribution should be:
   
-    L_CLVDebt = 1600 / 6 = 266.666 CLV
-    L_ETH = 16.8 /6 =  2.8 ether
+    L_CLVDebt = 1610 / 6 = 268.333 CLV
+    L_ETH = 16.820475 /6 =  2.8034125 ether
     */
     const L_CLVDebt = (await cdpManager.L_CLVDebt()).toString()
     const L_ETH = (await cdpManager.L_ETH()).toString()
 
-    assert.isAtMost(th.getDifference(L_CLVDebt, '266666666666666666667'), 100)
-    assert.isAtMost(th.getDifference(L_ETH, '2800000000000000000'), 100)
+    assert.isAtMost(th.getDifference(L_CLVDebt, '268333333333333333333'), 100)
+    assert.isAtMost(th.getDifference(L_ETH, '2803412500000000000'), 100)
   })
 
   // --- liquidate(), applied to loan with ICR > 110% that has the lowest ICR 
@@ -545,11 +546,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    //  Alice and Dennis withdraw 150 CLV, resulting in ICRs of 266%. 
-    await borrowerOperations.withdrawCLV('150000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    //Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    //  Alice and Dennis withdraw 140 CLV, resulting in ICRs of 266%. 
+    await borrowerOperations.withdrawCLV('140000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    //Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
@@ -605,14 +606,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    // Alice withdraws 1490 CLV, and Dennis 140 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
-    // Alice deposits all 1500 CLV in the Stability Pool
-    await poolManager.provideToSP('1500000000000000000000', { from: alice })
+    // Alice deposits all 1490 CLV in the Stability Pool
+    await poolManager.provideToSP('1490000000000000000000', { from: alice })
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
@@ -629,18 +630,18 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
 
-    /* Check accrued Stability Pool rewards after. Total Pool deposits was 1500 CLV, Alice sole depositor.
+    /* Check accrued Stability Pool rewards after. Total Pool deposits was 1490 CLV, Alice sole depositor.
     As liquidated debt (250 CLV) was completely offset
 
-    Alice's expected compounded deposit: (1500 - 250) = 1250CLV
-    Alice's expected ETH gain:  Bob's liquidated coll, 3 ether
+    Alice's expected compounded deposit: (1490 - 250) = 1240CLV
+    Alice's expected ETH gain:  Bob's liquidated coll, 3*0.995 ether
   
     */
     const aliceExpectedDeposit = await poolManager.getCompoundedCLVDeposit(alice)
     const aliceExpectedETHGain = await poolManager.getCurrentETHGain(alice)
 
-    assert.isAtMost(th.getDifference(aliceExpectedDeposit.toString(), '1250000000000000000000'), 1000)
-    assert.equal(aliceExpectedETHGain, _3_Ether)
+    assert.isAtMost(th.getDifference(aliceExpectedDeposit.toString(), '1240000000000000000000'), 2000)
+    assert.isAtMost(th.getDifference(aliceExpectedETHGain, dec(2985, 15)), 1000)
   })
 
   it("liquidate(), with  110% < ICR < 150%, and StabilityPool CLV > debt to liquidate: removes stake and updates totalStakes", async () => {
@@ -649,14 +650,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    // Alice withdraws 1490 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
-    // Alice deposits all 1500 CLV in the Stability Pool
-    await poolManager.provideToSP('1500000000000000000000', { from: alice })
+    // Alice deposits all 1490 CLV in the Stability Pool
+    await poolManager.provideToSP('1490000000000000000000', { from: alice })
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
@@ -674,7 +675,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(totalStakes_Before, _25_Ether)
 
     // Check Bob's ICR is between 110 and 150
-    bob_ICR = await cdpManager.getCurrentICR(bob, price)
+    const bob_ICR = await cdpManager.getCurrentICR(bob, price)
     assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
 
     // Liquidate Bob
@@ -694,14 +695,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    // Alice withdraws 1490 CLV, and Dennis 140 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
-    // Alice deposits all 1500 CLV in the Stability Pool
-    await poolManager.provideToSP('1500000000000000000000', { from: alice })
+    // Alice deposits all 1490 CLV in the Stability Pool
+    await poolManager.provideToSP('1490000000000000000000', { from: alice })
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
@@ -740,14 +741,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    // Alice withdraws 1490 CLV, and Dennis 140 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
-    // Alice deposits all 1500 CLV in the Stability Pool
-    await poolManager.provideToSP('1500000000000000000000', { from: alice })
+    // Alice deposits all 1490 CLV in the Stability Pool
+    await poolManager.provideToSP('1490000000000000000000', { from: alice })
 
     // --- TEST ---
     // price drops to 1ETH:100CLV, reducing TCR below 150%
@@ -784,13 +785,13 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(10, 'ether') })
     await poolManager.provideToSP(dec(1000, 18), { from: whale })
 
-    await borrowerOperations.openLoan('100000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('99000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('98000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('89000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('88000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -847,11 +848,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    // Alice withdraws 1490 CLV, and Dennis 140 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP('100000000000000000000', { from: alice })
@@ -889,11 +890,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    // Alice withdraws 1490 CLV, and Dennis 140 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP('100000000000000000000', { from: alice })
@@ -944,11 +945,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    // Alice withdraws 1490 CLV, and Dennis 140 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP('100000000000000000000', { from: alice })
@@ -997,11 +998,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    // Alice withdraws 1490 CLV, and Dennis 140 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP('100000000000000000000', { from: alice })
@@ -1040,11 +1041,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
-    // Bob withdraws 250 CLV, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
+    // Alice withdraws 1490 CLV, and Dennis 140 CLV, resulting in ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
+    // Bob withdraws 240 CLV, resulting in ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP('100000000000000000000', { from: alice })
@@ -1061,11 +1062,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     /* check Stability Pool rewards.  After Bob's liquidation:
     - amount of CLV offset with Stability Pool should be 100 CLV
-    - corresponding amount of ETH added to Stability Pool should be 100/250 * 3 = 1.2 ether.
+    - corresponding amount of ETH added to Stability Pool should be 100/250 * 3 * 0.995 = 1.194 ether.
 
     - Alice's deposit (100 CLV) should fully cancel with the debt, leaving her a withdrawable deposit of 0
   
-    Her ETH gain from offset should be (3 * 100/250) = 1.2 Ether.
+    Her ETH gain from offset should be (3 * 100/250)*0.995 = 1.194 Ether.
     */
 
     const aliceExpectedDeposit = await poolManager.getCompoundedCLVDeposit(alice)
@@ -1073,7 +1074,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     assert.equal(aliceExpectedDeposit.toString(), '0')
 
-    assert.isAtMost(th.getDifference(aliceExpectedETHGain, '1200000000000000000'), 100)
+    assert.isAtMost(th.getDifference(aliceExpectedETHGain, '1194000000000000000'), 100)
 
     /* For this Recovery Mode test case with ICR > 110%, there should be no redistribution of remainder to active CDPs. 
     Redistribution rewards-per-unit-staked should be zero. */
@@ -1092,14 +1093,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, carol, { from: carol, value: _3_Ether })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _2_Ether })
 
-    // Alice withdraws 1500 CLV, and Dennis 150 CLV, -> ICRs of 266%.  
-    await borrowerOperations.withdrawCLV('1500000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('150000000000000000000', dennis, { from: dennis })
+    // Alice withdraws 1490 CLV, and Dennis 140 CLV, -> ICRs of 266%.  
+    await borrowerOperations.withdrawCLV('1490000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawCLV('140000000000000000000', dennis, { from: dennis })
 
-    // Bob withdraws 250 CLV, -> ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob })
-    // Carol withdraws 240 CLV, -> ICR of 250%.
-    await borrowerOperations.withdrawCLV('240000000000000000000', carol, { from: carol })
+    // Bob withdraws 240 CLV, -> ICR of 240%. Bob has lowest ICR.
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob })
+    // Carol withdraws 230 CLV, -> ICR of 250%.
+    await borrowerOperations.withdrawCLV('230000000000000000000', carol, { from: carol })
 
     // Alice deposits 100 CLV in the Stability Pool
     await poolManager.provideToSP(dec(100, 18), { from: alice })
@@ -1125,7 +1126,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await cdpManager.liquidate(bob, { from: owner })
 
     //Check SP CLV has been completely emptied
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Check Bob remains active
     assert.isTrue(await sortedCDPs.contains(bob))
@@ -1164,7 +1165,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await cdpManager.liquidate(carol)
 
     //Check SP CLV has been completely emptied
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Check Carol's collateral and debt has reduced from the partial liquidation
     const carol_Coll_After = (await cdpManager.CDPs(carol))[1]
@@ -1190,12 +1191,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), whale, { from: whale, value: dec(1, 'ether') })
     await poolManager.provideToSP(dec(50, 18), { from: whale })
 
-    await borrowerOperations.openLoan('100000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('99000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('98000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('89000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('88000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -1228,7 +1229,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
   it("liquidate(): Doesn't liquidate undercollateralized trove if it is the only trove in the system", async () => {
     // Alice creates a single trove with 0.5 ETH and a debt of 50 LQTY, and provides 10 CLV to SP
-    await borrowerOperations.openLoan(dec(50, 18), alice, { from: alice, value: dec(500, 'finney') })
+    await borrowerOperations.openLoan(dec(40, 18), alice, { from: alice, value: dec(500, 'finney') })
     await poolManager.provideToSP(dec(10, 18), { from: alice })
 
     assert.isFalse(await cdpManager.checkRecoveryMode())
@@ -1258,10 +1259,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   it("liquidate(): Liquidates undercollateralized trove if there are two troves in the system", async () => {
-    await borrowerOperations.openLoan(dec(50, 18), bob, { from: bob, value: dec(500, 'finney') })
+    await borrowerOperations.openLoan(dec(40, 18), bob, { from: bob, value: dec(500, 'finney') })
 
     // Alice creates a single trove with 0.5 ETH and a debt of 50 LQTY,  and provides 10 CLV to SP
-    await borrowerOperations.openLoan(dec(50, 18), alice, { from: alice, value: dec(500, 'finney') })
+    await borrowerOperations.openLoan(dec(40, 18), alice, { from: alice, value: dec(500, 'finney') })
     await poolManager.provideToSP(dec(10, 18), { from: alice })
 
     // Alice proves 10 CLV to SP
@@ -1296,41 +1297,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_isInSortedList)
   })
 
-  it("liquidate(): does nothing if trove has non-zero coll, zero debt, and infinite ICR", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
-
-    await priceFeed.setPrice('0')
-    const price = await priceFeed.getPrice()
-
-    const TCR_Before = (await cdpManager.getTCR()).toString()
-    const listSize_Before = (await sortedCDPs.getSize()).toString()
-
-    assert.isTrue(await cdpManager.checkRecoveryMode())
-
-    const bob_ICR = web3.utils.toHex(await cdpManager.getCurrentICR(bob, price))
-    const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-
-    assert.equal(bob_ICR, maxBytes32)
-
-    // Attempt to liquidate bob
-    await cdpManager.liquidate(bob)
-
-    // check bob active, check alice active
-    assert.isTrue((await sortedCDPs.contains(bob)))
-    assert.isTrue((await sortedCDPs.contains(alice)))
-
-    const TCR_After = (await cdpManager.getTCR()).toString()
-    const listSize_After = (await sortedCDPs.getSize()).toString()
-
-    assert.equal(TCR_Before, TCR_After)
-    assert.equal(listSize_Before, listSize_After)
-  })
-
   it("liquidate(): does nothing if trove has >= 110% ICR and the Stability Pool is empty", async () => {
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(90, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(150, 18), carol, { from: carol, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), carol, { from: carol, value: dec(2, 'ether') })
 
     await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
@@ -1346,7 +1316,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_ICR.gte(mv._MCR))
 
     // Confirm SP is empty
-    const CLVinSP = (await stabilityPool.getCLV()).toString()
+    const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
     assert.equal(CLVinSP, '0')
 
     // Attempt to liquidate bob
@@ -1366,8 +1336,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   it("liquidate(): reverts if trove is non-existent", async () => {
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
 
     await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
@@ -1390,9 +1360,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   it("liquidate(): reverts if trove has been closed", async () => {
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(150, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     assert.isTrue(await sortedCDPs.contains(carol))
 
@@ -1421,12 +1391,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   it("liquidate(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {
-    await borrowerOperations.openLoan(dec(50, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('90500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 CLV, 1 ETH
-    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('80500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 CLV, 1 ETH
+    await borrowerOperations.openLoan(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Defaulter opens with 30 CLV, 0.3 ETH
-    await borrowerOperations.openLoan(dec(30, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
+    await borrowerOperations.openLoan(dec(20, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -1495,7 +1465,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
   it("liquidate(): does not affect the SP deposit or ETH gain when called on an SP depositor's address that has no trove", async () => {
     await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Bob sends tokens to Dennis, who has no trove
     await clvToken.transfer(dennis, dec(200, 18), { from: bob })
@@ -1516,7 +1486,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const dennis_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(dennis)).toString()
     const dennis_ETHGain_Before = (await poolManager.getCurrentETHGain(dennis)).toString()
     assert.isAtMost(th.getDifference(dennis_Deposit_Before, dec(100, 18)), 1000)
-    assert.isAtMost(th.getDifference(dennis_ETHGain_Before, dec(1, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(dennis_ETHGain_Before, dec(995, 15)), 1000)
 
     // Attempt to liquidate Dennis
     try {
@@ -1590,17 +1560,17 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, harry, { from: harry, value: _1_Ether })
 
     // Everyone withdraws some CLV from their CDP, resulting in different ICRs
-    await borrowerOperations.withdrawCLV('1400000000000000000000', alice, { from: alice })  // 1400 CLV -> ICR = 400%
-    await borrowerOperations.withdrawCLV('200000000000000000000', bob, { from: bob }) //  200 CLV -> ICR = 350%
-    await borrowerOperations.withdrawCLV('210000000000000000000', carol, { from: carol }) // 210 CLV -> ICR = 286%
-    await borrowerOperations.withdrawCLV('220000000000000000000', dennis, { from: dennis }) // 220 CLV -> ICR = 273%
-    await borrowerOperations.withdrawCLV('230000000000000000000', erin, { from: erin }) // 230 CLV -> ICR = 261%
-    await borrowerOperations.withdrawCLV('240000000000000000000', freddy, { from: freddy }) // 240 CLV -> ICR = 250%
-    await borrowerOperations.withdrawCLV('85000000000000000000', greta, { from: greta }) // 85 CLV -> ICR = 235%
-    await borrowerOperations.withdrawCLV('90000000000000000000', harry, { from: harry }) // 90 CLV ->  ICR = 222%
+    await borrowerOperations.withdrawCLV('1390000000000000000000', alice, { from: alice })  // 1400 CLV -> ICR = 400%
+    await borrowerOperations.withdrawCLV('190000000000000000000', bob, { from: bob }) //  200 CLV -> ICR = 350%
+    await borrowerOperations.withdrawCLV('200000000000000000000', carol, { from: carol }) // 210 CLV -> ICR = 286%
+    await borrowerOperations.withdrawCLV('210000000000000000000', dennis, { from: dennis }) // 220 CLV -> ICR = 273%
+    await borrowerOperations.withdrawCLV('220000000000000000000', erin, { from: erin }) // 230 CLV -> ICR = 261%
+    await borrowerOperations.withdrawCLV('230000000000000000000', freddy, { from: freddy }) // 240 CLV -> ICR = 250%
+    await borrowerOperations.withdrawCLV('75000000000000000000', greta, { from: greta }) // 85 CLV -> ICR = 235%
+    await borrowerOperations.withdrawCLV('80000000000000000000', harry, { from: harry }) // 90 CLV ->  ICR = 222%
 
-    // Alice deposits 1400 CLV to Stability Pool
-    await poolManager.provideToSP('1400000000000000000000', { from: alice })
+    // Alice deposits 1390 CLV to Stability Pool
+    await poolManager.provideToSP('1390000000000000000000', { from: alice })
 
     // price drops
     // price drops to 1ETH:90CLV, reducing TCR below 150%
@@ -1629,14 +1599,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     Harry       100%
 
     */
-    alice_ICR = await cdpManager.getCurrentICR(alice, price)
-    bob_ICR = await cdpManager.getCurrentICR(bob, price)
-    carol_ICR = await cdpManager.getCurrentICR(carol, price)
-    dennis_ICR = await cdpManager.getCurrentICR(dennis, price)
-    erin_ICR = await cdpManager.getCurrentICR(erin, price)
-    freddy_ICR = await cdpManager.getCurrentICR(freddy, price)
-    greta_ICR = await cdpManager.getCurrentICR(greta, price)
-    harry_ICR = await cdpManager.getCurrentICR(harry, price)
+    const alice_ICR = await cdpManager.getCurrentICR(alice, price)
+    const bob_ICR = await cdpManager.getCurrentICR(bob, price)
+    const carol_ICR = await cdpManager.getCurrentICR(carol, price)
+    const dennis_ICR = await cdpManager.getCurrentICR(dennis, price)
+    const erin_ICR = await cdpManager.getCurrentICR(erin, price)
+    const freddy_ICR = await cdpManager.getCurrentICR(freddy, price)
+    const greta_ICR = await cdpManager.getCurrentICR(greta, price)
+    const harry_ICR = await cdpManager.getCurrentICR(harry, price)
 
     // Alice and Bob should have ICR > 150%
     assert.isTrue(alice_ICR.gt(_150percent))
@@ -1722,13 +1692,13 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, erin, { from: erin, value: _3_Ether })
     await borrowerOperations.openLoan(0, freddy, { from: freddy, value: _3_Ether })
 
-    // Alice withdraws 1400 CLV, the others each withdraw 250 CLV 
-    await borrowerOperations.withdrawCLV('1400000000000000000000', alice, { from: alice })  // 1400 CLV -> ICR = 429%
-    await borrowerOperations.withdrawCLV('250000000000000000000', bob, { from: bob }) //  250 CLV -> ICR = 240%
-    await borrowerOperations.withdrawCLV('250000000000000000000', carol, { from: carol }) // 250 CLV -> ICR = 240%
-    await borrowerOperations.withdrawCLV('250000000000000000000', dennis, { from: dennis }) // 250 CLV -> ICR = 240%
-    await borrowerOperations.withdrawCLV('250000000000000000000', erin, { from: erin }) // 250 CLV -> ICR = 240%
-    await borrowerOperations.withdrawCLV('250000000000000000000', freddy, { from: freddy }) // 250 CLV -> ICR = 240%
+    // Alice withdraws 1400 CLV, the others each withdraw 240 CLV 
+    await borrowerOperations.withdrawCLV('1400000000000000000000', alice, { from: alice })  // 1410 CLV -> ICR = 426%
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob }) //  250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('240000000000000000000', carol, { from: carol }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('240000000000000000000', dennis, { from: dennis }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('240000000000000000000', erin, { from: erin }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('240000000000000000000', freddy, { from: freddy }) // 250 CLV -> ICR = 240%
 
     // Alice deposits 1400 CLV to Stability Pool
     await poolManager.provideToSP('1400000000000000000000', { from: alice })
@@ -1824,11 +1794,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // --- SETUP --- 
     // Alice, Bob, Carol, Dennis, Erin open troves with consecutively decreasing collateral ratio
-    await borrowerOperations.openLoan('105000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('104000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('103000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('102000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('95000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('94000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('93000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     await priceFeed.setPrice(dec(100, 18))
 
@@ -1884,9 +1854,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   it("liquidateCDPs(): does nothing if n = 0", async () => {
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), bob, { from: bob, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan(dec(290, 18), carol, { from: carol, value: dec(3, 'ether') })
 
     await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
@@ -1923,11 +1893,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(dec(500, 18), whale, { from: whale, value: dec(10, 'ether') })
 
     // create 5 CDPs with varying ICRs
-    await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(110, 18), erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(180, 18), freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(290, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(100, 18), erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(170, 18), freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Whale puts some tokens in Stability Pool
     await poolManager.provideToSP(dec(300, 18), { from: whale })
@@ -1978,10 +1948,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(2, 'ether') })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: dec(3, 'ether') })
 
-    await borrowerOperations.openLoan('101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('217000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan('431000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('207000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan('318000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan('421000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
     assert.isTrue((await sortedCDPs.contains(defaulter_1)))
     assert.isTrue((await sortedCDPs.contains(defaulter_2)))
@@ -2004,7 +1974,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const TCR_Before = await cdpManager.getTCR()
 
     // Check Stability Pool has 500 CLV
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(500, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(500, 18))
 
     await cdpManager.liquidateCDPs(8)
 
@@ -2014,23 +1984,23 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse((await sortedCDPs.contains(defaulter_4)))
 
     // Check Stability Pool has been emptied by the liquidations
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Check that the liquidation sequence has improved the TCR
     const TCR_After = await cdpManager.getTCR()
     assert.isTrue(TCR_After.gte(TCR_Before))
   })
 
-  it("liquidateCDPs(): A liquidation sequence of pure redistributions does not decrease the TCR", async () => {
-    await borrowerOperations.openLoan(dec(500, 18), whale, { from: whale, value: dec(5, 'ether') })
+  it("liquidateCDPs(): A liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5%", async () => {
+    await borrowerOperations.openLoan(dec(400, 18), whale, { from: whale, value: dec(5, 'ether') })
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(2, 'ether') })
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: dec(3, 'ether') })
 
-    await borrowerOperations.openLoan('101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('247000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
+    await borrowerOperations.openLoan('318000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan('470000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
     assert.isTrue((await sortedCDPs.contains(defaulter_1)))
     assert.isTrue((await sortedCDPs.contains(defaulter_2)))
@@ -2044,9 +2014,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
     const TCR_Before = await cdpManager.getTCR()
+    // (5+1+2+3+1+2+3+4)*100/(410+10+10+10+101+257+328+480)
+    assert.isAtMost(th.getDifference(TCR_Before, '1307596513075965027'), 1000)
 
     // Check pool is empty before liquidation
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Liquidate
     await cdpManager.liquidateCDPs(8)
@@ -2057,18 +2029,21 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse((await sortedCDPs.contains(defaulter_3)))
     assert.isFalse((await sortedCDPs.contains(defaulter_4)))
 
-    // Check that the liquidation sequence has not reduced the TCR
+    // Check that the liquidation sequence has reduced the TCR
     const TCR_After = await cdpManager.getTCR()
-    assert.isTrue(TCR_After.gte(TCR_Before))
+    // ((5+1+2+3)+(1+2+3+4)*0.995)*100/(410+10+10+10+101+257+328+480)
+    assert.isAtMost(th.getDifference(TCR_After, '1304483188044831987'), 1000)
+    assert.isTrue(TCR_Before.gte(TCR_After))
+    assert.isTrue(TCR_After.gte(TCR_Before.mul(th.toBN(995)).div(th.toBN(1000))))
   })
 
   it("liquidateCDPs(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {
-    await borrowerOperations.openLoan(dec(50, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('90500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 CLV, 1 ETH
-    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('80500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 CLV, 1 ETH
+    await borrowerOperations.openLoan(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Defaulter opens with 30 CLV, 0.3 ETH
-    await borrowerOperations.openLoan(dec(30, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
+    await borrowerOperations.openLoan(dec(20, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -2134,9 +2109,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   it('liquidateCDPs(): does nothing if all troves have ICR > 110% and Stability Pool is empty', async () => {
-    await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(80, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(70, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(70, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(60, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops, but all troves remain active
     await priceFeed.setPrice(dec(100, 18))
@@ -2158,7 +2133,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 0 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Attempt liqudation sequence
     await cdpManager.liquidateCDPs(10)
@@ -2176,11 +2151,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   it('liquidateCDPs(): emits liquidation event with zero coll and debt when all troves have ICR > 110% and Stability Pool is empty', async () => {
-    await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(80, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(70, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(70, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(60, 18), carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan(dec(66, 18), dennis, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(56, 18), dennis, { from: erin, value: dec(1, 'ether') })
 
     // Price drops, but all troves remain active
     await priceFeed.setPrice(dec(100, 18))
@@ -2194,7 +2169,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 0 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     // Attempt liqudation sequence
     const liquidationTx = await cdpManager.liquidateCDPs(10)
@@ -2206,19 +2181,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
   it('liquidateCDPs(): emits liquidation event with correct values when all troves have ICR > 110% and Stability Pool covers a subset of troves', async () => {
     // Whale adds 180 CLV to SP
-    await borrowerOperations.openLoan(dec(660, 18), whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(650, 18), whale, { from: whale, value: dec(10, 'ether') })
     await poolManager.provideToSP(dec(180, 18), { from: whale })
 
     // Troves to be absorbed by SP
-    await borrowerOperations.openLoan(dec(90, 18), freddy, { from: freddy, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(90, 18), greta, { from: greta, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), greta, { from: greta, value: dec(1, 'ether') })
 
     // Troves to be spared
-    await borrowerOperations.openLoan(dec(80, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(75, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(70, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(70, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(65, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(60, 18), carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan(dec(65, 18), dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(55, 18), dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops, but all troves remain active
     await priceFeed.setPrice(dec(100, 18))
@@ -2235,7 +2210,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 180 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(180, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(180, 18))
 
     // Attempt liqudation sequence
     const liquidationTx = await cdpManager.liquidateCDPs(10)
@@ -2252,28 +2227,28 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await sortedCDPs.contains(dennis))
     assert.isTrue(await sortedCDPs.contains(whale))
 
-    // Liquidation event emits coll = (F_coll + G_coll), and debt = (F_debt + G_debt)
+    // Liquidation event emits coll = (F_coll + G_coll)*0.995, and debt = (F_debt + G_debt)
     assert.equal(liquidatedDebt.toString(), dec(180, 18))
-    assert.equal(liquidatedColl.toString(), dec(2, 'ether'))
+    assert.equal(liquidatedColl.toString(), dec(1990, 15))
   })
 
   it('liquidateCDPs():  emits liquidation event with correct values when all troves have ICR > 110% and Stability Pool covers a subset of troves, including a partial', async () => {
     // Whale opens trove and adds 220 CLV to SP
-    await borrowerOperations.openLoan(dec(660, 18), whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(650, 18), whale, { from: whale, value: dec(10, 'ether') })
     await poolManager.provideToSP(dec(220, 18), { from: whale })
 
     // Troves to be absorbed by SP
-    await borrowerOperations.openLoan(dec(90, 18), freddy, { from: freddy, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(90, 18), greta, { from: greta, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), greta, { from: greta, value: dec(1, 'ether') })
 
     // Trove to be partially liquidated
-    await borrowerOperations.openLoan(dec(80, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(70, 18), alice, { from: alice, value: dec(1, 'ether') })
 
     // Troves to be spared
-    await borrowerOperations.openLoan(dec(75, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(70, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(65, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(60, 18), carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan(dec(65, 18), dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(55, 18), dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops, but all troves remain active
     await priceFeed.setPrice(dec(100, 18))
@@ -2290,7 +2265,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 220 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(220, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(220, 18))
 
     // Attempt liqudation sequence
     const liquidationTx = await cdpManager.liquidateCDPs(10)
@@ -2315,27 +2290,27 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(entireDebt_A, dec(40, 18))
 
     /* Liquidation event emits:
-    coll = (F_coll + G_coll + A_Coll/2)
+    coll = (F_coll + G_coll + A_Coll/2)*0.995
     debt = (F_debt + G_debt + A_debt/2) */
     assert.equal(liquidatedDebt.toString(), dec(220, 18))
-    assert.equal(liquidatedColl.toString(), dec(25, 17))
+    assert.equal(liquidatedColl.toString(), dec(24875, 14))
   })
 
   it("liquidateCDPs(): does not affect the liquidated user's token balances", async () => {
     await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(15, 'ether') })
 
     // D, E, F open loans that will fall below MCR when price drops to 100
-    await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(150, 18), erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(180, 18), freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(170, 18), freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Check list size is 4
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
 
     // Check token balances before
-    assert.equal((await clvToken.balanceOf(dennis)).toString(), dec(100, 18))
-    assert.equal((await clvToken.balanceOf(erin)).toString(), dec(150, 18))
-    assert.equal((await clvToken.balanceOf(freddy)).toString(), dec(180, 18))
+    assert.equal((await clvToken.balanceOf(dennis)).toString(), dec(90, 18))
+    assert.equal((await clvToken.balanceOf(erin)).toString(), dec(140, 18))
+    assert.equal((await clvToken.balanceOf(freddy)).toString(), dec(170, 18))
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -2356,9 +2331,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse(await sortedCDPs.contains(freddy))
 
     // Check token balances of users whose troves were liquidated, have not changed
-    assert.equal((await clvToken.balanceOf(dennis)).toString(), dec(100, 18))
-    assert.equal((await clvToken.balanceOf(erin)).toString(), dec(150, 18))
-    assert.equal((await clvToken.balanceOf(freddy)).toString(), dec(180, 18))
+    assert.equal((await clvToken.balanceOf(dennis)).toString(), dec(90, 18))
+    assert.equal((await clvToken.balanceOf(erin)).toString(), dec(140, 18))
+    assert.equal((await clvToken.balanceOf(freddy)).toString(), dec(170, 18))
   })
 
   it("liquidateCDPs(): Liquidating troves at 100 < ICR < 110 with SP deposits correctly impacts their SP deposit and ETH gain", async () => {
@@ -2366,13 +2341,13 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(dec(400, 18), whale, { from: whale, value: dec(6, 'ether') })
     await poolManager.provideToSP(dec(400, 18), { from: whale })
 
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(300, 18), bob, { from: bob, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(290, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
-    // A, B provide 100, 300 to the SP
-    await poolManager.provideToSP(dec(100, 18), { from: alice })
-    await poolManager.provideToSP(dec(300, 18), { from: bob })
+    // A, B provide 90, 290 to the SP
+    await poolManager.provideToSP(dec(90, 18), { from: alice })
+    await poolManager.provideToSP(dec(290, 18), { from: bob })
 
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
 
@@ -2383,8 +2358,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Confirm Recovery Mode
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check 800 CLV in Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(800, 18))
+    // Check 780 CLV in Pool
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(780, 18))
 
     // *** Check A, B, C ICRs 100<ICR<110
     const alice_ICR = await cdpManager.getCurrentICR(alice, price)
@@ -2408,33 +2383,33 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     /* Prior to liquidation, SP deposits were:
     Whale: 400 CLV
-    Alice: 100 CLV
-    Bob:   300 CLV
+    Alice:  90 CLV
+    Bob:   290 CLV
     Carol: 0 CLV
 
-    Total CLV in Pool: 800 CLV
+    Total CLV in Pool: 780 CLV
 
     Then, liquidation hits A,B,C: 
 
     Total liquidated debt = 100 + 300 + 100 = 500 CLV
     Total liquidated ETH = 1 + 3 + 1 = 5 ETH
 
-    Whale CLV Loss: 500 * (400/800) = 250 CLV
-    Alice CLV Loss:  500 *(100/800) = 62.5 CLV
-    Bob CLV Loss: 500 * (300/800) = 187.5 CLV
+    Whale CLV Loss: 500 * (400/780) = 256.41 CLV
+    Alice CLV Loss:  500 *(90/780) = 57.69 CLV
+    Bob CLV Loss: 500 * (290/780) = 185.90 CLV
 
-    Whale remaining deposit: (400 - 250) = 150 CLV
-    Alice remaining deposit: (100 - 62.5) = 37.5 CLV
-    Bob remaining deposit: (300 - 187.5) = 112.5 CLV
+    Whale remaining deposit: (400 - 256.41) = 143.59 CLV
+    Alice remaining deposit: (90 - 57.69) = 32.31 CLV
+    Bob remaining deposit: (290 - 185.90) = 104.10 CLV
 
-    Whale ETH Gain: 5 * (400/800) = 2.5 ETH
-    Alice ETH Gain: 5 *(100/800) = 0.625 ETH
-    Bob ETH Gain: 5 * (300/800) = 1.875 ETH
+    Whale ETH Gain: 5*0.995 * (400/780) = 2.55 ETH
+    Alice ETH Gain: 5*0.995 *(90/780) = 0.574 ETH
+    Bob ETH Gain: 5*0.995 * (290/780) = 1.850 ETH
 
-    Total remaining deposits: 300 CLV
+    Total remaining deposits: 280 CLV
     Total ETH gain: 5 ETH */
 
-    const CLVinSP = (await stabilityPool.getCLV()).toString()
+    const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
     const ETHinSP = (await stabilityPool.getETH()).toString()
 
     // Check remaining CLV Deposits and ETH gain, for whale and depositors whose troves were liquidated
@@ -2446,20 +2421,20 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const alice_ETHGain = (await poolManager.getCurrentETHGain(alice)).toString()
     const bob_ETHGain = (await poolManager.getCurrentETHGain(bob)).toString()
 
-    assert.isAtMost(th.getDifference(whale_Deposit_After, dec(150, 18)), 1000)
-    assert.isAtMost(th.getDifference(alice_Deposit_After, '37500000000000000000'), 1000)
-    assert.isAtMost(th.getDifference(bob_Deposit_After, '112500000000000000000'), 1000)
+    assert.isAtMost(th.getDifference(whale_Deposit_After, '143589743589743591201'), 20000)
+    assert.isAtMost(th.getDifference(alice_Deposit_After, '32307692307692306599'), 20000)
+    assert.isAtMost(th.getDifference(bob_Deposit_After, '104102564102564087989'), 20000)
 
-    assert.isAtMost(th.getDifference(whale_ETHGain, '2500000000000000000'), 1000)
-    assert.isAtMost(th.getDifference(alice_ETHGain, '625000000000000000'), 1000)
-    assert.isAtMost(th.getDifference(bob_ETHGain, '1875000000000000000'), 1000)
+    assert.isAtMost(th.getDifference(whale_ETHGain, '2551282051282050655'), 2000)
+    assert.isAtMost(th.getDifference(alice_ETHGain, '574038461538461497'), 2000)
+    assert.isAtMost(th.getDifference(bob_ETHGain, '1849679487179487047'), 2000)
 
     // Check total remaining deposits and ETH gain in Stability Pool
-    const total_CLVinSP = (await stabilityPool.getCLV()).toString()
+    const total_CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
     const total_ETHinSP = (await stabilityPool.getETH()).toString()
 
-    assert.isAtMost(th.getDifference(total_CLVinSP, dec(300, 18)), 1000)
-    assert.isAtMost(th.getDifference(total_ETHinSP, dec(5, 'ether')), 1000)
+    assert.isAtMost(th.getDifference(total_CLVinSP, dec(280, 18)), 1000)
+    assert.isAtMost(th.getDifference(total_ETHinSP, dec(4975, 15)), 1000)
   })
 
   it("liquidateCDPs(): Liquidating troves at ICR <=100% with SP deposits does not alter their deposit or ETH gain", async () => {
@@ -2467,9 +2442,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(dec(400, 18), whale, { from: whale, value: dec(6, 'ether') })
     await poolManager.provideToSP(dec(400, 18), { from: whale })
 
-    await borrowerOperations.openLoan(dec(180, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(170, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(300, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(150, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(140, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // A, B provide 100, 300 to the SP
     await poolManager.provideToSP(dec(100, 18), { from: alice })
@@ -2485,7 +2460,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
     // Check CLV and ETH in Pool  before
-    const CLVinSP_Before = (await stabilityPool.getCLV()).toString()
+    const CLVinSP_Before = (await stabilityPool.getTotalCLVDeposits()).toString()
     const ETHinSP_Before = (await stabilityPool.getETH()).toString()
     assert.equal(CLVinSP_Before, dec(800, 18))
     assert.equal(ETHinSP_Before, '0')
@@ -2507,7 +2482,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '1')
 
     // Check CLV and ETH in Pool after
-    const CLVinSP_After = (await stabilityPool.getCLV()).toString()
+    const CLVinSP_After = (await stabilityPool.getTotalCLVDeposits()).toString()
     const ETHinSP_After = (await stabilityPool.getETH()).toString()
     assert.equal(CLVinSP_Before, CLVinSP_After)
     assert.equal(ETHinSP_Before, ETHinSP_After)
@@ -2535,12 +2510,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2578,12 +2553,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2631,12 +2606,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2679,12 +2654,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2726,12 +2701,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2754,11 +2729,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     That leaves 50 CLV in the Pool to absorb exactly half of Carol's debt (100) */
     const liquidationTx = await cdpManager.liquidateCDPs(10)
 
-    const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+    const [liquidatedDebt, liquidatedColl, collGasComp, clvGasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
     assert.equal(liquidatedDebt.toString(), '253000000000000000000')
-    assert.equal(liquidatedColl.toString(), '2500000000000000000')
-    assert.equal(gasComp, '0')
+    assert.equal(liquidatedColl.toString(), '2487500000000000000') // 2.5*0.995
+    assert.equal(collGasComp.toString(), dec(125, 14)) // 0.5% of 2.5
+    assert.equal(clvGasComp.toString(), dec(20, 18)) // partially liquidated trove doesn’t count here
   })
 
   it("liquidateCDPs() with a partial liquidation: ICR of partially liquidated trove does not change", async () => {
@@ -2766,12 +2742,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2805,12 +2781,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2845,12 +2821,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2896,12 +2872,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2943,12 +2919,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -2988,12 +2964,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -3014,11 +2990,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const trovesToLiquidate = [alice, bob, carol]
     const liquidationTx = await cdpManager.batchLiquidateTroves(trovesToLiquidate)
 
-    const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
+    const [liquidatedDebt, liquidatedColl, collGasComp, clvGasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
     assert.equal(liquidatedDebt.toString(), '253000000000000000000')
-    assert.equal(liquidatedColl.toString(), '2500000000000000000')
-    assert.equal(gasComp, '0')
+    assert.equal(liquidatedColl.toString(), '2487500000000000000') // 2.5*0.995
+    assert.equal(collGasComp.toString(), dec(125, 14)) // 0.5% of 2.5
+    assert.equal(clvGasComp.toString(), dec(20, 18)) // partially liquidated trove doesn’t count here
   })
 
   it("batchLiquidateTroves() with a partial liquidation: ICR of partially liquidated trove does not change", async () => {
@@ -3026,12 +3003,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await poolManager.provideToSP('253000000000000000000', { from: whale })
 
-    await borrowerOperations.openLoan('102000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('100000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('92000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('91000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -3061,13 +3038,13 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(10, 'ether') })
     await poolManager.provideToSP(dec(1000, 18), { from: whale })
 
-    await borrowerOperations.openLoan('100000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('99000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('98000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('97000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('89000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('88000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -3109,18 +3086,18 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   it("batchLiquidateTroves(), with 110% < ICR < 150%, and StabilityPool empty: doesn't liquidate any troves", async () => {
-    await borrowerOperations.openLoan('100000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('90000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
 
-    const bobDebt_Before = '99000000000000000000'
-    const carolDebt_Before = '98000000000000000000'
-    const dennisDebt_Before = '97000000000000000000'
+    const bobDebt_Before = '89000000000000000000'
+    const carolDebt_Before = '88000000000000000000'
+    const dennisDebt_Before = '87000000000000000000'
 
     await borrowerOperations.openLoan(bobDebt_Before, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(carolDebt_Before, carol, { from: carol, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dennisDebt_Before, dennis, { from: dennis, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan('97000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('96000000000000000000', freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('87000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan('86000000000000000000', freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
@@ -3169,9 +3146,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const bobColl_After = (await cdpManager.CDPs(bob))[1].add(await cdpManager.getPendingETHReward(bob))
     const carolColl_After = (await cdpManager.CDPs(carol))[1].add(await cdpManager.getPendingETHReward(carol))
 
-    assert.equal(dennisDebt_Before, dennisDebt_After)
-    assert.equal(bobDebt_Before, bobDebt_After)
-    assert.equal(carolDebt_Before, carolDebt_After)
+    assert.equal(th.toBN(dennisDebt_Before).add(th.toBN(dec(10, 18))).toString(), dennisDebt_After.toString())
+    assert.equal(th.toBN(bobDebt_Before).add(th.toBN(dec(10, 18))).toString(), bobDebt_After.toString())
+    assert.equal(th.toBN(carolDebt_Before).add(th.toBN(dec(10, 18))).toString(), carolDebt_After.toString())
   })
 
   it('batchLiquidateTroves(): skips liquidation of troves with ICR > 150%, regardless of Stability Pool size', async () => {
@@ -3180,19 +3157,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await poolManager.provideToSP(dec(1000, 18), { from: whale })
 
     // Troves that will fall into ICR range 100-110
-    await borrowerOperations.openLoan(dec(93, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(92, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(91, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(83, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(82, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(81, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Troves that will fall into ICR range 110-150
-    await borrowerOperations.openLoan(dec(90, 18), D, { from: D, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(80, 18), E, { from: E, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(70, 18), F, { from: F, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), D, { from: D, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(70, 18), E, { from: E, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(60, 18), F, { from: F, value: dec(1, 'ether') })
 
     // Troves that will fall into ICR range >= 150
-    await borrowerOperations.openLoan(dec(65, 18), G, { from: G, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(60, 18), H, { from: H, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(55, 18), I, { from: I, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(55, 18), G, { from: G, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), H, { from: H, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(45, 18), I, { from: I, value: dec(1, 'ether') })
 
     // Price drops, but all troves remain active
     await priceFeed.setPrice(dec(100, 18))
@@ -3307,11 +3284,11 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   it('batchLiquidateTroves(): emits liquidation event with zero coll and debt when troves have ICR > 110% and Stability Pool is empty', async () => {
-    await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(80, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(70, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(70, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(60, 18), carol, { from: carol, value: dec(1, 'ether') })
 
-    await borrowerOperations.openLoan(dec(66, 18), dennis, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(56, 18), dennis, { from: erin, value: dec(1, 'ether') })
 
     // Price drops, but all troves remain active
     await priceFeed.setPrice(dec(100, 18))
@@ -3325,7 +3302,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 0 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), '0')
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), '0')
 
     const trovesToLiquidate = [alice, bob, carol, dennis]
 
@@ -3339,17 +3316,17 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
   it('batchLiquidateTroves(): emits liquidation event with correct values when all troves have ICR > 110% and Stability Pool covers a subset of troves', async () => {
     // Whale adds 180 CLV to SP
-    await borrowerOperations.openLoan(dec(660, 18), whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(650, 18), whale, { from: whale, value: dec(10, 'ether') })
     await poolManager.provideToSP(dec(180, 18), { from: whale })
 
     // Troves to be absorbed by SP
-    await borrowerOperations.openLoan(dec(90, 18), freddy, { from: freddy, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(90, 18), greta, { from: greta, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), greta, { from: greta, value: dec(1, 'ether') })
 
     // Troves to be spared
-    await borrowerOperations.openLoan(dec(80, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(75, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(70, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(70, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(65, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(60, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     await borrowerOperations.openLoan(dec(65, 18), dennis, { from: dennis, value: dec(1, 'ether') })
 
@@ -3368,7 +3345,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 180 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(180, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(180, 18))
 
     const trovesToLiquidate = [freddy, greta, alice, bob, carol, dennis, whale]
 
@@ -3387,26 +3364,26 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await sortedCDPs.contains(dennis))
     assert.isTrue(await sortedCDPs.contains(whale))
 
-    // Liquidation event emits coll = (F_coll + G_coll), and debt = (F_debt + G_debt)
+    // Liquidation event emits coll = (F_coll + G_coll)*0.995, and debt = (F_debt + G_debt)
     assert.equal(liquidatedDebt.toString(), dec(180, 18))
-    assert.equal(liquidatedColl.toString(), dec(2, 'ether'))
+    assert.equal(liquidatedColl.toString(), dec(199, 16))
   })
 
-  it('batchLiquidateTroves(): emits liquidation event with correct values when all troves have ICR > 110% and Stability Pool covers a subset of troves, including a partial', async () => {
+  it('batchLiquidateTroves(): emits liquidation event with correct values when all troves have ICR > 110% and Stability Pool covers a subset of troves, including. a partial', async () => {
     // Whale opens trove and adds 220 CLV to SP
-    await borrowerOperations.openLoan(dec(660, 18), whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(650, 18), whale, { from: whale, value: dec(10, 'ether') })
     await poolManager.provideToSP(dec(220, 18), { from: whale })
 
     // Troves to be absorbed by SP
-    await borrowerOperations.openLoan(dec(90, 18), freddy, { from: freddy, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(90, 18), greta, { from: greta, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(80, 18), greta, { from: greta, value: dec(1, 'ether') })
 
     // Trove to be partially liquidated
-    await borrowerOperations.openLoan(dec(80, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(70, 18), alice, { from: alice, value: dec(1, 'ether') })
 
     // Troves to be spared
-    await borrowerOperations.openLoan(dec(75, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(70, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(65, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(60, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     await borrowerOperations.openLoan(dec(65, 18), dennis, { from: dennis, value: dec(1, 'ether') })
 
@@ -3425,7 +3402,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue((await cdpManager.getCurrentICR(carol, price)).gte(mv._MCR))
 
     // Confirm 220 CLV in Stability Pool
-    assert.equal((await stabilityPool.getCLV()).toString(), dec(220, 18))
+    assert.equal((await stabilityPool.getTotalCLVDeposits()).toString(), dec(220, 18))
 
     const trovesToLiquidate = [freddy, greta, alice, bob, carol, dennis, whale]
 
@@ -3452,10 +3429,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(entireDebt_A, dec(40, 18))
 
     /* Liquidation event emits:
-    coll = (F_coll + G_coll + A_Coll/2)
+    coll = (F_coll + G_coll + A_Coll/2)*0.995
     debt = (F_debt + G_debt + A_debt/2) */
     assert.equal(liquidatedDebt.toString(), dec(220, 18))
-    assert.equal(liquidatedColl.toString(), dec(25, 17))
+    assert.equal(liquidatedColl.toString(), dec(24875, 14))
   })
 
 })

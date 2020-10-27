@@ -18,6 +18,8 @@ contract PoolManager is Ownable, IPoolManager {
     using SafeMath for uint;
     using SafeMath128 for uint128;
 
+    address constant public GAS_POOL_ADDRESS = 0x00000000000000000000000000000000000009A5;
+
     // --- Connected contract declarations ---
 
     IBorrowerOperations public borrowerOperations;
@@ -27,10 +29,8 @@ contract PoolManager is Ownable, IPoolManager {
     ICDPManager public cdpManager;
 
     IPriceFeed public priceFeed;
-    address public priceFeedAddress;
 
     ICLVToken public CLV;
-    address public clvAddress;
 
     IStabilityPool public stabilityPool;
     address public stabilityPoolAddress;
@@ -40,7 +40,6 @@ contract PoolManager is Ownable, IPoolManager {
 
     IPool public defaultPool;
     address public defaultPoolAddress;
-   
    // --- Data structures ---
    
     mapping (address => uint) public initialDeposits;
@@ -90,7 +89,7 @@ contract PoolManager is Ownable, IPoolManager {
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    
+
     event UserSnapshotUpdated(uint _P, uint _S);
     event P_Updated(uint _P);
     event S_Updated(uint _S);
@@ -109,64 +108,53 @@ contract PoolManager is Ownable, IPoolManager {
         _;
     }
 
-    modifier onlyStabilityPoolorActivePool {
+    modifier onlyStabilityPool {
         require(
-            _msgSender() == stabilityPoolAddress ||  _msgSender() ==  activePoolAddress, 
-            "PoolManager: Caller is neither StabilityPool nor ActivePool");
+            _msgSender() == stabilityPoolAddress,
+            "PoolManager: Caller is not StabilityPool");
         _;
     }
 
     // --- Dependency setters ---
 
-    function setBorrowerOperations(address _borrowerOperationsAddress) external onlyOwner {
+    function setAddresses(
+        address _borrowerOperationsAddress,
+        address _cdpManagerAddress,
+        address _priceFeedAddress,
+        address _CLVAddress,
+        address _stabilityPoolAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress
+    )
+    external
+    onlyOwner
+    {
         borrowerOperationsAddress = _borrowerOperationsAddress;
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-    }
-
-    function setCDPManager(address _cdpManagerAddress) external onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
-    }
-
-     function setPriceFeed(address _priceFeedAddress) external onlyOwner {
-        priceFeedAddress = _priceFeedAddress;
         priceFeed = IPriceFeed(_priceFeedAddress);
-        emit PriceFeedAddressChanged(_priceFeedAddress);
-    }
-
-    function setCLVToken(address _CLVAddress) external onlyOwner {
-        clvAddress = _CLVAddress;
         CLV = ICLVToken(_CLVAddress);
-        emit CLVTokenAddressChanged(_CLVAddress);
-    }
-
-    function setStabilityPool(address _stabilityPoolAddress) external onlyOwner {
         stabilityPoolAddress = _stabilityPoolAddress;
-        stabilityPool = IStabilityPool(stabilityPoolAddress);
-        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
-    }
-
-    function setActivePool(address _activePoolAddress) external onlyOwner {
+        stabilityPool = IStabilityPool(_stabilityPoolAddress);
         activePoolAddress = _activePoolAddress;
-        activePool = IPool(activePoolAddress);
-        emit ActivePoolAddressChanged(_activePoolAddress);
-    }
-
-    function setDefaultPool(address _defaultPoolAddress) external onlyOwner {
+        activePool = IPool(_activePoolAddress);
         defaultPoolAddress = _defaultPoolAddress;
-        defaultPool = IPool(defaultPoolAddress);
+        defaultPool = IPool(_defaultPoolAddress);
+
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit PriceFeedAddressChanged(_priceFeedAddress);
+        emit CLVTokenAddressChanged(_CLVAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
+
+        _renounceOwnership();
     }
 
     // --- Getters ---
 
-    // Return the current ETH balance of the PoolManager contract
-    function getBalance() external view returns (uint) {
-        return address(this).balance;
-    } 
-    
     // Return the total active debt (in CLV) in the system
     function getActiveDebt() external view returns (uint) {
         return activePool.getCLVDebt();
@@ -189,7 +177,7 @@ contract PoolManager is Ownable, IPoolManager {
     
     // Return the total CLV in the Stability Pool
     function getStabilityPoolCLV() external view returns (uint) {
-        return stabilityPool.getCLV();
+        return stabilityPool.getTotalCLVDeposits();
     }
     
     // --- Pool interaction functions ---
@@ -208,17 +196,37 @@ contract PoolManager is Ownable, IPoolManager {
     
     // Issue the specified amount of CLV to _account and increases the total active debt
     function withdrawCLV(address _account, uint _CLV) external onlyBorrowerOperations {
-        activePool.increaseCLVDebt(_CLV);  
-        CLV.mint(_account, _CLV);  
+        _withdrawCLV(_account, _CLV);
+    }
+
+    function _withdrawCLV(address _account, uint _CLV) internal {
+        activePool.increaseCLVDebt(_CLV);
+        CLV.mint(_account, _CLV);
     }
     
     // Burn the specified amount of CLV from _account and decreases the total active debt
     function repayCLV(address _account, uint _CLV) external onlyBorrowerOperations {
+        _repayCLV(_account, _CLV);
+    }
+
+    function _repayCLV(address _account, uint _CLV) internal {
         activePool.decreaseCLVDebt(_CLV);
         CLV.burn(_account, _CLV);
-    }           
-    
-    // Update the Active Pool and the Default Pool when a CDP gets closed
+    }
+
+    function lockCLVGasCompensation(uint _CLV) external onlyBorrowerOperations {
+        _withdrawCLV(GAS_POOL_ADDRESS, _CLV);
+    }
+
+    function refundCLVGasCompensation(uint _CLV) external onlyBorrowerOperations {
+        _repayCLV(GAS_POOL_ADDRESS, _CLV);
+    }
+
+    function sendCLVGasCompensation(address _user, uint _CLV) external onlyCDPManager {
+        CLV.returnFromPool(GAS_POOL_ADDRESS, _user, _CLV);
+    }
+
+    // Update the Active Pool and the Default Pool when a CDP gets liquidated
     function liquidate(uint _CLV, uint _ETH) external onlyCDPManager {
         // Transfer the debt & coll from the Active Pool to the Default Pool
         defaultPool.increaseCLVDebt(_CLV);
@@ -241,6 +249,24 @@ contract PoolManager is Ownable, IPoolManager {
         activePool.decreaseCLVDebt(_CLV);  
 
         activePool.sendETH(_account, _ETH); 
+    }
+
+    /*
+      Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
+     * It’s called by CDPManager when after redemption there’s only gas compensation left as debt
+     */
+    function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external onlyCDPManager {
+        /*
+         * This is called by CDPManager when the redemption drains all the trove and there’s only the gas compensation left.
+         * The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left correspond to the remaining collateral.
+         * In order to close the trove, the user should get the CLV refunded and use them to repay and close it,
+         * but instead we do that all in one step.
+         */
+        CLV.burn(GAS_POOL_ADDRESS, _CLV);
+        // Update Active Pool CLV, and send ETH to account
+        activePool.decreaseCLVDebt(_CLV);
+
+        activePool.sendETH(_account, _ETH);
     }
 
     // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
@@ -333,7 +359,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Send CLV to user and decrease CLV in Pool
     function _sendCLVToUser(address _address, uint CLVWithdrawal) internal {
-        uint CLVinPool = stabilityPool.getCLV();
+        uint CLVinPool = stabilityPool.getTotalCLVDeposits();
         assert(CLVWithdrawal <= CLVinPool);
 
         CLV.returnFromPool(stabilityPoolAddress, _address, CLVWithdrawal); 
@@ -451,10 +477,9 @@ contract PoolManager is Ownable, IPoolManager {
     Only called from liquidation functions in CDPManager. */
     function offset(uint _debtToOffset, uint _collToAdd) 
     external 
-    payable 
-    onlyCDPManager 
+    onlyCDPManager
     {    
-        uint totalCLVDeposits = stabilityPool.getCLV(); 
+        uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
         if (totalCLVDeposits == 0 || _debtToOffset == 0) { return; }
         
         (uint ETHGainPerUnitStaked,
@@ -539,5 +564,5 @@ contract PoolManager is Ownable, IPoolManager {
         require(cdpManager.getCDPStatus(_user) == 1, "CDPManager: caller must have an active trove to withdraw ETHGain to");
     }
 
-    function () external payable onlyStabilityPoolorActivePool {}
-}    
+    function () external payable onlyStabilityPool {}
+}

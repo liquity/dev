@@ -10,10 +10,9 @@ contract ActivePool is Ownable, IPool {
 
     address public poolManagerAddress;
     address public cdpManagerAddress;
-    address public stabilityPoolAddress;
     address public defaultPoolAddress;
-    uint256 public ETH;  // deposited ether tracker
-    uint256 public CLVDebt;
+    uint256 internal ETH;  // deposited ether tracker
+    uint256 internal CLVDebt;
 
     // --- Events ---
 
@@ -26,12 +25,11 @@ contract ActivePool is Ownable, IPool {
         _;
     }
 
-    modifier onlyPoolManagerOrPool {
+    modifier onlyPoolManagerOrDefaultPool {
         require(
             _msgSender() == poolManagerAddress || 
-            _msgSender() == stabilityPoolAddress || 
-            _msgSender() == defaultPoolAddress, 
-            "ActivePool: Caller is neither the PoolManager nor a Pool");
+            _msgSender() == defaultPoolAddress,
+            "ActivePool: Caller is neither the PoolManager nor Default Pool");
         _;
     }
 
@@ -45,24 +43,23 @@ contract ActivePool is Ownable, IPool {
 
     // --- Contract setters ---
 
-    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
+    function setAddresses(
+        address _poolManagerAddress,
+        address _cdpManagerAddress,
+        address _defaultPoolAddress
+    )
+        external
+        onlyOwner
+    {
         poolManagerAddress = _poolManagerAddress;
-        emit PoolManagerAddressChanged(_poolManagerAddress);
-    }
-
-     function setCDPManagerAddress(address _cdpManagerAddress) external onlyOwner {
         cdpManagerAddress = _cdpManagerAddress;
+        defaultPoolAddress = _defaultPoolAddress;
+
+        emit PoolManagerAddressChanged(_poolManagerAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
-    }
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
 
-    function setDefaultPoolAddress(address _defaultPoolAddress) external onlyOwner {
-        defaultPoolAddress = _defaultPoolAddress; 
-        emit DefaultPoolAddressChanged(defaultPoolAddress);
-    }
-
-    function setStabilityPoolAddress(address _stabilityPoolAddress) external onlyOwner {
-        stabilityPoolAddress = _stabilityPoolAddress;
-        emit StabilityPoolAddressChanged(stabilityPoolAddress);
+        _renounceOwnership();
     }
 
     // --- Getters for public variables. Required by IPool interface ---
@@ -99,8 +96,7 @@ contract ActivePool is Ownable, IPool {
         return address(this).balance;
     }
 
-    function () external payable onlyPoolManagerOrPool {
-        require(msg.data.length == 0);
+    function () external payable onlyPoolManagerOrDefaultPool {
         ETH = ETH.add(msg.value);
     }
 }

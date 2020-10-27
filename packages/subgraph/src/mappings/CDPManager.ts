@@ -17,6 +17,7 @@ import { getTroveOperationFromCDPManagerOperation } from "../types/TroveOperatio
 import { finishCurrentLiquidation } from "../entities/Liquidation";
 import { finishCurrentRedemption } from "../entities/Redemption";
 import { updateTrove } from "../entities/Trove";
+import { updateTotalRedistributed } from "../entities/Global";
 
 export function handleBorrowerOperationsAddressChanged(
   event: BorrowerOperationsAddressChanged
@@ -73,12 +74,17 @@ export function handleCDPLiquidated(event: CDPLiquidated): void {
 }
 
 export function handleLiquidation(event: Liquidation): void {
+  let cdpManager = CDPManager.bind(event.address);
+
   finishCurrentLiquidation(
     event,
     event.params._liquidatedColl,
     event.params._liquidatedDebt,
-    event.params._gasCompensation
+    event.params._collGasCompensation,
+    event.params._CLVGasCompensation
   );
+
+  updateTotalRedistributed(cdpManager.L_ETH(), cdpManager.L_CLVDebt());
 }
 
 export function handleRedemption(event: Redemption): void {

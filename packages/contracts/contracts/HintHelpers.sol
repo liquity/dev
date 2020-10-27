@@ -8,17 +8,11 @@ import "./Dependencies/Ownable.sol";
 
 contract HintHelpers is LiquityBase, Ownable {
 
-    uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.  TODO: extract to base contract
-    uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
-
     IPriceFeed public priceFeed;
-    address public priceFeedAddress;
 
     ISortedCDPs public sortedCDPs;
-    address public sortedCDPsAddress;
 
     ICDPManager public cdpManager;
-    address public cdpManagerAddress;
 
     // --- Events ---
 
@@ -28,22 +22,23 @@ contract HintHelpers is LiquityBase, Ownable {
 
     // --- Dependency setters ---
 
-    function setPriceFeed(address _priceFeedAddress) external onlyOwner {
-        priceFeedAddress = _priceFeedAddress;
-        priceFeed = IPriceFeed(priceFeedAddress);
-        emit PriceFeedAddressChanged(_priceFeedAddress);
-    }
-
-    function setSortedCDPs(address _sortedCDPsAddress) external onlyOwner {
-        sortedCDPsAddress = _sortedCDPsAddress;
+    function setAddresses(
+        address _priceFeedAddress,
+        address _sortedCDPsAddress,
+        address _cdpManagerAddress
+    )
+        external
+        onlyOwner
+    {
+        priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
-    }
-
-    function setCDPManager(address _cdpManagerAddress) external onlyOwner {
-        cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
+
+        emit PriceFeedAddressChanged(_priceFeedAddress);
+        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
+
+        _renounceOwnership();
     }
 
     // --- Functions ---
@@ -68,7 +63,7 @@ contract HintHelpers is LiquityBase, Ownable {
         firstRedemptionHint = currentCDPuser;
 
         while (currentCDPuser != address(0) && remainingCLV > 0) {
-            uint CLVDebt = cdpManager.getCDPDebt(currentCDPuser)
+            uint CLVDebt = _getNetDebt(cdpManager.getCDPDebt(currentCDPuser))
                                      .add(cdpManager.getPendingCLVDebtReward(currentCDPuser));
 
             if (CLVDebt > remainingCLV) {

@@ -9,10 +9,9 @@ contract DefaultPool is Ownable, IPool {
     using SafeMath for uint256;
 
     address public poolManagerAddress;
-    address public stabilityPoolAddress;
     address public activePoolAddress;
-    uint256 public ETH;  // deposited ether tracker
-    uint256 public CLVDebt;  // total outstanding CDP debt
+    uint256 internal ETH;  // deposited ether tracker
+    uint256 internal CLVDebt;  // total outstanding CDP debt
 
     // --- Modifiers ---
 
@@ -21,30 +20,27 @@ contract DefaultPool is Ownable, IPool {
         _;
     }
 
-    modifier onlyPoolManagerOrPool {
-        require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == stabilityPoolAddress || 
-            _msgSender() == activePoolAddress, 
-            "DefaultPool: Caller is neither the PoolManager nor a Pool");
+    modifier onlyActivePool {
+        require(_msgSender() == activePoolAddress, "DefaultPool: Caller is not ActivePool");
         _;
     }
 
     // --- Dependency setters ---
 
-    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
+    function setAddresses(
+        address _poolManagerAddress,
+        address _activePoolAddress
+    )
+        external
+        onlyOwner
+    {
         poolManagerAddress = _poolManagerAddress;
-        emit PoolManagerAddressChanged(poolManagerAddress);
-    }
-
-    function setActivePoolAddress(address _activePoolAddress) external onlyOwner {
         activePoolAddress = _activePoolAddress;
-        emit ActivePoolAddressChanged(activePoolAddress);
-    }
 
-    function setStabilityPoolAddress(address _stabilityPoolAddress) external onlyOwner {
-        stabilityPoolAddress = _stabilityPoolAddress;
-        emit StabilityPoolAddressChanged(stabilityPoolAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
+
+        _renounceOwnership();
     }
 
     // --- Getters for public variables. Required by IPool interface ---
@@ -81,8 +77,7 @@ contract DefaultPool is Ownable, IPool {
         return address(this).balance;
     }
 
-    function () external payable onlyPoolManagerOrPool {
-        require(msg.data.length == 0);
+    function () external payable onlyActivePool {
         ETH = ETH.add(msg.value);
     }
 }

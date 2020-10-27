@@ -21,7 +21,8 @@ export function getCurrentLiquidation(event: ethereum.Event): Liquidation {
     newLiquidation.liquidator = getUser(event.transaction.from).id;
     newLiquidation.liquidatedCollateral = DECIMAL_ZERO;
     newLiquidation.liquidatedDebt = DECIMAL_ZERO;
-    newLiquidation.gasCompensation = DECIMAL_ZERO;
+    newLiquidation.collGasCompensation = DECIMAL_ZERO;
+    newLiquidation.tokenGasCompensation = DECIMAL_ZERO;
     newLiquidation.save();
 
     let global = getGlobal();
@@ -38,12 +39,14 @@ export function finishCurrentLiquidation(
   event: ethereum.Event,
   _liquidatedColl: BigInt,
   _liquidatedDebt: BigInt,
-  _gasCompensation: BigInt
+  _collGasCompensation: BigInt,
+  _CLVGasCompensation: BigInt
 ): void {
   let currentLiquidation = getCurrentLiquidation(event);
   currentLiquidation.liquidatedCollateral = decimalize(_liquidatedColl);
   currentLiquidation.liquidatedDebt = decimalize(_liquidatedDebt);
-  currentLiquidation.gasCompensation = decimalize(_gasCompensation);
+  currentLiquidation.collGasCompensation = decimalize(_collGasCompensation);
+  currentLiquidation.tokenGasCompensation = decimalize(_CLVGasCompensation);
   currentLiquidation.save();
 
   let global = getGlobal();
