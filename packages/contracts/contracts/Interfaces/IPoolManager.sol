@@ -78,7 +78,7 @@ interface IPoolManager {
 
     function withdrawFromSP(uint _amount) external;
 
-    function withdrawFromSPtoCDP(address _user, address _hint) external;
+    function withdrawFromSPtoCDP(address _hint) external;
 
     function offset(uint _debt, uint _coll) external;
 }

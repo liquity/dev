@@ -97,9 +97,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_1, { from: owner });
 
       // Check depositors' compounded deposit is 66.66 CLV and ETH Gain is 0.33 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,  { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -139,9 +139,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Check depositors' compounded deposit is 33.33 CLV and ETH Gain is 0.66 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -184,9 +184,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Check depositors' compounded deposit is 0 CLV and ETH Gain is 1 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice,  { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice,  { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -226,9 +226,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Check depositors' compounded deposit is 0 CLV and ETH Gain is 1 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -270,9 +270,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Check depositors' compounded deposit is 80 CLV and ETH Gain is 0.2 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob,  { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob,  { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -317,9 +317,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Depositors attempt to withdraw everything
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,  { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -366,9 +366,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Depositors attempt to withdraw everything
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -424,9 +424,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Depositors attempt to withdraw everything
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -477,10 +477,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // Third defaulter liquidated
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -536,10 +536,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -607,10 +607,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
       // Each depositor withdraws as much as possible
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -660,7 +660,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
 
       const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(dennis)).toString(), '50000000000000000000'), 1000)
@@ -670,9 +670,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,  { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -744,9 +744,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,  { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -806,9 +806,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob,{ from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob,{ from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
@@ -869,10 +869,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // await borrowerOperations.openLoan(dec(1, 18), account, { from: erin, value: dec(2, 'ether') })
       // await poolManager.provideToSP(dec(1, 18), { from: erin })
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
 
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
       const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
@@ -942,11 +942,11 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // await borrowerOperations.openLoan(dec(1, 18), account, { from: flyn, value: dec(2, 'ether') })
       // await poolManager.provideToSP(dec(1, 18), { from: flyn })
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
-      const txE = await poolManager.withdrawFromSPtoCDP(erin, erin, { from: erin })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
+      const txE = await poolManager.withdrawFromSPtoCDP(erin, { from: erin })
 
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
       const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
@@ -1002,7 +1002,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
@@ -1084,14 +1084,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // await borrowerOperations.withdrawCLV(dec(1, 18), whale, { from: whale })
       // await poolManager.provideToSP(dec(1, 18), { from: whale })
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
-      const txE = await poolManager.withdrawFromSPtoCDP(erin, erin, { from: erin })
-      const txF = await poolManager.withdrawFromSPtoCDP(flyn, flyn,{ from: flyn })
-      const txG = await poolManager.withdrawFromSPtoCDP(graham, graham, { from: graham })
-      const txH = await poolManager.withdrawFromSPtoCDP(harriet, harriet, { from: harriet })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
+      const txE = await poolManager.withdrawFromSPtoCDP(erin, { from: erin })
+      const txF = await poolManager.withdrawFromSPtoCDP(flyn,{ from: flyn })
+      const txG = await poolManager.withdrawFromSPtoCDP(graham, { from: graham })
+      const txH = await poolManager.withdrawFromSPtoCDP(harriet, { from: harriet })
 
       const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
       const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
@@ -1157,7 +1157,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await poolManager.P()).toString(), '9')
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
@@ -1168,7 +1168,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // Defaulter 2 liquidated.  90 CLV liquidated. P altered by a factor of (1-90/100) = 0.1.  Scale changed.
       await cdpManager.liquidate(defaulter_2, { from: owner });
  
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
       const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
 
       // Expect Bob to withdraw 10% of initial deposit (10 CLV) and all the liquidated ETH (0.5 ether)
@@ -1207,7 +1207,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await poolManager.P()).toString(), '9')
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
 
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
       await poolManager.provideToSP(dec(100, 18), { from: bob })
@@ -1222,9 +1222,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
 
       /* Expect depositors to withdraw 10% of their initial deposit, and an ETH gain 
       in proportion to their initial deposit:
@@ -1281,7 +1281,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
       // Bob deposits 100 CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
       await poolManager.provideToSP(dec(100, 18), { from: bob })
@@ -1289,7 +1289,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
       const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
 
       // Bob should withdraw 0 deposit, and the full ETH gain of 1 ether
@@ -1327,7 +1327,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
 
       // B, C, D deposit 100, 200, 300 CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
@@ -1343,13 +1343,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
       const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
 
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
       const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
 
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
       const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
 
       // B, C and D should withdraw 1e-10 of initial deposit, 
@@ -1425,10 +1425,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txL4 = await cdpManager.liquidate(defaulter_4, { from: owner });
       assert.isTrue(txL4.receipt.status)
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol, carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, dennis, { from: dennis })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
 
       const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
       const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
@@ -1476,8 +1476,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // Defaulter liquidated
       await cdpManager.liquidate(defaulter_1, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = txA.logs[1].args[1]
@@ -1535,8 +1535,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // Defaulter liquidated
       await cdpManager.liquidate(defaulter_1, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, bob, { from: bob })
+      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
 
       const alice_ETHWithdrawn = txA.logs[1].args[1]
       const bob_ETHWithdrawn = txB.logs[1].args[1]

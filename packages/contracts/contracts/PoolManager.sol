@@ -449,28 +449,27 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Transfer the caller's entire ETH gain from the Stability Pool to the caller's CDP, and leaves
     their compounded deposit in the Stability Pool.
-    
-    TODO: Remove _user param and just use _msgSender(). */
-    function withdrawFromSPtoCDP(address _user, address _hint) external {
-        require(_user == _msgSender(), "PoolManager: A user may only withdraw ETH gains to their own trove" );
-        _requireUserHasDeposit(_user); 
-        _requireUserHasTrove(_user);
+     */
+    function withdrawFromSPtoCDP(address _hint) external {
+        address user = _msgSender();
+        _requireUserHasDeposit(user);
+        _requireUserHasTrove(user);
 
-        uint initialDeposit = initialDeposits[_user];
-        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_user);
+        uint initialDeposit = initialDeposits[user];
+        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
-        uint ETHGain = _getCurrentETHGain(_user);
+        uint ETHGain = _getCurrentETHGain(user);
        
         // Update the recorded deposit value, and deposit snapshots
-        _updateDeposit(_user, compoundedCLVDeposit);
+        _updateDeposit(user, compoundedCLVDeposit);
 
         /* Emit events before transferring ETH gain to CDP.
          This lets the event log make more sense (i.e. so it appears that first the ETH gain is withdrawn 
         and then it is deposited into the CDP, not the other way around). */
-        emit ETHGainWithdrawn(_user, ETHGain, CLVLoss);
-        emit UserDepositChanged(_user, compoundedCLVDeposit); 
+        emit ETHGainWithdrawn(user, ETHGain, CLVLoss);
+        emit UserDepositChanged(user, compoundedCLVDeposit); 
 
-        _sendETHGainToCDP(_user, ETHGain, _hint);
+        _sendETHGainToCDP(user, ETHGain, _hint);
     }
 
      /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
