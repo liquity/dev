@@ -288,10 +288,9 @@ contract PoolManager is Ownable, IPoolManager {
 
         if (initialDeposit == 0) { return 0; }
 
-        uint snapshot_S = snapshot[_user].S;  
-        uint snapshot_P = snapshot[_user].P;
-        uint scaleSnapshot = snapshot[_user].scale;
-        uint epochSnapshot = snapshot[_user].epoch;
+        Snapshot storage userSnapshot = snapshot[_user];
+        uint scaleSnapshot = userSnapshot.scale;
+        uint epochSnapshot = userSnapshot.epoch;
 
         uint ETHGain;
 
@@ -299,10 +298,10 @@ contract PoolManager is Ownable, IPoolManager {
         one scale change.  
         If it does, the second portion of the reward is scaled by 1e18. 
         If the reward spans no scale change, the second portion will be 0. */
-        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(snapshot_S);
+        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(userSnapshot.S);
         uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
 
-        ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(snapshot_P).div(1e18);
+        ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(userSnapshot.P).div(1e18);
         
         return ETHGain;
     }
@@ -318,10 +317,11 @@ contract PoolManager is Ownable, IPoolManager {
 
         if (initialDeposit == 0) { return 0; }
 
-        uint snapshot_P = snapshot[_user].P; 
-        uint128 scaleSnapshot = snapshot[_user].scale;
-        uint128 epochSnapshot = snapshot[_user].epoch;
-        
+        Snapshot storage userSnapshot = snapshot[_user];
+        uint snapshot_P = userSnapshot.P;
+        uint128 scaleSnapshot = userSnapshot.scale;
+        uint128 epochSnapshot = userSnapshot.epoch;
+
         // If deposit was made before a pool-emptying event, then it has been fully cancelled with debt -- so, return 0
         if (epochSnapshot < currentEpoch) { return 0; }
 
@@ -370,21 +370,22 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Record a new deposit
     function _updateDeposit(address _address, uint _amount) internal {
+        Snapshot storage userSnapshot = snapshot[_address];
         if (_amount == 0) {
             initialDeposits[_address] = 0;
-            emit UserSnapshotUpdated(snapshot[_address].P, snapshot[_address].S);
+            emit UserSnapshotUpdated(userSnapshot.P, userSnapshot.S);
             return;
         }
 
         initialDeposits[_address] = _amount;
     
         // Record new individual snapshots of the running product P and sum S for the user
-        snapshot[_address].P = P;
-        snapshot[_address].S = epochToScaleToSum[currentEpoch][currentScale];
-        snapshot[_address].scale = currentScale;
-        snapshot[_address].epoch = currentEpoch;
+        userSnapshot.P = P;
+        userSnapshot.S = epochToScaleToSum[currentEpoch][currentScale];
+        userSnapshot.scale = currentScale;
+        userSnapshot.epoch = currentEpoch;
 
-        emit UserSnapshotUpdated(snapshot[_address].P, snapshot[_address].S);
+        emit UserSnapshotUpdated(userSnapshot.P, userSnapshot.S);
     }
  
     // --- External StabilityPool Functions ---
