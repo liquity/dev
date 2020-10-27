@@ -340,6 +340,8 @@ contract PoolManager is Ownable, IPoolManager {
         }
 
         // If compounded deposit is less than a billionth of the initial deposit, return 0
+        // TODO: confirm the reason:
+        // to make sure that any numerical error from floor-division always "favors the system"
         if (compoundedDeposit < initialDeposit.div(1e9)) { return 0; }
 
         return compoundedDeposit;
