@@ -55,21 +55,34 @@ const getType = ({ baseType, components, arrayChildren }: ParamType, flexible: b
   throw new Error(`unimplemented type ${baseType}`);
 };
 
-export function generate(contractName: string, { functions, events }: Interface): string {
-  return [
-    `export declare class ${contractName} extends Contract {`,
+const declareInterface = ({
+  contractName,
+  interface: { events, functions }
+}: {
+  contractName: string;
+  interface: Interface;
+}) =>
+  [
+    `export interface ${contractName} extends LiquityContract {`,
     "  readonly [name: string]: unknown;",
 
     "  readonly filters: {",
     ...Object.values(events).map(({ name, inputs }) => {
       const params = inputs.map(
-        (input, i) =>
-          `${input.name || "arg" + i}?: ${input.indexed ? `${getType(input, true)} | null` : "null"}`
+        input => `${input.name}?: ${input.indexed ? `${getType(input, true)} | null` : "null"}`
       );
 
       return `    ${name}(${params.join(", ")}): EventFilter;`;
     }),
     "  };",
+
+    ...Object.values(events).map(
+      ({ name, inputs }) =>
+        `  extractEvents(logs: Log[], name: "${name}"): TypedLogDescription<${getTupleType(
+          inputs,
+          false
+        )}>[];`
+    ),
 
     ...Object.values(functions).map(({ name, constant, payable, inputs, outputs }) => {
       const overridesType = constant ? "CallOverrides" : payable ? "PayableOverrides" : "Overrides";
@@ -97,9 +110,8 @@ export function generate(contractName: string, { functions, events }: Interface)
 
     "}"
   ].join("\n");
-}
 
-const contracts = [
+const contractArtifacts = [
   ActivePool,
   BorrowerOperations,
   CDPManager,
@@ -113,10 +125,15 @@ const contracts = [
   StabilityPool
 ];
 
-export const imports = `import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
-//import { BytesLike } from "@ethersproject/bytes";
+const contracts = contractArtifacts.map(({ contractName, abi }) => ({
+  contractName,
+  interface: new Interface(abi)
+}));
+
+const output = `
+import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
+import { Log } from "@ethersproject/abstract-provider";
 import {
-  Contract,
   Overrides,
   CallOverrides,
   PayableOverrides,
@@ -124,16 +141,15 @@ import {
   EventFilter
 } from "@ethersproject/contracts";
 
-`;
+import { LiquityContract, TypedLogDescription } from "../src/contracts";
 
-const output =
-  imports +
-  contracts.map(({ contractName, abi }) => generate(contractName, new Interface(abi))).join("\n\n");
+${contracts.map(declareInterface).join("\n\n")}
+`;
 
 fs.mkdirSync("types", { recursive: true });
 fs.writeFileSync(path.join("types", "index.ts"), output);
 
 fs.mkdirSync("abi", { recursive: true });
-contracts.forEach(({ contractName, abi }) =>
+contractArtifacts.forEach(({ contractName, abi }) =>
   fs.writeFileSync(path.join("abi", `${contractName}.json`), JSON.stringify(abi, undefined, 2))
 );

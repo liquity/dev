@@ -1,6 +1,6 @@
-import { JsonFragment } from "@ethersproject/abi";
+import { JsonFragment, LogDescription, Result } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
-import { Provider } from "@ethersproject/abstract-provider";
+import { Provider, Log } from "@ethersproject/abstract-provider";
 import { Contract } from "@ethersproject/contracts";
 
 import activePoolAbi from "../abi/ActivePool.json";
@@ -21,7 +21,7 @@ import kovan from "../deployments/kovan.json";
 import rinkeby from "../deployments/rinkeby.json";
 import ropsten from "../deployments/ropsten.json";
 
-import type {
+import {
   ActivePool,
   BorrowerOperations,
   CDPManager,
@@ -49,6 +49,19 @@ export const abi: { [name: string]: JsonFragment[] } = {
   stabilityPool: stabilityPoolAbi
 };
 
+export interface TypedLogDescription<T> extends LogDescription {
+  args: Result & T;
+}
+
+export class LiquityContract extends Contract {
+  extractEvents(logs: Log[], name: string) {
+    return logs
+      .filter(log => log.address === this.address)
+      .map(log => this.interface.parseLog(log))
+      .filter(e => e.name === name);
+  }
+}
+
 export interface LiquityContractAddresses {
   activePool: string;
   borrowerOperations: string;
@@ -64,7 +77,7 @@ export interface LiquityContractAddresses {
 }
 
 export interface LiquityContracts {
-  [name: string]: Contract;
+  [name: string]: LiquityContract;
 
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
@@ -97,25 +110,58 @@ export const connectToContracts = (
   addresses: LiquityContractAddresses,
   signerOrProvider: Signer | Provider
 ): LiquityContracts => ({
-  activePool: new Contract(addresses.activePool, activePoolAbi, signerOrProvider) as ActivePool,
-  borrowerOperations: new Contract(
+  activePool: new LiquityContract(
+    addresses.activePool,
+    activePoolAbi,
+    signerOrProvider
+  ) as ActivePool,
+  borrowerOperations: new LiquityContract(
     addresses.borrowerOperations,
     borrowerOperationsAbi,
     signerOrProvider
   ) as BorrowerOperations,
-  cdpManager: new Contract(addresses.cdpManager, cdpManagerAbi, signerOrProvider) as CDPManager,
-  clvToken: new Contract(addresses.clvToken, clvTokenAbi, signerOrProvider) as CLVToken,
-  defaultPool: new Contract(addresses.defaultPool, defaultPoolAbi, signerOrProvider) as DefaultPool,
-  hintHelpers: new Contract(addresses.hintHelpers, hintHelpersAbi, signerOrProvider) as HintHelpers,
-  multiCDPgetter: new Contract(
+
+  cdpManager: new LiquityContract(
+    addresses.cdpManager,
+    cdpManagerAbi,
+    signerOrProvider
+  ) as CDPManager,
+
+  clvToken: new LiquityContract(addresses.clvToken, clvTokenAbi, signerOrProvider) as CLVToken,
+
+  defaultPool: new LiquityContract(
+    addresses.defaultPool,
+    defaultPoolAbi,
+    signerOrProvider
+  ) as DefaultPool,
+
+  hintHelpers: new LiquityContract(
+    addresses.hintHelpers,
+    hintHelpersAbi,
+    signerOrProvider
+  ) as HintHelpers,
+
+  multiCDPgetter: new LiquityContract(
     addresses.multiCDPgetter,
     multiCDPgetterAbi,
     signerOrProvider
   ) as MultiCDPGetter,
-  poolManager: new Contract(addresses.poolManager, poolManagerAbi, signerOrProvider) as PoolManager,
-  priceFeed: new Contract(addresses.priceFeed, priceFeedAbi, signerOrProvider) as PriceFeed,
-  sortedCDPs: new Contract(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider) as SortedCDPs,
-  stabilityPool: new Contract(
+
+  poolManager: new LiquityContract(
+    addresses.poolManager,
+    poolManagerAbi,
+    signerOrProvider
+  ) as PoolManager,
+
+  priceFeed: new LiquityContract(addresses.priceFeed, priceFeedAbi, signerOrProvider) as PriceFeed,
+
+  sortedCDPs: new LiquityContract(
+    addresses.sortedCDPs,
+    sortedCDPsAbi,
+    signerOrProvider
+  ) as SortedCDPs,
+
+  stabilityPool: new LiquityContract(
     addresses.stabilityPool,
     stabilityPoolAbi,
     signerOrProvider
