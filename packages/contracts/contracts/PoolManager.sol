@@ -90,7 +90,7 @@ contract PoolManager is Ownable, IPoolManager {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
 
-    event UserSnapshotUpdated(uint _P, uint _S);
+    event UserSnapshotUpdated(address indexed _user, uint _P, uint _S);
     event P_Updated(uint _P);
     event S_Updated(uint _S);
     event UserDepositChanged(address indexed _user, uint _amount);
@@ -376,7 +376,7 @@ contract PoolManager is Ownable, IPoolManager {
         if (_amount == 0) {
             initialDeposits[_address] = 0;
             delete snapshot[_address];
-            emit UserSnapshotUpdated(0, 0);
+            emit UserSnapshotUpdated(_address, 0, 0);
             return;
         }
 
@@ -388,7 +388,7 @@ contract PoolManager is Ownable, IPoolManager {
         userSnapshot.scale = currentScale;
         userSnapshot.epoch = currentEpoch;
 
-        emit UserSnapshotUpdated(userSnapshot.P, userSnapshot.S);
+        emit UserSnapshotUpdated(_address, userSnapshot.P, userSnapshot.S);
     }
  
     // --- External StabilityPool Functions ---
