@@ -1,7 +1,8 @@
 import { JsonFragment, LogDescription, Result } from "@ethersproject/abi";
+import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 import { Provider, Log } from "@ethersproject/abstract-provider";
-import { Contract } from "@ethersproject/contracts";
+import { Contract, ContractInterface } from "@ethersproject/contracts";
 
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
@@ -53,10 +54,32 @@ export interface TypedLogDescription<T> extends LogDescription {
   args: Result & T;
 }
 
-export class LiquityContract extends Contract {
-  // Ethers defines any string-keyed property as any. Override this, because it's not typesafe.
-  readonly [name: string]: unknown;
+type BucketOfFunctions = {
+  [name: string]: (...args: Array<any>) => any;
+};
 
+// Removes unsafe index signatures from an Ethers contract type
+type TypeSafeContract<T> = Pick<
+  T,
+  {
+    [P in keyof T]: BucketOfFunctions extends T[P] ? never : P;
+  } extends {
+    [_ in keyof T]: infer U;
+  }
+    ? U
+    : never
+>;
+
+export type TypedContract<T, U> = TypeSafeContract<T> &
+  U & {
+    estimateGas: {
+      [P in keyof U]: (
+        ...args: U[P] extends (...args: infer A) => unknown ? A : never
+      ) => Promise<BigNumber>;
+    };
+  };
+
+export class LiquityContract extends Contract {
   extractEvents(logs: Log[], name: string) {
     return logs
       .filter(log => log.address === this.address)
@@ -80,7 +103,7 @@ export interface LiquityContractAddresses {
 }
 
 export interface LiquityContracts {
-  [name: string]: LiquityContract;
+  [name: string]: TypeSafeContract<LiquityContract>;
 
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
@@ -109,66 +132,45 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   stabilityPool: contracts.stabilityPool.address
 });
 
+const create = <T extends TypedContract<LiquityContract, unknown>>(
+  address: string,
+  contractInterface: ContractInterface,
+  signerOrProvider: Signer | Provider
+) => (new LiquityContract(address, contractInterface, signerOrProvider) as unknown) as T;
+
 export const connectToContracts = (
   addresses: LiquityContractAddresses,
   signerOrProvider: Signer | Provider
 ): LiquityContracts => ({
-  activePool: new LiquityContract(
-    addresses.activePool,
-    activePoolAbi,
-    signerOrProvider
-  ) as ActivePool,
-  borrowerOperations: new LiquityContract(
+  activePool: create<ActivePool>(addresses.activePool, activePoolAbi, signerOrProvider),
+
+  borrowerOperations: create<BorrowerOperations>(
     addresses.borrowerOperations,
     borrowerOperationsAbi,
     signerOrProvider
-  ) as BorrowerOperations,
+  ),
 
-  cdpManager: new LiquityContract(
-    addresses.cdpManager,
-    cdpManagerAbi,
-    signerOrProvider
-  ) as CDPManager,
+  cdpManager: create<CDPManager>(addresses.cdpManager, cdpManagerAbi, signerOrProvider),
 
-  clvToken: new LiquityContract(addresses.clvToken, clvTokenAbi, signerOrProvider) as CLVToken,
+  clvToken: create<CLVToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
 
-  defaultPool: new LiquityContract(
-    addresses.defaultPool,
-    defaultPoolAbi,
-    signerOrProvider
-  ) as DefaultPool,
+  defaultPool: create<DefaultPool>(addresses.defaultPool, defaultPoolAbi, signerOrProvider),
 
-  hintHelpers: new LiquityContract(
-    addresses.hintHelpers,
-    hintHelpersAbi,
-    signerOrProvider
-  ) as HintHelpers,
+  hintHelpers: create<HintHelpers>(addresses.hintHelpers, hintHelpersAbi, signerOrProvider),
 
-  multiCDPgetter: new LiquityContract(
+  multiCDPgetter: create<MultiCDPGetter>(
     addresses.multiCDPgetter,
     multiCDPgetterAbi,
     signerOrProvider
-  ) as MultiCDPGetter,
+  ),
 
-  poolManager: new LiquityContract(
-    addresses.poolManager,
-    poolManagerAbi,
-    signerOrProvider
-  ) as PoolManager,
+  poolManager: create<PoolManager>(addresses.poolManager, poolManagerAbi, signerOrProvider),
 
-  priceFeed: new LiquityContract(addresses.priceFeed, priceFeedAbi, signerOrProvider) as PriceFeed,
+  priceFeed: create<PriceFeed>(addresses.priceFeed, priceFeedAbi, signerOrProvider),
 
-  sortedCDPs: new LiquityContract(
-    addresses.sortedCDPs,
-    sortedCDPsAbi,
-    signerOrProvider
-  ) as SortedCDPs,
+  sortedCDPs: create<SortedCDPs>(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider),
 
-  stabilityPool: new LiquityContract(
-    addresses.stabilityPool,
-    stabilityPoolAbi,
-    signerOrProvider
-  ) as StabilityPool
+  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider)
 });
 
 export type LiquityDeployment = {

@@ -63,26 +63,7 @@ const declareInterface = ({
   interface: Interface;
 }) =>
   [
-    `export interface ${contractName} extends LiquityContract {`,
-
-    "  readonly filters: {",
-    ...Object.values(events).map(({ name, inputs }) => {
-      const params = inputs.map(
-        input => `${input.name}?: ${input.indexed ? `${getType(input, true)} | null` : "null"}`
-      );
-
-      return `    ${name}(${params.join(", ")}): EventFilter;`;
-    }),
-    "  };",
-
-    ...Object.values(events).map(
-      ({ name, inputs }) =>
-        `  extractEvents(logs: Log[], name: "${name}"): TypedLogDescription<${getTupleType(
-          inputs,
-          false
-        )}>[];`
-    ),
-
+    `interface ${contractName}Functions {`,
     ...Object.values(functions).map(({ name, constant, payable, inputs, outputs }) => {
       const overridesType = constant ? "CallOverrides" : payable ? "PayableOverrides" : "Overrides";
 
@@ -106,6 +87,28 @@ const declareInterface = ({
 
       return `  ${name}(${params.join(", ")}): Promise<${returnType}>;`;
     }),
+    "}\n",
+
+    `export interface ${contractName}`,
+    `  extends TypedContract<LiquityContract, ${contractName}Functions> {`,
+
+    "  readonly filters: {",
+    ...Object.values(events).map(({ name, inputs }) => {
+      const params = inputs.map(
+        input => `${input.name}?: ${input.indexed ? `${getType(input, true)} | null` : "null"}`
+      );
+
+      return `    ${name}(${params.join(", ")}): EventFilter;`;
+    }),
+    "  };",
+
+    ...Object.values(events).map(
+      ({ name, inputs }) =>
+        `  extractEvents(logs: Log[], name: "${name}"): TypedLogDescription<${getTupleType(
+          inputs,
+          false
+        )}>[];`
+    ),
 
     "}"
   ].join("\n");
@@ -140,7 +143,7 @@ import {
   EventFilter
 } from "@ethersproject/contracts";
 
-import { LiquityContract, TypedLogDescription } from "../src/contracts";
+import { LiquityContract, TypedContract, TypedLogDescription } from "../src/contracts";
 
 ${contracts.map(declareInterface).join("\n\n")}
 `;
