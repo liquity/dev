@@ -527,6 +527,7 @@ contract PoolManager is Ownable, IPoolManager {
         uint newP;
 
         // Make product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
+        assert(_CLVLossPerUnitStaked <= 1e18);
         uint newProductFactor = _CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_CLVLossPerUnitStaked);
      
         // Update the ETH reward sum at the current scale and current epoch
