@@ -382,13 +382,17 @@ contract PoolManager is Ownable, IPoolManager {
 
         initialDeposits[_address] = _amount;
     
+        uint128 currentScaleCached = currentScale;
+        uint128 currentEpochCached = currentEpoch;
+        uint currentP = P;
+        uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
         // Record new individual snapshots of the running product P and sum S for the user
-        userSnapshot.P = P;
-        userSnapshot.S = epochToScaleToSum[currentEpoch][currentScale];
-        userSnapshot.scale = currentScale;
-        userSnapshot.epoch = currentEpoch;
+        userSnapshot.P = currentP;
+        userSnapshot.S = currentS;
+        userSnapshot.scale = currentScaleCached;
+        userSnapshot.epoch = currentEpochCached;
 
-        emit UserSnapshotUpdated(_address, userSnapshot.P, userSnapshot.S);
+        emit UserSnapshotUpdated(_address, currentP, currentS);
     }
  
     // --- External StabilityPool Functions ---
@@ -519,29 +523,37 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Update the Stability Pool reward sum S and product P
     function _updateRewardSumAndProduct(uint _ETHGainPerUnitStaked, uint _CLVLossPerUnitStaked) internal {
-         // Make product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
+        uint currentP = P;
+        uint newP;
+
+        // Make product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
         uint newProductFactor = _CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_CLVLossPerUnitStaked);
      
         // Update the ETH reward sum at the current scale and current epoch
-        uint marginalETHGain = _ETHGainPerUnitStaked.mul(P);
-        epochToScaleToSum[currentEpoch][currentScale] = epochToScaleToSum[currentEpoch][currentScale].add(marginalETHGain);
-        emit S_Updated(epochToScaleToSum[currentEpoch][currentScale]); 
+        uint128 currentScaleCached = currentScale;
+        uint128 currentEpochCached = currentEpoch;
+        uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
+        uint marginalETHGain = _ETHGainPerUnitStaked.mul(currentP);
+        uint newS = currentS.add(marginalETHGain);
+        epochToScaleToSum[currentEpochCached][currentScaleCached] = newS;
+        emit S_Updated(newS);
 
        // If the Pool was emptied, increment the epoch and reset the scale and product P
         if (newProductFactor == 0) {
-            currentEpoch = currentEpoch.add(1);
+            currentEpoch = currentEpochCached.add(1);
             currentScale = 0;
-            P = 1e18;
+            newP = 1e18;
     
         // If multiplying P by a non-zero product factor would round P to zero, increment the scale 
-        } else if (P.mul(newProductFactor) < 1e18) {
-            P = P.mul(newProductFactor);
-            currentScale = currentScale.add(1);
+        } else if (currentP.mul(newProductFactor) < 1e18) {
+            newP = currentP.mul(newProductFactor);
+            currentScale = currentScaleCached.add(1);
          } else {
-            P = P.mul(newProductFactor).div(1e18); 
+            newP = currentP.mul(newProductFactor).div(1e18);
         }
 
-        emit P_Updated(P); 
+        P = newP;
+        emit P_Updated(newP);
     }
 
     function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal {
