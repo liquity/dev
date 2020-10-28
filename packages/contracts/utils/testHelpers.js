@@ -26,7 +26,7 @@ const MoneyValues = {
 }
 
 const TimeValues = {
-  SECONDS_IN_ONE_MINUTE: 60, 
+  SECONDS_IN_ONE_MINUTE: 60,
   SECONDS_IN_ONE_HOUR: 3600,
   SECONDS_IN_ONE_DAY: 86400,
   SECONDS_IN_ONE_MONTH: 2592000,
@@ -37,6 +37,7 @@ const TimeValues = {
 
 class TestHelper {
   static ZERO_ADDRESS = '0x' + '0'.repeat(40)
+  static maxBytes32 = '0x' + 'f'.repeat(64)
 
   static dec(val, scale) {
     let zerosCount
@@ -81,13 +82,14 @@ class TestHelper {
       sum += gas
     }
 
-    if (sum === 0) { 
-      return  { gasCostList: gasCostList, 
-                minGas: undefined, 
-                maxGas: undefined, 
-                meanGas: undefined, 
-                medianGas: undefined 
-              }
+    if (sum === 0) {
+      return {
+        gasCostList: gasCostList,
+        minGas: undefined,
+        maxGas: undefined,
+        meanGas: undefined,
+        medianGas: undefined
+      }
     }
     const meanGas = sum / gasCostList.length
 
@@ -275,7 +277,7 @@ class TestHelper {
   static getEmittedRedemptionValues(redemptionTx) {
     for (let i = 0; i < redemptionTx.logs.length; i++) {
       if (redemptionTx.logs[i].event === "Redemption") {
-        
+
         const CLVAmount = redemptionTx.logs[i].args[0]
         const totalCLVRedeemed = redemptionTx.logs[i].args[1]
         const totalETHDrawn = redemptionTx.logs[i].args[2]
@@ -768,8 +770,8 @@ class TestHelper {
       firstRedemptionHint,
       exactPartialRedemptionHint,
       partialRedemptionNewICR,
-      { from: redeemer, gasPrice: 0},
-      )
+      { from: redeemer, gasPrice: 0 },
+    )
 
     return tx
   }
@@ -863,9 +865,9 @@ class TestHelper {
     return CDLC
   }
 
-  static async registerFrontEnds(frontEnds, poolManager, kickBackRate) {
+  static async registerFrontEnds(frontEnds, poolManager) {
     for (const frontEnd of frontEnds) {
-      await poolManager.registerFrontEnd(this.dec(5, 17), {from: frontEnd})  // default kickback rate of 50%
+      await poolManager.registerFrontEnd(this.dec(5, 17), { from: frontEnd })  // default kickback rate of 50%
     }
   }
 
@@ -911,31 +913,29 @@ class TestHelper {
   static daysToSeconds(days) {
     return Number(days) * (60 * 60 * 24)
   }
-}
 
-const assertRevert = async (txPromise, message = undefined) => {
-  try {
-    const tx = await txPromise
+  static async assertRevert(txPromise, message = undefined) {
+    try {
+      const tx = await txPromise
 
-    assert.isFalse(tx.receipt.status)
-  } catch (err) {
-    assert.include(err.message, "revert")
-    if (message) {
-      assert.include(err.message, message)
+      assert.isFalse(tx.receipt.status)
+    } catch (err) {
+      assert.include(err.message, "revert")
+      if (message) {
+        assert.include(err.message, message)
+      }
     }
   }
-}
 
-const forceSendEth = async (from, receiver, value) => {
-  const destructible = await Destructible.new()
-  await web3.eth.sendTransaction({ to: destructible.address, from, value })
-  await destructible.destruct(receiver)
+  static async forceSendEth(from, receiver, value) {
+    const destructible = await Destructible.new()
+    await web3.eth.sendTransaction({ to: destructible.address, from, value })
+    await destructible.destruct(receiver)
+  }
 }
 
 module.exports = {
   TestHelper,
   MoneyValues,
-  TimeValues,
-  assertRevert,
-  forceSendEth
+  TimeValues
 }

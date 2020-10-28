@@ -11,7 +11,7 @@ interface IPoolManager {
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    event UserSnapshotUpdated(uint _P, uint _S);
+    event UserSnapshotUpdated(address _user, uint _P, uint _S);
     event P_Updated(uint _P);
     event S_Updated(uint _S);
     event UserDepositChanged(address indexed _user, uint _amount);

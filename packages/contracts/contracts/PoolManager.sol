@@ -119,7 +119,7 @@ contract PoolManager is Ownable, IPoolManager {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     
-    event DepositSnapshotUpdated(uint _P, uint _S);
+    event DepositSnapshotUpdated(address indexed _user, uint _P, uint _S);
     event P_Updated(uint _P);
     event S_Updated(uint _S);
     event DepositChanged(address indexed _user, uint _amount);
@@ -551,7 +551,7 @@ contract PoolManager is Ownable, IPoolManager {
 
         if (_newValue == 0) {
             _removeTagAndEligibility(_depositor);
-            emit DepositSnapshotUpdated(depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
+            emit DepositSnapshotUpdated(_depositor, depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
             return;
         }
 
@@ -562,7 +562,7 @@ contract PoolManager is Ownable, IPoolManager {
         depositSnapshots[_depositor].scale = currentScale;
         depositSnapshots[_depositor].epoch = currentEpoch;
 
-        emit DepositSnapshotUpdated(depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
+        emit DepositSnapshotUpdated(_depositor, depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
     }
 
     function _updateFrontEndStake(address _frontEnd, uint _newValue) internal {
@@ -602,7 +602,7 @@ contract PoolManager is Ownable, IPoolManager {
 
         uint depositorETHGain = _getDepositorETHGain(depositor);
         uint compoundedCLVDeposit = _getCompoundedCLVDeposit(depositor);
-        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);  // Needed only for event log
+        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
 
         if (isEligibleForLQTY(depositor)) {
             // First pay out any LQTY gains 
