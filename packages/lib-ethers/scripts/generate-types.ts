@@ -64,7 +64,6 @@ const declareInterface = ({
 }) =>
   [
     `export interface ${contractName} extends LiquityContract {`,
-    "  readonly [name: string]: unknown;",
 
     "  readonly filters: {",
     ...Object.values(events).map(({ name, inputs }) => {

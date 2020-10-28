@@ -54,6 +54,9 @@ export interface TypedLogDescription<T> extends LogDescription {
 }
 
 export class LiquityContract extends Contract {
+  // Ethers defines any string-keyed property as any. Override this, because it's not typesafe.
+  readonly [name: string]: unknown;
+
   extractEvents(logs: Log[], name: string) {
     return logs
       .filter(log => log.address === this.address)
