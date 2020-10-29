@@ -18,7 +18,7 @@ interface IPoolManager {
 
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
 
-    event UserSnapshotUpdated(uint _P, uint _S);
+    event UserSnapshotUpdated(address indexed _user, uint _P, uint _S);
 
     event P_Updated(uint _P);
 
