@@ -1,8 +1,13 @@
-import { Signer } from "@ethersproject/abstract-signer";
-import { ContractTransaction, Event } from "@ethersproject/contracts";
-import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
-import { Provider, BlockTag } from "@ethersproject/abstract-provider";
 import { AddressZero } from "@ethersproject/constants";
+import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
+import {
+  Provider,
+  BlockTag,
+  TransactionResponse,
+  TransactionReceipt
+} from "@ethersproject/abstract-provider";
+import { Signer } from "@ethersproject/abstract-signer";
+import { Event } from "@ethersproject/contracts";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 
@@ -16,7 +21,11 @@ import {
   HintedTransactionOptionalParams,
   TroveChangeOptionalParams,
   StabilityDepositTransferOptionalParams,
-  HintedLiquity
+  HintedLiquity,
+  LiquityReceipt,
+  LiquityTransaction,
+  ParsedLiquidation,
+  ParsedRedemption
 } from "@liquity/lib-base";
 
 import {
@@ -38,6 +47,14 @@ enum CDPStatus {
   nonExistent,
   active,
   closed
+}
+
+enum CDPManagerOperation {
+  applyPendingRewards,
+  liquidateInNormalMode,
+  liquidateInRecoveryMode,
+  partiallyLiquidateInRecoveryMode,
+  redeemCollateral
 }
 
 const debouncingDelayMs = 50;
@@ -65,7 +82,42 @@ const debounce = (listener: (latestBlock: number) => void) => {
 };
 
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
-const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
+
+const noDetails = () => undefined;
+
+class ParsedEthersTransaction<T = unknown>
+  implements LiquityTransaction<TransactionResponse, LiquityReceipt<TransactionReceipt, T>> {
+  readonly rawTransaction: TransactionResponse;
+
+  private readonly parse: (rawReceipt: TransactionReceipt) => T;
+  private readonly provider: Provider;
+
+  constructor(
+    rawTransaction: TransactionResponse,
+    parse: (rawReceipt: TransactionReceipt) => T,
+    provider: Provider
+  ) {
+    this.rawTransaction = rawTransaction;
+    this.parse = parse;
+    this.provider = provider;
+  }
+
+  private receiptFrom(rawReceipt: TransactionReceipt | null): LiquityReceipt<TransactionReceipt, T> {
+    return rawReceipt
+      ? rawReceipt.status
+        ? { status: "succeeded", rawReceipt, details: this.parse(rawReceipt) }
+        : { status: "failed", rawReceipt }
+      : { status: "pending" };
+  }
+
+  async getReceipt() {
+    return this.receiptFrom(await this.provider.getTransactionReceipt(this.rawTransaction.hash));
+  }
+
+  async waitForReceipt() {
+    return this.receiptFrom(await this.provider.waitForTransaction(this.rawTransaction.hash));
+  }
+}
 
 type PromisesOf<T> = {
   [P in keyof T]: T[P] extends infer U | undefined ? U | Promise<U> : T[P] | Promise<T[P]>;
@@ -83,7 +135,10 @@ export type EthersTransactionOverrides = PromisesOf<{
 }>;
 
 export class EthersLiquity
-  implements ReadableLiquity, ObservableLiquity, HintedLiquity<ContractTransaction> {
+  implements
+    ReadableLiquity,
+    ObservableLiquity,
+    HintedLiquity<TransactionResponse, TransactionReceipt> {
   readonly userAddress?: string;
 
   private readonly cdpManager: CDPManager;
@@ -98,6 +153,8 @@ export class EthersLiquity
   private readonly multiCDPgetter: MultiCDPGetter;
   private readonly hintHelpers: HintHelpers;
 
+  private readonly provider: Provider;
+
   constructor(contracts: LiquityContracts, userAddress?: string) {
     this.cdpManager = contracts.cdpManager;
     this.borrowerOperations = contracts.borrowerOperations;
@@ -111,6 +168,8 @@ export class EthersLiquity
     this.multiCDPgetter = contracts.multiCDPgetter;
     this.hintHelpers = contracts.hintHelpers;
     this.userAddress = userAddress;
+
+    this.provider = contracts.cdpManager.provider;
   }
 
   static async connect(addresses: LiquityContractAddresses, signerOrProvider: Signer | Provider) {
@@ -248,6 +307,10 @@ export class EthersLiquity
     return this._findHintForCollateralRatio(trove.collateralRatio(price), { price, ...rest });
   }
 
+  private wrapSimpleTransaction(rawTransaction: TransactionResponse) {
+    return new ParsedEthersTransaction(rawTransaction, noDetails, this.provider);
+  }
+
   async openTrove(
     trove: Trove,
     optionalParams?: HintedTransactionOptionalParams,
@@ -260,15 +323,17 @@ export class EthersLiquity
       );
     }
 
-    return this.borrowerOperations.openLoan(
-      trove.netDebt.bigNumber,
-      await this._findHint(trove, optionalParams),
-      { value: trove.collateral.bigNumber, ...overrides }
+    return this.wrapSimpleTransaction(
+      await this.borrowerOperations.openLoan(
+        trove.netDebt.bigNumber,
+        await this._findHint(trove, optionalParams),
+        { value: trove.collateral.bigNumber, ...overrides }
+      )
     );
   }
 
   async closeTrove(overrides?: EthersTransactionOverrides) {
-    return this.borrowerOperations.closeLoan({ ...overrides });
+    return this.wrapSimpleTransaction(await this.borrowerOperations.closeLoan({ ...overrides }));
   }
 
   async depositEther(
@@ -280,13 +345,15 @@ export class EthersLiquity
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.addCollateral(depositedEther);
 
-    return this.borrowerOperations.addColl(
-      address,
-      await this._findHint(finalTrove, hintOptionalParams),
-      {
-        value: Decimal.from(depositedEther).bigNumber,
-        ...overrides
-      }
+    return this.wrapSimpleTransaction(
+      await this.borrowerOperations.addColl(
+        address,
+        await this._findHint(finalTrove, hintOptionalParams),
+        {
+          value: Decimal.from(depositedEther).bigNumber,
+          ...overrides
+        }
+      )
     );
   }
 
@@ -298,10 +365,12 @@ export class EthersLiquity
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.subtractCollateral(withdrawnEther);
 
-    return this.borrowerOperations.withdrawColl(
-      Decimal.from(withdrawnEther).bigNumber,
-      await this._findHint(finalTrove, hintOptionalParams),
-      { ...overrides }
+    return this.wrapSimpleTransaction(
+      await this.borrowerOperations.withdrawColl(
+        Decimal.from(withdrawnEther).bigNumber,
+        await this._findHint(finalTrove, hintOptionalParams),
+        { ...overrides }
+      )
     );
   }
 
@@ -313,10 +382,12 @@ export class EthersLiquity
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.addDebt(borrowedQui);
 
-    return this.borrowerOperations.withdrawCLV(
-      Decimal.from(borrowedQui).bigNumber,
-      await this._findHint(finalTrove, hintOptionalParams),
-      { ...overrides }
+    return this.wrapSimpleTransaction(
+      await this.borrowerOperations.withdrawCLV(
+        Decimal.from(borrowedQui).bigNumber,
+        await this._findHint(finalTrove, hintOptionalParams),
+        { ...overrides }
+      )
     );
   }
 
@@ -328,10 +399,12 @@ export class EthersLiquity
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.subtractDebt(repaidQui);
 
-    return this.borrowerOperations.repayCLV(
-      Decimal.from(repaidQui).bigNumber,
-      await this._findHint(finalTrove, hintOptionalParams),
-      { ...overrides }
+    return this.wrapSimpleTransaction(
+      await this.borrowerOperations.repayCLV(
+        Decimal.from(repaidQui).bigNumber,
+        await this._findHint(finalTrove, hintOptionalParams),
+        { ...overrides }
+      )
     );
   }
 
@@ -343,19 +416,21 @@ export class EthersLiquity
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.apply(change);
 
-    return this.borrowerOperations.adjustLoan(
-      change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
-      change.debtDifference?.bigNumber || 0,
-      await this._findHint(finalTrove, hintOptionalParams),
-      {
-        ...overrides,
-        value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
-      }
+    return this.wrapSimpleTransaction(
+      await this.borrowerOperations.adjustLoan(
+        change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
+        change.debtDifference?.bigNumber || 0,
+        await this._findHint(finalTrove, hintOptionalParams),
+        {
+          ...overrides,
+          value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
+        }
+      )
     );
   }
 
-  getNumberOfTroves(overrides?: EthersCallOverrides) {
-    return this.cdpManager.getCDPOwnersCount({ ...overrides }).then(numberify);
+  async getNumberOfTroves(overrides?: EthersCallOverrides) {
+    return (await this.cdpManager.getCDPOwnersCount({ ...overrides })).toNumber();
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void) {
@@ -393,11 +468,13 @@ export class EthersLiquity
   }
 
   async setPrice(price: Decimalish, overrides?: EthersTransactionOverrides) {
-    return this.priceFeed.setPrice(Decimal.from(price).bigNumber, { ...overrides });
+    return this.wrapSimpleTransaction(
+      await this.priceFeed.setPrice(Decimal.from(price).bigNumber, { ...overrides })
+    );
   }
 
   async updatePrice(overrides?: EthersTransactionOverrides) {
-    return this.priceFeed.updatePrice_Testnet({ ...overrides });
+    return this.wrapSimpleTransaction(await this.priceFeed.updatePrice_Testnet({ ...overrides }));
   }
 
   async getTotal(overrides?: EthersCallOverrides) {
@@ -431,15 +508,59 @@ export class EthersLiquity
     };
   }
 
+  parseLiquidation({ logs }: TransactionReceipt): ParsedLiquidation {
+    const fullyLiquidated = this.cdpManager
+      .extractEvents(logs, "CDPLiquidated")
+      .map(({ args: { _user } }) => _user);
+
+    const [partiallyLiquidated] = this.cdpManager
+      .extractEvents(logs, "CDPUpdated")
+      .filter(
+        ({ args: { operation } }) =>
+          operation === CDPManagerOperation.partiallyLiquidateInRecoveryMode
+      )
+      .map(({ args: { _user } }) => _user);
+
+    const [totals] = this.cdpManager
+      .extractEvents(logs, "Liquidation")
+      .map(
+        ({
+          args: { _CLVGasCompensation, _collGasCompensation, _liquidatedColl, _liquidatedDebt }
+        }) => ({
+          collateralGasCompensation: new Decimal(_collGasCompensation),
+          tokenGasCompensation: new Decimal(_CLVGasCompensation),
+
+          totalLiquidated: new Trove({
+            collateral: new Decimal(_liquidatedColl),
+            debt: new Decimal(_liquidatedDebt)
+          })
+        })
+      );
+
+    return {
+      fullyLiquidated,
+      partiallyLiquidated,
+      ...totals
+    };
+  }
+
   async liquidate(address: string, overrides?: EthersTransactionOverrides) {
-    return this.cdpManager.liquidate(address, { ...overrides });
+    return new ParsedEthersTransaction(
+      await this.cdpManager.liquidate(address, { ...overrides }),
+      receipt => this.parseLiquidation(receipt),
+      this.provider
+    );
   }
 
   async liquidateUpTo(
     maximumNumberOfTrovesToLiquidate: number,
     overrides?: EthersTransactionOverrides
   ) {
-    return this.cdpManager.liquidateCDPs(maximumNumberOfTrovesToLiquidate, { ...overrides });
+    return new ParsedEthersTransaction(
+      await this.cdpManager.liquidateCDPs(maximumNumberOfTrovesToLiquidate, { ...overrides }),
+      receipt => this.parseLiquidation(receipt),
+      this.provider
+    );
   }
 
   async _estimateLiquidateUpTo(
@@ -492,12 +613,19 @@ export class EthersLiquity
     };
   }
 
-  depositQuiInStabilityPool(depositedQui: Decimalish, overrides?: EthersTransactionOverrides) {
-    return this.poolManager.provideToSP(Decimal.from(depositedQui).bigNumber, { ...overrides });
+  async depositQuiInStabilityPool(depositedQui: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.poolManager.provideToSP(Decimal.from(depositedQui).bigNumber, { ...overrides })
+    );
   }
 
-  withdrawQuiFromStabilityPool(withdrawnQui: Decimalish, overrides?: EthersTransactionOverrides) {
-    return this.poolManager.withdrawFromSP(Decimal.from(withdrawnQui).bigNumber, { ...overrides });
+  async withdrawQuiFromStabilityPool(
+    withdrawnQui: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ) {
+    return this.wrapSimpleTransaction(
+      await this.poolManager.withdrawFromSP(Decimal.from(withdrawnQui).bigNumber, { ...overrides })
+    );
   }
 
   async transferCollateralGainToTrove(
@@ -509,9 +637,11 @@ export class EthersLiquity
       (deposit ?? (await this.getStabilityDeposit())).pendingCollateralGain
     );
 
-    return this.poolManager.withdrawFromSPtoCDP(
-      await this._findHint(finalTrove, hintOptionalParams),
-      { ...overrides }
+    return this.wrapSimpleTransaction(
+      await this.poolManager.withdrawFromSPtoCDP(
+        await this._findHint(finalTrove, hintOptionalParams),
+        { ...overrides }
+      )
     );
   }
 
@@ -562,8 +692,10 @@ export class EthersLiquity
       );
   }
 
-  sendQui(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
-    return this.clvToken.transfer(toAddress, Decimal.from(amount).bigNumber, { ...overrides });
+  async sendQui(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.clvToken.transfer(toAddress, Decimal.from(amount).bigNumber, { ...overrides })
+    );
   }
 
   async _findRedemptionHints(
@@ -601,14 +733,25 @@ export class EthersLiquity
       partialRedemptionHintICR
     ] = await this._findRedemptionHints(exchangedQui, optionalParams);
 
-    return this.cdpManager.redeemCollateral(
-      exchangedQui.bigNumber,
-      firstRedemptionHint,
-      partialRedemptionHint,
-      partialRedemptionHintICR.bigNumber,
-      {
-        ...overrides
-      }
+    return new ParsedEthersTransaction(
+      await this.cdpManager.redeemCollateral(
+        exchangedQui.bigNumber,
+        firstRedemptionHint,
+        partialRedemptionHint,
+        partialRedemptionHintICR.bigNumber,
+        {
+          ...overrides
+        }
+      ),
+      ({ logs }) =>
+        this.cdpManager.extractEvents(logs, "Redemption").map(
+          ({ args: { _ETHSent, _actualCLVAmount, _attemptedCLVAmount } }): ParsedRedemption => ({
+            attemptedTokenAmount: new Decimal(_attemptedCLVAmount),
+            actualTokenAmount: new Decimal(_actualCLVAmount),
+            collateralReceived: new Decimal(_ETHSent)
+          })
+        )[0],
+      this.provider
     );
   }
 

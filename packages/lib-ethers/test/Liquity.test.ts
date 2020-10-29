@@ -1,5 +1,5 @@
 import { describe, before, it } from "mocha";
-import chai, { expect } from "chai";
+import chai, { expect, assert } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { Signer } from "@ethersproject/abstract-signer";
 import { ethers } from "@nomiclabs/buidler";
@@ -9,10 +9,16 @@ import { Trove, StabilityDeposit } from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
 import { LiquityContractAddresses, addressesOf, EthersLiquity } from "..";
+import { BigNumber } from "ethers";
 
 const provider = ethers.provider;
 
 chai.use(chaiAsPromised);
+
+// Typed wrapper around Chai's
+function assertStrictEquals<T>(actual: unknown, expected: T, message?: string): asserts actual is T {
+  assert.strictEqual(actual, expected, message);
+}
 
 // TODO make the testcases isolated
 
@@ -228,6 +234,19 @@ describe("EthersLiquity", () => {
     });
   });
 
+  describe("ParsedEthersTransaction", () => {
+    it("should parse failed transactions without throwing", async () => {
+      const invalidTrove = new Trove({ debt: 10 });
+      const ampleGas = BigNumber.from(10).pow(6);
+
+      // By passing a gasLimit, we avoid automatic use of estimateGas which would throw
+      const tx = await liquity.openTrove(invalidTrove, undefined, { gasLimit: ampleGas });
+      const { status } = await tx.waitForReceipt();
+
+      expect(status).to.equal("failed");
+    });
+  });
+
   const connectUsers = (users: Signer[]) =>
     Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
 
@@ -263,9 +282,25 @@ describe("EthersLiquity", () => {
     });
 
     it("should liquidate other user's Trove", async () => {
-      await liquity.liquidateUpTo(1);
-      const otherTrove = await otherLiquities[0].getTrove();
+      const tx = await liquity.liquidateUpTo(1);
 
+      const receipt = await tx.waitForReceipt();
+      assertStrictEquals(receipt.status, "succeeded" as const);
+
+      expect(receipt.details).to.deep.equal({
+        fullyLiquidated: [otherLiquities[0].userAddress],
+        partiallyLiquidated: undefined,
+
+        collateralGasCompensation: Decimal.from(0.0011165), // 0.5%
+        tokenGasCompensation: Decimal.from(10),
+
+        totalLiquidated: new Trove({
+          collateral: Decimal.from(0.2221835), // -0.5%
+          debt: Decimal.from(39)
+        })
+      });
+
+      const otherTrove = await otherLiquities[0].getTrove();
       expect(otherTrove.isEmpty).to.be.true;
     });
 
@@ -451,10 +486,18 @@ describe("EthersLiquity", () => {
     });
 
     it("should redeem some collateral", async () => {
-      await liquity.redeemCollateral(55, {}, { gasPrice: 0 });
+      const tx = await liquity.redeemCollateral(55, {}, { gasPrice: 0 });
+
+      const receipt = await tx.waitForReceipt();
+      assertStrictEquals(receipt.status, "succeeded" as const);
+
+      expect(receipt.details).to.deep.equal({
+        attemptedTokenAmount: Decimal.from(55),
+        actualTokenAmount: Decimal.from(55),
+        collateralReceived: Decimal.from(0.275)
+      });
 
       const balance = new Decimal(await provider.getBalance(user.getAddress()));
-
       expect(`${balance}`).to.equal("100.275");
 
       expect(`${await liquity.getQuiBalance()}`).to.equal("45");
