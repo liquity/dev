@@ -263,9 +263,27 @@ describe("EthersLiquity", () => {
     });
 
     it("should liquidate other user's Trove", async () => {
-      await liquity.liquidateUpTo(1);
-      const otherTrove = await otherLiquities[0].getTrove();
+      const tx = await liquity.liquidateUpTo(1);
 
+      const receipt = await tx.waitForReceipt();
+      expect(receipt.status).to.equal("succeeded");
+
+      const { status, rawReceipt, ...details } = receipt;
+
+      expect(details).to.deep.equal({
+        fullyLiquidated: [otherLiquities[0].userAddress],
+        partiallyLiquidated: undefined,
+
+        collateralGasCompensation: Decimal.from(0.0011165), // 0.5%
+        tokenGasCompensation: Decimal.from(10),
+
+        totalLiquidated: new Trove({
+          collateral: Decimal.from(0.2221835), // -0.5%
+          debt: Decimal.from(39)
+        })
+      });
+
+      const otherTrove = await otherLiquities[0].getTrove();
       expect(otherTrove.isEmpty).to.be.true;
     });
 
@@ -451,10 +469,20 @@ describe("EthersLiquity", () => {
     });
 
     it("should redeem some collateral", async () => {
-      await liquity.redeemCollateral(55, {}, { gasPrice: 0 });
+      const tx = await liquity.redeemCollateral(55, {}, { gasPrice: 0 });
+
+      const receipt = await tx.waitForReceipt();
+      expect(receipt.status).to.equal("succeeded");
+
+      const { status, rawReceipt, ...details } = receipt;
+
+      expect(details).to.deep.equal({
+        attemptedTokenAmount: Decimal.from(55),
+        actualTokenAmount: Decimal.from(55),
+        collateralReceived: Decimal.from(0.275)
+      });
 
       const balance = new Decimal(await provider.getBalance(user.getAddress()));
-
       expect(`${balance}`).to.equal("100.275");
 
       expect(`${await liquity.getQuiBalance()}`).to.equal("45");

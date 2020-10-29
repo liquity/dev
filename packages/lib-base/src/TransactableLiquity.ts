@@ -1,28 +1,62 @@
-import { Decimalish } from "@liquity/decimal";
+import { Decimal, Decimalish } from "@liquity/decimal";
 
 import { Trove, TroveChange } from "./Trove";
 
-export interface TransactableLiquity<TTransaction = unknown> {
-  openTrove(trove: Trove): Promise<TTransaction>;
-  closeTrove(): Promise<TTransaction>;
+export type LiquityTransaction<T = unknown, U extends LiquityReceipt = LiquityReceipt> = {
+  rawTransaction: T;
 
-  depositEther(depositedEther: Decimalish): Promise<TTransaction>;
-  withdrawEther(withdrawnEther: Decimalish): Promise<TTransaction>;
-  borrowQui(borrowedQui: Decimalish): Promise<TTransaction>;
-  repayQui(repaidQui: Decimalish): Promise<TTransaction>;
-  changeTrove(change: TroveChange): Promise<TTransaction>;
+  getReceipt(): Promise<U | undefined>;
+  waitForReceipt(): Promise<U>;
+};
 
-  setPrice(price: Decimalish): Promise<TTransaction>;
-  updatePrice(): Promise<TTransaction>;
+export type LiquityReceipt<T = unknown, U = unknown> = { rawReceipt: T } & (
+  | { status: "failed" }
+  | ({ status: "succeeded" } & U)
+);
 
-  liquidate(address: string): Promise<TTransaction>;
-  liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<TTransaction>;
+export type ParsedLiquidation = {
+  fullyLiquidated: string[];
+  partiallyLiquidated?: string;
 
-  depositQuiInStabilityPool(depositedQui: Decimalish): Promise<TTransaction>;
-  withdrawQuiFromStabilityPool(withdrawnQui: Decimalish): Promise<TTransaction>;
-  transferCollateralGainToTrove(): Promise<TTransaction>;
+  totalLiquidated: Trove;
+  tokenGasCompensation: Decimal;
+  collateralGasCompensation: Decimal;
+};
 
-  sendQui(toAddress: string, amount: Decimalish): Promise<TTransaction>;
+export type ParsedRedemption = {
+  attemptedTokenAmount: Decimal;
+  actualTokenAmount: Decimal;
+  collateralReceived: Decimal;
+};
 
-  redeemCollateral(exchangedQui: Decimalish): Promise<TTransaction>;
+export type LiquidationReceipt<T = unknown> = LiquityReceipt<T, ParsedLiquidation>;
+export type RedemptionReceipt<T = unknown> = LiquityReceipt<T, ParsedRedemption>;
+
+export type SimpleTransaction<T, U> = LiquityTransaction<T, LiquityReceipt<U>>;
+export type Liquidation<T, U> = LiquityTransaction<T, LiquidationReceipt<U>>;
+export type Redemption<T, U> = LiquityTransaction<T, RedemptionReceipt<U>>;
+
+export interface TransactableLiquity<T = unknown, U = unknown> {
+  openTrove(trove: Trove): Promise<SimpleTransaction<T, U>>;
+  closeTrove(): Promise<SimpleTransaction<T, U>>;
+
+  depositEther(depositedEther: Decimalish): Promise<SimpleTransaction<T, U>>;
+  withdrawEther(withdrawnEther: Decimalish): Promise<SimpleTransaction<T, U>>;
+  borrowQui(borrowedQui: Decimalish): Promise<SimpleTransaction<T, U>>;
+  repayQui(repaidQui: Decimalish): Promise<SimpleTransaction<T, U>>;
+  changeTrove(change: TroveChange): Promise<SimpleTransaction<T, U>>;
+
+  setPrice(price: Decimalish): Promise<SimpleTransaction<T, U>>;
+  updatePrice(): Promise<SimpleTransaction<T, U>>;
+
+  liquidate(address: string): Promise<Liquidation<T, U>>;
+  liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<Liquidation<T, U>>;
+
+  depositQuiInStabilityPool(depositedQui: Decimalish): Promise<SimpleTransaction<T, U>>;
+  withdrawQuiFromStabilityPool(withdrawnQui: Decimalish): Promise<SimpleTransaction<T, U>>;
+  transferCollateralGainToTrove(): Promise<SimpleTransaction<T, U>>;
+
+  sendQui(toAddress: string, amount: Decimalish): Promise<SimpleTransaction<T, U>>;
+
+  redeemCollateral(exchangedQui: Decimalish): Promise<Redemption<T, U>>;
 }

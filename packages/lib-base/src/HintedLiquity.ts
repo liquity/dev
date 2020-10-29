@@ -2,7 +2,7 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 
 import { Trove, TroveChange } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
-import { TransactableLiquity } from "./TransactableLiquity";
+import { Redemption, SimpleTransaction, TransactableLiquity } from "./TransactableLiquity";
 
 export type HintedTransactionOptionalParams = {
   price?: Decimal;
@@ -17,37 +17,43 @@ export type StabilityDepositTransferOptionalParams = TroveChangeOptionalParams &
   deposit?: StabilityDeposit;
 };
 
-export interface HintedLiquity<TTransaction = unknown> extends TransactableLiquity<TTransaction> {
-  openTrove(trove: Trove, optionalParams?: HintedTransactionOptionalParams): Promise<TTransaction>;
+export interface HintedLiquity<T = unknown, U = unknown> extends TransactableLiquity<T, U> {
+  openTrove(
+    trove: Trove,
+    optionalParams?: HintedTransactionOptionalParams
+  ): Promise<SimpleTransaction<T, U>>;
 
   depositEther(
     depositedEther: Decimalish,
     optionalParams?: TroveChangeOptionalParams
-  ): Promise<TTransaction>;
+  ): Promise<SimpleTransaction<T, U>>;
 
   withdrawEther(
     withdrawnEther: Decimalish,
     optionalParams?: TroveChangeOptionalParams
-  ): Promise<TTransaction>;
+  ): Promise<SimpleTransaction<T, U>>;
 
   borrowQui(
     borrowedQui: Decimalish,
     optionalParams?: TroveChangeOptionalParams
-  ): Promise<TTransaction>;
+  ): Promise<SimpleTransaction<T, U>>;
 
-  repayQui(repaidQui: Decimalish, optionalParams?: TroveChangeOptionalParams): Promise<TTransaction>;
+  repayQui(
+    repaidQui: Decimalish,
+    optionalParams?: TroveChangeOptionalParams
+  ): Promise<SimpleTransaction<T, U>>;
 
   changeTrove(
     change: TroveChange,
     optionalParams?: TroveChangeOptionalParams
-  ): Promise<TTransaction>;
+  ): Promise<SimpleTransaction<T, U>>;
 
   transferCollateralGainToTrove(
     optionalParams?: StabilityDepositTransferOptionalParams
-  ): Promise<TTransaction>;
+  ): Promise<SimpleTransaction<T, U>>;
 
   redeemCollateral(
     exchangedQui: Decimalish,
     optionalParams?: HintedTransactionOptionalParams
-  ): Promise<TTransaction>;
+  ): Promise<Redemption<T, U>>;
 }
