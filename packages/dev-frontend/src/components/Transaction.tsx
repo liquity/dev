@@ -1,13 +1,13 @@
 import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
 import { Flex, Text, Box } from "theme-ui";
-import { ContractTransaction } from "@ethersproject/contracts";
-import { Provider } from "@ethersproject/abstract-provider";
+import { Provider, TransactionResponse, TransactionReceipt } from "@ethersproject/abstract-provider";
 import { hexDataSlice, hexDataLength } from "@ethersproject/bytes";
 import { defaultAbiCoder } from "@ethersproject/abi";
 
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
+import { SimpleTransaction } from "@liquity/lib-base";
 import {
   EthersTransactionOverrides,
   parseLogs,
@@ -65,7 +65,7 @@ type TransactionCancelled = {
 type TransactionWaitingForConfirmations = {
   type: "waitingForConfirmations";
   id: string;
-  tx: ContractTransaction;
+  tx: TransactionResponse;
   confirmations: number;
   numberOfConfirmationsToWait: number;
 };
@@ -128,7 +128,7 @@ type ButtonlikeProps = {
 
 export type TransactionFunction = (
   overrides?: EthersTransactionOverrides
-) => Promise<ContractTransaction>;
+) => Promise<SimpleTransaction<TransactionResponse, TransactionReceipt>>;
 
 type TransactionProps<C> = {
   id: string;
@@ -168,7 +168,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
       setTransactionState({
         type: "waitingForConfirmations",
         id,
-        tx,
+        tx: tx.rawTransaction,
         confirmations: 0,
         numberOfConfirmationsToWait
       });
