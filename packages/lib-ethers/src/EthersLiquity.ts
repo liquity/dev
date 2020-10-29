@@ -504,14 +504,12 @@ export class EthersLiquity
     { deposit, trove, ...hintOptionalParams }: StabilityDepositTransferOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const address = this.requireAddress();
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.addCollateral(
       (deposit ?? (await this.getStabilityDeposit())).pendingCollateralGain
     );
 
     return this.poolManager.withdrawFromSPtoCDP(
-      address,
       await this._findHint(finalTrove, hintOptionalParams),
       { ...overrides }
     );
