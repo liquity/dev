@@ -9,10 +9,10 @@ export type LiquityTransaction<T = unknown, U extends LiquityReceipt = LiquityRe
   waitForReceipt(): Promise<U>;
 };
 
-export type LiquityReceipt<T = unknown, U = unknown> = { rawReceipt: T } & (
-  | { status: "failed" }
-  | ({ status: "succeeded" } & U)
-);
+export type LiquityReceipt<T = unknown, U = unknown> =
+  | { status: "pending" }
+  | { status: "failed"; rawReceipt: T }
+  | { status: "succeeded"; rawReceipt: T; details: U };
 
 export type ParsedLiquidation = {
   fullyLiquidated: string[];
