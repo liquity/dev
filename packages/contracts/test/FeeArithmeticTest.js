@@ -354,7 +354,7 @@ contract('Fee arithmetic tests', async accounts => {
     lockupContractFactory = GTContracts.lockupContractFactory
 
     await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(contracts, gtStaking.address)
+    await deploymentHelper.connectCoreContracts(contracts, GTContrats)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 

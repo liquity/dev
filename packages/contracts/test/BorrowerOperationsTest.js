@@ -3864,14 +3864,14 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(alice_CLVTokenBalance_After, '50000000000000000000')
   })
 
-
-  it.only("openLoan(): the caller's ineligible deposit remains ineligible for LQTY", async () => {
+  it("openLoan(): the caller's ineligible deposit remains ineligible for LQTY", async () => {
+    await th.registerFrontEnds(frontEnds, poolManager)
     await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // Whale transfers CLV to A, B, C
     await clvToken.transfer(A, dec(50, 18), { from: whale })
-    await clvToken.transfer(A, dec(60, 18), { from: whale })
-    await clvToken.transfer(A, dec(70, 18), { from: whale })
+    await clvToken.transfer(B, dec(60, 18), { from: whale })
+    await clvToken.transfer(C, dec(70, 18), { from: whale })
 
     // A, B, C make deposits
     await poolManager.provideToSP(dec(50, 18), frontEnd_1, { from: A })

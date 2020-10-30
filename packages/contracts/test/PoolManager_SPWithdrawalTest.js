@@ -66,7 +66,7 @@ contract('PoolManager - Withdrawal of stability deposit - Reward calculations', 
       lockupContractFactory = GTContracts.lockupContractFactory
   
       await deploymentHelper.connectGTContracts(GTContracts)
-      await deploymentHelper.connectCoreContracts(contracts, gtStaking.address)
+      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
       await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
     })
 

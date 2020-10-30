@@ -39,7 +39,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     lockupContractFactory = GTContracts.lockupContractFactory
 
     await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(coreContracts, gtStaking.address)
+    await deploymentHelper.connectCoreContracts(coreContracts, GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
   })
 

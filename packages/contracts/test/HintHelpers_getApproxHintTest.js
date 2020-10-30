@@ -73,7 +73,7 @@ contract('CDPManager', async accounts => {
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
   
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts.gtStaking.address)
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
     await deploymentHelper.connectGTContracts(GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
 

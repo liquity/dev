@@ -44,7 +44,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     lockupContractFactory = GTContracts.lockupContractFactory
 
     await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(coreContracts, gtStaking.address)
+    await deploymentHelper.connectCoreContracts(coreContracts, GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
 
     th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))

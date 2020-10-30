@@ -11,9 +11,20 @@ contract CommunityIssuance {
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
     
-    // Determines the curvature of the issuance curve
-    // TODO: sort out exponential function
-    uint constant public ISSUANCE_FACTOR = 1e18; 
+    /* The issuance factor determines the curvature of the issuance curve.
+    
+    Minutes in one year: 60*24*365 = 525600
+   
+    For 50% of remaining tokens issued each year, with minutes as time units, we have:
+    
+    F ** 525600 = 0.5
+
+    Re-arranging:
+
+    525600 * ln(F) = ln(0.5)
+    F = 0.5 ** (1/525600)
+    F = 0.999998681227695000 */
+    uint constant public ISSUANCE_FACTOR = 999998681227695000;
 
     address public communityIssuanceDeployer;
 
@@ -83,35 +94,31 @@ contract CommunityIssuance {
         return issuance;
     }
 
-    /* Get 1-f^(-t).
+    /* Gets 1-f^(t)    where f < 1
+
     f: issuance factor that determines the shape of the curve
-    t:  time passed since last LQTY issuance event 
-    */
+    t:  time passed since last LQTY issuance event  */
     function _getCumulativeIssuanceFraction() internal view returns (uint) {
+        // Get the time passed since deployment
         uint timePassedInMinutes = block.timestamp.sub(deploymentTime).div(SECONDS_IN_ONE_MINUTE);
 
-        //  console.log("block.timestamp: %s", block.timestamp);
-        // console.log("deploymentTime: %s", deploymentTime);
-        // console.log("block.timestamp.sub(deploymentTime): %s", block.timestamp.sub(deploymentTime));
+        // ***** 1. Inverted exponential issuance curve:  y = (1 - f^t).
 
-        // ***** Inverted exponential issuance curve
+        // f^t
+        uint power = Math._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
 
-        // // f^(-t)
-        // uint power = Math._decPow(ISSUANCE_FACTOR, timePassed);
-
-        // // 1-(1/(f^-t))
-        // return (uint(1e18).sub(uint(1e18).div(power)));
+        //  (1 - f^t)
+        return (uint(1e18).sub(power));
 
         // *****
 
-        // ***** Dummy issuance - linear, 4 year schedule  ****
+        
+        // ***** 2.  Dummy issuance - linear, 4 year schedule. y = 1
 
-        uint MINUTES_IN_FOUR_YEARS = 2102400;
+        // uint MINUTES_IN_FOUR_YEARS = 2102400;
+        // uint fraction = timePassedInMinutes.mul(1e18).div(MINUTES_IN_FOUR_YEARS);
+        // return fraction;
 
-        uint fraction = timePassedInMinutes.mul(1e18).div(MINUTES_IN_FOUR_YEARS);
-        // console.log("timePassedInMinutes: %s", timePassedInMinutes);
-        // console.log("fraction: %s", fraction);
-        return fraction;
         // *****
 
     } 

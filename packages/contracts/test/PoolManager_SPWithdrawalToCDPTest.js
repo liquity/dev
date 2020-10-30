@@ -65,7 +65,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       lockupContractFactory = GTContracts.lockupContractFactory
   
       await deploymentHelper.connectGTContracts(GTContracts)
-      await deploymentHelper.connectCoreContracts(contracts, gtStaking.address)
+      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
       await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
     })
 

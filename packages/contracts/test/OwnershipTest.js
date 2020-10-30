@@ -1,5 +1,5 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
-const { TestHelper: th, MoneyValues: mv, assertRevert } = require("../utils/testHelpers.js")
+const { TestHelper: th, MoneyValues: mv } = require("../utils/testHelpers.js")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 
 contract('All Liquity functions with onlyOwner modifier', async accounts => {
@@ -40,13 +40,13 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   const testSetAddresses = async (contract, numberOfAddresses) => {
     const params = Array(numberOfAddresses).fill(bob)
     // Attempt call from alice
-    await assertRevert(contract.setAddresses(...params, { from: alice }))
+    await th.assertRevert(contract.setAddresses(...params, { from: alice }))
 
     // Owner can successfully set any address
     const txOwner = await contract.setAddresses(...params, { from: owner })
     assert.isTrue(txOwner.receipt.status)
     // fails if called twice
-    await assertRevert(contract.setAddresses(...params, { from: owner }))
+    await th.assertRevert(contract.setAddresses(...params, { from: owner }))
   }
 
   describe('CDPManager', async accounts => {
@@ -96,14 +96,14 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     it("setParams(): reverts when called by non-owner", async () => {
       const params = [10000001, bob, bob]
       // Attempt call from alice
-      await assertRevert(sortedCDPs.setParams(...params, { from: alice }))
+      await th.assertRevert(sortedCDPs.setParams(...params, { from: alice }))
 
       // Owner can successfully set params
       const txOwner = await sortedCDPs.setParams(...params, { from: owner })
       assert.isTrue(txOwner.receipt.status)
 
       // fails if called twice
-      await assertRevert(sortedCDPs.setParams(...params, { from: owner }))
+      await th.assertRevert(sortedCDPs.setParams(...params, { from: owner }))
     })
   })
 

@@ -86,7 +86,7 @@ async function main() {
   const coreContracts = await dh.deployLiquityCoreBuidler()
   const GTContracts = await dh.deployGTContractsBuidler()
 
-  await dh.connectCoreContracts(coreContracts)
+  await dh.connectCoreContracts(coreContracts, GTContracts)
   await dh.connectGTContracts(GTContracts)
   await dh.connectGTContractsToCore(GTContracts, coreContracts)
 

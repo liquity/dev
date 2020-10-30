@@ -251,15 +251,15 @@ contract PoolManager is Ownable, IPoolManager {
         if (isEligibleForLQTY(_troveCloser)) {
             _triggerLQTYIssuance(); 
 
-            uint troveCloserETHGain = _getDepositorETHGain(_troveCloser);
-            uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_troveCloser);
+            uint troveCloserETHGain = getDepositorETHGain(_troveCloser);
+            uint compoundedCLVDeposit = getCompoundedCLVDeposit(_troveCloser);
 
             address frontEnd = deposits[_troveCloser].frontEndTag;
             _payOutLQTYGains(_troveCloser, frontEnd);
 
-            uint compoundedFrontEndStake = _getCompoundedFrontEndStake(frontEnd);
+            uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
             uint newFrontEndStake = compoundedFrontEndStake.sub(compoundedCLVDeposit);
-            _updateFrontEndStake(frontEnd, newFrontEndStake);
+            _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
 
             _updateDepositAndSnapshots(_troveCloser, compoundedCLVDeposit);
             _removeTagAndEligibility(_troveCloser);
@@ -305,13 +305,9 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Reward calculator functions for depositor and front end ---
 
-    function getDepositorETHGain(address _depositor) external view returns (uint) {
-        return _getDepositorETHGain(_depositor);
-    }
-
     /* Return the ETH gain earned by the deposit. Given by the formula:  E = d0 * (S - S(0))/P(0)
     where S(0) and P(0) are the depositor's snapshots of the sum S and product P, respectively. */
-    function _getDepositorETHGain(address _depositor) internal view returns (uint) {
+    function getDepositorETHGain(address _depositor) public view returns (uint) {
         uint initialDeposit = deposits[_depositor].initialValue;
 
         if (initialDeposit == 0) { return 0; }
@@ -330,26 +326,16 @@ contract PoolManager is Ownable, IPoolManager {
         uint firstPortion = epochToScaleToSum[snapshots.epoch][snapshots.scale].sub(snapshots.S);
         uint secondPortion = epochToScaleToSum[snapshots.epoch][snapshots.scale.add(1)].div(1e18);
 
-        // console.log("firstPortion: %s", firstPortion);
-        // console.log("secondPortion: %s", secondPortion);
-        // console.log("initialDeposit: %s", initialDeposit);
-        // console.log("snapshots.P: %s", snapshots.P);
-
-
         uint ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(snapshots.P).div(1e18);
-        
         return ETHGain;
     }
 
-    function getDepositorLQTYGain(address _depositor) external view returns (uint) {
-        return _getDepositorLQTYGain(_depositor);
-    }
 
     /* Return the LQTY gain earned by the deposit. Given by the formula:  E = d0 * (G - G(0))/P(0)
     where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively. 
     
     d0 is the last recorded deposit value. */
-    function _getDepositorLQTYGain(address _depositor) internal view returns (uint) {
+    function getDepositorLQTYGain(address _depositor) public view returns (uint) {
        
         uint initialDeposit = deposits[_depositor].initialValue;
         if (initialDeposit == 0 || isEligibleForLQTY(_depositor) == false) { return 0; }
@@ -365,15 +351,11 @@ contract PoolManager is Ownable, IPoolManager {
         return LQTYGain;
     }
 
-    function getFrontEndLQTYGain(address _frontEnd) external view returns (uint) {
-        return _getFrontEndLQTYGain(_frontEnd);
-    }
-
     /* Return the LQTY gain earned by the front end. Given by the formula:  E = D0 * (G - G(0))/P(0)
     where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively.
 
     D0 is the last recorded value of the front end's total tagged deposits. */
-    function _getFrontEndLQTYGain(address _frontEnd) internal view returns (uint) {
+    function getFrontEndLQTYGain(address _frontEnd) public view returns (uint) {
         uint frontEndStake = frontEndStakes[_frontEnd];
         if (frontEndStake == 0) { return 0; }
 
@@ -394,28 +376,16 @@ contract PoolManager is Ownable, IPoolManager {
         uint firstPortion = epochToScaleToG[snapshots.epoch][snapshots.scale].sub(snapshots.G);
         uint secondPortion = epochToScaleToG[snapshots.epoch][snapshots.scale.add(1)].div(1e18);
 
-        // console.log("firstPortion: %s", firstPortion);
-        // console.log("secondPortion: %s", secondPortion);
-        // console.log("initialStake: %s", initialStake);
-        // console.log("snapshots.G: %s", snapshots.G);
-
         uint LQTYGain = initialStake.mul(firstPortion.add(secondPortion)).div(snapshots.P).div(1e18);
         
-        // console.log("LQTYGain: %s", LQTYGain);
-        // console.log("snapshots.G: %s", snapshots.G);
-        // console.log("snapshots.P: %s", snapshots.P);
         return LQTYGain;
     }
 
     // --- Compounded deposit and compounded front end stake ---
 
-    function getCompoundedCLVDeposit(address _depositor) external view returns (uint) {
-        return _getCompoundedCLVDeposit(_depositor);
-    }
-
     /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
     where P(0) is the depositor's snapshot of the product P. */
-    function _getCompoundedCLVDeposit(address _depositor) internal view returns (uint) {
+    function getCompoundedCLVDeposit(address _depositor) public view returns (uint) {
         uint initialDeposit = deposits[_depositor].initialValue;
         if (initialDeposit == 0) { return 0; }
 
@@ -425,13 +395,9 @@ contract PoolManager is Ownable, IPoolManager {
         return compoundedDeposit;
     }
 
-    function getCompoundedFrontEndStake(address _frontEnd) external view returns (uint) {
-        return _getCompoundedFrontEndStake(_frontEnd);
-    }
-
     /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
     where P(0) is the depositor's snapshot of the product P. */
-    function _getCompoundedFrontEndStake(address _frontEnd) internal view returns (uint) {
+    function getCompoundedFrontEndStake(address _frontEnd) public view returns (uint) {
         uint frontEndStake = frontEndStakes[_frontEnd];
         if (frontEndStake == 0) { return 0; }
 
@@ -486,8 +452,9 @@ contract PoolManager is Ownable, IPoolManager {
         borrowerOperations.addColl.value(_ETHGain)(_depositor, _hint); 
     }
 
-    /* When a borrower-depositor closes their loan, this function pays out their withrawn collateral and 
-    their deposit's accumulated ETH gain. 
+    /* When a borrower-depositor closes their loan, this function pays out their withrawn collateral 
+    and their deposit's accumulated ETH gain. 
+    
     It first collects the ETH, then sends it all in one operation.  */
     function _sendCollAndETHGain(address _troveCloser, uint _collWithdrawal, uint _ETHGain) internal {
         _requireCallerIsBorrowerOperations();
@@ -551,6 +518,7 @@ contract PoolManager is Ownable, IPoolManager {
 
         if (_newValue == 0) {
             _removeTagAndEligibility(_depositor);
+            _zeroDepositSnapshots(_depositor);
             emit DepositSnapshotUpdated(_depositor, depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
             return;
         }
@@ -565,10 +533,11 @@ contract PoolManager is Ownable, IPoolManager {
         emit DepositSnapshotUpdated(_depositor, depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
     }
 
-    function _updateFrontEndStake(address _frontEnd, uint _newValue) internal {
+    function _updateFrontEndStakeAndSnapshots(address _frontEnd, uint _newValue) internal {
         frontEndStakes[_frontEnd] = _newValue;
 
         if (_newValue == 0) {
+            _zeroFrontEndSnapshots(_frontEnd);
             // TODO: emit event
             return;
         }
@@ -582,6 +551,21 @@ contract PoolManager is Ownable, IPoolManager {
         //TODO: emit event
     }
 
+    function _zeroDepositSnapshots(address _depositor) internal {
+        depositSnapshots[_depositor].P = 0;
+        depositSnapshots[_depositor].S = 0;
+        depositSnapshots[_depositor].G = 0;
+        depositSnapshots[_depositor].scale = 0;
+        depositSnapshots[_depositor].epoch = 0;
+    }
+
+     function _zeroFrontEndSnapshots(address _frontEnd) internal {
+        frontEndSnapshots[_frontEnd].P = 0;
+        frontEndSnapshots[_frontEnd].G = 0;
+        frontEndSnapshots[_frontEnd].scale = 0;
+        frontEndSnapshots[_frontEnd].epoch = 0;
+    }
+
     // --- External Depositor Functions ---
    
     /* provideToSP():
@@ -593,6 +577,8 @@ contract PoolManager is Ownable, IPoolManager {
     */
     function provideToSP(uint _amount, address _frontEndTag) external {
         _requireFrontEndIsRegisteredOrZero(_frontEndTag);
+        _requireNonZeroAmount(_amount);
+
         address depositor = _msgSender();
         uint initialDeposit = deposits[depositor].initialValue;
 
@@ -600,8 +586,8 @@ contract PoolManager is Ownable, IPoolManager {
 
         if (initialDeposit == 0) {_setTagAndEligibility(depositor, _frontEndTag);}  
 
-        uint depositorETHGain = _getDepositorETHGain(depositor);
-        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(depositor);
+        uint depositorETHGain = getDepositorETHGain(depositor);
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
 
         if (isEligibleForLQTY(depositor)) {
@@ -610,9 +596,9 @@ contract PoolManager is Ownable, IPoolManager {
             _payOutLQTYGains(depositor, frontEnd);
         
             // Update front end stake
-            uint compoundedFrontEndStake = _getCompoundedFrontEndStake(frontEnd);
+            uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
             uint newFrontEndStake = compoundedFrontEndStake.add(_amount);
-            _updateFrontEndStake(frontEnd, newFrontEndStake);
+            _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         }
         
         _sendCLVtoStabilityPool(depositor, _amount);
@@ -641,9 +627,9 @@ contract PoolManager is Ownable, IPoolManager {
         
         _triggerLQTYIssuance();
         
-        uint depositorETHGain = _getDepositorETHGain(depositor);
+        uint depositorETHGain = getDepositorETHGain(depositor);
         
-        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(depositor);
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
         uint CLVtoWithdraw = Math._min(_amount, compoundedCLVDeposit);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
       
@@ -653,9 +639,9 @@ contract PoolManager is Ownable, IPoolManager {
             _payOutLQTYGains(depositor, frontEnd);
         
             // Update front end stake
-            uint compoundedFrontEndStake = _getCompoundedFrontEndStake(frontEnd);
+            uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
             uint newFrontEndStake = compoundedFrontEndStake.sub(CLVtoWithdraw);
-            _updateFrontEndStake(frontEnd, newFrontEndStake);
+            _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         }
 
         _sendCLVToDepositor(depositor, CLVtoWithdraw);
@@ -673,14 +659,12 @@ contract PoolManager is Ownable, IPoolManager {
     function _payOutLQTYGains(address _depositor, address _frontEnd) internal {
         // Pay out front end's LQTY gain
         if (_frontEnd != address(0)) {
-            uint frontEndLQTYGain = _getFrontEndLQTYGain(_frontEnd);
-            // console.log("frontEndLQTYGain: %s", frontEndLQTYGain);
+            uint frontEndLQTYGain = getFrontEndLQTYGain(_frontEnd);
             communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
         }
         
         // Pay out depositor's LQTY gain
-        uint depositorLQTYGain = _getDepositorLQTYGain(_depositor);
-        // console.log("depositorLQTYGain %s", depositorLQTYGain);
+        uint depositorLQTYGain = getDepositorLQTYGain(_depositor);
         communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
     }
 
@@ -695,14 +679,15 @@ contract PoolManager is Ownable, IPoolManager {
         require(_depositor == _msgSender(), "PoolManager: A user may only withdraw ETH gains to their own trove" );
         _requireUserHasDeposit(_depositor); 
         _requireUserHasTrove(_depositor);
+        _requireUserHasETHGain(_depositor);
 
         uint initialDeposit = deposits[_depositor].initialValue;
 
         _triggerLQTYIssuance();  
         
-        uint depositorETHGain = _getDepositorETHGain(_depositor);
+        uint depositorETHGain = getDepositorETHGain(_depositor);
         
-        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_depositor);
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(_depositor);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
       
         if (isEligibleForLQTY(_depositor)) {
@@ -711,9 +696,9 @@ contract PoolManager is Ownable, IPoolManager {
             _payOutLQTYGains(_depositor, frontEnd);
         
             // Update front end stake
-            uint compoundedFrontEndStake = _getCompoundedFrontEndStake(frontEnd);
+            uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
             uint newFrontEndStake = compoundedFrontEndStake;
-            _updateFrontEndStake(frontEnd, newFrontEndStake);
+            _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         }
 
         _updateDepositAndSnapshots(_depositor, compoundedCLVDeposit); 
@@ -853,8 +838,17 @@ contract PoolManager is Ownable, IPoolManager {
         require(initialDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
     }
 
+    function _requireNonZeroAmount(uint _amount) internal view {
+        require(_amount > 0, 'PoolManager: Amount must be non-zero');
+    }
+
     function _requireUserHasTrove(address _user) internal view {
         require(cdpManager.getCDPStatus(_user) == 1, "CDPManager: caller must have an active trove to withdraw ETHGain to");
+    }
+
+    function _requireUserHasETHGain(address _user) internal view {
+        uint ETHGain = getDepositorETHGain(_user);
+        require(ETHGain > 0, "PoolManager: caller must have non-zero ETH Gain");
     }
 
     function _requireFrontEndNotRegistered(address _address) internal view {

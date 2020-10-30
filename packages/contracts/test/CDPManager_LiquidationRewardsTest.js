@@ -41,7 +41,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     borrowerOperations = contracts.borrowerOperations
 
     await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts.gtStaking.address)
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
