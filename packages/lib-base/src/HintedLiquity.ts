@@ -1,8 +1,8 @@
-import { Decimal, Decimalish } from "@liquity/decimal";
+import { Decimal } from "@liquity/decimal";
 
-import { Trove, TroveChange } from "./Trove";
+import { Trove } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
-import { Redemption, SimpleTransaction, TransactableLiquity } from "./TransactableLiquity";
+import { TransactableLiquity } from "./TransactableLiquity";
 
 export type HintedTransactionOptionalParams = {
   price?: Decimal;
@@ -17,43 +17,20 @@ export type StabilityDepositTransferOptionalParams = TroveChangeOptionalParams &
   deposit?: StabilityDeposit;
 };
 
-export interface HintedLiquity<T = unknown, U = unknown> extends TransactableLiquity<T, U> {
-  openTrove(
-    trove: Trove,
-    optionalParams?: HintedTransactionOptionalParams
-  ): Promise<SimpleTransaction<T, U>>;
+type AddParams<T, K extends keyof T, U extends unknown[]> = {
+  [P in K]: T[P] extends (...args: infer A) => infer R ? (...args: [...A, ...U]) => R : never;
+};
 
-  depositEther(
-    depositedEther: Decimalish,
-    optionalParams?: TroveChangeOptionalParams
-  ): Promise<SimpleTransaction<T, U>>;
+type SimpleHintedMethod = "openTrove" | "redeemCollateral";
+type TroveChangeMethod = "depositEther" | "withdrawEther" | "borrowQui" | "repayQui" | "changeTrove";
 
-  withdrawEther(
-    withdrawnEther: Decimalish,
-    optionalParams?: TroveChangeOptionalParams
-  ): Promise<SimpleTransaction<T, U>>;
+type AddHintParams<T extends TransactableLiquity> = T &
+  AddParams<T, SimpleHintedMethod, [optionalParams?: HintedTransactionOptionalParams]> &
+  AddParams<T, TroveChangeMethod, [optionalParams?: TroveChangeOptionalParams]> &
+  AddParams<
+    T,
+    "transferCollateralGainToTrove",
+    [optionalParams?: StabilityDepositTransferOptionalParams]
+  >;
 
-  borrowQui(
-    borrowedQui: Decimalish,
-    optionalParams?: TroveChangeOptionalParams
-  ): Promise<SimpleTransaction<T, U>>;
-
-  repayQui(
-    repaidQui: Decimalish,
-    optionalParams?: TroveChangeOptionalParams
-  ): Promise<SimpleTransaction<T, U>>;
-
-  changeTrove(
-    change: TroveChange,
-    optionalParams?: TroveChangeOptionalParams
-  ): Promise<SimpleTransaction<T, U>>;
-
-  transferCollateralGainToTrove(
-    optionalParams?: StabilityDepositTransferOptionalParams
-  ): Promise<SimpleTransaction<T, U>>;
-
-  redeemCollateral(
-    exchangedQui: Decimalish,
-    optionalParams?: HintedTransactionOptionalParams
-  ): Promise<Redemption<T, U>>;
-}
+export type HintedLiquity<T, U> = AddHintParams<TransactableLiquity<T, U>>;
