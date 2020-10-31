@@ -49,6 +49,12 @@ const infuraNetwork = (name: string): { [name: string]: NetworkConfig } => ({
 const config: BuidlerConfig = {
   defaultNetwork: "buidlerevm",
   networks: {
+    buidlerevm: {
+      // Let Ethers throw instead of Buidler EVM
+      // This is closer to what will happen in production
+      throwOnCallFailures: false,
+      throwOnTransactionFailures: false
+    },
     dev: {
       url: "http://localhost:8545",
       accounts: [deployerAccount, devChainRichAccount, ...generateRandomAccounts(6)]
