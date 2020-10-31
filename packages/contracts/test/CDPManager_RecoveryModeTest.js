@@ -15,14 +15,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   const _3_Ether = web3.utils.toWei('3', 'ether')
   const _3pt5_Ether = web3.utils.toWei('3.5', 'ether')
   const _6_Ether = web3.utils.toWei('6', 'ether')
-  const _9_Ether = web3.utils.toWei('9', 'ether')
   const _10_Ether = web3.utils.toWei('10', 'ether')
   const _20_Ether = web3.utils.toWei('20', 'ether')
   const _21_Ether = web3.utils.toWei('21', 'ether')
   const _22_Ether = web3.utils.toWei('22', 'ether')
   const _24_Ether = web3.utils.toWei('24', 'ether')
   const _25_Ether = web3.utils.toWei('25', 'ether')
-  const _27_Ether = web3.utils.toWei('27', 'ether')
   const _30_Ether = web3.utils.toWei('30', 'ether')
 
   const [
@@ -30,8 +28,6 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     alice, bob, carol, dennis, erin, freddy, greta, harry, ida,
     whale, defaulter_1, defaulter_2, defaulter_3, defaulter_4,
     A, B, C, D, E, F, G, H, I] = accounts;
-
-  const defaulters = [defaulter_1, defaulter_2, defaulter_3, defaulter_4]
 
   let priceFeed
   let clvToken
@@ -619,13 +615,14 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000')
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
     // Check Bob's ICR is between 110 and 150
     const bob_ICR = await cdpManager.getCurrentICR(bob, price)
-    assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(mv._CCR))
+    assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(TCR))
 
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
@@ -796,57 +793,36 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan('87000000000000000000', erin, { from: erin, value: dec(2, 'ether') }) 
     await borrowerOperations.openLoan('86000000000000000000', freddy, { from: freddy, value: dec(2, 'ether') })
 
-    // so total collateral is 18 ETH ($3600)
-    // and total debt is (1000 + 90 + 89 + 88 + 87 + 87 + 86)
-    // so the TCR is ~235%
-    console.log("BEFORE TCR")
-    console.log((await cdpManager.getTCR()).toString())
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
-    // now the 18 ETH collateral is worth 
-    // $2160 and thus the new TCR is ~141.5%
-    console.log("AFTER TCR")
-    console.log((await cdpManager.getTCR()).toString())
-
+    const TCR = await cdpManager.getTCR()
+  
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
     // Check troves A-D are in range 110% < ICR < TCR
-    const ICR_A = await cdpManager.getCurrentICR(alice, price) // ~133%
-    console.log("A's ICR" + ICR_A.toString())
-    const ICR_B = await cdpManager.getCurrentICR(bob, price) // ~135%
-    console.log("B's ICR" + ICR_B.toString())
-    const ICR_C = await cdpManager.getCurrentICR(carol, price) // ~136%
-    console.log("C's ICR" + ICR_C.toString())
-    const ICR_D = await cdpManager.getCurrentICR(dennis, price) // ~138%
-    console.log("D's ICR" + ICR_D.toString())
+    const ICR_A = await cdpManager.getCurrentICR(alice, price)
+    const ICR_B = await cdpManager.getCurrentICR(bob, price)
+    const ICR_C = await cdpManager.getCurrentICR(carol, price)
+    const ICR_D = await cdpManager.getCurrentICR(dennis, price)
     
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
-    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
+    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(TCR))
 
     // Troves are ordered by ICR, low to high: A, B, C, D.
 
     // Liquidate out of ICR order: D, B, C.  Confirm Recovery Mode is active prior to each.
     const liquidationTx_D = await cdpManager.liquidate(dennis)
-    // new TCR = (2160 - 120 = 2040) / (1527 - 87 = 1440) = ~142%
-    console.log("NEW_D TCR")
-    console.log((await cdpManager.getTCR()).toString())
-
+  
     assert.isTrue(await cdpManager.checkRecoveryMode())
     const liquidationTx_B = await cdpManager.liquidate(bob)
-    // new TCR = (2040 - 120 = 1920) / (1440 - 89 = 1351) = ~142%
-    console.log("NEW_B")
-    console.log((await cdpManager.getTCR()).toString())
 
     assert.isTrue(await cdpManager.checkRecoveryMode())
     const liquidationTx_C = await cdpManager.liquidate(carol)
-    // new TCR = (1920 - 120 = 1800) / (1351 - 88 = 1263) = ~142.5%
-    console.log("NEW_C")
-    console.log((await cdpManager.getTCR()).toString())
-
+    
     // Check transactions all succeeded
     assert.isTrue(liquidationTx_D.receipt.status)
     assert.isTrue(liquidationTx_B.receipt.status)
@@ -1365,7 +1341,6 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
 
     await priceFeed.setPrice(dec(100, 18))
-    const price = await priceFeed.getPrice()
 
     // Confirm Recovery Mode
     assert.isTrue(await cdpManager.checkRecoveryMode())
@@ -2340,7 +2315,6 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
-    const price = await priceFeed.getPrice()
 
     // Confirm Recovery Mode
     assert.isTrue(await cdpManager.checkRecoveryMode())
@@ -2546,19 +2520,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C, D, E troves are in range 110% < ICR < 150%
+    // Check A, B, C, D, E troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
 
-
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
 
     /* Liquidate troves. Troves are ordered by ICR, from low to high:  A, B, C, D, E.
     With 253 in the SP, Alice (102 debt) and Bob (101 debt) should be entirely liquidated. 
@@ -2589,18 +2563,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C, D, E troves are in range 110% < ICR < 150%
+    // Check A, B, C, D, E troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
 
     /* Liquidate troves. Troves are ordered by ICR, from low to high:  A, B, C, D, E.
     With 253 in the SP, Alice (102 debt) and Bob (101 debt) should be entirely liquidated. 
@@ -2642,22 +2617,23 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C, D, E troves are in range 110% < ICR < 150%
+    // Check A, B, C, D, E troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
     const ICR_D = await cdpManager.getCurrentICR(dennis, price)
     const ICR_E = await cdpManager.getCurrentICR(erin, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
-    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
-    assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
+    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(TCR))
+    assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(TCR))
 
     /* Liquidate troves. Troves are ordered by ICR, from low to high:  A, B, C, D, E.
     With 253 in the SP, Alice (102 debt) and Bob (101 debt) should be entirely liquidated. 
@@ -2690,18 +2666,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C troves are in range 110% < ICR < 150%
+    // Check A, B, C troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
 
     const entireSystemCollBefore = await cdpManager.getEntireSystemColl()
     const entireSystemDebtBefore = await cdpManager.getEntireSystemDebt()
@@ -2737,18 +2714,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C troves are in range 110% < ICR < 150%
+    // Check A, B, C troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
 
     /* Liquidate troves. Troves are ordered by ICR, from low to high:  A, B, C, D, E.
     With 253 in the SP, Alice (102 debt) and Bob (101 debt) should be entirely liquidated. 
@@ -2778,18 +2756,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C troves are in range 110% < ICR < 150%
+    // Check A, B, C troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C_Before = await cdpManager.getCurrentICR(carol, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C_Before.gt(mv._MCR) && ICR_C_Before.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C_Before.gt(mv._MCR) && ICR_C_Before.lt(TCR))
 
     /* Liquidate troves. Troves are ordered by ICR, from low to high:  A, B, C, D, E.
     With 253 in the SP, Alice (102 debt) and Bob (101 debt) should be entirely liquidated. 
@@ -2817,18 +2796,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C troves are in range 110% < ICR < 150%
+    // Check A, B, C troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
 
     const trovesToLiquidate = [alice, bob, carol]
     await cdpManager.batchLiquidateTroves(trovesToLiquidate)
@@ -2857,18 +2837,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C troves are in range 110% < ICR < 150%
+    // Check A, B, C troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
 
     const trovesToLiquidate = [alice, bob, carol]
     await cdpManager.batchLiquidateTroves(trovesToLiquidate)
@@ -2908,23 +2889,23 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C, D, E troves are in range 110% < ICR < 150%
+    // Check A, B, C, D, E troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
     const ICR_D = await cdpManager.getCurrentICR(dennis, price)
     const ICR_E = await cdpManager.getCurrentICR(erin, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
-    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
-    assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(mv._CCR))
-
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
+    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(TCR))
+    assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(TCR))
 
     const trovesToLiquidate = [alice, bob, carol, dennis, erin]
     await cdpManager.batchLiquidateTroves(trovesToLiquidate)
@@ -2955,18 +2936,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C, D, E troves are in range 110% < ICR < 150%
+    // Check A, B, C, D, E troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
 
     const entireSystemCollBefore = await cdpManager.getEntireSystemColl()
     const entireSystemDebtBefore = await cdpManager.getEntireSystemDebt()
@@ -3000,18 +2982,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C troves are in range 110% < ICR < 150%
+    // Check A, B, C troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
 
     const trovesToLiquidate = [alice, bob, carol]
     const liquidationTx = await cdpManager.batchLiquidateTroves(trovesToLiquidate)
@@ -3039,18 +3022,19 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check A, B, C troves are in range 110% < ICR < 150%
+    // Check A, B, C troves are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C_Before = await cdpManager.getCurrentICR(carol, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C_Before.gt(mv._MCR) && ICR_C_Before.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C_Before.gt(mv._MCR) && ICR_C_Before.lt(TCR))
 
     const trovesToLiquidate = [alice, bob, carol]
     await cdpManager.batchLiquidateTroves(trovesToLiquidate)
@@ -3129,32 +3113,33 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(carolDebt_Before, carol, { from: carol, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dennisDebt_Before, dennis, { from: dennis, value: dec(1, 'ether') })
 
+    const bobColl_Before = (await cdpManager.CDPs(bob))[1]
+    const carolColl_Before = (await cdpManager.CDPs(carol))[1]
+    const dennisColl_Before = (await cdpManager.CDPs(dennis))[1]
+
     await borrowerOperations.openLoan('87000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
     await borrowerOperations.openLoan('86000000000000000000', freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Price drops 
     await priceFeed.setPrice(dec(120, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Check Recovery Mode is active
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    // Check troves A-D are in range 110% < ICR < 150%
+    // Check troves A-D are in range 110% < ICR < TCR
     const ICR_A = await cdpManager.getCurrentICR(alice, price)
     const ICR_B = await cdpManager.getCurrentICR(bob, price)
     const ICR_C = await cdpManager.getCurrentICR(carol, price)
-    const ICR_D = await cdpManager.getCurrentICR(dennis, price)
 
-    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(mv._CCR))
-    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(mv._CCR))
-    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(mv._CCR))
-    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
+    assert.isTrue(ICR_A.gt(mv._MCR) && ICR_A.lt(TCR))
+    assert.isTrue(ICR_B.gt(mv._MCR) && ICR_B.lt(TCR))
+    assert.isTrue(ICR_C.gt(mv._MCR) && ICR_C.lt(TCR))
 
-    // Troves are ordered by ICR, low to high: A, B, C, D.
-
+    // Troves are ordered by ICR, low to high: A, B, C, D. 
     // Liquidate out of ICR order: D, B, C. A (lowest ICR) not included.
     const trovesToLiquidate = [dennis, bob, carol]
-
     const liquidationTx = await cdpManager.batchLiquidateTroves(trovesToLiquidate)
 
     // Check transaction succeeded
@@ -3175,9 +3160,13 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const bobDebt_After = (await cdpManager.CDPs(bob))[0].add(await cdpManager.getPendingCLVDebtReward(bob))
     const carolDebt_After = (await cdpManager.CDPs(carol))[0].add(await cdpManager.getPendingCLVDebtReward(carol))
 
-    const dennisColl_After = (await cdpManager.CDPs(dennis))[1].add(await cdpManager.getPendingETHReward(dennis))
+    const dennisColl_After = (await cdpManager.CDPs(dennis))[1].add(await cdpManager.getPendingETHReward(dennis))  
     const bobColl_After = (await cdpManager.CDPs(bob))[1].add(await cdpManager.getPendingETHReward(bob))
     const carolColl_After = (await cdpManager.CDPs(carol))[1].add(await cdpManager.getPendingETHReward(carol))
+
+    assert.isTrue(dennisColl_After.eq(dennisColl_Before))
+    assert.isTrue(bobColl_After.eq(bobColl_Before))
+    assert.isTrue(carolColl_After.eq(carolColl_Before))
 
     assert.equal(th.toBN(dennisDebt_Before).add(th.toBN(dec(10, 18))).toString(), dennisDebt_After.toString())
     assert.equal(th.toBN(bobDebt_Before).add(th.toBN(dec(10, 18))).toString(), bobDebt_After.toString())
@@ -3196,7 +3185,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // Troves that will fall into ICR range 110-150
     await borrowerOperations.openLoan(dec(70, 18), D, { from: D, value: dec(1, 'ether') }) 
-    await borrowerOperations.openLoan(dec(60, 18), E, { from: E, value: dec(1, 'ether') }) 
+    await borrowerOperations.openLoan(dec(78, 18), E, { from: E, value: dec(1, 'ether') }) 
     await borrowerOperations.openLoan(dec(57, 18), F, { from: F, value: dec(1, 'ether') }) 
 
     // Troves that will fall into ICR range >= 150
@@ -3207,6 +3196,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Price drops, but all troves remain active
     await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
+    const TCR = await cdpManager.getTCR()
 
     // Confirm Recovery Mode
     assert.isTrue(await cdpManager.checkRecoveryMode())
@@ -3218,15 +3208,15 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const I_collBefore = (await cdpManager.CDPs(I))[1]
     const I_debtBefore = (await cdpManager.CDPs(I))[0]
 
-    const ICR_A = await cdpManager.getCurrentICR(A, price) // 107.5%
-    const ICR_B = await cdpManager.getCurrentICR(B, price) // 108.7%
-    const ICR_C = await cdpManager.getCurrentICR(C, price) // 109.9%
-    const ICR_D = await cdpManager.getCurrentICR(D, price) // 125%
-    const ICR_E = await cdpManager.getCurrentICR(E, price) // 142.8%
-    const ICR_F = await cdpManager.getCurrentICR(F, price) // 149%
-    const ICR_G = await cdpManager.getCurrentICR(G, price) // 181.8%
-    const ICR_H = await cdpManager.getCurrentICR(H, price) // 200%
-    const ICR_I = await cdpManager.getCurrentICR(I, price) // 222%
+    const ICR_A = await cdpManager.getCurrentICR(A, price) 
+    const ICR_B = await cdpManager.getCurrentICR(B, price) 
+    const ICR_C = await cdpManager.getCurrentICR(C, price) 
+    const ICR_D = await cdpManager.getCurrentICR(D, price)
+    const ICR_E = await cdpManager.getCurrentICR(E, price)
+    const ICR_F = await cdpManager.getCurrentICR(F, price)
+    const ICR_G = await cdpManager.getCurrentICR(G, price)
+    const ICR_H = await cdpManager.getCurrentICR(H, price)
+    const ICR_I = await cdpManager.getCurrentICR(I, price)
 
     // Check A-C are in range 100-110
     assert.isTrue(ICR_A.gte(mv._ICR100) && ICR_A.lt(mv._MCR))
@@ -3295,32 +3285,24 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     
     // B and E are still in range 110-150. 
     // Attempt to liquidate B, G, H, I, D.
-    // Expected Stability Pool to fully absorb B (92 CLV), and absorb 50% of D (40 of 80 CLV)
+    // Expected Stability Pool to fully absorb B (92 CLV), and absorb 50% of E (40 of 80 CLV)
     const stabilityBefore = await poolManager.getStabilityPoolCLV()
-    const dDebtBefore = (await cdpManager.CDPs(D))[0]
-    console.log("stabilityBefore..", stabilityBefore.toString())
-    console.log("dDebtBefore...", dDebtBefore.toString())
-    console.log("TCr before" + (await cdpManager.getTCR()).toString())
-    console.log("D iCr before" + await cdpManager.getCurrentICR(D, price))
-    console.log("B iCr before" + await cdpManager.getCurrentICR(B, price))
+    const dEbtBefore = (await cdpManager.CDPs(E))[0]
+
+    await cdpManager.batchLiquidateTroves([B, G, H, I, E])
     
-    await cdpManager.batchLiquidateTroves([B, G, H, I, D])
-    
-    const dDebtAfter = (await cdpManager.CDPs(D))[0]
-    console.log("dDebtAfter...", dDebtAfter.toString())
+    const dEbtAfter = (await cdpManager.CDPs(E))[0]
     const stabilityAfter = await poolManager.getStabilityPoolCLV()
-    console.log("stabilityAfter..", stabilityAfter.toString())
     
     const stabilityDelta = stabilityBefore.sub(stabilityAfter)  
-    console.log("stabilityDelta..", stabilityDelta.toString())
-    assert.equal(stabilityDelta, dec(92, 18))
+    const dEbtDelta = dEbtBefore.sub(dEbtAfter)
 
-    const dDebtDelta = dDebtBefore.sub(dDebtAfter)
-    // assert.equal(dDebtDelta.eq(dec(40, 18))) TODO 50% is not being absorbed
+    assert.isTrue(stabilityDelta.eq(stabilityBefore))
+    assert.equal((dEbtDelta.toString()), '40000000000000001000')
     
     // Confirm B removed and E active 
     assert.isFalse(await sortedCDPs.contains(B)) 
-    assert.isTrue(await sortedCDPs.contains(D))
+    assert.isTrue(await sortedCDPs.contains(E))
 
     // Check G, H, I remain in system
     assert.isTrue(await sortedCDPs.contains(G))
