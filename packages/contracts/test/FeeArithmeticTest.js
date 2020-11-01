@@ -354,7 +354,7 @@ contract('Fee arithmetic tests', async accounts => {
     lockupContractFactory = GTContracts.lockupContractFactory
 
     await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(contracts, GTContrats)
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
@@ -762,7 +762,7 @@ contract('Fee arithmetic tests', async accounts => {
     })
 
     it("decPow(): abs. error < 1e-9 for exponent = 43200 (minutes in one month)", async () => {
-      for (let i = 1; i <= 200; i++) {
+      for (let i = 1; i <= 1000; i++) {
         const exponent = timeValues.MINUTES_IN_ONE_MONTH
 
         // Use a high base to fully test high exponent, without prematurely decaying to 0
@@ -778,6 +778,110 @@ contract('Fee arithmetic tests', async accounts => {
         const error = expected.sub(res).abs()
 
         // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+
+        try {
+          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+        } catch (error) {
+          console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        }
+      }
+    })
+
+    it("decPow(): abs. error < 1e-9 for exponent = 525600 (minutes in one year)", async () => {
+      for (let i = 1; i <= 1000; i++) {
+        const exponent = timeValues.MINUTES_IN_ONE_YEAR
+
+        // Use a high base to fully test high exponent, without prematurely decaying to 0
+        const base = th.randDecayFactor(0.99999, 0.999999999999999999)
+        const baseAsDecimal = BNConverter.makeDecimal(base, 18)
+
+        // Calculate actual expected value
+        let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
+        expected = BNConverter.makeBN(expected)
+
+        const res = await mathTester.callDecPow(base, exponent)
+
+        const error = expected.sub(res).abs()
+
+        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+
+        try {
+          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+        } catch (error) {
+          console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        }
+      }
+    })
+
+    it("decPow(): abs. error < 1e-9 for exponent = 2628000 (minutes in five years)", async () => {
+      for (let i = 1; i <= 1000; i++) {
+        const exponent = timeValues.MINUTES_IN_FIVE_YEARS
+
+        // Use a high base to fully test high exponent, without prematurely decaying to 0
+        const base = th.randDecayFactor(0.99999, 0.999999999999999999)
+        const baseAsDecimal = BNConverter.makeDecimal(base, 18)
+
+        // Calculate actual expected value
+        let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
+        expected = BNConverter.makeBN(expected)
+
+        const res = await mathTester.callDecPow(base, exponent)
+
+        const error = expected.sub(res).abs()
+
+        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+
+        try {
+          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+        } catch (error) {
+          console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        }
+      }
+    })
+
+    it("decPow(): abs. error < 1e-9 for exponent = minutes in ten years", async () => {
+      for (let i = 1; i <= 1000; i++) {
+        const exponent = timeValues.MINUTES_IN_TEN_YEARS
+
+        // Use a high base to fully test high exponent, without prematurely decaying to 0
+        const base = th.randDecayFactor(0.99999, 0.999999999999999999)
+        const baseAsDecimal = BNConverter.makeDecimal(base, 18)
+
+        // Calculate actual expected value
+        let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
+        expected = BNConverter.makeBN(expected)
+
+        const res = await mathTester.callDecPow(base, exponent)
+
+        const error = expected.sub(res).abs()
+
+        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+
+        try {
+          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+        } catch (error) {
+          console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        }
+      }
+    })
+
+    it.only("decPow(): abs. error < 1e-9 for exponent = minutes in one hundred years", async () => {
+      for (let i = 1; i <= 1000; i++) {
+        const exponent = timeValues.MINUTES_IN_ONE_HUNDRED_YEARS
+
+        // Use a high base to fully test high exponent, without prematurely decaying to 0
+        const base = th.randDecayFactor(0.999999, 0.999999999999999999)
+        const baseAsDecimal = BNConverter.makeDecimal(base, 18)
+
+        // Calculate actual expected value
+        let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
+        expected = BNConverter.makeBN(expected)
+
+        const res = await mathTester.callDecPow(base, exponent)
+
+        const error = expected.sub(res).abs()
+
+        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
 
         try {
           assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9

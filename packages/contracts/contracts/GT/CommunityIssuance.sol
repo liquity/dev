@@ -85,11 +85,7 @@ contract CommunityIssuance {
 
         uint latestTotalLQTYIssued = supplyCap.mul(_getCumulativeIssuanceFraction()).div(1e18);
         uint issuance = latestTotalLQTYIssued.sub(totalLQTYIssued);
-        
-        // console.log("latestTotalLQTYIssued: %s", latestTotalLQTYIssued);
-        //  console.log("issuance: %s", issuance);
-        //   console.log("totalLQTYIssued: %s", totalLQTYIssued);
-
+      
         totalLQTYIssued = latestTotalLQTYIssued;
         return issuance;
     }

@@ -13,6 +13,7 @@ const GTStaking = artifacts.require("./GT/GTStaking.sol")
 const GrowthToken = artifacts.require("./GT/GrowthToken.sol")
 const LockupContractFactory = artifacts.require("./GT/LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./GT/CommunityIssuance.sol")
+const CommunityIssuanceTester = artifacts.require("./GT/CommunityIssuanceTester.sol")
 
 /* "Liquity core" consists of all contracts in the core Liquity system.
 
@@ -34,7 +35,7 @@ class DeploymentHelper {
     }
   }
 
-  static async deployGTContracts() {
+  static async deployGTContracts(communityIssuance = undefined) {
     const cmdLineArgs = process.argv
     const frameworkPath = cmdLineArgs[1]
     // console.log(`Framework used:  ${frameworkPath}`)
@@ -95,6 +96,29 @@ class DeploymentHelper {
     GTStaking.setAsDeployed(gtStaking)
     LockupContractFactory.setAsDeployed(lockupContractFactory)
     CommunityIssuance.setAsDeployed(communityIssuance)
+
+    // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
+    const growthToken = await GrowthToken.new(communityIssuance.address, lockupContractFactory.address)
+    GrowthToken.setAsDeployed(growthToken)
+
+    const GTContracts = {
+      gtStaking,
+      lockupContractFactory,
+      communityIssuance,
+      growthToken
+    }
+
+    return GTContracts
+  }
+
+  static async deployGTTesterContractsBuidler() {
+    const gtStaking = await GTStaking.new()
+    const lockupContractFactory = await LockupContractFactory.new()
+    const communityIssuance = await CommunityIssuanceTester.new()
+
+    GTStaking.setAsDeployed(gtStaking)
+    LockupContractFactory.setAsDeployed(lockupContractFactory)
+    CommunityIssuanceTester.setAsDeployed(communityIssuance)
 
     // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
     const growthToken = await GrowthToken.new(communityIssuance.address, lockupContractFactory.address)

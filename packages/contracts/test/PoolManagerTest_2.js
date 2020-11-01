@@ -880,7 +880,7 @@ contract('PoolManager', async accounts => {
     })
 
 
-    it("provideToSP(), new eligible deposit: tagged front end receives LQTY rewards", async () => {
+    it.only("provideToSP(), new eligible deposit: tagged front end receives LQTY rewards", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C, D, E, F open loans 
@@ -912,10 +912,18 @@ contract('PoolManager', async accounts => {
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
+      console.log(`supplyCap before: ${await communityIssuance.supplyCap()}`)
+      console.log(`totalLQTYIssued before: ${await communityIssuance.totalLQTYIssued()}`)
+      console.log(`LQTY balance of CI before: ${await growthToken.balanceOf(communityIssuance.address)}`)
+
       // A, B, C provide to SP
       await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
       await poolManager.provideToSP(dec(200, 18), frontEnd_2, { from: B })
       await poolManager.provideToSP(dec(300, 18), frontEnd_3, { from: C })
+
+      console.log(`supplyCap after: ${await communityIssuance.supplyCap()}`)
+      console.log(`totalLQTYIssued after: ${await communityIssuance.totalLQTYIssued()}`)
+      console.log(`LQTY balance of CI after: ${await growthToken.balanceOf(communityIssuance.address)}`)
 
       // Confirm A, B, C are now eligible for LQTY rewards
       assert.isTrue(await poolManager.isEligibleForLQTY(A))
