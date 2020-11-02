@@ -15,7 +15,7 @@ contract CommunityIssuanceTester is CommunityIssuance {
        return _getCumulativeIssuanceFraction();
     }
 
-      function unprotectedIssueLQTY() external returns (uint) {
+    function unprotectedIssueLQTY() external returns (uint) {
         // No checks on caller address
        
         uint latestTotalLQTYIssued = supplyCap.mul(_getCumulativeIssuanceFraction()).div(1e18);
@@ -24,8 +24,4 @@ contract CommunityIssuanceTester is CommunityIssuance {
         totalLQTYIssued = latestTotalLQTYIssued;
         return issuance;
     }
-
-
-
-
 }

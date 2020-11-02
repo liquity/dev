@@ -2,6 +2,7 @@ const fs = require('fs')
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const MathTester = artifacts.require("./MathTester.sol")
 
 const th = testHelpers.TestHelper
 
@@ -10,10 +11,14 @@ const timeValues = testHelpers.TimeValues
 contract('Gas costs for math functions', async accounts => {
   let contracts
   let cdpManagerTester
+  let mathTester
 
   before(async () => {
     cdpManagerTester = await CDPManagerTester.new()
     CDPManagerTester.setAsDeployed(cdpManagerTester)
+
+    mathTester = await MathTester.new()
+    MathTester.setAsDeployed(mathTester)
   })
 
   beforeEach(async () => {
@@ -36,19 +41,18 @@ contract('Gas costs for math functions', async accounts => {
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
 
-    await deploymentHelper.connectCoreContracts(contracts)
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
     await deploymentHelper.connectGTContracts(GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
-
   // performs n runs of exponentiation on a random base
-  const exponentiate = async (mathTester, baseMin, baseMax, exponent, runs) => {
+  const exponentiate = async (mathTester, exponent, runs, baseMin, baseMax = undefined) => {
     const gasCostList = []
 
     for (let i = 0; i < runs; i++) {
-      // random number between 0 and 1
-      const base = th.randDecayFactor(baseMin, baseMax)
+      // random number between 0 and 1 if func received a min and max
+      const base = baseMax ? th.randDecayFactor(baseMin, baseMax) : baseMin
 
       const res = await mathTester.callDecPow(base, exponent)
       const tx = await mathTester.callDecPowTx(base, exponent)
@@ -124,28 +128,58 @@ contract('Gas costs for math functions', async accounts => {
 
   //(choice of base is unimportant as gas costs depend only on the exponent)
 
-  it.only("", async () => {
-    let data = []
-    data.push(`exponentiation: exponent vs gas cost \n`)
+  it("", async () => {
+    let dataOneMonth = []
+    dataOneMonth.push(`exponentiation: exponent in units of seconds, max exponent is 30 years \n`)
 
     for (let n = 2; n <= timeValues.SECONDS_IN_ONE_MONTH; n += 100) {
       const runs = 1
-      const message = `exponentiation: n = ${n}, runs = ${runs}`
-      const gasResults = await exponentiate(cdpManagerTester, 0.9999999999, 0.999999999999999999, n, runs)
+      const message = `exponentiation: seconds n = ${n}, runs = ${runs}`
+      const gasResults = await exponentiate(cdpManagerTester, n, runs, 0.9999999999, 0.999999999999999999)
 
       th.logGasMetrics(gasResults, message)
       th.logAllGasCosts(gasResults)
 
-      data.push(n + "," + gasResults.medianGas + '\n')
+      dataOneMonth.push(n + "," + gasResults.medianGas + '\n')
     }
 
-    console.log(data)
+    // console.log(data)
 
-    fs.writeFile('gasTest/outputs/exponentiationCosts.csv', data, (err) => {
-      if (err) {console.log(err) } else {
-        console.log("Gas test data written to gasTest/outputs/exponentiationCosts.csv")
+    fs.writeFile('gasTest/outputs/exponentiationCostsOneMonth.csv', dataOneMonth, (err) => {
+      if (err) { console.log(err) } else {
+        console.log("Gas test data written to gasTest/outputs/exponentiationCostsOneMonth.csv")
       }
     })
   })
+
+  // --- Using the issuance factor (base) that corresponds to 50% issuance in year 1:  0.999998681227695000 ----
+
+  it.only("", async () => {
+    let data30Years = []
+    const issuanceFactor = '999998681227695000'
+
+    data30Years.push(`exponentiation: exponent vs gas cost: exponent in units of minutes, max exponent is 30 years \n`)
+
+    
+    for (let n = 2; n <= timeValues.MINUTES_IN_ONE_YEAR * 50; n += timeValues.MINUTES_IN_ONE_WEEK) {
+      console.log(`n: ${n}`)
+      const runs = 1
+      const message = `exponentiation: minutes n = ${n}, runs = ${runs}`
+      const gasResults = await exponentiate(mathTester, n, runs, issuanceFactor)
+
+      th.logGasMetrics(gasResults, message)
+      th.logAllGasCosts(gasResults)
+
+      data30Years.push(n + "," + gasResults.medianGas + '\n')
+    }
+
+    fs.writeFile('gasTest/outputs/exponentiationCosts30Years.csv', data30Years, (err) => {
+      if (err) { console.log(err) } else {
+        console.log("Gas test data written to gasTest/outputs/exponentiationCosts30Years.csv")
+      }
+    })
+  })
+
+
 })
 

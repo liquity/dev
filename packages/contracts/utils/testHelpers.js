@@ -32,6 +32,7 @@ const TimeValues = {
   SECONDS_IN_ONE_WEEK:          60 * 60 * 24 * 7,
   SECONDS_IN_ONE_MONTH:         60 * 60 * 24 * 30,
   SECONDS_IN_ONE_YEAR:          60 * 60 * 24 * 365,
+  MINUTES_IN_ONE_WEEK:          60 *24 * 30,
   MINUTES_IN_ONE_MONTH:         60 *24 * 30,
   MINUTES_IN_ONE_YEAR:          60 * 24 * 365
 }
