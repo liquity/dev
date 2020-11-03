@@ -3179,22 +3179,22 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await poolManager.provideToSP(dec(1000, 18), { from: whale })
 
     // Troves that will fall into ICR range 100-MCR
-    await borrowerOperations.openLoan(dec(83, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(82, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(81, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(93, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(92, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(91, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Troves that will fall into ICR range 110-TCR
-    await borrowerOperations.openLoan(dec(70, 18), D, { from: D, value: dec(1, 'ether') }) 
-    await borrowerOperations.openLoan(dec(78, 18), E, { from: E, value: dec(1, 'ether') }) 
-    await borrowerOperations.openLoan(dec(57, 18), F, { from: F, value: dec(1, 'ether') }) 
+    await borrowerOperations.openLoan(dec(82, 18), D, { from: D, value: dec(1, 'ether') }) 
+    await borrowerOperations.openLoan(dec(81, 18), E, { from: E, value: dec(1, 'ether') }) 
+    await borrowerOperations.openLoan(dec(80, 18), F, { from: F, value: dec(1, 'ether') }) 
 
     // Troves that will fall into ICR range >= TCR
-    await borrowerOperations.openLoan(dec(45, 18), G, { from: G, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(40, 18), H, { from: H, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(35, 18), I, { from: I, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), G, { from: G, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(30, 18), H, { from: H, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(20, 18), I, { from: I, value: dec(1, 'ether') })
 
     // Price drops, but all troves remain active
-    await priceFeed.setPrice(dec(100, 18))
+    await priceFeed.setPrice(dec(110, 18)) 
     const price = await priceFeed.getPrice()
     const TCR = await cdpManager.getTCR()
 
@@ -3223,10 +3223,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(ICR_B.gte(mv._ICR100) && ICR_B.lt(mv._MCR))
     assert.isTrue(ICR_C.gte(mv._ICR100) && ICR_C.lt(mv._MCR))
 
-    // Check D-F are in range 110-150
-    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(mv._CCR))
-    assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(mv._CCR))
-    assert.isTrue(ICR_F.gt(mv._MCR) && ICR_F.lt(mv._CCR))
+    // Check D-F are in range 110-TCR
+    assert.isTrue(ICR_D.gt(mv._MCR) && ICR_D.lt(TCR))
+    assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(TCR))
+    assert.isTrue(ICR_F.gt(mv._MCR) && ICR_F.lt(TCR))
 
     // Check G-I are in range >= TCR
     assert.isTrue(ICR_G.gte(TCR))
@@ -3259,9 +3259,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Confirm A, C, D liquidated  
     assert.isFalse(await sortedCDPs.contains(C))
     assert.isFalse(await sortedCDPs.contains(A))
-
-    assert.isTrue(await sortedCDPs.contains(D))
-    assert.isTrue(ICR_D.gt(await cdpManager.getTCR()))
+    assert.isFalse(await sortedCDPs.contains(D))
     
     // Check G, H, I remain in system
     assert.isTrue(await sortedCDPs.contains(G))
@@ -3285,7 +3283,9 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     
     // B and E are still in range 110-TCR. 
     // Attempt to liquidate B, G, H, I, D.
-    // Expected Stability Pool to fully absorb B (92 CLV), and absorb 50% of E (40 of 80 CLV)
+    // Expected Stability Pool to fully absorb B (92 CLV + 10 virtual debt), 
+    // and absorb ~1/3 of E (30 of 81 CLV + 10 virtual debt)
+    
     const stabilityBefore = await poolManager.getStabilityPoolCLV()
     const dEbtBefore = (await cdpManager.CDPs(E))[0]
 
@@ -3298,7 +3298,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const dEbtDelta = dEbtBefore.sub(dEbtAfter)
 
     assert.isTrue(stabilityDelta.eq(stabilityBefore))
-    assert.equal((dEbtDelta.toString()), '40000000000000001000')
+    assert.equal((dEbtDelta.toString()), '30000000000000001000')
     
     // Confirm B removed and E active 
     assert.isFalse(await sortedCDPs.contains(B)) 
