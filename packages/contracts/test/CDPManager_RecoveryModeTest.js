@@ -620,7 +620,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const recoveryMode = await cdpManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
-    // Check Bob's ICR is between 110 and 150
+    // Check Bob's ICR is between 110 and TCR
     const bob_ICR = await cdpManager.getCurrentICR(bob, price)
     assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(TCR))
 
@@ -716,7 +716,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(totalStakesSnaphot_before, '0')
     assert.equal(totalCollateralSnapshot_before, '0')
 
-    // Check Bob's ICR is between 110 and 150
+    // Check Bob's ICR is between 110 and TCR
     const bob_ICR = await cdpManager.getCurrentICR(bob, price)
     assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(await cdpManager.getTCR()))
 
@@ -762,7 +762,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
     assert.isTrue(bob_CDP_isInSortedList_Before)
 
-    // Check Bob's ICR is between 110 and 150
+    // Check Bob's ICR is between 110 and TCR
     const bob_ICR = await cdpManager.getCurrentICR(bob, price)
     assert.isTrue(bob_ICR.gt(mv._MCR) && bob_ICR.lt(await cdpManager.getTCR()))
 
@@ -3178,17 +3178,17 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(10, 'ether') })
     await poolManager.provideToSP(dec(1000, 18), { from: whale })
 
-    // Troves that will fall into ICR range 100-110
+    // Troves that will fall into ICR range 100-MCR
     await borrowerOperations.openLoan(dec(83, 18), A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(82, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(81, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // Troves that will fall into ICR range 110-150
+    // Troves that will fall into ICR range 110-TCR
     await borrowerOperations.openLoan(dec(70, 18), D, { from: D, value: dec(1, 'ether') }) 
     await borrowerOperations.openLoan(dec(78, 18), E, { from: E, value: dec(1, 'ether') }) 
     await borrowerOperations.openLoan(dec(57, 18), F, { from: F, value: dec(1, 'ether') }) 
 
-    // Troves that will fall into ICR range >= 150
+    // Troves that will fall into ICR range >= TCR
     await borrowerOperations.openLoan(dec(45, 18), G, { from: G, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(40, 18), H, { from: H, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(35, 18), I, { from: I, value: dec(1, 'ether') })
@@ -3228,12 +3228,12 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(ICR_E.gt(mv._MCR) && ICR_E.lt(mv._CCR))
     assert.isTrue(ICR_F.gt(mv._MCR) && ICR_F.lt(mv._CCR))
 
-    // Check G-I are in range >= 150
-    assert.isTrue(ICR_G.gte(mv._CCR))
-    assert.isTrue(ICR_H.gte(mv._CCR))
-    assert.isTrue(ICR_I.gte(mv._CCR))
+    // Check G-I are in range >= TCR
+    assert.isTrue(ICR_G.gte(TCR))
+    assert.isTrue(ICR_H.gte(TCR))
+    assert.isTrue(ICR_I.gte(TCR))
 
-    // Attempt to liquidate only troves with ICR > 150% 
+    // Attempt to liquidate only troves with ICR > TCR% 
     await cdpManager.batchLiquidateTroves([G, H, I])
 
     // Check G, H, I remain in system
@@ -3283,7 +3283,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await poolManager.withdrawFromSP(dec(1000, 18), {from: whale})
     await poolManager.provideToSP(dec(132, 18), {from: whale}) 
     
-    // B and E are still in range 110-150. 
+    // B and E are still in range 110-TCR. 
     // Attempt to liquidate B, G, H, I, D.
     // Expected Stability Pool to fully absorb B (92 CLV), and absorb 50% of E (40 of 80 CLV)
     const stabilityBefore = await poolManager.getStabilityPoolCLV()

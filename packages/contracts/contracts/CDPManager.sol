@@ -325,7 +325,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         /* If 110% <= ICR < current TCR (accounting for the preceding liquidations in the current sequence)
          * and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution) */
-        } else if ((_ICR >= MCR) && (_ICR <= _TCR)) {
+        } else if ((_ICR >= MCR) && (_ICR < _TCR)) {
             if (_CLVInPool == 0) {
                 LiquidationValues memory zeroVals;
                 return zeroVals;
