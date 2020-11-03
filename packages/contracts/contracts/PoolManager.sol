@@ -90,7 +90,7 @@ contract PoolManager is Ownable, IPoolManager {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
 
-    event UserSnapshotUpdated(uint _P, uint _S);
+    event UserSnapshotUpdated(address indexed _user, uint _P, uint _S);
     event P_Updated(uint _P);
     event S_Updated(uint _S);
     event UserDepositChanged(address indexed _user, uint _amount);
@@ -288,10 +288,9 @@ contract PoolManager is Ownable, IPoolManager {
 
         if (initialDeposit == 0) { return 0; }
 
-        uint snapshot_S = snapshot[_user].S;  
-        uint snapshot_P = snapshot[_user].P;
-        uint scaleSnapshot = snapshot[_user].scale;
-        uint epochSnapshot = snapshot[_user].epoch;
+        Snapshot storage userSnapshot = snapshot[_user];
+        uint scaleSnapshot = userSnapshot.scale;
+        uint epochSnapshot = userSnapshot.epoch;
 
         uint ETHGain;
 
@@ -299,10 +298,10 @@ contract PoolManager is Ownable, IPoolManager {
         one scale change.  
         If it does, the second portion of the reward is scaled by 1e18. 
         If the reward spans no scale change, the second portion will be 0. */
-        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(snapshot_S);
+        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(userSnapshot.S);
         uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
 
-        ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(snapshot_P).div(1e18);
+        ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(userSnapshot.P).div(1e18);
         
         return ETHGain;
     }
@@ -318,10 +317,11 @@ contract PoolManager is Ownable, IPoolManager {
 
         if (initialDeposit == 0) { return 0; }
 
-        uint snapshot_P = snapshot[_user].P; 
-        uint128 scaleSnapshot = snapshot[_user].scale;
-        uint128 epochSnapshot = snapshot[_user].epoch;
-        
+        Snapshot storage userSnapshot = snapshot[_user];
+        uint snapshot_P = userSnapshot.P;
+        uint128 scaleSnapshot = userSnapshot.scale;
+        uint128 epochSnapshot = userSnapshot.epoch;
+
         // If deposit was made before a pool-emptying event, then it has been fully cancelled with debt -- so, return 0
         if (epochSnapshot < currentEpoch) { return 0; }
 
@@ -340,6 +340,8 @@ contract PoolManager is Ownable, IPoolManager {
         }
 
         // If compounded deposit is less than a billionth of the initial deposit, return 0
+        // TODO: confirm the reason:
+        // to make sure that any numerical error from floor-division always "favors the system"
         if (compoundedDeposit < initialDeposit.div(1e9)) { return 0; }
 
         return compoundedDeposit;
@@ -370,21 +372,27 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Record a new deposit
     function _updateDeposit(address _address, uint _amount) internal {
+        Snapshot storage userSnapshot = snapshot[_address];
         if (_amount == 0) {
             initialDeposits[_address] = 0;
-            emit UserSnapshotUpdated(snapshot[_address].P, snapshot[_address].S);
+            delete snapshot[_address];
+            emit UserSnapshotUpdated(_address, 0, 0);
             return;
         }
 
         initialDeposits[_address] = _amount;
     
+        uint128 currentScaleCached = currentScale;
+        uint128 currentEpochCached = currentEpoch;
+        uint currentP = P;
+        uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
         // Record new individual snapshots of the running product P and sum S for the user
-        snapshot[_address].P = P;
-        snapshot[_address].S = epochToScaleToSum[currentEpoch][currentScale];
-        snapshot[_address].scale = currentScale;
-        snapshot[_address].epoch = currentEpoch;
+        userSnapshot.P = currentP;
+        userSnapshot.S = currentS;
+        userSnapshot.scale = currentScaleCached;
+        userSnapshot.epoch = currentEpochCached;
 
-        emit UserSnapshotUpdated(snapshot[_address].P, snapshot[_address].S);
+        emit UserSnapshotUpdated(_address, currentP, currentS);
     }
  
     // --- External StabilityPool Functions ---
@@ -448,28 +456,27 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Transfer the caller's entire ETH gain from the Stability Pool to the caller's CDP, and leaves
     their compounded deposit in the Stability Pool.
-    
-    TODO: Remove _user param and just use _msgSender(). */
-    function withdrawFromSPtoCDP(address _user, address _hint) external {
-        require(_user == _msgSender(), "PoolManager: A user may only withdraw ETH gains to their own trove" );
-        _requireUserHasDeposit(_user); 
-        _requireUserHasTrove(_user);
+     */
+    function withdrawFromSPtoCDP(address _hint) external {
+        address user = _msgSender();
+        _requireUserHasDeposit(user);
+        _requireUserHasTrove(user);
 
-        uint initialDeposit = initialDeposits[_user];
-        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(_user);
+        uint initialDeposit = initialDeposits[user];
+        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
-        uint ETHGain = _getCurrentETHGain(_user);
+        uint ETHGain = _getCurrentETHGain(user);
        
         // Update the recorded deposit value, and deposit snapshots
-        _updateDeposit(_user, compoundedCLVDeposit);
+        _updateDeposit(user, compoundedCLVDeposit);
 
         /* Emit events before transferring ETH gain to CDP.
          This lets the event log make more sense (i.e. so it appears that first the ETH gain is withdrawn 
         and then it is deposited into the CDP, not the other way around). */
-        emit ETHGainWithdrawn(_user, ETHGain, CLVLoss);
-        emit UserDepositChanged(_user, compoundedCLVDeposit); 
+        emit ETHGainWithdrawn(user, ETHGain, CLVLoss);
+        emit UserDepositChanged(user, compoundedCLVDeposit); 
 
-        _sendETHGainToCDP(_user, ETHGain, _hint);
+        _sendETHGainToCDP(user, ETHGain, _hint);
     }
 
      /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
@@ -516,29 +523,38 @@ contract PoolManager is Ownable, IPoolManager {
 
     // Update the Stability Pool reward sum S and product P
     function _updateRewardSumAndProduct(uint _ETHGainPerUnitStaked, uint _CLVLossPerUnitStaked) internal {
-         // Make product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
+        uint currentP = P;
+        uint newP;
+
+        // Make product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
+        assert(_CLVLossPerUnitStaked <= 1e18);
         uint newProductFactor = _CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_CLVLossPerUnitStaked);
      
         // Update the ETH reward sum at the current scale and current epoch
-        uint marginalETHGain = _ETHGainPerUnitStaked.mul(P);
-        epochToScaleToSum[currentEpoch][currentScale] = epochToScaleToSum[currentEpoch][currentScale].add(marginalETHGain);
-        emit S_Updated(epochToScaleToSum[currentEpoch][currentScale]); 
+        uint128 currentScaleCached = currentScale;
+        uint128 currentEpochCached = currentEpoch;
+        uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
+        uint marginalETHGain = _ETHGainPerUnitStaked.mul(currentP);
+        uint newS = currentS.add(marginalETHGain);
+        epochToScaleToSum[currentEpochCached][currentScaleCached] = newS;
+        emit S_Updated(newS);
 
        // If the Pool was emptied, increment the epoch and reset the scale and product P
         if (newProductFactor == 0) {
-            currentEpoch = currentEpoch.add(1);
+            currentEpoch = currentEpochCached.add(1);
             currentScale = 0;
-            P = 1e18;
+            newP = 1e18;
     
         // If multiplying P by a non-zero product factor would round P to zero, increment the scale 
-        } else if (P.mul(newProductFactor) < 1e18) {
-            P = P.mul(newProductFactor);
-            currentScale = currentScale.add(1);
+        } else if (currentP.mul(newProductFactor) < 1e18) {
+            newP = currentP.mul(newProductFactor);
+            currentScale = currentScaleCached.add(1);
          } else {
-            P = P.mul(newProductFactor).div(1e18); 
+            newP = currentP.mul(newProductFactor).div(1e18);
         }
 
-        emit P_Updated(P); 
+        P = newP;
+        emit P_Updated(newP);
     }
 
     function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal {

@@ -18,7 +18,7 @@ interface IPoolManager {
 
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
 
-    event UserSnapshotUpdated(uint _P, uint _S);
+    event UserSnapshotUpdated(address indexed _user, uint _P, uint _S);
 
     event P_Updated(uint _P);
 
@@ -78,7 +78,7 @@ interface IPoolManager {
 
     function withdrawFromSP(uint _amount) external;
 
-    function withdrawFromSPtoCDP(address _user, address _hint) external;
+    function withdrawFromSPtoCDP(address _hint) external;
 
     function offset(uint _debt, uint _coll) external;
 }

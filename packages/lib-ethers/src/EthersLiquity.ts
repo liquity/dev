@@ -632,7 +632,6 @@ export class EthersLiquity
     { deposit, trove, ...hintOptionalParams }: StabilityDepositTransferOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const address = this.requireAddress();
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.addCollateral(
       (deposit ?? (await this.getStabilityDeposit())).pendingCollateralGain
@@ -640,7 +639,6 @@ export class EthersLiquity
 
     return this.wrapSimpleTransaction(
       await this.poolManager.withdrawFromSPtoCDP(
-        address,
         await this._findHint(finalTrove, hintOptionalParams),
         { ...overrides }
       )
