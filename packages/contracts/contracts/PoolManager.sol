@@ -55,7 +55,6 @@ contract PoolManager is Ownable, IPoolManager {
     struct Deposit {
         uint initialValue;
         address frontEndTag;
-        bool eligibleForLQTY;
     }
 
     struct Snapshots { 
@@ -103,7 +102,6 @@ contract PoolManager is Ownable, IPoolManager {
 
     */ 
     mapping (uint => mapping(uint => uint)) public epochToScaleToG;
-
 
     // Error trackers for the error correction in the offset calculation
     uint public lastETHError_Offset;
@@ -233,43 +231,6 @@ contract PoolManager is Ownable, IPoolManager {
         CLV.burn(_account, _CLV);
     }       
 
-    /*closeLoan(): Repay the debt, and sends collateral back to the trove closer.
-
-    If they have an LQTY-eligible deposit at point of closing, then also:
-    - Trigger a LQTY reward event
-    - pay out their LQTY gain
-    - pay pout their deposit's ETH gain
-    - pay out their front end's LQTY gain (to their front end)
-    - Make the deposit ineligible for further LQTY gains.
-    */
-    function closeLoan(address _troveCloser, uint _debtRepayment, uint _collWithdrawal) external {
-        _requireCallerIsBorrowerOperations();
-
-        activePool.decreaseCLVDebt(_debtRepayment);
-        CLV.burn(_troveCloser, _debtRepayment);
-
-        if (isEligibleForLQTY(_troveCloser)) {
-            _triggerLQTYIssuance(); 
-
-            uint troveCloserETHGain = getDepositorETHGain(_troveCloser);
-            uint compoundedCLVDeposit = getCompoundedCLVDeposit(_troveCloser);
-
-            address frontEnd = deposits[_troveCloser].frontEndTag;
-            _payOutLQTYGains(_troveCloser, frontEnd);
-
-            uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
-            uint newFrontEndStake = compoundedFrontEndStake.sub(compoundedCLVDeposit);
-            _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
-
-            _updateDepositAndSnapshots(_troveCloser, compoundedCLVDeposit);
-            _removeTagAndEligibility(_troveCloser);
-
-            _sendCollAndETHGain(_troveCloser, _collWithdrawal, troveCloserETHGain);
-        } else {
-            activePool.sendETH(_troveCloser, _collWithdrawal);
-        }
-    } 
-    
     // Update the Active Pool and the Default Pool when a CDP gets closed
     function liquidate(uint _CLV, uint _ETH) external {
         _requireCallerIsCDPManager();
@@ -330,15 +291,14 @@ contract PoolManager is Ownable, IPoolManager {
         return ETHGain;
     }
 
-
-    /* Return the LQTY gain earned by the deposit. Given by the formula:  E = d0 * (G - G(0))/P(0)
+    /* Return the LQTY gain earned by the deposit. Given by the formula:  LQTY = d0 * (G - G(0))/P(0)
     where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively. 
     
     d0 is the last recorded deposit value. */
     function getDepositorLQTYGain(address _depositor) public view returns (uint) {
        
         uint initialDeposit = deposits[_depositor].initialValue;
-        if (initialDeposit == 0 || isEligibleForLQTY(_depositor) == false) { return 0; }
+        if (initialDeposit == 0) {return 0;}
 
         address frontEndTag = deposits[_depositor].frontEndTag;
 
@@ -439,7 +399,7 @@ contract PoolManager is Ownable, IPoolManager {
         return compoundedStake;
     }
 
-    // --- Sender functions for CLV deposits and ETH gains ---
+    // --- Sender functions for CLV deposit,  ETH gains and LQTY gains ---
 
     function _sendETHGainToDepositor(address _depositor, uint ETHGain) internal {
         if (ETHGain == 0) {return;}
@@ -450,23 +410,6 @@ contract PoolManager is Ownable, IPoolManager {
     function _sendETHGainToCDP(address _depositor, uint _ETHGain, address _hint) internal {
         stabilityPool.sendETH(address(this), _ETHGain); 
         borrowerOperations.addColl.value(_ETHGain)(_depositor, _hint); 
-    }
-
-    /* When a borrower-depositor closes their loan, this function pays out their withrawn collateral 
-    and their deposit's accumulated ETH gain. 
-    
-    It first collects the ETH, then sends it all in one operation.  */
-    function _sendCollAndETHGain(address _troveCloser, uint _collWithdrawal, uint _ETHGain) internal {
-        _requireCallerIsBorrowerOperations();
-
-        // Collect all the ETH to send
-        activePool.sendETH(address(this), _collWithdrawal);
-        stabilityPool.sendETH(address(this), _ETHGain);
-
-         // Send all ETH the trove closer in one move
-        uint totalETHToSend = _collWithdrawal.add(_ETHGain);
-        (bool success, ) = _troveCloser.call.value(totalETHToSend)("");
-        _requireETHSentSuccessfully(success);
     }
 
     // Send CLV to user and decrease CLV in Pool
@@ -490,26 +433,12 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Stability Pool Deposit Functionality --- 
 
-    function isEligibleForLQTY(address _depositor) public view returns (bool) {
-        return deposits[_depositor].eligibleForLQTY;
-    }
-
     function getFrontEndTag(address _depositor) public view returns (address) {
         return deposits[_depositor].frontEndTag;
     }
     
-    function _setTagAndEligibility(address _depositor, address _frontEndTag) internal {
+    function _setFrontEndTag(address _depositor, address _frontEndTag) internal {
         deposits[_depositor].frontEndTag = _frontEndTag;
-           
-        // If depositor also has an active trove, make their deposit eligible for LQTY
-        if (cdpManager.getCDPStatus(_depositor) == 1) {
-            deposits[_depositor].eligibleForLQTY = true;
-        } 
-    }
-
-    function _removeTagAndEligibility(address _depositor) internal {
-        deposits[_depositor].frontEndTag = address(0);
-        deposits[_depositor].eligibleForLQTY = false;
     }
 
     // Record a new deposit
@@ -517,18 +446,16 @@ contract PoolManager is Ownable, IPoolManager {
         deposits[_depositor].initialValue = _newValue;
 
         if (_newValue == 0) {
-            _removeTagAndEligibility(_depositor);
-            _zeroDepositSnapshots(_depositor);
-            emit DepositSnapshotUpdated(_depositor, depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
-            return;
+            delete deposits[_depositor].frontEndTag;
+            delete depositSnapshots[_depositor];
+        } else {
+            // Record new individual snapshots of the running product P and sum S for the depositor
+            depositSnapshots[_depositor].P = P;
+            depositSnapshots[_depositor].S = epochToScaleToSum[currentEpoch][currentScale];
+            depositSnapshots[_depositor].G = epochToScaleToG[currentEpoch][currentScale];
+            depositSnapshots[_depositor].scale = currentScale;
+            depositSnapshots[_depositor].epoch = currentEpoch;
         }
-
-        // Record new individual snapshots of the running product P and sum S for the depositor
-        depositSnapshots[_depositor].P = P;
-        depositSnapshots[_depositor].S = epochToScaleToSum[currentEpoch][currentScale];
-        depositSnapshots[_depositor].G = epochToScaleToG[currentEpoch][currentScale];
-        depositSnapshots[_depositor].scale = currentScale;
-        depositSnapshots[_depositor].epoch = currentEpoch;
 
         emit DepositSnapshotUpdated(_depositor, depositSnapshots[_depositor].P, depositSnapshots[_depositor].S);
     }
@@ -537,33 +464,28 @@ contract PoolManager is Ownable, IPoolManager {
         frontEndStakes[_frontEnd] = _newValue;
 
         if (_newValue == 0) {
-            _zeroFrontEndSnapshots(_frontEnd);
-            // TODO: emit event
-            return;
+            delete frontEndSnapshots[_frontEnd];
+        } else {
+            // Record new individual snapshots of the running product P and sum G for the front end
+            frontEndSnapshots[_frontEnd].P = P;
+            frontEndSnapshots[_frontEnd].G = epochToScaleToG[currentEpoch][currentScale];
+            frontEndSnapshots[_frontEnd].scale = currentScale;
+            frontEndSnapshots[_frontEnd].epoch = currentEpoch;
         }
-
-        // Record new individual snapshots of the running product P and sum G for the front end
-        frontEndSnapshots[_frontEnd].P = P;
-        frontEndSnapshots[_frontEnd].G = epochToScaleToG[currentEpoch][currentScale];
-        frontEndSnapshots[_frontEnd].scale = currentScale;
-        frontEndSnapshots[_frontEnd].epoch = currentEpoch;
 
         //TODO: emit event
     }
 
-    function _zeroDepositSnapshots(address _depositor) internal {
-        depositSnapshots[_depositor].P = 0;
-        depositSnapshots[_depositor].S = 0;
-        depositSnapshots[_depositor].G = 0;
-        depositSnapshots[_depositor].scale = 0;
-        depositSnapshots[_depositor].epoch = 0;
-    }
-
-     function _zeroFrontEndSnapshots(address _frontEnd) internal {
-        frontEndSnapshots[_frontEnd].P = 0;
-        frontEndSnapshots[_frontEnd].G = 0;
-        frontEndSnapshots[_frontEnd].scale = 0;
-        frontEndSnapshots[_frontEnd].epoch = 0;
+    function _payOutLQTYGains(address _depositor, address _frontEnd) internal {
+        // Pay out front end's LQTY gain
+        if (_frontEnd != address(0)) {
+            uint frontEndLQTYGain = getFrontEndLQTYGain(_frontEnd);
+            communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
+        }
+        
+        // Pay out depositor's LQTY gain
+        uint depositorLQTYGain = getDepositorLQTYGain(_depositor);
+        communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
     }
 
     // --- External Depositor Functions ---
@@ -584,22 +506,20 @@ contract PoolManager is Ownable, IPoolManager {
 
         _triggerLQTYIssuance(); 
 
-        if (initialDeposit == 0) {_setTagAndEligibility(depositor, _frontEndTag);}  
+        if (initialDeposit == 0) {_setFrontEndTag(depositor, _frontEndTag);}  
 
         uint depositorETHGain = getDepositorETHGain(depositor);
         uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
 
-        if (isEligibleForLQTY(depositor)) {
-            // First pay out any LQTY gains 
-            address frontEnd = deposits[depositor].frontEndTag;
-            _payOutLQTYGains(depositor, frontEnd);
-        
-            // Update front end stake
-            uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
-            uint newFrontEndStake = compoundedFrontEndStake.add(_amount);
-            _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
-        }
+        // First pay out any LQTY gains 
+        address frontEnd = deposits[depositor].frontEndTag;
+        _payOutLQTYGains(depositor, frontEnd);
+    
+        // Update front end stake
+        uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
+        uint newFrontEndStake = compoundedFrontEndStake.add(_amount);
+        _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         
         _sendCLVtoStabilityPool(depositor, _amount);
 
@@ -633,17 +553,15 @@ contract PoolManager is Ownable, IPoolManager {
         uint CLVtoWithdraw = Math._min(_amount, compoundedCLVDeposit);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
       
-        if (isEligibleForLQTY(depositor)) {
-            // First pay out any LQTY gains 
-            address frontEnd = deposits[depositor].frontEndTag;
-            _payOutLQTYGains(depositor, frontEnd);
+        // First pay out any LQTY gains 
+        address frontEnd = deposits[depositor].frontEndTag;
+        _payOutLQTYGains(depositor, frontEnd);
+    
+        // Update front end stake
+        uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
+        uint newFrontEndStake = compoundedFrontEndStake.sub(CLVtoWithdraw);
+        _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         
-            // Update front end stake
-            uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
-            uint newFrontEndStake = compoundedFrontEndStake.sub(CLVtoWithdraw);
-            _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
-        }
-
         _sendCLVToDepositor(depositor, CLVtoWithdraw);
 
         // Update deposit
@@ -654,18 +572,6 @@ contract PoolManager is Ownable, IPoolManager {
 
         emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss);  // CLV Loss required for event log
         emit UserDepositChanged(depositor, newDeposit); 
-    }
-
-    function _payOutLQTYGains(address _depositor, address _frontEnd) internal {
-        // Pay out front end's LQTY gain
-        if (_frontEnd != address(0)) {
-            uint frontEndLQTYGain = getFrontEndLQTYGain(_frontEnd);
-            communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
-        }
-        
-        // Pay out depositor's LQTY gain
-        uint depositorLQTYGain = getDepositorLQTYGain(_depositor);
-        communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
     }
 
     /* withdrawETHGainToTrove:
@@ -690,17 +596,15 @@ contract PoolManager is Ownable, IPoolManager {
         uint compoundedCLVDeposit = getCompoundedCLVDeposit(_depositor);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
       
-        if (isEligibleForLQTY(_depositor)) {
-            // First pay out any LQTY gains 
-            address frontEnd = deposits[_depositor].frontEndTag;
-            _payOutLQTYGains(_depositor, frontEnd);
-        
-            // Update front end stake
-            uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
-            uint newFrontEndStake = compoundedFrontEndStake;
-            _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
-        }
-
+        // First pay out any LQTY gains 
+        address frontEnd = deposits[_depositor].frontEndTag;
+        _payOutLQTYGains(_depositor, frontEnd);
+    
+        // Update front end stake
+        uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
+        uint newFrontEndStake = compoundedFrontEndStake;
+        _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
+    
         _updateDepositAndSnapshots(_depositor, compoundedCLVDeposit); 
 
         /* Emit events before transferring ETH gain to CDP.

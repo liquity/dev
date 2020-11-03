@@ -762,7 +762,7 @@ contract('Fee arithmetic tests', async accounts => {
     })
 
     it("decPow(): abs. error < 1e-9 for exponent = 43200 (minutes in one month)", async () => {
-      for (let i = 1; i <= 1000; i++) {
+      for (let i = 1; i <= 200; i++) {
         const exponent = timeValues.MINUTES_IN_ONE_MONTH
 
         // Use a high base to fully test high exponent, without prematurely decaying to 0
@@ -788,7 +788,7 @@ contract('Fee arithmetic tests', async accounts => {
     })
 
     it("decPow(): abs. error < 1e-9 for exponent = 525600 (minutes in one year)", async () => {
-      for (let i = 1; i <= 1000; i++) {
+      for (let i = 1; i <= 200; i++) {
         const exponent = timeValues.MINUTES_IN_ONE_YEAR
 
         // Use a high base to fully test high exponent, without prematurely decaying to 0
@@ -814,7 +814,7 @@ contract('Fee arithmetic tests', async accounts => {
     })
 
     it("decPow(): abs. error < 1e-9 for exponent = 2628000 (minutes in five years)", async () => {
-      for (let i = 1; i <= 1000; i++) {
+      for (let i = 1; i <= 200; i++) {
         const exponent = timeValues.MINUTES_IN_FIVE_YEARS
 
         // Use a high base to fully test high exponent, without prematurely decaying to 0
@@ -840,8 +840,8 @@ contract('Fee arithmetic tests', async accounts => {
     })
 
     it("decPow(): abs. error < 1e-9 for exponent = minutes in ten years", async () => {
-      for (let i = 1; i <= 1000; i++) {
-        const exponent = timeValues.MINUTES_IN_TEN_YEARS
+      for (let i = 1; i <= 200; i++) {
+        const exponent = timeValues.MINUTES_IN_ONE_YEAR * 10
 
         // Use a high base to fully test high exponent, without prematurely decaying to 0
         const base = th.randDecayFactor(0.99999, 0.999999999999999999)
@@ -865,9 +865,9 @@ contract('Fee arithmetic tests', async accounts => {
       }
     })
 
-    it.only("decPow(): abs. error < 1e-9 for exponent = minutes in one hundred years", async () => {
-      for (let i = 1; i <= 1000; i++) {
-        const exponent = timeValues.MINUTES_IN_ONE_HUNDRED_YEARS
+    it("decPow(): abs. error < 1e-9 for exponent = minutes in one hundred years", async () => {
+      for (let i = 1; i <= 200; i++) {
+        const exponent = timeValues.MINUTES_IN_ONE_YEAR * 100
 
         // Use a high base to fully test high exponent, without prematurely decaying to 0
         const base = th.randDecayFactor(0.999999, 0.999999999999999999)

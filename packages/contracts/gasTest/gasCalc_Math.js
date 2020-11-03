@@ -154,8 +154,8 @@ contract('Gas costs for math functions', async accounts => {
 
   // --- Using the issuance factor (base) that corresponds to 50% issuance in year 1:  0.999998681227695000 ----
 
-  it.only("", async () => {
-    let data30Years = []
+  it("", async () => {
+    let data50Years = []
     const issuanceFactor = '999998681227695000'
 
     data30Years.push(`exponentiation: exponent vs gas cost: exponent in units of minutes, max exponent is 30 years \n`)
@@ -170,10 +170,10 @@ contract('Gas costs for math functions', async accounts => {
       th.logGasMetrics(gasResults, message)
       th.logAllGasCosts(gasResults)
 
-      data30Years.push(n + "," + gasResults.medianGas + '\n')
+      data50Years.push(n + "," + gasResults.medianGas + '\n')
     }
 
-    fs.writeFile('gasTest/outputs/exponentiationCosts30Years.csv', data30Years, (err) => {
+    fs.writeFile('gasTest/outputs/exponentiationCosts30Years.csv', data50Years, (err) => {
       if (err) { console.log(err) } else {
         console.log("Gas test data written to gasTest/outputs/exponentiationCosts30Years.csv")
       }

@@ -36,6 +36,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
   let contracts
 
+  const ZERO_ADDRESS = th.ZERO_ADDRESS
+
   let gasPriceInWei
 
   describe("Stability Pool Withdrawal to CDP", async () => {
@@ -79,7 +81,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter opens loan with 200% ICR
@@ -118,7 +120,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -160,7 +162,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -206,7 +208,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -248,7 +250,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -293,13 +295,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Alice deposits 100, Bob deposits 200, Carol deposits 300 CLV
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: bob })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: carol })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: carol })
 
       // 2 Defaulters open loan with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -339,13 +341,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Alice deposits 100, Bob deposits 200, Carol deposits 300 CLV
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: bob })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: carol })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: carol })
 
       // Defaulters open loan with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -392,13 +394,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       Bob:  4560 CLV
       Carol: 131 CLV */
       await borrowerOperations.openLoan('20000000000000000000', alice, { from: alice, value: dec(100, 'ether') })
-      await poolManager.provideToSP('20000000000000000000', { from: alice })
+      await poolManager.provideToSP('20000000000000000000', ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan('4560000000000000000000', bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP('4560000000000000000000', { from: bob })
+      await poolManager.provideToSP('4560000000000000000000', ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan('131000000000000000000', carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP('131000000000000000000', { from: carol })
+      await poolManager.provideToSP('131000000000000000000', ZERO_ADDRESS, { from: carol })
 
 
       /* Defaulters open loans
@@ -450,7 +452,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -470,7 +472,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Dennis opens a loan and provides to SP
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: dennis })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: dennis })
 
       // Third defaulter liquidated
       await cdpManager.liquidate(defaulter_3, { from: owner });
@@ -506,7 +508,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -528,7 +530,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Dennis opens a loan and provides to SP
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: dennis })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: dennis })
 
       // Third and fourth defaulters liquidated
       await cdpManager.liquidate(defaulter_3, { from: owner });
@@ -566,13 +568,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       Carol: 150 CLV
       */
       await borrowerOperations.openLoan(dec(600, 18), alice, { from: alice, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(600, 18), { from: alice })
+      await poolManager.provideToSP(dec(600, 18), ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: bob })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(150, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(150, 18), { from: carol })
+      await poolManager.provideToSP(dec(150, 18), ZERO_ADDRESS, { from: carol })
 
       /* Defaulters open loans:
       Defaulter 1:  100 CLV, 1 ETH
@@ -598,7 +600,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Dennis opens a loan and provides 250 CLV
       await borrowerOperations.openLoan(dec(250, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(250, 18), { from: dennis })
+      await poolManager.provideToSP(dec(250, 18), ZERO_ADDRESS, { from: dennis })
 
       // Last two defaulters liquidated
       await cdpManager.liquidate(defaulter_3, { from: owner });
@@ -636,7 +638,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob, carol, dennis]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -696,16 +698,16 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       Dennis: 400 CLV
       */
       await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: alice })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan(dec(250, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(250, 18), { from: bob })
+      await poolManager.provideToSP(dec(250, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(125, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(125, 18), { from: carol })
+      await poolManager.provideToSP(dec(125, 18), ZERO_ADDRESS, { from: carol })
 
       await borrowerOperations.openLoan(dec(400, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(400, 18), { from: dennis })
+      await poolManager.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: dennis })
 
       /* Defaulters open loans:
       Defaulter 1: 100 CLV
@@ -766,7 +768,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob, dennis]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loans
@@ -788,7 +790,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Carol makes deposit
       await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: carol })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: carol })
 
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
@@ -836,7 +838,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_1 = [alice, bob]
       for (account of depositors_1) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // 2 Defaulters open loan with 200% ICR
@@ -855,14 +857,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_2 = [carol, dennis]
       for (account of depositors_2) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 2 liquidated. 100 CLV offset
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // await borrowerOperations.openLoan(dec(1, 18), account, { from: erin, value: dec(2, 'ether') })
-      // await poolManager.provideToSP(dec(1, 18), { from: erin })
+      // await poolManager.provideToSP(dec(1, 18),  ZERO_ADDRESS, { from: erin })
 
       const txA = await poolManager.withdrawETHGainToTrove(alice, alice, { from: alice })
       const txB = await poolManager.withdrawETHGainToTrove(bob, bob, { from: bob })
@@ -906,7 +908,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_1 = [alice, bob]
       for (account of depositors_1) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // 2 Defaulters open loan with 200% ICR
@@ -923,19 +925,19 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Carol, Dennis, Erin each deposit 100, 200, 300 CLV respectively
       await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: carol })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: carol })
 
       await borrowerOperations.openLoan(dec(200, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: dennis })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: dennis })
 
       await borrowerOperations.openLoan(dec(300, 18), erin, { from: erin, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: erin })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: erin })
 
       // Defaulter 2 liquidated. 100 CLV offset
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // await borrowerOperations.openLoan(dec(1, 18), account, { from: flyn, value: dec(2, 'ether') })
-      // await poolManager.provideToSP(dec(1, 18), { from: flyn })
+      // await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: flyn })
 
       const txA = await poolManager.withdrawETHGainToTrove(alice, alice, { from: alice })
       const txB = await poolManager.withdrawETHGainToTrove(bob, bob, { from: bob })
@@ -975,7 +977,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1,2,3 withdraw 'almost' 100 CLV
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1040,7 +1042,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_1 = [alice, bob]
       for (account of depositors_1) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 1 liquidated. 200 CLV fully offset with pool.
@@ -1050,7 +1052,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_2 = [carol, dennis]
       for (account of depositors_2) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 2 liquidated. 100 CLV offset
@@ -1060,7 +1062,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_3 = [erin, flyn]
       for (account of depositors_3) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 3 liquidated. 100 CLV offset
@@ -1070,14 +1072,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_4 = [graham, harriet]
       for (account of depositors_4) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 4 liquidated. 100 CLV offset
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
       // await borrowerOperations.withdrawCLV(dec(1, 18), whale, { from: whale })
-      // await poolManager.provideToSP(dec(1, 18), { from: whale })
+      // await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
 
       const txA = await poolManager.withdrawETHGainToTrove(alice, alice, { from: alice })
       const txB = await poolManager.withdrawETHGainToTrove(bob, bob, { from: bob })
@@ -1135,7 +1137,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 withdraws 'almost' 100 CLV
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1158,7 +1160,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
 
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
 
       // Defaulter 2 liquidated.  90 CLV liquidated. P altered by a factor of (1-90/100) = 0.1.  Scale changed.
       await cdpManager.liquidate(defaulter_2, { from: owner });
@@ -1185,7 +1187,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 withdraws 'almost' 100 CLV.
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1205,13 +1207,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txA = await poolManager.withdrawETHGainToTrove(alice, alice, { from: alice })
 
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(200, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: carol })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: carol })
 
       await borrowerOperations.openLoan(dec(300, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: dennis })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: dennis })
 
       // 540 CLV liquidated.  P altered by a factor of (1-540/600) = 0.1. Scale changed.
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
@@ -1259,7 +1261,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 and default 2 each withdraw 99.999999999 CLV
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1279,7 +1281,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txA = await poolManager.withdrawETHGainToTrove(alice, alice, { from: alice })
       // Bob deposits 100 CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
       // Defaulter 2 liquidated
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
@@ -1305,7 +1307,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 and default 2 each withdraw 99.999999999 CLV
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1326,13 +1328,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // B, C, D deposit 100, 200, 300 CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(200, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: carol })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: carol })
 
       await borrowerOperations.openLoan(dec(300, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: dennis })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: dennis })
 
       // Defaulter 2 liquidated
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
@@ -1392,7 +1394,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
       const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
@@ -1400,21 +1402,21 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // B deposits 100CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
 
       // Defaulter 2 liquidated
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
       await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: carol })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: carol })
 
       // Defaulter 3 liquidated
       const txL3 = await cdpManager.liquidate(defaulter_3, { from: owner });
       assert.isTrue(txL3.receipt.status)
 
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: dennis })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: dennis })
 
       // Defaulter 4 liquidated
       const txL4 = await cdpManager.liquidate(defaulter_4, { from: owner });
@@ -1457,7 +1459,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(1, 36), account, { from: account, value: dec(1, 27) })
-        await poolManager.provideToSP(dec(1, 36), { from: account })
+        await poolManager.provideToSP(dec(1, 36), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter opens loan with 200% ICR
@@ -1516,7 +1518,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(1, 36), account, { from: account, value: dec(1, 27) })
-        await poolManager.provideToSP(dec(1, 36), { from: account })
+        await poolManager.provideToSP(dec(1, 36), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter opens loan with 20e-9 ETH (with minimum value of $20) and 20 CLV. 200% ICR
@@ -1529,12 +1531,12 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // Defaulter liquidated
       await cdpManager.liquidate(defaulter_1, { from: owner });
 
-      const txA = await poolManager.withdrawETHGainToTrove(alice, alice, { from: alice })
-      const txB = await poolManager.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txPromise_A = poolManager.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txPromise_B =  poolManager.withdrawETHGainToTrove(bob, bob, { from: bob })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1]
-      const bob_ETHWithdrawn = txB.logs[1].args[1]
-
+       // Expect ETH gain per depositor of 1e9 wei to be rounded to 0 by the ETHGainedPerUnitStaked calculation (e / D), where D is ~1e36.
+      await th.assertRevert(txPromise_A, 'PoolManager: caller must have non-zero ETH Gain')
+      await th.assertRevert(txPromise_B, 'PoolManager: caller must have non-zero ETH Gain')
 
       aliceCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
       bobCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
@@ -1549,10 +1551,6 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       bobDepositDiff = bobCLVDeposit.sub(bobExpectedCLVDeposit).abs()
 
       assert.isTrue(bobDepositDiff.lte(web3.utils.toBN('1000000000000000000')))
-
-      // Expect ETH gain per depositor of 1e9 wei to be rounded to 0 by the ETHGainedPerUnitStaked calculation (e / D), where D is ~1e36.
-      assert.equal(alice_ETHWithdrawn.toString(), '0')
-      assert.equal(bob_ETHWithdrawn.toString(), '0')
     })
   })
 })

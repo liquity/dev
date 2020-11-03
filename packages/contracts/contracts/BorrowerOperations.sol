@@ -316,7 +316,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         cdpManager.removeStake(user);
         cdpManager.closeCDP(user);
 
-        poolManager.closeLoan(user, debt, coll);
+        // Tell PM to burn the debt from the user's balance, and send the collateral back to the user
+        poolManager.repayCLV(user, debt);
+        poolManager.withdrawColl(user, coll);
 
         emit CDPUpdated(user, 0, 0, 0, BorrowerOperation.closeLoan);
     }

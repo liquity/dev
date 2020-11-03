@@ -10,6 +10,9 @@ const ZERO = th.toBN('0')
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const maxBytes32 = th.maxBytes32
 
+const getFrontEndTag = async (poolManager, depositor) => {
+  return (await poolManager.deposits(depositor))[1]
+}
 
 contract('PoolManager', async accounts => {
 
@@ -573,7 +576,7 @@ contract('PoolManager', async accounts => {
       await th.assertRevert(txPromise_B)
     })
 
-
+    // --- LQTY functionality ---
     it("provideToSP(), new deposit: triggers LQTY reward event - increases the sum G", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
@@ -608,10 +611,10 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.openLoan(dec(400, 18), D, { from: D, value: dec(3, 'ether') })
 
       // Check A, B, C D have no front end tags
-      const A_tagBefore = await poolManager.getFrontEndTag(A)
-      const B_tagBefore = await poolManager.getFrontEndTag(B)
-      const C_tagBefore = await poolManager.getFrontEndTag(C)
-      const D_tagBefore = await poolManager.getFrontEndTag(D)
+      const A_tagBefore = await getFrontEndTag(poolManager, A)
+      const B_tagBefore = await getFrontEndTag(poolManager, B)
+      const C_tagBefore = await getFrontEndTag(poolManager, C)
+      const D_tagBefore = await getFrontEndTag(poolManager, D)
 
       assert.equal(A_tagBefore, ZERO_ADDRESS)
       assert.equal(B_tagBefore, ZERO_ADDRESS)
@@ -625,10 +628,10 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D })  // transacts directly, no front end
 
       // Check A, B, C D have no front end tags
-      const A_tagAfter = await poolManager.getFrontEndTag(A)
-      const B_tagAfter = await poolManager.getFrontEndTag(B)
-      const C_tagAfter = await poolManager.getFrontEndTag(C)
-      const D_tagAfter = await poolManager.getFrontEndTag(D)
+      const A_tagAfter = await getFrontEndTag(poolManager, A)
+      const B_tagAfter = await getFrontEndTag(poolManager, B)
+      const C_tagAfter = await getFrontEndTag(poolManager, C)
+      const D_tagAfter = await getFrontEndTag(poolManager, D)
 
       // Check front end tags are correctly set
       assert.equal(A_tagAfter, frontEnd_1)
@@ -637,64 +640,12 @@ contract('PoolManager', async accounts => {
       assert.equal(D_tagAfter, ZERO_ADDRESS)
     })
 
-    it("provideToSP(), new deposit with active loan: becomes eligible for LQTY rewards", async () => {
-      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
-
-      // A, B, C open loans 
-      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(3, 'ether') })
-
-      // Check A, B, C, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // A, B, C provides to SP
-      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(200, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: C })  // transacts directly, no front end
-
-      // Check A, B, C, are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-    })
-
-    it("provideToSP(), new deposit without active loan: remains ineligible for LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers LUSD to A, B and C
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-
-      // Check A, B, C, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // A, B, C provide to SP
-      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(200, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: C })  // transacts directly, no front end
-
-      // Check A, B, C, are still ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-    })
-
-    it("provideToSP(), new eligible deposit: depositor does not receive any LQTY rewards", async () => {
+    it("provideToSP(), new deposit: depositor does not receive any LQTY rewards", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, open loans 
       await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(2, 'ether') })
-
-      // Check A, B, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
 
       // Get A, B, C LQTY balances before and confirm they're zero
       const A_LQTYBalance_Before = await growthToken.balanceOf(A)
@@ -708,10 +659,6 @@ contract('PoolManager', async accounts => {
       // A, B provide to SP
       await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
       await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
-
-      // Confirm A, B, are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
 
       // Get A, B, C LQTY balances after, and confirm they're still zero
       const A_LQTYBalance_After = await growthToken.balanceOf(A)
@@ -721,43 +668,7 @@ contract('PoolManager', async accounts => {
       assert.equal(B_LQTYBalance_After, '0')
     })
 
-    it("provideToSP(), new ineligible deposit: depositor does not receive any LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers LUSD to A, B
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-
-      // Check A, B, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-
-      // Get A, B, C LQTY balances before and confirm they're zero
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
-
-      assert.equal(A_LQTYBalance_Before, '0')
-      assert.equal(B_LQTYBalance_Before, '0')
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // A, B provide to SP
-      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
-
-      // Confirm A, B, are still ineligible for LQTY rewards, as they have not opened troves
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-
-      // Get A, B LQTY balances after, and confirm they're still zero
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
-
-      assert.equal(A_LQTYBalance_After, '0')
-      assert.equal(B_LQTYBalance_After, '0')
-    })
-
-    it("provideToSP(), new eligible deposit after past full withdrawal: depositor does not receive any LQTY rewards", async () => {
+    it("provideToSP(), new deposit after past full withdrawal: depositor does not receive any LQTY rewards", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, open loans 
@@ -792,10 +703,6 @@ contract('PoolManager', async accounts => {
 
       // --- TEST --- 
 
-      // Check A, B, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-
       // Get A, B, C LQTY balances before and confirm they're zero
       const A_LQTYBalance_Before = await growthToken.balanceOf(A)
       const B_LQTYBalance_Before = await growthToken.balanceOf(B)
@@ -806,10 +713,6 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
       await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
 
-      // Confirm A, B, are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-
       // Get A, B, C LQTY balances after, and confirm they have not changed
       const A_LQTYBalance_After = await growthToken.balanceOf(A)
       const B_LQTYBalance_After = await growthToken.balanceOf(B)
@@ -818,69 +721,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(B_LQTYBalance_After.eq(B_LQTYBalance_Before))
     })
 
-    it("provideToSP(), new ineligible deposit after past full withdrawal: depositor does not receive any LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A and B
-      await clvToken.transfer(A, dec(300, 18), { from: whale })
-      await clvToken.transfer(B, dec(300, 18), { from: whale })
-
-      await borrowerOperations.openLoan(dec(10, 18), C, { from: C, value: dec(2, 'ether') })
-
-      await borrowerOperations.openLoan(dec(10, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-
-      // --- SETUP --- 
-
-      // A, B provide to SP
-      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(100, 18), frontEnd_2, { from: B })
-
-      // time passes
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // C deposits. A, and B earn LQTY
-      await poolManager.provideToSP(dec(5, 18), ZERO_ADDRESS, { from: C })
-
-      // Price drops, defaulter is liquidated, A, B and C earn ETH
-      await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-
-      await cdpManager.liquidate(defaulter_1)
-
-      // A and B fully withdraw from the pool
-      await poolManager.withdrawFromSP(dec(105, 18), { from: A })
-      await poolManager.withdrawFromSP(dec(105, 18), { from: B })
-
-      // --- TEST --- 
-
-      // Check A, B, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-
-      // Get A, B, C LQTY balances before and confirm they're zero
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // A, B provide to SP
-      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
-
-      // Confirm A, B, are still ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-
-      // Get A, B, C LQTY balances after, and confirm they have not changed
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
-
-      assert.isTrue(A_LQTYBalance_After.eq(A_LQTYBalance_Before))
-      assert.isTrue(B_LQTYBalance_After.eq(B_LQTYBalance_Before))
-    })
-
-
-    it.only("provideToSP(), new eligible deposit: tagged front end receives LQTY rewards", async () => {
+    it("provideToSP(), new eligible deposit: tagged front end receives LQTY rewards", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C, D, E, F open loans 
@@ -890,11 +731,6 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.openLoan(dec(100, 18), D, { from: D, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(dec(200, 18), E, { from: E, value: dec(2, 'ether') })
       await borrowerOperations.openLoan(dec(300, 18), F, { from: F, value: dec(3, 'ether') })
-
-      // Check A, B, C are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
 
       // D, E, F provide to SP
       await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: D })
@@ -925,11 +761,6 @@ contract('PoolManager', async accounts => {
       console.log(`totalLQTYIssued after: ${await communityIssuance.totalLQTYIssued()}`)
       console.log(`LQTY balance of CI after: ${await growthToken.balanceOf(communityIssuance.address)}`)
 
-      // Confirm A, B, C are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Get F1, F2, F3 LQTY balances after, and confirm they have increased
       const frontEnd_1_LQTYBalance_After = await growthToken.balanceOf(frontEnd_1)
       const frontEnd_2_LQTYBalance_After = await growthToken.balanceOf(frontEnd_2)
@@ -948,11 +779,6 @@ contract('PoolManager', async accounts => {
       await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(2, 'ether') })
       await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(3, 'ether') })
 
-      // Check A, B, C are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
       // Get front ends' stakes before
       const F1_Stake_Before = await poolManager.frontEndStakes(frontEnd_1)
       const F2_Stake_Before = await poolManager.frontEndStakes(frontEnd_2)
@@ -966,11 +792,6 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(deposit_A, frontEnd_1, { from: A })
       await poolManager.provideToSP(deposit_B, frontEnd_2, { from: B })
       await poolManager.provideToSP(deposit_C, frontEnd_3, { from: C })
-
-      // Check A, B, C are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
       // Get front ends' stakes after
       const F1_Stake_After = await poolManager.frontEndStakes(frontEnd_1)
@@ -1027,11 +848,6 @@ contract('PoolManager', async accounts => {
       assert.isTrue(S_Before.gt(th.toBN('0')))
       assert.isTrue(G_Before.gt(th.toBN('0')))
 
-      // Check A, B, C are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
       // Get front ends' snapshots before
       for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
         const snapshot = await poolManager.frontEndSnapshots(frontEnd)
@@ -1062,11 +878,6 @@ contract('PoolManager', async accounts => {
       const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
       const G_Values = [G1, G2, G3]
 
-      // Check A, B, C are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Map frontEnds to the value of G at time the deposit was made
       frontEndToG = th.zipToObject(frontEnds, G_Values)
 
@@ -1082,193 +893,6 @@ contract('PoolManager', async accounts => {
         assert.equal(snapshot[4], '0')  // epoch
       }
     })
-
-    it("provideToSP(), new ineligible deposit: tagged front end doesn't receive LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers LUSD to A, B, C
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-
-      // Check A, B, C are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Get F1, F2, F3 LQTY balances before, and confirm they're zero
-      const frontEnd_1_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_1)
-      const frontEnd_2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
-      const frontEnd_3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
-
-      assert.equal(frontEnd_1_LQTYBalance_Before, '0')
-      assert.equal(frontEnd_2_LQTYBalance_Before, '0')
-      assert.equal(frontEnd_3_LQTYBalance_Before, '0')
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // A, B, C provide to SP
-      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(200, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(300, 18), frontEnd_3, { from: C })
-
-      // Confirm A, B, C are still ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Get F1, F2, F3 LQTY balances after, and check they are still zero
-      const frontEnd_1_LQTYBalance_After = await growthToken.balanceOf(frontEnd_1)
-      const frontEnd_2_LQTYBalance_After = await growthToken.balanceOf(frontEnd_2)
-      const frontEnd_3_LQTYBalance_After = await growthToken.balanceOf(frontEnd_3)
-
-      assert.equal(frontEnd_1_LQTYBalance_After, '0')
-      assert.equal(frontEnd_2_LQTYBalance_After, '0')
-      assert.equal(frontEnd_3_LQTYBalance_After, '0')
-    })
-
-    it("provideToSP(), new ineligible deposit: tagged front end's stake does not change", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers LUSD to A, B, C
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-
-      // Check A, B, C are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Get front ends' stakes before
-      const F1_Stake_Before = await poolManager.frontEndStakes(frontEnd_1)
-      const F2_Stake_Before = await poolManager.frontEndStakes(frontEnd_2)
-      const F3_Stake_Before = await poolManager.frontEndStakes(frontEnd_3)
-
-      const deposit_A = dec(100, 18)
-      const deposit_B = dec(200, 18)
-      const deposit_C = dec(300, 18)
-
-      // A, B, C provide to SP
-      await poolManager.provideToSP(deposit_A, frontEnd_1, { from: A })
-      await poolManager.provideToSP(deposit_B, frontEnd_2, { from: B })
-      await poolManager.provideToSP(deposit_C, frontEnd_3, { from: C })
-
-      // Check A, B, C are still ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Get front ends' stakes after
-      const F1_Stake_After = await poolManager.frontEndStakes(frontEnd_1)
-      const F2_Stake_After = await poolManager.frontEndStakes(frontEnd_2)
-      const F3_Stake_After = await poolManager.frontEndStakes(frontEnd_3)
-
-      // Check front ends' stakes have not changed
-      assert.isTrue(F1_Stake_After.eq(F1_Stake_Before))
-      assert.isTrue(F2_Stake_After.eq(F2_Stake_Before))
-      assert.isTrue(F3_Stake_After.eq(F3_Stake_Before))
-    })
-
-    it("provideToSP(), new eligible deposit: tagged front end's snapshots don't change", async () => {
-      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
-
-      // A, B, C, open loans 
-      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(3, 'ether') })
-
-      // D opens loan
-      await borrowerOperations.openLoan(dec(2000, 18), D, { from: D, value: dec(20, 'ether') })
-
-      await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-
-      // --- SETUP ---
-
-      await poolManager.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: D })
-
-      // fastforward time then  make an SP deposit, to make G > 0
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      await poolManager.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: D })
-
-      // perform a liquidation to make 0 < P < 1, and S > 0
-      await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-
-      await cdpManager.liquidate(defaulter_1)
-
-
-
-      const currentEpoch = await poolManager.currentEpoch()
-      const currentScale = await poolManager.currentScale()
-
-      const S_Before = await poolManager.epochToScaleToSum(currentEpoch, currentScale)
-      const P_Before = await poolManager.P()
-      const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
-
-      // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
-      // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
-
-      // Check A, B, C are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Get front ends' snapshots before
-      for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
-        const snapshot = await poolManager.frontEndSnapshots(frontEnd)
-
-        assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends, since S corresponds to ETH gain)
-        assert.equal(snapshot[1], '0')  // P 
-        assert.equal(snapshot[2], '0')  // G
-        assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
-      }
-
-      const deposit_A = dec(100, 18)
-      const deposit_B = dec(200, 18)
-      const deposit_C = dec(300, 18)
-
-      // --- TEST ---
-
-      // A, B, C provide to SP
-      const G1 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.provideToSP(deposit_A, frontEnd_1, { from: A })
-
-      const G2 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.provideToSP(deposit_B, frontEnd_2, { from: B })
-
-      const G3 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.provideToSP(deposit_C, frontEnd_3, { from: C })
-
-      const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
-      const G_Values = [G1, G2, G3]
-
-      // Check A, B, C are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
-      // Map frontEnds to the value of G at time the deposit was made
-      frontEndToG = th.zipToObject(frontEnds, G_Values)
-
-      // Get front ends' snapshots after
-      for (const [frontEnd, G] of Object.entries(frontEndToG)) {
-        const snapshot = await poolManager.frontEndSnapshots(frontEnd)
-
-        // Check snapshots are the expected values
-        assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends)
-        assert.isTrue(snapshot[1].eq(P_Before))  // P 
-        assert.isTrue(snapshot[2].eq(G))  // G
-        assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
-      }
-    })
-
 
     it("provideToSP(), new deposit: depositor does not receive ETH gains", async () => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
@@ -1308,8 +932,7 @@ contract('PoolManager', async accounts => {
       assert.equal(D_ETHBalance_After, D_ETHBalance_Before)
     })
 
-
-    it("provideToSP(), new deposit: depositor does not receive ETH gains", async () => {
+    it("provideToSP(), new deposit after past full withdrawal: depositor does not receive ETH gains", async () => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // Whale transfers LUSD to A, B
@@ -1332,7 +955,7 @@ contract('PoolManager', async accounts => {
       // time passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-      // C deposits. A,B,C,D earn LQTY
+      // B deposits. A,B,C,D earn LQTY
       await poolManager.provideToSP(dec(5, 18), ZERO_ADDRESS, { from: B })
 
       // Price drops, defaulter is liquidated, A, B, C, D earn ETH
@@ -1444,7 +1067,7 @@ contract('PoolManager', async accounts => {
       assert.equal(frontEndTag_E, ZERO_ADDRESS)
     })
 
-    it("provideToSP(), topup of eligible deposit: depositor receives LQTY rewards", async () => {
+    it("provideToSP(), topup: depositor receives LQTY rewards", async () => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
@@ -1464,11 +1087,6 @@ contract('PoolManager', async accounts => {
       const B_LQTYBalance_Before = await growthToken.balanceOf(B)
       const C_LQTYBalance_Before = await growthToken.balanceOf(C)
 
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // A, B, C top up
       await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
       await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
@@ -1485,7 +1103,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(C_LQTYBalance_After.gt(C_LQTYBalance_Before))
     })
 
-    it("provideToSP(), topup of eligible deposit: tagged front end receives LQTY rewards", async () => {
+    it("provideToSP(), topup: tagged front end receives LQTY rewards", async () => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
@@ -1505,11 +1123,6 @@ contract('PoolManager', async accounts => {
       const F2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
       const F3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
 
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // A, B, C top up  (front end param passed here is irrelevant)
       await poolManager.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: A })  // provides no front end param
       await poolManager.provideToSP(dec(20, 18), frontEnd_1, { from: B })  // provides front end that doesn't match his tag
@@ -1526,7 +1139,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(F3_LQTYBalance_After.gt(F3_LQTYBalance_Before))
     })
 
-    it("provideToSP(), topup of eligible deposit: tagged front end's stake increases", async () => {
+    it("provideToSP(), topup: tagged front end's stake increases", async () => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
@@ -1552,11 +1165,6 @@ contract('PoolManager', async accounts => {
       const F2_Stake_Before = await poolManager.frontEndStakes(frontEnd_2)
       const F3_Stake_Before = await poolManager.frontEndStakes(frontEnd_3)
 
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // A, B, C top up  (front end param passed here is irrelevant)
       await poolManager.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: A })  // provides no front end param
       await poolManager.provideToSP(dec(20, 18), frontEnd_1, { from: B })  // provides front end that doesn't match his tag
@@ -1573,7 +1181,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(F3_Stake_After.gt(F3_Stake_Before))
     })
 
-    it("provideToSP(), topup of eligible deposit: tagged front end's snapshots update", async () => {
+    it("provideToSP(), topup: tagged front end's snapshots update", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C, open loans 
@@ -1621,11 +1229,6 @@ contract('PoolManager', async accounts => {
       assert.isTrue(S_Before.gt(th.toBN('0')))
       assert.isTrue(G_Before.gt(th.toBN('0')))
 
-      // Check A, B, C are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Get front ends' snapshots before
       for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
         const snapshot = await poolManager.frontEndSnapshots(frontEnd)
@@ -1653,11 +1256,6 @@ contract('PoolManager', async accounts => {
       const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
       const G_Values = [G1, G2, G3]
 
-      // Check A, B, C are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Map frontEnds to the value of G at time the deposit was made
       frontEndToG = th.zipToObject(frontEnds, G_Values)
 
@@ -1669,236 +1267,6 @@ contract('PoolManager', async accounts => {
         assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends)
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
         assert.isTrue(snapshot[2].eq(G))  // G
-        assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
-      }
-    })
-
-    it("provideToSP(), topup of ineligible deposit: depositor does not receive LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A, B, C 
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-
-      // A, B, C, provide to SP
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), ZERO_ADDRESS, { from: C })
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // Get A, B, C LQTY balance before
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
-      const C_LQTYBalance_Before = await growthToken.balanceOf(C)
-
-      // Check A, B, C, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // A, B, C top up
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), ZERO_ADDRESS, { from: C })
-
-      // Get LQTY balance after
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
-      const C_LQTYBalance_After = await growthToken.balanceOf(C)
-
-      // Check LQTY Balance of A, B, C has not change
-      assert.isTrue(A_LQTYBalance_After.eq(A_LQTYBalance_Before))
-      assert.isTrue(B_LQTYBalance_After.eq(B_LQTYBalance_Before))
-      assert.isTrue(C_LQTYBalance_After.eq(C_LQTYBalance_Before))
-    })
-
-    it("provideToSP(), topup of ineligible deposit: tagged front end does not receive LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A, B, C 
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-
-      // A, B, C, provide to SP
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: C })
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // Get front ends' LQTY balance before
-      const F1_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_1)
-      const F2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
-      const F3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
-
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // A, B, C top up  (front end param passed here is irrelevant)
-      await poolManager.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: A })  // provides no front end param
-      await poolManager.provideToSP(dec(20, 18), frontEnd_1, { from: B })  // provides front end that doesn't match his tag
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: C }) // provides front end that matches his tag
-
-      // Get front ends' LQTY balance after
-      const F1_LQTYBalance_After = await growthToken.balanceOf(A)
-      const F2_LQTYBalance_After = await growthToken.balanceOf(B)
-      const F3_LQTYBalance_After = await growthToken.balanceOf(C)
-
-      // Check LQTY Balance of front ends has increased
-      assert.isTrue(F1_LQTYBalance_After.eq(F1_LQTYBalance_Before))
-      assert.isTrue(F2_LQTYBalance_After.eq(F2_LQTYBalance_Before))
-      assert.isTrue(F3_LQTYBalance_After.eq(F3_LQTYBalance_Before))
-    })
-
-    it("provideToSP(), topup of ineligible deposit: tagged front end's stake doesn't change", async () => {
-      await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A, B, C, D, E, F
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-      await clvToken.transfer(D, dec(100, 18), { from: whale })
-      await clvToken.transfer(E, dec(200, 18), { from: whale })
-      await clvToken.transfer(F, dec(300, 18), { from: whale })
-
-      // A, B, C, D, E, F provide to SP
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: C })
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: D })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: E })
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: F })
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // Get front ends' stake before
-      const F1_Stake_Before = await poolManager.frontEndStakes(frontEnd_1)
-      const F2_Stake_Before = await poolManager.frontEndStakes(frontEnd_2)
-      const F3_Stake_Before = await poolManager.frontEndStakes(frontEnd_3)
-
-      // Check A, B, C, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // A, B, C top up (front end param passed here is irrelevant)
-      await poolManager.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: A })  // provides no front end param
-      await poolManager.provideToSP(dec(20, 18), frontEnd_1, { from: B })  // provides front end that doesn't match his tag
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: C }) // provides front end that matches his tag
-
-      // Get front ends' stakes after
-      const F1_Stake_After = await poolManager.frontEndStakes(frontEnd_1)
-      const F2_Stake_After = await poolManager.frontEndStakes(frontEnd_2)
-      const F3_Stake_After = await poolManager.frontEndStakes(frontEnd_3)
-
-      // Check front ends' stakes have not changed
-      assert.isTrue(F1_Stake_After.eq(F1_Stake_Before))
-      assert.isTrue(F2_Stake_After.eq(F2_Stake_Before))
-      assert.isTrue(F3_Stake_After.eq(F3_Stake_Before))
-    })
-
-    it("provideToSP(), topup of ineligible deposit: tagged front end's snapshots don't change", async () => {
-      await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers to A, B, C 
-      await clvToken.transfer(A, dec(200, 18), { from: whale })
-      await clvToken.transfer(B, dec(400, 18), { from: whale })
-      await clvToken.transfer(C, dec(600, 18), { from: whale })
-
-      // D opens loan
-      await borrowerOperations.openLoan(dec(1000, 18), D, { from: D, value: dec(10, 'ether') })
-
-      await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-
-      // --- SETUP ---
-
-      const deposit_A = dec(100, 18)
-      const deposit_B = dec(200, 18)
-      const deposit_C = dec(300, 18)
-
-      // A, B, C make their initial deposits
-      await poolManager.provideToSP(deposit_A, frontEnd_1, { from: A })
-      await poolManager.provideToSP(deposit_B, frontEnd_2, { from: B })
-      await poolManager.provideToSP(deposit_C, frontEnd_3, { from: C })
-
-      // fastforward time then make an SP deposit, to make G > 0
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      await poolManager.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: D })
-
-      // perform a liquidation to make 0 < P < 1, and S > 0
-      await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-
-      await cdpManager.liquidate(defaulter_1)
-
-      const currentEpoch = await poolManager.currentEpoch()
-      const currentScale = await poolManager.currentScale()
-
-      const S_Before = await poolManager.epochToScaleToSum(currentEpoch, currentScale)
-      const P_Before = await poolManager.P()
-      const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
-
-      // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
-      // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
-
-      // Check A, B, C are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Get front ends' snapshots before.  Should be 0, as they don't have any eligible deposits
-      for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
-        const snapshot = await poolManager.frontEndSnapshots(frontEnd)
-
-        assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends, since S corresponds to ETH gain)
-        assert.equal(snapshot[1], '0')  // P 
-        assert.equal(snapshot[2], '0')  // G
-        assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
-      }
-
-      // --- TEST ---
-
-      // A, B, C top up their deposits. Grab G at each stage, as it can increase a bit
-      // between topups, because some block.timestamp time passes (and LQTY is issued) between ops
-      const G1 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.provideToSP(deposit_A, frontEnd_1, { from: A })
-
-      const G2 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.provideToSP(deposit_B, frontEnd_2, { from: B })
-
-      const G3 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.provideToSP(deposit_C, frontEnd_3, { from: C })
-
-      const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
-      const G_Values = [G1, G2, G3]
-
-      // Check A, B, C are still ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Map frontEnds to the value of G at time the deposit was made
-      frontEndToG = th.zipToObject(frontEnds, G_Values)
-
-      // Get front ends' snapshots after
-      for (const [frontEnd, G] of Object.entries(frontEndToG)) {
-        const snapshot = await poolManager.frontEndSnapshots(frontEnd)
-
-        // Check snapshots are still 0
-        assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends)
-        assert.equal(snapshot[1], '0')  // P 
-        assert.equal(snapshot[2], '0')  // G
         assert.equal(snapshot[3], '0')  // scale
         assert.equal(snapshot[4], '0')  // epoch
       }
@@ -2248,8 +1616,6 @@ contract('PoolManager', async accounts => {
       assert.isAtMost(th.getDifference(stability_ETH_Difference, aliceETHGain), 100)
     })
 
-    // --- Tests that check any rounding error in accumulated CLVLoss in the SP "favors the Pool" ---
-
     it("withdrawFromSP(): All depositors are able to withdraw from the SP to their account", async () => {
       // Whale opens loan 
       await borrowerOperations.openLoan(0, accounts[999], { from: whale, value: dec(100, 'ether') })
@@ -2532,7 +1898,6 @@ contract('PoolManager', async accounts => {
       assert.equal(CLVinSP_Before, CLVinSP_After)
     })
 
-
     it("withdrawFromSP(): withdrawing 0 ETH Gain does not alter the caller's ETH balance, their trove collateral, or the ETH  in the Stability Pool", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
@@ -2578,8 +1943,6 @@ contract('PoolManager', async accounts => {
       // Check withdrawal has not altered the ETH in the Stability Pool
       assert.equal(ETHinSP_Before, ETHinSP_After)
     })
-
-
 
     it("withdrawFromSP(): Request to withdraw > caller's deposit only withdraws the caller's compounded deposit", async () => {
       // --- SETUP ---
@@ -2835,6 +2198,7 @@ contract('PoolManager', async accounts => {
       assert.equal(bob_ETHGain_1, bob_ETHGain_3)
     })
 
+    // --- LQTY functionality ---
     it("withdrawFromSP(): triggers LQTY reward event - increases the sum G", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
@@ -2912,8 +2276,7 @@ contract('PoolManager', async accounts => {
       assert.equal(frontEndTag_E, ZERO_ADDRESS)
     })
 
-
-    it("withdrawFromSP(), partial withdrawal, eligible deposit: depositor receives LQTY rewards", async () => {
+    it("withdrawFromSP(), partial withdrawal: depositor receives LQTY rewards", async () => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
@@ -2933,11 +2296,6 @@ contract('PoolManager', async accounts => {
       const B_LQTYBalance_Before = await growthToken.balanceOf(B)
       const C_LQTYBalance_Before = await growthToken.balanceOf(C)
 
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // A, B, C withdraw
       await poolManager.withdrawFromSP(dec(1, 18), { from: A })
       await poolManager.withdrawFromSP(dec(2, 18), { from: B })
@@ -2954,7 +2312,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(C_LQTYBalance_After.gt(C_LQTYBalance_Before))
     })
 
-    it("withdrawFromSP(), partial withdrawal, eligible deposit: tagged front end receives LQTY rewards", async () => {
+    it("withdrawFromSP(), partial withdrawal: tagged front end receives LQTY rewards", async () => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
@@ -2974,11 +2332,6 @@ contract('PoolManager', async accounts => {
       const F2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
       const F3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
 
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // A, B, C withdraw
       await poolManager.withdrawFromSP(dec(1, 18), { from: A })
       await poolManager.withdrawFromSP(dec(2, 18), { from: B })
@@ -2995,7 +2348,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(F3_LQTYBalance_After.gt(F3_LQTYBalance_Before))
     })
 
-    it("withdrawFromSP(), partial withdrawal, eligible deposit: tagged front end's stake decreases", async () => {
+    it("withdrawFromSP(), partial withdrawal: tagged front end's stake decreases", async () => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
@@ -3021,11 +2374,6 @@ contract('PoolManager', async accounts => {
       const F2_Stake_Before = await poolManager.frontEndStakes(frontEnd_2)
       const F3_Stake_Before = await poolManager.frontEndStakes(frontEnd_3)
 
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // A, B, C withdraw 
       await poolManager.withdrawFromSP(dec(1, 18), { from: A })
       await poolManager.withdrawFromSP(dec(2, 18), { from: B })
@@ -3042,7 +2390,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(F3_Stake_After.lt(F3_Stake_Before))
     })
 
-    it("withdrawFromSP(), partial withdrawal, eligible deposit: tagged front end's snapshots update", async () => {
+    it("withdrawFromSP(), partial withdrawal: tagged front end's snapshots update", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C, open loans 
@@ -3090,11 +2438,6 @@ contract('PoolManager', async accounts => {
       assert.isTrue(S_Before.gt(th.toBN('0')))
       assert.isTrue(G_Before.gt(th.toBN('0')))
 
-      // Check A, B, C are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Get front ends' snapshots before
       for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
         const snapshot = await poolManager.frontEndSnapshots(frontEnd)
@@ -3122,11 +2465,6 @@ contract('PoolManager', async accounts => {
       const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
       const G_Values = [G1, G2, G3]
 
-      // Check A, B, C are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Map frontEnds to the value of G at time the deposit was made
       frontEndToG = th.zipToObject(frontEnds, G_Values)
 
@@ -3138,236 +2476,6 @@ contract('PoolManager', async accounts => {
         assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends)
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
         assert.isTrue(snapshot[2].eq(G))  // G
-        assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
-      }
-    })
-
-    it("withdrawFromSP(), partial withdrawal of ineligible deposit: depositor does not receive LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A, B, C 
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-
-      // A, B, C, provide to SP
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), ZERO_ADDRESS, { from: C })
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // Get A, B, C LQTY balance before
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
-      const C_LQTYBalance_Before = await growthToken.balanceOf(C)
-
-      // Check A, B, C, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // A, B, C withdraw
-      await poolManager.withdrawFromSP(dec(1, 18), { from: A })
-      await poolManager.withdrawFromSP(dec(2, 18), { from: B })
-      await poolManager.withdrawFromSP(dec(3, 18), { from: C })
-
-      // Get LQTY balance after
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
-      const C_LQTYBalance_After = await growthToken.balanceOf(C)
-
-      // Check LQTY Balance of A, B, C has not change
-      assert.isTrue(A_LQTYBalance_After.eq(A_LQTYBalance_Before))
-      assert.isTrue(B_LQTYBalance_After.eq(B_LQTYBalance_Before))
-      assert.isTrue(C_LQTYBalance_After.eq(C_LQTYBalance_Before))
-    })
-
-    it("withdrawFromSP(), partial withdrawal of ineligible deposit: tagged front end does not receive LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A, B, C 
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-
-      // A, B, C, provide to SP
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: C })
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // Get front ends' LQTY balance before
-      const F1_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_1)
-      const F2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
-      const F3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
-
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // A, B, C withdraw
-      await poolManager.withdrawFromSP(dec(1, 18), { from: A })
-      await poolManager.withdrawFromSP(dec(2, 18), { from: B })
-      await poolManager.withdrawFromSP(dec(3, 18), { from: C })
-
-      // Get front ends' LQTY balance after
-      const F1_LQTYBalance_After = await growthToken.balanceOf(A)
-      const F2_LQTYBalance_After = await growthToken.balanceOf(B)
-      const F3_LQTYBalance_After = await growthToken.balanceOf(C)
-
-      // Check LQTY Balance of front ends has increased
-      assert.isTrue(F1_LQTYBalance_After.eq(F1_LQTYBalance_Before))
-      assert.isTrue(F2_LQTYBalance_After.eq(F2_LQTYBalance_Before))
-      assert.isTrue(F3_LQTYBalance_After.eq(F3_LQTYBalance_Before))
-    })
-
-    it("withdrawFromSP(), partial withdrawal of ineligible deposit: tagged front end's stake doesn't change", async () => {
-      await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A, B, C, D, E, F
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-      await clvToken.transfer(D, dec(100, 18), { from: whale })
-      await clvToken.transfer(E, dec(200, 18), { from: whale })
-      await clvToken.transfer(F, dec(300, 18), { from: whale })
-
-      // A, B, C, D, E, F provide to SP
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: C })
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: D })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: E })
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: F })
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // Get front ends' stake before
-      const F1_Stake_Before = await poolManager.frontEndStakes(frontEnd_1)
-      const F2_Stake_Before = await poolManager.frontEndStakes(frontEnd_2)
-      const F3_Stake_Before = await poolManager.frontEndStakes(frontEnd_3)
-
-      // Check A, B, C, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // A, B, C withdraw
-      await poolManager.withdrawFromSP(dec(1, 18), { from: A })
-      await poolManager.withdrawFromSP(dec(2, 18), { from: B })
-      await poolManager.withdrawFromSP(dec(3, 18), { from: C })
-
-      // Get front ends' stakes after
-      const F1_Stake_After = await poolManager.frontEndStakes(frontEnd_1)
-      const F2_Stake_After = await poolManager.frontEndStakes(frontEnd_2)
-      const F3_Stake_After = await poolManager.frontEndStakes(frontEnd_3)
-
-      // Check front ends' stakes have not changed
-      assert.isTrue(F1_Stake_After.eq(F1_Stake_Before))
-      assert.isTrue(F2_Stake_After.eq(F2_Stake_Before))
-      assert.isTrue(F3_Stake_After.eq(F3_Stake_Before))
-    })
-
-    it("withdrawFromSP(), partial withdrawal of ineligible deposit: tagged front end's snapshots don't change", async () => {
-      await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers to A, B, C 
-      await clvToken.transfer(A, dec(200, 18), { from: whale })
-      await clvToken.transfer(B, dec(400, 18), { from: whale })
-      await clvToken.transfer(C, dec(600, 18), { from: whale })
-
-      // D opens loan
-      await borrowerOperations.openLoan(dec(1000, 18), D, { from: D, value: dec(10, 'ether') })
-
-      await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-
-      // --- SETUP ---
-
-      const deposit_A = dec(100, 18)
-      const deposit_B = dec(200, 18)
-      const deposit_C = dec(300, 18)
-
-      // A, B, C make their initial deposits
-      await poolManager.provideToSP(deposit_A, frontEnd_1, { from: A })
-      await poolManager.provideToSP(deposit_B, frontEnd_2, { from: B })
-      await poolManager.provideToSP(deposit_C, frontEnd_3, { from: C })
-
-      // fastforward time then make an SP deposit, to make G > 0
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      await poolManager.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: D })
-
-      // perform a liquidation to make 0 < P < 1, and S > 0
-      await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-
-      await cdpManager.liquidate(defaulter_1)
-
-      const currentEpoch = await poolManager.currentEpoch()
-      const currentScale = await poolManager.currentScale()
-
-      const S_Before = await poolManager.epochToScaleToSum(currentEpoch, currentScale)
-      const P_Before = await poolManager.P()
-      const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
-
-      // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
-      // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
-
-      // Check A, B, C are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Get front ends' snapshots before.  Should be 0, as they don't have any eligible deposits
-      for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
-        const snapshot = await poolManager.frontEndSnapshots(frontEnd)
-
-        assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends, since S corresponds to ETH gain)
-        assert.equal(snapshot[1], '0')  // P 
-        assert.equal(snapshot[2], '0')  // G
-        assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
-      }
-
-      // --- TEST ---
-
-      // A, B, C withdraw part of their deposits. Grab G at each stage, as it can increase a bit
-      // between topups, because some block.timestamp time passes (and LQTY is issued) between ops
-      const G1 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.withdrawFromSP(dec(1, 18), { from: A })
-
-      const G2 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.withdrawFromSP(dec(2, 18), { from: B })
-
-      const G3 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.withdrawFromSP(dec(3, 18), { from: C })
-
-      const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
-      const G_Values = [G1, G2, G3]
-
-      // Check A, B, C are still ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Map frontEnds to the value of G at time the deposit was made
-      frontEndToG = th.zipToObject(frontEnds, G_Values)
-
-      // Get front ends' snapshots after
-      for (const [frontEnd, G] of Object.entries(frontEndToG)) {
-        const snapshot = await poolManager.frontEndSnapshots(frontEnd)
-
-        // Check snapshots are still 0
-        assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends)
-        assert.equal(snapshot[1], '0')  // P 
-        assert.equal(snapshot[2], '0')  // G
         assert.equal(snapshot[3], '0')  // scale
         assert.equal(snapshot[4], '0')  // epoch
       }
@@ -3391,10 +2499,10 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D })
 
       // Check deposits are tagged with correct front end 
-      const A_tagBefore = await poolManager.getFrontEndTag(A)
-      const B_tagBefore = await poolManager.getFrontEndTag(B)
-      const C_tagBefore = await poolManager.getFrontEndTag(C)
-      const D_tagBefore = await poolManager.getFrontEndTag(D)
+      const A_tagBefore = await getFrontEndTag(poolManager, A)
+      const B_tagBefore = await getFrontEndTag(poolManager, B)
+      const C_tagBefore = await getFrontEndTag(poolManager, C)
+      const D_tagBefore = await getFrontEndTag(poolManager, D)
 
       assert.equal(A_tagBefore, frontEnd_1)
       assert.equal(B_tagBefore, ZERO_ADDRESS)
@@ -3408,10 +2516,10 @@ contract('PoolManager', async accounts => {
       await poolManager.withdrawFromSP(dec(400, 18), { from: D })
 
       // Check all deposits now have no front end tag
-      const A_tagAfter = await poolManager.getFrontEndTag(A)
-      const B_tagAfter = await poolManager.getFrontEndTag(B)
-      const C_tagAfter = await poolManager.getFrontEndTag(C)
-      const D_tagAfter = await poolManager.getFrontEndTag(D)
+      const A_tagAfter = await getFrontEndTag(poolManager, A)
+      const B_tagAfter = await getFrontEndTag(poolManager, B)
+      const C_tagAfter = await getFrontEndTag(poolManager, C)
+      const D_tagAfter = await getFrontEndTag(poolManager, D)
 
       assert.equal(A_tagAfter, ZERO_ADDRESS)
       assert.equal(B_tagAfter, ZERO_ADDRESS)
@@ -4132,11 +3240,6 @@ contract('PoolManager', async accounts => {
       const B_LQTYBalance_Before = await growthToken.balanceOf(B)
       const C_LQTYBalance_Before = await growthToken.balanceOf(C)
 
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Check A, B, C have non-zero ETH gain
       assert.isTrue((await poolManager.getDepositorETHGain(A)).gt(ZERO))
       assert.isTrue((await poolManager.getDepositorETHGain(B)).gt(ZERO))
@@ -4185,11 +3288,6 @@ contract('PoolManager', async accounts => {
       const F2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
       const F3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
 
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Check A, B, C have non-zero ETH gain
       assert.isTrue((await poolManager.getDepositorETHGain(A)).gt(ZERO))
       assert.isTrue((await poolManager.getDepositorETHGain(B)).gt(ZERO))
@@ -4201,9 +3299,9 @@ contract('PoolManager', async accounts => {
       await poolManager.withdrawETHGainToTrove(C, C, { from: C })
 
       // Get front ends' LQTY balance after
-      const F1_LQTYBalance_After = await growthToken.balanceOf(A)
-      const F2_LQTYBalance_After = await growthToken.balanceOf(B)
-      const F3_LQTYBalance_After = await growthToken.balanceOf(C)
+      const F1_LQTYBalance_After = await growthToken.balanceOf(frontEnd_1)
+      const F2_LQTYBalance_After = await growthToken.balanceOf(frontEnd_2)
+      const F3_LQTYBalance_After = await growthToken.balanceOf(frontEnd_3)
 
       // Check LQTY Balance of front ends has increased
       assert.isTrue(F1_LQTYBalance_After.gt(F1_LQTYBalance_Before))
@@ -4243,11 +3341,6 @@ contract('PoolManager', async accounts => {
       const F1_Stake_Before = await poolManager.frontEndStakes(frontEnd_1)
       const F2_Stake_Before = await poolManager.frontEndStakes(frontEnd_2)
       const F3_Stake_Before = await poolManager.frontEndStakes(frontEnd_3)
-
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
 
       // Check A, B, C have non-zero ETH gain
       assert.isTrue((await poolManager.getDepositorETHGain(A)).gt(ZERO))
@@ -4318,11 +3411,6 @@ contract('PoolManager', async accounts => {
       assert.isTrue(S_Before.gt(th.toBN('0')))
       assert.isTrue(G_Before.gt(th.toBN('0')))
 
-      // Check A, B, C are eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Get front ends' snapshots before
       for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
         const snapshot = await poolManager.frontEndSnapshots(frontEnd)
@@ -4355,11 +3443,6 @@ contract('PoolManager', async accounts => {
       const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
       const G_Values = [G1, G2, G3]
 
-      // Check A, B, C are now eligible for LQTY rewards
-      assert.isTrue(await poolManager.isEligibleForLQTY(A))
-      assert.isTrue(await poolManager.isEligibleForLQTY(B))
-      assert.isTrue(await poolManager.isEligibleForLQTY(C))
-
       // Map frontEnds to the value of G at time the deposit was made
       frontEndToG = th.zipToObject(frontEnds, G_Values)
 
@@ -4371,303 +3454,6 @@ contract('PoolManager', async accounts => {
         assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends)
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
         assert.isTrue(snapshot[2].eq(G))  // G
-        assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
-      }
-    })
-
-
-    // INELIGIBLE FOR LQTY
-
-    it("withdrawETHGainToTrove(), ineligible deposit: depositor does not receive LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A, B, C 
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-
-      // A, B, C, provide to SP
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), ZERO_ADDRESS, { from: C })
-
-      // A, B, C open loans *after* making their deposit
-      await borrowerOperations.openLoan(dec(10, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(20, 18), B, { from: B, value: dec(5, 'ether') })
-      await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(10, 'ether') })
-
-
-      // Defaulter opens a loan, price drops, defaulter gets liquidated
-      await borrowerOperations.openLoan(dec(10, 18), defaulter_1, { from: defaulter_1, value: dec(1, 17) })
-      await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // Get A, B, C LQTY balance before
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
-      const C_LQTYBalance_Before = await growthToken.balanceOf(C)
-
-      // Check A, B, C, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Check A, B, C have non-zero ETH gain
-      assert.isTrue((await poolManager.getDepositorETHGain(A)).gt(ZERO))
-      assert.isTrue((await poolManager.getDepositorETHGain(B)).gt(ZERO))
-      assert.isTrue((await poolManager.getDepositorETHGain(C)).gt(ZERO))
-
-      // A, B, C withdraw
-      await poolManager.withdrawETHGainToTrove(A, A, { from: A })
-      await poolManager.withdrawETHGainToTrove(B, B, { from: B })
-      await poolManager.withdrawETHGainToTrove(C, C, { from: C })
-
-      // Get LQTY balance after
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
-      const C_LQTYBalance_After = await growthToken.balanceOf(C)
-
-      // Check LQTY Balance of A, B, C has not change
-      assert.isTrue(A_LQTYBalance_After.eq(A_LQTYBalance_Before))
-      assert.isTrue(B_LQTYBalance_After.eq(B_LQTYBalance_Before))
-      assert.isTrue(C_LQTYBalance_After.eq(C_LQTYBalance_Before))
-    })
-
-    it("withdrawETHGainToTrove(), of ineligible deposit: tagged front end does not receive LQTY rewards", async () => {
-      await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A, B, C 
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-
-      // A, B, C, provide to SP
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: C })
-
-      // A, B, C open loans *after* making their deposit
-      await borrowerOperations.openLoan(dec(10, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(20, 18), B, { from: B, value: dec(5, 'ether') })
-      await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(10, 'ether') })
-
-
-      // Defaulter opens a loan, price drops, defaulter gets liquidated
-      await borrowerOperations.openLoan(dec(10, 18), defaulter_1, { from: defaulter_1, value: dec(1, 17) })
-      await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // Get front ends' LQTY balance before
-      const F1_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_1)
-      const F2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
-      const F3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
-
-      // Check A, B, C, are eligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Check A, B, C have non-zero ETH gain
-      assert.isTrue((await poolManager.getDepositorETHGain(A)).gt(ZERO))
-      assert.isTrue((await poolManager.getDepositorETHGain(B)).gt(ZERO))
-      assert.isTrue((await poolManager.getDepositorETHGain(C)).gt(ZERO))
-
-      // A, B, C withdraw
-      await poolManager.withdrawETHGainToTrove(A, A, { from: A })
-      await poolManager.withdrawETHGainToTrove(B, B, { from: B })
-      await poolManager.withdrawETHGainToTrove(C, C, { from: C })
-
-      // Get front ends' LQTY balance after
-      const F1_LQTYBalance_After = await growthToken.balanceOf(A)
-      const F2_LQTYBalance_After = await growthToken.balanceOf(B)
-      const F3_LQTYBalance_After = await growthToken.balanceOf(C)
-
-      // Check LQTY Balance of front ends has increased
-      assert.isTrue(F1_LQTYBalance_After.eq(F1_LQTYBalance_Before))
-      assert.isTrue(F2_LQTYBalance_After.eq(F2_LQTYBalance_Before))
-      assert.isTrue(F3_LQTYBalance_After.eq(F3_LQTYBalance_Before))
-    })
-
-    it("withdrawETHGainToTrove(), ineligible deposit: tagged front end's stake doesn't change", async () => {
-      await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers CLV to A, B, C, D, E, F
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
-      await clvToken.transfer(C, dec(300, 18), { from: whale })
-      await clvToken.transfer(D, dec(100, 18), { from: whale })
-      await clvToken.transfer(E, dec(200, 18), { from: whale })
-      await clvToken.transfer(F, dec(300, 18), { from: whale })
-
-      // A, B, C, D, E, F provide to SP
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: C })
-      await poolManager.provideToSP(dec(10, 18), frontEnd_1, { from: D })
-      await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: E })
-      await poolManager.provideToSP(dec(30, 18), frontEnd_3, { from: F })
-
-      // A, B, C open loans *after* making their deposit
-      await borrowerOperations.openLoan(dec(10, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(20, 18), B, { from: B, value: dec(5, 'ether') })
-      await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(10, 'ether') })
-
-
-      // Defaulter opens a loan, price drops, defaulter gets liquidated
-      await borrowerOperations.openLoan(dec(10, 18), defaulter_1, { from: defaulter_1, value: dec(1, 17) })
-      await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // Get front ends' stake before
-      const F1_Stake_Before = await poolManager.frontEndStakes(frontEnd_1)
-      const F2_Stake_Before = await poolManager.frontEndStakes(frontEnd_2)
-      const F3_Stake_Before = await poolManager.frontEndStakes(frontEnd_3)
-
-      // Check A, B, C, are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Check A, B, C have non-zero ETH gain
-      assert.isTrue((await poolManager.getDepositorETHGain(A)).gt(ZERO))
-      assert.isTrue((await poolManager.getDepositorETHGain(B)).gt(ZERO))
-      assert.isTrue((await poolManager.getDepositorETHGain(C)).gt(ZERO))
-
-      // A, B, C withdraw
-      await poolManager.withdrawETHGainToTrove(A, A, { from: A })
-      await poolManager.withdrawETHGainToTrove(B, B, { from: B })
-      await poolManager.withdrawETHGainToTrove(C, C, { from: C })
-
-      // Get front ends' stakes after
-      const F1_Stake_After = await poolManager.frontEndStakes(frontEnd_1)
-      const F2_Stake_After = await poolManager.frontEndStakes(frontEnd_2)
-      const F3_Stake_After = await poolManager.frontEndStakes(frontEnd_3)
-
-      // Check front ends' stakes have not changed
-      assert.isTrue(F1_Stake_After.eq(F1_Stake_Before))
-      assert.isTrue(F2_Stake_After.eq(F2_Stake_Before))
-      assert.isTrue(F3_Stake_After.eq(F3_Stake_Before))
-    })
-
-    it("withdrawETHGainToTrove(), ineligible deposit: tagged front end's snapshots don't change", async () => {
-      await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-
-      // Whale transfers to A, B, C 
-      await clvToken.transfer(A, dec(200, 18), { from: whale })
-      await clvToken.transfer(B, dec(400, 18), { from: whale })
-      await clvToken.transfer(C, dec(600, 18), { from: whale })
-
-      // D opens loan
-      await borrowerOperations.openLoan(dec(1000, 18), D, { from: D, value: dec(10, 'ether') })
-
-      await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-
-      // --- SETUP ---
-
-      const deposit_A = dec(100, 18)
-      const deposit_B = dec(200, 18)
-      const deposit_C = dec(300, 18)
-
-      // A, B, C make their initial deposits
-      await poolManager.provideToSP(deposit_A, frontEnd_1, { from: A })
-      await poolManager.provideToSP(deposit_B, frontEnd_2, { from: B })
-      await poolManager.provideToSP(deposit_C, frontEnd_3, { from: C })
-
-      // A, B, C open loans *after* making their deposit
-      await borrowerOperations.openLoan(dec(10, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(20, 18), B, { from: B, value: dec(5, 'ether') })
-      await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(10, 'ether') })
-
-      // fastforward time then make an SP deposit, to make G > 0
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      await poolManager.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: D })
-
-      // perform a liquidation to make 0 < P < 1, and S > 0
-      await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-
-      await cdpManager.liquidate(defaulter_1)
-
-      const currentEpoch = await poolManager.currentEpoch()
-      const currentScale = await poolManager.currentScale()
-
-      const S_Before = await poolManager.epochToScaleToSum(currentEpoch, currentScale)
-      const P_Before = await poolManager.P()
-      const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
-
-      // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
-      // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
-
-      // Check A, B, C are ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Get front ends' snapshots before.  Should be 0, as they don't have any eligible deposits
-      for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
-        const snapshot = await poolManager.frontEndSnapshots(frontEnd)
-
-        assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends, since S corresponds to ETH gain)
-        assert.equal(snapshot[1], '0')  // P 
-        assert.equal(snapshot[2], '0')  // G
-        assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
-      }
-
-      // --- TEST ---
-
-      // Check A, B, C have non-zero ETH gain
-      assert.isTrue((await poolManager.getDepositorETHGain(A)).gt(ZERO))
-      assert.isTrue((await poolManager.getDepositorETHGain(B)).gt(ZERO))
-      assert.isTrue((await poolManager.getDepositorETHGain(C)).gt(ZERO))
-
-      // A, B, C withdraw part of their deposits. Grab G at each stage, as it can increase a bit
-      // between topups, because some block.timestamp time passes (and LQTY is issued) between ops
-      const G1 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.withdrawETHGainToTrove(A, A, { from: A })
-
-      const G2 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.withdrawETHGainToTrove(B, B, { from: B })
-
-      const G3 = await poolManager.epochToScaleToG(currentScale, currentEpoch)
-      await poolManager.withdrawETHGainToTrove(C, C, { from: C })
-
-      const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
-      const G_Values = [G1, G2, G3]
-
-      // Check A, B, C are still ineligible for LQTY rewards
-      assert.isFalse(await poolManager.isEligibleForLQTY(A))
-      assert.isFalse(await poolManager.isEligibleForLQTY(B))
-      assert.isFalse(await poolManager.isEligibleForLQTY(C))
-
-      // Map frontEnds to the value of G at time the deposit was made
-      frontEndToG = th.zipToObject(frontEnds, G_Values)
-
-      // Get front ends' snapshots after
-      for (const [frontEnd, G] of Object.entries(frontEndToG)) {
-        const snapshot = await poolManager.frontEndSnapshots(frontEnd)
-
-        // Check snapshots are still 0
-        assert.equal(snapshot[0], '0')  // S (should always be 0 for front ends)
-        assert.equal(snapshot[1], '0')  // P 
-        assert.equal(snapshot[2], '0')  // G
         assert.equal(snapshot[3], '0')  // scale
         assert.equal(snapshot[4], '0')  // epoch
       }
