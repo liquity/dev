@@ -49,7 +49,7 @@ contract PoolManager is Ownable, IPoolManager {
    
     struct FrontEnd {
         uint kickbackRate;
-        bool active;
+        bool registered;
     }
 
     struct Deposit {
@@ -438,7 +438,7 @@ contract PoolManager is Ownable, IPoolManager {
         _requireValidKickbackRate(_kickbackRate);
 
         frontEnds[msg.sender].kickbackRate = _kickbackRate;
-        frontEnds[msg.sender].active = true;
+        frontEnds[msg.sender].registered = true;
 
         emit FrontEndRegistered(msg.sender, _kickbackRate);
     }
@@ -450,7 +450,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
     
     function _setFrontEndTag(address _depositor, address _frontEndTag) internal {
-        deposits[_depositor].frontEndTag = _frontEndTag;
+        deposits[_depositor].frontEndTag = frontEnds[_frontEndTag].registered ? _frontEndTag : address(0);
     }
 
     // Record a new deposit
@@ -637,15 +637,19 @@ contract PoolManager is Ownable, IPoolManager {
     // --- LQTY issuance functions ---
 
     function _triggerLQTYIssuance() internal {
-        uint totalCLVDeposits = stabilityPool.getCLV();
-        if (totalCLVDeposits == 0) {return;} // Do nothing if the Pool is empty
-
         uint LQTYIssuance = communityIssuance.issueLQTY();
-        _updateG(LQTYIssuance, totalCLVDeposits);
+       _updateG(LQTYIssuance); 
     }
 
     // TODO: handle total deposits == 0?
-    function _updateG(uint _LQTYIssuance, uint totalCLVDeposits) internal {
+    function _updateG(uint _LQTYIssuance) internal {
+        uint totalCLVDeposits = stabilityPool.getCLV();
+
+        /* When total deposits is 0, G is not updated. In this case, the LQTY issued
+        can not be obtained by later depositors - it is missed out on, and remains in the balance 
+        of the CommunityIssuance contract. */
+        if (totalCLVDeposits == 0) {return;}
+
         uint LQTYPerUnitStaked;
         LQTYPerUnitStaked =_computeLQTYPerUnitStaked(_LQTYIssuance, totalCLVDeposits);
 
@@ -774,11 +778,11 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     function _requireFrontEndNotRegistered(address _address) internal view {
-        require(frontEnds[_address].active == false, "PoolManager: must not already be a registered front end");
+        require(frontEnds[_address].registered, "PoolManager: must not already be a registered front end");
     }
 
      function _requireFrontEndIsRegisteredOrZero(address _address) internal view {
-        require(frontEnds[_address].active == true || _address == address(0), 
+        require(frontEnds[_address].registered || _address == address(0), 
             "PoolManager: Tag must be a registered front end, or the zero address");
     }
 
