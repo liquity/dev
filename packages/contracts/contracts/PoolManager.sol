@@ -450,7 +450,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
     
     function _setFrontEndTag(address _depositor, address _frontEndTag) internal {
-        deposits[_depositor].frontEndTag = frontEnds[_frontEndTag].registered ? _frontEndTag : address(0);
+        deposits[_depositor].frontEndTag = _frontEndTag;
     }
 
     // Record a new deposit
