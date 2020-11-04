@@ -100,9 +100,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '66666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '66666666666666666666'), 1000)
@@ -142,9 +142,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '33333333333333333333'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '33333333333333333333'), 1000)
@@ -187,9 +187,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '0'), 1000)
@@ -230,9 +230,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '90000000000000000000'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '90000000000000000000'), 1000)
@@ -275,9 +275,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '80000000000000000000'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '80000000000000000000'), 1000)
@@ -322,9 +322,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '66666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '133333333333333333333'), 1000)
@@ -371,9 +371,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '50000000000000000000'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '100000000000000000000'), 1000)
@@ -430,9 +430,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '9017193801740610000'), 10000000000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '2055920186796860000000'), 1000000000)
@@ -483,10 +483,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txD = await poolManager.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '16666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '16666666666666666666'), 1000)
@@ -542,10 +542,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txD = await poolManager.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '0'), 1000)
@@ -613,10 +613,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txD = await poolManager.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '178328173374613000000'), 1000000000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '59442724458204300000'), 1000000000)
@@ -661,7 +661,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(dennis)).toString(), '50000000000000000000'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '500000000000000000'), 1000)
 
@@ -674,9 +674,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '0'), 1000)
@@ -734,7 +734,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
        // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSP(dec(5000, 18), { from: dennis })
       // console.log(txD.logs)
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '1230769230769230000'), 1000000000)
 
@@ -747,9 +747,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '16722408026755900000'), 100000000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '20903010033444800000'), 1000000000)
@@ -797,7 +797,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSP(dec(5000, 18), { from: dennis })
 
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '833333333333333333'), 1000)
 
@@ -808,9 +808,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '6666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '6666666666666666666'), 1000)
@@ -871,10 +871,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
       const txD = await poolManager.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       // Expect Alice And Bob's compounded deposit to be 0 CLV
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
@@ -945,11 +945,11 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txD = await poolManager.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
       const txE = await poolManager.withdrawETHGainToTrove(erin, erin, { from: erin })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
-      const erin_ETHWithdrawn = txE.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
+      const erin_ETHWithdrawn = th.getETHWithdrawnFromEvent(txE)
 
       // Expect Alice And Bob's compounded deposit to be 0 CLV
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
@@ -1002,7 +1002,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txA = await poolManager.withdrawETHGainToTrove(alice, alice, { from: alice })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), 0), 1000)
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(1, 18)), 1000)
@@ -1090,14 +1090,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txG = await poolManager.withdrawETHGainToTrove(graham, graham, { from: graham })
       const txH = await poolManager.withdrawETHGainToTrove(harriet, harriet, { from: harriet })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
-      const erin_ETHWithdrawn = txE.logs[1].args[1].toString()
-      const flyn_ETHWithdrawn = txF.logs[1].args[1].toString()
-      const graham_ETHWithdrawn = txG.logs[1].args[1].toString()
-      const harriet_ETHWithdrawn = txH.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
+      const erin_ETHWithdrawn = th.getETHWithdrawnFromEvent(txE)
+      const flyn_ETHWithdrawn = th.getETHWithdrawnFromEvent(txF)
+      const graham_ETHWithdrawn = th.getETHWithdrawnFromEvent(txG)
+      const harriet_ETHWithdrawn = th.getETHWithdrawnFromEvent(txH)
 
       // Expect all deposits to be 0 CLV
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
@@ -1156,9 +1156,6 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       const txA = await poolManager.withdrawETHGainToTrove(alice, alice, { from: alice })
 
-      // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
-
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
       await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
 
@@ -1166,7 +1163,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_2, { from: owner });
  
       const txB = await poolManager.withdrawETHGainToTrove(bob, bob, { from: bob })
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+     
 
       // Expect Bob to withdraw 10% of initial deposit (10 CLV) and all the liquidated ETH (0.5 ether)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '10000000000000000000'), 1000)
@@ -1236,9 +1234,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(carol)).toString(), dec(20, 18)), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(dennis)).toString(), dec(30, 18)), 1000)
 
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '500000000000000000'), 1000)
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '1000000000000000000'), 1000)
@@ -1287,7 +1285,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isTrue(txL2.receipt.status)
 
       const txB = await poolManager.withdrawETHGainToTrove(bob, bob, { from: bob })
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      
 
       // Bob should withdraw 0 deposit, and the full ETH gain of 1 ether
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), 0), 1000)
@@ -1341,13 +1340,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isTrue(txL2.receipt.status)
 
       const txB = await poolManager.withdrawETHGainToTrove(bob, bob, { from: bob })
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const bob_ETHWithdrawn = await th.getETHWithdrawnFromEvent(txB)
 
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
-      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
+      const carol_ETHWithdrawn = await th.getETHWithdrawnFromEvent(txC)
 
       const txD = await poolManager.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
-      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = await th.getETHWithdrawnFromEvent(txD)
 
       // B, C and D should withdraw 1e-10 of initial deposit, 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '0'), 1000)
@@ -1427,10 +1426,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txC = await poolManager.withdrawETHGainToTrove(carol, carol,   { from: carol })
       const txD = await poolManager.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
-      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = await th.getETHWithdrawnFromEvent(txD)
 
       // B, C and D should withdraw 1e-10 of initial deposit, 
 
@@ -1476,8 +1475,8 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const txB = await poolManager.withdrawETHGainToTrove(bob, bob, { from: bob })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1]
-      const bob_ETHWithdrawn = txB.logs[1].args[1]
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
 
       aliceCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
       bobCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
@@ -1494,18 +1493,15 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isTrue(bobDepositDiff.lte(web3.utils.toBN('1000000000000000000')))
 
       aliceExpectedETHGain = web3.utils.toBN(dec(500, 24))
-      aliceETHDiff = aliceExpectedETHGain.sub(alice_ETHWithdrawn)
+      aliceETHDiff = aliceExpectedETHGain.sub(th.toBN(alice_ETHWithdrawn))
 
       assert.isTrue(aliceETHDiff.lte(web3.utils.toBN('1000000000000000000')))
 
       bobExpectedETHGain = web3.utils.toBN(dec(500, 24))
-      bobETHDiff = bobExpectedETHGain.sub(bob_ETHWithdrawn)
+      bobETHDiff = bobExpectedETHGain.sub(th.toBN(bob_ETHWithdrawn))
 
       assert.isTrue(bobETHDiff.lte(web3.utils.toBN('1000000000000000000')))
-
-      //  assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(500, 24)), web3.utils.toBN('1000000000000000000'))
-      //  assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(500, 24)), web3.utils.toBN('1000000000000000000'))
-    })
+     })
 
     it("withdrawETHGainToTrove(): Tiny liquidated coll/debt, large deposits and ETH price", async () => {
       // Whale opens CDP with 100bn ETH

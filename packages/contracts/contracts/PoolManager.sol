@@ -108,7 +108,7 @@ contract PoolManager is Ownable, IPoolManager {
     uint public lastCLVLossError_Offset;
 
     // --- Events ---
-
+   
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
@@ -117,11 +117,21 @@ contract PoolManager is Ownable, IPoolManager {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     
-    event DepositSnapshotUpdated(address indexed _user, uint _P, uint _S);
+     event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
+
+    event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S);
+    event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);
+    
     event P_Updated(uint _P);
     event S_Updated(uint _S);
-    event DepositChanged(address indexed _user, uint _amount);
-    event ETHGainWithdrawn(address indexed _user, uint _ETH, uint _CLVLoss);
+    event G_Updated(uint _G);
+
+    event UserDepositChanged(address indexed _depositor, uint _newDeposit);
+    event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
+
+    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _CLVLoss);
+    event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
+    event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
 
     // --- Dependency setters ---
 
@@ -429,6 +439,8 @@ contract PoolManager is Ownable, IPoolManager {
 
         frontEnds[msg.sender].kickbackRate = _kickbackRate;
         frontEnds[msg.sender].active = true;
+
+        emit FrontEndRegistered(msg.sender, _kickbackRate);
     }
 
     // --- Stability Pool Deposit Functionality --- 
@@ -473,7 +485,7 @@ contract PoolManager is Ownable, IPoolManager {
             frontEndSnapshots[_frontEnd].epoch = currentEpoch;
         }
 
-        //TODO: emit event
+        emit FrontEndSnapshotUpdated(_frontEnd, frontEndSnapshots[_frontEnd].P, frontEndSnapshots[_frontEnd].G);
     }
 
     function _payOutLQTYGains(address _depositor, address _frontEnd) internal {
@@ -481,11 +493,14 @@ contract PoolManager is Ownable, IPoolManager {
         if (_frontEnd != address(0)) {
             uint frontEndLQTYGain = getFrontEndLQTYGain(_frontEnd);
             communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
+            emit LQTYPaidToFrontEnd(_frontEnd, frontEndLQTYGain);
         }
         
         // Pay out depositor's LQTY gain
         uint depositorLQTYGain = getDepositorLQTYGain(_depositor);
         communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
+
+        emit LQTYPaidToDepositor(_depositor, depositorLQTYGain);
     }
 
     // --- External Depositor Functions ---
@@ -520,16 +535,17 @@ contract PoolManager is Ownable, IPoolManager {
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
         uint newFrontEndStake = compoundedFrontEndStake.add(_amount);
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
+        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, depositor);
         
         _sendCLVtoStabilityPool(depositor, _amount);
 
         uint newDeposit = compoundedCLVDeposit.add(_amount);
         _updateDepositAndSnapshots(depositor, newDeposit);
+        emit UserDepositChanged(depositor, newDeposit);
 
         _sendETHGainToDepositor(depositor, depositorETHGain);
 
-        emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss); // CLV Loss required for event log
-        emit DepositChanged(depositor, newDeposit); 
+        emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss); // CLV Loss required for event log 
     }
 
     /* withdrawFromSP(): 
@@ -561,17 +577,18 @@ contract PoolManager is Ownable, IPoolManager {
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
         uint newFrontEndStake = compoundedFrontEndStake.sub(CLVtoWithdraw);
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
+        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, depositor);
         
         _sendCLVToDepositor(depositor, CLVtoWithdraw);
 
         // Update deposit
         uint newDeposit = compoundedCLVDeposit.sub(CLVtoWithdraw);
         _updateDepositAndSnapshots(depositor, newDeposit);  
+        emit UserDepositChanged(depositor, newDeposit);
        
         _sendETHGainToDepositor(depositor, depositorETHGain);
 
         emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss);  // CLV Loss required for event log
-        emit UserDepositChanged(depositor, newDeposit); 
     }
 
     /* withdrawETHGainToTrove:
@@ -604,6 +621,7 @@ contract PoolManager is Ownable, IPoolManager {
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
         uint newFrontEndStake = compoundedFrontEndStake;
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
+        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, _depositor);
     
         _updateDepositAndSnapshots(_depositor, compoundedCLVDeposit); 
 

@@ -11,6 +11,7 @@ const timeValues = testHelpers.TimeValues
 contract('CDPManager', async accounts => {
 
   const _18_zeros = '000000000000000000'
+  const ZERO_ADDRESS = th.ZERO_ADDRESS
 
   const [
     owner,
@@ -387,7 +388,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(A_CLVWithdrawal, alice, { from: alice, value: dec(500, 'finney') })
 
     // Alice proves 10 CLV to SP
-    await poolManager.provideToSP(dec(10, 18), { from: alice })
+    await poolManager.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: alice })
 
     // Set ETH:USD price to 105
     await priceFeed.setPrice('105000000000000000000')
@@ -536,7 +537,7 @@ contract('CDPManager', async accounts => {
   it("liquidate(): Given the same price and no other loan changes, complete Pool offsets restore the TCR to its value prior to the defaulters opening troves", async () => {
     // Whale provides 2000 CLV to SP
     await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-    await poolManager.provideToSP(dec(2000, 18), { from: whale })
+    await poolManager.provideToSP(dec(2000, 18), ZERO_ADDRESS, { from: whale })
 
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(7, 'ether') })
@@ -585,7 +586,7 @@ contract('CDPManager', async accounts => {
   it("liquidate(): Pool offsets increase the TCR", async () => {
     // Whale provides 2000 CLV to SP
     await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-    await poolManager.provideToSP(dec(2000, 18), { from: whale })
+    await poolManager.provideToSP(dec(2000, 18), ZERO_ADDRESS, { from: whale })
 
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(7, 'ether') })
@@ -735,7 +736,7 @@ contract('CDPManager', async accounts => {
     await clvToken.transfer(dennis, dec(200, 18), { from: bob })
 
     //Dennis provides 200 CLV to SP
-    await poolManager.provideToSP(dec(200, 18), { from: dennis })
+    await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: dennis })
 
     // Carol gets liquidated
     await priceFeed.setPrice(dec(100, 18))
@@ -745,7 +746,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
     // Check Dennis' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
     const dennis_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(dennis)).toString()
-    const dennis_ETHGain_Before = (await poolManager.getCurrentETHGain(dennis)).toString()
+    const dennis_ETHGain_Before = (await poolManager.getDepositorETHGain(dennis)).toString()
     assert.isAtMost(th.getDifference(dennis_Deposit_Before, th.toBN(dec(200, 18)).sub(liquidatedDebt)), 1000)
     assert.isAtMost(th.getDifference(dennis_ETHGain_Before, liquidatedColl), 1000)
 
@@ -763,7 +764,7 @@ contract('CDPManager', async accounts => {
 
     // Check Dennis' SP deposit does not change after liquidation attempt
     const dennis_Deposit_After = (await poolManager.getCompoundedCLVDeposit(dennis)).toString()
-    const dennis_ETHGain_After = (await poolManager.getCurrentETHGain(dennis)).toString()
+    const dennis_ETHGain_After = (await poolManager.getDepositorETHGain(dennis)).toString()
     assert.equal(dennis_Deposit_Before, dennis_Deposit_After)
     assert.equal(dennis_ETHGain_Before, dennis_ETHGain_After)
   })
@@ -774,7 +775,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     //Bob provides 200 CLV to SP
-    await poolManager.provideToSP(dec(200, 18), { from: bob })
+    await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
     // Carol gets liquidated
     await priceFeed.setPrice(dec(100, 18))
@@ -789,7 +790,7 @@ contract('CDPManager', async accounts => {
 
     // Check Bob' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
     const bob_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
-    const bob_ETHGain_Before = (await poolManager.getCurrentETHGain(bob)).toString()
+    const bob_ETHGain_Before = (await poolManager.getDepositorETHGain(bob)).toString()
     assert.isAtMost(th.getDifference(bob_Deposit_Before, th.toBN(dec(200, 18)).sub(liquidatedDebt)), 1000)
     assert.isAtMost(th.getDifference(bob_ETHGain_Before, liquidatedColl), 1000)
 
@@ -804,7 +805,7 @@ contract('CDPManager', async accounts => {
 
     // Check Bob' SP deposit does not change after liquidation attempt
     const bob_Deposit_After = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
-    const bob_ETHGain_After = (await poolManager.getCurrentETHGain(bob)).toString()
+    const bob_ETHGain_After = (await poolManager.getDepositorETHGain(bob)).toString()
     assert.equal(bob_Deposit_Before, bob_Deposit_After)
     assert.equal(bob_ETHGain_Before, bob_ETHGain_After)
   })
@@ -816,7 +817,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     //Bob provides 200 CLV to SP
-    await poolManager.provideToSP(dec(200, 18), { from: bob })
+    await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
     // Carol gets liquidated
     await priceFeed.setPrice(dec(100, 18))
@@ -824,12 +825,12 @@ contract('CDPManager', async accounts => {
 
     // Check Bob' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
     const bob_Deposit_Before = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
-    const bob_ETHGain_Before = (await poolManager.getCurrentETHGain(bob)).toString()
+    const bob_ETHGain_Before = (await poolManager.getDepositorETHGain(bob)).toString()
     assert.isAtMost(th.getDifference(bob_Deposit_Before, dec(100, 18)), 1000)
     assert.isAtMost(th.getDifference(bob_ETHGain_Before, dec(1, 'ether')), 1000)
 
     // Alice provides 300 CLV to SP
-    await poolManager.provideToSP(dec(300, 18), { from: alice })
+    await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: alice })
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await cdpManager.checkRecoveryMode());
@@ -850,7 +851,7 @@ contract('CDPManager', async accounts => {
 
      Check Bob' SP deposit has been reduced to 50 CLV, and his ETH gain has increased to 1.5 ETH. */
     const bob_Deposit_After = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
-    const bob_ETHGain_After = (await poolManager.getCurrentETHGain(bob)).toString()
+    const bob_ETHGain_After = (await poolManager.getDepositorETHGain(bob)).toString()
 
     assert.isAtMost(th.getDifference(bob_Deposit_After, dec(50, 18)), 1000)
     assert.isAtMost(th.getDifference(bob_ETHGain_After, '1500000000000000000'), 1000)
@@ -1006,7 +1007,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(dec(300, 18), ida, { from: ida, value: dec(100, 'ether') })
 
     // Whale puts some tokens in Stability Pool
-    await poolManager.provideToSP(dec(300, 18), { from: whale })
+    await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
 
     // --- TEST ---
 
@@ -1381,7 +1382,7 @@ contract('CDPManager', async accounts => {
   it("liquidateCDPs(): A liquidation sequence containing Pool offsets increases the TCR", async () => {
     // Whale provides 500 CLV to SP
     await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-    await poolManager.provideToSP(dec(500, 18), { from: whale })
+    await poolManager.provideToSP(dec(500, 18), ZERO_ADDRESS, { from: whale })
 
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(7, 'ether') })
@@ -1481,15 +1482,15 @@ contract('CDPManager', async accounts => {
   it("liquidateCDPs(): Liquidating troves with SP deposits correctly impacts their SP deposit and ETH gain", async () => {
     // Whale provides 400 CLV to the SP
     await borrowerOperations.openLoan(dec(400, 18), whale, { from: whale, value: dec(100, 'ether') })
-    await poolManager.provideToSP(dec(400, 18), { from: whale })
+    await poolManager.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: whale })
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(300, 18), bob, { from: bob, value: dec(3, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // A, B provide 100, 300 to the SP
-    await poolManager.provideToSP(dec(100, 18), { from: alice })
-    await poolManager.provideToSP(dec(300, 18), { from: bob })
+    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
+    await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: bob })
 
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
 
@@ -1546,9 +1547,9 @@ contract('CDPManager', async accounts => {
     const alice_Deposit_After = (await poolManager.getCompoundedCLVDeposit(alice)).toString()
     const bob_Deposit_After = (await poolManager.getCompoundedCLVDeposit(bob)).toString()
 
-    const whale_ETHGain = (await poolManager.getCurrentETHGain(whale)).toString()
-    const alice_ETHGain = (await poolManager.getCurrentETHGain(alice)).toString()
-    const bob_ETHGain = (await poolManager.getCurrentETHGain(bob)).toString()
+    const whale_ETHGain = (await poolManager.getDepositorETHGain(whale)).toString()
+    const alice_ETHGain = (await poolManager.getDepositorETHGain(alice)).toString()
+    const bob_ETHGain = (await poolManager.getDepositorETHGain(bob)).toString()
 
     assert.isAtMost(th.getDifference(whale_Deposit_After, dec(150, 18)), 1000)
     assert.isAtMost(th.getDifference(alice_Deposit_After, '37500000000000000000'), 1000)
@@ -1583,7 +1584,7 @@ contract('CDPManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '6')
 
     // Whale puts some tokens in Stability Pool
-    await poolManager.provideToSP(dec(300, 18), { from: whale })
+    await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
 
     // --- TEST ---
 
@@ -1637,7 +1638,7 @@ contract('CDPManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '6')
 
     // Whale puts some tokens in Stability Pool
-    await poolManager.provideToSP(dec(300, 18), { from: whale })
+    await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
 
     // --- TEST ---
 
@@ -1695,7 +1696,7 @@ contract('CDPManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '6')
 
     // Whale puts some tokens in Stability Pool
-    await poolManager.provideToSP(dec(300, 18), { from: whale })
+    await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
 
     // --- TEST ---
 
@@ -1749,7 +1750,7 @@ contract('CDPManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '6')
 
     // Whale puts some tokens in Stability Pool
-    await poolManager.provideToSP(dec(300, 18), { from: whale })
+    await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
 
     // --- TEST ---
 
@@ -2237,9 +2238,9 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), flyn, { from: flyn, value: dec(1, 'ether') })
 
     // B, C, D deposit some of their tokens to the Stability Pool
-    await poolManager.provideToSP(dec(50, 18), { from: bob })
-    await poolManager.provideToSP(dec(150, 18), { from: carol })
-    await poolManager.provideToSP(dec(200, 18), { from: dennis })
+    await poolManager.provideToSP(dec(50, 18), ZERO_ADDRESS, { from: bob })
+    await poolManager.provideToSP(dec(150, 18), ZERO_ADDRESS, { from: carol })
+    await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: dennis })
 
     let price = await priceFeed.getPrice()
     const bob_ICR_before = await cdpManager.getCurrentICR(bob, price)
@@ -2262,9 +2263,9 @@ contract('CDPManager', async accounts => {
     const carol_SPDeposit_before = (await poolManager.getCompoundedCLVDeposit(carol)).toString()
     const dennis_SPDeposit_before = (await poolManager.getCompoundedCLVDeposit(dennis)).toString()
 
-    const bob_ETHGain_before = (await poolManager.getCurrentETHGain(bob)).toString()
-    const carol_ETHGain_before = (await poolManager.getCurrentETHGain(carol)).toString()
-    const dennis_ETHGain_before = (await poolManager.getCurrentETHGain(dennis)).toString()
+    const bob_ETHGain_before = (await poolManager.getDepositorETHGain(bob)).toString()
+    const carol_ETHGain_before = (await poolManager.getDepositorETHGain(carol)).toString()
+    const dennis_ETHGain_before = (await poolManager.getDepositorETHGain(dennis)).toString()
 
     // Check the remaining CLV and ETH in Stability Pool after liquidation is non-zero
     const CLVinSP = await stabilityPool.getCLV()
@@ -2289,9 +2290,9 @@ contract('CDPManager', async accounts => {
     const carol_SPDeposit_after = (await poolManager.getCompoundedCLVDeposit(carol)).toString()
     const dennis_SPDeposit_after = (await poolManager.getCompoundedCLVDeposit(dennis)).toString()
 
-    const bob_ETHGain_after = (await poolManager.getCurrentETHGain(bob)).toString()
-    const carol_ETHGain_after = (await poolManager.getCurrentETHGain(carol)).toString()
-    const dennis_ETHGain_after = (await poolManager.getCurrentETHGain(dennis)).toString()
+    const bob_ETHGain_after = (await poolManager.getDepositorETHGain(bob)).toString()
+    const carol_ETHGain_after = (await poolManager.getDepositorETHGain(carol)).toString()
+    const dennis_ETHGain_after = (await poolManager.getDepositorETHGain(dennis)).toString()
 
     // Check B, C, D Stability Pool deposits and ETH gain have not been affected by redemptions from their troves
     assert.equal(bob_SPDeposit_before, bob_SPDeposit_after)
@@ -2976,7 +2977,7 @@ contract('CDPManager', async accounts => {
     // Make some loans
     const price = await priceFeed.getPrice()
     await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-    await poolManager.provideToSP(dec(2000, 18), { from: whale })
+    await poolManager.provideToSP(dec(2000, 18), ZERO_ADDRESS, { from: whale })
 
     await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
@@ -3005,7 +3006,7 @@ contract('CDPManager', async accounts => {
     // make some loans
     const price = await priceFeed.getPrice()
     await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-    await poolManager.provideToSP(dec(2000, 18), { from: whale })
+    await poolManager.provideToSP(dec(2000, 18), ZERO_ADDRESS, { from: whale })
 
     await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 

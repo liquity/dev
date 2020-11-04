@@ -834,39 +834,41 @@ contract('Fee arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  /* Accumulated issuance error: how many tokens are lost over a given period, for a given issuance frequency? */
+  /* ---  
+  Accumulated issuance error: how many tokens are lost over a given period, for a given issuance frequency? 
+  
+  Slow tests are skipped.
+  --- */
 
-  // (slow tests commented out)
+  it.skip("Frequent token issuance: issuance event every year, for 30 years", async () => {
+    // Register front end with kickback rate = 100%
+    await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
-  // it("Frequent token issuance: issuance event every year, for 30 years", async () => {
-  //   // Register front end with kickback rate = 100%
-  //   await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
+    // Set the deployment time to now
+    await communityIssuanceTester.setDeploymentTime()
+    // Alice opens loan and deposits to SP
+    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
-  //   // Set the deployment time to now
-  //   await communityIssuanceTester.setDeploymentTime()
-  //   // Alice opens loan and deposits to SP
-  //   await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
-  //   await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
+    assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
 
-  //   assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
+    const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_YEAR
+    const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
 
-  //   const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_YEAR
-  //   const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
+    await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
 
-  //   await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
+    // Depositor withdraws their deposit and accumulated LQTY
+    await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
 
-  //   // Depositor withdraws their deposit and accumulated LQTY
-  //   await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
+    const LQTYBalance_A = await growthToken.balanceOf(alice)
+    const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
+    const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
-  //   const LQTYBalance_A = await growthToken.balanceOf(alice)
-  //   const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
-  //   const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
+    logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
 
-  //   logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
-
-  //   // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
-  //   assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
-  // })
+    // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
+    assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
+  })
   /*  Results:
   
   Expected final balance: 33333333302289200000000000,
@@ -874,70 +876,70 @@ contract('Fee arithmetic tests', async accounts => {
   Abs. error: -47499999999 */
 
 
-  // it("Frequent token issuance: issuance event every day, for 30 years", async () => {
-  //   // Register front end with kickback rate = 100%
-  //   await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
+  it.skip("Frequent token issuance: issuance event every day, for 30 years", async () => {
+    // Register front end with kickback rate = 100%
+    await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
-  //   // Set the deployment time to now
-  //   await communityIssuanceTester.setDeploymentTime()
-  //   // Alice opens loan and deposits to SP
-  //   await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
-  //   await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
+    // Set the deployment time to now
+    await communityIssuanceTester.setDeploymentTime()
+    // Alice opens loan and deposits to SP
+    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
-  //   assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
+    assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
 
-  //   const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_DAY
-  //   const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
+    const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_DAY
+    const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
 
-  //   await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
+    await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
 
-  //   // Depositor withdraws their deposit and accumulated LQTY
-  //   await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
+    // Depositor withdraws their deposit and accumulated LQTY
+    await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
 
-  //   const LQTYBalance_A = await growthToken.balanceOf(alice)
-  //   const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
-  //   const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
+    const LQTYBalance_A = await growthToken.balanceOf(alice)
+    const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
+    const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
-  //   logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
+    logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
 
-  //   // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
-  //   assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
-  // })
+    // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
+    assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
+  })
   /* Results:
 
   Expected final balance: 33333333302289200000000000,
   Actual final balance: 33333333302297188866666666,
   Abs. error: -7988866666666  */
 
-  // it("Frequent token issuance: issuance event every minute, for 1 month", async () => {
-  //   // Register front end with kickback rate = 100%
-  //   await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
+  it.skip("Frequent token issuance: issuance event every minute, for 1 month", async () => {
+    // Register front end with kickback rate = 100%
+    await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
-  //   // Set the deployment time to now
-  //   await communityIssuanceTester.setDeploymentTime()
-  //   // Alice opens loan and deposits to SP
-  //   await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
-  //   await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
+    // Set the deployment time to now
+    await communityIssuanceTester.setDeploymentTime()
+    // Alice opens loan and deposits to SP
+    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
-  //   assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
+    assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
 
-  //   const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_MINUTE
-  //   const duration = timeValues.SECONDS_IN_ONE_MONTH
+    const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_MINUTE
+    const duration = timeValues.SECONDS_IN_ONE_MONTH
 
-  //   await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
+    await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
 
-  //   // Depositor withdraws their deposit and accumulated LQTY
-  //   await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
+    // Depositor withdraws their deposit and accumulated LQTY
+    await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
 
-  //   const LQTYBalance_A = await growthToken.balanceOf(alice)
-  //   const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')
-  //   const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
+    const LQTYBalance_A = await growthToken.balanceOf(alice)
+    const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')
+    const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
-  //   logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
+    logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
 
-  //   // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
-  //   assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
-  // })
+    // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
+    assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
+  })
   /* Results:
 
   Expected final balance: 1845951269598880000000000,
@@ -945,33 +947,33 @@ contract('Fee arithmetic tests', async accounts => {
   Abs. error: 34459800000001
   */
 
-  // it("Frequent token issuance: issuance event every minute, for 1 year", async () => {
-  //   // Register front end with kickback rate = 100%
-  //   await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
+  it.skip("Frequent token issuance: issuance event every minute, for 1 year", async () => {
+    // Register front end with kickback rate = 100%
+    await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
-  //   // Set the deployment time to now
-  //   await communityIssuanceTester.setDeploymentTime()
-  //   // Alice opens loan and deposits to SP
-  //   await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
-  //   await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
+    // Set the deployment time to now
+    await communityIssuanceTester.setDeploymentTime()
+    // Alice opens loan and deposits to SP
+    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
-  //   assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
+    assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
 
-  //   const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_MINUTE
-  //   const duration = timeValues.SECONDS_IN_ONE_YEAR
+    const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_MINUTE
+    const duration = timeValues.SECONDS_IN_ONE_YEAR
 
-  //   await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
+    await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
 
-  //   // Depositor withdraws their deposit and accumulated LQTY
-  //   await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
+    // Depositor withdraws their deposit and accumulated LQTY
+    await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
 
-  //   const LQTYBalance_A = await growthToken.balanceOf(alice)
-  //   const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')
-  //   const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
+    const LQTYBalance_A = await growthToken.balanceOf(alice)
+    const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')
+    const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
-  //   logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
+    logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
 
-  //   // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
-  //   assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
-  // })
+    // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
+    assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
+  })
 })

@@ -329,6 +329,15 @@ class TestHelper {
     throw ("The transaction logs do not contain a liquidation event")
   }
 
+  static getETHWithdrawnFromEvent(tx) {
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === "ETHGainWithdrawn") {
+        return (tx.logs[i].args[1]).toString()
+      }
+    }
+    throw ("The transaction logs do not contain an ETHGainWithdrawn event")
+  }
+
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
     return compositeDebt
