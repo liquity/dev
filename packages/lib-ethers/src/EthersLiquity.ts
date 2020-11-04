@@ -723,6 +723,7 @@ export class EthersLiquity
   async redeemCollateral(
     exchangedQui: Decimalish,
     optionalParams: HintedTransactionOptionalParams = {},
+    maxIterations: number = 0,
     overrides?: EthersTransactionOverrides
   ) {
     exchangedQui = Decimal.from(exchangedQui);
@@ -739,6 +740,7 @@ export class EthersLiquity
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintICR.bigNumber,
+        maxIterations,
         {
           ...overrides
         }

@@ -486,7 +486,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should redeem some collateral", async () => {
-      const tx = await liquity.redeemCollateral(55, {}, { gasPrice: 0 });
+      const tx = await liquity.redeemCollateral(55, {}, 0, { gasPrice: 0 });
 
       const receipt = await tx.waitForReceipt();
       assertStrictEquals(receipt.status, "succeeded" as const);
