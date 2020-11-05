@@ -87,6 +87,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     event CDPCreated(address indexed _user, uint arrayIndex);
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
+    event LUSDBorrowingFeePaid(address indexed _borrower, uint _CLVFee);
 
     // --- Dependency setters --- 
 
@@ -178,6 +179,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         poolManager.withdrawCLV(user, _CLVAmount, CLVFee); 
        
         emit CDPUpdated(user, rawDebt, msg.value, stake, BorrowerOperation.openLoan);
+        emit LUSDBorrowingFeePaid(user, CLVFee);
     }
 
     // Send ETH as collateral to a CDP
@@ -274,6 +276,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         
         uint stake = cdpManager.getCDPStake(user);
         emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.withdrawCLV);
+        emit LUSDBorrowingFeePaid(user, CLVFee);
     }
     
     // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the debt accordingly
@@ -381,6 +384,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _moveTokensAndETHfromAdjustment(L.user, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.CLVFee);   
     
         emit CDPUpdated(L.user, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
+        emit LUSDBorrowingFeePaid(L.user,  L.CLVFee);
     }
 
     // --- Helper functions --- 

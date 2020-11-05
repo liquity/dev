@@ -10,7 +10,7 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
-const GTStaking = artifacts.require("./GT/GTStaking.sol")
+const LQTYStaking = artifacts.require("./GT/LQTYStaking.sol")
 const GrowthToken = artifacts.require("./GT/GrowthToken.sol")
 const LockupContractFactory = artifacts.require("./GT/LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./GT/CommunityIssuance.sol")
@@ -37,7 +37,7 @@ const coreContractABIs = [
 ]
 
 const GTContractABIs = [
-  GTStaking,
+  LQTYStaking,
   GrowthToken,
   LockupContractFactory,
   CommunityIssuance

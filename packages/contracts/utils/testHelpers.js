@@ -338,6 +338,16 @@ class TestHelper {
     throw ("The transaction logs do not contain an ETHGainWithdrawn event")
   }
 
+  static getLUSDFeeFromLUSDBorrowingEvent(tx) {
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === "LUSDBorrowingFeePaid") {
+        return (tx.logs[i].args[1]).toString()
+      }
+    }
+    throw ("The transaction logs do not contain an LUSDBorrowingFeePaid event")
+  }
+
+
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
     return compositeDebt

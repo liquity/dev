@@ -3,19 +3,20 @@ pragma solidity 0.5.16;
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/console.sol";
 import "../Interfaces/IGrowthToken.sol";
+import "../Dependencies/Math.sol";
 import "../Interfaces/ICLVToken.sol";
 
-contract GTStaking {
+contract LQTYStaking {
     using SafeMath for uint;
 
     // --- Data ---
     address public stakingContractDeployer;
 
     mapping( address => uint) stakes;
-    uint public totalGTStaked;
+    uint public totalLQTYStaked;
 
-    uint public F_ETH;  // Running sum of ETH fees per-GT-staked
-    uint public F_LUSD; // Running sum of GT fees per-GT-staked
+    uint public F_ETH;  // Running sum of ETH fees per-LQTY-staked
+    uint public F_LUSD; // Running sum of LQTY fees per-LQTY-staked
 
     // User snapshots of F_ETH and F_LUSD, taken at the point at which their latest deposit was made
     mapping (address => Snapshot) snapshots; 
@@ -74,7 +75,7 @@ contract GTStaking {
     }
 
     /* Staking expects that this StakingContract is allowed to spend at least _amount of 
-    the caller's GT tokens.
+    the caller's LQTY tokens.
     If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. */
     function stake(uint _amount) external {
 
@@ -90,11 +91,11 @@ contract GTStaking {
     
        _updateUserSnapshots(msg.sender);
 
-        // Increase user’s stake and total GT staked
+        // Increase user’s stake and total LQTY staked
         stakes[msg.sender] = stakes[msg.sender].add(_amount);
-        totalGTStaked = totalGTStaked.add(_amount);
+        totalLQTYStaked = totalLQTYStaked.add(_amount);
 
-        // Transfer GT from caller to this contract
+        // Transfer LQTY from caller to this contract
         growthToken.transferFrom(msg.sender, address(this), _amount);
 
         // Send accumulated LUSD and ETH gains to the caller
@@ -102,27 +103,27 @@ contract GTStaking {
         _sendETHGainToUser(msg.sender, ETHGain);
     }
 
-    // Unstake the GT and send the it back to the caller, along with their accumulated LUSD & ETH gains 
+    // Unstake the LQTY and send the it back to the caller, along with their accumulated LUSD & ETH gains. 
+    // If requested amount > stake, send their entire stake.
     function unstake(uint _amount) external {
         uint currentStake = stakes[msg.sender];
-
-        uint ETHGain;
-        uint LUSDGain;
+        _requireUserHasStake(currentStake);
 
         // Grab any accumulated ETH and LUSD gains from the current stake
-        if (currentStake != 0) {
-            ETHGain = _getPendingETHGain(msg.sender);
-            LUSDGain = _getPendingLUSDGain(msg.sender);
-        }
-
+        uint ETHGain = _getPendingETHGain(msg.sender);
+        uint LUSDGain = _getPendingLUSDGain(msg.sender);
+        
         _updateUserSnapshots(msg.sender);
 
-        // Decrease user's stake and total GT staked
-        stakes[msg.sender] = stakes[msg.sender].sub(_amount);
-        totalGTStaked = totalGTStaked.sub(_amount);  
+        uint stake = stakes[msg.sender];
+        uint LQTYToWithdraw = Math._min(_amount, stake);
 
-        // Transfer unstaked GT to user
-        growthToken.transfer(msg.sender, _amount);
+        // Decrease user's stake and total LQTY staked
+        stakes[msg.sender] = stakes[msg.sender].sub(LQTYToWithdraw);
+        totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);  
+
+        // Transfer unstaked LQTY to user
+        growthToken.transfer(msg.sender, LQTYToWithdraw);
 
         // Send accumulated LUSD and ETH gains to the caller
         clvToken.transfer(msg.sender, LUSDGain);
@@ -133,20 +134,20 @@ contract GTStaking {
 
     function addETHFee() external payable {
         _requireCallerIsCDPManager();
-        uint ETHFeePerGTStaked;
+        uint ETHFeePerLQTYStaked;
      
-        if (totalGTStaked > 0) {ETHFeePerGTStaked = msg.value.mul(1e18).div(totalGTStaked);}
+        if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = msg.value.mul(1e18).div(totalLQTYStaked);}
 
-        F_ETH = F_ETH.add(ETHFeePerGTStaked); 
+        F_ETH = F_ETH.add(ETHFeePerLQTYStaked); 
     }
 
     function addLUSDFee(uint _LUSDFee) external {
         _requireCallerIsBorrowerOperations();
-        uint LUSDFeePerGTStaked;
+        uint LUSDFeePerLQTYStaked;
         
-        if (totalGTStaked > 0) {LUSDFeePerGTStaked = _LUSDFee.mul(1e18).div(totalGTStaked);}
+        if (totalLQTYStaked > 0) {LUSDFeePerLQTYStaked = _LUSDFee.mul(1e18).div(totalLQTYStaked);}
         
-        F_LUSD = F_LUSD.add(LUSDFeePerGTStaked);
+        F_LUSD = F_LUSD.add(LUSDFeePerLQTYStaked);
     }
 
     // --- Pending reward functions ---
@@ -180,20 +181,24 @@ contract GTStaking {
 
     function _sendETHGainToUser(address _user, uint ETHGain) internal returns (bool) {
         (bool success, ) = _user.call.value(ETHGain)("");
-        require(success, "GTStaking: Failed to send accumulated ETHGain");
+        require(success, "LQTYStaking: Failed to send accumulated ETHGain");
     }
 
     // --- 'require' functions ---
 
     function  _requireCallerIsStakingContractDeployer() internal view {
-        require(msg.sender == stakingContractDeployer, "GTStaking: caller is not deployer");
+        require(msg.sender == stakingContractDeployer, "LQTYStaking: caller is not deployer");
     }
 
     function _requireCallerIsCDPManager() internal view {
-        require(msg.sender == cdpManagerAddress, "GTStaking: caller is not CDPM");
+        require(msg.sender == cdpManagerAddress, "LQTYStaking: caller is not CDPM");
     }
 
     function _requireCallerIsBorrowerOperations() internal view {
-        require(msg.sender == borrowerOperationsAddress, "GTStaking: caller is not BorrowerOps");
+        require(msg.sender == borrowerOperationsAddress, "LQTYStaking: caller is not BorrowerOps");
+    }
+
+    function _requireUserHasStake(uint stake) internal pure {  
+        require(stake > 0, 'LQTYStaking: User must have a non-zero stake');  
     }
 }
