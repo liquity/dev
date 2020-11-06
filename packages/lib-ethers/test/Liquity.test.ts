@@ -536,7 +536,8 @@ describe("EthersLiquity", () => {
 
       const receipt = await tx.waitForReceipt();
       assertStrictEquals(receipt.status, "succeeded" as const);
-      // TODO: gasUsed is ~half the real used amount
+      // gasUsed is ~half the real used amount because of how refunds work, see:
+      // https://ethereum.stackexchange.com/a/859/9205
       assert.isTrue(receipt.rawReceipt.gasUsed.gt(BigNumber.from(5e6)), "should use at least 10M gas")
     });
   });
