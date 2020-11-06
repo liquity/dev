@@ -46,6 +46,8 @@ const infuraNetwork = (name: string): { [name: string]: NetworkConfig } => ({
   }
 });
 
+const { accountsList } = require("./buidlerAccountsList2k.js");
+
 const config: BuidlerConfig = {
   defaultNetwork: "buidlerevm",
   networks: {
@@ -53,7 +55,10 @@ const config: BuidlerConfig = {
       // Let Ethers throw instead of Buidler EVM
       // This is closer to what will happen in production
       throwOnCallFailures: false,
-      throwOnTransactionFailures: false
+      throwOnTransactionFailures: false,
+      gas: 12e6,  // tx gas limit
+      blockGasLimit: 12e6,
+      accounts: accountsList
     },
     dev: {
       url: "http://localhost:8545",
@@ -64,6 +69,7 @@ const config: BuidlerConfig = {
     ...infuraNetwork("goerli"),
     ...infuraNetwork("kovan")
   },
+  mocha: { timeout: 12000000 },
   paths: useLiveVersion
     ? {
         artifacts: "live/artifacts",

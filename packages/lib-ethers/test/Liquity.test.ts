@@ -8,7 +8,7 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 import { Trove, StabilityDeposit } from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
-import { LiquityContractAddresses, addressesOf, EthersLiquity } from "..";
+import { LiquityContractAddresses, addressesOf, EthersLiquity, redeemMaxIterations } from "..";
 import { BigNumber } from "ethers";
 
 const provider = ethers.provider;
@@ -346,13 +346,14 @@ describe("EthersLiquity", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
         addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+        const otherUsersSubset = otherUsers.slice(0, 2);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
-          ...otherUsers.slice(0, 2)
+          ...otherUsersSubset
         ]);
 
-        await sendToEach(otherUsers, 1.1);
+        await sendToEach(otherUsersSubset, 1.1);
 
         price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
@@ -397,13 +398,14 @@ describe("EthersLiquity", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
         addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+        const otherUsersSubset = otherUsers.slice(0, 5);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
-          ...otherUsers.slice(0, 5)
+          ...otherUsersSubset
         ]);
 
-        await sendToEach(otherUsers, 2.1);
+        await sendToEach(otherUsersSubset, 2.1);
 
         price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
@@ -456,13 +458,14 @@ describe("EthersLiquity", () => {
     before(async () => {
       // Deploy new instances of the contracts, for a clean slate
       addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      const otherUsersSubset = otherUsers.slice(0, 3);
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
         user,
-        ...otherUsers.slice(0, 3)
+        ...otherUsersSubset
       ]);
 
-      await sendToEach(otherUsers, 1.1);
+      await sendToEach(otherUsersSubset, 1.1);
 
       await liquity.openTrove(new Trove({ collateral: 20, debt: 110 }));
       await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 20 }));
@@ -486,7 +489,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should redeem some collateral", async () => {
-      const tx = await liquity.redeemCollateral(55, {}, 0, { gasPrice: 0 });
+      const tx = await liquity.redeemCollateral(55, {}, { gasPrice: 0 });
 
       const receipt = await tx.waitForReceipt();
       assertStrictEquals(receipt.status, "succeeded" as const);
@@ -505,6 +508,36 @@ describe("EthersLiquity", () => {
       expect(`${(await otherLiquities[0].getTrove()).debt}`).to.equal("15");
       expect((await otherLiquities[1].getTrove()).isEmpty).to.be.true;
       expect((await otherLiquities[2].getTrove()).isEmpty).to.be.true;
+    });
+  });
+
+
+  describe("Redemption, gas checks", () => {
+    before(async () => {
+      // Deploy new instances of the contracts, for a clean slate
+      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      const otherUsersSubset = otherUsers.slice(0, redeemMaxIterations);
+      [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
+        deployer,
+        user,
+        ...otherUsersSubset
+      ]);
+
+      await sendToEach(otherUsersSubset, 1.1);
+
+      await liquity.openTrove(new Trove({ collateral: 50, debt: 410 }));
+      for (let otherLiquity of otherLiquities) {
+        await otherLiquity.openTrove(new Trove({ collateral: 1, debt: 11 }));
+      }
+    });
+
+    it("should redeem using the maximum iterations and almost all gas", async () => {
+      const tx = await liquity.redeemCollateral(redeemMaxIterations, {}, { gasPrice: 0 });
+
+      const receipt = await tx.waitForReceipt();
+      assertStrictEquals(receipt.status, "succeeded" as const);
+      // TODO: gasUsed is ~half the real used amount
+      assert.isTrue(receipt.rawReceipt.gasUsed.gt(BigNumber.from(5e6)), "should use at least 10M gas")
     });
   });
 });
