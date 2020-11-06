@@ -56,7 +56,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     return null;
   }
 
-  const send = liquity.redeemCollateral.bind(liquity, exchangedQui, { price, numberOfTroves }, 0);
+  const send = liquity.redeemCollateral.bind(liquity, exchangedQui, { price, numberOfTroves });
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex variant="layout.actions">
