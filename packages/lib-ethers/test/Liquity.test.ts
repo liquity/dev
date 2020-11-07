@@ -534,13 +534,15 @@ describe("EthersLiquity", () => {
     });
 
     it("should redeem using the maximum iterations and almost all gas", async () => {
-      const tx = await liquity.redeemCollateral(redeemMaxIterations, {}, { gasPrice: 0 });
+      const tx = await liquity.redeemCollateral(redeemMaxIterations);
 
       const receipt = await tx.waitForReceipt();
       assertStrictEquals(receipt.status, "succeeded" as const);
+
+      const gasUsed = receipt.rawReceipt.gasUsed.toNumber();
       // gasUsed is ~half the real used amount because of how refunds work, see:
       // https://ethereum.stackexchange.com/a/859/9205
-      assert.isTrue(receipt.rawReceipt.gasUsed.gt(BigNumber.from(5e6)), "should use at least 10M gas")
+      expect(gasUsed).to.be.at.least(5e6, "should use at least 10M gas");
     });
   });
 });
