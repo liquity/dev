@@ -71,7 +71,6 @@ const config: BuidlerConfig = {
     ...infuraNetwork("goerli"),
     ...infuraNetwork("kovan")
   },
-  mocha: { timeout: 12000000 },
   paths: useLiveVersion
     ? {
         artifacts: "live/artifacts",
