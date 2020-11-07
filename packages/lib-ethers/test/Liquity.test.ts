@@ -517,6 +517,8 @@ describe("EthersLiquity", () => {
       // Deploy new instances of the contracts, for a clean slate
       addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
       const otherUsersSubset = otherUsers.slice(0, redeemMaxIterations);
+      expect(otherUsersSubset).to.have.length(redeemMaxIterations);
+
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
         user,
