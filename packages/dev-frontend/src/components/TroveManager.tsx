@@ -1,247 +1,127 @@
-import React, { useState, useEffect } from "react";
-import { Button, Flex, Spinner } from "theme-ui";
+import React from "react";
 
-import { Decimal, Percent } from "@liquity/decimal";
-import { Trove } from "@liquity/lib-base";
-import { EthersLiquity } from "@liquity/lib-ethers";
-import { usePrevious } from "../hooks/usePrevious";
+import { Decimal, Decimalish } from "@liquity/decimal";
+import { LiquityStoreState, Trove } from "@liquity/lib-base";
+import { LiquityStoreUpdate, useLiquityReducer } from "@liquity/lib-react";
+
 import { TroveEditor } from "./TroveEditor";
-import { Transaction, useMyTransactionState } from "./Transaction";
+import { TroveAction } from "./TroveAction";
 
-type TroveActionProps = {
-  liquity: EthersLiquity;
-  original: Trove;
-  edited: Trove;
-  changePending: boolean;
-  setChangePending: (isPending: boolean) => void;
-  price: Decimal;
-  total: Trove;
-  quiBalance: Decimal;
-  numberOfTroves: number;
-};
+const init = ({ trove }: LiquityStoreState) => ({
+  original: trove,
+  edited: trove,
+  changePending: false,
+  debtDirty: false,
+  addedGasCompensation: false
+});
 
-const mcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO).toString(0);
-const ccrPercent = new Percent(Trove.CRITICAL_COLLATERAL_RATIO).toString(0);
-
-const TroveAction: React.FC<TroveActionProps> = ({
-  liquity,
-  original,
-  edited,
-  changePending,
-  setChangePending,
-  price,
-  total,
-  quiBalance,
-  numberOfTroves
-}) => {
-  const myTransactionId = "trove";
-  const myTransactionState = useMyTransactionState(myTransactionId);
-  const { collateralDifference, debtDifference } = original.whatChanged(edited);
-
-  useEffect(() => {
-    if (myTransactionState.type === "waitingForApproval") {
-      setChangePending(true);
-    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
-      setChangePending(false);
+type TroveManagerState = ReturnType<typeof init>;
+type TroveManagerAction =
+  | LiquityStoreUpdate
+  | {
+      type:
+        | "startChange"
+        | "finishChange"
+        | "revert"
+        | "addDebtCompensation"
+        | "removeDebtCompensation";
     }
-  }, [myTransactionState.type, setChangePending]);
+  | { type: "setCollateral" | "setDebt"; newValue: Decimalish };
 
-  if (!collateralDifference && !debtDifference) {
-    return null;
-  }
+const reduceWith = (action: TroveManagerAction) => (state: TroveManagerState): TroveManagerState =>
+  reduce(state, action);
 
-  const [actionName, send, extraRequirements] = original.isEmpty
-    ? ([
-        "Open new Trove",
-        liquity.openTrove.bind(liquity, edited, { price, numberOfTroves }),
-        edited.debt.nonZero
-          ? ([
-              [
-                !total.collateralRatioIsBelowCritical(price),
-                "Can't borrow LQTY during recovery mode"
-              ],
-              [
-                !total.add(edited).collateralRatioIsBelowCritical(price),
-                `Total collateral ratio would fall below ${ccrPercent}`
-              ]
-            ] as const)
-          : []
-      ] as const)
-    : edited.isEmpty
-    ? ([
-        "Close Trove",
-        liquity.closeTrove.bind(liquity),
-        [
-          [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
-          [quiBalance.gte(original.debt), "You don't have enough LQTY"]
-        ]
-      ] as const)
-    : ([
-        collateralDifference && debtDifference
-          ? collateralDifference.positive && debtDifference.positive
-            ? `Deposit ${collateralDifference.absoluteValue!.prettify()} ETH & ` +
-              `borrow ${debtDifference.absoluteValue!.prettify()} LQTY`
-            : collateralDifference.negative && debtDifference.negative
-            ? `Repay ${debtDifference.absoluteValue!.prettify()} LQTY & ` +
-              `withdraw ${collateralDifference.absoluteValue!.prettify()} ETH`
-            : collateralDifference.positive
-            ? `Deposit ${collateralDifference.absoluteValue!.prettify()} ETH & ` +
-              `repay ${debtDifference.absoluteValue!.prettify()} LQTY`
-            : `Borrow ${debtDifference.absoluteValue!.prettify()} LQTY & ` +
-              `withdraw ${collateralDifference.absoluteValue!.prettify()} ETH`
-          : collateralDifference
-          ? `${collateralDifference.positive ? "Deposit" : "Withdraw"} ` +
-            `${collateralDifference.absoluteValue!.prettify()} ETH`
-          : `${debtDifference!.positive ? "Borrow" : "Repay"} ` +
-            `${debtDifference!.absoluteValue!.prettify()} LQTY`,
+const addDebtCompensation = reduceWith({ type: "addDebtCompensation" });
+const removeDebtCompensation = reduceWith({ type: "removeDebtCompensation" });
+const finishChange = reduceWith({ type: "finishChange" });
+const revert = reduceWith({ type: "revert" });
 
-        collateralDifference && debtDifference
-          ? liquity.changeTrove.bind(
-              liquity,
-              { collateralDifference, debtDifference },
-              { trove: original, price, numberOfTroves }
-            )
-          : (collateralDifference
-              ? collateralDifference.positive
-                ? liquity.depositEther
-                : liquity.withdrawEther
-              : debtDifference!.positive
-              ? liquity.borrowQui
-              : liquity.repayQui
-            ).bind(liquity, (collateralDifference ?? debtDifference)!.absoluteValue!, {
-              trove: original,
-              price,
-              numberOfTroves
-            }),
-        [
-          ...(collateralDifference?.negative
-            ? ([
-                [
-                  !total.collateralRatioIsBelowCritical(price),
-                  "Can't withdraw ETH during recovery mode"
-                ]
-              ] as const)
-            : []),
-          ...(debtDifference?.positive
-            ? ([
-                [
-                  !total.collateralRatioIsBelowCritical(price),
-                  "Can't borrow LQTY during recovery mode"
-                ],
-                [
-                  !total
-                    .subtract(original)
-                    .add(edited)
-                    .collateralRatioIsBelowCritical(price),
-                  `Total collateral ratio would fall below ${ccrPercent}`
-                ]
-              ] as const)
-            : []),
-          ...(debtDifference?.negative
-            ? ([
-                [quiBalance.gte(debtDifference.absoluteValue!), "You don't have enough LQTY"]
-              ] as const)
-            : [])
-        ]
-      ] as const);
+const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveManagerState => {
+  // console.log(state);
+  // console.log(action);
 
-  return myTransactionState.type === "waitingForApproval" ? (
-    <Flex variant="layout.actions">
-      <Button disabled sx={{ mx: 2 }}>
-        <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
-        Waiting for your approval
-      </Button>
-    </Flex>
-  ) : changePending ? null : (
-    <Flex variant="layout.actions">
-      <Transaction
-        id={myTransactionId}
-        requires={[
-          [
-            !edited.collateralRatioIsBelowMinimum(price),
-            `Collateral ratio must be at least ${mcrPercent}`
-          ],
-          [
-            edited.collateral.isZero || edited.collateral.mul(price).gte(20),
-            "Collateral must be worth at least $20"
-          ],
-          ...extraRequirements
-        ]}
-        {...{ send }}
-      >
-        <Button sx={{ mx: 2 }}>{actionName}</Button>
-      </Transaction>
-    </Flex>
-  );
-};
+  const { original, edited, changePending, debtDirty, addedGasCompensation } = state;
 
-type TroveManagerProps = {
-  liquity: EthersLiquity;
-  troveWithoutRewards: Trove;
-  trove: Trove;
-  price: Decimal;
-  total: Trove;
-  quiBalance: Decimal;
-  numberOfTroves: number;
-};
+  switch (action.type) {
+    case "startChange":
+      return { ...state, changePending: true };
 
-export const TroveManager: React.FC<TroveManagerProps> = ({
-  liquity,
-  troveWithoutRewards,
-  trove,
-  price,
-  total,
-  quiBalance,
-  numberOfTroves
-}) => {
-  const previousTroveWithoutRewards = usePrevious(troveWithoutRewards);
-  const [original, setOriginal] = useState(trove);
-  const [edited, setEdited] = useState(trove);
-  const [changePending, setChangePending] = useState(false);
+    case "finishChange":
+      return { ...state, changePending: false };
 
-  useEffect(() => {
-    setOriginal(trove);
+    case "setCollateral": {
+      const newCollateral = Decimal.from(action.newValue);
 
-    if (changePending && !troveWithoutRewards.equals(previousTroveWithoutRewards)) {
-      setEdited(trove);
-      setChangePending(false);
-    } else {
-      if (original.isEmpty !== edited.isEmpty) {
-        return;
+      const newState = { ...state, edited: edited.setCollateral(newCollateral) };
+
+      if (!debtDirty) {
+        if (edited.isEmpty && newCollateral.nonZero) {
+          return addDebtCompensation(newState);
+        }
+        if (addedGasCompensation && newCollateral.isZero) {
+          return removeDebtCompensation(newState);
+        }
       }
 
-      const change = original.whatChanged(edited);
-      setEdited(trove.apply(change));
+      return newState;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [troveWithoutRewards, trove]);
+
+    case "setDebt":
+      return { ...state, edited: edited.setDebt(action.newValue), debtDirty: true };
+
+    case "addDebtCompensation":
+      return {
+        ...state,
+        edited: edited.setDebt(Trove.GAS_COMPENSATION_DEPOSIT),
+        addedGasCompensation: true
+      };
+
+    case "removeDebtCompensation":
+      return {
+        ...state,
+        edited: edited.setDebt(0),
+        addedGasCompensation: false
+      };
+
+    case "revert":
+      return { ...state, edited: original, debtDirty: false, addedGasCompensation: false };
+
+    case "updateStore": {
+      const {
+        newState: { trove },
+        stateChange: { troveWithoutRewards: changeCommitted }
+      } = action;
+
+      let newState = {
+        ...state,
+        original: trove,
+        edited:
+          !original.isEmpty && edited.isEmpty ? edited : trove.apply(original.whatChanged(edited))
+      };
+
+      if ((changePending || original.isEmpty) && changeCommitted) {
+        newState = revert(newState);
+        if (changePending) {
+          newState = finishChange(newState);
+        }
+      }
+
+      return newState;
+    }
+  }
+};
+
+export const TroveManager: React.FC = () => {
+  const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
 
   return (
     <>
       <TroveEditor
         title={original.isEmpty ? "Open a new Liquity Trove" : "My Liquity Trove"}
-        {...{
-          original,
-          edited,
-          setEdited,
-          changePending,
-          price
-        }}
+        {...{ original, edited, changePending, dispatch }}
       />
 
-      <TroveAction
-        {...{
-          liquity,
-          original,
-          edited,
-          changePending,
-          setChangePending,
-          price,
-          total,
-          quiBalance,
-          numberOfTroves
-        }}
-      />
+      <TroveAction {...{ original, edited, changePending, dispatch }} />
     </>
   );
 };

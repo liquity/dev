@@ -9,29 +9,26 @@ contract StabilityPool is Ownable, IStabilityPool {
     using SafeMath for uint256;
 
     address public poolManagerAddress;
-    address public defaultPoolAddress;
     address public activePoolAddress;
-    uint256 public ETH;  // deposited ether tracker
+    uint256 internal ETH;  // deposited ether tracker
     
     // Total CLV held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.
-    uint256 public totalCLVDeposits; 
+    uint256 internal totalCLVDeposits;
 
     // --- Contract setters ---
 
     function setAddresses(
         address _poolManagerAddress,
-        address _activePoolAddress,
-        address _defaultPoolAddress
+        address _activePoolAddress
     )
         external
         onlyOwner
     {
         poolManagerAddress = _poolManagerAddress;
         activePoolAddress = _activePoolAddress;
-        defaultPoolAddress = _defaultPoolAddress;
 
-        emit PoolManagerAddressChanged(poolManagerAddress);
-        emit ActivePoolAddressChanged(activePoolAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
 
         _renounceOwnership();
     }
@@ -42,7 +39,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         return ETH;
     }
 
-    function getCLV() external view returns (uint) {
+    function getTotalCLVDeposits() external view returns (uint) {
         return totalCLVDeposits;
     }
 
@@ -81,19 +78,14 @@ contract StabilityPool is Ownable, IStabilityPool {
         require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
     }
 
-     function _requireCallerIsPoolManagerOrPool() internal view {
-         require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == activePoolAddress || 
-            _msgSender() == defaultPoolAddress, 
-            "StabilityPool: Caller is neither the PoolManager nor a Pool");
+    function _requireCallerIsActivePool() internal view {
+        require( _msgSender() == activePoolAddress, "StabilityPool: Caller is not ActivePool");
     }
 
     // --- Fallback function ---
 
     function () external payable {
-        _requireCallerIsPoolManagerOrPool();
-        require(msg.data.length == 0);
+        _requireCallerIsActivePool();
         ETH = ETH.add(msg.value);
     }
 }

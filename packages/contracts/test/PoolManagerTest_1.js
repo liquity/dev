@@ -1,5 +1,5 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
-const { MoneyVaules: mv, TestHelper: { dec }, assertRevert, forceSendEth } = require("../utils/testHelpers.js")
+const { MoneyValues: mv, TestHelper: {dec, assertRevert} } = require("../utils/testHelpers.js")
 
 const ActivePoolTester = artifacts.require("./TestContracts/ActivePoolTester.sol");
 const DefaultPoolTester = artifacts.require("./TestContracts/DefaultPoolTester.sol");
@@ -82,12 +82,12 @@ contract('PoolManager', async accounts => {
   })
 
   it('priceFeedAddress(): gets the priceFeed  address', async () => {
-    const recordedAddress = await poolManager.priceFeedAddress()
+    const recordedAddress = await poolManager.priceFeed()
     assert.equal(priceFeed.address, recordedAddress)
   })
 
   it('clvAddress(): gets the clv address', async () => {
-    const recordedAddress = await poolManager.clvAddress()
+    const recordedAddress = await poolManager.CLV()
     assert.equal(clvToken.address, recordedAddress)
   })
 
@@ -104,6 +104,11 @@ contract('PoolManager', async accounts => {
   it('defaultPoolAddress(): gets the defaultPool address', async () => {
     const recordedAddress = await poolManager.defaultPoolAddress()
     assert.equal(defaultPool.address, recordedAddress)
+  })
+
+  it('GAS_POOL_ADDRESS(): gets the gasPool address', async () => {
+    const recordedAddress = await poolManager.GAS_POOL_ADDRESS()
+    assert.equal('0x00000000000000000000000000000000000009A5', recordedAddress)
   })
 
   it('getActiveDebt(): returns the total CLV balance of the ActivePool', async () => {

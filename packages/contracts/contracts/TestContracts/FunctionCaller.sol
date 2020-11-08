@@ -9,8 +9,6 @@ import '../Dependencies/Math.sol';
 Not part of the Liquity application. */
 contract FunctionCaller {
 
-    uint number = 1;
-
     ICDPManager cdpManager;
     address public cdpManagerAddress;
 
@@ -39,10 +37,6 @@ contract FunctionCaller {
 
     // --- PriceFeed functions -  non-view wrappers ---
 
-     function priceFeed_getPrice() external returns (uint) {
-        return priceFeed.getPrice();
-    }
-
     // --- CDPManager functions - non-view wrappers ---
     function cdpManager_getCurrentICR (address _address, uint _price) external returns (uint) {
         return cdpManager.getCurrentICR(_address, _price);  
@@ -53,42 +47,4 @@ contract FunctionCaller {
     function sortedCDPs_findInsertPosition(uint _ICR, uint _price, address _prevId, address _nextId) external returns (address, address) {
         return sortedCDPs.findInsertPosition(_ICR, _price, _prevId, _nextId);
     }
-
-    // --- Math functions -  non-view wrappers ---
-
-    function _min(uint _a, uint _b) external returns (uint) {
-        return Math._min(_a, _b);
-    }
-
-
-    //  ---- Funcs for checking write-to-storage costs ---
-
-    function repeatedlySetVal (uint _n) external returns (uint, uint) {
-        for (uint i = 2; i < _n + 2; i ++) {
-            number = i;
-        }
-    }
-    
-    function repeatedlySetValThenClearIt (uint _n) external returns (uint, uint) {
-        for (uint i = 2; i < _n + 2; i ++) {
-            number = i;
-        }
-        number = 0;
-    }
-
-   // --- gas costs: Internal vs raw code ---
-
-   function internalStorageCheck () internal returns (bool) {
-       return (number == 42);
-   }
-
-   // Check storage by way of an internal functional call
-   function callInternalStorageCheck () external returns (bool) {
-       return internalStorageCheck();
-   }
-
-    // Check storage directly
-   function rawStorageCheck () external returns (bool) {
-       return (number == 42);
-   }
 }

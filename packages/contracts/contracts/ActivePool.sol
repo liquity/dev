@@ -10,10 +10,9 @@ contract ActivePool is Ownable, IPool {
 
     address public poolManagerAddress;
     address public cdpManagerAddress;
-    address public stabilityPoolAddress;
     address public defaultPoolAddress;
-    uint256 public ETH;  // deposited ether tracker
-    uint256 public CLVDebt;
+    uint256 internal ETH;  // deposited ether tracker
+    uint256 internal CLVDebt;
 
     // --- Events ---
 
@@ -24,8 +23,7 @@ contract ActivePool is Ownable, IPool {
     function setAddresses(
         address _poolManagerAddress,
         address _cdpManagerAddress,
-        address _defaultPoolAddress,
-        address _stabilityPoolAddress
+        address _defaultPoolAddress
     )
         external
         onlyOwner
@@ -33,12 +31,10 @@ contract ActivePool is Ownable, IPool {
         poolManagerAddress = _poolManagerAddress;
         cdpManagerAddress = _cdpManagerAddress;
         defaultPoolAddress = _defaultPoolAddress;
-        stabilityPoolAddress = _stabilityPoolAddress;
 
         emit PoolManagerAddressChanged(_poolManagerAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
-        emit DefaultPoolAddressChanged(defaultPoolAddress);
-        emit StabilityPoolAddressChanged(stabilityPoolAddress);
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
 
         _renounceOwnership();
     }
@@ -86,12 +82,10 @@ contract ActivePool is Ownable, IPool {
         require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
     }
 
-     function _requireCallerIsPoolManagerOrPool() internal view {
+     function _requireCallerIsPoolManagerOrDefaultPool() internal view {
         require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == stabilityPoolAddress || 
-            _msgSender() == defaultPoolAddress, 
-            "ActivePool: Caller is neither the PoolManager nor a Pool");
+            _msgSender() == poolManagerAddress || _msgSender() == defaultPoolAddress, 
+            "ActivePool: Caller is neither the PoolManager nor Default Pool");
     }
 
     function _requireCallerIsPoolManagerOrCDPManager() internal view {
@@ -104,8 +98,7 @@ contract ActivePool is Ownable, IPool {
     // --- Fallback function ---
 
     function () external payable {
-        _requireCallerIsPoolManagerOrPool();
-        require(msg.data.length == 0);
+        _requireCallerIsPoolManagerOrDefaultPool();
         ETH = ETH.add(msg.value);
     }
 }

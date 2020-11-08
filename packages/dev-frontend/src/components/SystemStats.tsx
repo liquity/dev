@@ -2,18 +2,29 @@ import React from "react";
 import { Card, Text, Heading, Link, Box } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
-import { Trove } from "@liquity/lib-base";
+import { LiquityStoreState } from "@liquity/lib-base";
+import { useLiquitySelector } from "@liquity/lib-react";
 
-export type SystemStatsProps = {
-  variant?: string;
-  numberOfTroves: number;
-  price: Decimal;
-  total: Trove;
-  quiInStabilityPool: Decimal;
-  contractsVersion: string;
-  deploymentDate: number;
-  etherBalance?: Decimal;
-  quiBalance?: Decimal;
+import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
+
+const selectBalances = ({ accountBalance, quiBalance }: LiquityStoreState) => ({
+  accountBalance,
+  quiBalance
+});
+
+const Balances: React.FC = () => {
+  const { accountBalance, quiBalance } = useLiquitySelector(selectBalances);
+
+  return (
+    <Box sx={{ mb: 3 }}>
+      <Heading>My Account Balances</Heading>
+      <Text>ETH: {accountBalance.prettify(4)}</Text>
+      <Text>
+        {COIN}: {quiBalance.prettify()}
+      </Text>
+    </Box>
+  );
 };
 
 const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
@@ -23,37 +34,40 @@ const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
     <>unknown</>
   );
 
-export const SystemStats: React.FC<SystemStatsProps> = ({
-  variant = "info",
+type SystemStatsProps = {
+  variant?: string;
+  showBalances?: boolean;
+};
+
+const select = ({ numberOfTroves, price, total, quiInStabilityPool }: LiquityStoreState) => ({
   numberOfTroves,
   price,
   total,
-  quiInStabilityPool,
-  contractsVersion,
-  deploymentDate,
-  etherBalance,
-  quiBalance
-}) => {
+  quiInStabilityPool
+});
+
+export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
+  const { contractsVersion, deploymentDate } = useLiquity();
+  const { numberOfTroves, price, quiInStabilityPool, total } = useLiquitySelector(select);
+
   const quiInStabilityPoolPct =
     total.debt.nonZero && new Percent(quiInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
 
   return (
     <Card {...{ variant }}>
-      {etherBalance && quiBalance && (
-        <Box sx={{ mb: 3 }}>
-          <Heading>My Account Balances</Heading>
-          <Text>ETH: {etherBalance.prettify(4)}</Text>
-          <Text>LQTY: {quiBalance.prettify()}</Text>
-        </Box>
-      )}
+      {showBalances && <Balances />}
 
       <Heading>Liquity System</Heading>
 
       <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
-      <Text>LQTY in circulation: {total.debt.shorten()}</Text>
+      <Text>
+        Total {COIN} supply: {total.debt.shorten()}
+      </Text>
       {quiInStabilityPoolPct && (
-        <Text>Fraction of LQTY in Stability Pool: {quiInStabilityPoolPct.toString(1)}</Text>
+        <Text>
+          Fraction of {COIN} in Stability Pool: {quiInStabilityPoolPct.toString(1)}
+        </Text>
       )}
       <Text>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Text>
       {total.collateralRatioIsBelowCritical(price) && (

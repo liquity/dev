@@ -13,7 +13,7 @@ import {
   DEV_CHAIN_ID
 } from "@liquity/lib-ethers";
 
-type LiquityContext = {
+type LiquityContextValue = {
   account: string;
   provider: Provider;
   contracts: LiquityContracts;
@@ -24,7 +24,7 @@ type LiquityContext = {
   deploymentDate: number;
 };
 
-const LiquityContext = createContext<LiquityContext | undefined>(undefined);
+const LiquityContext = createContext<LiquityContextValue | undefined>(undefined);
 
 type LiquityProviderProps = {
   loader?: React.ReactNode;
@@ -40,7 +40,8 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   loader,
   unsupportedNetworkFallback
 }) => {
-  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
+  const { library: provider, account, chainId: buggyChainId } = useWeb3React<Web3Provider>();
+  const chainId = buggyChainId === 1337 ? DEV_CHAIN_ID : buggyChainId;
 
   useEffect(() => {
     if (provider && chainId) {

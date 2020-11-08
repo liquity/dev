@@ -1,13 +1,13 @@
 import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
 import { Flex, Text, Box } from "theme-ui";
-import { ContractTransaction } from "@ethersproject/contracts";
-import { Provider } from "@ethersproject/abstract-provider";
+import { Provider, TransactionResponse, TransactionReceipt } from "@ethersproject/abstract-provider";
 import { hexDataSlice, hexDataLength } from "@ethersproject/bytes";
 import { defaultAbiCoder } from "@ethersproject/abi";
 
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
+import { SimpleTransaction } from "@liquity/lib-base";
 import {
   EthersTransactionOverrides,
   parseLogs,
@@ -65,7 +65,7 @@ type TransactionCancelled = {
 type TransactionWaitingForConfirmations = {
   type: "waitingForConfirmations";
   id: string;
-  tx: ContractTransaction;
+  tx: TransactionResponse;
   confirmations: number;
   numberOfConfirmationsToWait: number;
 };
@@ -128,7 +128,7 @@ type ButtonlikeProps = {
 
 export type TransactionFunction = (
   overrides?: EthersTransactionOverrides
-) => Promise<ContractTransaction>;
+) => Promise<SimpleTransaction<TransactionResponse, TransactionReceipt>>;
 
 type TransactionProps<C> = {
   id: string;
@@ -168,7 +168,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
       setTransactionState({
         type: "waitingForConfirmations",
         id,
-        tx,
+        tx: tx.rawTransaction,
         confirmations: 0,
         numberOfConfirmationsToWait
       });
@@ -176,7 +176,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
       if (hasMessage(error) && error.message.includes("User denied transaction signature")) {
         setTransactionState({ type: "cancelled", id });
       } else {
-        // console.error(error);
+        console.error(error);
 
         setTransactionState({
           type: "failed",
@@ -290,7 +290,15 @@ const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({
 export const TransactionMonitor: React.FC = () => {
   const { provider, contracts, account } = useLiquity();
   const [transactionState, setTransactionState] = useTransactionState();
+
   const interfaces = useMemo(() => contractsToInterfaces(contracts), [contracts]);
+  const names = useMemo(
+    () => ({
+      [account]: "user",
+      ...Object.fromEntries(Object.entries(interfaces).map(([address, [name]]) => [address, name]))
+    }),
+    [account, interfaces]
+  );
 
   const id = transactionState.type !== "idle" ? transactionState.id : undefined;
 
@@ -335,10 +343,7 @@ export const TransactionMonitor: React.FC = () => {
                     parsedLogs
                       .map(
                         ([contractName, logDescription]) =>
-                          `  ${contractName}.${logDescriptionToString(logDescription, {
-                            [account]: ["user"],
-                            ...interfaces
-                          })}`
+                          `  ${contractName}.${logDescriptionToString(logDescription, names)}`
                       )
                       .join("\n")
                 );
@@ -404,7 +409,16 @@ export const TransactionMonitor: React.FC = () => {
         }
       };
     }
-  }, [provider, account, interfaces, id, tx, numberOfConfirmationsToWait, setTransactionState]);
+  }, [
+    provider,
+    account,
+    interfaces,
+    names,
+    id,
+    tx,
+    numberOfConfirmationsToWait,
+    setTransactionState
+  ]);
 
   useEffect(() => {
     if (

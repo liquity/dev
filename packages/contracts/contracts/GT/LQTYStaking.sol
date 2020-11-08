@@ -3,10 +3,11 @@ pragma solidity 0.5.16;
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/console.sol";
 import "../Interfaces/IGrowthToken.sol";
+import "../Interfaces/ILQTYStaking.sol";
 import "../Dependencies/Math.sol";
 import "../Interfaces/ICLVToken.sol";
 
-contract LQTYStaking {
+contract LQTYStaking is ILQTYStaking {
     using SafeMath for uint;
 
     // --- Data ---
@@ -34,6 +35,7 @@ contract LQTYStaking {
 
     address cdpManagerAddress;
     address borrowerOperationsAddress;
+    address activePoolAddress;
 
     // --- Events ---
 
@@ -41,6 +43,8 @@ contract LQTYStaking {
     event CLVTokenAddressSet(address _clvTokenAddress);
     event CDPManagerAddressSet(address _cdpManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
+    event ActivePoolAddressSet(address _activePoolAddress);
+
 
     // --- Functions ---
 
@@ -74,11 +78,16 @@ contract LQTYStaking {
         emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
     }
 
+    function setActivePoolAddress(address _activePoolAddress) external {
+        _requireCallerIsStakingContractDeployer();
+        activePoolAddress = _activePoolAddress;
+        emit BorrowerOperationsAddressSet(_activePoolAddress);
+    }
+
     /* Staking expects that this StakingContract is allowed to spend at least _amount of 
     the caller's LQTY tokens.
     If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. */
-    function stake(uint _amount) external {
-
+    function stake(uint _LQTYamount) external {
         uint currentStake = stakes[msg.sender];
 
         uint ETHGain;
@@ -92,11 +101,11 @@ contract LQTYStaking {
        _updateUserSnapshots(msg.sender);
 
         // Increase user’s stake and total LQTY staked
-        stakes[msg.sender] = stakes[msg.sender].add(_amount);
-        totalLQTYStaked = totalLQTYStaked.add(_amount);
+        stakes[msg.sender] = currentStake.add(_LQTYamount);
+        totalLQTYStaked = totalLQTYStaked.add(_LQTYamount);
 
         // Transfer LQTY from caller to this contract
-        growthToken.transferFrom(msg.sender, address(this), _amount);
+        growthToken.transferFrom(msg.sender, address(this), _LQTYamount);
 
         // Send accumulated LUSD and ETH gains to the caller
         clvToken.transfer(msg.sender, LUSDGain);
@@ -105,7 +114,7 @@ contract LQTYStaking {
 
     // Unstake the LQTY and send the it back to the caller, along with their accumulated LUSD & ETH gains. 
     // If requested amount > stake, send their entire stake.
-    function unstake(uint _amount) external {
+    function unstake(uint _LQTYamount) external {
         uint currentStake = stakes[msg.sender];
         _requireUserHasStake(currentStake);
 
@@ -115,11 +124,10 @@ contract LQTYStaking {
         
         _updateUserSnapshots(msg.sender);
 
-        uint stake = stakes[msg.sender];
-        uint LQTYToWithdraw = Math._min(_amount, stake);
+        uint LQTYToWithdraw = Math._min(_LQTYamount, currentStake);
 
         // Decrease user's stake and total LQTY staked
-        stakes[msg.sender] = stakes[msg.sender].sub(LQTYToWithdraw);
+        stakes[msg.sender] = currentStake.sub(LQTYToWithdraw);
         totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);  
 
         // Transfer unstaked LQTY to user
@@ -130,18 +138,18 @@ contract LQTYStaking {
         _sendETHGainToUser(msg.sender, ETHGain);
     }
 
-    // --- Fee adding functions - called by Liquity core contracts ---
+    // --- Reward-per-unit-staked increase functions. Called by Liquity core contracts ---
 
-    function addETHFee() external payable {
+    function increaseF_ETH(uint _ETHFee) external {
         _requireCallerIsCDPManager();
         uint ETHFeePerLQTYStaked;
      
-        if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = msg.value.mul(1e18).div(totalLQTYStaked);}
+        if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = _ETHFee.mul(1e18).div(totalLQTYStaked);}
 
         F_ETH = F_ETH.add(ETHFeePerLQTYStaked); 
     }
 
-    function addLUSDFee(uint _LUSDFee) external {
+    function increaseF_LUSD(uint _LUSDFee) external {
         _requireCallerIsBorrowerOperations();
         uint LUSDFeePerLQTYStaked;
         
@@ -198,7 +206,15 @@ contract LQTYStaking {
         require(msg.sender == borrowerOperationsAddress, "LQTYStaking: caller is not BorrowerOps");
     }
 
-    function _requireUserHasStake(uint stake) internal pure {  
-        require(stake > 0, 'LQTYStaking: User must have a non-zero stake');  
+     function _requireCallerIsActivePool() internal view {
+        require(msg.sender == activePoolAddress, "LQTYStaking: caller is not ActivePool");
+    }
+
+    function _requireUserHasStake(uint currentStake) internal pure {  
+        require(currentStake > 0, 'LQTYStaking: User must have a non-zero stake');  
+    }
+
+    function () external payable {
+        _requireCallerIsActivePool();
     }
 }

@@ -6,6 +6,7 @@ import { StabilityDeposit } from "@liquity/lib-base";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Icon } from "./Icon";
+import { COIN } from "../strings";
 
 type StabilityDepositEditorProps = {
   title: string;
@@ -55,7 +56,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           amount={editedDeposit.depositAfterLoss.prettify()}
           pendingAmount={pendingDepositChange.nonZero?.prettify()}
           pendingColor={pendingDepositChange.positive ? "success" : "danger"}
-          unit="LQTY"
+          unit={COIN}
           {...{ editingState }}
           editedAmount={editedDeposit.depositAfterLoss.toString(2)}
           setEditedAmount={(editedDeposit: string) =>

@@ -12,18 +12,15 @@ import { deploymentOnNetwork, EthersLiquity as Liquity } from "@liquity/lib-ethe
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 import {
-  benford,
   checkSubgraph,
+  checkTroveOrdering,
   connectUsers,
   createRandomWallets,
   dumpTroves,
-  getListOfTroveOwners,
   getListOfTroves,
-  listDifference,
-  shortenAddress,
-  sortedByICR,
-  truncateLastDigits
+  shortenAddress
 } from "./utils";
+import { Fixture } from "./fixture";
 
 dotenv.config();
 
@@ -129,144 +126,46 @@ yargs
         addresses
       );
 
-      let price = await deployerLiquity.getPrice();
-      let numberOfTroves = await deployerLiquity.getNumberOfTroves();
+      const fixture = await Fixture.setup(deployerLiquity, funderLiquity, funder);
 
-      let funderTrove = await funderLiquity.getTrove();
-      if (funderTrove.isEmpty) {
-        await funderLiquity.openTrove(new Trove({ collateral: 10000, debt: 1000000 }), {
-          price,
-          numberOfTroves
-        });
+      let previousListOfTroves:
+        | (readonly [string, TroveWithPendingRewards])[]
+        | undefined = undefined;
 
-        numberOfTroves++;
-      }
-
-      let totalNumberOfLiquidations = 0;
+      console.log();
+      console.log("// Keys");
+      randomUsers.forEach(user =>
+        console.log(`[${shortenAddress(user.address)}]: ${user.privateKey}`)
+      );
 
       for (let i = 1; i <= numberOfRounds; ++i) {
         console.log();
         console.log(`// Round #${i}`);
 
-        price = price.add(100 * Math.random() + 150).div(2);
-        console.log(`[deployer] setPrice(${price})`);
-        await deployerLiquity.setPrice(price);
-        price = await deployerLiquity.getPrice();
-
-        const trovesBefore = await getListOfTroveOwners(deployerLiquity);
-
-        console.log(`[deployer] liquidateUpTo(30)`);
-        await deployerLiquity.liquidateUpTo(30); // Anything higher may run out of gas
-
-        const trovesAfter = await getListOfTroveOwners(deployerLiquity);
-        const liquidatedTroves = listDifference(trovesBefore, trovesAfter);
-
-        if (liquidatedTroves.length > 0) {
-          totalNumberOfLiquidations += liquidatedTroves.length;
-          numberOfTroves -= liquidatedTroves.length;
-          for (const liquidatedTrove of liquidatedTroves) {
-            console.log(`// Liquidated ${shortenAddress(liquidatedTrove)}`);
-          }
-        }
-
-        let previousListOfTroves: (readonly [string, TroveWithPendingRewards])[];
+        const price = await fixture.setRandomPrice();
+        await fixture.liquidateRandomNumberOfTroves();
 
         for (const liquity of randomLiquities) {
           if (Math.random() < 0.5) {
             const trove = await liquity.getTrove();
-            let total = await liquity.getTotal();
 
             if (trove.isEmpty) {
-              let newTrove: Trove;
-
-              do {
-                let collateral: Decimal, debt: Decimal;
-                let randomValue = truncateLastDigits(benford(1000));
-
-                if (Math.random() < 0.5) {
-                  collateral = Decimal.from(randomValue);
-
-                  const maxDebt = parseInt(
-                    price
-                      .mul(collateral)
-                      .div(1.1)
-                      .toString(0)
-                  );
-
-                  debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
-                } else {
-                  debt = Decimal.from(100 * randomValue);
-                  collateral = Decimal.from(
-                    debt
-                      .div(price)
-                      .mul(10 + benford(20))
-                      .div(10)
-                      .toString(1)
-                  );
-                }
-
-                newTrove = new Trove({ collateral, debt });
-              } while (newTrove.collateralRatioIsBelowMinimum(price));
-
-              while (total.add(newTrove).collateralRatioIsBelowCritical(price)) {
-                // Would fail to open the Trove due to TCR
-                newTrove = new Trove({
-                  collateral: newTrove.collateral.mul(2),
-                  debt: 0
-                });
-              }
-
-              await funder.sendTransaction({
-                to: liquity.userAddress,
-                value: newTrove.collateral.bigNumber
-              });
-
-              console.log(
-                `[${shortenAddress(liquity.userAddress!)}] openTrove({ ` +
-                  `collateral: ${newTrove.collateral}, ` +
-                  `debt: ${newTrove.debt} })`
-              );
-
-              await liquity.openTrove(newTrove, { price, numberOfTroves }, { gasPrice: 0 });
-              numberOfTroves++;
+              await fixture.openRandomTrove(liquity);
             } else {
-              while (total.collateralRatioIsBelowCritical(price)) {
-                // Cannot close Trove during recovery mode
-                await funderLiquity.depositEther(benford(50000), { price, numberOfTroves });
-
-                total = await liquity.getTotal();
-              }
-
-              await funderLiquity.sendQui(liquity.userAddress!, trove.debt);
-
-              console.log(`[${shortenAddress(liquity.userAddress!)}] closeTrove()`);
-              await liquity.closeTrove({ gasPrice: 0 });
-              numberOfTroves--;
+              await fixture.closeTrove(liquity, trove);
             }
           } else {
-            const exchangedQui = benford(5000);
-
-            await funderLiquity.sendQui(liquity.userAddress!, exchangedQui);
-
-            console.log(
-              `[${shortenAddress(liquity.userAddress!)}] redeemCollateral(${exchangedQui})`
-            );
-            await liquity.redeemCollateral(exchangedQui, { price, numberOfTroves }, { gasPrice: 0 });
+            if (Math.random() < 0.5) {
+              await fixture.redeemRandomAmount(liquity);
+            } else {
+              await fixture.depositRandomAmountInStabilityPool(liquity);
+            }
           }
 
-          const quiBalance = await liquity.getQuiBalance();
-          await liquity.sendQui(funderLiquity.userAddress!, quiBalance, { gasPrice: 0 });
+          await fixture.sweepQui(liquity);
 
           const listOfTroves = await getListOfTroves(deployerLiquity);
-          if (!(await sortedByICR(deployerLiquity, listOfTroves, price))) {
-            console.log();
-            console.log("// List of Troves before:");
-            await dumpTroves(deployerLiquity, previousListOfTroves!, price);
-            console.log();
-            console.log("// List of Troves after:");
-            await dumpTroves(deployerLiquity, listOfTroves, price);
-            throw new Error("last operation broke sorting");
-          }
+          await checkTroveOrdering(deployerLiquity, price, listOfTroves, previousListOfTroves);
 
           previousListOfTroves = listOfTroves;
         }
@@ -279,7 +178,7 @@ yargs
       }
 
       const total = await funderLiquity.getTotal();
-      numberOfTroves = await funderLiquity.getNumberOfTroves();
+      const numberOfTroves = await funderLiquity.getNumberOfTroves();
 
       console.log();
       console.log(`Number of Troves: ${numberOfTroves}`);
@@ -287,7 +186,7 @@ yargs
 
       fs.appendFileSync(
         "chaos.csv",
-        `${numberOfTroves},${totalNumberOfLiquidations},${total.collateral}\n`
+        `${numberOfTroves},${fixture.totalNumberOfLiquidations},${total.collateral}\n`
       );
     }
   )
@@ -300,7 +199,7 @@ yargs
       const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder], addresses);
 
       const initialPrice = await deployerLiquity.getPrice();
-      const initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
+      let initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
 
       let [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
 
@@ -315,6 +214,34 @@ yargs
           });
 
           trove = await funderLiquity.getTrove();
+        }
+
+        const quiBalance = await funderLiquity.getQuiBalance();
+
+        if (quiBalance.lt(trove.debt)) {
+          const [randomUser] = createRandomWallets(1, provider);
+          const randomLiquity = await Liquity.connect(addresses, randomUser);
+
+          const quiNeeded = trove.debt.sub(quiBalance);
+          const tempTrove = new Trove({
+            collateral: quiNeeded.div(initialPrice).mul(3),
+            debt: quiNeeded
+          });
+
+          await funder.sendTransaction({
+            to: randomUser.address,
+            value: tempTrove.collateral.bigNumber
+          });
+
+          await randomLiquity.openTrove(
+            tempTrove,
+            { price: initialPrice, numberOfTroves: initialNumberOfTroves },
+            { gasPrice: 0 }
+          );
+
+          initialNumberOfTroves++;
+
+          await randomLiquity.sendQui(funder.address, quiNeeded, { gasPrice: 0 });
         }
 
         await funderLiquity.repayQui(trove.debt, {
@@ -370,14 +297,10 @@ yargs
 
   .command("check-sorting", "Check if Troves are sorted by ICR.", {}, async () => {
     const deployerLiquity = await Liquity.connect(addresses, deployer);
-
     const price = await deployerLiquity.getPrice();
-
     const listOfTroves = await getListOfTroves(deployerLiquity);
-    if (!(await sortedByICR(deployerLiquity, listOfTroves, price))) {
-      await dumpTroves(deployerLiquity, listOfTroves, price);
-      throw new Error("not all Troves are sorted");
-    }
+
+    await checkTroveOrdering(deployerLiquity, price, listOfTroves);
 
     console.log("All Troves are sorted.");
   })
@@ -388,6 +311,14 @@ yargs
     await checkSubgraph(subgraph, deployerLiquity);
 
     console.log("Subgraph looks fine.");
+  })
+
+  .command("dump-troves", "Dump list of Troves.", {}, async () => {
+    const deployerLiquity = await Liquity.connect(addresses, deployer);
+
+    const listOfTroves = await getListOfTroves(deployerLiquity);
+    const price = await deployerLiquity.getPrice();
+    await dumpTroves(deployerLiquity, listOfTroves, price);
   })
 
   .demandCommand()

@@ -2,14 +2,11 @@ import React, { useState } from "react";
 import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 import { Transaction } from "./Transaction";
 
-import { EthersLiquity } from "@liquity/lib-ethers";
+import { useLiquity } from "../hooks/LiquityContext";
 import { Icon } from "./Icon";
 
-type LiquidationManagerProps = {
-  liquity: EthersLiquity;
-};
-
-export const LiquidationManager: React.FC<LiquidationManagerProps> = ({ liquity }) => {
+export const LiquidationManager: React.FC = () => {
+  const { liquity } = useLiquity();
   const [numberOfTrovesToLiquidate, setNumberOfTrovesToLiquidate] = useState("40");
 
   return (

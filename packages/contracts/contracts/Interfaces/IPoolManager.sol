@@ -4,18 +4,24 @@ pragma solidity >=0.5.16;
 interface IPoolManager {
      // --- Events ---
 
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+   event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    event UserSnapshotUpdated(address _user, uint _P, uint _S);
+    event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
+    event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S, uint _G);
+    event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);
     event P_Updated(uint _P);
     event S_Updated(uint _S);
-    event UserDepositChanged(address indexed _user, uint _amount);
-    event OverstayPenaltyClaimed(address claimant, uint claimantReward, address depositor, uint remainder);
+    event G_Updated(uint _G);
+    event UserDepositChanged(address indexed _depositor, uint _newDeposit);
+    event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
+    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _CLVLoss);
+    event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
+    event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
 
     // --- Functions ---
     function setAddresses(
@@ -29,8 +35,6 @@ interface IPoolManager {
         address _communityIssuanceAddress
     ) external;
 
-    function getBalance() external view returns (uint);
-    
     function getActiveDebt() external view returns (uint);
     
     function getActiveColl() external view returns (uint);
@@ -59,11 +63,19 @@ interface IPoolManager {
     
     function repayCLV(address _account, uint _CLV) external;
 
+    function lockCLVGasCompensation(uint _CLVGasComp) external;
+
+    function refundCLVGasCompensation(uint _CLVGasComp) external;
+
+    function sendCLVGasCompensation(address _user, uint _CLVGasComp) external;
+
     function liquidate(uint _CLV, uint _ETH) external;
   
     function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external;
 
     function redeemCollateral(address _account, uint _CLV, uint _ETH) external;
+
+    function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external;
 
     // --- StabilityPool Functions ---
 
@@ -71,7 +83,7 @@ interface IPoolManager {
 
     function withdrawFromSP(uint _amount) external;
 
-    function withdrawETHGainToTrove(address _depositor, address _hint) external;
+    function withdrawETHGainToTrove(address _hint) external;
 
     function registerFrontEnd(uint _kickbackRate) external;
 

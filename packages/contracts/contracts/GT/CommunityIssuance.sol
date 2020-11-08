@@ -90,7 +90,7 @@ contract CommunityIssuance {
         return issuance;
     }
 
-    /* Gets 1-f^(t)    where f < 1
+    /* Gets 1-f^t    where f < 1
 
     f: issuance factor that determines the shape of the curve
     t:  time passed since last LQTY issuance event  */
@@ -98,25 +98,14 @@ contract CommunityIssuance {
         // Get the time passed since deployment
         uint timePassedInMinutes = block.timestamp.sub(deploymentTime).div(SECONDS_IN_ONE_MINUTE);
 
-        // ***** 1. Inverted exponential issuance curve:  y = (1 - f^t).
-
         // f^t
         uint power = Math._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
 
         //  (1 - f^t)
-        return (uint(1e18).sub(power));
+        uint cumulativeIssuanceFraction = (uint(1e18).sub(power));
+        assert(cumulativeIssuanceFraction >= 0 && cumulativeIssuanceFraction <= 1e18);
 
-        // *****
-
-        
-        // ***** 2.  Dummy issuance - linear, 4 year schedule. y = 1
-
-        // uint MINUTES_IN_FOUR_YEARS = 2102400;
-        // uint fraction = timePassedInMinutes.mul(1e18).div(MINUTES_IN_FOUR_YEARS);
-        // return fraction;
-
-        // *****
-
+        return cumulativeIssuanceFraction;
     } 
 
     function sendLQTY(address _account, uint _LQTYamount) external returns (uint) {

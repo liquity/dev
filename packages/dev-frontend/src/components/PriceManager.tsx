@@ -3,17 +3,17 @@ import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 import { Transaction } from "./Transaction";
 
 import { Decimal } from "@liquity/decimal";
-import { EthersLiquity } from "@liquity/lib-ethers";
+import { LiquityStoreState } from "@liquity/lib-base";
+import { useLiquitySelector } from "@liquity/lib-react";
+
 import { useLiquity } from "../hooks/LiquityContext";
 import { Icon } from "./Icon";
 
-type PriceManagerProps = {
-  liquity: EthersLiquity;
-  price: Decimal;
-};
+const selectPrice = ({ price }: LiquityStoreState) => price;
 
-export const PriceManager: React.FC<PriceManagerProps> = ({ liquity, price }) => {
-  const { oracleAvailable } = useLiquity();
+export const PriceManager: React.FC = () => {
+  const { liquity, oracleAvailable } = useLiquity();
+  const price = useLiquitySelector(selectPrice);
   const [editedPrice, setEditedPrice] = useState(price.toString(2));
 
   useEffect(() => {

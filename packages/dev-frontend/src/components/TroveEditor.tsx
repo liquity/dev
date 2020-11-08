@@ -1,29 +1,36 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Percent, Difference } from "@liquity/decimal";
-import { Trove } from "@liquity/lib-base";
+import { Percent, Difference, Decimalish } from "@liquity/decimal";
+import { Trove, LiquityStoreState } from "@liquity/lib-base";
+import { useLiquitySelector } from "@liquity/lib-react";
+
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Icon } from "./Icon";
+import { COIN } from "../strings";
 
 type TroveEditorProps = {
   title: string;
   original: Trove;
   edited: Trove;
-  setEdited: (trove: Trove) => void;
   changePending: boolean;
-  price: Decimal;
+  dispatch: (
+    action: { type: "setCollateral" | "setDebt"; newValue: Decimalish } | { type: "revert" }
+  ) => void;
 };
+
+const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const TroveEditor: React.FC<TroveEditorProps> = ({
   title,
   original,
   edited,
-  setEdited,
   changePending,
-  price
+  dispatch
 }) => {
+  const price = useLiquitySelector(selectPrice);
+
   const editingState = useState<string>();
 
   const { collateralDifference, debtDifference } = original.whatChanged(edited);
@@ -49,7 +56,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => setEdited(original)}
+            onClick={() => dispatch({ type: "revert" })}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -69,7 +76,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           {...{ editingState }}
           editedAmount={edited.collateral.toString(4)}
           setEditedAmount={(editedCollateral: string) =>
-            setEdited(edited.setCollateral(editedCollateral))
+            dispatch({ type: "setCollateral", newValue: editedCollateral })
           }
         ></EditableRow>
 
@@ -79,10 +86,12 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           amount={edited.debt.prettify()}
           pendingAmount={pendingDebt?.prettify()}
           pendingColor={pendingDebt?.positive ? "danger" : "success"}
-          unit="LQTY"
+          unit={COIN}
           {...{ editingState }}
           editedAmount={edited.debt.toString(2)}
-          setEditedAmount={(editedDebt: string) => setEdited(edited.setDebt(editedDebt))}
+          setEditedAmount={(editedDebt: string) =>
+            dispatch({ type: "setDebt", newValue: editedDebt })
+          }
         />
 
         <StaticRow

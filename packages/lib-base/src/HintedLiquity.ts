@@ -1,6 +1,6 @@
-import { Decimal, Decimalish } from "@liquity/decimal";
+import { Decimal } from "@liquity/decimal";
 
-import { Trove, TroveChange } from "./Trove";
+import { Trove } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { TransactableLiquity } from "./TransactableLiquity";
 
@@ -17,37 +17,20 @@ export type StabilityDepositTransferOptionalParams = TroveChangeOptionalParams &
   deposit?: StabilityDeposit;
 };
 
-export interface HintedLiquity<TTransaction = unknown> extends TransactableLiquity<TTransaction> {
-  openTrove(trove: Trove, optionalParams?: HintedTransactionOptionalParams): Promise<TTransaction>;
+type AddParams<T, K extends keyof T, U extends unknown[]> = {
+  [P in K]: T[P] extends (...args: infer A) => infer R ? (...args: [...A, ...U]) => R : never;
+};
 
-  depositEther(
-    depositedEther: Decimalish,
-    optionalParams?: TroveChangeOptionalParams
-  ): Promise<TTransaction>;
+type SimpleHintedMethod = "openTrove" | "redeemCollateral";
+type TroveChangeMethod = "depositEther" | "withdrawEther" | "borrowQui" | "repayQui" | "changeTrove";
 
-  withdrawEther(
-    withdrawnEther: Decimalish,
-    optionalParams?: TroveChangeOptionalParams
-  ): Promise<TTransaction>;
+type AddHintParams<T extends TransactableLiquity> = T &
+  AddParams<T, SimpleHintedMethod, [optionalParams?: HintedTransactionOptionalParams]> &
+  AddParams<T, TroveChangeMethod, [optionalParams?: TroveChangeOptionalParams]> &
+  AddParams<
+    T,
+    "transferCollateralGainToTrove",
+    [optionalParams?: StabilityDepositTransferOptionalParams]
+  >;
 
-  borrowQui(
-    borrowedQui: Decimalish,
-    optionalParams?: TroveChangeOptionalParams
-  ): Promise<TTransaction>;
-
-  repayQui(repaidQui: Decimalish, optionalParams?: TroveChangeOptionalParams): Promise<TTransaction>;
-
-  changeTrove(
-    change: TroveChange,
-    optionalParams?: TroveChangeOptionalParams
-  ): Promise<TTransaction>;
-
-  transferCollateralGainToTrove(
-    optionalParams?: StabilityDepositTransferOptionalParams
-  ): Promise<TTransaction>;
-
-  redeemCollateral(
-    exchangedQui: Decimalish,
-    optionalParams?: HintedTransactionOptionalParams
-  ): Promise<TTransaction>;
-}
+export type HintedLiquity<T, U> = AddHintParams<TransactableLiquity<T, U>>;

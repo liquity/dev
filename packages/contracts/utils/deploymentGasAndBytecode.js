@@ -15,12 +15,17 @@ const GrowthToken = artifacts.require("./GT/GrowthToken.sol")
 const LockupContractFactory = artifacts.require("./GT/LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./GT/CommunityIssuance.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
-const dh = require("./deploymentHelpers.js")
 
-// const deployLiquityCoreBuidler = deploymentHelpers.deployLiquityCoreBuidler
-// const deployGTContractsBuidler = deploymentHelpers.deployGTContractsBuidler
-// const connectCoreContracts = deploymentHelpers.connectCoreContracts
-// const connectGTContractsToCore = deploymentHelpers.connectGTContractsToCore
+const CommunityIssuanceTester = artifacts.require("./GT/CommunityIssuanceTester.sol")
+const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
+const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
+const MathTester = artifacts.require("./MathTester.sol")
+const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
+const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const PoolManagerTester = artifacts.require("./PoolManagerTester.sol")
+const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
+
+const dh = require("./deploymentHelpers.js")
 
 const coreContractABIs = [
   BorrowerOperations,
@@ -41,6 +46,17 @@ const GTContractABIs = [
   GrowthToken,
   LockupContractFactory,
   CommunityIssuance
+]
+
+const TesterContractABIs  = [
+  CommunityIssuanceTester,
+  ActivePoolTester,
+  DefaultPoolTester,
+  MathTester,
+  BorrowerOperationsTester,
+  CDPManagerTester,
+  PoolManagerTester,
+  CLVTokenTester,
 ]
 
 const getGasFromContractDeployment = async (contractObject, name) => {
@@ -72,7 +88,7 @@ const logContractDeploymentCosts = async (contracts) => {
     totalGasCost = totalGasCost + Number(gasCost)
   }
   console.log(`Total deployment gas costs: ${totalGasCost}`)
-  getUSDCostFromGasCost(totalGasCost, 300, 400)
+  getUSDCostFromGasCost(totalGasCost, 200, 500)
 }
 
 const logContractBytecodeLengths = (contractABIs) => {
@@ -82,27 +98,36 @@ const logContractBytecodeLengths = (contractABIs) => {
   }
 }
 
+// Run script: log deployment gas costs and bytecode lengths for all contracts
 async function main() {
   const coreContracts = await dh.deployLiquityCoreBuidler()
   const GTContracts = await dh.deployGTContractsBuidler()
+  const testerContracts = await dh.deployTesterContractsBuidler()
 
   await dh.connectCoreContracts(coreContracts, GTContracts)
   await dh.connectGTContracts(GTContracts)
   await dh.connectGTContractsToCore(GTContracts, coreContracts)
 
-  await logContractDeploymentCosts(coreContracts)
 
   console.log(`\n`)
-
+  console.log(`GT CONTRACTS`)
   await logContractDeploymentCosts(GTContracts)
-
   console.log(`\n`)
-
-  logContractBytecodeLengths(coreContractABIs)
-
-  console.log(`\n`)
-
   logContractBytecodeLengths(GTContractABIs)
+  console.log(`\n`)
+
+  console.log(`CORE CONTRACTS`)
+  await logContractDeploymentCosts(coreContracts)
+  console.log(`\n`)
+  logContractBytecodeLengths(coreContractABIs)
+  console.log(`\n`)
+
+  console.log(`TESTER CONTRACTS`)
+  await logContractDeploymentCosts(testerContracts)
+  console.log(`\n`)
+  logContractBytecodeLengths(TesterContractABIs)
+  console.log(`\n`)
+
 }
 
 main()

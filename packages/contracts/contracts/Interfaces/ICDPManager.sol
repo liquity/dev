@@ -37,7 +37,7 @@ interface ICDPManager {
         address _priceFeedAddress,
         address _clvTokenAddress,
         address _sortedCDPsAddress,
-        address _gtStakingAddress
+        address _lqtyStakingAddress
     ) external;
 
     function getCDPOwnersCount() external view returns (uint);
@@ -79,7 +79,7 @@ interface ICDPManager {
 
     function getBorrowingFee(uint CLVDebt) external view returns (uint);
 
-    function decayBaseRate() external returns (uint);
+    function decayBaseRateFromBorrowing() external returns (uint);
 
     function getCDPStatus(address _user) external view returns (uint);
     

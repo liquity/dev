@@ -60,7 +60,7 @@ contract('Fee arithmetic tests', async accounts => {
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
 
-    gtStaking = GTContracts.gtStaking
+    lqtyStaking = GTContracts.lqtyStaking
     growthToken = GTContracts.growthToken
     communityIssuanceTester = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory

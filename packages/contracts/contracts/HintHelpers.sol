@@ -8,17 +8,11 @@ import "./Dependencies/Ownable.sol";
 
 contract HintHelpers is LiquityBase, Ownable {
 
-    uint constant public MIN_VIRTUAL_DEBT = 10e18;   // The minimum virtual debt assigned to all troves: 10 CLV.  TODO: extract to base contract
-    uint constant public MCR = 1100000000000000000; // Minimal collateral ratio.
-
     IPriceFeed public priceFeed;
-    address public priceFeedAddress;
 
     ISortedCDPs public sortedCDPs;
-    address public sortedCDPsAddress;
 
     ICDPManager public cdpManager;
-    address public cdpManagerAddress;
 
     // --- Events ---
 
@@ -36,11 +30,8 @@ contract HintHelpers is LiquityBase, Ownable {
         external
         onlyOwner
     {
-        priceFeedAddress = _priceFeedAddress;
-        priceFeed = IPriceFeed(priceFeedAddress);
-        sortedCDPsAddress = _sortedCDPsAddress;
+        priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        cdpManagerAddress = _cdpManagerAddress;
         cdpManager = ICDPManager(_cdpManagerAddress);
 
         emit PriceFeedAddressChanged(_priceFeedAddress);
@@ -72,7 +63,7 @@ contract HintHelpers is LiquityBase, Ownable {
         firstRedemptionHint = currentCDPuser;
 
         while (currentCDPuser != address(0) && remainingCLV > 0) {
-            uint CLVDebt = cdpManager.getCDPDebt(currentCDPuser)
+            uint CLVDebt = _getNetDebt(cdpManager.getCDPDebt(currentCDPuser))
                                      .add(cdpManager.getPendingCLVDebtReward(currentCDPuser));
 
             if (CLVDebt > remainingCLV) {

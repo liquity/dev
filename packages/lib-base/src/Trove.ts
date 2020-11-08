@@ -3,7 +3,6 @@ import { Decimal, Decimalish, Difference } from "@liquity/decimal";
 interface Trovish {
   readonly collateral?: Decimalish;
   readonly debt?: Decimalish;
-  readonly virtualDebt?: Decimalish;
 }
 
 export type TroveChange = {
@@ -14,119 +13,104 @@ export type TroveChange = {
 export class Trove {
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
-  // public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(10);
-  public static readonly DEFAULT_VIRTUAL_DEBT: Decimal = Decimal.from(0);
+  /**
+   * Amount automatically minted and assigned to gas compensation pool for each Trove opened,
+   * it counts towards collateral ratio (lowers it).
+   */
+  public static readonly GAS_COMPENSATION_DEPOSIT: Decimal = Decimal.from(10);
 
   readonly collateral: Decimal;
   readonly debt: Decimal;
 
-  /**
-   * Imaginary debt that doesn't need to be repaid, but counts towards collateral ratio (lowers it).
-   *
-   * When performing arithmetic on Troves (addition or subtraction of 2 Troves, multiplication by a
-   * scalar), the virtual debt of the Trove on the left side of the operation will be copied to the
-   * resulting Trove.
-   */
-  readonly virtualDebt: Decimal;
-
-  constructor({ collateral = 0, debt = 0, virtualDebt = Trove.DEFAULT_VIRTUAL_DEBT }: Trovish = {}) {
+  constructor({ collateral = 0, debt = 0 }: Trovish = {}) {
     this.collateral = Decimal.from(collateral);
     this.debt = Decimal.from(debt);
-    this.virtualDebt = Decimal.from(virtualDebt);
   }
 
-  get isEmpty() {
+  get isEmpty(): boolean {
     return this.collateral.isZero && this.debt.isZero;
   }
 
-  get compositeDebt() {
-    return this.debt.nonZero?.add(this.virtualDebt) ?? this.debt;
+  get netDebt(): Decimal {
+    if (this.debt.lt(Trove.GAS_COMPENSATION_DEPOSIT)) {
+      throw new Error(`netDebt should not be used when debt < ${Trove.GAS_COMPENSATION_DEPOSIT}`);
+    }
+
+    return this.debt.sub(Trove.GAS_COMPENSATION_DEPOSIT);
   }
 
   collateralRatio(price: Decimalish): Decimal {
-    return this.collateral.mulDiv(price, this.compositeDebt);
+    return this.collateral.mulDiv(price, this.debt);
   }
 
-  collateralRatioIsBelowMinimum(price: Decimalish) {
+  collateralRatioIsBelowMinimum(price: Decimalish): boolean {
     return this.collateralRatio(price).lt(Trove.MINIMUM_COLLATERAL_RATIO);
   }
 
-  collateralRatioIsBelowCritical(price: Decimalish) {
+  collateralRatioIsBelowCritical(price: Decimalish): boolean {
     return this.collateralRatio(price).lt(Trove.CRITICAL_COLLATERAL_RATIO);
   }
 
-  toString() {
-    return (
-      `{ collateral: ${this.collateral}` +
-      `, debt: ${this.debt}` +
-      (this.collateral.nonZero && this.virtualDebt.nonZero
-        ? `, virtualDebt: ${this.virtualDebt}`
-        : "") +
-      " }"
-    );
+  toString(): string {
+    return `{ collateral: ${this.collateral}, debt: ${this.debt} }`;
   }
 
-  equals(that: Trove) {
+  equals(that: Trove): boolean {
     return this.collateral.eq(that.collateral) && this.debt.eq(that.debt);
   }
 
-  add({ collateral = 0, debt = 0 }: Trovish) {
+  add({ collateral = 0, debt = 0 }: Trovish): Trove {
     return new Trove({
       collateral: this.collateral.add(collateral),
-      debt: this.debt.add(debt),
-      virtualDebt: this.virtualDebt
+      debt: this.debt.add(debt)
     });
   }
 
-  addCollateral(collateral: Decimalish) {
+  addCollateral(collateral: Decimalish): Trove {
     return this.add({ collateral });
   }
 
-  addDebt(debt: Decimalish) {
+  addDebt(debt: Decimalish): Trove {
     return this.add({ debt });
   }
 
-  subtract({ collateral = 0, debt = 0 }: Trovish) {
+  subtract({ collateral = 0, debt = 0 }: Trovish): Trove {
     return new Trove({
       collateral: this.collateral.sub(collateral),
-      debt: this.debt.sub(debt),
-      virtualDebt: this.virtualDebt
+      debt: this.debt.sub(debt)
     });
   }
 
-  subtractCollateral(collateral: Decimalish) {
+  subtractCollateral(collateral: Decimalish): Trove {
     return this.subtract({ collateral });
   }
 
-  subtractDebt(debt: Decimalish) {
+  subtractDebt(debt: Decimalish): Trove {
     return this.subtract({ debt });
   }
 
-  multiply(multiplier: Decimalish) {
+  multiply(multiplier: Decimalish): Trove {
     return new Trove({
       collateral: this.collateral.mul(multiplier),
-      debt: this.debt.mul(multiplier),
-      virtualDebt: this.virtualDebt
+      debt: this.debt.mul(multiplier)
     });
   }
 
-  setCollateral(collateral: Decimalish) {
+  setCollateral(collateral: Decimalish): Trove {
     return new Trove({
       collateral,
-      debt: this.debt,
-      virtualDebt: this.virtualDebt
+      debt: this.debt
     });
   }
 
-  setDebt(debt: Decimalish) {
+  setDebt(debt: Decimalish): Trove {
     return new Trove({
       collateral: this.collateral,
-      debt,
-      virtualDebt: this.virtualDebt
+      debt
     });
   }
 
-  whatChanged({ collateral, debt }: Trove) {
+  whatChanged({ collateral, debt }: Trove): TroveChange {
     const change: TroveChange = {};
 
     if (!collateral.eq(this.collateral)) {
@@ -140,11 +124,14 @@ export class Trove {
     return change;
   }
 
-  applyCollateralDifference(collateralDifference?: Difference) {
+  applyCollateralDifference(collateralDifference?: Difference): Trove {
     if (collateralDifference?.positive) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return this.addCollateral(collateralDifference.absoluteValue!);
     } else if (collateralDifference?.negative) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (collateralDifference.absoluteValue!.lt(this.collateral)) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.subtractCollateral(collateralDifference.absoluteValue!);
       } else {
         return this.setCollateral(0);
@@ -154,11 +141,14 @@ export class Trove {
     }
   }
 
-  applyDebtDifference(debtDifference?: Difference) {
+  applyDebtDifference(debtDifference?: Difference): Trove {
     if (debtDifference?.positive) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return this.addDebt(debtDifference.absoluteValue!);
     } else if (debtDifference?.negative) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (debtDifference.absoluteValue!.lt(this.collateral)) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.subtractDebt(debtDifference.absoluteValue!);
       } else {
         return this.setDebt(0);
@@ -168,7 +158,7 @@ export class Trove {
     }
   }
 
-  apply({ collateralDifference, debtDifference }: TroveChange) {
+  apply({ collateralDifference, debtDifference }: TroveChange): Trove {
     return this.applyCollateralDifference(collateralDifference).applyDebtDifference(debtDifference);
   }
 }
@@ -191,19 +181,16 @@ export class TroveWithPendingRewards extends Trove {
     super({ collateral, debt });
 
     this.stake = Decimal.from(stake);
-    this.snapshotOfTotalRedistributed = new Trove({
-      ...snapshotOfTotalRedistributed,
-      virtualDebt: 0
-    });
+    this.snapshotOfTotalRedistributed = new Trove({ ...snapshotOfTotalRedistributed });
   }
 
-  applyRewards(totalRedistributed: Trove) {
+  applyRewards(totalRedistributed: Trove): Trove {
     return this.add(
       totalRedistributed.subtract(this.snapshotOfTotalRedistributed).multiply(this.stake)
     );
   }
 
-  equals(that: TroveWithPendingRewards) {
+  equals(that: TroveWithPendingRewards): boolean {
     return (
       super.equals(that) &&
       this.stake.eq(that.stake) &&

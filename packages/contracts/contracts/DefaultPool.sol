@@ -9,28 +9,24 @@ contract DefaultPool is Ownable, IPool {
     using SafeMath for uint256;
 
     address public poolManagerAddress;
-    address public stabilityPoolAddress;
     address public activePoolAddress;
-    uint256 public ETH;  // deposited ether tracker
-    uint256 public CLVDebt;  // total outstanding CDP debt
+    uint256 internal ETH;  // deposited ether tracker
+    uint256 internal CLVDebt;  // total outstanding CDP debt
 
     // --- Dependency setters ---
 
     function setAddresses(
         address _poolManagerAddress,
-        address _activePoolAddress,
-        address _stabilityPoolAddress
+        address _activePoolAddress
     )
         external
         onlyOwner
     {
         poolManagerAddress = _poolManagerAddress;
         activePoolAddress = _activePoolAddress;
-        stabilityPoolAddress = _stabilityPoolAddress;
 
-        emit PoolManagerAddressChanged(poolManagerAddress);
-        emit ActivePoolAddressChanged(activePoolAddress);
-        emit StabilityPoolAddressChanged(stabilityPoolAddress);
+        emit PoolManagerAddressChanged(_poolManagerAddress);
+        emit ActivePoolAddressChanged(_activePoolAddress);
 
         _renounceOwnership();
     }
@@ -78,19 +74,14 @@ contract DefaultPool is Ownable, IPool {
         require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
     }
 
-     function _requireCallerIsPoolManagerOrPool() internal view {
-        require(
-            _msgSender() == poolManagerAddress || 
-            _msgSender() == stabilityPoolAddress || 
-            _msgSender() == activePoolAddress, 
-            "DefaultPool: Caller is neither the PoolManager nor a Pool");
+    function _requireCallerIsActivePool() internal view {
+        require( _msgSender() == activePoolAddress, "DefaultPool: Caller is not the ActivePool");
     }
 
     // --- Fallback function ---
 
     function () external payable {
-        _requireCallerIsPoolManagerOrPool();
-        require(msg.data.length == 0);
+        _requireCallerIsActivePool();
         ETH = ETH.add(msg.value);
     }
 }

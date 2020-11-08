@@ -13,7 +13,15 @@ const LQTYStaking = artifacts.require("./GT/LQTYStaking.sol")
 const GrowthToken = artifacts.require("./GT/GrowthToken.sol")
 const LockupContractFactory = artifacts.require("./GT/LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./GT/CommunityIssuance.sol")
+
 const CommunityIssuanceTester = artifacts.require("./GT/CommunityIssuanceTester.sol")
+const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
+const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
+const MathTester = artifacts.require("./MathTester.sol")
+const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
+const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const PoolManagerTester = artifacts.require("./PoolManagerTester.sol")
+const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 
 /* "Liquity core" consists of all contracts in the core Liquity system.
 
@@ -86,6 +94,21 @@ class DeploymentHelper {
       hintHelpers
     }
     return coreContracts
+  }
+
+  static async deployTesterContractsBuidler() {
+    const testerContracts = {}
+    testerContracts.communityIssuanceTester = await CommunityIssuanceTester.new()
+
+    testerContracts.activePoolTester =  await ActivePoolTester.new()
+    testerContracts.defaultPoolTester = await DefaultPoolTester.new()
+    testerContracts.mathTester = await  MathTester.new()
+    testerContracts.borrowerOperationsTester = await  BorrowerOperationsTester.new()
+    testerContracts.cdpManagerTester = await CDPManagerTester.new()
+    testerContracts.poolManagerTester = await PoolManagerTester.new()
+    testerContracts.clvTokenTester =  await CLVTokenTester.new()
+
+    return testerContracts
   }
 
   static async deployGTContractsBuidler() {
@@ -251,20 +274,17 @@ class DeploymentHelper {
     await contracts.stabilityPool.setAddresses(
       contracts.poolManager.address,
       contracts.activePool.address,
-      contracts.defaultPool.address
     )
 
     await contracts.activePool.setAddresses(
       contracts.poolManager.address,
       contracts.cdpManager.address,
-      contracts.defaultPool.address,
-      contracts.stabilityPool.address
+      contracts.defaultPool.address
     )
 
     await contracts.defaultPool.setAddresses(
       contracts.poolManager.address,
       contracts.activePool.address,
-      contracts.stabilityPool.address
     )
 
     // set contracts in HintHelpers
@@ -283,10 +303,11 @@ class DeploymentHelper {
 }
 
 static async connectGTContractsToCore(GTContracts, coreContracts) {
-  // Set CDPM and BorrowerOps in lqtyStaking
   await GTContracts.lqtyStaking.setCLVTokenAddress(coreContracts.clvToken.address)
   await GTContracts.lqtyStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
   await GTContracts.lqtyStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
+  await GTContracts.lqtyStaking.setActivePoolAddress(coreContracts.activePool.address)
+
   await GTContracts.communityIssuance.setPoolManagerAddress(coreContracts.poolManager.address)
   await GTContracts.communityIssuance.activateContract();
 }

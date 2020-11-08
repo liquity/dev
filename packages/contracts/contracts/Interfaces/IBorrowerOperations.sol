@@ -27,7 +27,7 @@ interface IBorrowerOperations {
         address _priceFeedAddress,
         address _sortedCDPsAddress,
         address _clvTokenAddress,
-        address _gtStakingAddress
+        address _lqtyStakingAddress
     ) external;
 
     function openLoan(uint _CLVAmount, address _hint) external payable;

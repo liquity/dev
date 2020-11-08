@@ -80,7 +80,8 @@ export function handleLiquidation(event: Liquidation): void {
     event,
     event.params._liquidatedColl,
     event.params._liquidatedDebt,
-    event.params._gasCompensation
+    event.params._collGasCompensation,
+    event.params._CLVGasCompensation
   );
 
   updateTotalRedistributed(cdpManager.L_ETH(), cdpManager.L_CLVDebt());

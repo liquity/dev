@@ -12,20 +12,24 @@ contract CDPManagerTester is CDPManager {
         return Math._computeCR(_coll, _debt, _price);
     }
 
-    function getMinVirtualDebtInETH(uint _price) external pure returns (uint) {
-        return _getMinVirtualDebtInETH(_price);
+    function getCollGasCompensation(uint _coll) external pure returns (uint) {
+        return _getCollGasCompensation(_coll);
     }
 
-     function getGasCompensation(uint _coll, uint _price) external view returns (uint) {
-        return _getGasCompensation(_coll, _price);
+    function getCLVGasCompensation() external pure returns (uint) {
+        return CLV_GAS_COMPENSATION;
     }
 
-    function getCompositeDebt(uint _debt) external view returns (uint) {
+    function getCompositeDebt(uint _debt) external pure returns (uint) {
         return _getCompositeDebt(_debt);
     }
 
-    function callDecayBaseRate() external returns (uint) {
-        _decayBaseRate();
+    function unprotectedDecayBaseRateFromBorrowing() external returns (uint) {
+        baseRate = _calcDecayedBaseRate();
+        assert(baseRate <= 1e18 && baseRate > 0);
+        
+        _updateLastFeeOpTime();
+        return baseRate;
     }
 
     function hoursPassedSinceLastFeeOp() external view returns (uint) {
@@ -40,13 +44,9 @@ contract CDPManagerTester is CDPManager {
         baseRate = _baseRate;
     }
 
-    // function callGetBorrowingFee(uint _CLVDebt) external view returns (uint) {
-    //     _getBorrowingFee(_CLVDebt);
-    // }  
-
-    // function callGetRedemptionFee(uint _ETHDrawn, uint _price) external view returns (uint) {
-    //     _getRedemptionFee(_ETHDrawn, _price);
-    // }  
+    function callGetRedemptionFee(uint _ETHDrawn) external view returns (uint) {
+        _getRedemptionFee(_ETHDrawn);
+    }  
 
     function pmLiquidate(uint _CLV, uint _ETH) external {
         poolManager.liquidate(_CLV, _ETH);
@@ -58,6 +58,10 @@ contract CDPManagerTester is CDPManager {
 
     function pmMovePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external {
         poolManager.movePendingTroveRewardsToActivePool(_CLV, _ETH);
+    }
+
+    function getActualDebtFromComposite(uint _debtVal) external pure returns (uint) {
+        return _getNetDebt(_debtVal);
     }
 }
 
