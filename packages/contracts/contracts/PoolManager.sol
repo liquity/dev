@@ -767,12 +767,14 @@ contract PoolManager is Ownable, IPoolManager {
         assert(_CLVLossPerUnitStaked <= 1e18);
         uint newProductFactor = _CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_CLVLossPerUnitStaked);
      
-        // Update the ETH reward sum at the current scale and current epoch
+       
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
         uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
+
         uint marginalETHGain = _ETHGainPerUnitStaked.mul(currentP);
         uint newS = currentS.add(marginalETHGain);
+       
         epochToScaleToSum[currentEpochCached][currentScaleCached] = newS;
         emit S_Updated(newS);
 

@@ -3,10 +3,11 @@ const testHelpers = require("../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
+const toBN = th.toBN
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
-const ZERO = th.toBN('0')
+const ZERO = toBN('0')
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const maxBytes32 = th.maxBytes32
 
@@ -577,7 +578,7 @@ contract('PoolManager', async accounts => {
     })
 
     // --- LQTY functionality ---
-    it("provideToSP(), new deposit: triggers LQTY reward event - increases the sum G", async () => {
+    it.only("provideToSP(), new deposit: when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
@@ -588,17 +589,60 @@ contract('PoolManager', async accounts => {
       // A provides to SP
       await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
 
-      const G_Before = await poolManager.epochToScaleToG(0, 0)
+      let currentEpoch = await poolManager.currentEpoch()
+      let currentScale = await poolManager.currentScale()
+      const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // B provides to SP
       await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: B })
 
-      const G_After = await poolManager.epochToScaleToG(0, 0)
+      currentEpoch = await poolManager.currentEpoch()
+      currentScale = await poolManager.currentScale()
+      const G_After = await poolManager.epochToScaleToG(currentEpoch, currentScale)
 
       // Expect G has increased from the LQTY reward event triggered
       assert.isTrue(G_After.gt(G_Before))
+    })
+
+    it.only("provideToSP(), new deposit: when SP is empty, doesn't update G", async () => {
+      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
+
+      // A, B, C open loans 
+      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(3, 'ether') })
+
+      // A provides to SP
+      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
+      // A withdraws
+      await poolManager.withdrawFromSP(dec(100, 18), { from: A })
+
+      // Check SP is empty
+      assert.equal((await stabilityPool.getTotalCLVDeposits()), '0')
+
+      // Check G is non-zero
+      let currentEpoch = await poolManager.currentEpoch()
+      let currentScale = await poolManager.currentScale()
+      const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
+
+      assert.isTrue(G_Before.gt(toBN('0')))
+
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
+      // B provides to SP
+      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: B })
+
+      currentEpoch = await poolManager.currentEpoch()
+      currentScale = await poolManager.currentScale()
+      const G_After = await poolManager.epochToScaleToG(currentEpoch, currentScale)
+
+      // Expect G has not changed
+      assert.isTrue(G_After.eq(G_Before))
     })
 
     it("provideToSP(), new deposit: sets the correct front end tag", async () => {
@@ -843,10 +887,10 @@ contract('PoolManager', async accounts => {
       const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
 
       // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
+      assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
       // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
+      assert.isTrue(S_Before.gt(toBN('0')))
+      assert.isTrue(G_Before.gt(toBN('0')))
 
       // Get front ends' snapshots before
       for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
@@ -1224,10 +1268,10 @@ contract('PoolManager', async accounts => {
       const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
 
       // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
+      assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
       // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
+      assert.isTrue(S_Before.gt(toBN('0')))
+      assert.isTrue(G_Before.gt(toBN('0')))
 
       // Get front ends' snapshots before
       for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
@@ -1352,10 +1396,10 @@ contract('PoolManager', async accounts => {
       const [liquidatedDebt_2] = await th.getEmittedLiquidationValues(liquidationTX_2)
 
       // Alice CLVLoss is ((150/2000) * liquidatedDebt), for each liquidation
-      const expectedCLVLoss_A = (liquidatedDebt_1.mul(th.toBN(dec(150, 18))).div(th.toBN(dec(2000, 18))))
-        .add(liquidatedDebt_2.mul(th.toBN(dec(150, 18))).div(th.toBN(dec(2000, 18))))
+      const expectedCLVLoss_A = (liquidatedDebt_1.mul(toBN(dec(150, 18))).div(toBN(dec(2000, 18))))
+        .add(liquidatedDebt_2.mul(toBN(dec(150, 18))).div(toBN(dec(2000, 18))))
 
-      const expectedCompoundedCLVDeposit_A = th.toBN(dec(150, 18)).sub(expectedCLVLoss_A)
+      const expectedCompoundedCLVDeposit_A = toBN(dec(150, 18)).sub(expectedCLVLoss_A)
       const compoundedCLVDeposit_A = await poolManager.getCompoundedCLVDeposit(alice)
 
       assert.isAtMost(th.getDifference(expectedCompoundedCLVDeposit_A, compoundedCLVDeposit_A), 1000)
@@ -1363,7 +1407,7 @@ contract('PoolManager', async accounts => {
       // Alice retrieves part of her entitled CLV: 90 CLV
       await poolManager.withdrawFromSP(dec(90, 18), { from: alice })
 
-      const expectedNewDeposit_A = (compoundedCLVDeposit_A.sub(th.toBN(dec(90, 18))))
+      const expectedNewDeposit_A = (compoundedCLVDeposit_A.sub(toBN(dec(90, 18))))
 
       // check Alice's deposit has been updated to equal her compounded deposit minus her withdrawal */
       const newDeposit = ((await poolManager.deposits(alice))[0]).toString()
@@ -1451,10 +1495,10 @@ contract('PoolManager', async accounts => {
       const [liquidatedDebt_2] = await th.getEmittedLiquidationValues(liquidationTX_2)
 
       // Alice CLVLoss is ((150/2000) * liquidatedDebt), for each liquidation
-      const expectedCLVLoss_A = (liquidatedDebt_1.mul(th.toBN(dec(150, 18))).div(th.toBN(dec(2000, 18))))
-        .add(liquidatedDebt_2.mul(th.toBN(dec(150, 18))).div(th.toBN(dec(2000, 18))))
+      const expectedCLVLoss_A = (liquidatedDebt_1.mul(toBN(dec(150, 18))).div(toBN(dec(2000, 18))))
+        .add(liquidatedDebt_2.mul(toBN(dec(150, 18))).div(toBN(dec(2000, 18))))
 
-      const expectedCompoundedCLVDeposit_A = th.toBN(dec(150, 18)).sub(expectedCLVLoss_A)
+      const expectedCompoundedCLVDeposit_A = toBN(dec(150, 18)).sub(expectedCLVLoss_A)
       const compoundedCLVDeposit_A = await poolManager.getCompoundedCLVDeposit(alice)
 
       assert.isAtMost(th.getDifference(expectedCompoundedCLVDeposit_A, compoundedCLVDeposit_A), 1000)
@@ -1597,7 +1641,7 @@ contract('PoolManager', async accounts => {
 
 
       // Expect alice to be entitled to 150/2000 of the liquidated coll
-      const aliceExpectedETHGain = liquidatedColl.mul(th.toBN(dec(150, 18))).div(th.toBN(dec(2000, 18)))
+      const aliceExpectedETHGain = liquidatedColl.mul(toBN(dec(150, 18))).div(toBN(dec(2000, 18)))
       const aliceETHGain = await poolManager.getDepositorETHGain(alice)
       assert.isTrue(aliceExpectedETHGain.eq(aliceETHGain))
 
@@ -2433,10 +2477,10 @@ contract('PoolManager', async accounts => {
       const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
 
       // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
+      assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
       // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
+      assert.isTrue(S_Before.gt(toBN('0')))
+      assert.isTrue(G_Before.gt(toBN('0')))
 
       // Get front ends' snapshots before
       for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
@@ -2557,10 +2601,10 @@ contract('PoolManager', async accounts => {
       const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
 
       // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
+      assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
       // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
+      assert.isTrue(S_Before.gt(toBN('0')))
+      assert.isTrue(G_Before.gt(toBN('0')))
 
       // --- TEST ---
 
@@ -2583,7 +2627,7 @@ contract('PoolManager', async accounts => {
       for (depositor of [A, B, C, D]) {
         const snapshot = await poolManager.depositSnapshots(depositor)
 
-        const ZERO = th.toBN('0')
+        const ZERO = toBN('0')
         // Check S,P, G snapshots are non-zero
         assert.isTrue(snapshot[0].eq(S_Before))  // S 
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
@@ -2642,10 +2686,10 @@ contract('PoolManager', async accounts => {
       const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
 
       // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
+      assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
       // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
+      assert.isTrue(S_Before.gt(toBN('0')))
+      assert.isTrue(G_Before.gt(toBN('0')))
 
       // --- TEST ---
 
@@ -2662,7 +2706,7 @@ contract('PoolManager', async accounts => {
       for (frontEnd of [frontEnd_1, frontEnd_2]) {
         const snapshot = await poolManager.frontEndSnapshots(frontEnd)
 
-        const ZERO = th.toBN('0')
+        const ZERO = toBN('0')
         // Check S,P, G snapshots are non-zero
         assert.equal(snapshot[0], '0')  // S  (always zero for front-end)
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
@@ -2791,9 +2835,9 @@ contract('PoolManager', async accounts => {
       const compoundedDeposit_A = await poolManager.getCompoundedCLVDeposit(alice)
 
       // Alice should receive rewards proportional to her deposit as share of total deposits
-      const expectedETHGain_A = liquidatedColl.mul(th.toBN(dec(150, 18))).div(th.toBN(dec(2000, 18)))
-      const expectedCLVLoss_A = liquidatedDebt.mul(th.toBN(dec(150, 18))).div(th.toBN(dec(2000, 18)))
-      const expectedCompoundedDeposit_A = th.toBN(dec(150, 18)).sub(expectedCLVLoss_A)
+      const expectedETHGain_A = liquidatedColl.mul(toBN(dec(150, 18))).div(toBN(dec(2000, 18)))
+      const expectedCLVLoss_A = liquidatedDebt.mul(toBN(dec(150, 18))).div(toBN(dec(2000, 18)))
+      const expectedCompoundedDeposit_A = toBN(dec(150, 18)).sub(expectedCLVLoss_A)
 
       assert.isAtMost(th.getDifference(expectedCompoundedDeposit_A, compoundedDeposit_A), 1000)
 
@@ -2891,7 +2935,7 @@ contract('PoolManager', async accounts => {
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
       // Expect alice to be entitled to 150/2000 of the liquidated coll
-      const aliceExpectedETHGain = liquidatedColl.mul(th.toBN(dec(150, 18))).div(th.toBN(dec(2000, 18)))
+      const aliceExpectedETHGain = liquidatedColl.mul(toBN(dec(150, 18))).div(toBN(dec(2000, 18)))
       const aliceETHGain = await poolManager.getDepositorETHGain(alice)
       assert.isTrue(aliceExpectedETHGain.eq(aliceETHGain))
 
@@ -2971,7 +3015,7 @@ contract('PoolManager', async accounts => {
       (1 + liquidatedColl/6)
       */
 
-      const expectedNewCollateral = (th.toBN(dec(1, 18))).add(liquidatedColl.div(th.toBN('6')))
+      const expectedNewCollateral = (toBN(dec(1, 18))).add(liquidatedColl.div(toBN('6')))
 
       await poolManager.withdrawETHGainToTrove(alice, { from: alice })
       aliceColl = (await cdpManager.CDPs(alice))[1]
@@ -3375,10 +3419,10 @@ contract('PoolManager', async accounts => {
       const G_Before = await poolManager.epochToScaleToG(currentEpoch, currentScale)
 
       // Confirm 0 < P < 1
-      assert.isTrue(P_Before.gt(th.toBN('0')) && P_Before.lt(th.toBN(dec(1, 18))))
+      assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
       // Confirm S, G are both > 0
-      assert.isTrue(S_Before.gt(th.toBN('0')))
-      assert.isTrue(G_Before.gt(th.toBN('0')))
+      assert.isTrue(S_Before.gt(toBN('0')))
+      assert.isTrue(G_Before.gt(toBN('0')))
 
       // Get front ends' snapshots before
       for (frontEnd of [frontEnd_1, frontEnd_2, frontEnd_3]) {
