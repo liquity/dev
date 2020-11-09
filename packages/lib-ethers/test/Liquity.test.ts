@@ -515,7 +515,7 @@ describe("EthersLiquity", () => {
   });
 
   describe("Redemption, gas checks", function () {
-    this.timeout("1m");
+    this.timeout("5m");
 
     before(async function () {
       if (network.name === "dev") {
