@@ -90,7 +90,7 @@ contract CommunityIssuance {
         return issuance;
     }
 
-    /* Gets 1-f^t    where f < 1
+    /* Gets 1-f^t    where: f < 1
 
     f: issuance factor that determines the shape of the curve
     t:  time passed since last LQTY issuance event  */

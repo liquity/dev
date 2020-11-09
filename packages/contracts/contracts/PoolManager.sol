@@ -767,7 +767,6 @@ contract PoolManager is Ownable, IPoolManager {
         assert(_CLVLossPerUnitStaked <= 1e18);
         uint newProductFactor = _CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_CLVLossPerUnitStaked);
      
-       
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
         uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];

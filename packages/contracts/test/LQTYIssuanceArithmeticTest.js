@@ -33,7 +33,7 @@ const repeatedlyIssueLQTY = async (poolManagerTester, timeBetweenIssuances, dura
 }
 
 
-contract('Fee arithmetic tests', async accounts => {
+contract('LQTY community issuance arithmetic tests', async accounts => {
   let contracts
   let communityIssuanceTester
   let poolManagerTester
