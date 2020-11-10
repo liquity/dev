@@ -291,7 +291,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not StabilityPool")
       }
     })
   })

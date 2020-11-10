@@ -170,6 +170,7 @@ const connectContracts = async (contracts, addresses) => {
 
   // set contracts in the Pools
   await contracts.stabilityPool.setAddresses(
+    addresses.BorrowerOperations,
     addresses.PoolManager,
     addresses.ActivePool
   )

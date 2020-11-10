@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity >=0.5.16;
 
 // Common interface for the ETH/CLV pools.
@@ -50,6 +52,8 @@ interface IPoolManager {
     function getStabilityPoolCLV() external view returns (uint);
 
     function getCurrentETHGain(address _user) external view returns (uint);
+
+    function getCompoundedCLVDeposit(address _user) external view returns (uint);
 
     function addColl() external payable;
 

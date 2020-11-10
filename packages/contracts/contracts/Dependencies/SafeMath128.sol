@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity >=0.5.0;
 
 // Safemath functions for overflow protection on uint128 basic arithmetic operations.
 

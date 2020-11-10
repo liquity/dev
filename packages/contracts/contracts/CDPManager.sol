@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -202,6 +204,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         address _sortedCDPsAddress
     )
         external
+        override 
         onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
@@ -227,11 +230,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Getters ---
 
-    function getCDPOwnersCount() external view returns (uint) {
+    function getCDPOwnersCount() external view override returns (uint) {
         return CDPOwners.length;
     }
 
-    function getTroveFromCDPOwnersArray(uint _index) external view returns (address) {
+    function getTroveFromCDPOwnersArray(uint _index) external view override returns (address) {
         return CDPOwners[_index];
     }
 
@@ -239,7 +242,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     /* Single liquidation function. Closes the CDP of the specified user if its individual
     collateral ratio is lower than the minimum collateral ratio. */
-    function liquidate(address _user) external {
+    function liquidate(address _user) external override {
         _requireCDPisActive(_user);
 
         address[] memory users = new address[](1);
@@ -410,7 +413,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     /* Liquidate a sequence of troves. Closes a maximum number of n under-collateralized CDPs, 
     starting from the one with the lowest collateral ratio in the system */
-    function liquidateCDPs(uint _n) external {
+    function liquidateCDPs(uint _n) external override {
         LocalVariables_OuterLiquidationFunction memory L;
 
         LiquidationTotals memory T;
@@ -535,7 +538,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     /* Attempt to liquidate a custom set of troves provided by the caller.  Stops if a partial liquidation is 
     performed, and thus leaves optimization of the order troves up to the caller.  */
-    function batchLiquidateTroves(address[] memory _troveArray) public {
+    function batchLiquidateTroves(address[] memory _troveArray) public override {
         require(_troveArray.length != 0, "CDPManager: Calldata address array must not be empty");
         
         LocalVariables_OuterLiquidationFunction memory L;
@@ -790,6 +793,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint _partialRedemptionHintICR
     )
     external
+    override 
     {
         address redeemer = _msgSender();
         uint activeDebt = activePool.getCLVDebt();
@@ -849,7 +853,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Helper functions ---
 
-    function getCurrentICR(address _user, uint _price) external view returns (uint) {
+    function getCurrentICR(address _user, uint _price) external view override returns (uint) {
         return _getCurrentICR(_user, _price);
     }
 
@@ -865,7 +869,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return ICR;
     }
 
-    function applyPendingRewards(address _user) external onlyBorrowerOperations {
+    function applyPendingRewards(address _user) external override onlyBorrowerOperations {
         return _applyPendingRewards(_user);
     }
 
@@ -892,7 +896,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     // Update user's snapshots of L_ETH and L_CLVDebt to reflect the current values
-    function updateCDPRewardSnapshots(address _user) external onlyBorrowerOperations {
+    function updateCDPRewardSnapshots(address _user) external override onlyBorrowerOperations {
        return  _updateCDPRewardSnapshots(_user);
     }
 
@@ -901,7 +905,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         rewardSnapshots[_user].CLVDebt = L_CLVDebt;
     }
     
-    function getPendingETHReward(address _user) external view returns (uint) {
+    function getPendingETHReward(address _user) external view override returns (uint) {
         return _computePendingETHReward(_user);
     }
 
@@ -919,7 +923,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return pendingETHReward;
     }
 
-    function getPendingCLVDebtReward(address _user) external view returns (uint) {
+    function getPendingCLVDebtReward(address _user) external view override returns (uint) {
         return _computePendingCLVDebtReward(_user);
     }
 
@@ -964,7 +968,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         coll = coll.add(pendingETHReward);
     }
 
-    function removeStake(address _user) external onlyBorrowerOperations {
+    function removeStake(address _user) external override onlyBorrowerOperations {
         return _removeStake(_user);
     }
 
@@ -975,7 +979,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         CDPs[_user].stake = 0;
     }
 
-    function updateStakeAndTotalStakes(address _user) external onlyBorrowerOperations returns (uint) {
+    function updateStakeAndTotalStakes(address _user) external override onlyBorrowerOperations returns (uint) {
         return _updateStakeAndTotalStakes(_user);
     }
 
@@ -1030,7 +1034,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         poolManager.liquidate(_debt, _coll);
     }
 
-    function closeCDP(address _user) external onlyBorrowerOperations {
+    function closeCDP(address _user) external override onlyBorrowerOperations {
         return _closeCDP(_user);
     }
 
@@ -1059,15 +1063,18 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
   
     // Push the owner's address to the CDP owners list, and record the corresponding array index on the CDP struct
-    function addCDPOwnerToArray(address _user) external onlyBorrowerOperations returns (uint index) {
+    function addCDPOwnerToArray(address _user) external override onlyBorrowerOperations returns (uint index) {
         return _addCDPOwnerToArray(_user);
     }
 
     function _addCDPOwnerToArray(address _user) internal returns (uint128 index) {
         require(CDPOwners.length < 2**128 - 1, "CDPManager: CDPOwners array has maximum size of 2^128 - 1");
         
-        // Push the user to the array, and convert the returned length to index of the new element, as a uint128
-        index = uint128(CDPOwners.push(_user).sub(1));
+        // Push the user to the array 
+        CDPOwners.push(_user);
+
+        // the index of the new user
+        index = uint128(CDPOwners.length.sub(1));
         CDPs[_user].arrayIndex = index;
 
         return index;
@@ -1088,12 +1095,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
        
         CDPOwners[index] = addressToMove;
         CDPs[addressToMove].arrayIndex = index;
-        CDPOwners.length--;
+        CDPOwners.pop();
     }
   
     // --- Recovery Mode and TCR functions ---
 
-    function checkRecoveryMode() external view returns (bool) {
+    function checkRecoveryMode() external view override returns (bool) {
         return _checkRecoveryMode();
     }
 
@@ -1111,7 +1118,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    function getTCR() external view returns (uint TCR) {
+    function getTCR() external view override returns (uint TCR) {
         uint price = priceFeed.getPrice();
         return _getTCR(price);
     }
@@ -1136,7 +1143,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return TCR;
     }
 
-    function getEntireSystemColl() external view returns (uint entireSystemColl) {
+    function getEntireSystemColl() external view override returns (uint entireSystemColl) {
         return _getEntireSystemColl();
     }
 
@@ -1147,7 +1154,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return activeColl.add(liquidatedColl);
     }
 
-    function getEntireSystemDebt() external view returns (uint entireSystemDebt) {
+    function getEntireSystemDebt() external view override returns (uint entireSystemDebt) {
         return _getEntireSystemDebt();
     }
 
@@ -1178,47 +1185,47 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Trove property getters ---
 
-    function getCDPStatus(address _user) external view returns (uint) {
+    function getCDPStatus(address _user) external view override returns (uint) {
         return uint(CDPs[_user].status);
     }
 
-    function getCDPStake(address _user) external view returns (uint) {
+    function getCDPStake(address _user) external view override returns (uint) {
         return CDPs[_user].stake;
     }
 
-    function getCDPDebt(address _user) external view returns (uint) {
+    function getCDPDebt(address _user) external view override returns (uint) {
         return CDPs[_user].debt;
     }
 
-    function getCDPColl(address _user) external view returns (uint) {
+    function getCDPColl(address _user) external view override returns (uint) {
         return CDPs[_user].coll;
     }
 
     // --- Trove property setters ---
 
-    function setCDPStatus(address _user, uint _num) external onlyBorrowerOperations {
+    function setCDPStatus(address _user, uint _num) external override onlyBorrowerOperations {
         CDPs[_user].status = Status(_num);
     }
 
-    function increaseCDPColl(address _user, uint _collIncrease) external onlyBorrowerOperations returns (uint) {
+    function increaseCDPColl(address _user, uint _collIncrease) external override onlyBorrowerOperations returns (uint) {
         uint newColl = CDPs[_user].coll.add(_collIncrease);
         CDPs[_user].coll = newColl;
         return newColl;
     }
 
-    function decreaseCDPColl(address _user, uint _collDecrease) external onlyBorrowerOperations returns (uint) {
+    function decreaseCDPColl(address _user, uint _collDecrease) external override onlyBorrowerOperations returns (uint) {
         uint newColl = CDPs[_user].coll.sub(_collDecrease);
         CDPs[_user].coll = newColl;
         return newColl;
     }
 
-    function increaseCDPDebt(address _user, uint _debtIncrease) external onlyBorrowerOperations returns (uint) {
+    function increaseCDPDebt(address _user, uint _debtIncrease) external override onlyBorrowerOperations returns (uint) {
         uint newDebt = CDPs[_user].debt.add(_debtIncrease);
         CDPs[_user].debt = newDebt;
         return newDebt;
     }
 
-    function decreaseCDPDebt(address _user, uint _debtDecrease) external onlyBorrowerOperations returns (uint) {
+    function decreaseCDPDebt(address _user, uint _debtDecrease) external override onlyBorrowerOperations returns (uint) {
         uint newDebt = CDPs[_user].debt.sub(_debtDecrease);
         CDPs[_user].debt = newDebt;
         return newDebt;

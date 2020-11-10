@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import "./Interfaces/ICLVToken.sol";
 import "./Dependencies/IERC20.sol";
@@ -6,7 +8,7 @@ import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
-contract CLVToken is IERC20, ICLVToken, Ownable {
+contract CLVToken is ICLVToken, Ownable {
     using SafeMath for uint256;
 
     string constant internal NAME = "LUSD";
@@ -35,34 +37,30 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
 
     // --- Functions ---
 
-    function setPoolManagerAddress(address _poolManagerAddress) external onlyOwner {
+    function setPoolManagerAddress(address _poolManagerAddress) external override onlyOwner {
         poolManagerAddress =  _poolManagerAddress;
         emit PoolManagerAddressChanged(_poolManagerAddress);
 
         _renounceOwnership();
     }
 
-    function mint(address _account, uint256 _amount) external onlyPoolManager {
+    function mint(address _account, uint256 _amount) external override onlyPoolManager {
         _mint(_account, _amount); 
     }
     
-    function burn(address _account, uint256 _amount) external onlyPoolManager {
+    function burn(address _account, uint256 _amount) external override onlyPoolManager {
         _burn(_account, _amount); 
     }
     
-    function sendToPool(address _sender,  address _poolAddress, uint256 _amount) external onlyPoolManager {
+    function sendToPool(address _sender,  address _poolAddress, uint256 _amount) external override onlyPoolManager {
         _transfer(_sender, _poolAddress, _amount);
     }
     
-    function returnFromPool(address _poolAddress, address _receiver, uint256 _amount ) external onlyPoolManager {
+    function returnFromPool(address _poolAddress, address _receiver, uint256 _amount ) external override onlyPoolManager {
         _transfer(_poolAddress, _receiver, _amount);
     }
 
     // --- Balance functions ---
-
-    function getBalance(address _account) external view returns (uint) {
-        return balanceOf(_account);
-    }
 
     function _addToBalance(address _account, uint256 _value) internal {
         balances[_account] = balances[_account].add(_value);
@@ -80,42 +78,42 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
 
     // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---
 
-   /**
- * @dev Implementation of the {IERC20} interface.
- *
- * This implementation is agnostic to the way tokens are created. This means
- * that a supply mechanism has to be added in a derived contract using {_mint}.
- * For a generic mechanism see {ERC20Mintable}.
- *
- * TIP: For a detailed writeup see our guide
- * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
- * to implement supply mechanisms].
- *
- * We have followed general OpenZeppelin guidelines: functions revert instead
- * of returning `false` on failure. This behavior is nonetheless conventional
- * and does not conflict with the expectations of ERC20 applications.
- *
- * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
- * This allows applications to reconstruct the allowance for all accounts just
- * by listening to said events. Other implementations of the EIP may not emit
- * these events, as it isn't required by the specification.
- *
- * Finally, the non-standard {decreaseAllowance} and {increaseAllowance}
- * functions have been added to mitigate the well-known issues around setting
- * allowances. See {IERC20-approve}.
- */
-   
+    /**
+     * @dev Implementation of the {IERC20} interface.
+     *
+     * This implementation is agnostic to the way tokens are created. This means
+     * that a supply mechanism has to be added in a derived contract using {_mint}.
+     * For a generic mechanism see {ERC20Mintable}.
+     *
+     * TIP: For a detailed writeup see our guide
+     * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
+     * to implement supply mechanisms].
+     *
+     * We have followed general OpenZeppelin guidelines: functions revert instead
+     * of returning `false` on failure. This behavior is nonetheless conventional
+     * and does not conflict with the expectations of ERC20 applications.
+     *
+     * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
+     * This allows applications to reconstruct the allowance for all accounts just
+     * by listening to said events. Other implementations of the EIP may not emit
+     * these events, as it isn't required by the specification.
+     *
+     * Finally, the non-standard {decreaseAllowance} and {increaseAllowance}
+     * functions have been added to mitigate the well-known issues around setting
+     * allowances. See {IERC20-approve}.
+     */
+    
     /**
      * @dev See {IERC20-totalSupply}.
      */
-    function totalSupply() external view returns (uint256) {
+    function totalSupply() external view override returns (uint256) {
         return _totalSupply;
     }
 
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address account) public view returns (uint256) {
+    function balanceOf(address account) public view override returns (uint256) {
         return balances[account];
     }
 
@@ -127,7 +125,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) external returns (bool) {
+    function transfer(address recipient, uint256 amount) external override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
@@ -135,7 +133,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) external view returns (uint256) {
+    function allowance(address owner, address spender) external view override returns (uint256) {
         return getAllowance(owner, spender);
     }
 
@@ -146,7 +144,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 amount) external returns (bool) {
+    function approve(address spender, uint256 amount) external override returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
@@ -163,7 +161,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      * - the caller must have allowance for `sender`'s tokens of at least
      * `amount`.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         _transfer(sender, recipient, amount);
         uint newAllowance = getAllowance(sender, _msgSender()).sub(amount, "ERC20: transfer amount exceeds allowance");
         _approve(sender, _msgSender(), newAllowance);
@@ -182,7 +180,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(address spender, uint256 addedValue) external returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) external override returns (bool) {
         uint newAllowance = getAllowance(_msgSender(),spender).add(addedValue);
         _approve(_msgSender(), spender, newAllowance);
         return true;
@@ -202,7 +200,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) external override returns (bool) {
         uint newAllowance = getAllowance(_msgSender(), spender).sub(subtractedValue, "ERC20: decreased allowance below zero");
         _approve(_msgSender(), spender, newAllowance);
         return true;
@@ -248,7 +246,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         emit Transfer(address(0), account, amount);
     }
 
-     /**
+    /**
      * @dev Destroys `amount` tokens from `account`, reducing the
      * total supply.
      *
@@ -291,15 +289,15 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
 
     // --- Optional functions ---
 
-    function name() external view returns (string memory) {
+    function name() external view override returns (string memory) {
         return NAME;
     }
 
-    function symbol() external view returns (string memory) {
+    function symbol() external view override returns (string memory) {
         return SYMBOL;
     }
 
-    function decimals() external view returns (uint8) {
+    function decimals() external view override returns (uint8) {
         return DECIMALS;
     }
 }

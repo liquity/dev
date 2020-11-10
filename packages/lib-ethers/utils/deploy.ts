@@ -153,10 +153,12 @@ const connectContracts = async (
       ),
 
     nonce =>
-      stabilityPool.setAddresses(poolManager.address, activePool.address, {
-        ...overrides,
-        nonce
-      }),
+      stabilityPool.setAddresses(
+        borrowerOperations.address, 
+        poolManager.address, 
+        activePool.address, 
+        { ...overrides, nonce }
+      ),
 
     nonce =>
       activePool.setAddresses(
