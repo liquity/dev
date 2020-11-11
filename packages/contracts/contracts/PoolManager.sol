@@ -97,10 +97,8 @@ contract PoolManager is Ownable, IPoolManager {
     /* Similarly, the sum 'G' is used to calculate LQTY gains. During it's lifetime, each deposit d(0) earns a LQTY gain of 
     ( d(0) * [G - G(0)] )/P(0), where G(0) is the depositor's snapshot of G taken at the instant the deposit was made. 
     
-    LQTY reward events are NOT coupled to liquidations, but rather, they are triggered by depositor operations 
-    (topup, withdrawal, etc).
-
-    */ 
+    LQTY reward events occur are triggered by depositor operations (new deposit, topup, withdrawal) and liquidations. 
+    In each case, the LQTY reward is issued (G is updated), before other state changes are made. */ 
     mapping (uint => mapping(uint => uint)) public epochToScaleToG;
 
     // Error trackers for the error correction in the offset calculation
@@ -693,7 +691,6 @@ contract PoolManager is Ownable, IPoolManager {
        _updateG(LQTYIssuance); 
     }
 
-    // TODO: handle total deposits == 0?
     function _updateG(uint _LQTYIssuance) internal {
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
 
@@ -723,7 +720,7 @@ contract PoolManager is Ownable, IPoolManager {
         _requireCallerIsCDPManager();
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
         if (totalCLVDeposits == 0 || _debtToOffset == 0) { return; }
-
+        
         _triggerLQTYIssuance();
 
         (uint ETHGainPerUnitStaked,
@@ -795,7 +792,7 @@ contract PoolManager is Ownable, IPoolManager {
         emit P_Updated(newP);
     }
 
-    function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal {
+    function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal { 
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLVDebt(_debtToOffset);  
         stabilityPool.decreaseCLV(_debtToOffset); 

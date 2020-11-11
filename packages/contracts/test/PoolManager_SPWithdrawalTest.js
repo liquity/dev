@@ -1504,7 +1504,7 @@ contract('PoolManager - Withdrawal of stability deposit - Reward calculations', 
     L4 decreases P by(~1e-10)P. L4:  99.999999999000000000 CLV, 1 ETH
     expect A, B, C, D each withdraw ~1 Ether
     */
-    it("withdrawFromSP(): Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
+    it("withdrawFromSP(): Several deposits of 100 CLV span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
@@ -1559,7 +1559,7 @@ contract('PoolManager - Withdrawal of stability deposit - Reward calculations', 
       const txD = await poolManager.withdrawFromSP(dec(100, 18), { from: dennis })
 
       const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
-      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const bob_ETHWithdrawn = th.getETHWithdrawnFromEvent(txB)
       const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
       const dennis_ETHWithdrawn = await th.getETHWithdrawnFromEvent(txD)
 
@@ -1571,10 +1571,11 @@ contract('PoolManager - Withdrawal of stability deposit - Reward calculations', 
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '0'), 1000)
 
+      // 0.995 ETH is offset at each L, 0.005 goes to gas comp
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '995000000009950000'), 1000000000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '995000000009950000'), 1000000000)
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '995000000009950000'), 1000000000)
-      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '994999999970149984'), 1000000000)
+      assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '995000000009950000'), 1000000000)
     })
 
 

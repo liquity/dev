@@ -1379,7 +1379,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     L4 decreases P by(~1e-10)P. L2:  99.999999999000000000 CLV, 1 ETH
     expect A, B, C, D each withdraw ~1e-10 CLV and ~1 Ether
     */
-    it("withdrawETHGainToTrove(): Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
+    it("withdrawETHGainToTrove(): Several deposits of 100 CLV span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
