@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity >=0.5.16;
 
 interface IStabilityPool {
@@ -6,7 +8,7 @@ interface IStabilityPool {
 
     event CLVBalanceUpdated(uint _newBalance);
 
-    event PoolManagerAddressChanged(address _newAddress);
+    event PoolManagerAddressChanged(address _newPoolManagerAddress);
 
     event ActivePoolAddressChanged(address _newActivePoolAddress);
 
@@ -22,11 +24,14 @@ interface IStabilityPool {
     function getTotalCLVDeposits() external view returns (uint);
 
     function setAddresses(
+        address _borrowerOperationsAddress,
         address _poolManagerAddress,
         address _activePoolAddress
     ) external;
 
     function sendETH(address _account, uint _amount) external;
+
+    function sendETHGainToTrove(address _depositor, uint _ETHGain, address _hint) external;
 
     function increaseCLV(uint _amount) external;
 

@@ -23,7 +23,7 @@
     "eth-mutants": "^0.1.1",
     "ethers": "^4.0.45",
     "ganache-core": "^2.8.0",
-    "solc": "^0.5.11",
+    "solc": "^0.6.11",
     "truffle-ganache-test": "^1.1.0",
     "xmlhttprequest": "^1.8.0"
   },

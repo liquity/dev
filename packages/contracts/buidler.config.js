@@ -13,7 +13,7 @@ module.exports = {
         // artifacts: "./artifacts"
     },
     solc: {
-        version: "0.5.16",
+        version: "0.6.11",
         optimizer: {
             enabled: true,
             runs: 100

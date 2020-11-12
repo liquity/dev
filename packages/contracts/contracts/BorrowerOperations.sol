@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -60,6 +62,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         address _sortedCDPsAddress
     )
         external
+        override
         onlyOwner
     {
         cdpManager = ICDPManager(_cdpManagerAddress);
@@ -81,7 +84,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Borrower Trove Operations ---
 
-    function openLoan(uint _CLVAmount, address _hint) external payable {
+    function openLoan(uint _CLVAmount, address _hint) external payable override {
         address user = _msgSender(); 
         uint price = priceFeed.getPrice(); 
 
@@ -111,7 +114,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit CDPCreated(user, arrayIndex);
         
         // Tell PM to move the ether to the Active Pool, and mint CLV to the borrower
-        poolManager.addColl.value(msg.value)(); 
+        poolManager.addColl{ value: msg.value }(); 
         poolManager.withdrawCLV(user, _CLVAmount);
         poolManager.lockCLVGasCompensation(CLV_GAS_COMPENSATION);
        
@@ -119,7 +122,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     // Send ETH as collateral to a CDP
-    function addColl(address _user, address _hint) external payable {
+    function addColl(address _user, address _hint) external payable override {
         _requireCDPisActive(_user);
 
         uint price = priceFeed.getPrice();
@@ -134,14 +137,14 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);  
        
         // Tell PM to move the ether to the Active Pool
-        poolManager.addColl.value(msg.value)();
+        poolManager.addColl{ value: msg.value }();
   
         uint debt = cdpManager.getCDPDebt(_user);
         emit CDPUpdated(_user, debt, newColl, stake, BorrowerOperation.addColl);
     }
     
     // Withdraw ETH collateral from a CDP
-    function withdrawColl(uint _amount, address _hint) external {
+    function withdrawColl(uint _amount, address _hint) external override {
         address user = _msgSender();
         _requireCDPisActive(user);
         _requireNonZeroAmount(_amount);
@@ -175,7 +178,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
     
     // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
-    function withdrawCLV(uint _amount, address _hint) external {
+    function withdrawCLV(uint _amount, address _hint) external override {
         address user = _msgSender();
         _requireCDPisActive(user);
         _requireNonZeroAmount(_amount); 
@@ -206,7 +209,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
     
     // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the debt accordingly
-    function repayCLV(uint _amount, address _hint) external {
+    function repayCLV(uint _amount, address _hint) external override {
         address user = _msgSender();
         _requireCDPisActive(user);
         _requireNonZeroAmount(_amount);
@@ -233,7 +236,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.repayCLV);
     }
 
-    function closeLoan() external {
+    function closeLoan() external override {
         address user = _msgSender();
         _requireCDPisActive(user);
         _requireNotInRecoveryMode();
@@ -256,7 +259,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     /* If ether is sent, the operation is considered as an increase in ether, and the first parameter 
     _collWithdrawal is ignored  */
-    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable {
+    function adjustLoan(uint _collWithdrawal, int _debtChange, address _hint) external payable override {
         address user = _msgSender();
         _requireCDPisActive(user);
         _requireNotInRecoveryMode();
@@ -323,7 +326,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
 
         if (_collChange > 0 ) {
-            poolManager.addColl.value(Math._intToUint(_collChange))();
+            poolManager.addColl{ value: Math._intToUint(_collChange) }();
         } else if (_collChange < 0) {
             poolManager.withdrawColl(_user, Math._intToUint(_collChange));
         }
@@ -418,7 +421,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         return newTCR;
     }
 
-    function getCompositeDebt(uint _debt) external pure returns (uint) {
+    function getCompositeDebt(uint _debt) external pure override returns (uint) {
         return _getCompositeDebt(_debt);
     }
 

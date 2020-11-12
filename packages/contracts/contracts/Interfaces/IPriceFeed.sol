@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity >=0.5.16;
 
 interface IPriceFeed { 
     // --- Events ---
     event PriceUpdated(uint _newPrice);
-    event CDPManagerAddressChanged(address _cdpManagerAddress);
-    event PoolManagerAddressChanged(address _poolManagerAddress);
+    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event PoolManagerAddressChanged(address _newPoolManagerAddress);
 
     // --- Functions ---
     function setAddresses(

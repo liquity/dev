@@ -18,10 +18,10 @@ contract('StabilityPool', async accounts => {
   */
   let stabilityPool
 
-  const [owner, mockPoolManagerAddress, mockActivePoolAddress, alice] = accounts;
+  const [owner, mockBorrowerOpsAddress, mockPoolManagerAddress, mockActivePoolAddress, alice] = accounts;
   beforeEach(async () => {
     stabilityPool = await StabilityPool.new()
-    await stabilityPool.setAddresses(mockPoolManagerAddress, mockActivePoolAddress)
+    await stabilityPool.setAddresses(mockBorrowerOpsAddress, mockPoolManagerAddress, mockActivePoolAddress)
   })
 
   it('poolManagerAddress(): gets the poolManager address', async () => {
