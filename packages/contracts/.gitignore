@@ -28,3 +28,6 @@
 # eth-mutants
 /.eth-mutants
 /mutantOutput
+
+# echidna
+/crytic-export
