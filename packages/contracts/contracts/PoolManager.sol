@@ -470,6 +470,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     function registerFrontEnd(uint _kickbackRate) external {
         _requireFrontEndNotRegistered(msg.sender);
+        _requireUserHasNoDeposit(msg.sender);
         _requireValidKickbackRate(_kickbackRate);
 
         frontEnds[msg.sender].kickbackRate = _kickbackRate;
@@ -564,6 +565,7 @@ contract PoolManager is Ownable, IPoolManager {
     */
     function provideToSP(uint _amount, address _frontEndTag) external {
         _requireFrontEndIsRegisteredOrZero(_frontEndTag);
+        _requireFrontEndNotRegistered(msg.sender);
         _requireNonZeroAmount(_amount);
 
         address depositor = _msgSender();
@@ -821,6 +823,11 @@ contract PoolManager is Ownable, IPoolManager {
     function _requireUserHasDeposit(address _address) internal view {
         uint initialDeposit = deposits[_address].initialValue;  
         require(initialDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
+    }
+
+     function _requireUserHasNoDeposit(address _address) internal view {
+        uint initialDeposit = deposits[_address].initialValue;  
+        require(initialDeposit == 0, 'PoolManager: User must have no deposit');  
     }
 
     function _requireNonZeroAmount(uint _amount) internal pure {

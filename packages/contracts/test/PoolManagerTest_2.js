@@ -578,7 +578,7 @@ contract('PoolManager', async accounts => {
     })
 
     // --- LQTY functionality ---
-    it.only("provideToSP(), new deposit: when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
+    it("provideToSP(), new deposit: when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
@@ -606,7 +606,7 @@ contract('PoolManager', async accounts => {
       assert.isTrue(G_After.gt(G_Before))
     })
 
-    it.only("provideToSP(), new deposit: when SP is empty, doesn't update G", async () => {
+    it("provideToSP(), new deposit: when SP is empty, doesn't update G", async () => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 

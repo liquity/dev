@@ -344,7 +344,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     const borrowerOperationsAddress = borrowerOperations.address
 
     const recordedBorrowerOperationsAddress = await lqtyStaking.borrowerOperationsAddress()
-    assert.equal(borrowerOperationsAddress, recordedActivePoolAddress)
+    assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
   // ---

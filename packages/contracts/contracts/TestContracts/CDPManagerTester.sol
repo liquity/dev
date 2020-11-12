@@ -26,14 +26,14 @@ contract CDPManagerTester is CDPManager {
 
     function unprotectedDecayBaseRateFromBorrowing() external returns (uint) {
         baseRate = _calcDecayedBaseRate();
-        assert(baseRate <= 1e18 && baseRate > 0);
+        assert(baseRate >= 0 && baseRate <= 1e18);
         
         _updateLastFeeOpTime();
         return baseRate;
     }
 
-    function hoursPassedSinceLastFeeOp() external view returns (uint) {
-        return _hoursPassedSinceLastFeeOp();
+    function minutesPassedSinceLastFeeOp() external view returns (uint) {
+        return _minutesPassedSinceLastFeeOp();
     }
 
     function setLastFeeOpTimeToNow() external {

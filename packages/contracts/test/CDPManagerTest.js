@@ -952,7 +952,7 @@ contract('CDPManager', async accounts => {
     assert.equal((await cdpManager.CDPs(carol))[3].toString(), '2')
   })
 
-  it.only("liquidate(): when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
+  it("liquidate(): when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open loans 
@@ -985,7 +985,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(G_After.gt(G_Before))
   })
 
-  it.only("liquidate(): when SP is empty, doesn't update G", async () => {
+  it("liquidate(): when SP is empty, doesn't update G", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open loans 
@@ -1611,7 +1611,7 @@ contract('CDPManager', async accounts => {
     assert.isAtMost(th.getDifference(total_ETHinSP, dec(4975, 15)), 1000)
   })
 
-  it.only("batchLiquidateTroves: when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
+  it("batchLiquidateTroves: when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open loans 
@@ -1646,7 +1646,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(G_After.gt(G_Before))
   })
 
-  it.only("batchLiquidateTroves(): when SP is empty, doesn't update G", async () => {
+  it("batchLiquidateTroves(): when SP is empty, doesn't update G", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open loans 
@@ -2025,7 +2025,7 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await cdpManager.checkRecoveryMode());
   })
 
-  it.only("batchLiquidateTroves: when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
+  it("batchLiquidateTroves: when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open loans 
@@ -2060,7 +2060,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(G_After.gt(G_Before))
   })
 
-  it.only("batchLiquidateTroves(): when SP is empty, doesn't update G", async () => {
+  it("batchLiquidateTroves(): when SP is empty, doesn't update G", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open loans 

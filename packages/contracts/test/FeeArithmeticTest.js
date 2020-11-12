@@ -8,6 +8,8 @@ const MathTester = artifacts.require("./MathTester.sol")
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
 const dec = th.dec
+const toBN = th.toBN
+const getDifference = th.getDifference
 
 contract('Fee arithmetic tests', async accounts => {
   let contracts
@@ -16,46 +18,46 @@ contract('Fee arithmetic tests', async accounts => {
 
   // Results array, maps seconds to expected hours passed output (rounded down to nearest hour).
 
-  const secondsToHoursRoundedDown = [
-    [0, '0'],
-    [1, '0'],
-    [3, '0'],
-    [37, '0'],
-    [432, '0'],
-    [1179, '0'],
-    [2343, '0'],
-    [3547, '0'],
-    [3600, '1'],  // 1 hour
-    [10000, '2'],
-    [15000, '4'],
-    [17999, '4'],
-    [18000, '5'],  // 5 hours
-    [61328, '17'],
-    [65932, '18'],
-    [79420, '22'],
-    [86147, '23'],
-    [86400, '24'],  // 1 day
-    [35405, '9'],
-    [100000, '27'],
-    [604342, '167'],
-    [604800, '168'],  // 1 week
-    [1092099, '303'],
-    [2591349, '719'],
-    [2592000, '720'],  // 1 month
-    [5940183, '1650'],
-    [8102940, '2250'],
-    [31535342, '8759'],
-    [31536000, '8760'],  // 1 year
-    [56809809, '15780'],
-    [315360000, '87600'],  // 10 years
-    [793450405, '220402'],
-    [1098098098, '305027'],
-    [3153600000, '876000'],  // 100 years
-    [4098977899, '1138604'],
-    [9999999999, '2777777'],
-    [31535999000, '8759999'],
-    [31536000000, '8760000'],  // 1000 years
-    [50309080980, '13974744']
+  const secondsToMinutesRoundedDown = [
+    [0, 0],
+    [1, 0],
+    [3, 0],
+    [37, 0],
+    [432, 7],
+    [1179, 19],
+    [2343, 39],
+    [3599, 59],
+    [3600, 60],
+    [10000, 166],
+    [15000, 250],
+    [17900, 298],
+    [18000, 300],
+    [61328, 1022],
+    [65932, 1098],
+    [79420, 1323],
+    [86147, 1435],
+    [86400, 1440],
+    [35405, 590],
+    [100000, 1666],
+    [604342, 10072],
+    [604800, 10080],
+    [1092099, 18201],
+    [2591349, 43189],
+    [2592000, 43200],
+    [5940183, 99003],
+    [8102940, 135049],
+    [31535342, 525589],
+    [31536000, 525600],
+    [56809809, 946830],
+    [315360000, 5256000],
+    [793450405, 13224173],
+    [1098098098, 18301634],
+    [3153600000, 52560000],
+    [4098977899, 68316298],
+    [9999999999, 166666666],
+    [31535999000, 525599983],
+    [31536000000, 525600000],
+    [50309080980, 838484683],
   ]
 
 
@@ -109,29 +111,29 @@ contract('Fee arithmetic tests', async accounts => {
       10000000000000000,
       10000000000000000,
       10000000000000000,
-      10000000000000000,
-      10000000000000000,
-      10000000000000000,
-      10000000000000000,
-      9900000000000000,
-      9801000000000000,
-      9605960100000000,
-      9605960100000000,
-      9509900499000000,
-      8429431933839270,
-      8345137614500880,
-      8016305895390460,
-      7936142836436550,
-      7856781408072190,
-      9135172474836410,
-      7623427143471040,
-      1866712767157030,
-      1848045639485460,
-      475843304764745,
-      7272854775176,
-      7200126227425,
-      628161168,
-      1510733,
+      9988281479725540,
+      9968224527694850,
+      9934885735097070,
+      9901658444310750,
+      9899999999999440,
+      9725770973074650,
+      9589883047871230,
+      9513086955848500,
+      9509900498997310,
+      8426608452740130,
+      8320014077791510,
+      8012278579034610,
+      7863364438736180,
+      7856781408061520,
+      9058982350792430,
+      7564912399470990,
+      1850523763408840,
+      1848045639467900,
+      474172410503716,
+      7213405132883,
+      7200126227131,
+      627845586,
+      1498384,
       0,
       0,
       0,
@@ -150,29 +152,29 @@ contract('Fee arithmetic tests', async accounts => {
       100000000000000000,
       100000000000000000,
       100000000000000000,
-      100000000000000000,
-      100000000000000000,
-      100000000000000000,
-      100000000000000000,
-      99000000000000000,
-      98010000000000000,
-      96059601000000000,
-      96059601000000000,
-      95099004990000000,
-      84294319338392700,
-      83451376145008800,
-      80163058953904600,
-      79361428364365600,
-      78567814080721900,
-      91351724748364100,
-      76234271434710400,
-      18667127671570300,
-      18480456394854600,
-      4758433047647450,
-      72728547751767,
-      72001262274250,
-      6281611687,
-      15107334,
+      99882814797255400,
+      99682245276948600,
+      99348857350970700,
+      99016584443107500,
+      98999999999994400,
+      97257709730746500,
+      95898830478712300,
+      95130869558485000,
+      95099004989973100,
+      84266084527401300,
+      83200140777915100,
+      80122785790346100,
+      78633644387361800,
+      78567814080615200,
+      90589823507924300,
+      75649123994709900,
+      18505237634088400,
+      18480456394679000,
+      4741724105037160,
+      72134051328836,
+      72001262271317,
+      6278455864,
+      14983844,
       0,
       0,
       0,
@@ -191,29 +193,29 @@ contract('Fee arithmetic tests', async accounts => {
       345392840000000000,
       345392840000000000,
       345392840000000000,
-      345392840000000000,
-      345392840000000000,
-      345392840000000000,
-      345392840000000000,
-      341938911600000000,
-      338519522484000000,
-      331782983986568000,
-      331782983986568000,
-      328465154146703000,
-      291146543521544000,
-      288235078086328000,
-      276877465951765000,
-      274108691292248000,
-      271367604379325000,
-      315522316497358000,
-      263307715161655000,
-      64474922411262600,
-      63830173187150000,
-      16435287042768100,
-      251199196570587,
-      248687204604881,
-      21696237004,
-      52179651,
+      344988090700181000,
+      344295337937818000,
+      343143839912067000,
+      341996193079047000,
+      341938911599981000,
+      335921165757982000,
+      331227694117210000,
+      328575212084747000,
+      328465154146610000,
+      291049022505992000,
+      287367329116839000,
+      276738365328393000,
+      271594977545010000,
+      271367604378957000,
+      312890764165007000,
+      261286657800450000,
+      63915765813126700,
+      63830173186543500,
+      16377575551352400,
+      249145848491724,
+      248687204594752,
+      21685337018,
+      51753125,
       0,
       0,
       0,
@@ -225,36 +227,36 @@ contract('Fee arithmetic tests', async accounts => {
       0,
       0,
       0,
-      0
+      0,
     ],
     '0.9976': [
       997600000000000000,
       997600000000000000,
       997600000000000000,
       997600000000000000,
-      997600000000000000,
-      997600000000000000,
-      997600000000000000,
-      997600000000000000,
-      987624000000000000,
-      977747760000000000,
-      958290579576000000,
-      958290579576000000,
-      948707673780240000,
-      840920129719805000,
-      832510928422607000,
-      799706676124152000,
-      791709609362911000,
-      783792513269281000,
-      911324806089680000,
-      760513091832671000,
-      186223265651586000,
-      184361032995070000,
-      47470128083330900,
-      725539992371634,
-      718284592447918,
-      62665358193,
-      150710768,
+      996430960417420000,
+      994430078882839000,
+      991104200933284000,
+      987789446404441000,
+      987623999999944000,
+      970242912273927000,
+      956686732855634000,
+      949025554715446000,
+      948707673779972000,
+      840638459245356000,
+      830004604400481000,
+      799304911044492000,
+      784449236408322000,
+      783792513268217000,
+      903724079315053000,
+      754675660971226000,
+      184608250637666000,
+      184361032993318000,
+      47303439671850700,
+      719609296056468,
+      718284592418665,
+      62633875704,
+      149478831,
       0,
       0,
       0,
@@ -266,7 +268,7 @@ contract('Fee arithmetic tests', async accounts => {
       0,
       0,
       0,
-      0
+      0,
     ]
   }
 
@@ -358,15 +360,15 @@ contract('Fee arithmetic tests', async accounts => {
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
-  it("hoursPassedSinceLastFeeOp(): returns zero hours passed for no time increase", async () => {
+  it("minutesPassedSinceLastFeeOp(): returns minutes passed for no time increase", async () => {
     await cdpManagerTester.setLastFeeOpTimeToNow()
-    const hoursPassed = await cdpManagerTester.hoursPassedSinceLastFeeOp()
+    const hoursPassed = await cdpManagerTester.minutesPassedSinceLastFeeOp()
 
     assert.equal(hoursPassed, '0')
   })
 
-  it("hoursPassedSinceLastFeeOp(): returns hours passed between time of last fee operation and current block.timestamp, rounded down to nearest hour", async () => {
-    for (testPair of secondsToHoursRoundedDown) {
+  it("minutesPassedSinceLastFeeOp(): returns minutes passed between time of last fee operation and current block.timestamp, rounded down to nearest minutes", async () => {
+    for (testPair of secondsToMinutesRoundedDown) {
       await cdpManagerTester.setLastFeeOpTimeToNow()
 
       const seconds = testPair[0]
@@ -374,26 +376,26 @@ contract('Fee arithmetic tests', async accounts => {
 
       await th.fastForwardTime(seconds, web3.currentProvider)
 
-      const hoursPassed = await cdpManagerTester.hoursPassedSinceLastFeeOp()
+      const hoursPassed = await cdpManagerTester.minutesPassedSinceLastFeeOp()
 
       assert.equal(expectedHoursPassed.toString(), hoursPassed.toString())
     }
   })
 
-  it("decayBaseRate(): returns the initial base rate for no time increase", async () => {
+  it("decayBaseRateFromBorrowing(): returns the initial base rate for no time increase", async () => {
     await cdpManagerTester.setBaseRate(dec(5, 17))
     await cdpManagerTester.setLastFeeOpTimeToNow()
 
     const baseRateBefore = await cdpManagerTester.baseRate()
     assert.equal(baseRateBefore, dec(5, 17))
 
-    await cdpManagerTester.decayBaseRate()
+    await cdpManagerTester.unprotectedDecayBaseRateFromBorrowing()
     const baseRateAfter = await cdpManagerTester.baseRate()
 
     assert.isTrue(baseRateBefore.eq(baseRateAfter))
   })
 
-  it("decayBaseRate(): returns the initial base rate for less than one hour passed ", async () => {
+  it("decayBaseRateFromBorrowing(): returns the initial base rate for less than one minute passed ", async () => {
     await cdpManagerTester.setBaseRate(dec(5, 17))
     await cdpManagerTester.setLastFeeOpTimeToNow()
 
@@ -403,57 +405,48 @@ contract('Fee arithmetic tests', async accounts => {
 
     await th.fastForwardTime(1, web3.currentProvider)
 
-    await cdpManagerTester.decayBaseRate()
+    await cdpManagerTester.unprotectedDecayBaseRateFromBorrowing()
     const baseRateAfter_1 = await cdpManagerTester.baseRate()
 
     assert.isTrue(baseRateBefore_1.eq(baseRateAfter_1))
 
-    // 345 seconds
+    // 17 seconds
     await cdpManagerTester.setLastFeeOpTimeToNow()
 
     const baseRateBefore_2 = await cdpManagerTester.baseRate()
-    await th.fastForwardTime(345, web3.currentProvider)
+    await th.fastForwardTime(17, web3.currentProvider)
 
-    await cdpManagerTester.decayBaseRate()
+    await cdpManagerTester.unprotectedDecayBaseRateFromBorrowing()
     const baseRateAfter_2 = await cdpManagerTester.baseRate()
 
     assert.isTrue(baseRateBefore_2.eq(baseRateAfter_2))
 
-    // 1541 seconds
+    // 29 seconds
     await cdpManagerTester.setLastFeeOpTimeToNow()
 
     const baseRateBefore_3 = await cdpManagerTester.baseRate()
-    await th.fastForwardTime(1541, web3.currentProvider)
+    await th.fastForwardTime(29, web3.currentProvider)
 
-    await cdpManagerTester.decayBaseRate()
+    await cdpManagerTester.unprotectedDecayBaseRateFromBorrowing()
     const baseRateAfter_3 = await cdpManagerTester.baseRate()
 
     assert.isTrue(baseRateBefore_3.eq(baseRateAfter_3))
 
-    // 2117 seconds
+    // 50 seconds
     await cdpManagerTester.setLastFeeOpTimeToNow()
 
     const baseRateBefore_4 = await cdpManagerTester.baseRate()
-    await th.fastForwardTime(2117, web3.currentProvider)
+    await th.fastForwardTime(50, web3.currentProvider)
 
-    await cdpManagerTester.decayBaseRate()
+    await cdpManagerTester.unprotectedDecayBaseRateFromBorrowing()
     const baseRateAfter_4 = await cdpManagerTester.baseRate()
 
     assert.isTrue(baseRateBefore_4.eq(baseRateAfter_4))
 
-    // 3540 seconds ( i.e 59 minutes)
-    await cdpManagerTester.setLastFeeOpTimeToNow()
-
-    const baseRateBefore_5 = await cdpManagerTester.baseRate()
-    await th.fastForwardTime(3540, web3.currentProvider)
-
-    await cdpManagerTester.decayBaseRate()
-    const baseRateAfter_5 = await cdpManagerTester.baseRate()
-
-    assert.isTrue(baseRateBefore_5.eq(baseRateAfter_5))
+    // (cant quite test up to 59 seconds, as execution of the final tx takes >1 second before the block is mined)
   })
 
-  it("decayBaseRate(): returns correctly decayed base rate, for various durations. Initial baseRate = 0.01", async () => {
+  it("decayBaseRateFromBorrowing(): returns correctly decayed base rate, for various durations. Initial baseRate = 0.01", async () => {
     // baseRate = 0.01
     for (i = 0; i < decayBaseRateResults.seconds.length; i++) {
       // Set base rate to 0.01 in CDPManager
@@ -461,21 +454,33 @@ contract('Fee arithmetic tests', async accounts => {
       const contractBaseRate = await cdpManagerTester.baseRate()
       assert.equal(contractBaseRate, dec(1, 16))
 
-      const timePassed = decayBaseRateResults.seconds[i]
-      const expectedDecayedBaseRate = decayBaseRateResults["0.01"][i]
+      const startBaseRate = '0.01'
+
+      const secondsPassed = decayBaseRateResults.seconds[i]
+      const expectedDecayedBaseRate = decayBaseRateResults[startBaseRate][i]
       await cdpManagerTester.setLastFeeOpTimeToNow()
 
       // Progress time 
-      await th.fastForwardTime(timePassed, web3.currentProvider)
+      await th.fastForwardTime(secondsPassed, web3.currentProvider)
 
-      await cdpManagerTester.decayBaseRate()
+      await cdpManagerTester.unprotectedDecayBaseRateFromBorrowing()
       const decayedBaseRate = await cdpManagerTester.baseRate()
 
-      assert.isAtMost(th.getDifference(expectedDecayedBaseRate.toString(), decayedBaseRate.toString()), 1000) // allow absolute error tolerance of 1e-15
+      const minutesPassed = secondsPassed / 60
+
+      const error = decayedBaseRate.sub(toBN(expectedDecayedBaseRate))
+      // console.log(
+      //   `starting baseRate: ${startBaseRate}, 
+      //   minutesPassed: ${minutesPassed}, 
+      //   expectedDecayedBaseRate: ${expectedDecayedBaseRate}, 
+      //   decayedBaseRate: ${decayedBaseRate}, 
+      //   error: ${error}`
+      // )
+      assert.isAtMost(getDifference(expectedDecayedBaseRate.toString(), decayedBaseRate.toString()), 100000) // allow absolute error tolerance of 1e-13
     }
   })
 
-  it("decayBaseRate(): returns correctly decayed base rate, for various durations. Initial baseRate = 0.1", async () => {
+  it("decayBaseRateFromBorrowing(): returns correctly decayed base rate, for various durations. Initial baseRate = 0.1", async () => {
     // baseRate = 0.1
     for (i = 0; i < decayBaseRateResults.seconds.length; i++) {
       // Set base rate to 0.1 in CDPManager
@@ -483,22 +488,33 @@ contract('Fee arithmetic tests', async accounts => {
       const contractBaseRate = await cdpManagerTester.baseRate()
       assert.equal(contractBaseRate, dec(1, 17))
 
-      const timePassed = decayBaseRateResults.seconds[i]
+      const startBaseRate = '0.1'
+
+      const secondsPassed = decayBaseRateResults.seconds[i]
       const expectedDecayedBaseRate = decayBaseRateResults['0.1'][i]
       await cdpManagerTester.setLastFeeOpTimeToNow()
 
       // Progress time 
-      await th.fastForwardTime(timePassed, web3.currentProvider)
+      await th.fastForwardTime(secondsPassed, web3.currentProvider)
 
-      await cdpManagerTester.decayBaseRate()
+      await cdpManagerTester.unprotectedDecayBaseRateFromBorrowing()
       const decayedBaseRate = await cdpManagerTester.baseRate()
 
-      assert.isAtMost(th.getDifference(expectedDecayedBaseRate.toString(), decayedBaseRate.toString()), 1000) // allow absolute error tolerance of 1e-15
+      const minutesPassed = secondsPassed / 60
+
+      const error = decayedBaseRate.sub(toBN(expectedDecayedBaseRate))
+      // console.log(
+      //   `starting baseRate: ${startBaseRate}, 
+      //   minutesPassed: ${minutesPassed}, 
+      //   expectedDecayedBaseRate: ${expectedDecayedBaseRate}, 
+      //   decayedBaseRate: ${decayedBaseRate}, 
+      //   error: ${error}`
+      // )
+      assert.isAtMost(getDifference(expectedDecayedBaseRate.toString(), decayedBaseRate.toString()), 1000000) // allow absolute error tolerance of 1e-12
     }
   })
 
-
-  it("decayBaseRate(): returns correctly decayed base rate, for various durations. Initial baseRate = 0.34539284", async () => {
+  it("decayBaseRateFromBorrowing(): returns correctly decayed base rate, for various durations. Initial baseRate = 0.34539284", async () => {
     // baseRate = 0.34539284
     for (i = 0; i < decayBaseRateResults.seconds.length; i++) {
       // Set base rate to 0.1 in CDPManager
@@ -506,39 +522,65 @@ contract('Fee arithmetic tests', async accounts => {
       const contractBaseRate = await cdpManagerTester.baseRate()
       await cdpManagerTester.setBaseRate('345392840000000000')
 
-      const timePassed = decayBaseRateResults.seconds[i]
-      const expectedDecayedBaseRate = decayBaseRateResults['0.34539284'][i]
+      const startBaseRate = '0.34539284'
+
+      const secondsPassed = decayBaseRateResults.seconds[i]
+      const expectedDecayedBaseRate = decayBaseRateResults[startBaseRate][i]
       await cdpManagerTester.setLastFeeOpTimeToNow()
 
       // Progress time 
-      await th.fastForwardTime(timePassed, web3.currentProvider)
+      await th.fastForwardTime(secondsPassed, web3.currentProvider)
 
-      await cdpManagerTester.decayBaseRate()
+      await cdpManagerTester.unprotectedDecayBaseRateFromBorrowing()
       const decayedBaseRate = await cdpManagerTester.baseRate()
 
-      assert.isAtMost(th.getDifference(expectedDecayedBaseRate.toString(), decayedBaseRate.toString()), 1000) // allow absolute error tolerance of 1e-15
+      const minutesPassed = secondsPassed / 60
+
+      const error = decayedBaseRate.sub(toBN(expectedDecayedBaseRate))
+      // console.log(
+      //   `starting baseRate: ${startBaseRate}, 
+      //   minutesPassed: ${minutesPassed}, 
+      //   expectedDecayedBaseRate: ${expectedDecayedBaseRate}, 
+      //   decayedBaseRate: ${decayedBaseRate}, 
+      //   error: ${error}`
+      // )
+
+      assert.isAtMost(getDifference(expectedDecayedBaseRate.toString(), decayedBaseRate.toString()), 1000000) // allow absolute error tolerance of 1e-12
     }
   })
 
-  it("decayBaseRate(): returns correctly decayed base rate, for various durations. Initial baseRate = 0.9976", async () => {
+  it("decayBaseRateFromBorrowing(): returns correctly decayed base rate, for various durations. Initial baseRate = 0.9976", async () => {
     // baseRate = 0.9976
     for (i = 0; i < decayBaseRateResults.seconds.length; i++) {
       // Set base rate to 0.9976 in CDPManager
       await cdpManagerTester.setBaseRate('997600000000000000')
-      const contractBaseRate = await cdpManagerTester.baseRate()
       await cdpManagerTester.setBaseRate('997600000000000000')
 
-      const timePassed = decayBaseRateResults.seconds[i]
-      const expectedDecayedBaseRate = decayBaseRateResults['0.9976'][i]
+      const startBaseRate = '0.9976'
+
+      const secondsPassed = decayBaseRateResults.seconds[i]
+      const expectedDecayedBaseRate = decayBaseRateResults[startBaseRate][i]
       await cdpManagerTester.setLastFeeOpTimeToNow()
 
       // progress time 
-      await th.fastForwardTime(timePassed, web3.currentProvider)
+      await th.fastForwardTime(secondsPassed, web3.currentProvider)
 
-      await cdpManagerTester.decayBaseRate()
+      await cdpManagerTester.unprotectedDecayBaseRateFromBorrowing()
       const decayedBaseRate = await cdpManagerTester.baseRate()
 
-      assert.isAtMost(th.getDifference(expectedDecayedBaseRate.toString(), decayedBaseRate.toString()), 1000) // allow absolute error tolerance of 1e-15
+      const minutesPassed = secondsPassed / 60
+
+      const error = decayedBaseRate.sub(toBN(expectedDecayedBaseRate))
+
+      // console.log(
+      //   `starting baseRate: ${startBaseRate}, 
+      //   minutesPassed: ${minutesPassed}, 
+      //   expectedDecayedBaseRate: ${expectedDecayedBaseRate}, 
+      //   decayedBaseRate: ${decayedBaseRate}, 
+      //   error: ${error}`
+      // )
+
+      assert.isAtMost(getDifference(expectedDecayedBaseRate.toString(), decayedBaseRate.toString()), 10000000) // allow absolute error tolerance of 1e-11
     }
   })
 
@@ -554,7 +596,7 @@ contract('Fee arithmetic tests', async accounts => {
       const e = '990000000000000000'
       const f = '897890990909098978678609090'
       const g = dec(8789789, 27)
-      const maxUint256 = th.toBN('2').pow(th.toBN('256')).sub(th.toBN('1'))
+      const maxUint256 = toBN('2').pow(toBN('256')).sub(toBN('1'))
 
       const res_a = await mathTester.callDecPow(a, 0)
       const res_b = await mathTester.callDecPow(b, 0)
@@ -576,7 +618,7 @@ contract('Fee arithmetic tests', async accounts => {
     })
 
     // for exponent = 1, returns base
-    it("decPow(): for exponent = 0, returns 1, regardless of base", async () => {
+    it("decPow(): for exponent = 1, returns base, regardless of base", async () => {
       const a = '0'
       const b = '1'
       const c = dec(1, 18)
@@ -584,8 +626,8 @@ contract('Fee arithmetic tests', async accounts => {
       const e = '990000000000000000'
       const f = '897890990909098978678609090'
       const g = dec(8789789, 27)
-      const maxUint128 = th.toBN('2').pow(th.toBN('128')).sub(th.toBN('1'))
-      const maxUint192 = th.toBN('2').pow(th.toBN('192')).sub(th.toBN('1'))
+      const maxUint128 = toBN('2').pow(toBN('128')).sub(toBN('1'))
+      const maxUint192 = toBN('2').pow(toBN('192')).sub(toBN('1'))
 
       const res_a = await mathTester.callDecPow(a, 1)
       const res_b = await mathTester.callDecPow(b, 1)
@@ -705,13 +747,13 @@ contract('Fee arithmetic tests', async accounts => {
 
         const result = await mathTester.callDecPow(base, exponent)
 
-        assert.isAtMost(th.getDifference(expectedResult, result.toString()), 10000)  // allow absolute error tolerance of 1e-14
+        assert.isAtMost(getDifference(expectedResult, result.toString()), 10000)  // allow absolute error tolerance of 1e-14
       }
     })
 
     it("decPow(): abs. error < 1e-9 for exponent = 7776000 (seconds in three months)", async () => {
       for (let i = 1; i <= 200; i++) {
-        const exponent = timeValues.SECONDS_IN_THREE_MONTHS
+        const exponent = timeValues.SECONDS_IN_ONE_MONTH * 3
 
         // Use a high base to fully test high exponent, without prematurely decaying to 0
         const base = th.randDecayFactor(0.999999, 0.999999999999999999)
@@ -728,7 +770,7 @@ contract('Fee arithmetic tests', async accounts => {
         // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
 
         try {
-          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+          assert.isAtMost(getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
         } catch (error) {
           console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
         }
@@ -754,7 +796,7 @@ contract('Fee arithmetic tests', async accounts => {
         // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
 
         try {
-          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+          assert.isAtMost(getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
         } catch (error) {
           console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
         }
@@ -780,7 +822,7 @@ contract('Fee arithmetic tests', async accounts => {
         // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
 
         try {
-          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+          assert.isAtMost(getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
         } catch (error) {
           console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
         }
@@ -803,10 +845,10 @@ contract('Fee arithmetic tests', async accounts => {
 
         const error = expected.sub(res).abs()
 
-        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
 
         try {
-          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+          assert.isAtMost(getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
         } catch (error) {
           console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
         }
@@ -815,7 +857,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     it("decPow(): abs. error < 1e-9 for exponent = 2628000 (minutes in five years)", async () => {
       for (let i = 1; i <= 200; i++) {
-        const exponent = timeValues.MINUTES_IN_FIVE_YEARS
+        const exponent = timeValues.MINUTES_IN_ONE_YEAR * 5
 
         // Use a high base to fully test high exponent, without prematurely decaying to 0
         const base = th.randDecayFactor(0.99999, 0.999999999999999999)
@@ -829,10 +871,10 @@ contract('Fee arithmetic tests', async accounts => {
 
         const error = expected.sub(res).abs()
 
-        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
 
         try {
-          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+          assert.isAtMost(getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
         } catch (error) {
           console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
         }
@@ -855,10 +897,10 @@ contract('Fee arithmetic tests', async accounts => {
 
         const error = expected.sub(res).abs()
 
-        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
 
         try {
-          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+          assert.isAtMost(getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
         } catch (error) {
           console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
         }
@@ -881,10 +923,10 @@ contract('Fee arithmetic tests', async accounts => {
 
         const error = expected.sub(res).abs()
 
-        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
+        // console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
 
         try {
-          assert.isAtMost(th.getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
+          assert.isAtMost(getDifference(expected, res.toString()), 1000000000)  // allow absolute error tolerance of 1e-9
         } catch (error) {
           console.log(`run: ${i}. base: ${base}, exp: ${exponent}, expected: ${expected}, res: ${res}, error: ${error}`)
         }

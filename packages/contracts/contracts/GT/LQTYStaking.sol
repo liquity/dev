@@ -33,9 +33,9 @@ contract LQTYStaking is ILQTYStaking {
     address public clvTokenAddress;
     ICLVToken clvToken;
 
-    address cdpManagerAddress;
-    address borrowerOperationsAddress;
-    address activePoolAddress;
+    address public cdpManagerAddress;
+    address public borrowerOperationsAddress;
+    address public activePoolAddress;
 
     // --- Events ---
 
@@ -44,7 +44,6 @@ contract LQTYStaking is ILQTYStaking {
     event CDPManagerAddressSet(address _cdpManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
-
 
     // --- Functions ---
 

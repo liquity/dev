@@ -39,8 +39,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Data structures ---
 
-    uint constant public SECONDS_IN_ONE_HOUR = 3600;
-    uint constant public HOURLY_DECAY_FACTOR = 990000000000000000;  // 0.99 as 18-digit decimal
+    uint constant public SECONDS_IN_ONE_MINUTE = 60;
+    uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // Corresponds to an hourly decay factor of 0.99
 
     uint public baseRate;
 
@@ -1209,8 +1209,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         * the fraction of total supply that was redeemed at face value. */
         uint redeemedCLVFraction = _ETHDrawn.mul(_price).div(totalCLVSupply);
 
+        uint newBaseRate = decayedBaseRate.add(redeemedCLVFraction);
+        
         // update the baseRate state variable
-        baseRate = decayedBaseRate.add(redeemedCLVFraction);
+        baseRate = newBaseRate < 1e18 ? newBaseRate : 1e18;  // cap baseRate at maximum 100%
         assert(baseRate <= 1e18 && baseRate > 0);
 
         _updateLastFeeOpTime();
@@ -1245,20 +1247,20 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     function _updateLastFeeOpTime() internal {
         uint timePassed = block.timestamp.sub(lastFeeOperationTime);
 
-        if (timePassed >= SECONDS_IN_ONE_HOUR) {
+        if (timePassed >= SECONDS_IN_ONE_MINUTE) {
             lastFeeOperationTime = block.timestamp;
         }
     }
 
     function _calcDecayedBaseRate() internal view returns (uint) {
-        uint hoursPassed = _hoursPassedSinceLastFeeOp();
-        uint decayFactor = Math._decPow(HOURLY_DECAY_FACTOR, hoursPassed);
+        uint minutesPassed = _minutesPassedSinceLastFeeOp();
+        uint decayFactor = Math._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
     
         return baseRate.mul(decayFactor).div(1e18);
     }
 
-    function _hoursPassedSinceLastFeeOp() internal view returns (uint) {
-        return (block.timestamp.sub(lastFeeOperationTime)).div(SECONDS_IN_ONE_HOUR);
+    function _minutesPassedSinceLastFeeOp() internal view returns (uint) {
+        return (block.timestamp.sub(lastFeeOperationTime)).div(SECONDS_IN_ONE_MINUTE);
     }
 
     // --- 'require' wrapper functions ---
