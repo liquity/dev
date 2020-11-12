@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import "../BorrowerOperations.sol";
 
@@ -43,7 +45,7 @@ contract BorrowerOperationsTester is BorrowerOperations {
     }
 
     function pmAddColl(uint _amount) public {
-        poolManager.addColl.value(_amount)(); 
+        poolManager.addColl{value: _amount}(); 
     }
 
     function pmWithdrawColl(address _account, uint _ETH) public {
@@ -59,5 +61,5 @@ contract BorrowerOperationsTester is BorrowerOperations {
     }
 
     // Payable fallback function
-    function() external payable { }
+    receive() external payable { }
 }

@@ -1,4 +1,4 @@
-pragma solidity 0.5.16;
+pragma solidity 0.6.11;
 
 import "../Dependencies/IERC20.sol";
 import "../Dependencies/SafeMath.sol";
@@ -30,6 +30,10 @@ contract GrowthToken is IERC20 {
     using SafeMath for uint256;
 
     // --- Data ---
+    string constant internal NAME = "LUSD";
+    string constant internal SYMBOL = "LUSD";
+    uint8 constant internal DECIMALS = 18;
+
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;
 
     uint public _100_MILLION = 1e26;  // non-constant, for use with SafeMath
@@ -74,15 +78,15 @@ contract GrowthToken is IERC20 {
 
     // --- Public functions ---
 
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         return _totalSupply;
     }
 
-    function balanceOf(address account) public view returns (uint256) {
+    function balanceOf(address account) public view override returns (uint256) {
         return _balances[account];
     }
 
-    function transfer(address recipient, uint256 amount) public returns (bool) {
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
         // Restrict the deployer's transfers in first year
         if (_callerIsDeployer() && _isFirstYear()) {
             _requireRecipientIsRegisteredOYLC(recipient);
@@ -93,18 +97,18 @@ contract GrowthToken is IERC20 {
         return true;
     }
 
-    function allowance(address owner, address spender) public view returns (uint256) {
+    function allowance(address owner, address spender) public view override returns (uint256) {
         return _allowances[owner][spender];
     }
 
-    function approve(address spender, uint256 amount) public returns (bool) {
+    function approve(address spender, uint256 amount) public override returns (bool) {
         if (_isFirstYear()) {_requireCallerIsNotDeployer();}
 
         _approve(msg.sender, spender, amount);
         return true;
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
         if (_isFirstYear()) {_requireRecipientIsNotDeployer(recipient);}
         
         _transfer(sender, recipient, amount);
@@ -112,14 +116,14 @@ contract GrowthToken is IERC20 {
         return true;
     }
 
-    function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) public override returns (bool) {
         if (_isFirstYear()) {_requireCallerIsNotDeployer();}
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
         return true;
     }
 
-    function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) public override returns (bool) {
         if (_isFirstYear()) {_requireCallerIsNotDeployer();}
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
@@ -189,5 +193,19 @@ contract GrowthToken is IERC20 {
 
     function _requireCallerIsNotDeployer() internal view {
         require(!_callerIsDeployer(), "GrowthToken: caller must not be the deployer");
+    }
+
+    // --- Optional functions ---
+
+    function name() external view override returns (string memory) {
+        return NAME;
+    }
+
+    function symbol() external view override returns (string memory) {
+        return SYMBOL;
+    }
+
+    function decimals() external view override returns (uint8) {
+        return DECIMALS;
     }
 }

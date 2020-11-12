@@ -1,7 +1,8 @@
-const deploymentHelper = require("../utils/deploymentHelpers.js")
-const testHelpers = require("../utils/testHelpers.js")
+const deploymentHelper = require("../../utils/deploymentHelpers.js")
+const testHelpers = require("../../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
+const timeValues = testHelpers.TimeValues
 const dec = th.dec
 
 contract('After the initial lockup period has passed', async accounts => {
@@ -15,11 +16,11 @@ contract('After the initial lockup period has passed', async accounts => {
     investor_3,
     A, B, C, D, E, F, G, H, I, J, K] = accounts;
 
-  const ONE_DAY_IN_SECONDS = 86400
-  const THIRTY_DAYS_IN_SECONDS = 2592000
-  const ONE_YEAR_IN_SECONDS = 31536000
-  const maxBytes32 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-
+  const SECONDS_IN_ONE_DAY = timeValues.SECONDS_IN_ONE_DAY
+  const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
+  const SECONDS_IN_ONE_YEAR = timeValues.SECONDS_IN_ONE_YEAR
+  const maxBytes32 = th.maxBytes32
+  
   let GTContracts
 
   // OYLCs for team members on vesting schedules
@@ -56,7 +57,7 @@ contract('After the initial lockup period has passed', async accounts => {
     GTContracts = await deploymentHelper.deployGTContracts()
     await deploymentHelper.connectGTContracts(GTContracts)
 
-    gtStaking = GTContracts.gtStaking
+    lqtyStaking = GTContracts.lqtyStaking
     growthToken = GTContracts.growthToken
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
@@ -106,7 +107,7 @@ contract('After the initial lockup period has passed', async accounts => {
 
     // Every thirty days, deployer transfers vesting amounts to team members
     for (i = 0; i < 12; i++) {
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       await growthToken.transfer(OYLC_T1.address, teamMemberMonthlyVesting_1, { from: liquityAG })
       await growthToken.transfer(OYLC_T2.address, teamMemberMonthlyVesting_2, { from: liquityAG })
@@ -114,14 +115,14 @@ contract('After the initial lockup period has passed', async accounts => {
     }
 
     // After Since only 360 days have passed, fast forward 5 more days, until OYLCs unlock
-    await th.fastForwardTime((ONE_DAY_IN_SECONDS * 5), web3.currentProvider)
+    await th.fastForwardTime((SECONDS_IN_ONE_DAY * 5), web3.currentProvider)
 
     const endTime = await th.getLatestBlockTimestamp(web3)
 
     const timePassed = endTime - startTime
     // Confirm that just over one year has passed -  not more than 1000 seconds 
-    assert.isBelow((timePassed - ONE_YEAR_IN_SECONDS), 1000)
-    assert.isAbove((timePassed - ONE_YEAR_IN_SECONDS), 0)
+    assert.isBelow((timePassed - SECONDS_IN_ONE_YEAR), 1000)
+    assert.isAbove((timePassed - SECONDS_IN_ONE_YEAR), 0)
   })
 
   describe('Deploying new OYLCs', async accounts => {
@@ -153,8 +154,8 @@ contract('After the initial lockup period has passed', async accounts => {
   describe('Deploying Custom Duration Lockup Contracts (CDLCs)', async accounts => {
     it("GT Deployer can now deploy CDLCs", async () => {
       // GT deployer deploys CDLCs
-      const CDLCDeploymentTx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 18), ONE_DAY_IN_SECONDS, { from: liquityAG })
-      const CDLCDeploymentTx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(1, 18), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const CDLCDeploymentTx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 18), SECONDS_IN_ONE_DAY, { from: liquityAG })
+      const CDLCDeploymentTx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(1, 18), SECONDS_IN_ONE_MONTH, { from: liquityAG })
       const CDLCDeploymentTx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, '9595995999999900000023423234', '23403434', { from: liquityAG })
 
       assert.isTrue(CDLCDeploymentTx_A.receipt.status)
@@ -164,8 +165,8 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("Anyone can deploy CDLCs", async () => {
       // Various EOAs deploy CDLCs
-      const CDLCDeploymentTx_1 = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 18), ONE_DAY_IN_SECONDS, { from: teamMember_1 })
-      const CDLCDeploymentTx_2 = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(1, 18), THIRTY_DAYS_IN_SECONDS, { from: investor_2 })
+      const CDLCDeploymentTx_1 = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 18), SECONDS_IN_ONE_DAY, { from: teamMember_1 })
+      const CDLCDeploymentTx_2 = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(1, 18), SECONDS_IN_ONE_MONTH, { from: investor_2 })
       const CDLCDeploymentTx_3 = await lockupContractFactory.deployCustomDurationLockupContract(liquityAG, '9595995999999900000023423234', '23403434', { from: A })
       const CDLCDeploymentTx_4 = await lockupContractFactory.deployCustomDurationLockupContract(D, '123', '23403434', { from: B })
 
@@ -177,11 +178,11 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("CDLC deployed through the Factory stores Factory's address in the CDLC", async () => {
       // Deploy 5 CDLCs
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
@@ -204,11 +205,11 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("CDLC deployment stores the beneficiary's address in the CDLC", async () => {
       // Deploy 5 CDLCs
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       // Grab contracts from deployment tx events
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
@@ -232,11 +233,11 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("CDLC deployment records the beneficiary's initial entitlement in the CDLC", async () => {
       // Deploy 5 CDLCs
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       // Grab contracts from deployment tx events
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
@@ -260,8 +261,8 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("CDLC deployment records the lockup duration in the CDLC", async () => {
 
-      const lockupDuration_A = THIRTY_DAYS_IN_SECONDS
-      const lockupDuration_B = ONE_YEAR_IN_SECONDS
+      const lockupDuration_A = SECONDS_IN_ONE_MONTH
+      const lockupDuration_B = SECONDS_IN_ONE_YEAR
       const lockupDuration_C = '1'
       const lockupDuration_D = '9582095795723094723094823'
       const lockupDuration_E = maxBytes32
@@ -295,11 +296,11 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("CDLC deployment through the Factory registers the CDLC in the Factory", async () => {
       // Deploy 5 CDLCs
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       // Grab contract addresses from deployment tx events
       const CDLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedCDLCtx_A)
@@ -317,11 +318,11 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("CDLC deployment through the factory records the CDLC contract address and deployer as a k-v pair in the Factory", async () => {
       // Deploy 5 CDLCs
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_D = await lockupContractFactory.deployCustomDurationLockupContract(D, GTEntitlement_D, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_E = await lockupContractFactory.deployCustomDurationLockupContract(E, GTEntitlement_E, SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       // Grab contract addresses from deployment tx events
       const CDLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedCDLCtx_A)
@@ -416,7 +417,7 @@ contract('After the initial lockup period has passed', async accounts => {
       await growthToken.transfer(OYLC_I3.address, dec(1, 24), { from: liquityAG })
 
       // 1 month passes
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // GT deployer again sends extra GT to investor OYLCs
       await growthToken.transfer(OYLC_I1.address, dec(1, 24), { from: liquityAG })
@@ -473,7 +474,7 @@ contract('After the initial lockup period has passed', async accounts => {
       await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: D })
 
       // One year passes, so that contract can now be withdrawn from
-      th.fastForwardTime(ONE_YEAR_IN_SECONDS, web3.currentProvider)
+      th.fastForwardTime(SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // GT deployer attempts withdrawal from OYLC
       try {
@@ -517,7 +518,7 @@ contract('After the initial lockup period has passed', async accounts => {
       const initialGTBalanceOfOYLC_T3 = await growthToken.balanceOf(OYLC_T3.address)
 
       // One month passes
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // GT deployer transfers vesting amount
       await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
@@ -535,7 +536,7 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.isTrue(GTBalanceOfOYLC_T3_1.eq(th.toBN(initialGTBalanceOfOYLC_T3).add(th.toBN(dec(1, 24)))))
 
       // Another month passes
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // GT deployer transfers vesting amount
       await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
@@ -569,7 +570,7 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.equal(await growthToken.balanceOf(OYLC_C.address), '0')
 
       // One month passes
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // GT deployer transfers GT to OYLCs deployed by other accounts
       await growthToken.transfer(OYLC_A.address, dec(1, 24), { from: liquityAG })
@@ -601,9 +602,9 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("GT deployer can transfer GT to CDLCs they deployed", async () => {
       // Deploy 5 CDLCs
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       // Grab contract addresses from deployment tx events
       const CDLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedCDLCtx_A)
@@ -628,9 +629,9 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("GT deployer can transfer GT to CDLCs deployed by anyone", async () => {
       // Deploy 5 CDLCs
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, THIRTY_DAYS_IN_SECONDS, { from: D })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, THIRTY_DAYS_IN_SECONDS, { from: E })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, THIRTY_DAYS_IN_SECONDS, { from: F })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, SECONDS_IN_ONE_MONTH, { from: D })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, SECONDS_IN_ONE_MONTH, { from: E })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, SECONDS_IN_ONE_MONTH, { from: F })
 
       // Grab contract addresses from deployment tx events
       const CDLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedCDLCtx_A)
@@ -692,9 +693,9 @@ contract('After the initial lockup period has passed', async accounts => {
       await growthToken.transfer(F, dec(3, 24), { from: liquityAG })
 
       // H, I, J deploy lockup contracts with A, B, C as beneficiaries, respectively
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: H })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: I })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: J })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: H })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), SECONDS_IN_ONE_MONTH, { from: I })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), SECONDS_IN_ONE_MONTH, { from: J })
 
       // Grab contract addresses from deployment tx events
       const CDLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedCDLCtx_A)
@@ -720,9 +721,9 @@ contract('After the initial lockup period has passed', async accounts => {
 
   describe('Locking CDLCs', async accounts => {
     it("GT deployer can lock CDLCs they deployed through the Factory", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
@@ -751,9 +752,9 @@ contract('After the initial lockup period has passed', async accounts => {
 
     it("An externally owned account can lock CDLCs they deployed through the Factory", async () => {
       // D, E, F each deploy a CDLC
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: D })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: E })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: F })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: D })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), SECONDS_IN_ONE_MONTH, { from: E })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), SECONDS_IN_ONE_MONTH, { from: F })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
@@ -783,9 +784,9 @@ contract('After the initial lockup period has passed', async accounts => {
 
   describe('Beneficiary withdrawal from CDLCs', async accounts => {
     it("After a CDLC lockup period has passed, beneficiary can withdraw their full entitlement from their CDLC", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
@@ -801,7 +802,7 @@ contract('After the initial lockup period has passed', async accounts => {
       // GT deployer locks the CDLCs they deployed
       await lockupContractFactory.lockCustomDurationContracts(CDLCsToLock, { from: liquityAG })
 
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Check A, B, C GT balances before
       assert.equal(await growthToken.balanceOf(A), '0')
@@ -820,9 +821,9 @@ contract('After the initial lockup period has passed', async accounts => {
     })
 
     it("After a CDLC lockup period has passed, Beneficiary can withdraw full GT balance of CDLC when it exceeds their initial entitlement", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
@@ -838,7 +839,7 @@ contract('After the initial lockup period has passed', async accounts => {
       // GT deployer locks the CDLCs they deployed
       await lockupContractFactory.lockCustomDurationContracts(CDLCsToLock, { from: liquityAG })
 
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Transfer more GT, such that CDLC balances exceed their respective entitlements
       await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
@@ -869,9 +870,9 @@ contract('After the initial lockup period has passed', async accounts => {
 
   describe('Withdrawal attempts from CDLCs by non-beneficiaries', async accounts => {
     it("After a CDLC lockup period has passed, GT deployer can't withdraw from a CDLC they deployed", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: liquityAG })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
@@ -887,7 +888,7 @@ contract('After the initial lockup period has passed', async accounts => {
       // GT deployer locks the CDLCs they deployed
       await lockupContractFactory.lockCustomDurationContracts(CDLCsToLock, { from: liquityAG })
 
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       const CDLCs = [CDLC_A, CDLC_B, CDLC_C]
 
@@ -902,9 +903,9 @@ contract('After the initial lockup period has passed', async accounts => {
     })
 
     it("After a CDLC lockup period has passed, GT deployer can't withdraw from a CDLC someone else deployed", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: D })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), THIRTY_DAYS_IN_SECONDS, { from: E })
-      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), THIRTY_DAYS_IN_SECONDS, { from: F })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: D })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), SECONDS_IN_ONE_MONTH, { from: E })
+      const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), SECONDS_IN_ONE_MONTH, { from: F })
 
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
       const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
@@ -922,7 +923,7 @@ contract('After the initial lockup period has passed', async accounts => {
       await lockupContractFactory.lockCustomDurationContracts([CDLC_B.address], { from: E })
       await lockupContractFactory.lockCustomDurationContracts([CDLC_C.address], { from: F })
 
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       const CDLCs = [CDLC_A, CDLC_B, CDLC_C]
 
@@ -937,7 +938,7 @@ contract('After the initial lockup period has passed', async accounts => {
     })
 
     it("After a CDLC lockup period has passed, any account that is not the beneficiary can not withdraw", async () => {
-      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), THIRTY_DAYS_IN_SECONDS, { from: D })
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: D })
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
 
       // GT deployer transfers GT entitlements to the contract
@@ -946,7 +947,7 @@ contract('After the initial lockup period has passed', async accounts => {
       // GT deployer locks the CDLCs they deployed
       await lockupContractFactory.lockCustomDurationContracts([CDLC_A.address], { from: D })
 
-      await th.fastForwardTime(THIRTY_DAYS_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       const variousAccounts = [
         liquityAG,

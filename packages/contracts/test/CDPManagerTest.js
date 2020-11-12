@@ -3036,8 +3036,8 @@ contract('CDPManager', async accounts => {
 
     const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
 
-    // 59 minutes pass
-    th.fastForwardTime(3540, web3.currentProvider)
+    // 50 seconds pass
+    th.fastForwardTime(50, web3.currentProvider)
 
     // Borrower A triggers a fee
     await th.redeemCollateral(A, contracts, dec(1, 18))
@@ -3048,8 +3048,8 @@ contract('CDPManager', async accounts => {
     // since before minimum interval had passed 
     assert.isTrue(lastFeeOpTime_2.eq(lastFeeOpTime_1))
 
-    // 1 minute passes
-    th.fastForwardTime(60, web3.currentProvider)
+    // 10 seconds passes
+    th.fastForwardTime(10, web3.currentProvider)
 
     // Check that now, at least one hour has passed since lastFeeOpTime_1
     const timeNow = await th.getLatestBlockTimestamp(web3)

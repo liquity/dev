@@ -1,6 +1,8 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
 
-// Safemath functions for overflow protection on uint128 basic arithmetic operations.
+pragma solidity >=0.5.0;
+
+// uint128 addition and subtraction, with overflow protection.
 
 library SafeMath128 {
     function add(uint128 a, uint128 b) internal pure returns (uint128) {

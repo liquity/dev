@@ -43,7 +43,7 @@ class DeploymentHelper {
     }
   }
 
-  static async deployGTContracts(communityIssuance = undefined) {
+  static async deployGTContracts() {
     const cmdLineArgs = process.argv
     const frameworkPath = cmdLineArgs[1]
     // console.log(`Framework used:  ${frameworkPath}`)
@@ -272,8 +272,9 @@ class DeploymentHelper {
 
     // set contracts in the Pools
     await contracts.stabilityPool.setAddresses(
+      contracts.borrowerOperations.address,
       contracts.poolManager.address,
-      contracts.activePool.address,
+      contracts.activePool.address
     )
 
     await contracts.activePool.setAddresses(

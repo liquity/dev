@@ -1,4 +1,4 @@
-pragma solidity 0.5.16;
+pragma solidity 0.6.11;
 
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/console.sol";
@@ -51,33 +51,33 @@ contract LQTYStaking is ILQTYStaking {
         stakingContractDeployer = msg.sender;
     }
 
-    function setGrowthTokenAddress(address _growthTokenAddress) external {
+    function setGrowthTokenAddress(address _growthTokenAddress) external override {
         _requireCallerIsStakingContractDeployer();
         growthTokenAddress = _growthTokenAddress;
         growthToken = IGrowthToken(growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 
-    function setCLVTokenAddress(address _clvTokenAddress) external {
+    function setCLVTokenAddress(address _clvTokenAddress) external override {
         _requireCallerIsStakingContractDeployer();
         clvTokenAddress = _clvTokenAddress;
         clvToken = ICLVToken(_clvTokenAddress);
         emit GrowthTokenAddressSet(_clvTokenAddress);
     }
 
-    function setCDPManagerAddress(address _cdpManagerAddress) external {
+    function setCDPManagerAddress(address _cdpManagerAddress) external override {
         _requireCallerIsStakingContractDeployer();
         cdpManagerAddress = _cdpManagerAddress;
         emit CDPManagerAddressSet(_cdpManagerAddress);
     }
 
-    function setBorrowerOperationsAddress(address _borrowerOperationsAddress) external {
+    function setBorrowerOperationsAddress(address _borrowerOperationsAddress) external override {
         _requireCallerIsStakingContractDeployer();
         borrowerOperationsAddress = _borrowerOperationsAddress;
         emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
     }
 
-    function setActivePoolAddress(address _activePoolAddress) external {
+    function setActivePoolAddress(address _activePoolAddress) external override {
         _requireCallerIsStakingContractDeployer();
         activePoolAddress = _activePoolAddress;
         emit BorrowerOperationsAddressSet(_activePoolAddress);
@@ -86,7 +86,7 @@ contract LQTYStaking is ILQTYStaking {
     /* Staking expects that this StakingContract is allowed to spend at least _amount of 
     the caller's LQTY tokens.
     If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. */
-    function stake(uint _LQTYamount) external {
+    function stake(uint _LQTYamount) external override {
         uint currentStake = stakes[msg.sender];
 
         uint ETHGain;
@@ -113,7 +113,7 @@ contract LQTYStaking is ILQTYStaking {
 
     // Unstake the LQTY and send the it back to the caller, along with their accumulated LUSD & ETH gains. 
     // If requested amount > stake, send their entire stake.
-    function unstake(uint _LQTYamount) external {
+    function unstake(uint _LQTYamount) external override {
         uint currentStake = stakes[msg.sender];
         _requireUserHasStake(currentStake);
 
@@ -139,7 +139,7 @@ contract LQTYStaking is ILQTYStaking {
 
     // --- Reward-per-unit-staked increase functions. Called by Liquity core contracts ---
 
-    function increaseF_ETH(uint _ETHFee) external {
+    function increaseF_ETH(uint _ETHFee) external override {
         _requireCallerIsCDPManager();
         uint ETHFeePerLQTYStaked;
      
@@ -148,7 +148,7 @@ contract LQTYStaking is ILQTYStaking {
         F_ETH = F_ETH.add(ETHFeePerLQTYStaked); 
     }
 
-    function increaseF_LUSD(uint _LUSDFee) external {
+    function increaseF_LUSD(uint _LUSDFee) external override {
         _requireCallerIsBorrowerOperations();
         uint LUSDFeePerLQTYStaked;
         
@@ -159,7 +159,7 @@ contract LQTYStaking is ILQTYStaking {
 
     // --- Pending reward functions ---
 
-    function getPendingETHGain(address _user) external view returns (uint) {
+    function getPendingETHGain(address _user) external view override returns (uint) {
         return _getPendingETHGain(_user);
     }
 
@@ -169,7 +169,7 @@ contract LQTYStaking is ILQTYStaking {
         return ETHGain;
     }
 
-    function getPendingLUSDGain(address _user) external view returns (uint) {
+    function getPendingLUSDGain(address _user) external view override returns (uint) {
         return _getPendingLUSDGain(_user);
     }
 
@@ -187,7 +187,7 @@ contract LQTYStaking is ILQTYStaking {
     }
 
     function _sendETHGainToUser(address _user, uint ETHGain) internal returns (bool) {
-        (bool success, ) = _user.call.value(ETHGain)("");
+        (bool success, ) = _user.call{value: ETHGain}("");
         require(success, "LQTYStaking: Failed to send accumulated ETHGain");
     }
 
@@ -213,7 +213,7 @@ contract LQTYStaking is ILQTYStaking {
         require(currentStake > 0, 'LQTYStaking: User must have a non-zero stake');  
     }
 
-    function () external payable {
+    receive() external payable {
         _requireCallerIsActivePool();
     }
 }

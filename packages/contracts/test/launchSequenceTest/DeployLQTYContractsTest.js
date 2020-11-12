@@ -1,9 +1,9 @@
-const deploymentHelper = require("../utils/deploymentHelpers.js")
-const testHelpers = require("../utils/testHelpers.js")
+const deploymentHelper = require("../../utils/deploymentHelpers.js")
+const testHelpers = require("../../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
 
-contract('GT Contracts deployments', async accounts => {
+contract('Deploying the LQTY contract: LCF, CI, LQTYStaking, and GrowthToken ', async accounts => {
   const [liquityAG] = accounts;
 
   let GTContracts
@@ -11,7 +11,7 @@ contract('GT Contracts deployments', async accounts => {
     // Deploy all contracts from the first account
     GTContracts = await deploymentHelper.deployGTContracts()
 
-    gtStaking = GTContracts.gtStaking
+    lqtyStaking = GTContracts.lqtyStaking
     growthToken = GTContracts.growthToken
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
@@ -42,9 +42,9 @@ contract('GT Contracts deployments', async accounts => {
     })
   })
 
-  describe('GTStaking deployment', async accounts => {
+  describe('LQTYStaking deployment', async accounts => {
     it("stores the deployer's address", async () => {
-      const storedDeployerAddress = await gtStaking.stakingContractDeployer()
+      const storedDeployerAddress = await lqtyStaking.stakingContractDeployer()
 
       assert.equal(liquityAG, storedDeployerAddress)
     })
@@ -89,19 +89,19 @@ contract('GT Contracts deployments', async accounts => {
     })
   })
 
-  describe('Connecting GrowthToken to LCF, CI and GTStaking', async accounts => {
-    it('sets the correct GrowthToken address in GTStaking', async () => { 
-      // Set the GrowthToken address in the LCF, CI and GTStaking
+  describe('Connecting GrowthToken to LCF, CI and LQTYStaking', async accounts => {
+    it('sets the correct GrowthToken address in LQTYStaking', async () => { 
+      // Set the GrowthToken address in the LCF, CI and LQTYStaking
       await deploymentHelper.connectGTContracts(GTContracts)
       
       const growthTokenAddress = growthToken.address
 
-      const recordedGrowthTokenAddress = await gtStaking.growthTokenAddress()
+      const recordedGrowthTokenAddress = await lqtyStaking.growthTokenAddress()
       assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
     })
 
     it('sets the correct GrowthToken address in LockupContractFactory', async () => {
-      // Set the GrowthToken address in the LCF, CI and GTStaking
+      // Set the GrowthToken address in the LCF, CI and LQTYStaking
       await deploymentHelper.connectGTContracts(GTContracts)
 
       const growthTokenAddress = growthToken.address
@@ -111,7 +111,7 @@ contract('GT Contracts deployments', async accounts => {
     })
 
     it('sets the correct GrowthToken address in LockupContractFactory', async () => {
-       // Set the GrowthToken address in the LCF, CI and GTStaking
+       // Set the GrowthToken address in the LCF, CI and LQTYStaking
        await deploymentHelper.connectGTContracts(GTContracts)
 
       const growthTokenAddress = growthToken.address

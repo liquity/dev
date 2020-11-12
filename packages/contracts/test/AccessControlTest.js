@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
@@ -296,7 +297,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not StabilityPool")
       }
     })
   })
@@ -777,15 +777,18 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
   describe('CommunityIssuance', async accounts => { 
     it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
+      
+      const CINew = await CommunityIssuance.new() 
+
       try {
-        const txAlice = await communityIssuance.setGrowthTokenAddress(growthToken.address, { from: alice })
+        const txAlice = await CINew.setGrowthTokenAddress(growthToken.address, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
       }
 
       // Deployer can successfully set address
-      const txDeployer =  communityIssuance.setGrowthTokenAddress(growthToken.address, { from: owner })
+      const txDeployer =  CINew.setGrowthTokenAddress(growthToken.address, { from: owner })
     })
   })
 })

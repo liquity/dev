@@ -287,7 +287,7 @@ export class EthersLiquity
       numberOfTrials
     );
 
-    const { 0: hint } = await this.sortedCDPs.findInsertPosition(
+    const [hint] = await this.sortedCDPs.findInsertPosition(
       collateralRatio.bigNumber,
       price.bigNumber,
       approxHint,

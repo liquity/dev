@@ -1,17 +1,17 @@
 const OneYearLockupContract = artifacts.require("./OneYearLockupContract.sol")
 const CustomDurationLockupContract = artifacts.require("./CustomDurationLockupContract.sol")
 
-const deploymentHelper = require("../utils/deploymentHelpers.js")
-const testHelpers = require("../utils/testHelpers.js")
+const deploymentHelper = require("../../utils/deploymentHelpers.js")
+const testHelpers = require("../../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
+const timeValues = testHelpers.TimeValues
 const dec = th.dec
 
-contract('Deploying and funding GT contracts', async accounts => {
+contract('Deploying and funding One Year Lockup Contracts', async accounts => {
   const [liquityAG, A, B, C, D, E, F, G, H, I, J] = accounts;
 
-  const ONE_MONTH_IN_SECONDS = 2592000
-  const ONE_YEAR_IN_SECONDS = 31536000
+  const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
 
   let GTContracts
 
@@ -27,7 +27,7 @@ contract('Deploying and funding GT contracts', async accounts => {
     GTContracts = await deploymentHelper.deployGTContracts()
     await deploymentHelper.connectGTContracts(GTContracts)
 
-    gtStaking = GTContracts.gtStaking
+    lqtyStaking = GTContracts.lqtyStaking
     growthToken = GTContracts.growthToken
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
@@ -498,7 +498,7 @@ contract('Deploying and funding GT contracts', async accounts => {
 
       // --- Fast forward time one month ---
 
-      await th.fastForwardTime(ONE_MONTH_IN_SECONDS, web3.currentProvider)
+      await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Deploy 2 more OYLCs, D and E
       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, GTEntitlement_D, { from: liquityAG })
@@ -571,21 +571,21 @@ contract('Deploying and funding GT contracts', async accounts => {
   describe('Deploying CDLCs', async accounts => {
     it("No one can deploy CDLCs through the factory", async () => {
       try {
-        const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, ONE_MONTH_IN_SECONDS, { from: liquityAG })
+        const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, GTEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
         assert.isFalse(deployedCDLCtx_A.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
 
       try {
-        const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, ONE_MONTH_IN_SECONDS, { from: B })
+        const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, GTEntitlement_B, SECONDS_IN_ONE_MONTH, { from: B })
         assert.isFalse(deployedCDLCtx_B.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
 
       try {
-        const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, ONE_MONTH_IN_SECONDS, { from: G })
+        const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, GTEntitlement_C, SECONDS_IN_ONE_MONTH, { from: G })
         assert.isFalse(deployedCDLCtx_C.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
@@ -594,13 +594,13 @@ contract('Deploying and funding GT contracts', async accounts => {
 
     it("Anyone can deploy CDLCs directly", async () => {
       // Various EOAs deploy CDLCs
-      const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, GTEntitlement_A, ONE_MONTH_IN_SECONDS, { from: D })
+      const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, GTEntitlement_A, SECONDS_IN_ONE_MONTH, { from: D })
       const CDLC_A_txReceipt = await web3.eth.getTransactionReceipt(CDLC_A.transactionHash)
 
-      const CDLC_B = await CustomDurationLockupContract.new(growthToken.address, B, GTEntitlement_B, ONE_MONTH_IN_SECONDS, { from: E })
+      const CDLC_B = await CustomDurationLockupContract.new(growthToken.address, B, GTEntitlement_B, SECONDS_IN_ONE_MONTH, { from: E })
       const CDLC_B_txReceipt = await web3.eth.getTransactionReceipt(CDLC_B.transactionHash)
 
-      const CDLC_C = await CustomDurationLockupContract.new(growthToken.address, C, GTEntitlement_C, ONE_MONTH_IN_SECONDS, { from: F })
+      const CDLC_C = await CustomDurationLockupContract.new(growthToken.address, C, GTEntitlement_C, SECONDS_IN_ONE_MONTH, { from: F })
       const CDLC_C_txReceipt = await web3.eth.getTransactionReceipt(CDLC_C.transactionHash)
 
       // Check deployment succeeded

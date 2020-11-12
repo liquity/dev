@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import "./Interfaces/ICLVToken.sol";
 import "./Dependencies/IERC20.sol";
@@ -6,7 +8,7 @@ import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
-contract CLVToken is IERC20, ICLVToken, Ownable {
+contract CLVToken is ICLVToken, Ownable {
     using SafeMath for uint256;
 
     string constant internal NAME = "LUSD";
@@ -35,6 +37,7 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         address _borrowerOperationsAddress
     )
         external
+        override
         onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
@@ -46,31 +49,27 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
         _renounceOwnership();
     }
   
-    function mint(address _account, uint256 _amount) external  {
+    function mint(address _account, uint256 _amount) external override {
         _requireCallerIsPMorBO();
         _mint(_account, _amount); 
     }
     
-    function burn(address _account, uint256 _amount) external {
+    function burn(address _account, uint256 _amount) external override {
         _requireCallerIsPoolManager();
         _burn(_account, _amount); 
     }
     
-    function sendToPool(address _sender,  address _poolAddress, uint256 _amount) external {
+    function sendToPool(address _sender,  address _poolAddress, uint256 _amount) external override {
         _requireCallerIsPoolManager();
         _transfer(_sender, _poolAddress, _amount);
     }
     
-    function returnFromPool(address _poolAddress, address _receiver, uint256 _amount) external {
+    function returnFromPool(address _poolAddress, address _receiver, uint256 _amount) external override {
         _requireCallerIsPoolManager();
         _transfer(_poolAddress, _receiver, _amount);
     }
 
     // --- Balance functions ---
-
-    function getBalance(address _account) external view returns (uint) {
-        return balanceOf(_account);
-    }
 
     function _addToBalance(address _account, uint256 _value) internal {
         balances[_account] = balances[_account].add(_value);
@@ -99,42 +98,42 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
 
     // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---
 
-    function totalSupply() external view returns (uint256) {
+    function totalSupply() external view override returns (uint256) {
         return _totalSupply;
     }
 
-    function balanceOf(address account) public view returns (uint256) {
+    function balanceOf(address account) public view override returns (uint256) {
         return balances[account];
     }
 
-    function transfer(address recipient, uint256 amount) external returns (bool) {
+    function transfer(address recipient, uint256 amount) external override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
 
-    function allowance(address owner, address spender) external view returns (uint256) {
+    function allowance(address owner, address spender) external view override returns (uint256) {
         return getAllowance(owner, spender);
     }
 
-    function approve(address spender, uint256 amount) external returns (bool) {
+    function approve(address spender, uint256 amount) external override returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         _transfer(sender, recipient, amount);
         uint newAllowance = getAllowance(sender, _msgSender()).sub(amount, "ERC20: transfer amount exceeds allowance");
         _approve(sender, _msgSender(), newAllowance);
         return true;
     }
 
-    function increaseAllowance(address spender, uint256 addedValue) external returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) external override returns (bool) {
         uint newAllowance = getAllowance(_msgSender(),spender).add(addedValue);
         _approve(_msgSender(), spender, newAllowance);
         return true;
     }
 
-    function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) external override returns (bool) {
         uint newAllowance = getAllowance(_msgSender(), spender).sub(subtractedValue, "ERC20: decreased allowance below zero");
         _approve(_msgSender(), spender, newAllowance);
         return true;
@@ -176,15 +175,15 @@ contract CLVToken is IERC20, ICLVToken, Ownable {
 
     // --- Optional functions ---
 
-    function name() external view returns (string memory) {
+    function name() external view override returns (string memory) {
         return NAME;
     }
 
-    function symbol() external view returns (string memory) {
+    function symbol() external view override returns (string memory) {
         return SYMBOL;
     }
 
-    function decimals() external view returns (uint8) {
+    function decimals() external view override returns (uint8) {
         return DECIMALS;
     }
 }

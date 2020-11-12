@@ -1,8 +1,9 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
 
+pragma solidity 0.6.11;
 
 contract Destructible {
-    function () external payable {}
+    receive() external payable {}
     function destruct(address payable _receiver) external {
         selfdestruct(_receiver);
     }

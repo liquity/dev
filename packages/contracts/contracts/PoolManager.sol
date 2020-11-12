@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/IPool.sol';
@@ -144,6 +146,7 @@ contract PoolManager is Ownable, IPoolManager {
         address _communityIssuanceAddress
     )
     external
+    override
     onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
@@ -175,48 +178,48 @@ contract PoolManager is Ownable, IPoolManager {
     // --- Getters ---
 
     // Return the total active debt (in CLV) in the system
-    function getActiveDebt() external view returns (uint) {
+    function getActiveDebt() external view override returns (uint) {
         return activePool.getCLVDebt();
     }    
     
     // Return the total active collateral (in ETH) in the system
-    function getActiveColl() external view returns (uint) {
+    function getActiveColl() external view override returns (uint) {
         return activePool.getETH();
     } 
     
     // Return the amount of closed debt (in CLV)
-    function getClosedDebt() external view returns (uint) {
+    function getClosedDebt() external view override returns (uint) {
         return defaultPool.getCLVDebt();
     }    
     
     // Return the amount of closed collateral (in ETH)
-    function getLiquidatedColl() external view returns (uint) {
+    function getLiquidatedColl() external view override returns (uint) {
         return defaultPool.getETH();
     }
     
     // Return the total CLV in the Stability Pool
-    function getStabilityPoolCLV() external view returns (uint) {
+    function getStabilityPoolCLV() external view override returns (uint) {
         return stabilityPool.getTotalCLVDeposits();
     }
     
     // --- Pool interaction functions ---
 
     // Add the received ETH to the total active collateral
-    function addColl() external payable {
+    function addColl() external override payable {
         _requireCallerIsBorrowerOperations();
     
-        (bool success, ) = activePoolAddress.call.value(msg.value)("");
+        (bool success, ) = activePoolAddress.call{value: msg.value}("");
         assert(success == true);
     }
     
     // Transfer the specified amount of ETH to _account and updates the total active collateral
-    function withdrawColl(address _account, uint _ETH) external {
+    function withdrawColl(address _account, uint _ETH) external override {
         _requireCallerIsBorrowerOperations();
         activePool.sendETH(_account, _ETH);
     }
     
     // Issue the specified amount of CLV (minus the fee) to _account, and increase the total active debt
-    function withdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) public {
+    function withdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) public override {
         _requireCallerIsBorrowerOperations();
 
         uint totalCLVDrawn = _CLVAmount.add(_CLVFee);
@@ -225,31 +228,31 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Burn the specified amount of CLV from _account and decreases the total active debt
-    function repayCLV(address _account, uint _CLV) external {
+    function repayCLV(address _account, uint _CLV) external override {
         _requireCallerIsBorrowerOperations();
         activePool.decreaseCLVDebt(_CLV);
         CLV.burn(_account, _CLV);
     }       
 
-    function lockCLVGasCompensation(uint _CLVGasComp) external {
+    function lockCLVGasCompensation(uint _CLVGasComp) external override {
         _requireCallerIsBorrowerOperations();
         activePool.increaseCLVDebt(_CLVGasComp);  
         CLV.mint(GAS_POOL_ADDRESS, _CLVGasComp);  
     }
 
-    function refundCLVGasCompensation(uint _CLVGasComp) external {
+    function refundCLVGasCompensation(uint _CLVGasComp) external override {
         _requireCallerIsBorrowerOperations();
         activePool.decreaseCLVDebt(_CLVGasComp);
         CLV.burn(GAS_POOL_ADDRESS, _CLVGasComp);
     }
 
-    function sendCLVGasCompensation(address _user, uint _CLVGasComp) external {
+    function sendCLVGasCompensation(address _user, uint _CLVGasComp) external override {
         _requireCallerIsCDPManager();
         CLV.returnFromPool(GAS_POOL_ADDRESS, _user, _CLVGasComp);
     }
 
     // Update the Active Pool and the Default Pool when a CDP gets closed
-    function liquidate(uint _CLV, uint _ETH) external {
+    function liquidate(uint _CLV, uint _ETH) external override {
         _requireCallerIsCDPManager();
 
         defaultPool.increaseCLVDebt(_CLV);
@@ -258,7 +261,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Move a CDP's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
-    function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external {
+    function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external override {
         _requireCallerIsCDPManager();
 
         defaultPool.decreaseCLVDebt(_CLV);  
@@ -267,7 +270,7 @@ contract PoolManager is Ownable, IPoolManager {
     }
 
     // Burn the received CLV, transfer the redeemed ETH to _account and updates the Active Pool
-    function redeemCollateral(address _account, uint _CLV, uint _ETH) external {
+    function redeemCollateral(address _account, uint _CLV, uint _ETH) external override {
         _requireCallerIsCDPManager();
        
         CLV.burn(_account, _CLV); 
@@ -280,7 +283,7 @@ contract PoolManager is Ownable, IPoolManager {
     
     This 10 CLV gas compensation is burned. Therefore, the total CLV burned in a redemption equals the full debt of the trove.
     Since redeemed-from troves have >=110% ICR, a full redemption leaves the trove with some surplus ETH, which is sent out to the trove owner. */
-    function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external {
+    function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external override {
         _requireCallerIsCDPManager();
      
         CLV.burn(GAS_POOL_ADDRESS, _CLV);
@@ -299,7 +302,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Return the ETH gain earned by the deposit. Given by the formula:  E = d0 * (S - S(0))/P(0)
     where S(0) and P(0) are the depositor's snapshots of the sum S and product P, respectively. */
-    function getDepositorETHGain(address _depositor) public view returns (uint) {
+    function getDepositorETHGain(address _depositor) public view override returns (uint) {
         uint initialDeposit = deposits[_depositor].initialValue;
 
         if (initialDeposit == 0) { return 0; }
@@ -332,7 +335,7 @@ contract PoolManager is Ownable, IPoolManager {
     where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively. 
     
     d0 is the last recorded deposit value. */
-    function getDepositorLQTYGain(address _depositor) public view returns (uint) {
+    function getDepositorLQTYGain(address _depositor) public view override returns (uint) {
        
         uint initialDeposit = deposits[_depositor].initialValue;
         if (initialDeposit == 0) {return 0;}
@@ -353,7 +356,7 @@ contract PoolManager is Ownable, IPoolManager {
     where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively.
 
     D0 is the last recorded value of the front end's total tagged deposits. */
-    function getFrontEndLQTYGain(address _frontEnd) public view returns (uint) {
+    function getFrontEndLQTYGain(address _frontEnd) public view override returns (uint) {
         uint frontEndStake = frontEndStakes[_frontEnd];
         if (frontEndStake == 0) { return 0; }
 
@@ -388,7 +391,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
     where P(0) is the depositor's snapshot of the product P. */
-    function getCompoundedCLVDeposit(address _depositor) public view returns (uint) {
+    function getCompoundedCLVDeposit(address _depositor) public view override returns (uint) {
         uint initialDeposit = deposits[_depositor].initialValue;
         if (initialDeposit == 0) { return 0; }
 
@@ -400,7 +403,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
     where P(0) is the depositor's snapshot of the product P. */
-    function getCompoundedFrontEndStake(address _frontEnd) public view returns (uint) {
+    function getCompoundedFrontEndStake(address _frontEnd) public view override returns (uint) {
         uint frontEndStake = frontEndStakes[_frontEnd];
         if (frontEndStake == 0) { return 0; }
 
@@ -451,12 +454,6 @@ contract PoolManager is Ownable, IPoolManager {
         stabilityPool.sendETH(_depositor, ETHGain);
     }
     
-    // Send ETHGain to depositor's CDP. Send in two steps: StabilityPool -> PoolManager -> depositor's CDP
-    function _sendETHGainToCDP(address _depositor, uint _ETHGain, address _hint) internal {
-        stabilityPool.sendETH(address(this), _ETHGain); 
-        borrowerOperations.addColl.value(_ETHGain)(_depositor, _hint); 
-    }
-
     // Send CLV to user and decrease CLV in Pool
     function _sendCLVToDepositor(address _depositor, uint CLVWithdrawal) internal {
         uint CLVinPool = stabilityPool.getTotalCLVDeposits();
@@ -468,7 +465,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- External Front End functions ---
 
-    function registerFrontEnd(uint _kickbackRate) external {
+    function registerFrontEnd(uint _kickbackRate) external override {
         _requireFrontEndNotRegistered(msg.sender);
         _requireUserHasNoDeposit(msg.sender);
         _requireValidKickbackRate(_kickbackRate);
@@ -481,7 +478,7 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Stability Pool Deposit Functionality --- 
 
-    function getFrontEndTag(address _depositor) public view returns (address) {
+    function getFrontEndTag(address _depositor) public view override returns (address) {
         return deposits[_depositor].frontEndTag;
     }
     
@@ -563,7 +560,7 @@ contract PoolManager is Ownable, IPoolManager {
     - Sends all accumulated gains (LQTY, ETH) to depositor and front end
     - Increases deposit and front end stake, and takes new snapshots for each.
     */
-    function provideToSP(uint _amount, address _frontEndTag) external {
+    function provideToSP(uint _amount, address _frontEndTag) external override {
         _requireFrontEndIsRegisteredOrZero(_frontEndTag);
         _requireFrontEndNotRegistered(msg.sender);
         _requireNonZeroAmount(_amount);
@@ -608,7 +605,7 @@ contract PoolManager is Ownable, IPoolManager {
     - Decreases deposit and front end stake, and takes new snapshots for each.
 
     If _amount > userDeposit, the user withdraws all of their compounded deposit. */
-    function withdrawFromSP(uint _amount) external {
+    function withdrawFromSP(uint _amount) external override {
         address depositor = _msgSender();
         _requireUserHasDeposit(depositor); 
         uint initialDeposit = deposits[depositor].initialValue;
@@ -650,7 +647,7 @@ contract PoolManager is Ownable, IPoolManager {
     - Updates snapshots for deposit and front end stake
     
     TODO: Remove _user depositor and just use _msgSender(). */
-    function withdrawETHGainToTrove(address _hint) external {
+    function withdrawETHGainToTrove(address _hint) external override {
         address depositor = _msgSender();
         _requireUserHasDeposit(depositor); 
         _requireUserHasTrove(depositor);
@@ -683,7 +680,7 @@ contract PoolManager is Ownable, IPoolManager {
         emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss);
         emit UserDepositChanged(depositor, compoundedCLVDeposit); 
 
-        _sendETHGainToCDP(depositor, depositorETHGain, _hint);
+        stabilityPool.sendETHGainToTrove(depositor, depositorETHGain, _hint);
     }
 
     // --- LQTY issuance functions ---
@@ -718,7 +715,7 @@ contract PoolManager is Ownable, IPoolManager {
     /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
     and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
     Only called from liquidation functions in CDPManager. */
-    function offset(uint _debtToOffset, uint _collToAdd) external payable {    
+    function offset(uint _debtToOffset, uint _collToAdd) external payable override {    
         _requireCallerIsCDPManager();
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
         if (totalCLVDeposits == 0 || _debtToOffset == 0) { return; }
@@ -858,11 +855,5 @@ contract PoolManager is Ownable, IPoolManager {
 
     function _requireETHSentSuccessfully(bool _success) internal pure {
         require(_success, "CDPManager: Failed to send ETH to msg.sender");
-    }
-
-    // --- Fallback function ---
-    
-    function() external payable {
-        _requireOnlyStabilityPool();
     }
 }    

@@ -1,10 +1,12 @@
-pragma solidity 0.5.16;
+pragma solidity 0.6.11;
+
 import "../Dependencies/SafeMath.sol";
+import "../Interfaces/ILockupContractFactory.sol";
 import "./OneYearLockupContract.sol";
 import "./CustomDurationLockupContract.sol";
 import "../Dependencies/console.sol";
 
-contract LockupContractFactory {
+contract LockupContractFactory is ILockupContractFactory {
     using SafeMath for uint;
      
     // --- Data ---
@@ -32,14 +34,14 @@ contract LockupContractFactory {
         factoryDeployer = msg.sender;
     }
 
-    function setGrowthTokenAddress(address _growthTokenAddress) external {
+    function setGrowthTokenAddress(address _growthTokenAddress) external override {
         _requireCallerIsFactoryDeployer();
         growthTokenAddress = _growthTokenAddress;
         GrowthToken = IGrowthToken(growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 
-    function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external  {
+    function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external override {
         _requireGTAddressIsSet();
         OneYearLockupContract oneYearLockupContract = new OneYearLockupContract(
                                                         growthTokenAddress, 
@@ -50,7 +52,7 @@ contract LockupContractFactory {
         emit OYLCDeployed(address(oneYearLockupContract), beneficiary, initialEntitlement);
     }
 
-    function deployCustomDurationLockupContract(address beneficiary, uint initialEntitlement, uint lockupDuration) external {
+    function deployCustomDurationLockupContract(address beneficiary, uint initialEntitlement, uint lockupDuration) external override {
         _requireGTAddressIsSet();
         _requireFactoryIsAtLeastOneYearOld();
     
@@ -65,7 +67,7 @@ contract LockupContractFactory {
     }
 
     // Simultaneously lock a set of OYLCs that were originally deployed by the caller, through this Factory.
-    function lockOneYearContracts(address[] calldata addresses) external {
+    function lockOneYearContracts(address[] calldata addresses) external override {
         for (uint i = 0; i < addresses.length; i++ ) {
             address addr = addresses[i];
             OneYearLockupContract oneYearlockupContract = OneYearLockupContract(addr);
@@ -79,7 +81,7 @@ contract LockupContractFactory {
     }
 
     // Simultaneously lock a set of CDLCs that were originally deployed by the caller, through this Factory.
-    function lockCustomDurationContracts(address[] calldata addresses) external {
+    function lockCustomDurationContracts(address[] calldata addresses) external override {
         for (uint i = 0; i < addresses.length; i++ ) {
             address addr = addresses[i];
             CustomDurationLockupContract customDurationLockupContract = CustomDurationLockupContract(addr);
@@ -92,7 +94,7 @@ contract LockupContractFactory {
         }
     }
 
-    function isRegisteredOneYearLockup(address _contractAddress) external view returns (bool) {
+    function isRegisteredOneYearLockup(address _contractAddress) external view override returns (bool) {
         return _isRegisteredOneYearLockup(_contractAddress);
     }
 
@@ -101,7 +103,7 @@ contract LockupContractFactory {
         return isRegistered;
     }
 
-    function isRegisteredCustomDurationLockup(address _contractAddress) external view returns (bool) {
+    function isRegisteredCustomDurationLockup(address _contractAddress) external view override returns (bool) {
         return _isRegisteredCustomDurationLockup(_contractAddress);
     }
 

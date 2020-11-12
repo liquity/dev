@@ -1,10 +1,11 @@
-pragma solidity 0.5.16;
+pragma solidity 0.6.11;
 import "../Interfaces/IGrowthToken.sol";
+import "../Interfaces/ICommunityIssuance.sol";
 import "../Dependencies/Math.sol";
 import "../Dependencies/SafeMath.sol";
 
 //TODO: Decide upon and implement GT community issuance schedule.
-contract CommunityIssuance {
+contract CommunityIssuance is ICommunityIssuance {
     using SafeMath for uint;
 
     // --- Data ---
@@ -52,7 +53,7 @@ contract CommunityIssuance {
         deploymentTime = block.timestamp;
     }
 
-    function setGrowthTokenAddress(address _growthTokenAddress) external {
+    function setGrowthTokenAddress(address _growthTokenAddress) external override {
         _requireCallerIsCommunityIssuanceDeployer();
         _requireContractIsNotActive();
         
@@ -61,7 +62,7 @@ contract CommunityIssuance {
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 
-    function setPoolManagerAddress(address _poolManagerAddress) external {
+    function setPoolManagerAddress(address _poolManagerAddress) external override {
         _requireCallerIsCommunityIssuanceDeployer();
         _requireContractIsNotActive();
         
@@ -69,7 +70,7 @@ contract CommunityIssuance {
         emit PoolManagerAddressSet(_poolManagerAddress);
     }
 
-    function activateContract() external {
+    function activateContract() external override {
         _requireCallerIsCommunityIssuanceDeployer();
         _requireContractIsNotActive();
 
@@ -78,7 +79,7 @@ contract CommunityIssuance {
         active = true;
     }
 
-    function issueLQTY() external returns (uint) {
+    function issueLQTY() external override returns (uint) {
         // check caller is PM
         _requireCallerIsPoolManager();
         _requireContractIsActive();
@@ -108,10 +109,10 @@ contract CommunityIssuance {
         return cumulativeIssuanceFraction;
     } 
 
-    function sendLQTY(address _account, uint _LQTYamount) external returns (uint) {
+    function sendLQTY(address _account, uint _LQTYamount) external override {
         _requireCallerIsPoolManager();
         _requireContractIsActive();
-        // console.log("transfer amount: %s", _LQTYamount );
+    
         growthToken.transfer(_account, _LQTYamount);
     }
 
@@ -126,10 +127,10 @@ contract CommunityIssuance {
     }
 
     function _requireContractIsActive() internal view {
-        require(active == true, "CDLC: Contract must be active");
+        require(active == true, "CommunityIssuance: Contract must be active");
     }
 
     function _requireContractIsNotActive() internal view {
-        require(active == false, "CDLC: Contract must not be active");
+        require(active == false, "CommunityIssuance: Contract must not be active");
     }
 }

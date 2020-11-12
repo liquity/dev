@@ -798,8 +798,8 @@ contract('BorrowerOperations', async accounts => {
 
     const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
 
-    // 59 minutes pass
-    th.fastForwardTime(3540, web3.currentProvider)
+    // 50 seconds pass
+    th.fastForwardTime(50, web3.currentProvider)
 
     // Borrower C triggers a fee
     await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
@@ -810,12 +810,12 @@ contract('BorrowerOperations', async accounts => {
     // since before minimum interval had passed 
     assert.isTrue(lastFeeOpTime_2.eq(lastFeeOpTime_1))
 
-    // 1 minute passes
+    // 10 seconds passes
     th.fastForwardTime(60, web3.currentProvider)
 
-    // Check that now, at least one hour has passed since lastFeeOpTime_1
+    // Check that now, at least one minute has passed since lastFeeOpTime_1
     const timeNow = await th.getLatestBlockTimestamp(web3)
-    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
+    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(60))
 
     // Borrower C triggers a fee
     await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
@@ -1445,8 +1445,8 @@ contract('BorrowerOperations', async accounts => {
 
     const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
 
-    // 59 minutes pass
-    th.fastForwardTime(3540, web3.currentProvider)
+    // 50 seconds pass
+    th.fastForwardTime(50, web3.currentProvider)
 
     // Borrower C triggers a fee
     await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
@@ -1457,12 +1457,12 @@ contract('BorrowerOperations', async accounts => {
     // since before minimum interval had passed 
     assert.isTrue(lastFeeOpTime_2.eq(lastFeeOpTime_1))
 
-    // 1 minute passes
-    th.fastForwardTime(60, web3.currentProvider)
+    // 10 seconds passes
+    th.fastForwardTime(10, web3.currentProvider)
 
-    // Check that now, at least one hour has passed since lastFeeOpTime_1
+    // Check that now, at least one minute has passed since lastFeeOpTime_1
     const timeNow = await th.getLatestBlockTimestamp(web3)
-    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
+    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(60))
 
     // Borrower C triggers a fee
     await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
@@ -2606,8 +2606,8 @@ contract('BorrowerOperations', async accounts => {
 
     const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
 
-    // 59 minutes pass
-    th.fastForwardTime(3540, web3.currentProvider)
+    // 50 seconds pass
+    th.fastForwardTime(50, web3.currentProvider)
 
     // Borrower D triggers a fee
     await borrowerOperations.openLoan(dec(1, 18), D, { from: D, value: dec(1, 'ether') })
@@ -2618,8 +2618,8 @@ contract('BorrowerOperations', async accounts => {
     // since before minimum interval had passed 
     assert.isTrue(lastFeeOpTime_2.eq(lastFeeOpTime_1))
 
-    // 1 minute passes
-    th.fastForwardTime(60, web3.currentProvider)
+    // 10 seconds passes
+    th.fastForwardTime(10, web3.currentProvider)
 
     // Check that now, at least one hour has passed since lastFeeOpTime_1
     const timeNow = await th.getLatestBlockTimestamp(web3)

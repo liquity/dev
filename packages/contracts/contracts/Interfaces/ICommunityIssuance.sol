@@ -1,7 +1,9 @@
-pragma solidity >=0.5.16;
+pragma solidity 0.6.11;
+
 interface ICommunityIssuance { 
     // --- Events ---
     event GrowthTokenAddressSet(address _growthTokenAddress);
+    
     event PoolManagerAddressSet(address _poolManagerAddress);
 
     // --- Functions ---

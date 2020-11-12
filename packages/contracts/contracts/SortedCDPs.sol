@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ICDPManager.sol";
@@ -70,7 +72,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
     // --- Dependency setters --- 
 
-    function setParams(uint256 _size, address _CDPManagerAddress, address _borrowerOperationsAddress) external onlyOwner {
+    function setParams(uint256 _size, address _CDPManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
         require(_size > 0, "SortedCDPs: Size can’t be zero");
 
         data.maxSize = _size;
@@ -93,7 +95,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _nextId Id of next node for the insert position
      */
 
-    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external {
+    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external override {
         _requireCallerIsBOorCDPM();
         _insert (_id, _ICR, _price, _prevId, _nextId);
     }
@@ -144,7 +146,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         data.size = data.size.add(1); 
     }
 
-    function remove(address _id) external {
+    function remove(address _id) external override {
         _requireCallerIsCDPManager();
         _remove(_id);
     }
@@ -196,7 +198,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the new insert position
      * @param _nextId Id of next node for the new insert position
      */
-    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external {
+    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external override {
         _requireCallerIsBOorCDPM();
         // List must contain the node
         require(_contains(_id));
@@ -214,7 +216,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @dev Checks if the list contains a node
      * @param _transcoder Address of transcoder
      */
-    function contains(address _id) external view returns (bool) {
+    function contains(address _id) external view override returns (bool) {
        return _contains(_id);
     }
 
@@ -225,42 +227,42 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     /*
      * @dev Checks if the list is full
      */
-    function isFull() public view returns (bool) {
+    function isFull() public view override returns (bool) {
         return data.size == data.maxSize;
     }
 
     /*
      * @dev Checks if the list is empty
      */
-    function isEmpty() public view returns (bool) {
+    function isEmpty() public view override returns (bool) {
         return data.size == 0;
     }
 
     /*
      * @dev Returns the current size of the list
      */
-    function getSize() external view returns (uint256) {
+    function getSize() external view override returns (uint256) {
         return data.size;
     }
 
     /*
      * @dev Returns the maximum size of the list
      */
-    function getMaxSize() external view returns (uint256) {
+    function getMaxSize() external view override returns (uint256) {
         return data.maxSize;
     }
 
     /*
      * @dev Returns the first node in the list (node with the largest ICR)
      */
-    function getFirst() external view returns (address) {
+    function getFirst() external view override returns (address) {
         return data.head;
     }
 
     /*
      * @dev Returns the last node in the list (node with the smallest ICR)
      */
-    function getLast() external view returns (address) {
+    function getLast() external view override returns (address) {
         return data.tail;
     }
 
@@ -268,7 +270,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @dev Returns the next node (with a smaller ICR) in the list for a given node
      * @param _id Node's id
      */
-    function getNext(address _id) external view returns (address) {
+    function getNext(address _id) external view override returns (address) {
         return data.nodes[_id].nextId;
     }
 
@@ -276,7 +278,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @dev Returns the previous node (with a larger ICR) in the list for a given node
      * @param _id Node's id
      */
-    function getPrev(address _id) external view returns (address) {
+    function getPrev(address _id) external view override returns (address) {
         return data.nodes[_id].prevId;
     }
 
@@ -287,7 +289,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _nextId Id of next node for the insert position
      */
     
-    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) external view returns (bool) {
+    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) external view override returns (bool) {
         return _validInsertPosition(_ICR, _price, _prevId, _nextId);
     }
 
@@ -314,7 +316,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _ICR Node's ICR
      * @param _startId Id of node to start ascending the list from
      */
-    function descendList(uint256 _ICR, uint _price, address _startId) private view returns (address, address) {
+    function _descendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {
         // If `_startId` is the head, check if the insert position is before the head
         if (data.head == _startId && _ICR >= cdpManager.getCurrentICR(_startId, _price)) {
             return (address(0), _startId);
@@ -337,7 +339,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _ICR Node's ICR
      * @param _startId Id of node to start descending the list from
      */
-    function ascendList(uint256 _ICR, uint _price, address _startId) private view returns (address, address) {
+    function _ascendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {
         // If `_startId` is the tail, check if the insert position is after the tail
         if (data.tail == _startId && _ICR <= cdpManager.getCurrentICR(_startId, _price)) {
             return (_startId, address(0));
@@ -361,7 +363,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) external view returns (address, address) {
+    function findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) external view override returns (address, address) {
         return _findInsertPosition(_ICR, _price, _prevId, _nextId);
     }
 
@@ -385,16 +387,16 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
         if (prevId == address(0) && nextId == address(0)) {
             // No hint - descend list starting from head
-            return descendList(_ICR, _price, data.head);
+            return _descendList(_ICR, _price, data.head);
         } else if (prevId == address(0)) {
             // No `prevId` for hint - ascend list starting from `nextId`
-            return ascendList(_ICR, _price, nextId);
+            return _ascendList(_ICR, _price, nextId);
         } else if (nextId == address(0)) {
             // No `nextId` for hint - descend list starting from `prevId`
-            return descendList(_ICR, _price, prevId);
+            return _descendList(_ICR, _price, prevId);
         } else {
             // Descend list starting from `prevId`
-            return descendList(_ICR, _price, prevId);
+            return _descendList(_ICR, _price, prevId);
         }
     }
 
