@@ -3,7 +3,7 @@ const testHelpers = require("../../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
 
-contract('Deploying the LQTY contract: LCF, CI, LQTYStaking, and GrowthToken ', async accounts => {
+contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ', async accounts => {
   const [liquityAG] = accounts;
 
   let GTContracts
