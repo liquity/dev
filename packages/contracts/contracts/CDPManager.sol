@@ -40,7 +40,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // --- Data structures ---
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
-    uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // Corresponds to an hourly decay factor of 0.99
+    uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // 18 digit decimal. Corresponds to an hourly decay factor of 0.99
 
     uint public baseRate;
 
