@@ -24,7 +24,7 @@ contract EchidnaProxy {
         clvToken = _clvToken;
     }
 
-    function () external payable {
+    receive() external payable {
         // do nothing
     }
 
