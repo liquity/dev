@@ -1,4 +1,5 @@
 pragma solidity 0.6.11;
+
 import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ICommunityIssuance.sol";
 import "../Dependencies/Math.sol";

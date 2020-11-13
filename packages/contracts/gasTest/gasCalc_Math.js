@@ -8,6 +8,7 @@ const th = testHelpers.TestHelper
 
 const timeValues = testHelpers.TimeValues
 
+/* Script that logs gas costs for Liquity math functions. */
 contract('Gas costs for math functions', async accounts => {
   let contracts
   let cdpManagerTester
@@ -47,7 +48,7 @@ contract('Gas costs for math functions', async accounts => {
   })
 
   // performs n runs of exponentiation on a random base
-  const exponentiate = async (mathTester, exponent, runs, baseMin, baseMax = undefined) => {
+  const exponentiate = async (mathTester, baseMin, baseMax = undefined, exponent, runs) => {
     const gasCostList = []
 
     for (let i = 0; i < runs; i++) {
@@ -78,7 +79,7 @@ contract('Gas costs for math functions', async accounts => {
     const n = 2
     const runs = 10
     const message = `exponentiation: n = ${n}, runs = ${runs}`
-    const gasResults = await exponentiate(cdpManagerTester, 0.01, 0.9, n, runs)
+    const gasResults = await exponentiate(mathTester, 0.01, 0.9, n, runs)
 
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
@@ -88,7 +89,7 @@ contract('Gas costs for math functions', async accounts => {
     const n = 5
     const runs = 100
     const message = `exponentiation: n = ${n}, runs = ${runs}`
-    const gasResults = await exponentiate(cdpManagerTester, 0.1, 0.9, n, runs)
+    const gasResults = await exponentiate(mathTester, 0.1, 0.9, n, runs)
 
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
@@ -98,7 +99,7 @@ contract('Gas costs for math functions', async accounts => {
     const n = 1000
     const runs = 100
     const message = `exponentiation: n = ${n}, runs = ${runs}`
-    const gasResults = await exponentiate(cdpManagerTester, 0.1, 0.9, n, runs)
+    const gasResults = await exponentiate(mathTester, 0.1, 0.9, n, runs)
 
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
@@ -108,7 +109,7 @@ contract('Gas costs for math functions', async accounts => {
     const n = 2592000  // Seconds in 1 month 
     const runs = 100
     const message = `exponentiation: n = ${n}, runs = ${runs}`
-    const gasResults = await exponentiate(cdpManagerTester, 0.9999999999, 0.999999999999999999, n, runs)
+    const gasResults = await exponentiate(mathTester, 0.9999999999, 0.999999999999999999, n, runs)
 
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
@@ -118,7 +119,7 @@ contract('Gas costs for math functions', async accounts => {
     const n = 43200  // Minutes in 1 month 
     const runs = 100
     const message = `exponentiation: n = ${n}, runs = ${runs}`
-    const gasResults = await exponentiate(cdpManagerTester, 0.9999999999, 0.999999999999999999, n, runs)
+    const gasResults = await exponentiate(mathTester, 0.9999999999, 0.999999999999999999, n, runs)
 
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
@@ -135,7 +136,7 @@ contract('Gas costs for math functions', async accounts => {
     for (let n = 2; n <= timeValues.SECONDS_IN_ONE_MONTH; n += 100) {
       const runs = 1
       const message = `exponentiation: seconds n = ${n}, runs = ${runs}`
-      const gasResults = await exponentiate(cdpManagerTester, n, runs, 0.9999999999, 0.999999999999999999)
+      const gasResults = await exponentiate(mathTester, 0.9999999999, 0.999999999999999999, n, runs,)
 
       th.logGasMetrics(gasResults, message)
       th.logAllGasCosts(gasResults)
@@ -158,7 +159,7 @@ contract('Gas costs for math functions', async accounts => {
     let data50Years = []
     const issuanceFactor = '999998681227695000'
 
-    data30Years.push(`exponentiation: exponent vs gas cost: exponent in units of minutes, max exponent is 30 years \n`)
+    data50Years.push(`exponentiation: exponent vs gas cost: exponent in units of minutes, max exponent is 30 years \n`)
 
     
     for (let n = 2; n <= timeValues.MINUTES_IN_ONE_YEAR * 50; n += timeValues.MINUTES_IN_ONE_WEEK) {

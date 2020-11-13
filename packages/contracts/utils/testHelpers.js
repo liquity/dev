@@ -820,7 +820,7 @@ class TestHelper {
   static async provideToSP_allAccounts(accounts, poolManager, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await poolManager.provideToSP(amount, { from: account })
+      const tx = await poolManager.provideToSP(amount, this.ZERO_ADDRESS, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -831,7 +831,7 @@ class TestHelper {
     const gasCostList = []
     for (const account of accounts) {
       const randomCLVAmount = this.randAmountInWei(min, max)
-      const tx = await poolManager.provideToSP(randomCLVAmount, { from: account })
+      const tx = await poolManager.provideToSP(randomCLVAmount, this.ZERO_ADDRESS, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
