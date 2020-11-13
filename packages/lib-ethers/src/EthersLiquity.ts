@@ -616,7 +616,7 @@ export class EthersLiquity
     };
   }
 
-  async depositQuiInStabilityPool(depositedQui: Decimalish, frontEndTag: string, overrides?: EthersTransactionOverrides) {
+  async depositQuiInStabilityPool(depositedQui: Decimalish, frontEndTag: string | undefined, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
       await this.poolManager.provideToSP(Decimal.from(depositedQui).bigNumber, frontEndTag, { ...overrides })
     );
