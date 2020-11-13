@@ -5,6 +5,7 @@ checkAsserts: true
 codeSize: 124576
 
 #whether ot not to use the multi-abi mode of testing
+#it’s not working for us, see: https://github.com/crytic/echidna/issues/547
 #multi-abi: true
 
 #balanceAddr is default balance for addresses

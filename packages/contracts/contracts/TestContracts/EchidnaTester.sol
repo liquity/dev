@@ -24,18 +24,19 @@ contract EchidnaTester {
     uint private MCR;
     uint private CCR;
     uint private CLV_GAS_COMPENSATION;
+    address public GAS_POOL_ADDRESS;
 
-    CDPManager cdpManager;
-    BorrowerOperations borrowerOperations;
-    PoolManager poolManager;
-    ActivePool activePool;
-    DefaultPool defaultPool;
-    StabilityPool stabilityPool;
-    CLVToken clvToken;
+    CDPManager public cdpManager;
+    BorrowerOperations public borrowerOperations;
+    PoolManager public poolManager;
+    ActivePool public activePool;
+    DefaultPool public defaultPool;
+    StabilityPool public stabilityPool;
+    CLVToken public clvToken;
     PriceFeed priceFeed;
     SortedCDPs sortedCDPs;
 
-    EchidnaProxy[NUMBER_OF_ACTORS] echidnaProxies;
+    EchidnaProxy[NUMBER_OF_ACTORS] public echidnaProxies;
 
     uint private numberOfTroves;
 
@@ -72,13 +73,14 @@ contract EchidnaTester {
         require(MCR > 0);
         require(CCR > 0);
 
+        GAS_POOL_ADDRESS = poolManager.GAS_POOL_ADDRESS();
+
         // TODO:
         priceFeed.setPrice(1e22);
     }
 
     // CDPManager
 
-    /*
     function liquidateExt(uint _i, address _user) external {
         uint actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].liquidatePrx(_user);
@@ -104,7 +106,6 @@ contract EchidnaTester {
         uint actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].redeemCollateralPrx(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR);
     }
-    */
 
     // Borrower Operations
 
@@ -388,6 +389,8 @@ contract EchidnaTester {
     // total CLV matches
     function echidna_CLV_global_balances() public view returns(bool) {
         uint totalSupply = clvToken.totalSupply();
+        uint gasPoolBalance = clvToken.balanceOf(GAS_POOL_ADDRESS);
+
         uint activePoolBalance = activePool.getCLVDebt();
         uint defaultPoolBalance = defaultPool.getCLVDebt();
         if (totalSupply != activePoolBalance + defaultPoolBalance) {
@@ -401,7 +404,8 @@ contract EchidnaTester {
             trovesBalance += clvToken.balanceOf(address(currentTrove));
             currentTrove = sortedCDPs.getNext(currentTrove);
         }
-        if (totalSupply != stabilityPoolBalance + trovesBalance) {
+        // we cannot state equality because tranfers are made to external addresses too
+        if (totalSupply <= stabilityPoolBalance + trovesBalance + gasPoolBalance) {
             return false;
         }
 
@@ -414,19 +418,3 @@ contract EchidnaTester {
     }
     */
 }
-
-
-/*
-contract CDPManagerEchidna is CDPManager {
-    function echidna_test() public view returns(bool) {
-        return true;
-    }
-}
-
-
-contract PoolManagerEchidna is PoolManager {
-    function echidna_test() public view returns(bool) {
-        return true;
-    }
-}
-*/
