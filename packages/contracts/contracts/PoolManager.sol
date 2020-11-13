@@ -9,6 +9,7 @@ import './Interfaces/ICDPManager.sol';
 import './Interfaces/IStabilityPool.sol';
 import './Interfaces/IPriceFeed.sol';
 import './Interfaces/ICLVToken.sol';
+import "./Interfaces/ICommunityIssuance.sol";
 import './Dependencies/Math.sol';
 import './Dependencies/SafeMath.sol';
 import './Dependencies/SafeMath128.sol';
@@ -42,22 +43,42 @@ contract PoolManager is Ownable, IPoolManager {
 
     IPool public defaultPool;
     address public defaultPoolAddress;
+
+    ICommunityIssuance public communityIssuance;
+    address public communityIssuanceAddress;
+   
    // --- Data structures ---
    
-    mapping (address => uint) public initialDeposits;
+    struct FrontEnd {
+        uint kickbackRate;
+        bool registered;
+    }
 
-    struct Snapshot {
-        uint S;
-        uint P;
+    struct Deposit {
+        uint initialValue;
+        address frontEndTag;
+    }
+
+    struct Snapshots { 
+        uint S; 
+        uint P; 
+        uint G; 
         uint128 scale;
         uint128 epoch;
     }
 
+    mapping (address => Deposit) public deposits;  // depositor address -> Deposit struct
+    mapping (address => Snapshots) public depositSnapshots;  // depositor address -> snapshots struct
+
+    mapping (address => FrontEnd) public frontEnds;  // front end address -> FrontEnd struct
+    mapping (address => uint) public frontEndStakes; // front end address -> last recorded total deposits, tagged with that front end
+    mapping (address => Snapshots) public frontEndSnapshots; // front end address -> snapshots struct
+
     /* Product 'P': Running product by which to multiply an initial deposit, in order to find the current compounded deposit, 
     given a series of liquidations, each of which cancel some CLV debt with the deposit. 
 
-    During its lifetime, a deposit's value evolves from d(0) to (d(0) * P / P(0) ), where P(0) 
-    is the snapshot of P taken at the instant the deposit was made. 18 DP decimal.  */
+    During its lifetime, a deposit's value evolves from d(0) to d(0) * P / P(0) , where P(0) 
+    is the snapshot of P taken at the instant the deposit was made. 18-digit decimal.  */
     uint public P = 1e18;
 
      // Each time the scale of P shifts by 1e18, the scale is incremented by 1
@@ -67,23 +88,27 @@ contract PoolManager is Ownable, IPoolManager {
     uint128 public currentEpoch;  
 
     /* ETH Gain sum 'S': During it's lifetime, each deposit d(0) earns an ETH gain of ( d(0) * [S - S(0)] )/P(0), where S(0) 
-    is the snapshot of S taken at the instant the deposit was made.
-   
+    is the depositor's snapshot of S taken at the instant the deposit was made.  
+    
     The 'S' sums are stored in a nested mapping (epoch => scale => sum):
 
     - The inner mapping records the sum S at different scales
     - The outer mapping records the (scale => sum) mappings, for different epochs. */
     mapping (uint => mapping(uint => uint)) public epochToScaleToSum;
 
-    // Map users to their individual snapshot structs
-    mapping (address => Snapshot) public snapshot;
+    /* Similarly, the sum 'G' is used to calculate LQTY gains. During it's lifetime, each deposit d(0) earns a LQTY gain of 
+    ( d(0) * [G - G(0)] )/P(0), where G(0) is the depositor's snapshot of G taken at the instant the deposit was made. 
+    
+    LQTY reward events occur are triggered by depositor operations (new deposit, topup, withdrawal) and liquidations. 
+    In each case, the LQTY reward is issued (G is updated), before other state changes are made. */ 
+    mapping (uint => mapping(uint => uint)) public epochToScaleToG;
 
     // Error trackers for the error correction in the offset calculation
     uint public lastETHError_Offset;
     uint public lastCLVLossError_Offset;
 
     // --- Events ---
-
+   
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
@@ -91,31 +116,22 @@ contract PoolManager is Ownable, IPoolManager {
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
+    
+    event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
 
-    event UserSnapshotUpdated(address indexed _user, uint _P, uint _S);
+    event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S, uint _G);
+    event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);
+    
     event P_Updated(uint _P);
     event S_Updated(uint _S);
-    event UserDepositChanged(address indexed _user, uint _amount);
-    event ETHGainWithdrawn(address indexed _user, uint _ETH, uint _CLVLoss);
+    event G_Updated(uint _G);
 
-    // --- Modifiers ---
+    event UserDepositChanged(address indexed _depositor, uint _newDeposit);
+    event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
 
-    modifier onlyCDPManager() {
-        require(_msgSender() == cdpManagerAddress, "PoolManager: Caller is not the CDPManager");
-        _;
-    }
-
-     modifier onlyBorrowerOperations() {
-        require(_msgSender() == borrowerOperationsAddress, "PoolManager: Caller is not the BorrowerOperations contract");
-        _;
-    }
-
-    modifier onlyStabilityPool {
-        require(
-            _msgSender() == stabilityPoolAddress,
-            "PoolManager: Caller is not StabilityPool");
-        _;
-    }
+    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _CLVLoss);
+    event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
+    event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
 
     // --- Dependency setters ---
 
@@ -126,7 +142,8 @@ contract PoolManager is Ownable, IPoolManager {
         address _CLVAddress,
         address _stabilityPoolAddress,
         address _activePoolAddress,
-        address _defaultPoolAddress
+        address _defaultPoolAddress,
+        address _communityIssuanceAddress
     )
     external
     override
@@ -143,7 +160,9 @@ contract PoolManager is Ownable, IPoolManager {
         activePoolAddress = _activePoolAddress;
         activePool = IPool(_activePoolAddress);
         defaultPoolAddress = _defaultPoolAddress;
-        defaultPool = IPool(_defaultPoolAddress);
+        defaultPool = IPool(defaultPoolAddress);
+        communityIssuanceAddress = _communityIssuanceAddress;
+        communityIssuance = ICommunityIssuance(_communityIssuanceAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
@@ -186,89 +205,90 @@ contract PoolManager is Ownable, IPoolManager {
     // --- Pool interaction functions ---
 
     // Add the received ETH to the total active collateral
-    function addColl() external payable override onlyBorrowerOperations {
-        // Send ETH to Active Pool and increase its recorded ETH balance
-       (bool success, ) = activePoolAddress.call{ value: msg.value }("");
-       assert(success == true);
+    function addColl() external override payable {
+        _requireCallerIsBorrowerOperations();
+    
+        (bool success, ) = activePoolAddress.call{value: msg.value}("");
+        assert(success == true);
     }
     
     // Transfer the specified amount of ETH to _account and updates the total active collateral
-    function withdrawColl(address _account, uint _ETH) external override onlyBorrowerOperations {
+    function withdrawColl(address _account, uint _ETH) external override {
+        _requireCallerIsBorrowerOperations();
         activePool.sendETH(_account, _ETH);
     }
     
-    // Issue the specified amount of CLV to _account and increases the total active debt
-    function withdrawCLV(address _account, uint _CLV) external override onlyBorrowerOperations {
-        _withdrawCLV(_account, _CLV);
+    // Issue the specified amount of CLV (minus the fee) to _account, and increase the total active debt
+    function withdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) public override {
+        _requireCallerIsBorrowerOperations();
+
+        uint totalCLVDrawn = _CLVAmount.add(_CLVFee);
+        activePool.increaseCLVDebt(totalCLVDrawn);  
+        CLV.mint(_account, _CLVAmount);  
     }
 
-    function _withdrawCLV(address _account, uint _CLV) internal {
-        activePool.increaseCLVDebt(_CLV);
-        CLV.mint(_account, _CLV);
-    }
-    
     // Burn the specified amount of CLV from _account and decreases the total active debt
-    function repayCLV(address _account, uint _CLV) external override onlyBorrowerOperations {
-        _repayCLV(_account, _CLV);
-    }
-
-    function _repayCLV(address _account, uint _CLV) internal {
+    function repayCLV(address _account, uint _CLV) external override {
+        _requireCallerIsBorrowerOperations();
         activePool.decreaseCLVDebt(_CLV);
         CLV.burn(_account, _CLV);
+    }       
+
+    function lockCLVGasCompensation(uint _CLVGasComp) external override {
+        _requireCallerIsBorrowerOperations();
+        activePool.increaseCLVDebt(_CLVGasComp);  
+        CLV.mint(GAS_POOL_ADDRESS, _CLVGasComp);  
     }
 
-    function lockCLVGasCompensation(uint _CLV) external override onlyBorrowerOperations {
-        _withdrawCLV(GAS_POOL_ADDRESS, _CLV);
+    function refundCLVGasCompensation(uint _CLVGasComp) external override {
+        _requireCallerIsBorrowerOperations();
+        activePool.decreaseCLVDebt(_CLVGasComp);
+        CLV.burn(GAS_POOL_ADDRESS, _CLVGasComp);
     }
 
-    function refundCLVGasCompensation(uint _CLV) external override onlyBorrowerOperations {
-        _repayCLV(GAS_POOL_ADDRESS, _CLV);
+    function sendCLVGasCompensation(address _user, uint _CLVGasComp) external override {
+        _requireCallerIsCDPManager();
+        CLV.returnFromPool(GAS_POOL_ADDRESS, _user, _CLVGasComp);
     }
 
-    function sendCLVGasCompensation(address _user, uint _CLV) external override onlyCDPManager {
-        CLV.returnFromPool(GAS_POOL_ADDRESS, _user, _CLV);
-    }
+    // Update the Active Pool and the Default Pool when a CDP gets closed
+    function liquidate(uint _CLV, uint _ETH) external override {
+        _requireCallerIsCDPManager();
 
-    // Update the Active Pool and the Default Pool when a CDP gets liquidated
-    function liquidate(uint _CLV, uint _ETH) external override onlyCDPManager {
-        // Transfer the debt & coll from the Active Pool to the Default Pool
         defaultPool.increaseCLVDebt(_CLV);
         activePool.decreaseCLVDebt(_CLV);
         activePool.sendETH(defaultPoolAddress, _ETH);
     }
 
     // Move a CDP's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
-    function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external override onlyCDPManager {
-        // Transfer the debt & coll from the Default Pool to the Active Pool
+    function movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external override {
+        _requireCallerIsCDPManager();
+
         defaultPool.decreaseCLVDebt(_CLV);  
         activePool.increaseCLVDebt(_CLV); 
         defaultPool.sendETH(activePoolAddress, _ETH); 
     }
 
-    // Burn the received CLV, transfers the redeemed ETH to _account and updates the Active Pool
-    function redeemCollateral(address _account, uint _CLV, uint _ETH) external override onlyCDPManager {
-        // Update Active Pool CLV, and send ETH to account
+    // Burn the received CLV, transfer the redeemed ETH to _account and updates the Active Pool
+    function redeemCollateral(address _account, uint _CLV, uint _ETH) external override {
+        _requireCallerIsCDPManager();
+       
         CLV.burn(_account, _CLV); 
         activePool.decreaseCLVDebt(_CLV);  
-
         activePool.sendETH(_account, _ETH); 
     }
 
-    /*
-      Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
-     * It’s called by CDPManager when after redemption there’s only gas compensation left as debt
-     */
-    function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external override onlyCDPManager {
-        /*
-         * This is called by CDPManager when the redemption drains all the trove and there’s only the gas compensation left.
-         * The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left correspond to the remaining collateral.
-         * In order to close the trove, the user should get the CLV refunded and use them to repay and close it,
-         * but instead we do that all in one step.
-         */
+    /* This is called by CDPManager when the redemption fully cancels CLV with the trove owner's drawn debt, and there’s only the gas compensation left.
+    The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left corresponds to the remaining debt.
+    
+    This 10 CLV gas compensation is burned. Therefore, the total CLV burned in a redemption equals the full debt of the trove.
+    Since redeemed-from troves have >=110% ICR, a full redemption leaves the trove with some surplus ETH, which is sent out to the trove owner. */
+    function redeemCloseLoan(address _account, uint _CLV, uint _ETH) external override {
+        _requireCallerIsCDPManager();
+     
         CLV.burn(GAS_POOL_ADDRESS, _CLV);
         // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLVDebt(_CLV);
-
         activePool.sendETH(_account, _ETH);
     }
 
@@ -278,215 +298,430 @@ contract PoolManager is Ownable, IPoolManager {
         stabilityPool.increaseCLV(_amount);
     }
 
-    // --- Reward calculator functions ---
-
-    function getCurrentETHGain(address _user) external view override returns (uint) {
-        return _getCurrentETHGain(_user);
-    }
+    // --- Reward calculator functions for depositor and front end ---
 
     /* Return the ETH gain earned by the deposit. Given by the formula:  E = d0 * (S - S(0))/P(0)
     where S(0) and P(0) are the depositor's snapshots of the sum S and product P, respectively. */
-    function _getCurrentETHGain(address _user) internal view returns (uint) {
-        uint initialDeposit = initialDeposits[_user];
+    function getDepositorETHGain(address _depositor) public view override returns (uint) {
+        uint initialDeposit = deposits[_depositor].initialValue;
 
         if (initialDeposit == 0) { return 0; }
 
-        Snapshot storage userSnapshot = snapshot[_user];
-        uint scaleSnapshot = userSnapshot.scale;
-        uint epochSnapshot = userSnapshot.epoch;
+        Snapshots memory snapshots = depositSnapshots[_depositor];
 
-        uint ETHGain;
+        uint ETHGain = _getETHGainFromSnapshots(initialDeposit, snapshots);
+        return ETHGain;
+    }
 
-        /* Grab the reward sum from the epoch at which the deposit was made. The reward may span up to 
-        one scale change.  
+    function _getETHGainFromSnapshots(uint initialDeposit, Snapshots memory snapshots) internal view returns (uint) {
+        /* Grab the reward sum from the epoch at which the stake was made. The reward may span up to one scale change.  
         If it does, the second portion of the reward is scaled by 1e18. 
         If the reward spans no scale change, the second portion will be 0. */
-        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(userSnapshot.S);
+        
+        uint128 epochSnapshot = snapshots.epoch;
+        uint128 scaleSnapshot = snapshots.scale;
+        uint S_Snapshot = snapshots.S;
+        uint P_Snapshot = snapshots.P;
+
+        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(S_Snapshot);
         uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
 
-        ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(userSnapshot.P).div(1e18);
+        uint ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(1e18);
         
         return ETHGain;
     }
 
-    function getCompoundedCLVDeposit(address _user) external view override returns (uint) {
-        return _getCompoundedCLVDeposit(_user);
+    /* Return the LQTY gain earned by the deposit. Given by the formula:  LQTY = d0 * (G - G(0))/P(0)
+    where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively. 
+    
+    d0 is the last recorded deposit value. */
+    function getDepositorLQTYGain(address _depositor) public view override returns (uint) {
+       
+        uint initialDeposit = deposits[_depositor].initialValue;
+        if (initialDeposit == 0) {return 0;}
+
+        address frontEndTag = deposits[_depositor].frontEndTag;
+
+        // If not tagged with a front end, depositor gets a 100% cut
+        uint kickbackRate = frontEndTag == address(0) ? 1e18 : frontEnds[frontEndTag].kickbackRate;
+
+        Snapshots memory snapshots = depositSnapshots[_depositor];  
+      
+        uint LQTYGain = kickbackRate.mul(_getLQTYGainFromSnapshots(initialDeposit, snapshots)).div(1e18);
+
+        return LQTYGain;
+    }
+
+    /* Return the LQTY gain earned by the front end. Given by the formula:  E = D0 * (G - G(0))/P(0)
+    where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively.
+
+    D0 is the last recorded value of the front end's total tagged deposits. */
+    function getFrontEndLQTYGain(address _frontEnd) public view override returns (uint) {
+        uint frontEndStake = frontEndStakes[_frontEnd];
+        if (frontEndStake == 0) { return 0; }
+
+        uint kickbackRate = frontEnds[_frontEnd].kickbackRate;
+        uint frontEndShare = uint(1e18).sub(kickbackRate);
+
+        Snapshots memory snapshots = frontEndSnapshots[_frontEnd];  
+    
+        uint LQTYGain = frontEndShare.mul(_getLQTYGainFromSnapshots(frontEndStake, snapshots)).div(1e18);
+        return LQTYGain;
+    }
+
+    function _getLQTYGainFromSnapshots(uint initialStake, Snapshots memory snapshots) internal view returns (uint) {
+        /* Grab the reward sum from the epoch at which the stake was made. The reward may span up to one scale change.  
+        If it does, the second portion of the reward is scaled by 1e18. 
+        If the reward spans no scale change, the second portion will be 0. */
+
+        uint128 epochSnapshot = snapshots.epoch;
+        uint128 scaleSnapshot = snapshots.scale;
+        uint G_Snapshot = snapshots.G;
+        uint P_Snapshot = snapshots.P;
+
+        uint firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot].sub(G_Snapshot);
+        uint secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
+
+        uint LQTYGain = initialStake.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(1e18);
+        
+        return LQTYGain;
+    }
+
+    // --- Compounded deposit and compounded front end stake ---
+
+    /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
+    where P(0) is the depositor's snapshot of the product P. */
+    function getCompoundedCLVDeposit(address _depositor) public view override returns (uint) {
+        uint initialDeposit = deposits[_depositor].initialValue;
+        if (initialDeposit == 0) { return 0; }
+
+        Snapshots memory snapshots = depositSnapshots[_depositor]; 
+       
+        uint compoundedDeposit = _getCompoundedStakeFromSnapshots(initialDeposit, snapshots);
+        return compoundedDeposit;
     }
 
     /* Return the user's compounded deposit.  Given by the formula:  d = d0 * P/P(0)
     where P(0) is the depositor's snapshot of the product P. */
-    function _getCompoundedCLVDeposit(address _user) internal view returns (uint) {
-        uint initialDeposit = initialDeposits[_user];
+    function getCompoundedFrontEndStake(address _frontEnd) public view override returns (uint) {
+        uint frontEndStake = frontEndStakes[_frontEnd];
+        if (frontEndStake == 0) { return 0; }
 
-        if (initialDeposit == 0) { return 0; }
+        Snapshots memory snapshots = frontEndSnapshots[_frontEnd]; 
+       
+        uint compoundedFrontEndStake = _getCompoundedStakeFromSnapshots(frontEndStake, snapshots);
+        return compoundedFrontEndStake;
+    }
 
-        Snapshot storage userSnapshot = snapshot[_user];
-        uint snapshot_P = userSnapshot.P;
-        uint128 scaleSnapshot = userSnapshot.scale;
-        uint128 epochSnapshot = userSnapshot.epoch;
+    function _getCompoundedStakeFromSnapshots(uint initialStake, Snapshots memory snapshots) 
+    internal 
+    view 
+    returns (uint)
+    {
+        uint snapshot_P = snapshots.P;
+        uint128 scaleSnapshot = snapshots.scale;
+        uint128 epochSnapshot = snapshots.epoch;
 
         // If deposit was made before a pool-emptying event, then it has been fully cancelled with debt -- so, return 0
         if (epochSnapshot < currentEpoch) { return 0; }
-
-        uint compoundedDeposit;
+       
+        uint compoundedStake;
         uint128 scaleDiff = currentScale.sub(scaleSnapshot);
     
-        /* Compute the compounded deposit. If a scale change in P was made during the deposit's lifetime, 
-        account for it. If more than one scale change was made, then the deposit has decreased by a factor of 
+        /* Compute the compounded stake. If a scale change in P was made during the stake's lifetime, 
+        account for it. If more than one scale change was made, then the stake has decreased by a factor of 
         at least 1e-18 -- so return 0.*/
         if (scaleDiff == 0) { 
-            compoundedDeposit = initialDeposit.mul(P).div(snapshot_P);
+            compoundedStake = initialStake.mul(P).div(snapshot_P);
         } else if (scaleDiff == 1) {
-            compoundedDeposit = initialDeposit.mul(P).div(snapshot_P).div(1e18);
+            compoundedStake = initialStake.mul(P).div(snapshot_P).div(1e18);
         } else {
-            compoundedDeposit = 0;
+            compoundedStake = 0;
         }
 
         // If compounded deposit is less than a billionth of the initial deposit, return 0
         // TODO: confirm the reason:
         // to make sure that any numerical error from floor-division always "favors the system"
-        if (compoundedDeposit < initialDeposit.div(1e9)) { return 0; }
+        if (compoundedStake < initialStake.div(1e9)) {return 0;}
 
-        return compoundedDeposit;
+        return compoundedStake;
     }
 
-    // --- Sender functions for CLV deposits and ETH gains ---
+    // --- Sender functions for CLV deposit,  ETH gains and LQTY gains ---
 
-    function _sendETHGainToUser(address _address, uint ETHGain) internal {
-        stabilityPool.sendETH(_address, ETHGain);
+    function _sendETHGainToDepositor(address _depositor, uint ETHGain) internal {
+        if (ETHGain == 0) {return;}
+        stabilityPool.sendETH(_depositor, ETHGain);
     }
-
+    
     // Send CLV to user and decrease CLV in Pool
-    function _sendCLVToUser(address _address, uint CLVWithdrawal) internal {
+    function _sendCLVToDepositor(address _depositor, uint CLVWithdrawal) internal {
         uint CLVinPool = stabilityPool.getTotalCLVDeposits();
         assert(CLVWithdrawal <= CLVinPool);
 
-        CLV.returnFromPool(stabilityPoolAddress, _address, CLVWithdrawal); 
+        CLV.returnFromPool(stabilityPoolAddress, _depositor, CLVWithdrawal); 
         stabilityPool.decreaseCLV(CLVWithdrawal);
+    }
+
+    // --- External Front End functions ---
+
+    function registerFrontEnd(uint _kickbackRate) external override {
+        _requireFrontEndNotRegistered(msg.sender);
+        _requireUserHasNoDeposit(msg.sender);
+        _requireValidKickbackRate(_kickbackRate);
+
+        frontEnds[msg.sender].kickbackRate = _kickbackRate;
+        frontEnds[msg.sender].registered = true;
+
+        emit FrontEndRegistered(msg.sender, _kickbackRate);
     }
 
     // --- Stability Pool Deposit Functionality --- 
 
-    // Record a new deposit
-    function _updateDeposit(address _address, uint _amount) internal {
-        Snapshot storage userSnapshot = snapshot[_address];
-        if (_amount == 0) {
-            initialDeposits[_address] = 0;
-            delete snapshot[_address];
-            emit UserSnapshotUpdated(_address, 0, 0);
-            return;
-        }
-
-        initialDeposits[_address] = _amount;
+    function getFrontEndTag(address _depositor) public view override returns (address) {
+        return deposits[_depositor].frontEndTag;
+    }
     
+    function _setFrontEndTag(address _depositor, address _frontEndTag) internal {
+        deposits[_depositor].frontEndTag = _frontEndTag;
+    }
+
+    // Record a new deposit
+    function _updateDepositAndSnapshots(address _depositor, uint _newValue) internal {
+        deposits[_depositor].initialValue = _newValue;
+
+        if (_newValue == 0) {
+            delete deposits[_depositor].frontEndTag;
+            delete depositSnapshots[_depositor];
+            emit DepositSnapshotUpdated(_depositor, 0, 0, 0);
+            return;
+        } 
+
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
         uint currentP = P;
         uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
-        // Record new individual snapshots of the running product P and sum S for the user
-        userSnapshot.P = currentP;
-        userSnapshot.S = currentS;
-        userSnapshot.scale = currentScaleCached;
-        userSnapshot.epoch = currentEpochCached;
+        uint currentG = epochToScaleToG[currentEpochCached][currentScaleCached];
 
-        emit UserSnapshotUpdated(_address, currentP, currentS);
-    }
- 
-    // --- External StabilityPool Functions ---
-
-    /* Send ETHGain to user's address, and updates their deposit, 
-    setting newDeposit = compounded deposit + amount. */
-    function provideToSP(uint _amount) external override {
-        address user = _msgSender();
-        uint initialDeposit = initialDeposits[user];
-
-        if (initialDeposit == 0) {
-            _sendCLVtoStabilityPool(user, _amount);
-            _updateDeposit(user, _amount);
+        // Record new individual snapshots of the running product P, sum S  and sum G, for the depositor
+        depositSnapshots[_depositor].P = currentP;
+        depositSnapshots[_depositor].S = currentS;
+        depositSnapshots[_depositor].G = currentG;
+        depositSnapshots[_depositor].scale = currentScaleCached;
+        depositSnapshots[_depositor].epoch = currentEpochCached;
         
-            emit UserDepositChanged(user, _amount);
+        emit DepositSnapshotUpdated(_depositor, currentP, currentS, currentG);
+    }
 
-        } else { // If user already has a deposit, make a new composite deposit and retrieve their ETH gain
-            uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
-            uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
-            uint ETHGain = _getCurrentETHGain(user);
+    function _updateFrontEndStakeAndSnapshots(address _frontEnd, uint _newValue) internal {
+        frontEndStakes[_frontEnd] = _newValue;
 
-            uint newDeposit = compoundedCLVDeposit.add(_amount);
+        if (_newValue == 0) {
+            delete frontEndSnapshots[_frontEnd];
+            emit FrontEndSnapshotUpdated(_frontEnd, 0, 0);
+            return;
+        } 
 
-            _sendCLVtoStabilityPool(user, _amount);
-            _updateDeposit(user, newDeposit);
+        uint128 currentScaleCached = currentScale;
+        uint128 currentEpochCached = currentEpoch;
+        uint currentP = P;
+        uint currentG = epochToScaleToG[currentEpochCached][currentScaleCached];
 
-            _sendETHGainToUser(user, ETHGain);
-            
-            emit ETHGainWithdrawn(user, ETHGain, CLVLoss);
-            emit UserDepositChanged(user, newDeposit); 
+        // Record new individual snapshots of the running product P and sum G for the front end
+        frontEndSnapshots[_frontEnd].P = currentP;
+        frontEndSnapshots[_frontEnd].G = currentG;
+        frontEndSnapshots[_frontEnd].scale = currentScaleCached;
+        frontEndSnapshots[_frontEnd].epoch = currentEpochCached;
+        
+        emit FrontEndSnapshotUpdated(_frontEnd, currentP, currentG);
+    }
+
+    function _payOutLQTYGains(address _depositor, address _frontEnd) internal {
+        // Pay out front end's LQTY gain
+        if (_frontEnd != address(0)) {
+            uint frontEndLQTYGain = getFrontEndLQTYGain(_frontEnd);
+            communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
+            emit LQTYPaidToFrontEnd(_frontEnd, frontEndLQTYGain);
         }
+        
+        // Pay out depositor's LQTY gain
+        uint depositorLQTYGain = getDepositorLQTYGain(_depositor);
+        communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
+
+        emit LQTYPaidToDepositor(_depositor, depositorLQTYGain);
     }
 
-    /* Withdraw _amount of CLV and the caller’s entire ETH gain from the 
-    Stability Pool, and updates the caller’s reduced deposit. 
+    // --- External Depositor Functions ---
+   
+    /* provideToSP():
 
-    If  _amount is 0, the user only withdraws their ETH gain, no CLV.
-    If _amount > userDeposit, the user withdraws all their ETH gain, and all of their compounded deposit.
+    - Triggers a LQTY reward, shared between all depositors and front ends
+    - Tags deposit with the front end tag param, if it's a new deposit
+    - Sends all accumulated gains (LQTY, ETH) to depositor and front end
+    - Increases deposit and front end stake, and takes new snapshots for each.
+    */
+    function provideToSP(uint _amount, address _frontEndTag) external override {
+        _requireFrontEndIsRegisteredOrZero(_frontEndTag);
+        _requireFrontEndNotRegistered(msg.sender);
+        _requireNonZeroAmount(_amount);
 
-    In all cases, the entire ETH gain is sent to user. */
+        address depositor = _msgSender();
+        uint initialDeposit = deposits[depositor].initialValue;
+
+        _triggerLQTYIssuance(); 
+
+        if (initialDeposit == 0) {_setFrontEndTag(depositor, _frontEndTag);}  
+
+        uint depositorETHGain = getDepositorETHGain(depositor);
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
+        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
+
+        // First pay out any LQTY gains 
+        address frontEnd = deposits[depositor].frontEndTag;
+        _payOutLQTYGains(depositor, frontEnd);
+    
+        // Update front end stake
+        uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
+        uint newFrontEndStake = compoundedFrontEndStake.add(_amount);
+        _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
+        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, depositor);
+        
+        _sendCLVtoStabilityPool(depositor, _amount);
+
+        uint newDeposit = compoundedCLVDeposit.add(_amount);
+        _updateDepositAndSnapshots(depositor, newDeposit);
+        emit UserDepositChanged(depositor, newDeposit);
+
+        _sendETHGainToDepositor(depositor, depositorETHGain);
+
+        emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss); // CLV Loss required for event log 
+    }
+
+    /* withdrawFromSP(): 
+
+    - Triggers a LQTY reward, shared between all depositors and front ends
+    - Removes deposit's front end tag if it is a full withdrawal
+    - Sends all accumulated gains (LQTY, ETH) to depositor and front end
+    - Decreases deposit and front end stake, and takes new snapshots for each.
+
+    If _amount > userDeposit, the user withdraws all of their compounded deposit. */
     function withdrawFromSP(uint _amount) external override {
-        address user = _msgSender();
-        _requireUserHasDeposit(user); 
-
-        uint initialDeposit = initialDeposits[user];
-        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
-        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
-        uint ETHGain = _getCurrentETHGain(user);
-
+        address depositor = _msgSender();
+        _requireUserHasDeposit(depositor); 
+        uint initialDeposit = deposits[depositor].initialValue;
+        
+        _triggerLQTYIssuance();
+        
+        uint depositorETHGain = getDepositorETHGain(depositor);
+        
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
         uint CLVtoWithdraw = Math._min(_amount, compoundedCLVDeposit);
-        uint CLVremainder = compoundedCLVDeposit.sub(CLVtoWithdraw);
-
-        _sendCLVToUser(user, CLVtoWithdraw);
-        _updateDeposit(user, CLVremainder);
+        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
       
-        _sendETHGainToUser(user, ETHGain);
+        // First pay out any LQTY gains 
+        address frontEnd = deposits[depositor].frontEndTag;
+        _payOutLQTYGains(depositor, frontEnd);
+    
+        // Update front end stake
+        uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
+        uint newFrontEndStake = compoundedFrontEndStake.sub(CLVtoWithdraw);
+        _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
+        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, depositor);
+        
+        _sendCLVToDepositor(depositor, CLVtoWithdraw);
 
-        emit ETHGainWithdrawn(user, ETHGain, CLVLoss);
-        emit UserDepositChanged(user, CLVremainder); 
+        // Update deposit
+        uint newDeposit = compoundedCLVDeposit.sub(CLVtoWithdraw);
+        _updateDepositAndSnapshots(depositor, newDeposit);  
+        emit UserDepositChanged(depositor, newDeposit);
+       
+        _sendETHGainToDepositor(depositor, depositorETHGain);
+
+        emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss);  // CLV Loss required for event log
     }
 
-    /* Transfer the caller's entire ETH gain from the Stability Pool to the caller's CDP, and leaves
-    their compounded deposit in the Stability Pool.
-     */
-    function withdrawFromSPtoCDP(address _hint) external override {
-        address user = _msgSender();
-        _requireUserHasDeposit(user);
-        _requireUserHasTrove(user);
+    /* withdrawETHGainToTrove:
+    - Issues LQTY gain to depositor and front end
+    - Transfers the depositor's entire ETH gain from the Stability Pool to the caller's CDP
+    - Leaves their compounded deposit in the Stability Pool
+    - Updates snapshots for deposit and front end stake
+    
+    TODO: Remove _user depositor and just use _msgSender(). */
+    function withdrawETHGainToTrove(address _hint) external override {
+        address depositor = _msgSender();
+        _requireUserHasDeposit(depositor); 
+        _requireUserHasTrove(depositor);
+        _requireUserHasETHGain(depositor);
 
-        uint initialDeposit = initialDeposits[user];
-        uint compoundedCLVDeposit = _getCompoundedCLVDeposit(user);
-        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit);
-        uint ETHGain = _getCurrentETHGain(user);
-       
-        // Update the recorded deposit value, and deposit snapshots
-        _updateDeposit(user, compoundedCLVDeposit);
+        uint initialDeposit = deposits[depositor].initialValue;
+
+        _triggerLQTYIssuance();  
+        
+        uint depositorETHGain = getDepositorETHGain(depositor);
+        
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
+        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
+      
+        // First pay out any LQTY gains 
+        address frontEnd = deposits[depositor].frontEndTag;
+        _payOutLQTYGains(depositor, frontEnd);
+    
+        // Update front end stake
+        uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
+        uint newFrontEndStake = compoundedFrontEndStake;
+        _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
+        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, depositor);
+    
+        _updateDepositAndSnapshots(depositor, compoundedCLVDeposit); 
 
         /* Emit events before transferring ETH gain to CDP.
          This lets the event log make more sense (i.e. so it appears that first the ETH gain is withdrawn 
         and then it is deposited into the CDP, not the other way around). */
-        emit ETHGainWithdrawn(user, ETHGain, CLVLoss);
-        emit UserDepositChanged(user, compoundedCLVDeposit); 
+        emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss);
+        emit UserDepositChanged(depositor, compoundedCLVDeposit); 
 
-        stabilityPool.sendETHGainToTrove(user, ETHGain, _hint);
+        stabilityPool.sendETHGainToTrove(depositor, depositorETHGain, _hint);
     }
 
-     /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
+    // --- LQTY issuance functions ---
+
+    function _triggerLQTYIssuance() internal {
+        uint LQTYIssuance = communityIssuance.issueLQTY();
+       _updateG(LQTYIssuance); 
+    }
+
+    function _updateG(uint _LQTYIssuance) internal {
+        uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
+
+        /* When total deposits is 0, G is not updated. In this case, the LQTY issued
+        can not be obtained by later depositors - it is missed out on, and remains in the balance 
+        of the CommunityIssuance contract. */
+        if (totalCLVDeposits == 0) {return;}
+
+        uint LQTYPerUnitStaked;
+        LQTYPerUnitStaked =_computeLQTYPerUnitStaked(_LQTYIssuance, totalCLVDeposits);
+
+        uint marginalLQTYGain = LQTYPerUnitStaked.mul(P);
+        epochToScaleToG[currentEpoch][currentScale] = epochToScaleToG[currentEpoch][currentScale].add(marginalLQTYGain);
+    }
+
+    // TODO: Error correction here?
+    function _computeLQTYPerUnitStaked (uint LQTYIssuance, uint totalCLVDeposits) internal pure returns (uint) {
+        return LQTYIssuance.mul(1e18).div(totalCLVDeposits);
+    }
+
+    // --- Liquidation functions ---
+
+    /* Cancel out the specified _debt against the CLV contained in the Stability Pool (as far as possible)  
     and transfers the CDP's ETH collateral from ActivePool to StabilityPool. 
     Only called from liquidation functions in CDPManager. */
-    function offset(uint _debtToOffset, uint _collToAdd) 
-    external 
-    override 
-    onlyCDPManager
-    {    
+    function offset(uint _debtToOffset, uint _collToAdd) external payable override {    
+        _requireCallerIsCDPManager();
         uint totalCLVDeposits = stabilityPool.getTotalCLVDeposits();
         if (totalCLVDeposits == 0 || _debtToOffset == 0) { return; }
         
+        _triggerLQTYIssuance();
+
         (uint ETHGainPerUnitStaked,
          uint CLVLossPerUnitStaked) = _computeRewardsPerUnitStaked(_collToAdd, _debtToOffset, totalCLVDeposits);
 
@@ -510,7 +745,7 @@ contract PoolManager is Ownable, IPoolManager {
             lastCLVLossError_Offset = 0;
         } else {
             CLVLossPerUnitStaked = (CLVLossNumerator.div(_totalCLVDeposits)).add(1); // add 1 to make error in quotient positive
-             lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(_totalCLVDeposits)).sub(CLVLossNumerator);
+            lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(_totalCLVDeposits)).sub(CLVLossNumerator);
         } 
 
         ETHGainPerUnitStaked = ETHNumerator.div(_totalCLVDeposits); 
@@ -528,12 +763,13 @@ contract PoolManager is Ownable, IPoolManager {
         assert(_CLVLossPerUnitStaked <= 1e18);
         uint newProductFactor = _CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_CLVLossPerUnitStaked);
      
-        // Update the ETH reward sum at the current scale and current epoch
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
         uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
+
         uint marginalETHGain = _ETHGainPerUnitStaked.mul(currentP);
         uint newS = currentS.add(marginalETHGain);
+       
         epochToScaleToSum[currentEpochCached][currentScaleCached] = newS;
         emit S_Updated(newS);
 
@@ -555,7 +791,7 @@ contract PoolManager is Ownable, IPoolManager {
         emit P_Updated(newP);
     }
 
-    function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal {
+    function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal { 
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLVDebt(_debtToOffset);  
         stabilityPool.decreaseCLV(_debtToOffset); 
@@ -569,12 +805,55 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- 'require' wrapper functions ---
 
+    function _requireOnlyStabilityPool() internal view {
+        require(_msgSender() == stabilityPoolAddress, "PoolManager: Caller is not StabilityPool");
+    }
+
+    function _requireCallerIsBorrowerOperations() internal view {
+        require(_msgSender() == borrowerOperationsAddress, "PoolManager: Caller is not the BorrowerOperations contract");
+    }
+
+    function _requireCallerIsCDPManager() internal view {
+        require(_msgSender() == cdpManagerAddress, "PoolManager: Caller is not the CDPManager");
+    }
+
     function _requireUserHasDeposit(address _address) internal view {
-        uint initialDeposit = initialDeposits[_address];  
+        uint initialDeposit = deposits[_address].initialValue;  
         require(initialDeposit > 0, 'PoolManager: User must have a non-zero deposit');  
+    }
+
+     function _requireUserHasNoDeposit(address _address) internal view {
+        uint initialDeposit = deposits[_address].initialValue;  
+        require(initialDeposit == 0, 'PoolManager: User must have no deposit');  
+    }
+
+    function _requireNonZeroAmount(uint _amount) internal pure {
+        require(_amount > 0, 'PoolManager: Amount must be non-zero');
     }
 
     function _requireUserHasTrove(address _user) internal view {
         require(cdpManager.getCDPStatus(_user) == 1, "CDPManager: caller must have an active trove to withdraw ETHGain to");
     }
-}
+
+    function _requireUserHasETHGain(address _user) internal view {
+        uint ETHGain = getDepositorETHGain(_user);
+        require(ETHGain > 0, "PoolManager: caller must have non-zero ETH Gain");
+    }
+
+    function _requireFrontEndNotRegistered(address _address) internal view {
+        require(frontEnds[_address].registered == false, "PoolManager: must not already be a registered front end");
+    }
+
+     function _requireFrontEndIsRegisteredOrZero(address _address) internal view {
+        require(frontEnds[_address].registered || _address == address(0), 
+            "PoolManager: Tag must be a registered front end, or the zero address");
+    }
+
+    function  _requireValidKickbackRate(uint _kickbackRate) internal pure {
+        require (_kickbackRate >= 0 && _kickbackRate <= 1e18, "PoolManager: Kickback rate must be in range [0,1]");
+    }
+
+    function _requireETHSentSuccessfully(bool _success) internal pure {
+        require(_success, "CDPManager: Failed to send ETH to msg.sender");
+    }
+}    

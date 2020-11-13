@@ -2,7 +2,7 @@
 
 pragma solidity >=0.5.0;
 
-// Safemath functions for overflow protection on uint128 basic arithmetic operations.
+// uint128 addition and subtraction, with overflow protection.
 
 library SafeMath128 {
     function add(uint128 a, uint128 b) internal pure returns (uint128) {

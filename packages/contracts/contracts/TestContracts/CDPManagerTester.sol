@@ -26,7 +26,44 @@ contract CDPManagerTester is CDPManager {
         return _getCompositeDebt(_debt);
     }
 
+    function unprotectedDecayBaseRateFromBorrowing() external returns (uint) {
+        baseRate = _calcDecayedBaseRate();
+        assert(baseRate >= 0 && baseRate <= 1e18);
+        
+        _updateLastFeeOpTime();
+        return baseRate;
+    }
+
+    function minutesPassedSinceLastFeeOp() external view returns (uint) {
+        return _minutesPassedSinceLastFeeOp();
+    }
+
+    function setLastFeeOpTimeToNow() external {
+        lastFeeOperationTime = block.timestamp;
+    }
+
+     function setBaseRate(uint _baseRate) external {
+        baseRate = _baseRate;
+    }
+
+    function callGetRedemptionFee(uint _ETHDrawn) external view returns (uint) {
+        _getRedemptionFee(_ETHDrawn);
+    }  
+
+    function pmLiquidate(uint _CLV, uint _ETH) external {
+        poolManager.liquidate(_CLV, _ETH);
+    }
+
+    function pmRedeemCollateral(address _account, uint _CLV, uint _ETH) external {
+        poolManager.redeemCollateral(_account, _CLV, _ETH);
+    }
+
+    function pmMovePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external {
+        poolManager.movePendingTroveRewardsToActivePool(_CLV, _ETH);
+    }
+
     function getActualDebtFromComposite(uint _debtVal) external pure returns (uint) {
         return _getNetDebt(_debtVal);
     }
 }
+

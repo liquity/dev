@@ -1,9 +1,6 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
-const { TestHelper: th, MoneyValues: mv, assertRevert } = require("../utils/testHelpers.js")
-
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
+const deploymentHelper = require("../utils/deploymentHelpers.js")
+const { TestHelper: th, MoneyValues: mv } = require("../utils/testHelpers.js")
+const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 
 contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
@@ -13,59 +10,60 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   let poolManager
   let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
   let borrowerOperations
 
   before(async () => {
-    const contracts = await deployLiquity()
+    contracts = await deploymentHelper.deployLiquityCore()
+    contracts.borrowerOperations = await BorrowerOperationsTester.new()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
-    nameRegistry = contracts.nameRegistry
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
+    hintHelpers = contracts.hintHelpers
 
-    const contractAddresses = getAddresses(contracts)
-    //await connectContracts(contracts, contractAddresses)
+    lqtyStaking = GTContracts.lqtyStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
   })
 
   const testSetAddresses = async (contract, numberOfAddresses) => {
     const params = Array(numberOfAddresses).fill(bob)
     // Attempt call from alice
-    await assertRevert(contract.setAddresses(...params, { from: alice }))
+    await th.assertRevert(contract.setAddresses(...params, { from: alice }))
 
     // Owner can successfully set any address
     const txOwner = await contract.setAddresses(...params, { from: owner })
     assert.isTrue(txOwner.receipt.status)
     // fails if called twice
-    await assertRevert(contract.setAddresses(...params, { from: owner }))
+    await th.assertRevert(contract.setAddresses(...params, { from: owner }))
   }
 
   describe('CDPManager', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(cdpManager, 8)
+      await testSetAddresses(cdpManager, 9)
     })
   })
 
   describe('PoolManager', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(poolManager, 7)
+      await testSetAddresses(poolManager, 8)
     })
   })
 
   describe('BorrowerOperations', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(borrowerOperations, 6)
+      await testSetAddresses(borrowerOperations, 8)
     })
   })
 
@@ -90,15 +88,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   describe('CLVToken', async accounts => {
     // setPoolManagerAddress
     it("setPoolManagerAddress(): reverts when called by non-owner", async () => {
-      // Attempt call from alice
-      await assertRevert(clvToken.setPoolManagerAddress(bob, { from: alice }))
-
-      // Owner can successfully set any address
-      const txOwner = await clvToken.setPoolManagerAddress(bob, { from: owner })
-      assert.isTrue(txOwner.receipt.status)
-
-      // fails if called twice
-      await assertRevert(clvToken.setPoolManagerAddress(bob, { from: owner }))
+      await testSetAddresses(clvToken, 2)
     })
   })
 
@@ -106,14 +96,14 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     it("setParams(): reverts when called by non-owner", async () => {
       const params = [10000001, bob, bob]
       // Attempt call from alice
-      await assertRevert(sortedCDPs.setParams(...params, { from: alice }))
+      await th.assertRevert(sortedCDPs.setParams(...params, { from: alice }))
 
       // Owner can successfully set params
       const txOwner = await sortedCDPs.setParams(...params, { from: owner })
       assert.isTrue(txOwner.receipt.status)
 
       // fails if called twice
-      await assertRevert(sortedCDPs.setParams(...params, { from: owner }))
+      await th.assertRevert(sortedCDPs.setParams(...params, { from: owner }))
     })
   })
 

@@ -20,18 +20,6 @@ contract StabilityPool is Ownable, IStabilityPool {
     // Total CLV held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.
     uint256 internal totalCLVDeposits;
 
-    // --- Modifiers ---
-
-    modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "StabilityPool:  Caller is not the PoolManager");
-        _;
-    }
-
-    modifier onlyActivePool {
-        require(_msgSender() == activePoolAddress, "StabilityPool: Caller is not ActivePool");
-        _;
-    }
-
     // --- Contract setters ---
 
     function setAddresses(
@@ -64,14 +52,16 @@ contract StabilityPool is Ownable, IStabilityPool {
     }
 
     // --- Pool functionality ---
-    function sendETHGainToTrove(address _depositor, uint _ETHGain, address _hint) external override onlyPoolManager {
+    function sendETHGainToTrove(address _depositor, uint _ETHGain, address _hint) external override {
+        _requireCallerIsPoolManager();
         ETH = ETH.sub(_ETHGain);
         emit ETHBalanceUpdated(ETH);
         emit EtherSent(_depositor, _ETHGain);
 
         borrowerOperations.addColl{ value: _ETHGain }(_depositor, _hint);
     }
-    function sendETH(address _account, uint _amount) external override onlyPoolManager {
+    function sendETH(address _account, uint _amount) external override {
+        _requireCallerIsPoolManager();
         ETH = ETH.sub(_amount);
         emit ETHBalanceUpdated(ETH);
         emit EtherSent(_account, _amount);
@@ -80,12 +70,14 @@ contract StabilityPool is Ownable, IStabilityPool {
         require(success, "StabilityPool: sending ETH failed");
     }
 
-    function increaseCLV(uint _amount) external override onlyPoolManager {
+    function increaseCLV(uint _amount) external override {
+        _requireCallerIsPoolManager();
         totalCLVDeposits  = totalCLVDeposits.add(_amount);
         emit CLVBalanceUpdated(totalCLVDeposits);
     }
 
-    function decreaseCLV(uint _amount) external override onlyPoolManager {
+    function decreaseCLV(uint _amount) external override {
+        _requireCallerIsPoolManager();
         totalCLVDeposits = totalCLVDeposits.sub(_amount);
         emit CLVBalanceUpdated(totalCLVDeposits);
     }
@@ -96,7 +88,19 @@ contract StabilityPool is Ownable, IStabilityPool {
         return address(this).balance;
     }
 
-    receive() external payable onlyActivePool {
+    // --- 'require' functions ---
+     function _requireCallerIsPoolManager() internal view {
+        require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
+    }
+
+    function _requireCallerIsActivePool() internal view {
+        require( _msgSender() == activePoolAddress, "StabilityPool: Caller is not ActivePool");
+    }
+
+    // --- Fallback function ---
+
+    receive() external payable {
+        _requireCallerIsActivePool();
         ETH = ETH.add(msg.value);
     }
 }

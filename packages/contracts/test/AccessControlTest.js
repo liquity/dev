@@ -1,12 +1,11 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
+const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
 
 const th = testHelpers.TestHelper
+const timeValues = testHelpers.TimeValues
+
 const dec = th.dec
-const mv = testHelpers.MoneyValues
 
 contract('All Liquity functions with intra-system access control restrictions', async accounts => {
 
@@ -24,34 +23,40 @@ contract('All Liquity functions with intra-system access control restrictions', 
   let borrowerOperations
 
   before(async () => {
-    const contracts = await deployLiquity()
+    const coreContracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
-    priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
-    sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
-    nameRegistry = contracts.nameRegistry
-    activePool = contracts.activePool
-    stabilityPool = contracts.stabilityPool
-    defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
-    borrowerOperations = contracts.borrowerOperations
+    priceFeed = coreContracts.priceFeed
+    clvToken = coreContracts.clvToken
+    poolManager = coreContracts.poolManager
+    sortedCDPs = coreContracts.sortedCDPs
+    cdpManager = coreContracts.cdpManager
+    nameRegistry = coreContracts.nameRegistry
+    activePool = coreContracts.activePool
+    stabilityPool = coreContracts.stabilityPool
+    defaultPool = coreContracts.defaultPool
+    functionCaller = coreContracts.functionCaller
+    borrowerOperations = coreContracts.borrowerOperations
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    lqtyStaking = GTContracts.lqtyStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
 
-    th.openLoan_allAccounts(accounts.slice(0, 10), contracts, dec(10, 'ether'), dec(100, 18))
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
+
+    th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
   })
 
   describe('CDPManager', async accounts => {
-
     // applyPendingRewards
     it("applyPendingRewards(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.applyPendingRewards(bob, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.applyPendingRewards(bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -62,8 +67,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("updateRewardSnapshots(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.updateCDPRewardSnapshots(bob, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.updateCDPRewardSnapshots(bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -74,8 +79,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("removeStake(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.removeStake(bob, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.removeStake(bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -86,8 +91,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("removeStake(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.updateStakeAndTotalStakes(bob, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.updateStakeAndTotalStakes(bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -98,8 +103,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("closeCDP(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.closeCDP(bob, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.closeCDP(bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -111,8 +116,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("addCDPOwnerToArray(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.addCDPOwnerToArray(bob, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.addCDPOwnerToArray(bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -124,8 +129,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("setCDPStatus(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.setCDPStatus(bob, 1, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.setCDPStatus(bob, 1, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -136,8 +141,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("increaseCDPColl(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.increaseCDPColl(bob, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.increaseCDPColl(bob, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -148,8 +153,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("decreaseCDPColl(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.decreaseCDPColl(bob, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.decreaseCDPColl(bob, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -160,8 +165,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("increaseCDPDebt(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.increaseCDPDebt(bob, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.increaseCDPDebt(bob, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -172,8 +177,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("decreaseCDPDebt(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await cdpManager.decreaseCDPDebt(bob, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await cdpManager.decreaseCDPDebt(bob, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -188,8 +193,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("liquidate(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.liquidate(100, 10, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await poolManager.liquidate(100, 10, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the CDPManager")
@@ -200,8 +205,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("movePendingTroveRewardsToActivePool(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.movePendingTroveRewardsToActivePool(100, 10, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await poolManager.movePendingTroveRewardsToActivePool(100, 10, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the CDPManager")
@@ -212,8 +217,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("redeemCollateral(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.redeemCollateral(bob, 100, 10, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await poolManager.redeemCollateral(bob, 100, 10, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the CDPManager")
@@ -224,8 +229,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("offset(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.offset(100, 10, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await poolManager.offset(100, 10, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the CDPManager")
@@ -234,12 +239,13 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
 
     // --- onlyBorrowerOperations ---
+ 
     // addColl
     it("addColl(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.addColl({ from: alice, value: 100 })
-        assert.fail(txAlice)
+        const txAlice = await poolManager.addColl({ from: alice, value: 100 })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -250,8 +256,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("withdrawColl(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.withdrawColl(alice, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await poolManager.withdrawColl(alice, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -262,8 +268,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("withdrawCLV(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.withdrawCLV(alice, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await poolManager.withdrawCLV(alice, 100, 10, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -274,8 +280,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("repayCLV(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        txAlice = await poolManager.repayCLV(alice, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await poolManager.repayCLV(alice, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the BorrowerOperations contract")
@@ -287,8 +293,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("fallback(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
-        txAlice = await web3.eth.sendTransaction({ from: alice, to: poolManager.address, value: 100 })
-        assert.fail(txAlice)
+        const txAlice = await web3.eth.sendTransaction({ from: alice, to: poolManager.address, value: 100 })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -303,8 +309,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("sendETH(): reverts when called by an account that is not PoolManager or CDPM", async () => {
       // Attempt call from alice
       try {
-        txAlice = await activePool.sendETH(alice, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await activePool.sendETH(alice, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is neither the PoolManager nor CDPManager")
@@ -315,8 +321,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("increaseCLVDebt(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await activePool.increaseCLVDebt(100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await activePool.increaseCLVDebt(100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -327,8 +333,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("decreaseCLVDebt(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await activePool.decreaseCLVDebt(100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await activePool.decreaseCLVDebt(100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -341,8 +347,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("fallback(): reverts when called by an account that is neither PoolManager nor Default Pool", async () => {
       // Attempt call from alice
       try {
-        txAlice = await web3.eth.sendTransaction({ from: alice, to: activePool.address, value: 100 })
-        assert.fail(txAlice)
+        const txAlice = await web3.eth.sendTransaction({ from: alice, to: activePool.address, value: 100 })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "ActivePool: Caller is neither the PoolManager nor Default Pool")
@@ -355,8 +361,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("sendETH(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await defaultPool.sendETH(alice, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await defaultPool.sendETH(alice, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -367,8 +373,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("increaseCLVDebt(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await defaultPool.increaseCLVDebt(100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await defaultPool.increaseCLVDebt(100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -379,8 +385,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("decreaseCLV(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await defaultPool.decreaseCLVDebt(100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await defaultPool.decreaseCLVDebt(100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -393,11 +399,11 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("fallback(): reverts when called by an account that is not the Active Pool", async () => {
       // Attempt call from alice
       try {
-        txAlice = await web3.eth.sendTransaction({ from: alice, to: defaultPool.address, value: 100 })
-        assert.fail(txAlice)
+        const txAlice = await web3.eth.sendTransaction({ from: alice, to: defaultPool.address, value: 100 })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "DefaultPool: Caller is not ActivePool")
+        assert.include(err.message, "DefaultPool: Caller is not the ActivePool")
       }
     })
   })
@@ -406,8 +412,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("sendETH(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await stabilityPool.sendETH(alice, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await stabilityPool.sendETH(alice, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -418,8 +424,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("increaseCLV(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await stabilityPool.increaseCLV(100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await stabilityPool.increaseCLV(100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -430,8 +436,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("decreaseCLV(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await stabilityPool.decreaseCLV(100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await stabilityPool.decreaseCLV(100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -444,8 +450,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("fallback(): reverts when called by an account that is not the Active Pool", async () => {
       // Attempt call from alice
       try {
-        txAlice = await web3.eth.sendTransaction({ from: alice, to: stabilityPool.address, value: 100 })
-        assert.fail(txAlice)
+        const txAlice = await web3.eth.sendTransaction({ from: alice, to: stabilityPool.address, value: 100 })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "StabilityPool: Caller is not ActivePool")
@@ -461,11 +467,11 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("mint(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await clvToken.mint(bob, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await clvToken.mint(bob, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is not the PM or BO")
       }
     })
 
@@ -473,8 +479,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("burn(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await clvToken.burn(bob, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await clvToken.burn(bob, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -485,8 +491,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("sendToPool(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await clvToken.sendToPool(bob, activePool.address, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await clvToken.sendToPool(bob, activePool.address, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -497,8 +503,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("returnFromPool(): reverts when called by an account that is not PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await clvToken.returnFromPool(activePool.address, bob, 100, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await clvToken.returnFromPool(activePool.address, bob, 100, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the PoolManager")
@@ -512,8 +518,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("insert(): reverts when called by an account that is not BorrowerOps or CDPM", async () => {
       // Attempt call from alice
       try {
-        txAlice = await sortedCDPs.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await sortedCDPs.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, " Caller is neither BO nor CDPM")
@@ -525,8 +531,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("remove(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await sortedCDPs.remove(bob, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await sortedCDPs.remove(bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, " Caller is not the CDPManager")
@@ -538,8 +544,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("reinsert(): reverts when called by an account that is neither BorrowerOps nor CDPManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await sortedCDPs.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
-        assert.fail(txAlice)
+        const txAlice = await sortedCDPs.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is neither BO nor CDPM")
@@ -551,12 +557,239 @@ contract('All Liquity functions with intra-system access control restrictions', 
     it("updatePrice(): reverts when called by an account that is not CDPManager or PoolManager", async () => {
       // Attempt call from alice
       try {
-        txAlice = await priceFeed.updatePrice({ from: alice })
-        assert.fail(txAlice)
+        const txAlice = await priceFeed.updatePrice({ from: alice })
+        assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is neither CDPManager nor PoolManager")
       }
     })
   })
+
+  describe('LockupContractFactory', async accounts => {
+    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
+      try {
+        const txAlice = await lockupContractFactory.setGrowthTokenAddress(growthToken.address, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Owner can successfully set any address
+      const txOwner1 = await lockupContractFactory.setGrowthTokenAddress(bob, { from: owner })
+      const txOwner2 = await lockupContractFactory.setGrowthTokenAddress(growthToken.address, { from: owner })
+    })
+  })
+
+  describe('OneYearLockupContract', async accounts => {
+    it("lockContract(): reverts when caller is not deployer", async () => {
+      // deploy new OYLC with Carol as beneficiary
+      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, dec(100, 18), { from: owner })
+
+      const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
+
+      // Check Factory is OYLC deployer
+      assert.equal(await OYLC.lockupDeployer(), lockupContractFactory.address)
+
+      // Deployer funds the OYLC
+      await growthToken.transfer(OYLC.address, dec(100, 18), { from: owner })
+
+      try {
+        const txAlice = await OYLC.lockContract({ from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Deployer can successfully lock OYLC contract via Factory
+      const txOwner = await lockupContractFactory.lockOneYearContracts([OYLC.address], { from: owner })
+      assert.isTrue(txOwner.receipt.status)
+    })
+
+    it("withdrawGT(): reverts when caller is not beneficiary", async () => {
+      // deploy new OYLC with Carol as beneficiary
+      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, dec(100, 18), { from: owner })
+
+      const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
+
+      // Deployer funds the OYLC
+      await growthToken.transfer(OYLC.address, dec(100, 18), { from: owner })
+
+      // Deployer locks contract via the factory
+      await lockupContractFactory.lockOneYearContracts([OYLC.address], { from: owner })
+      assert.isTrue(await OYLC.active())
+
+      // Fast-forward one year, so that beneficiary can withdraw
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+
+      // Bob attempts to withdraw GT
+      try {
+        const txBob = await OYLC.withdrawGT({ from: bob })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Confirm beneficiary, Carol, can withdraw
+      const txCarol = await OYLC.withdrawGT({ from: carol })
+      assert.isTrue(txCarol.receipt.status)
+    })
+  })
+
+  describe('CustomDurationLockupContract', async accounts => {
+    it("lockContract(): reverts when caller is not deployer", async () => {
+      // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+
+      // deploy new CDLC with 1 month duration and Carol as beneficiary
+      const deployedCDLCtx = await lockupContractFactory
+      .deployCustomDurationLockupContract(
+        carol,
+        dec(100, 18),
+        timeValues.SECONDS_IN_ONE_MONTH,
+        { from: owner })
+
+      const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
+
+      // Check Factory is CDLC deployer
+      assert.equal(await CDLC.lockupDeployer(), lockupContractFactory.address)
+
+      // Deployer funds the CDLC
+      await growthToken.transfer(CDLC.address, dec(100, 18), { from: owner })
+
+
+      try {
+        const txAlice = await CDLC.lockContract({ from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Deployer can successfully lock OYLC contract via Factory
+      const txOwner1 = await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
+    })
+
+    it("withdrawGT(): reverts when caller is not beneficiary", async () => {
+       // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
+       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+
+      // deploy new CDLC with 1 month duration and Carol as beneficiary
+      const deployedCDLCtx = await lockupContractFactory
+      .deployCustomDurationLockupContract(
+        carol,
+        dec(100, 18),
+        timeValues.SECONDS_IN_ONE_MONTH,
+        { from: owner })
+
+      const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
+
+      // Deployer funds the CDLC
+      await growthToken.transfer(CDLC.address, dec(100, 18), { from: owner })
+
+      // Deployer locks contract via the factory
+      await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
+      assert.isTrue(await CDLC.active())
+
+      // Fast-forward one month, so that beneficiary can withdraw
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+
+      // Bob attempts to withdraw GT
+      try {
+        const txBob = await CDLC.withdrawGT({ from: bob })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Confirm beneficiary, Carol, can withdraw
+      const txCarol = await CDLC.withdrawGT({ from: carol })
+      assert.isTrue(txCarol.receipt.status)
+    })
+  })
+
+  describe('LQTYStaking', async accounts => { 
+    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
+      try {
+        const txAlice = await lqtyStaking.setGrowthTokenAddress(growthToken.address, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Deployer can successfully set address
+      const txDeployer =  lqtyStaking.setGrowthTokenAddress(growthToken.address, { from: owner })
+    })
+
+    it("setCLVTokenAddress(): reverts when caller is not  deployer", async () => {
+      try {
+        const txAlice = await lqtyStaking.setCLVTokenAddress(clvToken.address, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Deployer can successfully set address
+      const txDeployer =  lqtyStaking.setCLVTokenAddress(clvToken.address, { from: owner })
+    })
+
+    it("setCDPManagerAddress(): reverts when caller is not deployer", async () => {
+      try {
+        const txAlice = await lqtyStaking.setCDPManagerAddress(cdpManager.address, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Deployer can successfully set address
+      const txDeployer = lqtyStaking.setCDPManagerAddress(cdpManager.address, { from: owner })
+    })
+
+    it("setBorrowerOperationsAddress(): reverts when caller is not deployer", async () => {
+      try {
+        const txAlice = await lqtyStaking.setBorrowerOperationsAddress(borrowerOperations.address, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Deployer can successfully set address
+      const txDeployer = lqtyStaking.setBorrowerOperationsAddress(borrowerOperations.address, { from: owner })
+    })
+
+    it("addETHFee(): reverts when caller is not CDPManager", async () => {
+      try {
+        const txAlice = await lqtyStaking.increaseF_ETH(dec(1, 'ether'), { from: alice})
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+    })
+
+    it("addLQTYFee(): reverts when caller is not CDPManager", async () => {
+      try {
+        const txAlice = await lqtyStaking.increaseF_LUSD(dec(1, 18), { from: alice})
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+    })
+  })
+
+  describe('CommunityIssuance', async accounts => { 
+    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
+      
+      const CINew = await CommunityIssuance.new() 
+
+      try {
+        const txAlice = await CINew.setGrowthTokenAddress(growthToken.address, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // Deployer can successfully set address
+      const txDeployer =  CINew.setGrowthTokenAddress(growthToken.address, { from: owner })
+    })
+  })
 })
+

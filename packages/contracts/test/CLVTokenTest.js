@@ -1,14 +1,9 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
-
-const getDifference = testHelpers.getDifference
-const moneyVals = testHelpers.MoneyValues
 const dec = testHelpers.TestHelper.dec
 
+const CLVTokenTester = artifacts.require('CLVTokenTester')
 const PoolManagerTester = artifacts.require('PoolManagerTester')
 
 contract('CLVToken', async accounts => {
@@ -18,32 +13,38 @@ contract('CLVToken', async accounts => {
   let poolManager
   let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
   let borrowerOperations
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
-      const contracts = await deployLiquity()
+      contracts = await deploymentHelper.deployLiquityCore()
+      contracts.clvToken = await CLVTokenTester.new()
       contracts.poolManager = await PoolManagerTester.new()
-
+      
+      const GTContracts = await deploymentHelper.deployGTContracts()
+  
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
       poolManager = contracts.poolManager
       sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
-      nameRegistry = contracts.nameRegistry
       activePool = contracts.activePool
       stabilityPool = contracts.stabilityPool
       defaultPool = contracts.defaultPool
-      functionCaller = contracts.functionCaller
       borrowerOperations = contracts.borrowerOperations
+      hintHelpers = contracts.hintHelpers
   
-      const contractAddresses = getAddresses(contracts)
-      await connectContracts(contracts, contractAddresses)
+      lqtyStaking = GTContracts.lqtyStaking
+      growthToken = GTContracts.growthToken
+      communityIssuance = GTContracts.communityIssuance
+      lockupContractFactory = GTContracts.lockupContractFactory
+  
+      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
+      await deploymentHelper.connectGTContracts(GTContracts)
+      await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
       
       // add CDPs for three test users
       await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })

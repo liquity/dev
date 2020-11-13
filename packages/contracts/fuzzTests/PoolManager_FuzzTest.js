@@ -1,30 +1,20 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
 
 const th = testHelpers.TestHelper
 const dec = th.dec
-const mv = testHelpers.MoneyValues
+
+const ZERO_ADDRESS = th.ZERO_ADDRESS
 
 contract("PoolManager", async accounts => {
 
   let priceFeed
   let clvToken
   let poolManager
-  let sortedCDPs
   let cdpManager
-  let nameRegistry
-  let activePool
   let stabilityPool
-  let defaultPool
-  let functionCaller
   let borrowerOperations
 
-  let gasPriceInWei
-  
   const performLiquidation = async (remainingDefaulters, liquidatedAccountsDict) => {
     if (remainingDefaulters.length === 0) { return }
 
@@ -38,9 +28,10 @@ contract("PoolManager", async accounts => {
     const ICR = (await cdpManager.getCurrentICR(randomDefaulter, price)).toString()
     const ICRPercent = ICR.slice(0, ICR.length-16)
   
-    const CLVinPoolBefore = await stabilityPool.getCLV()
+    console.log(`SP address: ${stabilityPool.address}`)
+    const CLVinPoolBefore = await stabilityPool.getTotalCLVDeposits()
     const liquidatedTx = await cdpManager.liquidate(randomDefaulter, { from: accounts[0] })
-    const CLVinPoolAfter = await stabilityPool.getCLV()
+    const CLVinPoolAfter = await stabilityPool.getTotalCLVDeposits()
 
     assert.isTrue(liquidatedTx.receipt.status)
 
@@ -62,7 +53,7 @@ contract("PoolManager", async accounts => {
 
     const randomCLVAmount = th.randAmountInWei(1, maxCLVDeposit)
 
-    const depositTx = await poolManager.provideToSP(randomCLVAmount, { from: randomDepositor })
+    const depositTx = await poolManager.provideToSP(randomCLVAmount, ZERO_ADDRESS, { from: randomDepositor })
 
     assert.isTrue(depositTx.receipt.status)
 
@@ -97,17 +88,19 @@ contract("PoolManager", async accounts => {
     console.log(`Depositors count: ${currentDepositors.length}`)
 
     for (depositor of currentDepositors) {
-      const initialDeposit = await poolManager.initialDeposits(depositor)
+      const initialDeposit = (await poolManager.deposits(depositor))[0]
       const finalDeposit = await poolManager.getCompoundedCLVDeposit(depositor)
-      const ETHGain = await poolManager.getCurrentETHGain(depositor)
+      const ETHGain = await poolManager.getDepositorETHGain(depositor)
       const ETHinSP = (await stabilityPool.getETH()).toString()
-      const CLVinSP = (await stabilityPool.getCLV()).toString()
+      const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
 
       // Attempt to withdraw
       const withdrawalTx = await poolManager.withdrawFromSP(dec(1, 36), { from: depositor })
       
       const ETHinSPAfter = (await stabilityPool.getETH()).toString()
-      const CLVinSPAfter = (await stabilityPool.getCLV()).toString()
+      const CLVinSPAfter = (await stabilityPool.getTotalCLVDeposits()).toString()
+      const CLVBalanceSPAfter = (await clvToken.balanceOf(stabilityPool.address))
+      const depositAfter = await poolManager.getCompoundedCLVDeposit(depositor)
 
       console.log(`--Before withdrawal--
                     withdrawer addr: ${th.squeezeAddr(depositor)}
@@ -116,16 +109,19 @@ contract("PoolManager", async accounts => {
                      ETH in SP: ${ETHinSP}
                      compounded deposit: ${finalDeposit} 
                      CLV in SP: ${CLVinSP}
+                    
                     --After withdrawal--
-                     withdrawal tx success: ${withdrawalTx.receipt.status} 
-                     ETH in SP: ${ETHinSPAfter}
-                     CLV in SP: ${CLVinSPAfter}
+                     Withdrawal tx success: ${withdrawalTx.receipt.status} 
+                     Deposit after: ${depositAfter}
+                     ETH remaining in SP: ${ETHinSPAfter}
+                     SP CLV deposits tracker after: ${CLVinSPAfter}
+                     SP CLV balance after: ${CLVBalanceSPAfter}
                      `)
                      
 
        // Check each deposit can be withdrawn
        assert.isTrue(withdrawalTx.receipt.status)
-
+       assert.equal(depositAfter, '0')
     }
   }
 
@@ -136,22 +132,19 @@ contract("PoolManager", async accounts => {
     })
 
     beforeEach(async () => {
-      const contracts = await deployLiquity()
+      contracts = await deploymentHelper.deployLiquityCore()
+      const GTContracts = await deploymentHelper.deployGTContracts()
 
+      stabilityPool = contracts.stabilityPool
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
       poolManager = contracts.poolManager
-      sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
-      nameRegistry = contracts.nameRegistry
-      activePool = contracts.activePool
-      stabilityPool = contracts.stabilityPool
-      defaultPool = contracts.defaultPool
-      functionCaller = contracts.functionCaller
       borrowerOperations = contracts.borrowerOperations
 
-      const contractAddresses = getAddresses(contracts)
-      await connectContracts(contracts, contractAddresses)
+      await deploymentHelper.connectGTContracts(GTContracts)
+      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
+      await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
     })
 
     // mixed deposits/liquidations
@@ -165,9 +158,9 @@ contract("PoolManager", async accounts => {
     it("Defaulters' Collateral in range [1, 1e8]. SP Deposits in range [100, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: dec(5, 29) })
+      await borrowerOperations.openLoan(0, lastAccount, { from: lastAccount, value: dec(5, 29) })
 
-      const numberOfOps = 1000
+      const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
       const depositorAccounts = accounts.slice(numberOfOps + 1 , numberOfOps*2)
 
@@ -191,7 +184,7 @@ contract("PoolManager", async accounts => {
       await th.openLoan_allAccounts_randomETH_randomCLV(defaulterCollMin,
         defaulterCollMax,
         defaulterAccounts,
-        borrowerOperations,
+        contracts,
         defaulterCLVProportionMin,
         defaulterCLVProportionMax,
         true)
@@ -200,7 +193,7 @@ contract("PoolManager", async accounts => {
       await th.openLoan_allAccounts_randomETH_randomCLV(depositorCollMin,
         depositorCollMax,
         depositorAccounts,
-        borrowerOperations,
+        contracts,
         depositorCLVProportionMin,
         depositorCLVProportionMax,
         true)
@@ -217,12 +210,12 @@ contract("PoolManager", async accounts => {
                               currentDepositorsDict)
       }
 
-      const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getCLV()
+      const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsBeforeWithdrawals = await stabilityPool.getETH()
 
       await attemptWithdrawAllDeposits(currentDepositors)
 
-      const totalCLVDepositsAfterWithdrawals = await stabilityPool.getCLV()
+      const totalCLVDepositsAfterWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsAfterWithdrawals = await stabilityPool.getETH()
 
       console.log(`Total CLV deposits before any withdrawals: ${totalCLVDepositsBeforeWithdrawals}`)
@@ -238,9 +231,9 @@ contract("PoolManager", async accounts => {
     it("Defaulters' Collateral in range [1, 10]. SP Deposits in range [1e8, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: dec(5, 29) })
+      await borrowerOperations.openLoan(0, lastAccount, { from: lastAccount, value: dec(5, 29) })
 
-      const numberOfOps = 1000
+      const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
       const depositorAccounts = accounts.slice(numberOfOps + 1 , numberOfOps*2)
 
@@ -264,7 +257,7 @@ contract("PoolManager", async accounts => {
       await th.openLoan_allAccounts_randomETH_randomCLV(defaulterCollMin,
         defaulterCollMax,
         defaulterAccounts,
-        borrowerOperations,
+        contracts,
         defaulterCLVProportionMin,
         defaulterCLVProportionMax)
 
@@ -272,7 +265,7 @@ contract("PoolManager", async accounts => {
       await th.openLoan_allAccounts_randomETH_randomCLV(depositorCollMin,
         depositorCollMax,
         depositorAccounts,
-        borrowerOperations,
+        contracts,
         depositorCLVProportionMin,
         depositorCLVProportionMax)
 
@@ -288,12 +281,12 @@ contract("PoolManager", async accounts => {
                               currentDepositorsDict) 
       }
 
-      const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getCLV()
+      const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsBeforeWithdrawals = await stabilityPool.getETH()
 
       await attemptWithdrawAllDeposits(currentDepositors)
 
-      const totalCLVDepositsAfterWithdrawals = await stabilityPool.getCLV()
+      const totalCLVDepositsAfterWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsAfterWithdrawals = await stabilityPool.getETH()
 
       console.log(`Total CLV deposits before any withdrawals: ${totalCLVDepositsBeforeWithdrawals}`)
@@ -309,9 +302,9 @@ contract("PoolManager", async accounts => {
     it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [100, 1000]. Every liquidation empties the Pool. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: dec(5, 29) })
+      await borrowerOperations.openLoan(0, lastAccount, { from: lastAccount, value: dec(5, 29) })
 
-      const numberOfOps = 1000
+      const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
       const depositorAccounts = accounts.slice(numberOfOps + 1 , numberOfOps*2)
 
@@ -335,7 +328,7 @@ contract("PoolManager", async accounts => {
       await th.openLoan_allAccounts_randomETH_randomCLV(defaulterCollMin,
         defaulterCollMax,
         defaulterAccounts,
-        borrowerOperations,
+        contracts,
         defaulterCLVProportionMin,
         defaulterCLVProportionMax)
 
@@ -343,7 +336,7 @@ contract("PoolManager", async accounts => {
       await th.openLoan_allAccounts_randomETH_randomCLV(depositorCollMin,
         depositorCollMax,
         depositorAccounts,
-        borrowerOperations,
+        contracts,
         depositorCLVProportionMin,
         depositorCLVProportionMax)
 
@@ -359,12 +352,12 @@ contract("PoolManager", async accounts => {
                               currentDepositorsDict)
       }
 
-      const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getCLV()
+      const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsBeforeWithdrawals = await stabilityPool.getETH()
 
       await attemptWithdrawAllDeposits(currentDepositors)
 
-      const totalCLVDepositsAfterWithdrawals = await stabilityPool.getCLV()
+      const totalCLVDepositsAfterWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsAfterWithdrawals = await stabilityPool.getETH()
 
       console.log(`Total CLV deposits before any withdrawals: ${totalCLVDepositsBeforeWithdrawals}`)
@@ -377,13 +370,13 @@ contract("PoolManager", async accounts => {
       console.log(`remaining defaulters length: ${remainingDefaulters.length}`)
     })
 
-    it.only("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [1e8 1e10]. ETH:USD = 100", async () => {
+    it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [1e8 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
       const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.addColl(lastAccount, lastAccount, { from: lastAccount, value: dec(5, 29) })
+      await borrowerOperations.openLoan(0, lastAccount, { from: lastAccount, value: dec(5, 29) })
 
       // price drops, all L liquidateable
-      const numberOfOps = 1000
+      const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
       const depositorAccounts = accounts.slice(numberOfOps + 1 , numberOfOps*2)
 
@@ -407,7 +400,7 @@ contract("PoolManager", async accounts => {
       await th.openLoan_allAccounts_randomETH_randomCLV(defaulterCollMin,
         defaulterCollMax,
         defaulterAccounts,
-        borrowerOperations,
+        contracts,
         defaulterCLVProportionMin,
         defaulterCLVProportionMax)
 
@@ -415,7 +408,7 @@ contract("PoolManager", async accounts => {
       await th.openLoan_allAccounts_randomETH_randomCLV(depositorCollMin,
         depositorCollMax,
         depositorAccounts,
-        borrowerOperations,
+        contracts,
         depositorCLVProportionMin,
         depositorCLVProportionMax)
 
@@ -431,12 +424,12 @@ contract("PoolManager", async accounts => {
                               currentDepositorsDict)
       }
 
-      const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getCLV()
+      const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsBeforeWithdrawals = await stabilityPool.getETH()
 
       await attemptWithdrawAllDeposits(currentDepositors)
 
-      const totalCLVDepositsAfterWithdrawals = await stabilityPool.getCLV()
+      const totalCLVDepositsAfterWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsAfterWithdrawals = await stabilityPool.getETH()
 
       console.log(`Total CLV deposits before any withdrawals: ${totalCLVDepositsBeforeWithdrawals}`)

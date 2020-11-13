@@ -70,25 +70,6 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
     Data public data;
 
-    // --- Modifiers ---
-
-    modifier onlyBorrowerOperations() {
-        require(_msgSender() == borrowerOperationsAddress, "SortedCDPs: Caller is not the BorrowerOperations contract");
-        _;
-    }
-
-    modifier onlyCDPManager() {
-        require(_msgSender() == CDPManagerAddress, "SortedCDPs: Caller is not the CDPManager");
-        _;
-    }
-
-     modifier onlyBOorCDPM() {
-        address sender = _msgSender();
-        require(sender == borrowerOperationsAddress || sender == CDPManagerAddress, 
-                "SortedCDPs: Caller is neither BO nor CDPM");
-        _;
-    }
-
     // --- Dependency setters --- 
 
     function setParams(uint256 _size, address _CDPManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
@@ -114,7 +95,8 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _nextId Id of next node for the insert position
      */
 
-    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external override onlyBOorCDPM {
+    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external override {
+        _requireCallerIsBOorCDPM();
         _insert (_id, _ICR, _price, _prevId, _nextId);
     }
     
@@ -164,7 +146,8 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         data.size = data.size.add(1); 
     }
 
-    function remove(address _id) external override onlyCDPManager {
+    function remove(address _id) external override {
+        _requireCallerIsCDPManager();
         _remove(_id);
     }
 
@@ -215,7 +198,8 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _prevId Id of previous node for the new insert position
      * @param _nextId Id of next node for the new insert position
      */
-    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external override onlyBOorCDPM {
+    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external override {
+        _requireCallerIsBOorCDPM();
         // List must contain the node
         require(_contains(_id));
 
@@ -414,5 +398,16 @@ contract SortedCDPs is Ownable, ISortedCDPs {
             // Descend list starting from `prevId`
             return _descendList(_ICR, _price, prevId);
         }
+    }
+
+    // --- 'require' functions ---
+
+    function _requireCallerIsCDPManager() internal view {
+        require(_msgSender() == CDPManagerAddress, "SortedCDPs: Caller is not the CDPManager");
+    }
+
+    function _requireCallerIsBOorCDPM() internal view {
+        require(_msgSender() == borrowerOperationsAddress || _msgSender() == CDPManagerAddress, 
+                "SortedCDPs: Caller is neither BO nor CDPM");
     }
 }

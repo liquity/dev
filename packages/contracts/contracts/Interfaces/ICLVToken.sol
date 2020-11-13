@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.5.16;
+pragma solidity 0.6.11;
 
 import "../Dependencies/IERC20.sol";
 
@@ -11,7 +11,10 @@ interface ICLVToken is IERC20 {
     event CLVTokenBalanceUpdated(address _user, uint _amount);
 
     // --- Functions ---
-    function setPoolManagerAddress(address _poolManagerAddress) external;
+    function setAddresses(
+        address _poolManagerAddress,
+        address _borrowerOperationsAddress
+    ) external;
 
     function mint(address _account, uint256 _amount) external;
 

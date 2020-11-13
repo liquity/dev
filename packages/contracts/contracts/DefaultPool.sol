@@ -15,18 +15,6 @@ contract DefaultPool is Ownable, IPool {
     uint256 internal ETH;  // deposited ether tracker
     uint256 internal CLVDebt;  // total outstanding CDP debt
 
-    // --- Modifiers ---
-
-    modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "DefaultPool:  Caller is not the PoolManager");
-        _;
-    }
-
-    modifier onlyActivePool {
-        require(_msgSender() == activePoolAddress, "DefaultPool: Caller is not ActivePool");
-        _;
-    }
-
     // --- Dependency setters ---
 
     function setAddresses(
@@ -57,7 +45,8 @@ contract DefaultPool is Ownable, IPool {
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) external override onlyPoolManager {
+    function sendETH(address _account, uint _amount) external override {
+        _requireCallerIsPoolManager();
         ETH = ETH.sub(_amount); 
          emit EtherSent(_account, _amount);  
 
@@ -65,11 +54,13 @@ contract DefaultPool is Ownable, IPool {
         require(success, "DefaultPool: sending ETH failed");     
     }
 
-    function increaseCLVDebt(uint _amount) external override onlyPoolManager {
+    function increaseCLVDebt(uint _amount) external override {
+        _requireCallerIsPoolManager();
         CLVDebt = CLVDebt.add(_amount);
     }
 
-    function decreaseCLVDebt(uint _amount) external override onlyPoolManager {
+    function decreaseCLVDebt(uint _amount) external override {
+        _requireCallerIsPoolManager();
         CLVDebt = CLVDebt.sub(_amount); 
     }
 
@@ -79,7 +70,20 @@ contract DefaultPool is Ownable, IPool {
         return address(this).balance;
     }
 
-    receive() external payable onlyActivePool {
+    // --- 'require' functions ---
+
+    function _requireCallerIsPoolManager() internal view {
+        require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
+    }
+
+    function _requireCallerIsActivePool() internal view {
+        require( _msgSender() == activePoolAddress, "DefaultPool: Caller is not the ActivePool");
+    }
+
+    // --- Fallback function ---
+
+    receive() external payable {
+        _requireCallerIsActivePool();
         ETH = ETH.add(msg.value);
     }
 }

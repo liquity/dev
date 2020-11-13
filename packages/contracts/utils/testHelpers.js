@@ -1,5 +1,7 @@
 const BN = require('bn.js')
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
+const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
+const CustomDurationLockupContract = artifacts.require(("./CustomDurationLockupContract.sol"))
 const Destructible = artifacts.require("./TestContracts/Destructible.sol")
 
 const MoneyValues = {
@@ -21,12 +23,24 @@ const MoneyValues = {
 
   _MCR: web3.utils.toBN('1100000000000000000'),
   _ICR100: web3.utils.toBN('1000000000000000000'),
-  _CCR: web3.utils.toBN('1500000000000000000')
+  _CCR: web3.utils.toBN('1500000000000000000'),
 }
 
-// TODO: Make classes for function export
+const TimeValues = {
+  SECONDS_IN_ONE_MINUTE:        60,
+  SECONDS_IN_ONE_HOUR:          60 * 60,
+  SECONDS_IN_ONE_DAY:           60 * 60 * 24,
+  SECONDS_IN_ONE_WEEK:          60 * 60 * 24 * 7,
+  SECONDS_IN_ONE_MONTH:         60 * 60 * 24 * 30,
+  SECONDS_IN_ONE_YEAR:          60 * 60 * 24 * 365,
+  MINUTES_IN_ONE_WEEK:          60 *24 * 30,
+  MINUTES_IN_ONE_MONTH:         60 *24 * 30,
+  MINUTES_IN_ONE_YEAR:          60 * 24 * 365
+}
 
 class TestHelper {
+  static ZERO_ADDRESS = '0x' + '0'.repeat(40)
+  static maxBytes32 = '0x' + 'f'.repeat(64)
 
   static dec(val, scale) {
     let zerosCount
@@ -56,16 +70,31 @@ class TestHelper {
     return Number(x_BN.sub(y_BN).abs())
   }
 
+  static zipToObject(array1, array2) {
+    let obj = {}
+    array1.forEach((element, idx) => obj[element] = array2[idx])
+    return obj
+  }
+
   static getGasMetrics(gasCostList) {
     const minGas = Math.min(...gasCostList)
     const maxGas = Math.max(...gasCostList)
 
     let sum = 0;
-    let meanGas;
     for (const gas of gasCostList) {
       sum += gas
     }
-    meanGas = sum / gasCostList.Length
+
+    if (sum === 0) {
+      return {
+        gasCostList: gasCostList,
+        minGas: undefined,
+        maxGas: undefined,
+        meanGas: undefined,
+        medianGas: undefined
+      }
+    }
+    const meanGas = sum / gasCostList.length
 
     // median is the middle element (for odd list size) or element adjacent-right of middle (for even list size)
     const sortedGasCostList = [...gasCostList].sort()
@@ -73,9 +102,26 @@ class TestHelper {
     return { gasCostList, minGas, maxGas, meanGas, medianGas }
   }
 
+  static getGasMinMaxAvg(gasCostList) {
+    const metrics = th.getGasMetrics(gasCostList)
+
+    const minGas = metrics.minGas
+    const maxGas = metrics.maxGas
+    const meanGas = metrics.meanGas
+    const medianGas = metrics.medianGas
+
+    return { minGas, maxGas, meanGas, medianGas }
+  }
+
   static getEndOfAccount(account) {
     const accountLast2bytes = account.slice((account.length - 4), account.length)
     return accountLast2bytes
+  }
+
+  static randDecayFactor(min, max) {
+    const amount = Math.random() * (max - min) + min;
+    const amountInWei = web3.utils.toWei(amount.toFixed(18), 'ether')
+    return amountInWei
   }
 
   static randAmountInWei(min, max) {
@@ -134,7 +180,6 @@ class TestHelper {
     const gas = tx.receipt.gasUsed
     return gas
   }
-
 
   // --- Logging functions ---
 
@@ -231,6 +276,23 @@ class TestHelper {
     return totalCollRemainder
   }
 
+
+  static getEmittedRedemptionValues(redemptionTx) {
+    for (let i = 0; i < redemptionTx.logs.length; i++) {
+      if (redemptionTx.logs[i].event === "Redemption") {
+
+        const CLVAmount = redemptionTx.logs[i].args[0]
+        const totalCLVRedeemed = redemptionTx.logs[i].args[1]
+        const totalETHDrawn = redemptionTx.logs[i].args[2]
+        const ETHFee = redemptionTx.logs[i].args[3]
+
+        return [CLVAmount, totalCLVRedeemed, totalETHDrawn, ETHFee]
+      }
+    }
+
+    throw ("The transaction logs do not contain a redemption event")
+  }
+
   static getEmittedLiquidationValues(liquidationTx) {
     for (let i = 0; i < liquidationTx.logs.length; i++) {
       if (liquidationTx.logs[i].event === "Liquidation") {
@@ -269,6 +331,23 @@ class TestHelper {
     throw ("The transaction logs do not contain a liquidation event")
   }
 
+  static getETHWithdrawnFromEvent(tx) {
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === "ETHGainWithdrawn") {
+        return (tx.logs[i].args[1]).toString()
+      }
+    }
+    throw ("The transaction logs do not contain an ETHGainWithdrawn event")
+  }
+
+  static getLUSDFeeFromLUSDBorrowingEvent(tx) {
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === "LUSDBorrowingFeePaid") {
+        return (tx.logs[i].args[1]).toString()
+      }
+    }
+    throw ("The transaction logs do not contain an LUSDBorrowingFeePaid event")
+  }
 
 
   static async getCompositeDebt(contracts, debt) {
@@ -421,7 +500,6 @@ class TestHelper {
     }
     return this.getGasMetrics(gasCostList)
   }
-
 
   static async openLoan_allAccounts_randomCLV(minCLV, maxCLV, accounts, contracts, ETHAmount) {
     const gasCostList = []
@@ -679,6 +757,12 @@ class TestHelper {
     return gas
   }
 
+  static async redeemCollateralAndGetTxObject(redeemer, contracts, CLVAmount) {
+    const price = await contracts.priceFeed.getPrice()
+    const tx = await this.performRedemptionTx(redeemer, price, contracts, CLVAmount)
+    return tx
+  }
+
   static async redeemCollateral_allAccounts_randomAmount(min, max, accounts, contracts) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
@@ -709,7 +793,8 @@ class TestHelper {
       firstRedemptionHint,
       exactPartialRedemptionHint,
       partialRedemptionNewICR,
-      { from: redeemer })
+      { from: redeemer, gasPrice: 0 },
+    )
 
     return tx
   }
@@ -735,7 +820,7 @@ class TestHelper {
   static async provideToSP_allAccounts(accounts, poolManager, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await poolManager.provideToSP(amount, { from: account })
+      const tx = await poolManager.provideToSP(amount, this.ZERO_ADDRESS, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -746,7 +831,7 @@ class TestHelper {
     const gasCostList = []
     for (const account of accounts) {
       const randomCLVAmount = this.randAmountInWei(min, max)
-      const tx = await poolManager.provideToSP(randomCLVAmount, { from: account })
+      const tx = await poolManager.provideToSP(randomCLVAmount, this.ZERO_ADDRESS, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -784,30 +869,96 @@ class TestHelper {
     }
     return this.getGasMetrics(gasCostList)
   }
-}
 
-const assertRevert = async (txPromise, message = undefined) => {
-  try {
-    const tx = await txPromise
+  // --- GT & Lockup Contract functions ---
 
-    assert.isFalse(tx.receipt.status)
-  } catch (err) {
-    assert.include(err.message, "revert")
-    if (message) {
-      assert.include(err.message, message)
+  static getLCAddressFromDeploymentTx(deployedLCTx) {
+    return deployedLCTx.logs[0].args[0]
+  }
+
+  static async getOYLCFromDeploymentTx(deployedOYLCTx) {
+    const deployedOYLCAddress = this.getLCAddressFromDeploymentTx(deployedOYLCTx)  // grab addr of deployed contract from event
+    const OYLC = await OneYearLockupContract.at(deployedOYLCAddress)
+    return OYLC
+  }
+
+  static async getCDLCFromDeploymentTx(deployedCDLCTx) {
+    const deployedCDLCAddress = this.getLCAddressFromDeploymentTx(deployedCDLCTx)  // grab addr of deployed contract from event
+    const CDLC = await CustomDurationLockupContract.at(deployedCDLCAddress)
+    return CDLC
+  }
+
+  static async registerFrontEnds(frontEnds, poolManager) {
+    for (const frontEnd of frontEnds) {
+      await poolManager.registerFrontEnd(this.dec(5, 17), { from: frontEnd })  // default kickback rate of 50%
     }
+  }
+
+  // --- Time functions ---
+
+  static async fastForwardTime(seconds, currentWeb3Provider) {
+    await currentWeb3Provider.send({
+      id: 0,
+      jsonrpc: '2.0',
+      method: 'evm_increaseTime',
+      params: [seconds]
+    },
+      (err) => { if (err) console.log(err) })
+
+    await currentWeb3Provider.send({
+      id: 0,
+      jsonrpc: '2.0',
+      method: 'evm_mine'
+    },
+      (err) => { if (err) console.log(err) })
+  }
+
+  static async getLatestBlockTimestamp(web3Instance) {
+    const blockNumber = await web3Instance.eth.getBlockNumber()
+    const block = await web3Instance.eth.getBlock(blockNumber)
+
+    return block.timestamp
+  }
+
+  static async getTimestampFromTx(tx, web3Instance) {
+    return this.getTimestampFromTxReceipt(tx.receipt, web3Instance)
+  }
+
+  static async getTimestampFromTxReceipt(txReceipt, web3Instance) {
+    const block = await web3Instance.eth.getBlock(txReceipt.blockNumber)
+    return block.timestamp
+  }
+
+  static secondsToDays(seconds) {
+    return Number(seconds) / (60 * 60 * 24)
+  }
+
+  static daysToSeconds(days) {
+    return Number(days) * (60 * 60 * 24)
+  }
+
+  static async assertRevert(txPromise, message = undefined) {
+    try {
+      const tx = await txPromise
+
+      assert.isFalse(tx.receipt.status)
+    } catch (err) {
+      assert.include(err.message, "revert")
+      if (message) {
+        assert.include(err.message, message)
+      }
+    }
+  }
+
+  static async forceSendEth(from, receiver, value) {
+    const destructible = await Destructible.new()
+    await web3.eth.sendTransaction({ to: destructible.address, from, value })
+    await destructible.destruct(receiver)
   }
 }
 
-const forceSendEth = async (from, receiver, value) => {
-  const destructible = await Destructible.new()
-  await web3.eth.sendTransaction({ to: destructible.address, from, value })
-  await destructible.destruct(receiver)
-}
-
 module.exports = {
-  TestHelper: TestHelper,
-  MoneyValues: MoneyValues,
-  assertRevert,
-  forceSendEth
+  TestHelper,
+  MoneyValues,
+  TimeValues
 }

@@ -419,7 +419,8 @@ export class EthersLiquity
     return this.wrapSimpleTransaction(
       await this.borrowerOperations.adjustLoan(
         change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
-        change.debtDifference?.bigNumber || 0,
+        change.debtDifference?.absoluteValue?.bigNumber,
+        change.debtDifference?.positive ? true : false,  
         await this._findHint(finalTrove, hintOptionalParams),
         {
           ...overrides,
@@ -573,11 +574,13 @@ export class EthersLiquity
   }
 
   async getStabilityDeposit(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    const [deposit, depositAfterLoss, pendingCollateralGain] = await Promise.all([
-      this.poolManager.initialDeposits(address, { ...overrides }).then(decimalify),
+    const [depositStruct, depositAfterLoss, pendingCollateralGain] = await Promise.all([
+      this.poolManager.deposits(address, { ...overrides }),
       this.poolManager.getCompoundedCLVDeposit(address, { ...overrides }).then(decimalify),
-      this.poolManager.getCurrentETHGain(address, { ...overrides }).then(decimalify)
+      this.poolManager.getDepositorETHGain(address, { ...overrides }).then(decimalify)
     ]);
+
+    const deposit = decimalify(depositStruct.initialValue);
 
     return new StabilityDeposit({ deposit, depositAfterLoss, pendingCollateralGain });
   }
@@ -613,9 +616,9 @@ export class EthersLiquity
     };
   }
 
-  async depositQuiInStabilityPool(depositedQui: Decimalish, overrides?: EthersTransactionOverrides) {
+  async depositQuiInStabilityPool(depositedQui: Decimalish, frontEndTag: string, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.poolManager.provideToSP(Decimal.from(depositedQui).bigNumber, { ...overrides })
+      await this.poolManager.provideToSP(Decimal.from(depositedQui).bigNumber, frontEndTag, { ...overrides })
     );
   }
 
@@ -638,7 +641,7 @@ export class EthersLiquity
     );
 
     return this.wrapSimpleTransaction(
-      await this.poolManager.withdrawFromSPtoCDP(
+      await this.poolManager.withdrawETHGainToTrove(
         await this._findHint(finalTrove, hintOptionalParams),
         { ...overrides }
       )

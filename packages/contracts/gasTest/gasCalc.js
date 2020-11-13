@@ -2,16 +2,13 @@
   Note: uses Mocha testing structure, but simply prints gas costs of transactions. No assertions.
 */
 const fs = require('fs')
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
-
-const mv = testHelpers.MoneyValues
 const th = testHelpers.TestHelper
 const dec = th.dec
+
+const ZERO_ADDRESS = th.ZERO_ADDRESS
 
 contract('Gas cost tests', async accounts => {
 
@@ -34,7 +31,6 @@ contract('Gas cost tests', async accounts => {
   let poolManager
   let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
@@ -46,23 +42,28 @@ contract('Gas cost tests', async accounts => {
 
 
   beforeEach(async () => {
-    contracts = await deployLiquity()
+    contracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
-    nameRegistry = contracts.nameRegistry
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    lqtyStaking = GTContracts.lqtyStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
+
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
   // ---TESTS ---
@@ -1589,7 +1590,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 100 provides 600 CLV to pool
     await borrowerOperations.withdrawCLV(dec(600, 18), accounts[100], { from: accounts[100] })
-    await poolManager.provideToSP(dec(600, 18), { from: accounts[100] })
+    await poolManager.provideToSP(dec(600, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     // Initial liquidations - full offset - makes SP reward terms and SP non-zero
     await cdpManager.liquidate(accounts[2], { from: accounts[0] })
@@ -1625,7 +1626,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 100 provides 360 CLV to SP
     await borrowerOperations.withdrawCLV(dec(600, 18), accounts[100], { from: accounts[100] })
-    await poolManager.provideToSP(dec(360, 18), { from: accounts[100] })
+    await poolManager.provideToSP(dec(360, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     // Initial liquidations - full offset - makes SP reward terms and SP non-zero
     await cdpManager.liquidate(accounts[2], { from: accounts[0] })
@@ -1635,7 +1636,7 @@ contract('Gas cost tests', async accounts => {
     await cdpManager.liquidate(accounts[4], { from: accounts[0] })
 
     // Account 5 provides another 200 to the SP
-    await poolManager.provideToSP(dec(200, 18), { from: accounts[100] })
+    await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     const hasPendingRewards = await cdpManager.hasPendingRewards(accounts[1])
     console.log("Liquidee has pending rewards: " + hasPendingRewards)
@@ -1665,14 +1666,14 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Set up some "previous" liquidations triggering partial offsets, and pending rewards for all troves
-    await poolManager.provideToSP(dec(100, 18), { from: accounts[100] })
+    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[100] })
     await cdpManager.liquidate(accounts[2], { from: accounts[0] })
 
-    await poolManager.provideToSP(dec(100, 18), { from: accounts[101] })
+    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[101] })
     await cdpManager.liquidate(accounts[3], { from: accounts[0] })
 
     // pool refilled with 100 CLV
-    await poolManager.provideToSP(dec(100, 18), { from: accounts[102] })
+    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[102] })
 
     const hasPendingRewards = await cdpManager.hasPendingRewards(accounts[1])
     console.log("Liquidee has pending rewards: " + hasPendingRewards)
@@ -1702,14 +1703,14 @@ contract('Gas cost tests', async accounts => {
 
     // Set up some "previous" liquidations that trigger partial offsets, 
     //and create pending rewards for all troves
-    await poolManager.provideToSP(dec(100, 18), { from: accounts[100] })
+    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[100] })
     await cdpManager.liquidate(accounts[2], { from: accounts[0] })
 
-    await poolManager.provideToSP(dec(100, 18), { from: accounts[101] })
+    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[101] })
     await cdpManager.liquidate(accounts[3], { from: accounts[0] })
 
     // Pool refilled with 50 CLV
-    await poolManager.provideToSP(dec(50, 18), { from: accounts[102] })
+    await poolManager.provideToSP(dec(50, 18), ZERO_ADDRESS, { from: accounts[102] })
 
     // Account 1 opens loan
     await borrowerOperations.openLoan(dec(90, 18), accounts[1], { from: accounts[1], value:dec(1, 'ether') })
@@ -1741,7 +1742,7 @@ contract('Gas cost tests', async accounts => {
     await borrowerOperations.withdrawCLV(dec(180, 18), accounts[98], {from: accounts[98]} )
 
     // Acct 99 deposits 1 CLV to SP
-    await poolManager.provideToSP(dec(1, 18), {from: accounts[99]} )
+    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, {from: accounts[99]} )
 
      //Account 97 opens CDP with 1 ether and withdraws 180 CLV
      await th.openLoan_allAccounts([accounts[97]], borrowerOperations,dec(1, 'ether'), 0)
@@ -1749,7 +1750,7 @@ contract('Gas cost tests', async accounts => {
 
     // Acct 100 withdraws 1800 CLV and deposits it to the SP
     await borrowerOperations.withdrawCLV(dec(1800, 18), accounts[100], {from: accounts[100]} )
-    await poolManager.provideToSP(dec(1800, 18), {from: accounts[100]} )
+    await poolManager.provideToSP(dec(1800, 18), ZERO_ADDRESS, {from: accounts[100]} )
 
      // Price drops too $100, accounts 99 and 100 ICR fall below MCR
      await priceFeed.setPrice(dec(100, 18))
@@ -1767,7 +1768,7 @@ contract('Gas cost tests', async accounts => {
     await cdpManager.liquidate(accounts[98], { from: accounts[0]})
 
     // Account 7 deposits 1 CLV in the Stability Pool
-    await poolManager.provideToSP(dec(1, 18), {from: accounts[100]} )
+    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, {from: accounts[100]} )
 
     const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0]})
     assert.isFalse(await sortedCDPs.contains(accounts[99]))
@@ -1785,7 +1786,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(100, 130), contracts, dec(10, 'ether'), 0 )
     await th.withdrawCLV_allAccounts(accounts.slice(100, 130), contracts, dec(180, 18))
 
-    await poolManager.provideToSP( dec(180, 18), {from:accounts[100]})
+    await poolManager.provideToSP( dec(180, 18), ZERO_ADDRESS, {from:accounts[100]})
 
     //1 acct open CDP with 1 ether and withdraws 180 CLV
     await th.openLoan_allAccounts([accounts[1]], contracts, dec(1, 'ether'), 0)

@@ -31,15 +31,6 @@ contract PriceFeed is Ownable, IPriceFeed {
     event CDPManagerAddressChanged(address _cdpManagerAddress);
     event PoolManagerAddressChanged(address _poolManagerAddress);
 
-    // --- Modifiers ---
-
-    modifier onlyCDPManagerOrPoolManager {
-        require(_msgSender() == cdpManagerAddress ||_msgSender() == poolManagerAddress,
-            "PriceFeed: Caller is neither CDPManager nor PoolManager"
-        );
-        _;
-    }
-
     // --- Dependency setters ---
 
     function setAddresses(
@@ -84,7 +75,8 @@ contract PriceFeed is Ownable, IPriceFeed {
     // --- MAINNET FUNCTIONALITY ---
 
     // TODO: convert received Chainlink price to precision-18 before setting state variable
-    function updatePrice() external override onlyCDPManagerOrPoolManager returns (uint256) {
+    function updatePrice() external override returns (uint256) {
+        _requireCallerIsCDPManagerOrPoolManager();
         price = getLatestPrice();
         emit PriceUpdated(price);
         return price;
@@ -145,6 +137,14 @@ contract PriceFeed is Ownable, IPriceFeed {
         require(_n <= latestAnswerID, "Not enough history");
 
         return priceAggregator_Testnet.getTimestamp(latestAnswerID - _n);
+    }
+
+    // --- 'require' functions ---
+
+    function _requireCallerIsCDPManagerOrPoolManager() internal view {
+        require(_msgSender() == cdpManagerAddress ||_msgSender() == poolManagerAddress,
+            "PriceFeed: Caller is neither CDPManager nor PoolManager"
+        );
     }
 }
 

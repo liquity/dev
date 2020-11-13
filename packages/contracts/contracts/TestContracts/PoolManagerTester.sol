@@ -21,4 +21,8 @@ contract PoolManagerTester is PoolManager {
     function clvReturnFromPool(address _poolAddress, address _receiver, uint256 _amount ) external {
         CLV.returnFromPool(_poolAddress, _receiver, _amount);
     }
+
+    function _unprotectedTriggerLQTYIssuance() external {
+        _triggerLQTYIssuance();
+    }
 }
