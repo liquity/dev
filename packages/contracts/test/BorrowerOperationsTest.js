@@ -2915,7 +2915,7 @@ contract('BorrowerOperations', async accounts => {
 
     // System TCR would be: ((3+3) * 100 ) / (200+201) = 600/401 = 149.62%, i.e. below CCR of 150%.
     try {
-      const txBob = await borrowerOperations.openLoan('201000000000000000000', bob, { from: bob, value: dec(3, 'ether') })
+      const txBob = await borrowerOperations.openLoan('191000000000000000000', bob, { from: bob, value: dec(3, 'ether') })
       assert.fail(txBob)
     } catch (err) {
       assert.include(err.message, "revert")
