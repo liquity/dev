@@ -219,6 +219,12 @@ const connectContracts = async (
         ...overrides,
         nonce
       }),
+
+    nonce =>
+      communityIssuance.setPoolManagerAddress(poolManager.address, {
+        ...overrides,
+        nonce
+      }),
   ];
 
   const txs = await Promise.all(connections.map((connect, i) => connect(txCount + i)));
