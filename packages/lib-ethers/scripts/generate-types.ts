@@ -14,6 +14,8 @@ import PoolManager from "../../contracts/artifacts/PoolManager.json";
 import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
 import SortedCDPs from "../../contracts/artifacts/SortedCDPs.json";
 import StabilityPool from "../../contracts/artifacts/StabilityPool.json";
+import LQTYStaking from "../../contracts/artifacts/LQTYStaking.json";
+import CommunityIssuance from "../../contracts/artifacts/CommunityIssuance.json";
 
 const getTupleType = (components: ParamType[], flexible: boolean) => {
   if (components.every(component => component.name)) {
@@ -124,7 +126,9 @@ const contractArtifacts = [
   PoolManager,
   PriceFeed,
   SortedCDPs,
-  StabilityPool
+  StabilityPool,
+  LQTYStaking,
+  CommunityIssuance
 ];
 
 const contracts = contractArtifacts.map(({ contractName, abi }) => ({

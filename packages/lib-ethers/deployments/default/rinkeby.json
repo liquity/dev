@@ -10,7 +10,9 @@
     "poolManager": "0x43bDa5817362abcbD900484ccdC2201120367B3B",
     "priceFeed": "0xF8Ac0B7A9dda5b46692139f3cA0B24d3d600B722",
     "sortedCDPs": "0x00725ef1ecC8d4Be14a28Fe356e4f8AB08858995",
-    "stabilityPool": "0x08EF272405e6034ED073D91A0D689429dfF213e4"
+    "stabilityPool": "0x08EF272405e6034ED073D91A0D689429dfF213e4",
+    "lqtyStaking": "0x00",
+    "communityIssuance": "0x00"
   },
   "version": "a936fe01e7ab36f85e9667bcd4530d8efa5d5e34",
   "deploymentDate": 1592388426394,

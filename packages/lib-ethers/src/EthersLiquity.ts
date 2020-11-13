@@ -419,8 +419,8 @@ export class EthersLiquity
     return this.wrapSimpleTransaction(
       await this.borrowerOperations.adjustLoan(
         change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
-        change.debtDifference?.absoluteValue?.bigNumber,
-        change.debtDifference?.positive ? true : false,  
+        change.debtDifference?.absoluteValue?.bigNumber || 0,
+        change.debtDifference?.positive ? true : false,
         await this._findHint(finalTrove, hintOptionalParams),
         {
           ...overrides,

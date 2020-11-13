@@ -55,7 +55,9 @@ const deployContracts = async (
     sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs", { ...overrides }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
-    })
+    }),
+    lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
+    communityIssuance: await deployContract(deployer, getContractFactory, "CommunityIssuance", { ...overrides }),
   };
 
   return {
@@ -83,7 +85,9 @@ const connectContracts = async (
     poolManager,
     priceFeed,
     sortedCDPs,
-    stabilityPool
+    stabilityPool,
+    lqtyStaking,
+    communityIssuance
   }: LiquityContracts,
   deployer: Signer,
   overrides?: Overrides
@@ -96,7 +100,7 @@ const connectContracts = async (
   const network = await deployer.provider.getNetwork();
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
-    nonce => clvToken.setPoolManagerAddress(poolManager.address, { ...overrides, nonce }),
+    nonce => clvToken.setAddresses(poolManager.address, borrowerOperations.address, { ...overrides, nonce }),
 
     nonce =>
       poolManager.setAddresses(
@@ -107,6 +111,7 @@ const connectContracts = async (
         stabilityPool.address,
         activePool.address,
         defaultPool.address,
+        communityIssuance.address,
         { ...overrides, nonce }
       ),
 
@@ -138,6 +143,7 @@ const connectContracts = async (
         priceFeed.address,
         clvToken.address,
         sortedCDPs.address,
+        lqtyStaking.address,
         { ...overrides, nonce }
       ),
 
@@ -149,14 +155,16 @@ const connectContracts = async (
         defaultPool.address,
         priceFeed.address,
         sortedCDPs.address,
+        clvToken.address,
+        lqtyStaking.address,
         { ...overrides, nonce }
       ),
 
     nonce =>
       stabilityPool.setAddresses(
-        borrowerOperations.address, 
-        poolManager.address, 
-        activePool.address, 
+        borrowerOperations.address,
+        poolManager.address,
+        activePool.address,
         { ...overrides, nonce }
       ),
 
@@ -178,7 +186,39 @@ const connectContracts = async (
       hintHelpers.setAddresses(priceFeed.address, sortedCDPs.address, cdpManager.address, {
         ...overrides,
         nonce
-      })
+      }),
+
+    /*
+    nonce =>
+    lqtyStaking.setGrowthTokenAddress(TODO.address, {
+      ...overrides,
+      nonce
+    }),
+    */
+
+    nonce =>
+      lqtyStaking.setCLVTokenAddress(clvToken.address, {
+        ...overrides,
+        nonce
+      }),
+
+    nonce =>
+      lqtyStaking.setCDPManagerAddress(cdpManager.address, {
+        ...overrides,
+        nonce
+      }),
+
+    nonce =>
+      lqtyStaking.setBorrowerOperationsAddress(borrowerOperations.address, {
+        ...overrides,
+        nonce
+      }),
+
+    nonce =>
+      lqtyStaking.setActivePoolAddress(activePool.address, {
+        ...overrides,
+        nonce
+      }),
   ];
 
   const txs = await Promise.all(connections.map((connect, i) => connect(txCount + i)));

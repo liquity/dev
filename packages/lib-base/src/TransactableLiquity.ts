@@ -52,7 +52,7 @@ export interface TransactableLiquity<T = unknown, U = unknown> {
   liquidate(address: string): Promise<Liquidation<T, U>>;
   liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<Liquidation<T, U>>;
 
-  depositQuiInStabilityPool(depositedQui: Decimalish): Promise<SimpleTransaction<T, U>>;
+  depositQuiInStabilityPool(depositedQui: Decimalish, frontEndTag: string): Promise<SimpleTransaction<T, U>>;
   withdrawQuiFromStabilityPool(withdrawnQui: Decimalish): Promise<SimpleTransaction<T, U>>;
   transferCollateralGainToTrove(): Promise<SimpleTransaction<T, U>>;
 

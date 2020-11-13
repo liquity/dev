@@ -264,7 +264,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should make a small stability deposit", async () => {
-      await liquity.depositQuiInStabilityPool(10);
+      await liquity.depositQuiInStabilityPool(10, '0x1234');
     });
 
     it("other user should make a Trove with very low ICR", async () => {
@@ -361,7 +361,7 @@ describe("EthersLiquity", () => {
         await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 100 }));
 
         await liquity.openTrove(new Trove({ collateral: 10, debt: 1410 }));
-        await liquity.depositQuiInStabilityPool(100);
+        await liquity.depositQuiInStabilityPool(100, '0x1234');
 
         price = Decimal.from(190);
         await deployerLiquity.setPrice(price);
@@ -380,8 +380,8 @@ describe("EthersLiquity", () => {
 
       describe("after depositing some more tokens", () => {
         before(async () => {
-          await liquity.depositQuiInStabilityPool(1300);
-          await otherLiquities[0].depositQuiInStabilityPool(10);
+          await liquity.depositQuiInStabilityPool(1300, '0x1234');
+          await otherLiquities[0].depositQuiInStabilityPool(10, '0x1234');
         });
 
         it("should liquidate more of the bottom Trove", async () => {
@@ -420,8 +420,8 @@ describe("EthersLiquity", () => {
         await otherLiquities[3].openTrove(new Trove({ collateral: 2, debt: 300 }));
         await otherLiquities[4].openTrove(new Trove({ collateral: 2, debt: 300 }));
 
-        await otherLiquities[0].depositQuiInStabilityPool(300);
-        await otherLiquities[1].depositQuiInStabilityPool(100);
+        await otherLiquities[0].depositQuiInStabilityPool(300, '0x1234');
+        await otherLiquities[1].depositQuiInStabilityPool(100, '0x1234');
         // otherLiquities[2] doesn't deposit yet
 
         // Tank the price so we can liquidate
@@ -433,7 +433,7 @@ describe("EthersLiquity", () => {
         expect((await otherLiquities[3].getTrove()).isEmpty).to.be.true;
 
         // Now otherLiquities[2] makes their deposit too
-        await otherLiquities[2].depositQuiInStabilityPool(100);
+        await otherLiquities[2].depositQuiInStabilityPool(100, '0x1234');
 
         // Liquidate second victim
         await liquity.liquidate(otherLiquities[4].userAddress!);

@@ -15,6 +15,8 @@ import poolManagerAbi from "../abi/PoolManager.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
 import sortedCDPsAbi from "../abi/SortedCDPs.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
+import lqtyStakingAbi from "../abi/LQTYStaking.json";
+import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 
 import dev from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
@@ -33,7 +35,9 @@ import {
   PoolManager,
   PriceFeed,
   SortedCDPs,
-  StabilityPool
+  StabilityPool,
+  LQTYStaking,
+  CommunityIssuance
 } from "../types";
 
 export const abi: { [name: string]: JsonFragment[] } = {
@@ -47,7 +51,9 @@ export const abi: { [name: string]: JsonFragment[] } = {
   poolManager: poolManagerAbi,
   priceFeed: priceFeedAbi,
   sortedCDPs: sortedCDPsAbi,
-  stabilityPool: stabilityPoolAbi
+  stabilityPool: stabilityPoolAbi,
+  lqtyStaking: lqtyStakingAbi,
+  communityIssuance: communityIssuanceAbi
 };
 
 export interface TypedLogDescription<T> extends LogDescription {
@@ -100,6 +106,8 @@ export interface LiquityContractAddresses {
   priceFeed: string;
   sortedCDPs: string;
   stabilityPool: string;
+  lqtyStaking: string;
+  communityIssuance: string;
 }
 
 export interface LiquityContracts {
@@ -116,6 +124,8 @@ export interface LiquityContracts {
   priceFeed: PriceFeed;
   sortedCDPs: SortedCDPs;
   stabilityPool: StabilityPool;
+  lqtyStaking: LQTYStaking;
+  communityIssuance: CommunityIssuance;
 }
 
 export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses => ({
@@ -129,7 +139,9 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   poolManager: contracts.poolManager.address,
   priceFeed: contracts.priceFeed.address,
   sortedCDPs: contracts.sortedCDPs.address,
-  stabilityPool: contracts.stabilityPool.address
+  stabilityPool: contracts.stabilityPool.address,
+  lqtyStaking: contracts.lqtyStaking.address,
+  communityIssuance: contracts.communityIssuance.address
 });
 
 const create = <T extends TypedContract<LiquityContract, unknown>>(
@@ -170,7 +182,9 @@ export const connectToContracts = (
 
   sortedCDPs: create<SortedCDPs>(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider),
 
-  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider)
+  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider),
+  lqtyStaking: create<LQTYStaking>(addresses.lqtyStaking, lqtyStakingAbi, signerOrProvider),
+  communityIssuance: create<CommunityIssuance>(addresses.communityIssuance, communityIssuanceAbi, signerOrProvider)
 });
 
 export type LiquityDeployment = {
