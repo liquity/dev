@@ -466,8 +466,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(_newICR >= MCR, "BorrowerOps: An operation that would result in ICR < MCR is not permitted");
     }
 
-    function _requireICRisAboveR_MCR(uint _newICR)  internal pure {
-        require(ICR >= R_MCR, "BorrowerOps: In Recovery Mode new loans must have ICR >= R_MCR");
+    function _requireICRisAboveR_MCR(uint _newICR) internal pure {
+        require(_newICR >= R_MCR, "BorrowerOps: In Recovery Mode new loans must have ICR >= R_MCR");
     }
 
     function _requireNewTCRisAboveCCR
