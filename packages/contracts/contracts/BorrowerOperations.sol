@@ -141,7 +141,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint ICR = Math._computeCR(msg.value, compositeDebt, price);  
 
         if (_checkRecoveryMode()) {
-            require(ICR >= R_MCR, "BorrowerOps: In Recovery Mode new loans must have ICR >= R_MCR");
+            _requireICRisAboveR_MCR(ICR);
         } else {
             _requireICRisAboveMCR(ICR);
             _requireNewTCRisAboveCCR(msg.value, true, rawDebt, true, price);  // coll increase, debt increase
@@ -464,6 +464,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function _requireICRisAboveMCR(uint _newICR)  internal pure {
         require(_newICR >= MCR, "BorrowerOps: An operation that would result in ICR < MCR is not permitted");
+    }
+
+    function _requireICRisAboveR_MCR(uint _newICR)  internal pure {
+        require(ICR >= R_MCR, "BorrowerOps: In Recovery Mode new loans must have ICR >= R_MCR");
     }
 
     function _requireNewTCRisAboveCCR
