@@ -53,11 +53,11 @@ contract EchidnaProxy {
 
     // Borrower Operations
     function openLoanPrx(uint _ETH, uint _CLVAmount, address _hint) external payable {
-        borrowerOperations.openLoan.value(_ETH)(_CLVAmount, _hint);
+        borrowerOperations.openLoan{value: _ETH}(_CLVAmount, _hint);
     }
 
     function addCollPrx(uint _ETH, address _user, address _hint) external payable {
-        borrowerOperations.addColl.value(_ETH)(_user, _hint);
+        borrowerOperations.addColl{value: _ETH}(_user, _hint);
     }
 
     function withdrawCollPrx(uint _amount, address _hint) external {
@@ -76,21 +76,17 @@ contract EchidnaProxy {
         borrowerOperations.closeLoan();
     }
 
-    function adjustLoanPrx(uint _ETH, uint _collWithdrawal, int _debtChange, address _hint) external payable {
-        borrowerOperations.adjustLoan.value(_ETH)(_collWithdrawal, _debtChange, _hint);
+    function adjustLoanPrx(uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable {
+        borrowerOperations.adjustLoan{value: _ETH}(_collWithdrawal, _debtChange, _isDebtIncrease, _hint);
     }
 
     // Pool Manager
-    function provideToSPPrx(uint _amount) external {
-        poolManager.provideToSP(_amount);
+    function provideToSPPrx(uint _amount, address _frontEndTag) external {
+        poolManager.provideToSP(_amount, _frontEndTag);
     }
 
     function withdrawFromSPPrx(uint _amount) external {
         poolManager.withdrawFromSP(_amount);
-    }
-
-    function withdrawFromSPtoCDPPrx(address _hint) external {
-        poolManager.withdrawFromSPtoCDP(_hint);
     }
 
     // CLV Token

@@ -51,13 +51,16 @@ contract EchidnaTester {
         priceFeed = new PriceFeed();
         sortedCDPs = new SortedCDPs();
 
-        cdpManager.setAddresses(address(borrowerOperations), address(poolManager), address(activePool), address(defaultPool), address(stabilityPool), address(priceFeed), address(clvToken), address(sortedCDPs));
-        borrowerOperations.setAddresses(address(cdpManager), address(poolManager), address(activePool), address(defaultPool), address(priceFeed), address(sortedCDPs));
-        poolManager.setAddresses(address(borrowerOperations), address(cdpManager), address(priceFeed), address(clvToken), address(stabilityPool), address(activePool), address(defaultPool));
+        // TODO
+        cdpManager.setAddresses(address(borrowerOperations), address(poolManager), address(activePool), address(defaultPool), address(stabilityPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
+        // TODO
+        borrowerOperations.setAddresses(address(cdpManager), address(poolManager), address(activePool), address(defaultPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
+        // TODO
+        poolManager.setAddresses(address(borrowerOperations), address(cdpManager), address(priceFeed), address(clvToken), address(stabilityPool), address(activePool), address(defaultPool), address(0));
         activePool.setAddresses(address(poolManager), address(cdpManager), address(defaultPool));
         defaultPool.setAddresses(address(poolManager), address(activePool));
-        stabilityPool.setAddresses(address(poolManager), address(activePool));
-        clvToken.setPoolManagerAddress(address(poolManager));
+        stabilityPool.setAddresses(address(borrowerOperations), address(poolManager), address(activePool));
+        clvToken.setAddresses(address(poolManager), address(borrowerOperations));
         priceFeed.setAddresses(address(cdpManager), address(poolManager), address(0), address(0));
         sortedCDPs.setParams(1e18, address(cdpManager), address(borrowerOperations));
 
@@ -190,41 +193,36 @@ contract EchidnaTester {
         echidnaProxies[actor].closeLoanPrx();
     }
 
-    function adjustLoanExt(uint _i, uint _ETH, uint _collWithdrawal, int _debtChange) external payable {
+    function adjustLoanExt(uint _i, uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease) external payable {
         uint actor = _i % NUMBER_OF_ACTORS;
         EchidnaProxy echidnaProxy = echidnaProxies[actor];
         uint actorBalance = address(echidnaProxy).balance;
 
         uint ETH = getAdjustedETH(actorBalance, _ETH, MCR);
-        int debtChange = _debtChange;
-        if (_debtChange > 0) {
+        uint debtChange = _debtChange;
+        if (_isDebtIncrease) {
             // TODO: add current amount already withdrawn:
-            debtChange = int(getAdjustedCLV(ETH, uint(_debtChange), MCR));
+            debtChange = getAdjustedCLV(ETH, uint(_debtChange), MCR);
         }
         // TODO: collWithdrawal, debtChange
-        echidnaProxy.adjustLoanPrx(ETH, _collWithdrawal, debtChange, address(0));
+        echidnaProxy.adjustLoanPrx(ETH, _collWithdrawal, debtChange, _isDebtIncrease, address(0));
     }
 
-    function adjustLoanRawExt(uint _i, uint _ETH, uint _collWithdrawal, int _debtChange, address _hint) external payable {
+    function adjustLoanRawExt(uint _i, uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].adjustLoanPrx(_ETH, _collWithdrawal, _debtChange, _hint);
+        echidnaProxies[actor].adjustLoanPrx(_ETH, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
     }
 
     // Pool Manager
 
-    function provideToSPExt(uint _i, uint _amount) external {
+    function provideToSPExt(uint _i, uint _amount, address _frontEndTag) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].provideToSPPrx(_amount);
+        echidnaProxies[actor].provideToSPPrx(_amount, _frontEndTag);
     }
 
     function withdrawFromSPExt(uint _i, uint _amount) external {
         uint actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].withdrawFromSPPrx(_amount);
-    }
-
-    function withdrawFromSPtoCDPExt(uint _i, address _hint) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].withdrawFromSPtoCDPPrx(_hint);
     }
 
     // CLV Token
