@@ -98,44 +98,42 @@ contract HintHelpers is LiquityBase, Ownable {
 
     Submitting numTrials = k * sqrt(length), with k = 15 makes it very, very likely that the ouput address will 
     be <= sqrt(length) positions away from the correct insert position.
-   
-    Note on the use of block.timestamp for random number generation: it is known to be gameable by miners. However, no value 
-    transmission depends on getApproxHint() - it is only used to generate hints for efficient list traversal. In this case, 
-    there is no profitable exploit.
     */
-    function getApproxHint(uint _CR, uint _numTrials) external view returns (address) {
+    function getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)
+        external
+        view
+        returns (address hintAddress, uint diff, uint latestRandomSeed)
+    {
         uint arrayLength = cdpManager.getCDPOwnersCount();
-        if (arrayLength == 0 ) { return address(0); } 
 
-        uint price = priceFeed.getPrice();
-        address hintAddress = sortedCDPs.getLast();
-        uint closestICR = cdpManager.getCurrentICR(hintAddress, price);
-        uint diff = Math._getAbsoluteDifference(_CR, closestICR);
+        if (arrayLength == 0) {
+            return (address(0), 0, _inputRandomSeed);
+        }
+
+        hintAddress = sortedCDPs.getLast();
+        diff = Math._getAbsoluteDifference(_CR, cdpManager.getCurrentICR(hintAddress, _price));
+        latestRandomSeed = _inputRandomSeed;
+
         uint i = 1;
 
         while (i < _numTrials) {
-            uint arrayIndex = _getRandomArrayIndex(block.timestamp.add(i), arrayLength);
+            latestRandomSeed = uint(keccak256(abi.encodePacked(latestRandomSeed)));
+
+            uint arrayIndex = latestRandomSeed % arrayLength;
             address currentAddress = cdpManager.getTroveFromCDPOwnersArray(arrayIndex);
-            uint currentICR = cdpManager.getCurrentICR(currentAddress, price);
+            uint currentICR = cdpManager.getCurrentICR(currentAddress, _price);
 
             // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
             uint currentDiff = Math._getAbsoluteDifference(currentICR, _CR);
 
             if (currentDiff < diff) {
-                closestICR = currentICR;
                 diff = currentDiff;
                 hintAddress = currentAddress;
             }
+
             i++;
         }
-        return hintAddress;
     }
-
-    // Convert input to pseudo-random uint in range [0, arrayLength - 1]
-    function _getRandomArrayIndex(uint _input, uint _arrayLength) internal pure returns (uint) {
-        uint randomIndex = uint256(keccak256(abi.encodePacked(_input))) % (_arrayLength);
-        return randomIndex;
-   }
 
     function computeCR(uint _coll, uint _debt, uint _price) external pure returns (uint) {
         return Math._computeCR(_coll, _debt, _price);
