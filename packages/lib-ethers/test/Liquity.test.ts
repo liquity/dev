@@ -361,7 +361,7 @@ describe("EthersLiquity", () => {
         await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 100 }));
         await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 100 }));
 
-        await liquity.openTrove(new Trove({ collateral: 10, debt: 1410 }));
+        await liquity.openTrove(new Trove({ collateral: 10.075, debt: 1410 }));
         await liquity.depositQuiInStabilityPool(100, ZERO_ADDRESS);
 
         price = Decimal.from(190);
@@ -375,8 +375,8 @@ describe("EthersLiquity", () => {
         await liquity.liquidateUpTo(40);
 
         trove = await liquity.getTrove();
-        // 10 * 1310 / 1410
-        expect(trove).to.deep.equal(new Trove({ collateral: "9.290780141843971632", debt: 1310 }));
+        // 10.075 * 1310 / 1410
+        expect(trove).to.deep.equal(new Trove({ collateral: "9.360460992907801419", debt: 1310 }));
       });
 
       describe("after depositing some more tokens", () => {
