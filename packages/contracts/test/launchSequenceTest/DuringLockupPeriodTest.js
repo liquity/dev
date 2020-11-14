@@ -1,4 +1,3 @@
-const MockCommunityIssuance = artifacts.require("./MockCommunityIssuance.sol")
 const OneYearLockupContract = artifacts.require("./OneYearLockupContract.sol")
 const CustomDurationLockupContract = artifacts.require("./CustomDurationLockupContract.sol")
 
@@ -32,7 +31,6 @@ contract('During the initial lockup period', async accounts => {
 
 
   let GTContracts
-  let mockCommunityIssuance
 
   // OYLCs for team members on vesting schedules
   let OYLC_T1
@@ -61,10 +59,6 @@ contract('During the initial lockup period', async accounts => {
     growthToken = GTContracts.growthToken
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
-
-    mockCommunityIssuance = await MockCommunityIssuance.new()
-    MockCommunityIssuance.setAsDeployed(mockCommunityIssuance)
-    await mockCommunityIssuance.setGrowthTokenAddress(growthToken.address, { from: liquityAG })
 
     // Deploy 3 OYLCs for team members on vesting schedules
     const deployedOYLCtx_T1 = await lockupContractFactory.deployOneYearLockupContract(teamMember_1, teamMemberInitialEntitlement_1, { from: liquityAG })

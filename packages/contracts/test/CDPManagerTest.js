@@ -1611,7 +1611,7 @@ contract('CDPManager', async accounts => {
     assert.isAtMost(th.getDifference(total_ETHinSP, dec(4975, 15)), 1000)
   })
 
-  it("batchLiquidateTroves: when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
+  it("liquidateCDPs(): when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open loans 
@@ -1646,7 +1646,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(G_After.gt(G_Before))
   })
 
-  it("batchLiquidateTroves(): when SP is empty, doesn't update G", async () => {
+  it("liquidateCDPs(): when SP is empty, doesn't update G", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open loans 

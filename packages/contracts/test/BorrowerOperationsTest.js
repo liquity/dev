@@ -2170,7 +2170,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("closeLoan(): reverts when trove is the only one in the system", async () => {
+  it.only("closeLoan(): reverts when trove is the only one in the system", async () => {
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
     // check recovery mode 
