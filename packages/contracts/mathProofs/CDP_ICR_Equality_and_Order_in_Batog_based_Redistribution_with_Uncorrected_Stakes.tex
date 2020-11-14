@@ -53,7 +53,7 @@ If $\gamma_i$ falls below a minimum threshold $\delta$, the trove is subject to 
 If the Stability Pool is empty, the trove's collateral and debt are redistributed to all active troves in the system as part of the liquidation process (a trove is called \textit{active} as long as it has not been liquidated or closed by their owner). Every existing borrower with an open trove thus receives a share of both the collateral and the debt of the liquidated trove.
 
 Collateral and debt shares from liquidations are proportional to the \textit{entire} collateral of the recipient troves, i.e. taking into account accumulated “rewards” from prior liquidations. Thus, in the event of a redistribution of a trove $k$, an active trove $i$ receives the following collateral and debt shares $x_i,y_i$:  
-\begin{equation} 
+\begin{equation} \label{eq:proportional}
   (x_i, y_i) = \left(\frac{c_i}{C} \cdot c_k, \frac{c_i}{C} \cdot d_k\right)
 \end{equation}
 The rewards compound across multiple redistribution events.
@@ -63,7 +63,7 @@ To ensure that the troves can be reliably accessed using a linked list, it is cr
 
 The ordering is maintained if $\forall{(E_k,i,j)}: \gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$, where $\gamma_i'$ and $\gamma_j'$ is the ICR of troves $i$ and $j$ after $E_k$.
 
-It is easy to prove that a redistribution in proportion to the collateral of the recipient troves maintains ordering. See \ref{eq:appendix} Appendix.
+It is easy to prove that a redistribution in proportion to the collateral of the recipient trove as described by equation \ref{eq:proportional} troves maintains ordering. See \ref{eq:appendix} Appendix.
 
 \section{Efficient Reward Distribution}
 
@@ -633,7 +633,7 @@ Having shown all nth order systems are equivalent to a first order system, we no
 
 \uline{In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.}
 
-\section{Corrected Stake Preserves Order}
+\section{Corrected Stake Approach Preserves Order}
 Here we show that ICR ordering is preserved with corrected stakes across a liquidation event.\\
 
 We make use of the first-order equivalence result, namely, that with corrected stakes:
