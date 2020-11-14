@@ -7,15 +7,15 @@ import ActivePool from "../../contracts/artifacts/ActivePool.json";
 import BorrowerOperations from "../../contracts/artifacts/BorrowerOperations.json";
 import CDPManager from "../../contracts/artifacts/CDPManager.json";
 import CLVToken from "../../contracts/artifacts/CLVToken.json";
+import CommunityIssuance from "../../contracts/artifacts/CommunityIssuance.json";
 import DefaultPool from "../../contracts/artifacts/DefaultPool.json";
 import HintHelpers from "../../contracts/artifacts/HintHelpers.json";
+import LQTYStaking from "../../contracts/artifacts/LQTYStaking.json";
 import MultiCDPGetter from "../../contracts/artifacts/MultiCDPGetter.json";
 import PoolManager from "../../contracts/artifacts/PoolManager.json";
 import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
 import SortedCDPs from "../../contracts/artifacts/SortedCDPs.json";
 import StabilityPool from "../../contracts/artifacts/StabilityPool.json";
-import LQTYStaking from "../../contracts/artifacts/LQTYStaking.json";
-import CommunityIssuance from "../../contracts/artifacts/CommunityIssuance.json";
 
 const getTupleType = (components: ParamType[], flexible: boolean) => {
   if (components.every(component => component.name)) {
@@ -120,15 +120,15 @@ const contractArtifacts = [
   BorrowerOperations,
   CDPManager,
   CLVToken,
+  CommunityIssuance,
   DefaultPool,
   HintHelpers,
+  LQTYStaking,
   MultiCDPGetter,
   PoolManager,
   PriceFeed,
   SortedCDPs,
-  StabilityPool,
-  LQTYStaking,
-  CommunityIssuance
+  StabilityPool
 ];
 
 const contracts = contractArtifacts.map(({ contractName, abi }) => ({

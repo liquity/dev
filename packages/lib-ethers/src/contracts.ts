@@ -8,15 +8,15 @@ import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import cdpManagerAbi from "../abi/CDPManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
+import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
 import hintHelpersAbi from "../abi/HintHelpers.json";
+import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
 import poolManagerAbi from "../abi/PoolManager.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
 import sortedCDPsAbi from "../abi/SortedCDPs.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
-import lqtyStakingAbi from "../abi/LQTYStaking.json";
-import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 
 import dev from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
@@ -29,15 +29,15 @@ import {
   BorrowerOperations,
   CDPManager,
   CLVToken,
+  CommunityIssuance,
   DefaultPool,
   HintHelpers,
+  LQTYStaking,
   MultiCDPGetter,
   PoolManager,
   PriceFeed,
   SortedCDPs,
-  StabilityPool,
-  LQTYStaking,
-  CommunityIssuance
+  StabilityPool
 } from "../types";
 
 export const abi: { [name: string]: JsonFragment[] } = {
@@ -45,15 +45,15 @@ export const abi: { [name: string]: JsonFragment[] } = {
   borrowerOperations: borrowerOperationsAbi,
   cdpManager: cdpManagerAbi,
   clvToken: clvTokenAbi,
+  communityIssuance: communityIssuanceAbi,
   defaultPool: defaultPoolAbi,
   hintHelpers: hintHelpersAbi,
+  lqtyStaking: lqtyStakingAbi,
   multiCDPgetter: multiCDPgetterAbi,
   poolManager: poolManagerAbi,
   priceFeed: priceFeedAbi,
   sortedCDPs: sortedCDPsAbi,
-  stabilityPool: stabilityPoolAbi,
-  lqtyStaking: lqtyStakingAbi,
-  communityIssuance: communityIssuanceAbi
+  stabilityPool: stabilityPoolAbi
 };
 
 export interface TypedLogDescription<T> extends LogDescription {
@@ -99,15 +99,15 @@ export interface LiquityContractAddresses {
   borrowerOperations: string;
   cdpManager: string;
   clvToken: string;
+  communityIssuance: string;
   defaultPool: string;
   hintHelpers: string;
+  lqtyStaking: string;
   multiCDPgetter: string;
   poolManager: string;
   priceFeed: string;
   sortedCDPs: string;
   stabilityPool: string;
-  lqtyStaking: string;
-  communityIssuance: string;
 }
 
 export interface LiquityContracts {
@@ -117,15 +117,15 @@ export interface LiquityContracts {
   borrowerOperations: BorrowerOperations;
   cdpManager: CDPManager;
   clvToken: CLVToken;
+  communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
   hintHelpers: HintHelpers;
+  lqtyStaking: LQTYStaking;
   multiCDPgetter: MultiCDPGetter;
   poolManager: PoolManager;
   priceFeed: PriceFeed;
   sortedCDPs: SortedCDPs;
   stabilityPool: StabilityPool;
-  lqtyStaking: LQTYStaking;
-  communityIssuance: CommunityIssuance;
 }
 
 export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses => ({
@@ -133,15 +133,15 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   borrowerOperations: contracts.borrowerOperations.address,
   cdpManager: contracts.cdpManager.address,
   clvToken: contracts.clvToken.address,
+  communityIssuance: contracts.communityIssuance.address,
   defaultPool: contracts.defaultPool.address,
   hintHelpers: contracts.hintHelpers.address,
+  lqtyStaking: contracts.lqtyStaking.address,
   multiCDPgetter: contracts.multiCDPgetter.address,
   poolManager: contracts.poolManager.address,
   priceFeed: contracts.priceFeed.address,
   sortedCDPs: contracts.sortedCDPs.address,
-  stabilityPool: contracts.stabilityPool.address,
-  lqtyStaking: contracts.lqtyStaking.address,
-  communityIssuance: contracts.communityIssuance.address
+  stabilityPool: contracts.stabilityPool.address
 });
 
 const create = <T extends TypedContract<LiquityContract, unknown>>(
@@ -166,9 +166,17 @@ export const connectToContracts = (
 
   clvToken: create<CLVToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
 
+  communityIssuance: create<CommunityIssuance>(
+    addresses.communityIssuance,
+    communityIssuanceAbi,
+    signerOrProvider
+  ),
+
   defaultPool: create<DefaultPool>(addresses.defaultPool, defaultPoolAbi, signerOrProvider),
 
   hintHelpers: create<HintHelpers>(addresses.hintHelpers, hintHelpersAbi, signerOrProvider),
+
+  lqtyStaking: create<LQTYStaking>(addresses.lqtyStaking, lqtyStakingAbi, signerOrProvider),
 
   multiCDPgetter: create<MultiCDPGetter>(
     addresses.multiCDPgetter,
@@ -182,9 +190,7 @@ export const connectToContracts = (
 
   sortedCDPs: create<SortedCDPs>(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider),
 
-  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider),
-  lqtyStaking: create<LQTYStaking>(addresses.lqtyStaking, lqtyStakingAbi, signerOrProvider),
-  communityIssuance: create<CommunityIssuance>(addresses.communityIssuance, communityIssuanceAbi, signerOrProvider)
+  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider)
 });
 
 export type LiquityDeployment = {

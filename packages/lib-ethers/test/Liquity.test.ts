@@ -12,7 +12,6 @@ import { LiquityContractAddresses, addressesOf, EthersLiquity } from "..";
 import { BigNumber } from "ethers";
 
 const provider = ethers.provider;
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 chai.use(chaiAsPromised);
 
@@ -73,10 +72,7 @@ describe("EthersLiquity", () => {
     if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
       await funder.sendTransaction({
         to: user.getAddress(),
-        value: targetBalance
-          .add(txCost)
-          .sub(balance)
-          .add(1),
+        value: targetBalance.add(txCost).sub(balance).add(1),
         gasLimit
       });
 
@@ -265,7 +261,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should make a small stability deposit", async () => {
-      await liquity.depositQuiInStabilityPool(10, ZERO_ADDRESS);
+      await liquity.depositQuiInStabilityPool(10);
     });
 
     it("other user should make a Trove with very low ICR", async () => {
@@ -362,7 +358,7 @@ describe("EthersLiquity", () => {
         await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 100 }));
 
         await liquity.openTrove(new Trove({ collateral: 10.075, debt: 1410 }));
-        await liquity.depositQuiInStabilityPool(100, ZERO_ADDRESS);
+        await liquity.depositQuiInStabilityPool(100);
 
         price = Decimal.from(190);
         await deployerLiquity.setPrice(price);
@@ -381,8 +377,8 @@ describe("EthersLiquity", () => {
 
       describe("after depositing some more tokens", () => {
         before(async () => {
-          await liquity.depositQuiInStabilityPool(1300, ZERO_ADDRESS);
-          await otherLiquities[0].depositQuiInStabilityPool(10, ZERO_ADDRESS);
+          await liquity.depositQuiInStabilityPool(1300);
+          await otherLiquities[0].depositQuiInStabilityPool(10);
         });
 
         it("should liquidate more of the bottom Trove", async () => {
@@ -421,8 +417,8 @@ describe("EthersLiquity", () => {
         await otherLiquities[3].openTrove(new Trove({ collateral: 2, debt: 300 }));
         await otherLiquities[4].openTrove(new Trove({ collateral: 2, debt: 300 }));
 
-        await otherLiquities[0].depositQuiInStabilityPool(300, ZERO_ADDRESS);
-        await otherLiquities[1].depositQuiInStabilityPool(100, ZERO_ADDRESS);
+        await otherLiquities[0].depositQuiInStabilityPool(300);
+        await otherLiquities[1].depositQuiInStabilityPool(100);
         // otherLiquities[2] doesn't deposit yet
 
         // Tank the price so we can liquidate
@@ -434,7 +430,7 @@ describe("EthersLiquity", () => {
         expect((await otherLiquities[3].getTrove()).isEmpty).to.be.true;
 
         // Now otherLiquities[2] makes their deposit too
-        await otherLiquities[2].depositQuiInStabilityPool(100, ZERO_ADDRESS);
+        await otherLiquities[2].depositQuiInStabilityPool(100);
 
         // Liquidate second victim
         await liquity.liquidate(otherLiquities[4].userAddress!);
