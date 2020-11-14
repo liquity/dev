@@ -8,9 +8,6 @@ import "./console.sol";
 library Math {
     using SafeMath for uint;
 
-    // The virtual debt assigned to all troves. 
-    uint constant virtualDebt = 6e18;
-  
     function _min(uint _a, uint _b) internal pure returns (uint) {
         return (_a < _b) ? _a : _b;
     }
