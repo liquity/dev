@@ -559,6 +559,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -594,6 +596,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
@@ -631,6 +635,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -666,6 +672,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
@@ -703,6 +711,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -738,6 +748,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
@@ -776,6 +788,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -811,6 +825,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
@@ -848,6 +864,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -883,6 +901,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(55, { from: accounts[0] })
@@ -934,6 +954,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -980,6 +1002,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
@@ -1028,6 +1052,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1074,6 +1100,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
@@ -1122,6 +1150,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1168,6 +1198,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
@@ -1216,6 +1248,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1262,6 +1296,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
@@ -1311,6 +1347,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(45, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1357,6 +1395,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
@@ -1475,6 +1515,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1509,6 +1551,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
@@ -1559,6 +1603,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1605,6 +1651,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+    
     // Liquidate troves
     const tx = await cdpManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)

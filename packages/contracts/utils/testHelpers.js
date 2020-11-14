@@ -554,19 +554,22 @@ class TestHelper {
       let tx;
 
       let ETHChangeBN = this.toBN(ETHAmount)
-      const CLVChangeBN = this.toBN(CLVAmount)
+      let CLVChangeBN = this.toBN(CLVAmount)
 
       const { newColl, newDebt } = await this.getCollAndDebtFromAdjustment(contracts, account, ETHChangeBN, CLVChangeBN)
       const hint = await this.getBorrowerOpsListHint(contracts, newColl, newDebt, price)
 
       const zero = this.toBN('0')
 
+      let isDebtIncrease = CLVChangeBN.gt(zero)
+      CLVChangeBN = CLVChangeBN.abs() 
+
       if (ETHChangeBN.gt(zero)) {
-        tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, hint, { from: account, value: ETHChangeBN })
+        tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
       } else if (ETHChangeBN.lt(zero)) {
         ETHChangeBN = ETHChangeBN.neg()
         // console.log(`ETHAmountBN: ${ETHAmountBN}`)
-        tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, hint, { from: account })
+        tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
       }
 
       const gas = this.gasUsed(tx)
@@ -582,19 +585,22 @@ class TestHelper {
     for (const account of accounts) {
       let tx;
 
-      let ETHAmountBN = this.toBN(this.randAmountInWei(ETHMin, ETHMax))
-      let CLVAmountBN = this.toBN(this.randAmountInWei(CLVMin, CLVMax))
+      let ETHChangeBN = this.toBN(this.randAmountInWei(ETHMin, ETHMax))
+      let CLVChangeBN = this.toBN(this.randAmountInWei(CLVMin, CLVMax))
 
-      const { newColl, newDebt } = await this.getCollAndDebtFromAdjustment(contracts, account, ETHAmountBN, CLVAmountBN)
+      const { newColl, newDebt } = await this.getCollAndDebtFromAdjustment(contracts, account, ETHChangeBN, CLVChangeBN)
       const hint = await this.getBorrowerOpsListHint(contracts, newColl, newDebt, price)
 
       const zero = this.toBN('0')
 
-      if (ETHAmountBN.gt(zero)) {
-        tx = await contracts.borrowerOperations.adjustLoan(0, CLVAmountBN, hint, { from: account, value: ETHAmountBN })
-      } else if (ETHAmountBN.lt(zero)) {
-        ETHAmountBN = ETHAmountBN.neg()
-        tx = await contracts.borrowerOperations.adjustLoan(ETHAmountBN, CLVAmountBN, hint, { from: account })
+      let isDebtIncrease = CLVChangeBN.gt(zero)
+      CLVChangeBN = CLVChangeBN.abs() 
+
+      if (ETHChangeBN.gt(zero)) {
+        tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
+      } else if (ETHChangeBN.lt(zero)) {
+        ETHChangeBN = ETHChangeBN.neg()
+        tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
       }
 
       const gas = this.gasUsed(tx)
@@ -859,11 +865,11 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawFromSPtoCDP_allAccounts(accounts, poolManager) {
+  static async withdrawETHGainToTrove_allAccounts(accounts, poolManager) {
     const gasCostList = []
     for (const account of accounts) {
 
-      const tx = await poolManager.withdrawFromSPtoCDP(account, account, { from: account })
+      const tx = await poolManager.withdrawETHGainToTrove(account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }

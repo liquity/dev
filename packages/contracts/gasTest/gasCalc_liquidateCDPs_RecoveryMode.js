@@ -505,8 +505,12 @@ contract('Gas cost tests', async accounts => {
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
     // Check defaulter ICRs are all between 100% and 110%
-    for (account of _1_Defaulter) { console.log(`ICR: ${ await cdpManager.getCurrentICR(account, price)}`)
-      assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
+    for (account of _1_Defaulter) {
+      console.log(`ICR: ${await cdpManager.getCurrentICR(account, price)}`)
+      assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price))
+    }
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
@@ -565,6 +569,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _2_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
@@ -625,6 +631,7 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _3_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
@@ -684,6 +691,7 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _5_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
@@ -744,6 +752,7 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _10_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
@@ -802,6 +811,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _20_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
@@ -862,6 +873,8 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _30_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -920,6 +933,8 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _40_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -977,6 +992,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _45_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(45, { from: accounts[0] })
@@ -1051,6 +1068,8 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _1_Defaulter) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1122,6 +1141,8 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _2_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1191,9 +1212,10 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is true
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _3_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
@@ -1263,10 +1285,10 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is true
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _5_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
@@ -1339,6 +1361,7 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _10_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
@@ -1411,6 +1434,7 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _20_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
@@ -1483,6 +1507,8 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _30_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1553,6 +1579,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _40_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
@@ -1625,6 +1653,8 @@ contract('Gas cost tests', async accounts => {
     // Check defaulter ICRs are all between 100% and 110%
     for (account of _45_Defaulters) { assert.isTrue(await th.ICRbetween100and110(account, cdpManager, price)) }
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(45, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1649,9 +1679,6 @@ contract('Gas cost tests', async accounts => {
 
     th.appendData({ gas: gas }, message, data)
   })
-
-
-
 
   // --- BatchLiquidateTroves ---
 
@@ -1832,9 +1859,10 @@ contract('Gas cost tests', async accounts => {
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
-
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     const tx = await cdpManager.batchLiquidateTroves(_10_defaulters, { from: accounts[0] })
 
@@ -1847,7 +1875,7 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
- 
+
   // 40 troves
   it("", async () => {
     const message = 'batchLiquidateTroves(). n = 40. All troves fully offset. Have pending distribution rewards'
@@ -1878,6 +1906,8 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     const tx = await cdpManager.batchLiquidateTroves(_40_defaulters, { from: accounts[0] })
 
@@ -1920,6 +1950,8 @@ contract('Gas cost tests', async accounts => {
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     const tx = await cdpManager.batchLiquidateTroves(_45_defaulters, { from: accounts[0] })
 
     // check all defaulters liquidated
@@ -1961,6 +1993,8 @@ contract('Gas cost tests', async accounts => {
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+    
     const tx = await cdpManager.batchLiquidateTroves(_50_defaulters, { from: accounts[0] })
 
     // check all defaulters liquidated
