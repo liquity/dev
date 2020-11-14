@@ -3,19 +3,19 @@ const ActivePool = artifacts.require("./ActivePool.sol")
 const DefaultPool = artifacts.require("./DefaultPool.sol")
 
 const testHelpers = require("../utils/testHelpers.js")
-const { ZERO_ADDRESS } = require("../utils/deploymentHelpers.js")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
+
+const ZERO_ADDRESS = th.ZERO_ADDRESS
 
 const _minus_1_Ether = web3.utils.toWei('-1', 'ether')
 
 
 
 contract('StabilityPool', async accounts => {
-  /* mockPoolManager is an EOA, temporarily used to call PoolManager functions.
-  TODO: Replace with a mockPoolManager contract, and later complete transactions from EOA -> CDPManager -> PoolManager -> CLVToken.
-  */
+  // mockPoolManager is an EOA, temporarily used to call PoolManager functions.
+
   let stabilityPool
 
   const [owner, mockBorrowerOpsAddress, mockPoolManagerAddress, mockActivePoolAddress, alice] = accounts;
