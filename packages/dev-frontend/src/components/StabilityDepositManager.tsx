@@ -58,7 +58,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
                   ? ` & withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
                   : ""
               }`,
-              liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!),
+              liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!, undefined),
               [[quiBalance.gte(difference.absoluteValue!), `You don't have enough ${COIN}`]]
             ]
           ] as const)

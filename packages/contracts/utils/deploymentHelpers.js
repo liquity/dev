@@ -28,8 +28,9 @@ const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 GT contracts consist of only those contracts related to the Growth Token:the token itself, 
 and lockup, staking and community issuance coreContracts. */
 
+const ZERO_ADDRESS = '0x' + '0'.repeat(40)
+
 class DeploymentHelper {
-  static ZERO_ADDRESS = '0x' + '0'.repeat(40)
 
   static async deployLiquityCore() {
     const cmdLineArgs = process.argv
@@ -241,8 +242,8 @@ class DeploymentHelper {
     await contracts.priceFeed.setAddresses(
       contracts.cdpManager.address,
       contracts.poolManager.address,
-      this.ZERO_ADDRESS,
-      this.ZERO_ADDRESS
+      ZERO_ADDRESS,
+      ZERO_ADDRESS
     )
 
     // set contracts in the CDP Manager

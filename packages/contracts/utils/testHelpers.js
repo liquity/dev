@@ -39,8 +39,6 @@ const TimeValues = {
 }
 
 class TestHelper {
-  static ZERO_ADDRESS = '0x' + '0'.repeat(40)
-  static maxBytes32 = '0x' + 'f'.repeat(64)
 
   static dec(val, scale) {
     let zerosCount
@@ -962,6 +960,9 @@ class TestHelper {
     await destructible.destruct(receiver)
   }
 }
+
+TestHelper.ZERO_ADDRESS = '0x' + '0'.repeat(40)
+TestHelper.maxBytes32 = '0x' + 'f'.repeat(64)
 
 module.exports = {
   TestHelper,

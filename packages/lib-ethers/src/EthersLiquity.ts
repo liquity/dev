@@ -616,9 +616,15 @@ export class EthersLiquity
     };
   }
 
-  async depositQuiInStabilityPool(depositedQui: Decimalish, frontEndTag: string | undefined, overrides?: EthersTransactionOverrides) {
+  async depositQuiInStabilityPool(
+    depositedQui: Decimalish,
+    frontEndTag = AddressZero,
+    overrides?: EthersTransactionOverrides
+  ) {
     return this.wrapSimpleTransaction(
-      await this.poolManager.provideToSP(Decimal.from(depositedQui).bigNumber, frontEndTag, { ...overrides })
+      await this.poolManager.provideToSP(Decimal.from(depositedQui).bigNumber, frontEndTag, {
+        ...overrides
+      })
     );
   }
 
@@ -748,10 +754,13 @@ export class EthersLiquity
       ),
       ({ logs }) =>
         this.cdpManager.extractEvents(logs, "Redemption").map(
-          ({ args: { _ETHSent, _actualCLVAmount, _attemptedCLVAmount } }): ParsedRedemption => ({
+          ({
+            args: { _ETHSent, _ETHFee, _actualCLVAmount, _attemptedCLVAmount }
+          }): ParsedRedemption => ({
             attemptedTokenAmount: new Decimal(_attemptedCLVAmount),
             actualTokenAmount: new Decimal(_actualCLVAmount),
-            collateralReceived: new Decimal(_ETHSent)
+            collateralReceived: new Decimal(_ETHSent),
+            fee: new Decimal(_ETHFee)
           })
         )[0],
       this.provider
