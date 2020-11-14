@@ -39,11 +39,11 @@ export function handleCDPUpdated(event: CDPUpdated): void {
 
   updateTrove(
     event,
-    getTroveOperationFromCDPManagerOperation(event.params.operation),
+    getTroveOperationFromCDPManagerOperation(event.params._operation),
     event.params._user,
     event.params._coll,
     event.params._debt,
-    event.params.stake,
+    event.params._stake,
     snapshots.value0,
     snapshots.value1
   );
@@ -63,7 +63,7 @@ export function handleCDPLiquidated(event: CDPLiquidated): void {
 
   updateTrove(
     event,
-    getTroveOperationFromCDPManagerOperation(event.params.operation),
+    getTroveOperationFromCDPManagerOperation(event.params._operation),
     event.params._user,
     BIGINT_ZERO,
     BIGINT_ZERO,
