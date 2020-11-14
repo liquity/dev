@@ -13,7 +13,7 @@
 \usepackage{enumitem}
 \newlist{terms}{description}{1}
 \begin{document}
-\title{\textbf{Efficient Redistribution of Liquidated Troves}}
+\title{\textbf{Efficient Order-Preserving Redistribution of Troves}}
 \date{November 2020}
 \maketitle
 
@@ -22,7 +22,7 @@
 \section{Introduction}
 
 
-The Liquity protocol $\cite{Whitepaper}$ issues a USD-pegged stablecoin LUSD that is redeemable at face value against ETH: any owner of LUSD can redeem their stablecoins for equivalent value in the underlying collateral at any time. The ETH paid to the redeemer is taken from the borrowers' collateralized debt positions (“troves”) in ascending order of collateral ratio. In other words, the system uses the redeemed LUSD to repay the debt on the riskiest trove with the currently lowest individual collateral ratio (ICR), and transfers a corresponding amount of ETH from the trove to the redeemer. If the redeemed LUSD is larger than the debt on the riskiest trove, the system proceeds with the second riskiest trove, and so on. \\
+The Liquity protocol $\cite{Whitepaper}$ issues a USD-pegged stablecoin LUSD that is redeemable at face value against ETH: any owner of LUSD can exchange their stablecoins for equivalent value in the underlying collateral at any time. The ETH paid to the redeemer is taken from the borrowers' collateralized debt positions (“troves”) in ascending order of collateral ratio. In other words, the system uses the redeemed LUSD to repay the debt on the riskiest trove with the currently lowest individual collateral ratio (ICR), and transfers a corresponding amount of ETH from the trove to the redeemer. If the redeemed LUSD is larger than the debt on the riskiest trove, the system proceeds with the second riskiest trove, and so on. \\
 
 To allow for efficient redemptions despite Ethereum's gas constraints, the system keeps troves ordered by ICR, so that it can iterate over the linked list starting from the bottom. It is not feasible to sort the list after every operation. \\
 
@@ -61,7 +61,7 @@ The rewards compound across multiple redistribution events.
 \section{Trove Ordering}
 To ensure that the troves can be reliably accessed using a linked list, it is crucial to maintain the ordering of the troves (by ICR) throughout all redistribution events $E_k$.
 
-The ordering is maintained if $\forall{(E_k,i,j)}: \gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$, where $\gamma_i'$ and $\gamma_j'$ is the ICR of troves $i$ and $j$ after $E_k$.
+The ordering is maintained if $\forall{E_k,i,j}: (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$), where $\gamma_i'$ and $\gamma_j'$ is the ICR of troves $i$ and $j$ after $E_k$.
 
 It is easy to prove that a redistribution in proportion to the collateral of the recipient trove as described by equation \ref{eq:proportional} troves maintains ordering. See \ref{eq:appendix} Appendix.
 
