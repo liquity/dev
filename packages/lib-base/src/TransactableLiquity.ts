@@ -27,6 +27,7 @@ export type ParsedRedemption = {
   attemptedTokenAmount: Decimal;
   actualTokenAmount: Decimal;
   collateralReceived: Decimal;
+  fee: Decimal;
 };
 
 export type LiquidationReceipt<T = unknown> = LiquityReceipt<T, ParsedLiquidation>;
