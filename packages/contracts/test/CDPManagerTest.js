@@ -2684,7 +2684,7 @@ contract('CDPManager', async accounts => {
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
-      assert.include(error.message, "Requested redemption amount must be >= user's CLV token balance")
+      assert.include(error.message, "Requested redemption amount must be <= user's CLV token balance")
     }
 
     // Erin tries to redeem 401 CLV
@@ -2709,7 +2709,7 @@ contract('CDPManager', async accounts => {
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
-      assert.include(error.message, "Requested redemption amount must be >= user's CLV token balance")
+      assert.include(error.message, "Requested redemption amount must be <= user's CLV token balance")
     }
 
     // Erin tries to redeem 239482309 CLV
@@ -2734,7 +2734,7 @@ contract('CDPManager', async accounts => {
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
-      assert.include(error.message, "Requested redemption amount must be >= user's CLV token balance")
+      assert.include(error.message, "Requested redemption amount must be <= user's CLV token balance")
     }
 
     // Erin tries to redeem 2^256 - 1 CLV
@@ -2761,7 +2761,7 @@ contract('CDPManager', async accounts => {
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
-      assert.include(error.message, "Requested redemption amount must be >= user's CLV token balance")
+      assert.include(error.message, "Requested redemption amount must be <= user's CLV token balance")
     }
   })
 
@@ -3237,8 +3237,8 @@ contract('CDPManager', async accounts => {
     const totalCLVSupply = await activeCLV.add(defaultCLV)
     assert.equal(totalCLVSupply, dec(100, 18))
 
-    // A redeems 10 CLV, which is 10% of total CLV supply, at 0 gas cost
-    await th.redeemCollateral(A, contracts, dec(10, 18), { gasPrice: 0 })
+    // A redeems 10 CLV, which is 10% of total CLV supply
+    await th.redeemCollateral(A, contracts, dec(10, 18))
 
     /*
     At ETH:USD price of 200:
@@ -3251,6 +3251,90 @@ contract('CDPManager', async accounts => {
 
     // check A's ETH balance has increased by 0.045 ETH 
     assert.equal((A_balanceAfter.sub(A_balanceBefore)).toString(), dec(45, 15))
+  })
+
+  it("redeemCollateral(): a full redemption (leaving trove with 0 debt), closes the trove", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyStaking.stake(dec(1, 18), { from: owner })
+
+    await borrowerOperations.openLoan(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(120, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(130, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), D, { from: D, value: dec(1, 'ether') })
+
+    const A_balanceBefore = toBN(await web3.eth.getBalance(A))
+    const B_balanceBefore = toBN(await web3.eth.getBalance(B))
+    const C_balanceBefore = toBN(await web3.eth.getBalance(C))
+
+    // whale redeems 360 CLV.  Expect this to fully redeem A, B, C, and partially redeem D.
+    await th.redeemCollateral(whale, contracts, dec(360, 18), { gasPrice: 0 })
+
+    // Check A, B, C have been closed
+    assert.isFalse(await sortedCDPs.contains(A))
+    assert.isFalse(await sortedCDPs.contains(B))
+    assert.isFalse(await sortedCDPs.contains(C))
+
+    // Check D remains active
+    assert.isTrue(await sortedCDPs.contains(D))
+  })
+
+  it("redeemCollateral(): a redemption that close a trove sends the trove's ETH surplus (collateral - ETH drawn) to the trove owner", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyStaking.stake(dec(1, 18), { from: owner })
+
+    await borrowerOperations.openLoan(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(120, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(130, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), D, { from: D, value: dec(1, 'ether') })
+
+    const A_balanceBefore = toBN(await web3.eth.getBalance(A))
+    const B_balanceBefore = toBN(await web3.eth.getBalance(B))
+    const C_balanceBefore = toBN(await web3.eth.getBalance(C))
+    const D_balanceBefore = toBN(await web3.eth.getBalance(D))
+
+    // Confirm baseRate before redemption is 0
+    const baseRate = await cdpManager.baseRate()
+    assert.equal(baseRate, '0')
+
+    // whale redeems 360 CLV.  Expect this to fully redeem A, B, C, and partially redeem D.
+    await th.redeemCollateral(whale, contracts, dec(360, 18), { gasPrice: 0 })
+
+    // Check A, B, C have been closed
+    assert.isFalse(await sortedCDPs.contains(A))
+    assert.isFalse(await sortedCDPs.contains(B))
+    assert.isFalse(await sortedCDPs.contains(C))
+
+    // Check D stays active
+    assert.isTrue(await sortedCDPs.contains(D))
+    
+    /*
+    At ETH:USD price of 200, with full redemptions from A, B, C:
+
+    ETHDrawn from A = 100/200 = 0.5 ETH --> Surplus = (1-0.5) = 0.5
+    ETHDrawn from B = 120/200 = 0.6 ETH --> Surplus = (1-0.6) = 0.4
+    ETHDrawn from C = 130/200 = 0.65 ETH --> Surplus = (1-0.65) = 0.35
+    */
+
+    const A_balanceAfter = toBN(await web3.eth.getBalance(A))
+    const B_balanceAfter = toBN(await web3.eth.getBalance(B))
+    const C_balanceAfter = toBN(await web3.eth.getBalance(C))
+    const D_balanceAfter = toBN(await web3.eth.getBalance(D))
+
+    // check A, B, C's balances have increased by correct amount (fully redeemed-from troves)
+    assert.isTrue(A_balanceAfter.gt(A_balanceBefore))
+    assert.isTrue(B_balanceAfter.gt(B_balanceBefore))
+    assert.isTrue(C_balanceAfter.gt(C_balanceBefore))
+
+    // Check D's balance has not changed (the partially redeemed-from trove)
+    assert.isTrue(D_balanceAfter.eq(D_balanceBefore))
   })
 
   it("getPendingCLVDebtReward(): Returns 0 if there is no pending CLVDebt reward", async () => {

@@ -1281,7 +1281,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     function _requireCLVBalanceCoversRedemption(address _user, uint _amount) internal view {
-        require(clvToken.balanceOf(_user) >= _amount, "CDPManager: Requested redemption amount must be >= user's CLV token balance");
+        require(clvToken.balanceOf(_user) >= _amount, "CDPManager: Requested redemption amount must be <= user's CLV token balance");
     }
 
     function _requireETHSentSuccessfully(bool _success) internal pure {
