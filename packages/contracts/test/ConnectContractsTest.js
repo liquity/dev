@@ -1,12 +1,4 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
-const testHelpers = require("../utils/testHelpers.js")
-
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
-
-const getDifference = testHelpers.getDifference
-const moneyVals = testHelpers.MoneyValues
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 
 contract('Deployment script - Sets correct contract addresses dependencies after deployment', async accounts => {
   const [owner] = accounts;
@@ -20,24 +12,35 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   let defaultPool
   let functionCaller
   let borrowerOperations
+  let lqtyStaking
+  let growthToken
+  let communityIssuance
+  let lockupContractFactory
 
   before(async () => {
-    const contracts = await deployLiquity()
+    const coreContracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
-    priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
-    sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
-    nameRegistry = contracts.nameRegistry
-    activePool = contracts.activePool
-    stabilityPool = contracts.stabilityPool
-    defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
-    borrowerOperations = contracts.borrowerOperations
+    priceFeed = coreContracts.priceFeed
+    clvToken = coreContracts.clvToken
+    poolManager = coreContracts.poolManager
+    sortedCDPs = coreContracts.sortedCDPs
+    cdpManager = coreContracts.cdpManager
+    nameRegistry = coreContracts.nameRegistry
+    activePool = coreContracts.activePool
+    stabilityPool = coreContracts.stabilityPool
+    defaultPool = coreContracts.defaultPool
+    functionCaller = coreContracts.functionCaller
+    borrowerOperations = coreContracts.borrowerOperations
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    lqtyStaking = GTContracts.lqtyStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
+
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
   })
 
   it('sets the correct PriceFeed address in CDPManager', async () => {
@@ -80,8 +83,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  // ActivePool in CDPM
-  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+  it('sets the correct ActivePool address in CDPManager', async () => {
     const activePoolAddress = activePool.address
 
     const recordedActivePoolAddresss = await cdpManager.activePool()
@@ -89,8 +91,8 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(activePoolAddress, recordedActivePoolAddresss)
   })
 
-  // DefaultPool in CDPM
-  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+
+  it('sets the correct DefaultPool address in CDPManager', async () => {
     const defaultPoolAddress = defaultPool.address
 
     const recordedDefaultPoolAddresss = await cdpManager.defaultPool()
@@ -98,8 +100,8 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(defaultPoolAddress, recordedDefaultPoolAddresss)
   })
 
-  // StabilityPool in CDPM
-  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+
+  it('sets the correct StabilityPool address in CDPManager', async () => {
     const stabilityPoolAddress = stabilityPool.address
 
     const recordedStabilityPoolAddresss = await cdpManager.stabilityPool()
@@ -107,6 +109,13 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(stabilityPoolAddress, recordedStabilityPoolAddresss)
   })
 
+  // GT Staking in CDPM
+  it('sets the correct LQTYStaking address in CDPManager', async () => {
+    const lqtyStakingAddress = lqtyStaking.address
+
+    const recordedLQTYStakingAddress = await cdpManager.lqtyStakingAddress()
+    assert.equal(lqtyStakingAddress, recordedLQTYStakingAddress)
+  })
 
   it('sets the correct PriceFeed address  in PoolManager', async () => {
     const priceFeedAddress = priceFeed.address
@@ -287,7 +296,72 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
   })
 
+  // GT Staking in BO
+  it('sets the correct LQTYStaking address in BorrowerOperations', async () => {
+    const lqtyStakingAddress = lqtyStaking.address
 
+    const recordedLQTYStakingAddress = await borrowerOperations.lqtyStakingAddress()
+    assert.equal(lqtyStakingAddress, recordedLQTYStakingAddress)
+  })
+
+
+  // --- LQTY Staking ---
+
+  // sets GrowthToken in LQTYStaking
+  it('sets the correct GrowthToken address in LQTYStaking', async () => {
+    const growthTokenAddress = growthToken.address
+
+    const recordedGrowthTokenAddress = await lqtyStaking.growthTokenAddress()
+    assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+  })
+
+  // sets ActivePool in LQTYStaking
+  it('sets the correct ActivePool address in LQTYStaking', async () => {
+    const activePoolAddress = activePool.address
+
+    const recordedActivePoolAddress = await lqtyStaking.activePoolAddress()
+    assert.equal(activePoolAddress, recordedActivePoolAddress)
+  })
+
+  // sets CLVToken in LQTYStaking
+  it('sets the correct ActivePool address in LQTYStaking', async () => {
+    const clvTokenAddress = clvToken.address
+
+    const recordedCLVTokenAddress = await lqtyStaking.clvTokenAddress()
+    assert.equal(clvTokenAddress, recordedCLVTokenAddress)
+  })
+
+  // sets CDPManager in LQTYStaking
+  it('sets the correct ActivePool address in LQTYStaking', async () => {
+    const cdpManagerAddress = cdpManager.address
+
+    const recordedCDPManagerAddress = await lqtyStaking.cdpManagerAddress()
+    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+  })
+
+  // sets BorrowerOperations in LQTYStaking
+  it('sets the correct BorrowerOperations address in LQTYStaking', async () => {
+    const borrowerOperationsAddress = borrowerOperations.address
+
+    const recordedBorrowerOperationsAddress = await lqtyStaking.borrowerOperationsAddress()
+    assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
+  })
+
+  // ---
+
+  // sets GrowthToken in LockupContractFactory
+  it('sets the correct GrowthToken address in LockupContractFactory', async () => {
+    const growthTokenAddress = growthToken.address
+
+    const recordedGrowthTokenAddress = await lockupContractFactory.growthTokenAddress()
+    assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+  })
+
+  // sets GrowthToken in CommunityIssuance
+  it('sets the correct GrowthToken address in LockupContractFactory', async () => {
+    const growthTokenAddress = growthToken.address
+
+    const recordedGrowthTokenAddress = await communityIssuance.growthTokenAddress()
+    assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+  })
 })
-
-contract('Reset chain state', async accounts => { })

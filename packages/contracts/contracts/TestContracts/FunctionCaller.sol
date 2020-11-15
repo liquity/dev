@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import '../Interfaces/ICDPManager.sol';
 import '../Interfaces/ISortedCDPs.sol';
@@ -35,14 +37,11 @@ contract FunctionCaller {
         priceFeed = IPriceFeed(_priceFeedAddress);
     }
 
-    // --- PriceFeed functions -  non-view wrappers ---
-
-    // --- CDPManager functions - non-view wrappers ---
+    // --- Non-view wrapper functions used for calculating gas ---
+    
     function cdpManager_getCurrentICR (address _address, uint _price) external returns (uint) {
         return cdpManager.getCurrentICR(_address, _price);  
     }
-
-    // --- SortedCDPs functions -  non-view wrappers ---
 
     function sortedCDPs_findInsertPosition(uint _ICR, uint _price, address _prevId, address _nextId) external returns (address, address) {
         return sortedCDPs.findInsertPosition(_ICR, _price, _prevId, _nextId);

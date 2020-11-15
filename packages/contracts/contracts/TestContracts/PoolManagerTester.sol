@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import "../PoolManager.sol";
 
@@ -18,5 +20,9 @@ contract PoolManagerTester is PoolManager {
 
     function clvReturnFromPool(address _poolAddress, address _receiver, uint256 _amount ) external {
         CLV.returnFromPool(_poolAddress, _receiver, _amount);
+    }
+
+    function _unprotectedTriggerLQTYIssuance() external {
+        _triggerLQTYIssuance();
     }
 }

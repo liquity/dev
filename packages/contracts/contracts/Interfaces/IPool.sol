@@ -1,4 +1,6 @@
-pragma solidity >=0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 // Common interface for the Pools.
 interface IPool {
@@ -7,7 +9,7 @@ interface IPool {
 
     event CLVBalanceUpdated(uint _newBalance);
 
-    event PoolManagerAddressChanged(address _newAddress);
+    event PoolManagerAddressChanged(address _newPoolManagerAddress);
 
     event ActivePoolAddressChanged(address _newActivePoolAddress);
 

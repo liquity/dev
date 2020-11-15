@@ -1,19 +1,20 @@
 /* Script that logs gas costs for Liquity operations under various conditions. 
 
-  Note: uses Mocha testing structure, but simply prints gas costs of transactions. No assertions.
+  Note: uses Mocha testing structure, but the purpose of each test is simply to print gas costs.
+
+  'asserts' are only used to confirm the setup conditions.
 */
 const fs = require('fs')
 
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
 
 const mv = testHelpers.MoneyValues
 const th = testHelpers.TestHelper
 const dec = th.dec
+const toBN = th.toBN
+
+const ZERO_ADDRESS = th.ZERO_ADDRESS
 
 contract('Gas cost tests', async accounts => {
   const [owner] = accounts;
@@ -23,33 +24,37 @@ contract('Gas cost tests', async accounts => {
   let poolManager
   let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
   let borrowerOperations
 
-  let contracts 
+  let contracts
   let data = []
 
   beforeEach(async () => {
-    contracts = await deployLiquity()
+    contracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
-    nameRegistry = contracts.nameRegistry
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
-    functionCaller = contracts.functionCaller
     borrowerOperations = contracts.borrowerOperations
+    hintHelpers = contracts.hintHelpers
 
-    const contractAddresses = getAddresses(contracts)
-    await connectContracts(contracts, contractAddresses)
+    lqtyStaking = GTContracts.lqtyStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
+
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
   // --- TESTS ---
@@ -532,14 +537,14 @@ contract('Gas cost tests', async accounts => {
   // --- liquidate CDPs - all troves offset by Stability Pool - no pending distribution rewards ---
 
   // 1 trove
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. No pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //1 acct opens CDP with 1 ether and withdraw 100 CLV
     const _1_Defaulter = accounts.slice(1, 2)
@@ -553,6 +558,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
@@ -575,7 +582,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //2 accts open CDP with 1 ether and withdraw 100 CLV
     const _2_Defaulters = accounts.slice(1, 3)
@@ -589,6 +596,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
@@ -611,7 +620,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //3 accts open CDP with 1 ether and withdraw 100 CLV
     const _3_Defaulters = accounts.slice(1, 4)
@@ -625,6 +634,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
@@ -647,7 +658,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //5 accts open CDP with 1 ether and withdraw 100 CLV
     const _5_Defaulters = accounts.slice(1, 6)
@@ -661,6 +672,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
@@ -683,7 +696,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //10 accts open CDP with 1 ether and withdraw 100 CLV
     const _10_Defaulters = accounts.slice(1, 11)
@@ -697,6 +710,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
@@ -719,7 +734,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //20 accts open CDP with 1 ether and withdraw 100 CLV
     const _20_Defaulters = accounts.slice(1, 21)
@@ -733,6 +748,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
@@ -756,7 +773,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //30 accts open CDP with 1 ether and withdraw 100 CLV
     const _30_Defaulters = accounts.slice(1, 31)
@@ -770,6 +787,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
@@ -792,7 +811,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //40 accts open CDP with 1 ether and withdraw 100 CLV
     const _40_Defaulters = accounts.slice(1, 41)
@@ -806,6 +825,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
@@ -828,7 +849,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //50 accts open CDP with 1 ether and withdraw 100 CLV
     const _50_Defaulters = accounts.slice(1, 51)
@@ -842,6 +863,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
@@ -864,7 +887,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //50 accts open CDP with 1 ether and withdraw 100 CLV
     const _55_Defaulters = accounts.slice(1, 56)
@@ -878,6 +901,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(55, { from: accounts[0] })
@@ -896,7 +921,7 @@ contract('Gas cost tests', async accounts => {
   // --- liquidate CDPs - all troves offset by Stability Pool - Has pending distribution rewards ---
 
   // 1 trove
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -920,14 +945,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
@@ -943,7 +970,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 2 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 2. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -967,14 +994,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
@@ -990,7 +1019,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 3 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 3. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1014,14 +1043,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
@@ -1037,7 +1068,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 5 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 5. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1061,14 +1092,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
@@ -1084,7 +1117,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 10 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 10. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1108,14 +1141,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
@@ -1131,7 +1166,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 20 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 20. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1155,14 +1190,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
@@ -1178,7 +1215,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 30 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 30. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1202,14 +1239,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
@@ -1225,7 +1264,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 40 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 40. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1249,14 +1288,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
@@ -1273,7 +1314,7 @@ contract('Gas cost tests', async accounts => {
 
 
   // 45 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 45. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1297,14 +1338,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(45, { from: accounts[0] })
@@ -1320,7 +1363,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 50 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'liquidateCDPs(). n = 50. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1344,14 +1387,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
@@ -1369,7 +1414,7 @@ contract('Gas cost tests', async accounts => {
   // --- batchLiquidateTroves ---
 
   // ---batchLiquidateTroves(): Pure redistribution ---
-  it("", async () => {
+  it.only("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 10. Pure redistribution'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1407,7 +1452,7 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  it("", async () => {
+  it.only("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 50. Pure redistribution'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1448,14 +1493,14 @@ contract('Gas cost tests', async accounts => {
   // ---batchLiquidateTroves(): Full SP offset, no pending rewards ---
 
   // 10 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 10. All fully offset with Stability Pool. No pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //10 accts open CDP with 1 ether and withdraw 100 CLV
     const _10_Defaulters = accounts.slice(1, 11)
@@ -1470,6 +1515,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
     // Liquidate troves
     const tx = await cdpManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
@@ -1483,14 +1530,14 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  it("", async () => {
+  it.only("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 50. All fully offset with Stability Pool. No pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     //50 accts open CDP with 1 ether and withdraw 100 CLV
     const _50_Defaulters = accounts.slice(1, 51)
@@ -1504,6 +1551,8 @@ contract('Gas cost tests', async accounts => {
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
@@ -1521,7 +1570,7 @@ contract('Gas cost tests', async accounts => {
 
   // ---batchLiquidateTroves(): Full SP offset, HAS pending rewards ---
 
-  it("", async () => {
+  it.only("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 10. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1545,14 +1594,16 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
     const tx = await cdpManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
@@ -1567,7 +1618,7 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  it("", async () => {
+  it.only("", async () => {
     const message = 'batchLiquidateTroves(). batch size = 50. All fully offset with Stability Pool. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
@@ -1591,8 +1642,8 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), { from: accounts[999] })
-    assert.equal((await stabilityPool.getCLV()), dec(1, 27))
+    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
 
     // Price drops, defaulters' ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
@@ -1600,6 +1651,8 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is false
     assert.isFalse(await cdpManager.checkRecoveryMode())
 
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+    
     // Liquidate troves
     const tx = await cdpManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)

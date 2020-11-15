@@ -42,7 +42,7 @@ dataSources:
           handler: handleCDPLiquidated
         - event: Liquidation(uint256,uint256,uint256,uint256)
           handler: handleLiquidation
-        - event: Redemption(uint256,uint256,uint256)
+        - event: Redemption(uint256,uint256,uint256,uint256)
           handler: handleRedemption
 templates:
   - name: BorrowerOperations

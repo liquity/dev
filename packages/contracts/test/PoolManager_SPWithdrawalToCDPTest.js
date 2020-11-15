@@ -1,15 +1,11 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 
-const deployLiquity = deploymentHelpers.deployLiquity
-const getAddresses = deploymentHelpers.getAddresses
-const connectContracts = deploymentHelpers.connectContracts
-
 const th = testHelpers.TestHelper
 const dec = th.dec
-const moneyVals = testHelpers.MoneyValues
+const toBN = th.toBN
 
 contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculations', async accounts => {
 
@@ -36,14 +32,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
   let poolManager
   let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
   let borrowerOperations
 
   let contracts
+
+  const ZERO_ADDRESS = th.ZERO_ADDRESS
 
   let gasPriceInWei
 
@@ -54,36 +50,42 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     })
 
     beforeEach(async () => {
-      contracts = await deployLiquity()
+      contracts = await deploymentHelper.deployLiquityCore()
+      const GTContracts = await deploymentHelper.deployGTContracts()
       contracts.cdpManager = await CDPManagerTester.new()
-
+  
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
       poolManager = contracts.poolManager
       sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
-      nameRegistry = contracts.nameRegistry
       activePool = contracts.activePool
       stabilityPool = contracts.stabilityPool
       defaultPool = contracts.defaultPool
-      functionCaller = contracts.functionCaller
       borrowerOperations = contracts.borrowerOperations
-
-      const contractAddresses = getAddresses(contracts)
-      await connectContracts(contracts, contractAddresses)
+      hintHelpers = contracts.hintHelpers
+  
+      lqtyStaking = GTContracts.lqtyStaking
+      growthToken = GTContracts.growthToken
+      communityIssuance = GTContracts.communityIssuance
+      lockupContractFactory = GTContracts.lockupContractFactory
+  
+      await deploymentHelper.connectGTContracts(GTContracts)
+      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
+      await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
     })
 
-    // --- withdrawFromSPtoCDP() ---
+    // --- withdrawETHGainToTrove() ---
 
     // --- Identical deposits, identical liquidation amounts---
-    it("withdrawFromSPtoCDP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after one liquidation", async () => {
+    it("withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter opens loan with 200% ICR
@@ -97,14 +99,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_1, { from: owner });
 
       // Check depositors' compounded deposit is 66.66 CLV and ETH Gain is 0.33 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,  { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '66666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '66666666666666666666'), 1000)
@@ -115,14 +117,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '331666666666666667'), 1000)
     })
 
-    it("withdrawFromSPtoCDP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two identical liquidations", async () => {
+    it("withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two identical liquidations", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -139,14 +141,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Check depositors' compounded deposit is 33.33 CLV and ETH Gain is 0.66 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '33333333333333333333'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '33333333333333333333'), 1000)
@@ -157,14 +159,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '663333333333333333'), 1000)
     })
 
-    it("withdrawFromSPtoCDP():  Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three identical liquidations", async () => {
+    it("withdrawETHGainToTrove():  Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three identical liquidations", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -184,14 +186,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Check depositors' compounded deposit is 0 CLV and ETH Gain is 1 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice,  { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice,  { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '0'), 1000)
@@ -203,14 +205,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     })
 
     // --- Identical deposits, increasing liquidation amounts ---
-    it("withdrawFromSPtoCDP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two liquidations of increasing CLV", async () => {
+    it("withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two liquidations of increasing CLV", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -226,14 +228,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Check depositors' compounded deposit is 0 CLV and ETH Gain is 1 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '90000000000000000000'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '90000000000000000000'), 1000)
@@ -244,14 +246,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '99500000000000000'), 1000)
     })
 
-    it("withdrawFromSPtoCDP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three liquidations of increasing CLV", async () => {
+    it("withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three liquidations of increasing CLV", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -270,14 +272,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Check depositors' compounded deposit is 80 CLV and ETH Gain is 0.2 ETH
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob,  { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob,  { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '80000000000000000000'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '80000000000000000000'), 1000)
@@ -289,19 +291,19 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     })
 
     // --- Increasing deposits, identical liquidation amounts ---
-    it("withdrawFromSPtoCDP(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after two identical liquidations", async () => {
+    it("withdrawETHGainToTrove(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after two identical liquidations", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       // Alice deposits 100, Bob deposits 200, Carol deposits 300 CLV
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: bob })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: carol })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: carol })
 
       // 2 Defaulters open loan with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -317,14 +319,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Depositors attempt to withdraw everything
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,  { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '66666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '133333333333333333333'), 1000)
@@ -335,19 +337,19 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '995000000000000000'), 1000)
     })
 
-    it("withdrawFromSPtoCDP(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three identical liquidations", async () => {
+    it("withdrawETHGainToTrove(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three identical liquidations", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       // Alice deposits 100, Bob deposits 200, Carol deposits 300 CLV
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: bob })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: carol })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: carol })
 
       // Defaulters open loan with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -366,14 +368,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Depositors attempt to withdraw everything
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '50000000000000000000'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '100000000000000000000'), 1000)
@@ -385,7 +387,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     })
 
     // --- Varied depoosits and varied liquidation amount ---
-    it("withdrawFromSPtoCDP(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three varying liquidations", async () => {
+    it("withdrawETHGainToTrove(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three varying liquidations", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
@@ -394,13 +396,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       Bob:  4560 CLV
       Carol: 131 CLV */
       await borrowerOperations.openLoan('20000000000000000000', alice, { from: alice, value: dec(100, 'ether') })
-      await poolManager.provideToSP('20000000000000000000', { from: alice })
+      await poolManager.provideToSP('20000000000000000000', ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan('4560000000000000000000', bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP('4560000000000000000000', { from: bob })
+      await poolManager.provideToSP('4560000000000000000000', ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan('131000000000000000000', carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP('131000000000000000000', { from: carol })
+      await poolManager.provideToSP('131000000000000000000', ZERO_ADDRESS, { from: carol })
 
 
       /* Defaulters open loans
@@ -424,14 +426,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Depositors attempt to withdraw everything
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '9017193801740610000'), 10000000000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '2055920186796860000000'), 1000000000)
@@ -445,14 +447,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
     // --- Deposit enters at t > 0
 
-    it("withdrawFromSPtoCDP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 1 liquidation. All deposits and liquidations = 100 CLV.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
+    it("withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 1 liquidation. All deposits and liquidations = 100 CLV.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -472,21 +474,21 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Dennis opens a loan and provides to SP
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: dennis })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: dennis })
 
       // Third defaulter liquidated
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '16666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '16666666666666666666'), 1000)
@@ -501,14 +503,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '497500000000000000'), 1000)
     })
 
-    it("withdrawFromSPtoCDP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. All deposits and liquidations = 100 CLV.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
+    it("withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. All deposits and liquidations = 100 CLV.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -530,22 +532,22 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Dennis opens a loan and provides to SP
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: dennis })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: dennis })
 
       // Third and fourth defaulters liquidated
       await cdpManager.liquidate(defaulter_3, { from: owner });
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '0'), 1000)
@@ -558,7 +560,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, dec(995, 15)), 1000)
     })
 
-    it("withdrawFromSPtoCDP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. Various deposit and liquidation vals.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
+    it("withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. Various deposit and liquidation vals.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
@@ -568,13 +570,13 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       Carol: 150 CLV
       */
       await borrowerOperations.openLoan(dec(600, 18), alice, { from: alice, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(600, 18), { from: alice })
+      await poolManager.provideToSP(dec(600, 18), ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: bob })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(150, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(150, 18), { from: carol })
+      await poolManager.provideToSP(dec(150, 18), ZERO_ADDRESS, { from: carol })
 
       /* Defaulters open loans:
       Defaulter 1:  100 CLV, 1 ETH
@@ -600,23 +602,23 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Dennis opens a loan and provides 250 CLV
       await borrowerOperations.openLoan(dec(250, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(250, 18), { from: dennis })
+      await poolManager.provideToSP(dec(250, 18), ZERO_ADDRESS, { from: dennis })
 
       // Last two defaulters liquidated
       await cdpManager.liquidate(defaulter_3, { from: owner });
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
       // Each depositor withdraws as much as possible
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '178328173374613000000'), 1000000000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '59442724458204300000'), 1000000000)
@@ -632,14 +634,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
     // --- Depositor leaves ---
 
-    it("withdrawFromSPtoCDP(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. All deposits and liquidations = 100 CLV.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
+    it("withdrawETHGainToTrove(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. All deposits and liquidations = 100 CLV.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol, dennis]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loan with 200% ICR
@@ -660,9 +662,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
 
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(dennis)).toString(), '50000000000000000000'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '497500000000000000'), 1000)
 
@@ -670,14 +672,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,  { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '0'), 1000)
@@ -688,7 +690,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(995, 15)), 1000)
     })
 
-    it("withdrawFromSPtoCDP(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. Various deposit and liquidation vals. A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
+    it("withdrawETHGainToTrove(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. Various deposit and liquidation vals. A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
@@ -699,16 +701,16 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       Dennis: 400 CLV
       */
       await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: alice })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: alice })
 
       await borrowerOperations.openLoan(dec(250, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(250, 18), { from: bob })
+      await poolManager.provideToSP(dec(250, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(125, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(125, 18), { from: carol })
+      await poolManager.provideToSP(dec(125, 18), ZERO_ADDRESS, { from: carol })
 
       await borrowerOperations.openLoan(dec(400, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(400, 18), { from: dennis })
+      await poolManager.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: dennis })
 
       /* Defaulters open loans:
       Defaulter 1: 100 CLV
@@ -735,7 +737,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
        // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSP(dec(5000, 18), { from: dennis })
       // console.log(txD.logs)
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
       // 3*0.995 * 400/975
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '1224615384615384661'), 1000000000)
@@ -744,14 +746,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_3, { from: owner });
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,  { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '16722408026755900000'), 100000000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '20903010033444800000'), 1000000000)
@@ -764,14 +766,14 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     })
 
     // --- One deposit enters at t > 0, and another leaves later ---
-    it("withdrawFromSPtoCDP(): A, B, D deposit -> 2 liquidations -> C makes deposit -> 1 liquidation -> D withdraws -> 1 liquidation. All deposits: 100 CLV. Liquidations: 100,100,100,50.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
+    it("withdrawETHGainToTrove(): A, B, D deposit -> 2 liquidations -> C makes deposit -> 1 liquidation -> D withdraws -> 1 liquidation. All deposits: 100 CLV. Liquidations: 100,100,100,50.  A, B, C, D withdraw correct CLV deposit and ETH Gain", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, dennis]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulters open loans
@@ -793,27 +795,27 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Carol makes deposit
       await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: carol })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: carol })
 
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
       const txD = await poolManager.withdrawFromSP(dec(5000, 18), { from: dennis })
 
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '829166666666666667'), 1000)
 
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob,{ from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob,{ from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '6666666666666666666'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '6666666666666666666'), 1000)
@@ -833,7 +835,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
     // A, B withdraw 0c & 1e
     // C, D withdraw 50c  & 0.5e
-    it("withdrawFromSPtoCDP(): Depositor withdraws correct compounded deposit after liquidation empties the pool", async () => {
+    it("withdrawETHGainToTrove(): Depositor withdraws correct compounded deposit after liquidation empties the pool", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
@@ -841,7 +843,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_1 = [alice, bob]
       for (account of depositors_1) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // 2 Defaulters open loan with 200% ICR
@@ -860,24 +862,24 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_2 = [carol, dennis]
       for (account of depositors_2) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 2 liquidated. 100 CLV offset
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // await borrowerOperations.openLoan(dec(1, 18), account, { from: erin, value: dec(2, 'ether') })
-      // await poolManager.provideToSP(dec(1, 18), { from: erin })
+      // await poolManager.provideToSP(dec(1, 18),  ZERO_ADDRESS, { from: erin })
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       // Expect Alice And Bob's compounded deposit to be 0 CLV
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
@@ -903,7 +905,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
     // A, B withdraw 0c & 1e
     // C, D withdraw 50c  & 0.5e
-    it("withdrawFromSPtoCDP(): Depositors withdraw correct compounded deposit after liquidation empties the pool", async () => {
+    it("withdrawETHGainToTrove(): Depositors withdraw correct compounded deposit after liquidation empties the pool", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
@@ -911,7 +913,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_1 = [alice, bob]
       for (account of depositors_1) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // 2 Defaulters open loan with 200% ICR
@@ -928,31 +930,31 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // Carol, Dennis, Erin each deposit 100, 200, 300 CLV respectively
       await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: carol })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: carol })
 
       await borrowerOperations.openLoan(dec(200, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: dennis })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: dennis })
 
       await borrowerOperations.openLoan(dec(300, 18), erin, { from: erin, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: erin })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: erin })
 
       // Defaulter 2 liquidated. 100 CLV offset
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // await borrowerOperations.openLoan(dec(1, 18), account, { from: flyn, value: dec(2, 'ether') })
-      // await poolManager.provideToSP(dec(1, 18), { from: flyn })
+      // await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: flyn })
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
-      const txE = await poolManager.withdrawFromSPtoCDP(erin, { from: erin })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txE = await poolManager.withdrawETHGainToTrove(erin, { from: erin })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
-      const erin_ETHWithdrawn = txE.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
+      const erin_ETHWithdrawn = th.getETHWithdrawnFromEvent(txE)
 
       // Expect Alice And Bob's compounded deposit to be 0 CLV
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
@@ -975,12 +977,12 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     // L1, L2, L3 liquidated with 100 CLV each
     // A withdraws all
     // Expect A to withdraw 0 deposit and ether only from reward L1
-    it("withdrawFromSPtoCDP(): single deposit fully offset. After subsequent liquidations, depositor withdraws 0 deposit and *only* the ETH Gain from one liquidation", async () => {
+    it("withdrawETHGainToTrove(): single deposit fully offset. After subsequent liquidations, depositor withdraws 0 deposit and *only* the ETH Gain from one liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1,2,3 withdraw 'almost' 100 CLV
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1002,10 +1004,10 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), 0), 1000)
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 15)), 1000)
@@ -1024,7 +1026,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
     // Expect all depositors withdraw 0 CLV and 1 ETH
 
-    it("withdrawFromSPtoCDP(): Depositor withdraws correct compounded deposit after liquidation empties the pool", async () => {
+    it("withdrawETHGainToTrove(): Depositor withdraws correct compounded deposit after liquidation empties the pool", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
@@ -1045,7 +1047,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_1 = [alice, bob]
       for (account of depositors_1) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 1 liquidated. 200 CLV fully offset with pool.
@@ -1055,7 +1057,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_2 = [carol, dennis]
       for (account of depositors_2) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 2 liquidated. 100 CLV offset
@@ -1065,7 +1067,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_3 = [erin, flyn]
       for (account of depositors_3) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 3 liquidated. 100 CLV offset
@@ -1075,32 +1077,32 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors_4 = [graham, harriet]
       for (account of depositors_4) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), { from: account })
+        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter 4 liquidated. 100 CLV offset
       await cdpManager.liquidate(defaulter_4, { from: owner });
 
       // await borrowerOperations.withdrawCLV(dec(1, 18), whale, { from: whale })
-      // await poolManager.provideToSP(dec(1, 18), { from: whale })
+      // await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
-      const txE = await poolManager.withdrawFromSPtoCDP(erin, { from: erin })
-      const txF = await poolManager.withdrawFromSPtoCDP(flyn,{ from: flyn })
-      const txG = await poolManager.withdrawFromSPtoCDP(graham, { from: graham })
-      const txH = await poolManager.withdrawFromSPtoCDP(harriet, { from: harriet })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txE = await poolManager.withdrawETHGainToTrove(erin, { from: erin })
+      const txF = await poolManager.withdrawETHGainToTrove(flyn, { from: flyn })
+      const txG = await poolManager.withdrawETHGainToTrove(graham,  { from: graham })
+      const txH = await poolManager.withdrawETHGainToTrove(harriet,  { from: harriet })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = txD.logs[1].args[1].toString()
-      const erin_ETHWithdrawn = txE.logs[1].args[1].toString()
-      const flyn_ETHWithdrawn = txF.logs[1].args[1].toString()
-      const graham_ETHWithdrawn = txG.logs[1].args[1].toString()
-      const harriet_ETHWithdrawn = txH.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
+      const erin_ETHWithdrawn = th.getETHWithdrawnFromEvent(txE)
+      const flyn_ETHWithdrawn = th.getETHWithdrawnFromEvent(txF)
+      const graham_ETHWithdrawn = th.getETHWithdrawnFromEvent(txG)
+      const harriet_ETHWithdrawn = th.getETHWithdrawnFromEvent(txH)
 
       // Expect all deposits to be 0 CLV
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(alice)).toString(), '0'), 1000)
@@ -1112,7 +1114,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(graham)).toString(), '0'), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(harriet)).toString(), '0'), 1000)
 
-      /* Expect all ETH gains to be 1 ETH:  Since each liquidation of empties the pool, depositors
+      /* Expect all ETH gains to be 1 ETH (0.995 w/ gas comp taken):  
+      
+      Since each liquidation of empties the pool, depositors
       should only earn ETH from the single liquidation that cancelled with their deposit */
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 15)), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 15)), 1000)
@@ -1135,12 +1139,12 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
     // expect d(B) = d0(B)/10
     // expect correct ETH gain, i.e. all of the reward
-    it("withdrawFromSPtoCDP(): deposit spans one scale factor change: Single depositor withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
+    it("withdrawETHGainToTrove(): deposit spans one scale factor change: Single depositor withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 withdraws 'almost' 90 CLV
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1157,19 +1161,17 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await poolManager.P()).toString(), '9')
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-
-      // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
 
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
 
       // Defaulter 2 liquidated.  90 CLV liquidated. P altered by a factor of (1-90/100) = 0.1.  Scale changed.
       await cdpManager.liquidate(defaulter_2, { from: owner });
  
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+     
 
       // Expect Bob to withdraw 10% of initial deposit (10 CLV) and all the liquidated ETH (0.5 ether)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '10000000000000000000'), 1000)
@@ -1185,12 +1187,12 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
     // expect d(B) = d0(B)/10
     // expect correct ETH gain, i.e. all of the reward
-    it("withdrawFromSPtoCDP(): Several deposits of varying amounts span one scale factor change. Depositors withdraw correct compounded deposit and ETH Gain after one liquidation", async () => {
+    it("withdrawETHGainToTrove(): Several deposits of varying amounts span one scale factor change. Depositors withdraw correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 withdraws 'almost' 90 CLV.
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1207,24 +1209,24 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await cdpManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await poolManager.P()).toString(), '9')
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
 
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(200, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: carol })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: carol })
 
       await borrowerOperations.openLoan(dec(300, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: dennis })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: dennis })
 
       // 540 CLV liquidated.  P altered by a factor of (1-540/600) = 0.1. Scale changed.
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
 
       /* Expect depositors to withdraw 10% of their initial deposit, and an ETH gain 
       in proportion to their initial deposit:
@@ -1239,9 +1241,9 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(carol)).toString(), dec(20, 18)), 1000)
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(dennis)).toString(), dec(30, 18)), 1000)
 
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = th.getETHWithdrawnFromEvent(txD)
 
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '497500000000000000'), 1000)
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '995000000000000000'), 1000)
@@ -1259,12 +1261,12 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     // B withdraws
     // expect d(B) = d0(B) * (1e-10)
     // expect B gets entire ETH gain from L2
-    it("withdrawFromSPtoCDP(): deposit spans one scale factor change: Single depositor withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
+    it("withdrawETHGainToTrove(): deposit spans one scale factor change: Single depositor withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 and default 2 each withdraw 89.999999999 CLV
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1281,16 +1283,17 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
       // Bob deposits 100 CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
       // Defaulter 2 liquidated
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      
 
       // Bob should withdraw 0 deposit, and the full ETH gain of 1 ether
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), 0), 1000)
@@ -1305,12 +1308,12 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     // B withdraws
     // expect d(B) = d0(B) * (1e-10)
     // expect B gets entire ETH gain from L2
-    it("withdrawFromSPtoCDP(): Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
+    it("withdrawETHGainToTrove(): Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
           // Defaulter 1 and default 2 withdraw 89.999999999 CLV and 58.9999999994
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
@@ -1327,30 +1330,30 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
 
       // B, C, D deposit 100, 200, 300 CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
 
       await borrowerOperations.openLoan(dec(200, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(200, 18), { from: carol })
+      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: carol })
 
       await borrowerOperations.openLoan(dec(300, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(300, 18), { from: dennis })
+      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: dennis })
 
       // Defaulter 2 liquidated
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const bob_ETHWithdrawn = await th.getETHWithdrawnFromEvent(txB)
 
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
-      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
+      const carol_ETHWithdrawn = await th.getETHWithdrawnFromEvent(txC)
 
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
-      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
+      const dennis_ETHWithdrawn = await th.getETHWithdrawnFromEvent(txD)
 
       // B, C and D should withdraw 1e-10 of initial deposit, 
       assert.isAtMost(th.getDifference((await poolManager.getCompoundedCLVDeposit(bob)).toString(), '0'), 1000)
@@ -1376,7 +1379,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
     L4 decreases P by(~1e-10)P. L2:  99.999999999000000000 CLV, 1 ETH
     expect A, B, C, D each withdraw ~1e-10 CLV and ~1 Ether
     */
-    it("withdrawFromSPtoCDP(): Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
+    it("withdrawETHGainToTrove(): Several deposits of 100 CLV span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
@@ -1397,7 +1400,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       await priceFeed.setPrice(dec(100, 18));
 
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: alice })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
       const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
@@ -1405,35 +1408,35 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // B deposits 100CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: bob })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
 
       // Defaulter 2 liquidated
       const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
       await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: carol })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: carol })
 
       // Defaulter 3 liquidated
       const txL3 = await cdpManager.liquidate(defaulter_3, { from: owner });
       assert.isTrue(txL3.receipt.status)
 
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: dennis })
+      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: dennis })
 
       // Defaulter 4 liquidated
       const txL4 = await cdpManager.liquidate(defaulter_4, { from: owner });
       assert.isTrue(txL4.receipt.status)
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
-      const txC = await poolManager.withdrawFromSPtoCDP(carol,   { from: carol })
-      const txD = await poolManager.withdrawFromSPtoCDP(dennis, { from: dennis })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
+      const txC = await poolManager.withdrawETHGainToTrove(carol,   { from: carol })
+      const txD = await poolManager.withdrawETHGainToTrove(dennis, { from: dennis })
 
-      const alice_ETHWithdrawn = await txA.logs[1].args[1].toString()
-      const bob_ETHWithdrawn = await txB.logs[1].args[1].toString()
-      const carol_ETHWithdrawn = await txC.logs[1].args[1].toString()
-      const dennis_ETHWithdrawn = await txD.logs[1].args[1].toString()
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
+      const carol_ETHWithdrawn = th.getETHWithdrawnFromEvent(txC)
+      const dennis_ETHWithdrawn = await th.getETHWithdrawnFromEvent(txD)
 
       // B, C and D should withdraw 1e-10 of initial deposit, 
 
@@ -1451,7 +1454,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
     // --- Extreme values, confirm no overflows ---
 
-    it("withdrawFromSPtoCDP(): Large liquidated coll/debt, deposits and ETH price", async () => {
+    it("withdrawETHGainToTrove(): Large liquidated coll/debt, deposits and ETH price", async () => {
       // Whale opens CDP with 100bn ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(1, 29) })
 
@@ -1462,7 +1465,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(1, 36), account, { from: account, value: dec(1, 27) })
-        await poolManager.provideToSP(dec(1, 36), { from: account })
+        await poolManager.provideToSP(dec(1, 36), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter opens loan with 200% ICR
@@ -1476,42 +1479,47 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // Defaulter liquidated
       await cdpManager.liquidate(defaulter_1, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txA = await poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txB = await poolManager.withdrawETHGainToTrove(bob, { from: bob })
 
       // Grab the ETH gain from the emitted event in the tx log
-      const alice_ETHWithdrawn = txA.logs[1].args[1]
-      const bob_ETHWithdrawn = txB.logs[1].args[1]
+      const alice_ETHWithdrawn = th.getETHWithdrawnFromEvent(txA)
+      const bob_ETHWithdrawn =th.getETHWithdrawnFromEvent(txB)
 
-      aliceCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
-      bobCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
+      const aliceCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
+      const bobCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
       
-      aliceExpectedCLVDeposit = web3.utils.toBN(dec(5, 35))
-      bobExpectedCLVDeposit = web3.utils.toBN(dec(5, 35))
+      const aliceExpectedCLVDeposit = toBN(dec(5, 35))
+      const  bobExpectedCLVDeposit = toBN(dec(5, 35))
       
-      aliceDepositDiff = aliceCLVDeposit.sub(aliceExpectedCLVDeposit).abs()
+      const aliceDepositDiff = aliceCLVDeposit.sub(aliceExpectedCLVDeposit).abs()
 
-      assert.isTrue(aliceDepositDiff.lte(web3.utils.toBN('1000000000000000000')))
+      assert.isTrue(aliceDepositDiff.lte(toBN('1000000000000000000')))
 
-      bobDepositDiff = bobCLVDeposit.sub(bobExpectedCLVDeposit).abs()
+      const bobDepositDiff = bobCLVDeposit.sub(bobExpectedCLVDeposit).abs()
 
-      assert.isTrue(bobDepositDiff.lte(web3.utils.toBN('1000000000000000000')))
+      assert.isTrue(bobDepositDiff.lte(toBN('1000000000000000000')))
 
-      aliceExpectedETHGain = web3.utils.toBN(dec(4975, 23))
-      aliceETHDiff = aliceExpectedETHGain.sub(alice_ETHWithdrawn)
+      const aliceExpectedETHGain = toBN(dec(4975, 23))
+      const aliceETHDiff = aliceExpectedETHGain.sub(toBN(alice_ETHWithdrawn))
 
-      assert.isTrue(aliceETHDiff.lte(web3.utils.toBN('1000000000000000000')))
+      console.log(`alice_ETHWithdrawn: ${alice_ETHWithdrawn}`)
+      console.log(`aliceExpectedETHGain: ${aliceExpectedETHGain}`)
+      console.log(`aliceETHDiff: ${aliceETHDiff}`)
 
-      bobExpectedETHGain = web3.utils.toBN(dec(4975, 23))
-      bobETHDiff = bobExpectedETHGain.sub(bob_ETHWithdrawn)
+      assert.isTrue(aliceETHDiff.lte(toBN('1000000000000000000')))
 
-      assert.isTrue(bobETHDiff.lte(web3.utils.toBN('1000000000000000000')))
+      const bobExpectedETHGain = toBN(dec(4975, 23))
+      const bobETHDiff = bobExpectedETHGain.sub(toBN(bob_ETHWithdrawn))
 
-      //  assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(500, 24)), web3.utils.toBN('1000000000000000000'))
-      //  assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(500, 24)), web3.utils.toBN('1000000000000000000'))
-    })
+      console.log(`bob_ETHWithdrawn: ${bob_ETHWithdrawn}`)
+      console.log(`bobExpectedETHGain: ${bobExpectedETHGain}`)
+      console.log(`bobETHDiff: ${bobETHDiff}`)
 
-    it("withdrawFromSPtoCDP(): Tiny liquidated coll/debt, large deposits and ETH price", async () => {
+      assert.isTrue(bobETHDiff.lte(toBN('1000000000000000000')))
+     })
+
+    it("withdrawETHGainToTrove(): Tiny liquidated coll/debt, large deposits and ETH price", async () => {
       // Whale opens CDP with 100bn ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(1, 29) })
 
@@ -1522,7 +1530,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const depositors = [alice, bob]
       for (account of depositors) {
         await borrowerOperations.openLoan(dec(1, 36), account, { from: account, value: dec(1, 27) })
-        await poolManager.provideToSP(dec(1, 36), { from: account })
+        await poolManager.provideToSP(dec(1, 36), ZERO_ADDRESS, { from: account })
       }
 
       // Defaulter opens loan with 20e-9 ETH (with minimum value of $20) and 20 CLV. 200% ICR
@@ -1535,30 +1543,26 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       // Defaulter liquidated
       await cdpManager.liquidate(defaulter_1, { from: owner });
 
-      const txA = await poolManager.withdrawFromSPtoCDP(alice, { from: alice })
-      const txB = await poolManager.withdrawFromSPtoCDP(bob, { from: bob })
+      const txPromise_A = poolManager.withdrawETHGainToTrove(alice, { from: alice })
+      const txPromise_B =  poolManager.withdrawETHGainToTrove(bob, { from: bob })
 
-      const alice_ETHWithdrawn = txA.logs[1].args[1]
-      const bob_ETHWithdrawn = txB.logs[1].args[1]
-
+       // Expect ETH gain per depositor of 1e9 wei to be rounded to 0 by the ETHGainedPerUnitStaked calculation (e / D), where D is ~1e36.
+      await th.assertRevert(txPromise_A, 'PoolManager: caller must have non-zero ETH Gain')
+      await th.assertRevert(txPromise_B, 'PoolManager: caller must have non-zero ETH Gain')
 
       aliceCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
       bobCLVDeposit = await poolManager.getCompoundedCLVDeposit(alice)
       
-      aliceExpectedCLVDeposit = web3.utils.toBN('999999999999999990000000000000000000')
-      bobExpectedCLVDeposit = web3.utils.toBN('999999999999999990000000000000000000')
+      aliceExpectedCLVDeposit = toBN('999999999999999990000000000000000000')
+      bobExpectedCLVDeposit = toBN('999999999999999990000000000000000000')
 
       aliceDepositDiff = aliceCLVDeposit.sub(aliceExpectedCLVDeposit).abs()
 
-      assert.isTrue(aliceDepositDiff.lte(web3.utils.toBN('1000000000000000000')))
+      assert.isTrue(aliceDepositDiff.lte(toBN('1000000000000000000')))
 
       bobDepositDiff = bobCLVDeposit.sub(bobExpectedCLVDeposit).abs()
 
-      assert.isTrue(bobDepositDiff.lte(web3.utils.toBN('1000000000000000000')))
-
-      // Expect ETH gain per depositor of 1e9 wei to be rounded to 0 by the ETHGainedPerUnitStaked calculation (e / D), where D is ~1e36.
-      assert.equal(alice_ETHWithdrawn.toString(), '0')
-      assert.equal(bob_ETHWithdrawn.toString(), '0')
+      assert.isTrue(bobDepositDiff.lte(toBN('1000000000000000000')))
     })
   })
 })

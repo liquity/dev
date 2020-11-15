@@ -8,8 +8,10 @@ import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import cdpManagerAbi from "../abi/CDPManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
+import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
 import hintHelpersAbi from "../abi/HintHelpers.json";
+import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
 import poolManagerAbi from "../abi/PoolManager.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
@@ -27,8 +29,10 @@ import {
   BorrowerOperations,
   CDPManager,
   CLVToken,
+  CommunityIssuance,
   DefaultPool,
   HintHelpers,
+  LQTYStaking,
   MultiCDPGetter,
   PoolManager,
   PriceFeed,
@@ -41,8 +45,10 @@ export const abi: { [name: string]: JsonFragment[] } = {
   borrowerOperations: borrowerOperationsAbi,
   cdpManager: cdpManagerAbi,
   clvToken: clvTokenAbi,
+  communityIssuance: communityIssuanceAbi,
   defaultPool: defaultPoolAbi,
   hintHelpers: hintHelpersAbi,
+  lqtyStaking: lqtyStakingAbi,
   multiCDPgetter: multiCDPgetterAbi,
   poolManager: poolManagerAbi,
   priceFeed: priceFeedAbi,
@@ -93,8 +99,10 @@ export interface LiquityContractAddresses {
   borrowerOperations: string;
   cdpManager: string;
   clvToken: string;
+  communityIssuance: string;
   defaultPool: string;
   hintHelpers: string;
+  lqtyStaking: string;
   multiCDPgetter: string;
   poolManager: string;
   priceFeed: string;
@@ -109,8 +117,10 @@ export interface LiquityContracts {
   borrowerOperations: BorrowerOperations;
   cdpManager: CDPManager;
   clvToken: CLVToken;
+  communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
   hintHelpers: HintHelpers;
+  lqtyStaking: LQTYStaking;
   multiCDPgetter: MultiCDPGetter;
   poolManager: PoolManager;
   priceFeed: PriceFeed;
@@ -123,8 +133,10 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   borrowerOperations: contracts.borrowerOperations.address,
   cdpManager: contracts.cdpManager.address,
   clvToken: contracts.clvToken.address,
+  communityIssuance: contracts.communityIssuance.address,
   defaultPool: contracts.defaultPool.address,
   hintHelpers: contracts.hintHelpers.address,
+  lqtyStaking: contracts.lqtyStaking.address,
   multiCDPgetter: contracts.multiCDPgetter.address,
   poolManager: contracts.poolManager.address,
   priceFeed: contracts.priceFeed.address,
@@ -154,9 +166,17 @@ export const connectToContracts = (
 
   clvToken: create<CLVToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
 
+  communityIssuance: create<CommunityIssuance>(
+    addresses.communityIssuance,
+    communityIssuanceAbi,
+    signerOrProvider
+  ),
+
   defaultPool: create<DefaultPool>(addresses.defaultPool, defaultPoolAbi, signerOrProvider),
 
   hintHelpers: create<HintHelpers>(addresses.hintHelpers, hintHelpersAbi, signerOrProvider),
+
+  lqtyStaking: create<LQTYStaking>(addresses.lqtyStaking, lqtyStakingAbi, signerOrProvider),
 
   multiCDPgetter: create<MultiCDPGetter>(
     addresses.multiCDPgetter,

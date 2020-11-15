@@ -1,4 +1,6 @@
-pragma solidity >=0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 // Common interface for the CDP Manager.
 interface ICDPManager {
@@ -36,7 +38,8 @@ interface ICDPManager {
         address _stabilityPoolAddress,
         address _priceFeedAddress,
         address _clvTokenAddress,
-        address _sortedCDPsAddress
+        address _sortedCDPsAddress,
+        address _lqtyStakingAddress
     ) external;
 
     function getCDPOwnersCount() external view returns (uint);
@@ -73,9 +76,33 @@ interface ICDPManager {
 
     function getPendingCLVDebtReward(address _user) external view returns (uint);
 
+     function hasPendingRewards(address _user) external view returns (bool);
+
+    function getEntireDebtAndColl(
+        address _user
+    ) 
+        external 
+        view 
+    returns (
+        uint debt, 
+        uint coll, 
+        uint pendingCLVDebtReward, 
+        uint pendingETHReward
+    );
+
+    function getEntireSystemColl() external view returns (uint);
+
+    function getEntireSystemDebt() external view returns (uint);
+
+    function getTCR() external view returns (uint TCR);
+
     function closeCDP(address _user) external;
 
     function removeStake(address _user) external;
+
+    function getBorrowingFee(uint CLVDebt) external view returns (uint);
+
+    function decayBaseRateFromBorrowing() external returns (uint);
 
     function getCDPStatus(address _user) external view returns (uint);
     

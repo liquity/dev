@@ -1,4 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
 
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IPriceFeed.sol";
@@ -48,7 +50,10 @@ contract HintHelpers is LiquityBase, Ownable {
      * Find the first and last CDPs that will modified by calling redeemCollateral() with the same _CLVamount and _price,
      * and return the address of the first one and the final ICR of the last one.
      */
-    function getRedemptionHints(uint _CLVamount, uint _price)
+    function getRedemptionHints(
+        uint _CLVamount, 
+        uint _price
+    )
         external
         view
         returns (address firstRedemptionHint, uint partialRedemptionHintICR)

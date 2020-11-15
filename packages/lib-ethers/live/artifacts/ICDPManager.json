@@ -69,9 +69,46 @@
         },
         {
           "indexed": false,
+          "internalType": "uint8",
+          "name": "operation",
+          "type": "uint8"
+        }
+      ],
+      "name": "CDPLiquidated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_debt",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_coll",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
           "internalType": "uint256",
           "name": "stake",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "operation",
+          "type": "uint8"
         }
       ],
       "name": "CDPUpdated",
@@ -186,13 +223,22 @@
         }
       ],
       "name": "applyPendingRewards",
-      "outputs": [
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
         {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
+          "internalType": "address[]",
+          "name": "_troveArray",
+          "type": "address[]"
         }
       ],
+      "name": "batchLiquidateTroves",
+      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -222,13 +268,7 @@
         }
       ],
       "name": "closeCDP",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -283,32 +323,6 @@
       ],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "CR",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "numTrials",
-          "type": "uint256"
-        }
-      ],
-      "name": "getApproxHint",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -440,27 +454,59 @@
       "constant": true,
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "_CLVamount",
-          "type": "uint256"
-        },
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getPendingCLVDebtReward",
+      "outputs": [
         {
           "internalType": "uint256",
-          "name": "_price",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "name": "getRedemptionHints",
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getPendingETHReward",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getTroveFromCDPOwnersArray",
       "outputs": [
         {
           "internalType": "address",
           "name": "",
           "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
         }
       ],
       "payable": false,
@@ -529,13 +575,7 @@
         }
       ],
       "name": "liquidate",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -550,13 +590,7 @@
         }
       ],
       "name": "liquidateCDPs",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -586,13 +620,7 @@
         }
       ],
       "name": "redeemCollateral",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -607,13 +635,7 @@
         }
       ],
       "name": "removeStake",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -623,11 +645,46 @@
       "inputs": [
         {
           "internalType": "address",
+          "name": "_borrowerOperationsAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_poolManagerAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
           "name": "_activePoolAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_defaultPoolAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_stabilityPoolAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_priceFeedAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_clvTokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_sortedCDPsAddress",
           "type": "address"
         }
       ],
-      "name": "setActivePool",
+      "name": "setAddresses",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -658,93 +715,12 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_clvTokenAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setCLVToken",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_defaultPoolAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setDefaultPool",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_poolManagerAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setPoolManager",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_priceFeedAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setPriceFeed",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_sortedCDPsAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setSortedCDPs",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
           "name": "_user",
           "type": "address"
         }
       ],
-      "name": "updateRewardSnapshots",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "name": "updateCDPRewardSnapshots",
+      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"

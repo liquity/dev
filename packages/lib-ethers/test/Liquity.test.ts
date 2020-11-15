@@ -75,10 +75,7 @@ describe("EthersLiquity", () => {
     if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
       await funder.sendTransaction({
         to: user.getAddress(),
-        value: targetBalance
-          .add(txCost)
-          .sub(balance)
-          .add(1),
+        value: targetBalance.add(txCost).sub(balance).add(1),
         gasLimit
       });
 
@@ -253,7 +250,7 @@ describe("EthersLiquity", () => {
   const connectUsers = (users: Signer[]) =>
     Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
 
-  describe("StabilityPool", () => {
+  describe.skip("StabilityPool", () => {
     before(async () => {
       [deployerLiquity, ...otherLiquities] = await connectUsers([
         deployer,
@@ -364,7 +361,7 @@ describe("EthersLiquity", () => {
         await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 100 }));
         await otherLiquities[1].openTrove(new Trove({ collateral: 1, debt: 100 }));
 
-        await liquity.openTrove(new Trove({ collateral: 10, debt: 1410 }));
+        await liquity.openTrove(new Trove({ collateral: 10.075, debt: 1410 }));
         await liquity.depositQuiInStabilityPool(100);
 
         price = Decimal.from(190);
@@ -378,8 +375,8 @@ describe("EthersLiquity", () => {
         await liquity.liquidateUpTo(40);
 
         trove = await liquity.getTrove();
-        // 10 * 1310 / 1410
-        expect(trove).to.deep.equal(new Trove({ collateral: "9.290780141843971632", debt: 1310 }));
+        // 10.075 * 1310 / 1410
+        expect(trove).to.deep.equal(new Trove({ collateral: "9.360460992907801419", debt: 1310 }));
       });
 
       describe("after depositing some more tokens", () => {
@@ -500,11 +497,12 @@ describe("EthersLiquity", () => {
       expect(receipt.details).to.deep.equal({
         attemptedTokenAmount: Decimal.from(55),
         actualTokenAmount: Decimal.from(55),
-        collateralReceived: Decimal.from(0.275)
+        collateralReceived: Decimal.from(0.275),
+        fee: Decimal.from("0.084027777777777777")
       });
 
       const balance = new Decimal(await provider.getBalance(user.getAddress()));
-      expect(`${balance}`).to.equal("100.275");
+      expect(`${balance}`).to.equal("100.190972222222222223");
 
       expect(`${await liquity.getQuiBalance()}`).to.equal("45");
 

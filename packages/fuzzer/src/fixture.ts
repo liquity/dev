@@ -181,7 +181,7 @@ export class Fixture {
       `[${shortenAddress(liquity.userAddress!)}] depositQuiInStabilityPool(${depositedQui})`
     );
 
-    await liquity.depositQuiInStabilityPool(depositedQui, { gasPrice: 0 });
+    await liquity.depositQuiInStabilityPool(depositedQui, undefined, { gasPrice: 0 });
   }
 
   async sweepQui(liquity: Liquity) {

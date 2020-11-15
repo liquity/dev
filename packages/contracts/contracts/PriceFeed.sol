@@ -1,5 +1,6 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
 
+pragma solidity 0.6.11;
 
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IPriceFeed.sol";
@@ -30,15 +31,6 @@ contract PriceFeed is Ownable, IPriceFeed {
     event CDPManagerAddressChanged(address _cdpManagerAddress);
     event PoolManagerAddressChanged(address _poolManagerAddress);
 
-    // --- Modifiers ---
-
-    modifier onlyCDPManagerOrPoolManager {
-        require(_msgSender() == cdpManagerAddress ||_msgSender() == poolManagerAddress,
-            "PriceFeed: Caller is neither CDPManager nor PoolManager"
-        );
-        _;
-    }
-
     // --- Dependency setters ---
 
     function setAddresses(
@@ -48,6 +40,7 @@ contract PriceFeed is Ownable, IPriceFeed {
         address _priceAggregatorAddressTestnet
     )
         external
+        override
         onlyOwner
     {
         cdpManagerAddress = _cdpManagerAddress;
@@ -66,14 +59,14 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     // --- Functions ---
 
-    function getPrice() external view returns (uint256) {
+    function getPrice() external view override returns (uint256) {
         return price;
     }
 
     // --- DEVELOPMENT FUNCTIONALITY - TODO: remove before mainnet deployment.  ---
 
     // Manual external price setter. 
-    function setPrice(uint256 _price) external returns (bool) {
+    function setPrice(uint256 _price) external override returns (bool) {
         price = _price;
         emit PriceUpdated(price);
         return true;
@@ -82,37 +75,38 @@ contract PriceFeed is Ownable, IPriceFeed {
     // --- MAINNET FUNCTIONALITY ---
 
     // TODO: convert received Chainlink price to precision-18 before setting state variable
-    function updatePrice() external onlyCDPManagerOrPoolManager returns (uint256) {
+    function updatePrice() external override returns (uint256) {
+        _requireCallerIsCDPManagerOrPoolManager();
         price = getLatestPrice();
         emit PriceUpdated(price);
         return price;
     }
 
-    function getLatestPrice() public view returns (uint256) {
+    function getLatestPrice() public view override returns (uint256) {
         int256 intPrice = priceAggregator.currentAnswer();
         require(intPrice >= 0, "Price response from aggregator is negative int");
 
         return uint256(intPrice);
     }
 
-    function getLatestAnswerID() external view returns (uint256) {
+    function getLatestAnswerID() external view override returns (uint256) {
         return priceAggregator.latestCompletedAnswer();
     }
 
     // Get the block timestamp at which the reference price was last updated
-    function getLatestTimestamp() external view returns (uint256) {
+    function getLatestTimestamp() external view override returns (uint256) {
         return priceAggregator.updatedHeight();
     }
 
     // ---- ROPSTEN FUNCTIONALITY - TODO: Remove before Mainnet deployment ----
 
-    function updatePrice_Testnet() external returns (uint256) {
+    function updatePrice_Testnet() external override returns (uint256) {
         price = getLatestPrice_Testnet();
         emit PriceUpdated(price);
         return price;
     }
 
-    function getLatestPrice_Testnet() public view returns (uint256) {
+    function getLatestPrice_Testnet() public view override returns (uint256) {
         int256 intPrice = priceAggregator_Testnet.latestAnswer();
         require( intPrice >= 0, "Price response from aggregator is negative int");
 
@@ -120,14 +114,14 @@ contract PriceFeed is Ownable, IPriceFeed {
     }
 
     // Get the block timestamp at which the reference data was last updated
-    function getLatestTimestamp_Testnet() external view returns (uint256) {
+    function getLatestTimestamp_Testnet() external view override returns (uint256) {
         uint256 latestTimestamp = priceAggregator_Testnet.latestTimestamp();
 
         return latestTimestamp;
     }
 
     // Get the past price from 'n' rounds ago
-    function getPreviousPrice_Testnet(uint256 _n) external view returns (uint256) {
+    function getPreviousPrice_Testnet(uint256 _n) external view override returns (uint256) {
         uint256 latestAnswerID = priceAggregator_Testnet.latestRound();
         require(_n <= latestAnswerID, "Not enough history");
 
@@ -138,11 +132,19 @@ contract PriceFeed is Ownable, IPriceFeed {
     }
 
     // Get the block timestamp from the round that occurred 'n' rounds ago
-    function getPreviousTimestamp_Testnet(uint256 _n) external view returns (uint256) {
+    function getPreviousTimestamp_Testnet(uint256 _n) external view override returns (uint256) {
         uint256 latestAnswerID = priceAggregator_Testnet.latestRound();
         require(_n <= latestAnswerID, "Not enough history");
 
         return priceAggregator_Testnet.getTimestamp(latestAnswerID - _n);
+    }
+
+    // --- 'require' functions ---
+
+    function _requireCallerIsCDPManagerOrPoolManager() internal view {
+        require(_msgSender() == cdpManagerAddress ||_msgSender() == poolManagerAddress,
+            "PriceFeed: Caller is neither CDPManager nor PoolManager"
+        );
     }
 }
 
