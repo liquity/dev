@@ -18,34 +18,51 @@ contract CLVToken is ICLVToken, Ownable {
     // User data for CLV token
     mapping (address => uint256) public balances;
     mapping (address => mapping (address => uint256)) public allowances;
-
-    address public poolManagerAddress;
-    address public borrowerOperationsAddress;
-
+    
+    address public immutable cdpManagerAddress;
+    address public immutable poolManagerAddress;
+    address public immutable stabilityPoolAddress;
+    address public immutable activePoolAddress;
+    address public immutable defaultPoolAddress;
+    address public immutable borrowerOperationsAddress;
+    
     uint256 public _totalSupply;
 
     // --- Events ---
-
-    event PoolManagerAddressChanged( address _newPoolManagerAddress);
+    /*
+    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event PoolManagerAddressChanged( address _newPoolManagerAddress);    
+    event ActivePoolAddressChanged(address _newActivePoolAddress);
+    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
+    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event BorrowerOperationsAddressChanged( address _newBorrowerOperationsAddress);
-    event CLVTokenBalanceUpdated(address _user, uint _amount);
 
+    event CLVTokenBalanceUpdated(address _user, uint _amount);
+    */
     // --- Functions ---
 
-     function setAddresses(
+    constructor( 
+        address _cdpManagerAddress,
         address _poolManagerAddress,
+        address _activePoolAddress,
+        address _defaultPoolAddress,
+        address _stabilityPoolAddress,
         address _borrowerOperationsAddress
-    )
-        external
-        override
-        onlyOwner
-    {
-        borrowerOperationsAddress = _borrowerOperationsAddress;
+    ) public Ownable() {    
+        cdpManagerAddress = _cdpManagerAddress;
         poolManagerAddress = _poolManagerAddress;
-       
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+        activePoolAddress = _activePoolAddress;
+        defaultPoolAddress = _defaultPoolAddress;
+        stabilityPoolAddress = _stabilityPoolAddress;
+        borrowerOperationsAddress = _borrowerOperationsAddress;
+
+        emit CDPManagerAddressChanged(_cdpManagerAddress);
         emit PoolManagerAddressChanged(_poolManagerAddress);
-        
+        emit ActivePoolAddressChanged( _activePoolAddress);
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+
         _renounceOwnership();
     }
   
@@ -86,6 +103,38 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     // --- 'require' functions ---
+    function _requireValidRecipient(address recipient) internal view {
+        require(
+            recipient != address(0) && 
+            recipient != address(this) &&
+            recipient != defaultPoolAddress, 
+            "CLVToken: Provided transfer recipient is not appropriate"
+        );
+        require(
+            recipient != activePoolAddress &&
+            recipient != poolManagerAddress && 
+            recipient != borrowerOperationsAddress,
+            "CLVToken: Use repay function instead to clear your debt"
+        );
+        require(
+            recipient != stabilityPoolAddress || 
+            _msgSender() == poolManagerAddress, 
+            "CLVToken: Sender must be PoolManager if recipient is StabilityPool"
+        );
+    }
+
+    function _requireValidSpender(address spender) internal view {
+        require(
+            spender != address(0) && 
+            spender != address(this) &&
+            spender != activePoolAddress &&
+            spender != defaultPoolAddress &&
+            spender != poolManagerAddress && 
+            spender != stabilityPoolAddress &&
+            spender != borrowerOperationsAddress,
+            "CLVToken: Provided spender is not appropriate"
+        );
+    }
 
     function _requireCallerIsPoolManager() internal view {
         require(_msgSender() == poolManagerAddress, "CLVToken: Caller is not the PoolManager");
@@ -141,8 +190,8 @@ contract CLVToken is ICLVToken, Ownable {
 
     function _transfer(address sender, address recipient, uint256 amount) internal {
         require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
-
+        require(recipient != sender, "ERC20: transfer sender and recipient are the same");
+        _requireValidRecipient(recipient);
         _subFromBalance(sender, amount);
         _addToBalance(recipient, amount);
         emit Transfer(sender, recipient, amount);
@@ -167,7 +216,8 @@ contract CLVToken is ICLVToken, Ownable {
 
     function _approve(address owner, address spender, uint256 amount) internal {
         require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        require(spender != owner, "ERC20: approver and spender are the same address");
+        _requireValidSpender(spender);
 
         allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);

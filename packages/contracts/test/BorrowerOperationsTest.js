@@ -278,7 +278,7 @@ contract('BorrowerOperations', async accounts => {
   // })
 
   it("addColl(): non-trove owner can add collateral to another user's trove", async () => {
-    console.log(`addr:${borrowerOperations.address}`)
+    // console.log(`addr:${borrowerOperations.address}`)
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
     await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
     await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(5, 'ether') })
@@ -712,9 +712,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    console.log(`activePool raw ETH bal: ${await web3.eth.getBalance(activePool.address)}`)
-    console.log(`activePool ETH tracker: ${await activePool.getETH()}`)
-    console.log(`activePool in CDPManager: ${await cdpManager.activePool()}`)
+    // console.log(`activePool raw ETH bal: ${await web3.eth.getBalance(activePool.address)}`)
+    // console.log(`activePool ETH tracker: ${await activePool.getETH()}`)
+    // console.log(`activePool in CDPManager: ${await cdpManager.activePool()}`)
 
     // A redeems 10 CLV
     await th.redeemCollateral(A, contracts, dec(10, 18))
@@ -2178,9 +2178,10 @@ contract('BorrowerOperations', async accounts => {
 
     // Alice attempts to close her loan
     try {
-      const txCarol = await borrowerOperations.closeLoan({ from: alice })
-      assert.isFalse(txCarol.receipt.status)
+      const txAlice = await borrowerOperations.closeLoan({ from: alice })
+      assert.isFalse(txAlice.receipt.status)
     } catch (err) {
+      // TOOD issue#99
       // assert.include(err.message, "revert")
       // assert.include(err.message, "CDPManager: Only one trove in the system")
     }

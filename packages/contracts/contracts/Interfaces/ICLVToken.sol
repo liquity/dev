@@ -6,15 +6,14 @@ import "../Dependencies/IERC20.sol";
 
 interface ICLVToken is IERC20 { 
     // --- Events ---
-    event PoolManagerAddressChanged( address _newPoolManagerAddress);
+    event PoolManagerAddressChanged(address _newPoolManagerAddress);
+    event CDPManagerAddressChanged(address _cdpManagerAddress);
+    event ActivePoolAddressChanged(address _newActivePoolAddress);
+    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
+    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
+    event BorrowerOperationsAddressChanged( address _newBorrowerOperationsAddress);
 
     event CLVTokenBalanceUpdated(address _user, uint _amount);
-
-    // --- Functions ---
-    function setAddresses(
-        address _poolManagerAddress,
-        address _borrowerOperationsAddress
-    ) external;
 
     function mint(address _account, uint256 _amount) external;
 

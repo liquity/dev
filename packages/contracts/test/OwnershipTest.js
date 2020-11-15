@@ -85,13 +85,6 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     })
   })
 
-  describe('CLVToken', async accounts => {
-    // setPoolManagerAddress
-    it("setPoolManagerAddress(): reverts when called by non-owner", async () => {
-      await testSetAddresses(clvToken, 2)
-    })
-  })
-
   describe('SortedCDPs', async accounts => {
     it("setParams(): reverts when called by non-owner", async () => {
       const params = [10000001, bob, bob]

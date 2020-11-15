@@ -58,7 +58,6 @@ class DeploymentHelper {
 
   static async deployLiquityCoreBuidler() {
     const priceFeed = await PriceFeed.new()
-    const clvToken = await CLVToken.new()
     const poolManager = await PoolManager.new()
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
@@ -71,7 +70,6 @@ class DeploymentHelper {
 
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
-    CLVToken.setAsDeployed(clvToken)
     PoolManager.setAsDeployed(poolManager)
     SortedCDPs.setAsDeployed(sortedCDPs)
     CDPManager.setAsDeployed(cdpManager)
@@ -80,6 +78,16 @@ class DeploymentHelper {
     FunctionCaller.setAsDeployed(functionCaller)
     BorrowerOperations.setAsDeployed(borrowerOperations)
     HintHelpers.setAsDeployed(hintHelpers)
+
+    const clvToken = await CLVToken.new(
+      cdpManager.address,
+      poolManager.address,
+      activePool.address,
+      defaultPool.address,
+      stabilityPool.address,
+      borrowerOperations.address
+    )
+    CLVToken.setAsDeployed(clvToken)
 
     const coreContracts = {
       priceFeed,
@@ -104,7 +112,7 @@ class DeploymentHelper {
     testerContracts.activePoolTester =  await ActivePoolTester.new()
     testerContracts.defaultPoolTester = await DefaultPoolTester.new()
     testerContracts.mathTester = await  MathTester.new()
-    testerContracts.borrowerOperationsTester = await  BorrowerOperationsTester.new()
+    testerContracts.borrowerOperationsTester = await BorrowerOperationsTester.new()
     testerContracts.cdpManagerTester = await CDPManagerTester.new()
     testerContracts.poolManagerTester = await PoolManagerTester.new()
     testerContracts.clvTokenTester =  await CLVTokenTester.new()
@@ -131,7 +139,6 @@ class DeploymentHelper {
       communityIssuance,
       growthToken
     }
-
     return GTContracts
   }
 
@@ -154,13 +161,11 @@ class DeploymentHelper {
       communityIssuance,
       growthToken
     }
-
     return LQTYContracts
   }
 
   static async deployLiquityCoreTruffle() {
     const priceFeed = await PriceFeed.new()
-    const clvToken = await CLVToken.new()
     const poolManager = await PoolManager.new()
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
@@ -170,7 +175,14 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-
+    const clvToken = await CLVToken.new(
+      cdpManager.address,
+      poolManager.address,
+      activePool.address,
+      defaultPool.address,
+      stabilityPool.address,
+      borrowerOperations.address
+    )
     const coreContracts = {
       priceFeed,
       clvToken,
@@ -184,7 +196,6 @@ class DeploymentHelper {
       borrowerOperations,
       hintHelpers
     }
-
     return coreContracts
   }
 
@@ -195,26 +206,17 @@ class DeploymentHelper {
 
     // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
     const growthToken = await GrowthToken.new(communityIssuance.address, lockupContractFactory.address)
-
     const GTContracts = {
       lqtyStaking,
       lockupContractFactory,
       communityIssuance,
       growthToken
     }
-
     return GTContracts
   }
 
   // Connect contracts to their dependencies
   static async connectCoreContracts(contracts, GTContracts) {
-
-    // set PoolManager address in the CLVToken contract
-    await contracts.clvToken.setAddresses(
-      contracts.poolManager.address,
-      contracts.borrowerOperations.address
-    )
-
     // set contracts in the PoolManager
     await contracts.poolManager.setAddresses(
       contracts.borrowerOperations.address,
@@ -296,26 +298,21 @@ class DeploymentHelper {
       contracts.cdpManager.address
     )
   }
-
   static async connectGTContracts(GTContracts) {
     // Set GrowthToken address in LCF, lqtyStaking, and CI
     await GTContracts.lqtyStaking.setGrowthTokenAddress(GTContracts.growthToken.address)
     await GTContracts.lockupContractFactory.setGrowthTokenAddress(GTContracts.growthToken.address)
     await GTContracts.communityIssuance.setGrowthTokenAddress(GTContracts.growthToken.address)
-}
+  }
+  static async connectGTContractsToCore(GTContracts, coreContracts) {
+    await GTContracts.lqtyStaking.setCLVTokenAddress(coreContracts.clvToken.address)
+    await GTContracts.lqtyStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
+    await GTContracts.lqtyStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
+    await GTContracts.lqtyStaking.setActivePoolAddress(coreContracts.activePool.address)
 
-static async connectGTContractsToCore(GTContracts, coreContracts) {
-  await GTContracts.lqtyStaking.setCLVTokenAddress(coreContracts.clvToken.address)
-  await GTContracts.lqtyStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
-  await GTContracts.lqtyStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
-  await GTContracts.lqtyStaking.setActivePoolAddress(coreContracts.activePool.address)
-
-  await GTContracts.communityIssuance.setPoolManagerAddress(coreContracts.poolManager.address)
-  await GTContracts.communityIssuance.activateContract();
-}
-
+    await GTContracts.communityIssuance.setPoolManagerAddress(coreContracts.poolManager.address)
+    await GTContracts.communityIssuance.activateContract();
+  }
 }
 
 module.exports = DeploymentHelper
-
-
