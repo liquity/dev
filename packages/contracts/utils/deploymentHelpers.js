@@ -280,7 +280,6 @@ class DeploymentHelper {
 
     await contracts.activePool.setAddresses(
       contracts.poolManager.address,
-      contracts.cdpManager.address,
       contracts.defaultPool.address
     )
 
