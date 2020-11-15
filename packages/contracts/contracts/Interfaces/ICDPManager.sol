@@ -75,9 +75,23 @@ interface ICDPManager {
 
     function getPendingCLVDebtReward(address _user) external view returns (uint);
 
-    function getEntireSystemColl() external view returns (uint entireSystemColl);
+     function hasPendingRewards(address _user) external view returns (bool);
 
-    function getEntireSystemDebt() external view returns (uint entireSystemDebt);
+    function getEntireDebtAndColl(
+        address _user
+    ) 
+        external 
+        view 
+    returns (
+        uint debt, 
+        uint coll, 
+        uint pendingCLVDebtReward, 
+        uint pendingETHReward
+    );
+
+    function getEntireSystemColl() external view returns (uint);
+
+    function getEntireSystemDebt() external view returns (uint);
 
     function getTCR() external view returns (uint TCR);
 

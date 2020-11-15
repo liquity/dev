@@ -88,7 +88,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // updateStakeAndTotalStakes
-    it("removeStake(): reverts when called by an account that is not BorrowerOperations", async () => {
+    it("updateStakeAndTotalStakes(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.updateStakeAndTotalStakes(bob, { from: alice })

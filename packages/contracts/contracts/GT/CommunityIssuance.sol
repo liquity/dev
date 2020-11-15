@@ -75,7 +75,8 @@ contract CommunityIssuance is ICommunityIssuance {
         _requireCallerIsCommunityIssuanceDeployer();
         _requireContractIsNotActive();
 
-        // The community LQTY supply cap is the starting balance of the Community Issuance contract
+        /* The community LQTY supply cap is the starting balance of the Community Issuance contract.
+        Liquity admin should transfer LQTY to this CommunityIssuance contract before activating it */
         supplyCap = growthToken.balanceOf(address(this));
         active = true;
     }

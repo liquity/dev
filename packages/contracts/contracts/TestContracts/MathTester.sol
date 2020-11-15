@@ -11,7 +11,7 @@ contract MathTester {
     }
 
     // External view wrapper
-    function callDecPow(uint _base, uint _n) external view returns (uint) {
+    function callDecPow(uint _base, uint _n) external pure returns (uint) {
         return Math._decPow(_base, _n);
     }
 }
