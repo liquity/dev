@@ -246,7 +246,8 @@ contract PoolManager is Ownable, IPoolManager {
         CLV.burn(GAS_POOL_ADDRESS, _CLVGasComp);
     }
 
-    function sendGasCompensation(address _user, uint _CLV, uint _ETH) external onlyCDPManager {
+    function sendGasCompensation(address _user, uint _CLV, uint _ETH) external override {
+        _requireCallerIsCDPManager();
         // Send CLV gas compensation to caller
         if (_CLV > 0) {
             CLV.returnFromPool(GAS_POOL_ADDRESS, _user, _CLV);

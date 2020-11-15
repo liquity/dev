@@ -15,21 +15,6 @@ contract ActivePool is Ownable, IPool {
     uint256 internal ETH;  // deposited ether tracker
     uint256 internal CLVDebt;
 
-    // --- Modifiers ---
-
-    modifier onlyPoolManager {
-        require(_msgSender() == poolManagerAddress, "ActivePool: Caller is not the PoolManager");
-        _;
-    }
-
-    modifier onlyPoolManagerOrDefaultPool {
-        require(
-            _msgSender() == poolManagerAddress ||
-            _msgSender() == defaultPoolAddress,
-            "ActivePool: Caller is neither the PoolManager nor Default Pool");
-        _;
-    }
-
     // --- Contract setters ---
 
     function setAddresses(
@@ -60,7 +45,8 @@ contract ActivePool is Ownable, IPool {
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) public onlyPoolManager {
+    function sendETH(address _account, uint _amount) public override {
+        _requireCallerIsPoolManager();
         ETH = ETH.sub(_amount);
         emit EtherSent(_account, _amount);
 
@@ -94,13 +80,6 @@ contract ActivePool is Ownable, IPool {
         require(
             _msgSender() == poolManagerAddress || _msgSender() == defaultPoolAddress,
             "ActivePool: Caller is neither the PoolManager nor Default Pool");
-    }
-
-    function _requireCallerIsPoolManagerOrCDPManager() internal view {
-        require(
-            _msgSender() == poolManagerAddress ||
-            _msgSender() == cdpManagerAddress,
-            "ActivePool: Caller is neither the PoolManager nor CDPManager");
     }
 
     // --- Fallback function ---
