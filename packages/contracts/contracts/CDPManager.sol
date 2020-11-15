@@ -43,7 +43,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
     uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // 18 digit decimal. Corresponds to an hourly decay factor of 0.99
-
+    
+    /* BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, 
+    in order to calc the new base rate from a redemption. Corresponds to (1 / ALPHA) in the white paper. */
+    uint constant public BETA = 2; 
+    
     uint public baseRate;
 
     /* Records the timestamp of the last fee operation. To avoid base-rate griefing, it is only updated by 
@@ -1218,7 +1222,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         * the fraction of total supply that was redeemed at face value. */
         uint redeemedCLVFraction = _ETHDrawn.mul(_price).div(totalCLVSupply);
 
-        uint newBaseRate = decayedBaseRate.add(redeemedCLVFraction);
+        uint newBaseRate = decayedBaseRate.add(redeemedCLVFraction.div(BETA));
         
         // update the baseRate state variable
         baseRate = newBaseRate < 1e18 ? newBaseRate : 1e18;  // cap baseRate at maximum 100%

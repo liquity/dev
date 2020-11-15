@@ -3243,14 +3243,14 @@ contract('CDPManager', async accounts => {
     /*
     At ETH:USD price of 200:
     ETHDrawn = (10 / 200) = 0.05 ETH
-    ETHfee = ( 10/100 ) * ETHDrawn = 0.005 ETH
-    ETHRemainder = 0.005 - 0.05 = 0.045 ETH
+    ETHfee = (1/) *( 10/100 ) * ETHDrawn = 0.0025 ETH
+    ETHRemainder = 0.005 - 0.027 = 0.0475 ETH
     */
 
     const A_balanceAfter = toBN(await web3.eth.getBalance(A))
 
     // check A's ETH balance has increased by 0.045 ETH 
-    assert.equal((A_balanceAfter.sub(A_balanceBefore)).toString(), dec(45, 15))
+    assert.equal((A_balanceAfter.sub(A_balanceBefore)).toString(), dec(475, 14))
   })
 
   it("redeemCollateral(): a full redemption (leaving trove with 0 debt), closes the trove", async () => {
