@@ -492,11 +492,12 @@ describe("EthersLiquity", () => {
         attemptedTokenAmount: Decimal.from(55),
         actualTokenAmount: Decimal.from(55),
         collateralReceived: Decimal.from(0.275),
-        fee: Decimal.from("0.084027777777777777")
+        // fee: Decimal.from("0.084027777777777777")
+        fee: Decimal.from( "0.042013888888888888")
       });
 
       const balance = new Decimal(await provider.getBalance(user.getAddress()));
-      expect(`${balance}`).to.equal("100.190972222222222223");
+      expect(`${balance}`).to.equal("100.232986111111111112");
 
       expect(`${await liquity.getQuiBalance()}`).to.equal("45");
 
