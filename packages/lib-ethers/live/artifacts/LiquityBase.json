@@ -1,0 +1,99 @@
+{
+  "contractName": "LiquityBase",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "CCR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "CLV_GAS_COMPENSATION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "MCR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "PERCENT_DIVISOR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "R_MCR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "_100pct",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5061010b806100206000396000f3fe6080604052348015600f57600080fd5b5060043610605a5760003560e01c80634870dd9a14605f5780635733d58f14607757806372fe25aa14607d578063794e572414608357806397a135be146089578063f24344e614608f575b600080fd5b60656095565b60408051918252519081900360200190f35b6065609a565b606560a6565b606560b2565b606560be565b606560ca565b60c881565b6714d1120d7b16000081565b670de0b6b3a764000081565b670f43fc2c04ee000081565b678ac7230489e8000081565b6729a2241af62c00008156fea265627a7a72315820efb5fdbd1b2404a67682ede84dd8d136cef0abf064892345cf87c775eaca60b764736f6c63430005100032",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060043610605a5760003560e01c80634870dd9a14605f5780635733d58f14607757806372fe25aa14607d578063794e572414608357806397a135be146089578063f24344e614608f575b600080fd5b60656095565b60408051918252519081900360200190f35b6065609a565b606560a6565b606560b2565b606560be565b606560ca565b60c881565b6714d1120d7b16000081565b670de0b6b3a764000081565b670f43fc2c04ee000081565b678ac7230489e8000081565b6729a2241af62c00008156fea265627a7a72315820efb5fdbd1b2404a67682ede84dd8d136cef0abf064892345cf87c775eaca60b764736f6c63430005100032",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

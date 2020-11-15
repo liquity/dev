@@ -13,8 +13,8 @@
 \usepackage{enumitem}
 \newlist{terms}{description}{1}
 \begin{document}
-\title{\textbf{ICR Equality is Maintained in Batog-based Redistribution with Corrected Stakes}}
-\date{September 2020}
+\title{\textbf{Efficient Order-Preserving Redistribution of Troves}}
+\date{November 2020}
 \maketitle
 
 \tableofcontents
@@ -22,15 +22,15 @@
 \section{Introduction}
 
 
-The Liquity protocol $\cite{Whitepaper}$ issues a USD-pegged stablecoin LUSD that is redeemable at face value against ETH: any owner of LUSD can redeem their stablecoins for equivalent value in the underlying collateral at any time. The ETH paid to the redeemer is taken from the borrowers' collateralized debt positions (“troves”) in ascending order of collateral ratio. In other words, the system uses the redeemed LUSD to repay the debt on the riskiest trove with the currently lowest individual collateral ratio (ICR), and transfers a corresponding amount of ETH from the trove to the redeemer. If the redeemed LUSD is larger than the debt on the riskiest trove, the system proceeds with the second riskiest trove, and so on. \\
+The Liquity protocol $\cite{Whitepaper}$ issues a USD-pegged stablecoin LUSD that is redeemable at face value against ETH: any owner of LUSD can exchange their stablecoins for equivalent value in the underlying collateral at any time. The ETH paid to the redeemer is taken from the borrowers' collateralized debt positions (“troves”) in ascending order of collateral ratio. In other words, the system uses the redeemed LUSD to repay the debt on the riskiest trove with the currently lowest individual collateral ratio (ICR), and transfers a corresponding amount of ETH from the trove to the redeemer. If the redeemed LUSD is larger than the debt on the riskiest trove, the system proceeds with the second riskiest trove, and so on. \\
 
 To allow for efficient redemptions despite Ethereum's gas constraints, the system keeps troves ordered by ICR, so that it can iterate over the linked list starting from the bottom. It is not feasible to sort the list after every operation. \\
 
-Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be  ensured that redistributions do not break trove ordering. \\
+Troves with an insufficient ICR are subject to liquidation. Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be ensured that redistributions do not break trove ordering. \\
 
 In principle, redistribution in proportion to the collateral size of active troves maintains ordering, as can be easily shown. However, in practice, it is clear that redistributing in a “push” based manner - iterating over all troves and updating their collateral and debt - does not scale, and has computational complexity of $O(n)$, where $n$ is the number of troves. \\
 
-Previous work by Batog et al $\cite{Batog}$ derived a scalable $O(1)$ method to assign proportional rewards, as long as the basis for the rewards (“stakes”) do not change over time. The method is “pull” based: instead of adjusting all recipient positions upon every reward event, the update is deferred to the moment at which an owner changes their position. In the described approach rewards are stored separately from the initial stakes, and do not compound. That is to say, past accumulated rewards are not included in future reward calculations. \\
+Previous work by Batog et al $\cite{Batog}$ derived a scalable $O(1)$ method to assign proportional rewards to a large number of recipients, as long as the basis for their rewards (“stakes”) do not change over time. The method is “pull” based: instead of adjusting all recipient positions upon every reward event, the update is deferred to the moment at which an owner changes their position. In the described approach rewards are stored separately from the initial stakes, and do not compound. That is to say, past accumulated rewards are not included in future reward calculations. \\
 
 It turns out that this approach thus cannot be applied to Liquity as is. As the system undergoes reward events, a given trove’s ratio of initial collateral to its total collateral shrinks. Rewards are based on a smaller and smaller share of the total collateral. This is fine, as long as all active troves have experienced all reward events - in this case, ordering is maintained since all troves are affected by the same change. \\
 
@@ -48,22 +48,28 @@ Let $\gamma_i$ denote the individual collateral ratio (ICR) of a trove $i$, i.e.
     \gamma_i = \frac{c_i} {d_i}
 \end{equation}
 
-If $\gamma_i$ falls below a minimum threshold $\delta$, the trove is subject to liquidation. As long as there are sufficient LUSD tokens in the Stability Pool, the system can use them to repay the liquidated debt. If the Stability Pool is empty, the trove's collateral and debt are redistributed to all active troves in the system. Every borrower thus receives a share of both the collateral and the debt of the liquidated trove.
+If $\gamma_i$ falls below a minimum threshold $\delta$, the trove is subject to liquidation. As long as there are sufficient LUSD tokens in the Stability Pool, the system can use them to repay the liquidated debt. 
 
-Collateral and debt shares from liquidations are proportional to the entire collateral of the recipient troves. 
+If the Stability Pool is empty, the trove's collateral and debt are redistributed to all active troves in the system as part of the liquidation process (a trove is called \textit{active} as long as it has not been liquidated or closed by their owner). Every existing borrower with an open trove thus receives a share of both the collateral and the debt of the liquidated trove.
 
-TODO: Add formula to show how much debt & collateral a trove is receiving.
-
+Collateral and debt shares from liquidations are proportional to the \textit{entire} collateral of the recipient troves, i.e. taking into account accumulated “rewards” from prior liquidations. Thus, in the event of a redistribution of a trove $k$, an active trove $i$ receives the following collateral and debt shares $x_i,y_i$:  
+\begin{equation} \label{eq:proportional}
+  (x_i, y_i) = \left(\frac{c_i}{C} \cdot c_k, \frac{c_i}{C} \cdot d_k\right)
+\end{equation}
+The rewards compound across multiple redistribution events.
 
 \section{Trove Ordering}
-TODO: Definition of trove ordering.
-Say that it can be easily proven that a redistribution in proportion to collateral maintain ordering.
+To ensure that the troves can be reliably accessed using a linked list, it is crucial to maintain the ordering of the troves (by ICR) throughout all redistribution events $E_k$.
 
-\section{Liquidations as Reward Distribution Events}
+The ordering is maintained if $\forall{E_k,i,j}: (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$), where $\gamma_i'$ and $\gamma_j'$ is the ICR of troves $i$ and $j$ after $E_k$.
 
-\subsection{Scalable Reward Distribution with fixed stakes}
+It is easy to prove that a redistribution in proportion to the collateral of the recipient trove as described by equation \ref{eq:proportional} troves maintains ordering. See \ref{eq:appendix} Appendix.
 
-A naive “push” based implementation (“strawman approach”) would iterate over all participants and compute the reward for each recipient $j$ separately whenever the system distributes rewards. Thus, at a reward event $t$, every recipient would receive the following reward share:
+\section{Efficient Reward Distribution}
+
+\subsection{Scalable Reward Distribution with Fixed Stakes}
+
+A naive “push” based implementation of the redistribution (“strawman approach”) would iterate over all participants and compute the debt and collateral shares  for each recipient $j$ separately whenever the system distributes such rewards. Thus, at a reward event $t$, every recipient would receive the following reward share:
 
 \begin{equation} 
     r_{j,t}=s_j \cdot \frac{R_t}{S_t}
@@ -111,7 +117,7 @@ To compute the total (accumulated) reward for participant $j$, we can then use f
 
 \bigskip
 
-\subsection{Corrected Stake Approach to deal with variable stakes}
+\subsection{Corrected Stake Approach for Variable Stakes}
 In Liquity, collateral and debt shares from liquidations are proportional to the entire collateral of the recipient troves. The redistribution must cope with the fact that some fraction of a trove's entire collateral is the accumulated reward from prior liquidations, and this fraction varies across troves. \\
 
 The “strawman” approach in 6, with rewards proportional to the initial stake, neglects this: it over-rewards fresh troves, and under-rewards older troves. \\
@@ -136,7 +142,7 @@ By extending the original formula from $\cite{Batog}$, we can thus express the c
     r_i=
         \begin{cases} 
             c_j \cdot (Q - Q_{t_1}) & for \;C_\emptyset = 0\\
-            c_i \cdot \frac{S_\emptyset} {\;C\emptyset} \cdot (Q - Q_{t_1}) & for \;C_\emptyset>0
+            c_i \cdot \frac{S_\emptyset} {\;C_\emptyset} \cdot (Q - Q_{t_1}) & for \;C_\emptyset>0
         \end{cases}
 \end{equation}
 
@@ -150,8 +156,6 @@ Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistri
 To that end, we make use of the following definitions and notation. 
 
 \subsection{Notation}
-
-
 
 Note that the collateral and debt include all previously accumulated rewards from past liquidations. Further, let $\gamma_1$ denote the ICR of a trove 1 and $\gamma_2$ denote the ICR of a trove 2. \\
 
@@ -215,7 +219,7 @@ The corrected stake effectively models the fresh trove’s collateral $c_i$ as a
 
 We now prove that ICR equality is maintained with rewards proportional to corrected stakes - starting with the simplest case, and progressively generalizing.
 
-\section{Corrected Stake Preserves Equality}
+\section{Corrected Stake Approach Preserves Equality}
 
 \subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations}
 
@@ -629,7 +633,7 @@ Having shown all nth order systems are equivalent to a first order system, we no
 
 \uline{In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.}
 
-\section{Corrected Stake Preserves Order}
+\section{Corrected Stake Approach Preserves Order}
 Here we show that ICR ordering is preserved with corrected stakes across a liquidation event.\\
 
 We make use of the first-order equivalence result, namely, that with corrected stakes:
@@ -806,7 +810,6 @@ Then taking reciprocals, finally yields:
 Therefore, trove ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in N’th order systems.
 
 \bigskip
-\subsection*{References}
 
 \begin{thebibliography}{9}
 
@@ -822,5 +825,75 @@ http://batog.info/papers/scalable-reward-distribution.pdf
 
 
 \end{thebibliography}
+
+\pagebreak
+\section{Appendix} \label{eq:appendix}
+We prove that after a redistribution proportional to the collateral of active troves, the ordering of active troves by ICR is preserved. 
+
+Consider two active troves $i$ and $j$ with ICR $\gamma_i,  \gamma_j$ such that $\gamma_i > \gamma_j$.
+
+Let $c_i$, $d_i$ and $c_j$, $d_j$ denote the collateral and debt of troves $i$ and $j$ respectively, and let $C$ denote the total active collateral in the system.
+
+Given the definition of ICR we have 
+\begin{equation} \label{eq:92}
+    \frac{c_i}{d_i}>\frac{c_j}{d_j}
+\end{equation}
+
+In the event of a redistribution of a trove $k$, its collateral $c_k$ and debt $d_k$ is redistributed to all active troves, proportional to their shares of $C$.
+
+Troves $i$ and $j$ thus receive the following pairs of collateral and debt rewards $(x_i, y_i)$ and $(x_j, y_j)$:
+
+\begin{equation} 
+  (x_i, y_i) = \left(\frac{c_i}{C} \cdot c_k, \frac{c_i}{C} \cdot d_k\right)
+\end{equation}
+
+\begin{equation} 
+   (x_j, y_j) = \left(\frac{c_j}{C} \cdot c_k, \frac{c_j}{C} \cdot d_k\right)
+\end{equation}
+
+As a result, their ICRs will change to:
+\begin{equation} 
+  \gamma_i' = \frac{c_i + x_i}{d_i + y_i} 
+\end{equation}
+
+\begin{equation} 
+  \gamma_j' = \frac{c_j + x_j}{d_j + y_j} 
+\end{equation}
+
+Let $a = \frac{c_k}{C}$ and $b = \frac{d_k}{C}$. Substituting the rewards, this leads to:
+
+\begin{equation} \label{eq:97}
+  \gamma_i' = \frac{c_i + a \cdot c_i}{d_i + b \cdot c_i} 
+\end{equation}
+
+\begin{equation} \label{eq:98}
+  \gamma_j' = \frac{c_j + a \cdot c_j}{d_j + b \cdot c_j} 
+\end{equation}
+
+The equations \ref{eq:97} and \ref{eq:98} can be rewritten as:
+\begin{equation} \label{eq:a}
+  \frac{1}{\gamma_i'} = \left(\frac{d_i}{c_i}+b\right) \cdot \frac{1}{1 + a}  
+\end{equation}
+
+\begin{equation} \label{eq:b}
+  \frac{1}{\gamma_j'} = \left(\frac{d_j}{c_j}+b\right) \cdot \frac{1}{1 + a}  
+\end{equation}
+
+Taking the reciprocal of inequality \ref{eq:92}:
+\begin{equation}
+  \frac{d_i}{c_i} < \frac{d_j}{c_j}
+\end{equation}
+
+and applying it to equations \ref{eq:a} and \ref{eq:b}, cancelling out common constants, yields:
+\begin{equation} \label{eq:c}
+  \frac{1}{\gamma_i'} < \frac{1}{\gamma_j'}
+\end{equation}
+
+Finally, taking the reciprocal of \ref{eq:c}, yields:
+\begin{equation}
+  \gamma_i' > \gamma_j'
+\end{equation}
+
+Thus, ordering of active troves by ICR is preserved across a reward event that is proportional to the collateral of the active troves.
 
 \end{document}
