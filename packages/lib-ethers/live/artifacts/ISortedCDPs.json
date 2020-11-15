@@ -310,42 +310,22 @@
       "constant": false,
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "_size",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_CDPManagerAddress",
+          "type": "address"
+        },
+        {
           "internalType": "address",
           "name": "_borrowerOperationsAddress",
           "type": "address"
         }
       ],
-      "name": "setBorrowerOperations",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_CDPManagerAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setCDPManager",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_size",
-          "type": "uint256"
-        }
-      ],
-      "name": "setMaxSize",
+      "name": "setParams",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

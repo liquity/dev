@@ -107,7 +107,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseCLV",
+      "name": "decreaseCLVDebt",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -116,7 +116,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getCLV",
+      "name": "getCLVDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -167,7 +167,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseCLV",
+      "name": "increaseCLVDebt",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -188,13 +188,7 @@
         }
       ],
       "name": "sendETH",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
