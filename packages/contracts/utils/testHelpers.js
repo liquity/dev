@@ -797,6 +797,7 @@ class TestHelper {
       firstRedemptionHint,
       exactPartialRedemptionHint,
       partialRedemptionNewICR,
+      0,
       { from: redeemer, gasPrice: 0 },
     )
 
