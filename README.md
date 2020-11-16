@@ -29,6 +29,7 @@
   - [Supplying Hints to CDP operations](#supplying-hints-to-cdp-operations)
   - [Gas Compensation](#gas-compensation)
   - [The Stability Pool](#the-stability-pool)
+  - [LQTY Issuance to Stability Depositors](#LQTY-issuance-to-stability-depositors)
   - [Redistributions and Corrected Stakes](#redistributions-and-corrected-stakes)
   - [Math Proofs](#math-proofs)
   - [Definitions](#definitions)
@@ -648,6 +649,75 @@ Each liquidation updates `P` and `S`. After a series of liquidations, a compound
 Any time a depositor updates their deposit (withdrawal, top-up) their ETH gain is paid out, and they receive new snapshots of `P` and `S`.
 
 This is similar in spirit to the simpler [“Batog” pull-based distribution](http://batog.info/papers/scalable-reward-distribution.pdf), however, the mathematics is more involved as we handle a compounding, decreasing stake, and a corresponding ETH reward.
+
+## LQTY Issuance to Stability Depositors
+
+Stability Pool depositors earn LQTY tokens continuously over time, in proportion to the size of their deposit. This is known as “Community Issuance”, and is handled by `CommunityIssuance.sol`.
+
+Upon system deployment and activation, `CommunityIssuance` holds an initial LQTY supply, currently (provisionally) set at 1/3 of the total 100 million LQTY tokens.
+
+Each Stability Pool deposit is tagged with a front end tag - the Ethereum address of the front end through which the deposit was made. Stability deposits made directly with the protocol (no front end) are tagged with the zero address.
+
+When a deposit earns LQTY, it is split between the depositor, and the front end through which the deposit was made. Upon registering as a front end, a front end chooses a “kickback rate”: this is the percentage of LQTY earned by a tagged deposit, to allocate to the depositor. Thus, the total LQTY received by a depositor is the total LQTY earned by their deposit, multiplied by `kickbackRate`. The front end takes a cut of `1-kickbackRate` of the LQTY earned by the deposit.
+
+### LQTY Issuance schedule
+
+The overall community issuance schedule for LQTY is sub-linear and monotonic. We currently (provisionally) implement a yearly “halving” schedule, described by the cumulative issuance function:
+
+`supplyCap * 1 - 0.5^t` 
+
+where `t` is years. 
+
+It results in the following cumulative issuance schedule for the community LQTY supply:
+
+| Year | Total community LQTY issued |
+|------|-----------------------------|
+| 0    | 0%                          |
+| 1    | 50%                         |
+| 2    | 75%                         |
+| 3    | 87.5%                       |
+| 4    | 93.75%                      |
+| 5    | 96.88%                      |
+
+The shape of the LQTY issuance curve is intended to incentivize both early depositors, and long-term deposits.
+
+Although the LQTY issuance curve follows a yearly halving schedule, in practice the `CommunityIssuance` contract use time intervals of one minute, for more fine-grained reward calculations.
+
+### LQTY Issuance implementation
+
+The continuous time-based LQTY issuance is chunked into discrete reward events, that occur at every deposit change (new deposit, top-up, withdrawal), and every liquidation, before other state changes are made.
+
+In a LQTY reward event, the LQTY to be issued is calculated based on time passed since the last reward event, `block.timestamp - lastLQTYIssuanceTime`, and the cumulative issuance function.
+
+The LQTY produced in this issuance event is shared between depositors, in proportion to their deposit sizes.
+
+To efficiently and accurately track LQTY gains for depositors and front ends as deposits decrease over time from liquidations, we re-use the [algorithm for rewards from a compounding, decreasing stake][LINK]. It is the same algorithm used for the ETH gain from liquidations.
+
+The same product `P` is used, and a sum `G` is used to track LQTY rewards, and each deposit gets a new snapshot of `P` and `G` when it is updated.
+
+### Handling the front end LQTY gain
+
+As mentioned, in a LQTY reward event generating `LQTY_d` for a deposit `d` made through a front end with kickback rate `k`, the front end receives `(1-k) * LQTY_d` and the depositor receives `k* LQTY_d`.
+
+The front end should earn a cut of LQTY gains for all deposits tagged with its front end.
+
+Thus, we use a virtual stake for the front end, equal to the sum of all its tagged deposits. The front end’s accumulated LQTY gain is calculated in the same way as an individual deposit, using the product `P` and sum `G`.
+
+Also, whenever one of the front end’s depositors tops or withdraws their deposit, the same change is applied to the front-end’s stake.
+
+### LQTY reward events and payouts
+
+When a deposit is changed (top-up, withdrawal):
+
+- A LQTY reward event occurs, and `G` is updated
+- Its ETH and LQTY gains are paid out
+- Its tagged front end’s LQTY gains are paid out to that front end
+- The deposit is updated, with new snapshots of `P`, `S` and `G`
+-The front end’s stake updated, with new snapshots of `P` and `G`
+
+When a liquidation occurs:
+- A LQTY reward event occurs, and G is updated
+
 
 ## Redistributions and Corrected Stakes
 
