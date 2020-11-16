@@ -357,7 +357,11 @@ class TestHelper {
     const compositeDebt = await this.getCompositeDebt(contracts, newDebt)
     const newICR = await contracts.hintHelpers.computeCR(newColl, compositeDebt, price)
 
-    const approxfullListHint = await contracts.hintHelpers.getApproxHint(newICR, 50)
+    const {
+      hintAddress: approxfullListHint,
+      latestRandomSeed
+    } = await contracts.hintHelpers.getApproxHint(newICR, 50, price, this.latestRandomSeed)
+    this.latestRandomSeed = latestRandomSeed
 
     const exactFullListHint = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
 
@@ -787,7 +791,12 @@ class TestHelper {
     const firstRedemptionHint = redemptionhint[0]
     const partialRedemptionNewICR = redemptionhint[1]
 
-    const approxPartialRedemptionHint = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50)
+    const {
+      hintAddress: approxPartialRedemptionHint,
+      latestRandomSeed
+    } = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50, price, this.latestRandomSeed)
+    this.latestRandomSeed = latestRandomSeed
+
     const exactPartialRedemptionHint = (await contracts.sortedCDPs.findInsertPosition(partialRedemptionNewICR,
       price,
       approxPartialRedemptionHint,
@@ -964,6 +973,7 @@ class TestHelper {
 
 TestHelper.ZERO_ADDRESS = '0x' + '0'.repeat(40)
 TestHelper.maxBytes32 = '0x' + 'f'.repeat(64)
+TestHelper.latestRandomSeed = 31337
 
 module.exports = {
   TestHelper,
