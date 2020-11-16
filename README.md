@@ -33,7 +33,8 @@
   - [Supplying Hints to CDP operations](#supplying-hints-to-cdp-operations)
   - [Gas Compensation](#gas-compensation)
   - [The Stability Pool](#the-stability-pool)
-  - [LQTY Issuance to Stability Depositors](#LQTY-issuance-to-stability-depositors)
+  - [LQTY Issuance to Stability Depositors](#lqty-issuance-to-stability-depositors)
+  - [Liquity System Fees](#lqty-system-fees)
   - [Redistributions and Corrected Stakes](#redistributions-and-corrected-stakes)
   - [Math Proofs](#math-proofs)
   - [Definitions](#definitions)
@@ -789,6 +790,67 @@ When a deposit is changed (top-up, withdrawal):
 
 When a liquidation occurs:
 - A LQTY reward event occurs, and G is updated
+
+## Liquity System Fees
+
+Liquity generates fee revenue from certain operations. Fees are captured by the LQTY token.
+
+A LQTY holder may stake their LQTY, and earn a share of all system fees, proportional to their share of the total LQTY staked.
+
+Liquity generates revenue in two ways: redemptions, and and new debt issuance.
+
+Redemptions fees are paid in ETH. Debt issuance (when a user opens a trove, or issues more CLV from their existing trove) are paid in CLV .
+
+### Redemption Fee
+
+The redemption fee is taken as a cut of the total ETH drawn from the system in a redemption.
+
+In the` CDPManager`, `redeemCollateral` calculates the ETH fee and transfers it to the staking contract, `LQTYStaking.sol`
+
+### Debt issuance fee
+
+The debt issuance fee is added on top of the user’s requested CLV. 
+
+When new debt is drawn via one of the `BorrowerOperations` functions `openLoan`, `withdrawCLV` or `adjustLoan`, an extra amount CLVFee is minted, and an equal amount of debt is added to the user’s trove. The `CLVFee` is transferred to the staking contract, `LQTYStaking.sol`.
+
+### Fee Schedule
+
+Redemption and debt issuance fees are based on the `baseRate` state variable in CDPManager, which is dynamically updated. The `baseRate` increases with each redemption, and decays according to time passed since the last fee event - i.e. the last redemption or debt issuance.
+
+The fee formulae are provisional, and subject to change depending on the results of economic modelling.
+
+The current fee schedule:
+
+Upon each redemption:
+- `baseRate` is decayed based on time passed since the last fee event
+- `baseRate` is incremented by an amount proportional to the fraction of the total CLV supply that was redeemed
+- The redemption fee is given by `baseRate * ETHdrawn`
+
+Upon each debt issuance:
+- `baseRate` is decayed based on time passed since the last fee event
+-The debt issuance fee is given `by baseRate * newDebtIssued`
+
+### Intuition behind fees
+
+The larger the redemption volume, the greater the fee percentage.
+
+The longer the time delay since the last operation, the more the baseRate decreases.
+
+The intent is to throttle large redemptions with higher fees, and to throttle borrowing directly after large redemption volumes. The `baseRate` decay over time ensures that the fee for both borrowers and redeemers will “cool down”, while redemptions volumes are low.
+
+### Fee decay Implementation
+
+Time is measured in units of minutes. The `baseRate` decay is based on `block.timestamp - lastFeeOpTime`. If less than a minute has passed since the last fee event, then `lastFeeOpTime` is not updated. This prevents “base rate griefing”: i.e. it prevents an attacker stopping the `baseRate` from decaying by making a series of redemptions or debt issuances with time intervals of < 1 minute.
+
+The decay parameter is tuned such that the fee changes by a factor of 0.99 per hour, i.e. it loses 1% of it’s current value per hour. At that rate, after one week, the baseRate decays to 18% of its prior value. The exact decay parameter is subject to change, and will be fine-tuned via economic modelling.
+
+### Staking LQTY and earning fees
+
+LQTY holders may `stake` and `unstake` their LQTY in the `LQTYStaking.sol` contract. 
+
+When a fee event occurs, the LUSD or ETH is sent to the staking contract, and a reward-per-unit-staked sum (F_ETH, or F_LUSD) is incremented. A LQTY stake earns a share of the fee equal to its share of the total LQTY staked, at the instant the fee occurred.
+
+This staking formula and implementation follows the basic [“Batog” pull-based reward distribution](http://batog.info/papers/scalable-reward-distribution.pdf).
 
 
 ## Redistributions and Corrected Stakes
