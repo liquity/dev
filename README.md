@@ -28,6 +28,7 @@
   - [Public User-Facing Functions](#public-user-facing-functions)
   - [Supplying Hints to CDP operations](#supplying-hints-to-cdp-operations)
   - [Gas Compensation](#gas-compensation)
+  - [The Stability Pool](#the-stability-pool)
   - [Redistributions and Corrected Stakes](#redistributions-and-corrected-stakes)
   - [Math Proofs](#math-proofs)
   - [Definitions](#definitions)
@@ -542,6 +543,112 @@ Gas compensation functions are found in the parent _LiquityBase.sol_ contract:
 
 `_getCompositeDebt(uint _debt)`
 
+## The Stability Pool
+
+Any LUSD holder may deposit LUSD to the Stability Pool. It is designed to absorb debt from liquidations, and reward depositors with the liquidated collateral, shared between depositors in proportion to their deposit size.
+
+Since liquidations are expected to occur at an ICR of just below 110%, and even in most extreme cases, still above 100%, a depositor can expect to receive a net gain from most liquidations. When that holds, the dollar value of the ETH gain from a liquidation exceeds the dollar value of the LUSD loss (assuming the price of LUSD is $1).  
+
+We define the **collateral surplus** in a liquidation as `$(ETH) - debt`, where `$(...)` represents the dollar value.
+
+At an LUSD price of $1, troves with `ICR > 100%` have a positive collateral surplus.
+
+After one or more liquidations, a deposit will have absorbed LUSD losses, and received ETH gains. The remaining reduced deposit is the **compounded deposit**.
+
+Stability Pool depositors expect a positive ROI on their initial deposit. That is:
+
+`$(ETH Gain + compounded deposit) > $(initial deposit)`
+
+### Mixed liquidations: offset and redistribution
+
+When a liquidation hits the Stability Pool, it is known as an **offset**: the debt of the trove is offset against the LUSD in the Pool. When **x** LUSD debt is offset, the debt is cancelled, and **x** LUSD in the Pool is burned. When the LUSD Stability Pool is greater than the debt of the trove, all the trove's debt is cancelled, and all its ETH is shared between depositors. This is a **pure offset**.
+
+It can happen that the LUSD in the Stability Pool is less than the debt of a trove. In this case, the the whole stability Pool will be used to offset a fraction of the trove’s debt, and an equal fraction of the trove’s ETH collateral will be assigned to Stability Pool depositors. The remainder of the trove’s debt and ETH gets redistributed to active troves. This is a **mixed offset and redistribution**.
+
+Because the ETH collateral fraction matches the offset debt fraction, the effective ICR of the collateral and debt that is offset, is equal to the ICR of the trove. So, for depositors, the ROI per liquidation depends only on the ICR of the liquidated trove.
+
+### Stability Pool deposit losses and ETH gains - implementation
+
+Deposit functionality is handled by `PoolManager.sol` (`provideToSP`, `withdrawFromSP`, etc).  PoolManager also handles the liquidation calculation. `StabilityPool.sol` actually holds the LUSD and ETH balances.
+
+When a liquidation is offset with the Stability Pool, debt from the liquidation is cancelled with an equal amount of LUSD in the pool, which is burned. 
+
+Individual deposits absorb the debt from the liquidated trove in proportion to their deposit as a share of total deposits.
+ 
+Similarly the liquidated trove’s ETH is assigned to depositors in the same proportion.
+
+For example: a liquidation that empties 30% of the Stability Pool will reduce each deposit by 30%, no matter the size of the deposit.
+
+### Stability Pool example
+
+Here’s an example of the Stablilty Pool absorbing liquidations. The Stability Pool contains 3 depositors, A, B and C, and the ETH:USD price is 100.
+
+There are two Troves to be liquidated, T1 and T2:
+
+|   | Trove | Collateral (ETH) | Debt (LUSD) | ICR         | $(ETH) ($) | Collateral surplus ($) |
+|---|-------|------------------|-------------|-------------|------------|------------------------|
+|   | T1    | 1.6              | 150         | 1.066666667 | 160        | 10                     |
+|   | T2    | 2.45             | 225         | 1.088888889 | 245        | 20                     |
+
+Here are the deposits, before any liquidations occur:
+
+| Depositor | Deposit | Share  |
+|-----------|---------|--------|
+| A         | 100     | 0.1667 |
+| B         | 200     | 0.3333 |
+| C         | 300     | 0.5    |
+| Total     | 600     | 1      |
+
+Now, the first liquidation T1 is absorbed by the Pool: 150 debt is cancelled with 150 Pool LUSD, and its 1.6 ETH is split between depositors. We see the gains earned by A, B, C, are in proportion to their share of the total LUSD in the Stability Pool:
+
+| Deposit | Debt absorbed from T1 | Deposit after | Total ETH gained | $(deposit + ETH gain) ($) | Current ROI   |
+|---------|-----------------------|---------------|------------------|---------------------------|---------------|
+| A       | 25                    | 75            | 0.2666666667     | 101.6666667               | 0.01666666667 |
+| B       | 50                    | 150           | 0.5333333333     | 203.3333333               | 0.01666666667 |
+| C       | 75                    | 225           | 0.8              | 305                       | 0.01666666667 |
+| Total   | 150                   | 450           | 1.6              | 610                       | 0.01666666667 |
+
+And now the second liquidation, T2, occurs: 225 debt is cancelled with 225 Pool LUSD, and 2.45 ETH is split between depositors.   The accumulated ETH gain includes all ETH gain from T1 and T2.
+
+| Depositor | Debt absorbed from T2 | Deposit after | Accumulated ETH | $(deposit + ETH gain) ($) | Current ROI |
+|-----------|-----------------------|---------------|-----------------|---------------------------|-------------|
+| A         | 37.5                  | 37.5          | 0.675           | 105                       | 0.05        |
+| B         | 75                    | 75            | 1.35            | 210                       | 0.05        |
+| C         | 112.5                 | 112.5         | 2.025           | 315                       | 0.05        |
+| Total     | 225                   | 225           | 4.05            | 630                       | 0.05        |
+
+It’s clear that:
+
+- Each depositor gets the same ROI from a given liquidation
+- Depositors' ROI increases over time, as the deposits absorb liquidations with a positive collateral surplus
+
+Eventually, a deposit can be fully “used up” in absorbing debt, and reduced to 0. This happens whenever a liquidation occurs that empties the Stability Pool. A deposit stops earning ETH gains when it has been reduced to 0.
+
+
+### Stability Pool implementation
+
+A depositor obtain their compounded deposits and corresponding ETH gain in a “pull-based” manner. The system calculates the depositor’s compounded deposit and accumulated ETH gain when the depositor makes an operation that withdraws their ETH gain.
+
+Depositors deposit CLV via `provideToSP`, and withdraw with `withdrawFromSP`. Their accumulated ETH gain is paid out every time they make a deposit operation - so ETH payout is triggered by both deposit withdrawals and top-ups.
+
+### How deposits and ETH gains are tracked
+
+We use a highly scalable method of tracking deposits and ETH gains that has O(1) complexity. 
+
+When a liquidation occurs, rather than updating each depositor’s deposit and ETH gain, we simply update two intermediate variables: a product `P`, and a sum `S`.
+
+A mathematical manipulation allows us to factor out the initial deposit, and accurately track all depositors’ compounded deposits and accumulated ETH gains over time, as liquidations occur, using just these two variables. When a depositor join the Pool, they get a snapshot of `P` and `S`.
+
+The formula for a depositor’s accumulated ETH gain is derived here:
+
+[Scalable reward distribution for compounding, decreasing stake](https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf)
+
+Each liquidation updates `P` and `S`. After a series of liquidations, a compounded deposit and corresponding ETH gain can be calculcated using the initial deposit, the depositor’s snapshots, and the current values of `P` and `S`.
+
+Any time a depositor updates their deposit (withdrawal, top-up) their ETH gain is paid out, and they receive new snapshots of `P` and `S`.
+
+This is similar in spirit to the simpler [“Batog” pull-based distribution](http://batog.info/papers/scalable-reward-distribution.pdf), however, the mathematics is more involved as we handle a compounding, decreasing stake, and a corresponding ETH reward.
+
 ## Redistributions and Corrected Stakes
 
 When a liquidation occurs and the Stability Pool is empty, the redistribution mechanism should distribute the collateral and debt of the liquidated trove, to all active troves in the system, in proportion to their collateral.
@@ -580,7 +687,6 @@ It then earns redistribution rewards based on this corrected stake. A newly open
 Whenever a borrower adjusts their trove’s collateral, their pending rewards are applied, and a fresh corrected stake is computed.
 
 To convince yourself this corrected stake preserves ordering of active troves by ICR, please see the [proofs section](https://github.com/liquity/dev/tree/main/packages/contracts/mathProofs).
-
 
 ## Math Proofs
 
@@ -647,9 +753,15 @@ _**Liquidation:**_ the act of force-closing an undercollateralized trove and red
 
 Liquidation functionality is permissionless and publically available - anyone may liquidate an undercollateralized trove, or batch liquidate troves in ascending order of collateral ratio.
 
+_**Collateral Surplus**_: The difference between the dollar value of a trove's ETH collateral, and the dollar value of its CLV debt. In a full liquidation, this is the net gain earned by the recipients of the liquidation.
+
 _**Offset:**_ cancellation of liquidated debt with CLV in the Stability Pool, and assignment of liquidated collateral to Stability Pool depositors, in proportion to their deposit.
 
-_**Distribution:**_ assignment of liquidated debt and collateral directly to active troves, in proportion to their collateral.
+_**Redistribution:**_ assignment of liquidated debt and collateral directly to active troves, in proportion to their collateral.
+
+_**Pure offset:**_  when a trove's debt is entirely cancelled with CLV in the Stability Pool, and all of it's liquidated ETH collateral is assigned to Stability Pool depositors.
+
+_**Mixed offset and redistribution:**_  When the Stability Pool CLV only covers a fraction of the liquidated trove's debt.  This fraction of debt is cancelled with CLV in the Stability Pool, and an equal fraction of the trove's collateral is assigned to depositors. The remaining collateral & debt is redistributed directly to active troves.
 
 _**Gas compensation:**_ A refund, in ETH, automatically paid to the caller of a liquidation function, intended to at least cover the gas cost of the transaction. Designed to ensure that liquidators are not dissuaded by potentially high gas costs.
 
