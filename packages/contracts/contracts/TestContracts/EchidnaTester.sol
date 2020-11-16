@@ -66,7 +66,7 @@ contract EchidnaTester {
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
             echidnaProxies[i] = new EchidnaProxy(cdpManager, borrowerOperations, poolManager, clvToken);
-            (bool success, ) = address(echidnaProxies[i]).call.value(INITIAL_BALANCE)("");
+            (bool success, ) = address(echidnaProxies[i]).call{value: INITIAL_BALANCE}("");
             require(success);
         }
 
@@ -107,12 +107,12 @@ contract EchidnaTester {
         uint _partialRedemptionHintICR
     ) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].redeemCollateralPrx(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR);
+        echidnaProxies[actor].redeemCollateralPrx(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, 0);
     }
 
     // Borrower Operations
 
-    function getAdjustedETH(uint actorBalance, uint _ETH, uint ratio) internal returns (uint) {
+    function getAdjustedETH(uint actorBalance, uint _ETH, uint ratio) internal view returns (uint) {
         uint price = priceFeed.getPrice();
         require(price > 0);
         uint minETH = ratio.mul(CLV_GAS_COMPENSATION).div(price);
@@ -121,7 +121,7 @@ contract EchidnaTester {
         return ETH;
     }
 
-    function getAdjustedCLV(uint ETH, uint _CLVAmount, uint ratio) internal returns (uint) {
+    function getAdjustedCLV(uint ETH, uint _CLVAmount, uint ratio) internal view returns (uint) {
         uint price = priceFeed.getPrice();
         uint CLVAmount = _CLVAmount;
         uint compositeDebt = CLVAmount.add(CLV_GAS_COMPENSATION);

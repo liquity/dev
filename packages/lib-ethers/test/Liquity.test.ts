@@ -2,13 +2,13 @@ import { describe, before, it } from "mocha";
 import chai, { expect, assert } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { Signer } from "@ethersproject/abstract-signer";
-import { ethers } from "@nomiclabs/buidler";
+import { ethers, network } from "@nomiclabs/buidler";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 import { Trove, StabilityDeposit } from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
-import { LiquityContractAddresses, addressesOf, EthersLiquity } from "..";
+import { LiquityContractAddresses, addressesOf, EthersLiquity, redeemMaxIterations } from "..";
 import { BigNumber } from "ethers";
 
 const provider = ethers.provider;
@@ -41,7 +41,7 @@ describe("EthersLiquity", () => {
   const sendToEach = async (users: Signer[], value: Decimalish) => {
     const txCount = await provider.getTransactionCount(funder.getAddress());
 
-    return Promise.all(
+    const txs = await Promise.all(
       users.map((user, i) =>
         funder.sendTransaction({
           to: user.getAddress(),
@@ -50,6 +50,9 @@ describe("EthersLiquity", () => {
         })
       )
     );
+
+    // Wait for the last tx to be mined.
+    await txs[txs.length - 1].wait();
   };
 
   before(async () => {
@@ -343,13 +346,14 @@ describe("EthersLiquity", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
         addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+        const otherUsersSubset = otherUsers.slice(0, 2);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
-          ...otherUsers.slice(0, 2)
+          ...otherUsersSubset
         ]);
 
-        await sendToEach(otherUsers, 1.1);
+        await sendToEach(otherUsersSubset, 1.1);
 
         price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
@@ -394,13 +398,14 @@ describe("EthersLiquity", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
         addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+        const otherUsersSubset = otherUsers.slice(0, 5);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
-          ...otherUsers.slice(0, 5)
+          ...otherUsersSubset
         ]);
 
-        await sendToEach(otherUsers, 2.1);
+        await sendToEach(otherUsersSubset, 2.1);
 
         price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
@@ -453,13 +458,14 @@ describe("EthersLiquity", () => {
     before(async () => {
       // Deploy new instances of the contracts, for a clean slate
       addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      const otherUsersSubset = otherUsers.slice(0, 3);
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
         user,
-        ...otherUsers.slice(0, 3)
+        ...otherUsersSubset
       ]);
 
-      await sendToEach(otherUsers, 1.1);
+      await sendToEach(otherUsersSubset, 1.1);
 
       await liquity.openTrove(new Trove({ collateral: 20, debt: 110 }));
       await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 20 }));
@@ -504,6 +510,50 @@ describe("EthersLiquity", () => {
       expect(`${(await otherLiquities[0].getTrove()).debt}`).to.equal("15");
       expect((await otherLiquities[1].getTrove()).isEmpty).to.be.true;
       expect((await otherLiquities[2].getTrove()).isEmpty).to.be.true;
+    });
+  });
+
+  describe("Redemption, gas checks", function () {
+    this.timeout("5m");
+
+    before(async function () {
+      if (network.name === "dev") {
+        // Only about the first 40 accounts work when testing on the dev chain due to a not yet
+        // known issue.
+
+        // Since this test needs more than that, let's skip it on dev for now.
+        this.skip();
+      }
+
+      // Deploy new instances of the contracts, for a clean slate
+      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      const otherUsersSubset = otherUsers.slice(0, redeemMaxIterations);
+      expect(otherUsersSubset).to.have.length(redeemMaxIterations);
+
+      [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
+        deployer,
+        user,
+        ...otherUsersSubset
+      ]);
+
+      await sendToEach(otherUsersSubset, 1.1);
+
+      await liquity.openTrove(new Trove({ collateral: 50, debt: 410 }));
+      for (let otherLiquity of otherLiquities) {
+        await otherLiquity.openTrove(new Trove({ collateral: 1, debt: 11 }));
+      }
+    });
+
+    it("should redeem using the maximum iterations and almost all gas", async () => {
+      const tx = await liquity.redeemCollateral(redeemMaxIterations);
+
+      const receipt = await tx.waitForReceipt();
+      assertStrictEquals(receipt.status, "succeeded" as const);
+
+      const gasUsed = receipt.rawReceipt.gasUsed.toNumber();
+      // gasUsed is ~half the real used amount because of how refunds work, see:
+      // https://ethereum.stackexchange.com/a/859/9205
+      expect(gasUsed).to.be.at.least(5e6, "should use at least 10M gas");
     });
   });
 });

@@ -13,6 +13,10 @@ import { Decimal } from "@liquity/decimal";
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
 import { abi, addressesOf, LiquityDeployment } from ".";
 
+import accounts from "./accounts.json";
+
+const numAccounts = 100;
+
 dotenv.config();
 
 usePlugin("buidler-ethers-v5");
@@ -53,11 +57,14 @@ const config: BuidlerConfig = {
       // Let Ethers throw instead of Buidler EVM
       // This is closer to what will happen in production
       throwOnCallFailures: false,
-      throwOnTransactionFailures: false
+      throwOnTransactionFailures: false,
+      gas: 12e6, // tx gas limit
+      blockGasLimit: 12e6,
+      accounts: accounts.slice(0, numAccounts)
     },
     dev: {
       url: "http://localhost:8545",
-      accounts: [deployerAccount, devChainRichAccount, ...generateRandomAccounts(6)]
+      accounts: [deployerAccount, devChainRichAccount, ...generateRandomAccounts(numAccounts - 2)]
     },
     ...infuraNetwork("ropsten"),
     ...infuraNetwork("rinkeby"),

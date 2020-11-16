@@ -60,7 +60,8 @@ interface ICDPManager {
         uint _CLVAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
-        uint _partialRedemptionHintICR
+        uint _partialRedemptionHintICR,
+        uint _maxIterations
     ) external; 
 
     function updateStakeAndTotalStakes(address _user) external returns (uint);

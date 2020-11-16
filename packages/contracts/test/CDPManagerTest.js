@@ -2171,6 +2171,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
+      0,
       {
         from: dennis,
         gasPrice: 0
@@ -2224,7 +2225,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), flyn, { from: flyn, value: dec(100, 'ether') })
 
     // Flyn redeems collateral
-    await cdpManager.redeemCollateral(dec(60, 18), alice, alice, 0, { from: flyn })
+    await cdpManager.redeemCollateral(dec(60, 18), alice, alice, 0, 0, { from: flyn })
 
     // Check Flyn's redemption has reduced his balance from 100 to (100-60) = 40 CLV
     const flynBalance = (await clvToken.balanceOf(flyn)).toString()
@@ -2259,6 +2260,46 @@ contract('CDPManager', async accounts => {
 
     assert.equal(dennis_Coll, dec(1, 'ether'))
     assert.equal(erin_Coll, dec(1, 'ether'))
+  })
+
+  it('redeemCollateral(): ends the redemption sequence when max iterations have been reached', async () => {
+    // --- SETUP --- 
+    const price = await priceFeed.getPrice()
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
+
+    // Alice, Bob, Carol, Dennis, Erin open troves with consecutively decreasing collateral ratio
+    await borrowerOperations.openLoan(dec(20, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(20, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
+
+    // --- TEST --- 
+
+    // open loan from redeemer.  Redeemer has highest ICR (100ETH, 100 CLV), 20000%
+    await borrowerOperations.openLoan(dec(100, 18), flyn, { from: flyn, value: dec(100, 'ether') })
+
+    // Flyn redeems collateral
+    await cdpManager.redeemCollateral(dec(60, 18), alice, alice, 0, 2, { from: flyn })
+
+    // Check Flyn's redemption has reduced his balance from 100 to (100-40) = 60 CLV
+    const flynBalance = (await clvToken.balanceOf(flyn)).toString()
+    assert.equal(flynBalance, dec(60, 18))
+
+    // Check debt of Alice, Bob, Carol
+    const alice_Debt = await cdpManager.getCDPDebt(alice)
+    const bob_Debt = await cdpManager.getCDPDebt(bob)
+    const carol_Debt = await cdpManager.getCDPDebt(carol)
+
+    assert.equal(alice_Debt, 0)
+    assert.equal(bob_Debt, 0)
+    assert.equal(carol_Debt.toString(), dec(30, 18)) // 20 withdrawn + 10 for gas compensation
+
+    // check Alice and Bob troves are closed, but Carol is not
+    const alice_Status = await cdpManager.getCDPStatus(alice)
+    const bob_Status = await cdpManager.getCDPStatus(bob)
+    const carol_Status = await cdpManager.getCDPStatus(carol)
+    assert.equal(alice_Status, 2)
+    assert.equal(bob_Status, 2)
+    assert.equal(carol_Status, 1)
   })
 
   it('redeemCollateral(): doesnt perform the final partial redemption in the sequence if the hint is out-of-date', async () => {
@@ -2311,6 +2352,7 @@ contract('CDPManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintICR,
+        0,
         { from: alice }
       )
     }
@@ -2321,6 +2363,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
+      0,
       {
         from: dennis,
         gasPrice: 0
@@ -2374,6 +2417,7 @@ contract('CDPManager', async accounts => {
       alice,
       '0x0000000000000000000000000000000000000000',
       dec(49975, 15), // (10 + 0.995 - 1)*100 / 20
+      0,
       {
         from: carol,
         gasPrice: 0
@@ -2412,6 +2456,7 @@ contract('CDPManager', async accounts => {
       dec(100, 18),
       bob,
       '0x0000000000000000000000000000000000000000',
+      0,
       0,
       { from: carol }
     );
@@ -2459,6 +2504,7 @@ contract('CDPManager', async accounts => {
       // last CDP with ICR == 110% (which would be Alice's)
       '0x0000000000000000000000000000000000000000',
       0,
+      0,
       { from: dennis }
     );
 
@@ -2488,7 +2534,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(dec(300, 18), dennis, { from: dennis, value: dec(3, 'ether') })
 
     // Erin attempts to redeem with _amount = 0
-    const redemptionTxPromise = cdpManager.redeemCollateral(0, erin, erin, 0, { from: erin })
+    const redemptionTxPromise = cdpManager.redeemCollateral(0, erin, erin, 0, 0, { from: erin })
     await th.assertRevert(redemptionTxPromise, "CDPManager: Amount must be greater than zero")
   })
 
@@ -2542,7 +2588,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(ETHinSP.gte(mv._zeroBN))
 
     // Erin redeems 400 CLV
-    await cdpManager.redeemCollateral(dec(400, 18), erin, erin, 0, { from: erin })
+    await cdpManager.redeemCollateral(dec(400, 18), erin, erin, 0, 0, { from: erin })
 
     price = await priceFeed.getPrice()
     const bob_ICR_after = await cdpManager.getCurrentICR(bob, price)
@@ -2614,6 +2660,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR,
+      0,
       { from: erin })
 
     // Check activePool debt reduced by  400 CLV
@@ -2679,6 +2726,7 @@ contract('CDPManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint_1,
         partialRedemptionHintICR,
+        0,
         { from: erin })
 
       assert.isFalse(redemptionTx.receipt.status)
@@ -2705,6 +2753,7 @@ contract('CDPManager', async accounts => {
         '401000000000000000000', firstRedemptionHint,
         partialRedemptionHint_2,
         partialRedemptionHintICR,
+        0,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2730,6 +2779,7 @@ contract('CDPManager', async accounts => {
         '239482309000000000000000000', firstRedemptionHint,
         partialRedemptionHint_3,
         partialRedemptionHintICR,
+        0,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2757,6 +2807,7 @@ contract('CDPManager', async accounts => {
         maxBytes32, firstRedemptionHint,
         partialRedemptionHint_4,
         partialRedemptionHintICR,
+        0,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2811,6 +2862,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint_1,
       partialRedemptionHintICR,
+      0,
       { from: erin })
 
     assert.isTrue(redemption_1.receipt.status);
@@ -2840,6 +2892,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint_2,
       partialRedemptionHintICR,
+      0,
       { from: flyn })
 
     assert.isTrue(redemption_2.receipt.status);
@@ -2868,6 +2921,7 @@ contract('CDPManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint_3,
       partialRedemptionHintICR,
+      0,
       { from: graham })
 
     assert.isTrue(redemption_3.receipt.status);
@@ -2910,6 +2964,7 @@ contract('CDPManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintICR,
+        0,
         { from: bob })
     } catch (error) {
       assert.include(error.message, "VM Exception while processing transaction")
@@ -2949,6 +3004,7 @@ contract('CDPManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintICR,
+        0,
         { from: bob })
     } catch (error) {
       assert.include(error.message, "VM Exception while processing transaction")

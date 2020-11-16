@@ -817,8 +817,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     /* Send _CLVamount CLV to the system and redeem the corresponding amount of collateral from as many CDPs as are needed to fill the redemption
      request.  Applies pending rewards to a CDP before reducing its debt and coll.
 
-    Note that if _amount is very large, this function can run out of gas. This can be easily avoided by splitting the total _amount
+    Note that if _amount is very large, this function can run out of gas, specially if traversed troves are small. This can be easily avoided by splitting the total _amount
     in appropriate chunks and calling the function multiple times.
+    Param `_maxIterations` can also be provided, so the loop through CDPs is capped. (If it’s zero it will be ignored)
+    This makes it easier to avoid OOG for the frontend, as only knowing approximately the average cost of an iteration is enough, without needing to know the “topology” of the trove list.
+    It also avoids the need to set the cap in stone in the contract, nor doing gas calculations, as both gas price and opcode costs can vary.
 
     All CDPs that are redeemed from -- with the likely exception of the last one -- will end up with no debt left, therefore they will be closed
     If the last CDP does have some remaining debt, the reinsertion could be anywhere in the
@@ -834,7 +837,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint _CLVamount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
-        uint _partialRedemptionHintICR
+        uint _partialRedemptionHintICR,
+        uint _maxIterations
     )
         external
         override 
@@ -867,7 +871,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
 
         // Loop through the CDPs starting from the one with lowest collateral ratio until _amount of CLV is exchanged for collateral
-        while (currentCDPuser != address(0) && remainingCLV > 0) {
+        if (_maxIterations == 0) { _maxIterations = uint(-1); }
+        while (currentCDPuser != address(0) && remainingCLV > 0 && _maxIterations > 0) {
+            _maxIterations--;
             // Save the address of the CDP preceding the current one, before potentially modifying the list
             address nextUserToCheck = sortedCDPs.getPrev(currentCDPuser);
 
