@@ -28,7 +28,7 @@ To allow for efficient redemptions despite Ethereum's gas constraints, the syste
 
 Troves with an insufficient ICR are subject to liquidation. Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be ensured that redistributions do not break trove ordering. \\
 
-In principle, redistribution in proportion to the collateral size of active troves maintains ordering, as can be easily shown. However, in practice, it is clear that redistributing in a “push” based manner - iterating over all troves and updating their collateral and debt - does not scale, and has computational complexity of $O(n)$, where $n$ is the number of troves. \\
+Redistribution in proportion to the collateral size of active troves maintains ordering, as can be easily shown (see \ref{sec:appendix} Appendix). However, in practice, it is clear that redistributing in a “push” based manner - iterating over all troves and updating their collateral and debt - does not scale, and has computational complexity of $O(n)$, where $n$ is the number of troves. \\
 
 Previous work by Batog et al $\cite{Batog}$ derived a scalable $O(1)$ method to assign proportional rewards to a large number of recipients, as long as the basis for their rewards (“stakes”) do not change over time. The method is “pull” based: instead of adjusting all recipient positions upon every reward event, the update is deferred to the moment at which an owner changes their position. In the described approach rewards are stored separately from the initial stakes, and do not compound. That is to say, past accumulated rewards are not included in future reward calculations. \\
 
@@ -63,13 +63,13 @@ To ensure that the troves can be reliably accessed using a linked list, it is cr
 
 The ordering is maintained if $\forall{E_k,i,j}: (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$), where $\gamma_i'$ and $\gamma_j'$ is the ICR of troves $i$ and $j$ after $E_k$.
 
-It is easy to prove that a redistribution in proportion to the collateral of the recipient trove as described by equation \ref{eq:proportional} troves maintains ordering. See \ref{eq:appendix} Appendix.
+It is easy to prove that a redistribution in proportion to the collateral of the recipient trove as described by equation \ref{eq:proportional} troves maintains ordering. See \ref{sec:appendix} Appendix.
 
 \section{Efficient Reward Distribution}
 
-\subsection{Scalable Reward Distribution with Fixed Stakes}
+\subsection{Scalable Reward Distribution with Fixed Stakes} \label{sec:strawman}
 
-A naive “push” based implementation of the redistribution (“strawman approach”) would iterate over all participants and compute the debt and collateral shares  for each recipient $j$ separately whenever the system distributes such rewards. Thus, at a reward event $t$, every recipient would receive the following reward share:
+A naive “push” based implementation of the redistribution (“strawman approach”), where rewards don’t compound, would iterate over all participants and compute the debt and collateral shares  for each recipient $j$ separately whenever the system distributes such rewards. Thus, at a reward event $t$, every recipient would receive the following reward share:
 
 \begin{equation} 
     r_{j,t}=s_j \cdot \frac{R_t}{S_t}
@@ -120,7 +120,7 @@ To compute the total (accumulated) reward for participant $j$, we can then use f
 \subsection{Corrected Stake Approach for Variable Stakes}
 In Liquity, collateral and debt shares from liquidations are proportional to the entire collateral of the recipient troves. The redistribution must cope with the fact that some fraction of a trove's entire collateral is the accumulated reward from prior liquidations, and this fraction varies across troves. \\
 
-The “strawman” approach in 6, with rewards proportional to the initial stake, neglects this: it over-rewards fresh troves, and under-rewards older troves. \\
+The “strawman” approach in \ref{sec:strawman}, with rewards proportional to the initial stake, neglects this: it over-rewards fresh troves, and under-rewards older troves. \\
 
 We introduce a corrected stake $s_i$ to restore proportional reward distribution:
 
@@ -176,7 +176,7 @@ Let $\Gamma_0$ define a system of troves with no past liquidations.\\
 
 Let $\Gamma_1$ define a system of troves with past liquidations, in which all active troves have received reward shares from all past liquidations. $\Gamma_1$ is a first-order system, and contains only stakes of first-order troves. Each first-order stake $s_i$ is equal to it’s collateral $c_i$, and \textit{S} $= \sum s_i = \sum c_i$.\\
 
-Let $\Gamma_2$ define an evolution of $\Gamma_1$, i.e. $\Gamma_2 = f(\Gamma_1)$. $\Gamma_2$ is a system with past liquidations, with \textit{S} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added trove $j$. $S_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
+Let $\Gamma_2$ define an evolution of $\Gamma_1$, i.e. $\Gamma_2 = f(\Gamma_1)$. $\Gamma_2$ is a system with past liquidations, with \textit{S} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added troves $j$. $\Gamma_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
 
 In general, $\Gamma_n$ is a system with $n$ sequential pairs, each consisting of a trove creation period and a liquidation period. Troves created in a given trove creation period $t$ have experienced only those liquidations that occurred in liquidation period $t$ or greater.
 
@@ -840,7 +840,7 @@ http://batog.info/papers/scalable-reward-distribution.pdf
 \end{thebibliography}
 
 \pagebreak
-\section{Appendix} \label{eq:appendix}
+\section{Appendix} \label{sec:appendix}
 We prove that after a redistribution proportional to the collateral of active troves, the ordering of active troves by ICR is preserved. 
 
 Consider two active troves $i$ and $j$ with ICR $\gamma_i,  \gamma_j$ such that $\gamma_i > \gamma_j$.
