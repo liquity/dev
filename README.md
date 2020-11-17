@@ -34,7 +34,7 @@
   - [Gas Compensation](#gas-compensation)
   - [The Stability Pool](#the-stability-pool)
   - [LQTY Issuance to Stability Depositors](#lqty-issuance-to-stability-depositors)
-  - [Liquity System Fees](#lqty-system-fees)
+  - [Liquity System Fees](#liquity-system-fees)
   - [Redistributions and Corrected Stakes](#redistributions-and-corrected-stakes)
   - [Math Proofs](#math-proofs)
   - [Definitions](#definitions)
@@ -51,55 +51,61 @@
 
 ## Liquity Overview
 
-Liquity is a collateralized stablecoin platform. Users can lock up ether, and issue stablecoin tokens (CLV) to their own Ethereum address, and subsequently transfer those tokens to any other Ethereum address.
+Liquity is a collateralized debt platform. Users can lock up Ether, and issue stablecoin tokens (LUSD) to their own Ethereum address, and subsequently transfer those tokens to any other Ethereum address. The individual collateralized debt positions are called troves.
 
-The stablecoin tokens are economically guaranteed to maintain value of 1 CLV = \$1 USD, due to two system properties:
+The stablecoin tokens are economically geared towards maintaining value of 1 LUSD = \$1 USD, due to the following properties:
 
-1. The system will always be over-collateralized - the dollar value of the locked ether exceeds the dollar value of the issued stablecoins
+1. The system is designed to always be over-collateralized - the dollar value of the locked Ether exceeds the dollar value of the issued stablecoins
 
-2. The stablecoins are fully redeemable - users can always swap $x worth of CLV for $x worth of ETH, directly with the system.
+2. The stablecoins are fully redeemable - users can always swap $x worth of LUSD for $x worth of ETH (minus fees), directly with the system.
 
-After opening a CDP with some ether, they may issue tokens such that the collateral ratio of their CDP remains above 110%. A user with $1000 worth of ETH in a CDP can issue up to $909.09 worth of CLV.
+3. The system algorithmically controls the generation of LUSD through a variable debt issuance fee.
 
-Tokens are freely exchangeable - anyone with an Ethereum address can send or receive CLV tokens, whether they have an open CDP or not.
+After opening a trove with some Ether, users may issue ("borrow") tokens such that the collateral ratio of their trove remains above 110%. A user with $1000 worth of ETH in a trove can issue up to $909.09 worth of trove.
 
-The Liquity system regularly updates the ETH:USD price via a decentralized data feed. When a CDP falls below a minimum collateral ratio (MCR) of 110%, it is considered under-collateralized, and is vulnerable to liquidation.
+The tokens are freely exchangeable - anyone with an Ethereum address can send or receive LUSD tokens, whether they have an open trove or not. The tokens are burned upon repayment of a trove's debt.
+
+The Liquity system regularly updates the ETH:USD price via a decentralized data feed. When a trove falls below a minimum collateral ratio (MCR) of 110%, it is considered under-collateralized, and is vulnerable to liquidation.
 
 ## Liquidation and the Stability Pool
 
-Liquity redistributes the collateral and debt from under-collateralized loans. It distributes primarily to CLV holders who have added tokens to the Stability Pool.
+Liquity utilizes a two-step liquidation mechanism in the following order of priority: 
 
-Any user may deposit CLV tokens to the Stability Pool. This allows them to earn “rewards” over time, from liquidated CDPs. When a liquidation occurs, the liquidated debt is cancelled with CLV in the Pool, and the liquidated Ether is proportionally distributed to depositors.
+1. Offset under-collateralized troves against the Stability Pool containing LUSD tokens
 
-Stability Pool depositors can expect to earn net gains from liquidations, as in most cases, the value of the liquidated Ether will be greater than the value of the cancelled debt (since a liquidated CDP will likely have an ICR just slightly below 110%).
+2. Redistribute under-collateralized troves to other borrowers
 
-Anyone may call the public `liquidateCDPs()` function, which will check for under-collateralized loans, and liquidate them.
+Liquity primarily uses the LUSD tokens in its Stability Pool to absorb the under-collateralized debt, i.e. to repay the liquidated borrower's liability.
 
-Liquity redistributes liquidations in two ways: firstly, it tries to cancel as much debt as possible with the tokens in the Stability pool, and distributes the liquidated collateral between the Stability Pool depositors.
+Any user may deposit LUSD tokens to the Stability Pool. This allows them to earn the collateral from the liquidated trove. When a liquidation occurs, the liquidated debt is cancelled with the same amount of LUSD in the Pool (which is burned as a result), and the liquidated Ether is proportionally distributed to depositors.
 
-Secondly, if the CLV in the Pool is not sufficient to cancel with the liquidated debt, the system cancels as much as possible, and then distributes the remaining liquidated collateral and debt across all active CDPs.
+Stability Pool depositors can expect to earn net gains from liquidations, as in most cases, the value of the liquidated Ether will be greater than the value of the cancelled debt (since a liquidated trove will likely have an ICR just slightly below 110%).
 
-## Rewards From Liquidations
+If the liquidated debt is higher than the amount of LUSD in the Stability Pool, the system tries to cancel as much debt as possible with the tokens in the Stability Pool, and then redistributes the remaining liquidated collateral and debt across all active troves.
 
-Stability Pool depositors earn rewards in Ether over time, as liquidated debt is cancelled with their deposit. When they withdraw all or part of their deposited tokens, or top up their deposit, they system sends them their accumulated ETH gains.
+Anyone may call the public `liquidateTroves()` function, which will check for under-collateralized troves, and liquidate them.
 
-Similarly, a CDP’s accumulated rewards from liquidations are automatically applied to the CDP when the owner performs any operation - e.g. adding/withdrawing collateral, or issuing/repaying CLV.
+## Gains From Liquidations
 
-## CLV Token Redemption
+Stability Pool depositors gain Ether over time, as liquidated debt is cancelled with their deposit. When they withdraw all or part of their deposited tokens, or top up their deposit, they system sends them their accumulated ETH gains.
 
-Any CLV holder (whether or not they have an active CDP) may redeem their CLV directly with the system. Their CLV is exchanged for ETH, at face value: redeeming x CLV tokens returns \$x worth of ETH.
+Similarly, a trove's accumulated gains from liquidations are automatically applied to the trove when the owner performs any operation - e.g. adding/withdrawing collateral, or issuing/repaying LUSD.
 
-When CLV is redeemed for ETH, the system cancels the CLV with debt from troves, and the ETH is drawn from their collateral.
+## LUSD Token Redemption
+
+Any LUSD holder (whether or not they have an active trove) may redeem their LUSD directly with the system. Their LUSD is exchanged for ETH, at face value: redeeming x CLV tokens returns \$x worth of ETH (minus a [redemption fee](#redemption-fee)).
+
+When LUSD is redeemed for ETH, the system cancels the LUSD with debt from troves, and the ETH is drawn from their collateral.
 
 In order to fulfill the redemption request, troves are redeemed from in ascending order of their collateral ratio.
 
-Economically, this redemption mechanism creates a hard price floor for CLV, ensuring that the market price stays at or near to \$1 USD.
+Economically, this redemption mechanism creates a hard price floor for LUSD, ensuring that the market price stays at or near to \$1 USD.
 
 ## Recovery Mode
 
 Recovery Mode kicks in when the total collateral ratio (TCR) of the system falls below 150%.
 
-During Recovery Mode, liquidation conditions are relaxed, and the system blocks issuance of new CLV, and withdrawal of collateral. Recovery Mode is structured to incentivize borrowers to behave in ways that promptly raise the TCR back above 150%.
+During Recovery Mode, liquidation conditions are relaxed, and the system blocks issuance of new LUSD, and withdrawal of collateral. Recovery Mode is structured to incentivize borrowers to behave in ways that promptly raise the TCR back above 150%.
 
 Recovery Mode is designed to encourage collateral top-ups, and also itself acts as a self-negating deterrent: the possibility of it occurring actually guides the system away from ever reaching it.
 
@@ -107,9 +113,14 @@ Recovery Mode is designed to encourage collateral top-ups, and also itself acts 
 
 ### Directories
 
+**TODO: add full directory structure!**
+
 - `packages/dev-frontend/` - Liquity Developer UI: a fully functional React app used for interfacing with the smart contracts during development
 - `packages/frontend/` - The front-end React app for the user-facing web interface
-- `packages/lib/` - A layer between the front-end and smart contracts that handles the intermediate logic and low-level transactions
+- `packages/lib-base/` - todo
+- `packages/lib-ethers/`- todo
+- `packages/lib-react/` - todo
+- `packages/lib-subgraph/` - todo
 - `packages/contracts/` The backend development folder, contains the Buidler project, contracts and tests
 - `packages/contracts/contracts/` -The core back end smart contracts written in Solidity
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
@@ -122,6 +133,8 @@ Backend development is done in the Buidler framework, and allows Liquity to be d
 
 ### Branches
 
+**TODO: check and update before audit**
+
 As of 21/08/2020, the current working branch is `main`.  
 
 `master` is somewhat out of date, as our CI pipeline automatically redeploys contracts to testnet from master branch, and we want users to have a chance to engage with the existing deployments.
@@ -132,7 +145,7 @@ Other branches contain functionality that has either been shelved (`size-range-l
 
 ## LQTY Token Architecture
 
-The Liquity system incorporates a secondary token, LQTY. This token entitles the holder to a share of the system revenue generated by redemption fees and new debt issuance fees.
+The Liquity system incorporates a secondary token, LQTY. This token entitles the holder to a share of the system revenue generated by redemption fees and  issuance fees.
 
 To earn a share of system fees, the LQTY holder must stake their LQTY in a staking contract.
 
@@ -140,11 +153,11 @@ Liquity also issues LQTY to Stability Pool depositors, in a continous time-based
 
 The LQTY contracts consist of:
 
-`LQTYStaking.sol` - the staking contract, containing stake and unstake functionality for LQTY holders. This contract receives ETH fees from redemptions, and CLV fees from new debt issuance.
+`LQTYStaking.sol` - the staking contract, containing stake and unstake functionality for LQTY holders. This contract receives ETH fees from redemptions, and LUSD fees from new debt issuance.
 
 `CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability Pool depositors as a function of time. It is controlled by the `PoolManager`. Upon system launch, the Liquity admin will transfer an initial supply of LQTY to it - the “community issuance” supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
 
-`GrowthToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address.
+`GrowthToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
 
 ### LQTY Lockup contracts and token vesting
 
@@ -167,10 +180,10 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 ### Launch sequence and vesting process
 
 #### Deploy LQTY Contracts
-1. LiquityAG deploys `LockupContractFactory`
-2. LiquityAG deploys `CommunityIssuance`
-3. LiquityAG deploys `LQTYStaking` 
-4. LiquityAG deploys `GrowthToken`, which upon deployment:
+1. Liquity admin deploys `LockupContractFactory`
+2. Liquity admin deploys `CommunityIssuance`
+3. Liquity admin deploys `LQTYStaking` 
+4. Liquity admin deploys `GrowthToken`, which upon deployment:
 - Stores the `CommunityIssuance` and `LockupContractFactory` addresses
 - Mints LQTY tokens to `CommunityIssuance` and the Liquity admin address
 5. Liquity admin sets `GrowthToken` address in `LockupContractFactory`, `CommunityIssuance`, and `LQTYStaking`
@@ -182,7 +195,7 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 
 #### Deploy Liquity Core
 9. Liquity admin deploys the Liquity core system
-10. Liquidity admin connects Liquity core system internally (with setters), and connects each of the `LQTYStaking` and `CommunityIssuance` contracts with Liquity core contracts
+10. Liquity admin connects Liquity core system internally (with setters), and connects each of the `LQTYStaking` and `CommunityIssuance` contracts with Liquity core contracts
 11. Liquity admin activates the `CommunityIssuance` contract
 
 #### During one year lockup period
@@ -193,7 +206,7 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 #### Upon end of lockup period
 - All `OneYearLockupContracts` automatically unlock. Beneficiaries may withdraw their entire unlocked entitlements
 - Liquity admin address restriction on LQTY transfers is automatically lifted, and Liquity admin may now transfer LQTY to any address
-- Anyone may deploy new OneYear and CustomDuration lockup contracts via the Factory
+- Anyone may deploy new `OneYearLockupContracts` and `CustomDurationLockupContracts` via the Factory
 
 #### Post-lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners, directly to their individual addresses, or to a fresh lockup contract if required.
@@ -206,21 +219,23 @@ All application logic and data is contained in these contracts - there is no nee
 
 The system has no admin key or human governance. Once deployed, it is fully automated, decentralized and no user holds any special privileges in or control over the system.
 
-The three main contracts - `BorrowerOperations.sol`, `CDPManager.sol` and `PoolManager.sol` - hold the user-facing public functions, and contain most of the internal system logic. Together they control trove state updates and movements of ether and tokens around the system.
+The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `PoolManager.sol` - hold the user-facing public functions, and contain most of the internal system logic. Together they control trove state updates and movements of Ether and tokens around the system.
 
 ### Core Smart Contracts
 
 `BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their CDP: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment. BorrowerOperations functions call in to CDPManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to PoolManager, telling it to move Ether and/or tokens between Pools, where necessary.
 
-`CDPManager.sol` - contains functionality for liquidations and redemptions. Also contains the state of each trove - i.e. a record of the trove’s collateral and debt. The CDPManager does not hold value (i.e. ether / tokens). CDPManager functions call in to PooManager to tell it to move ether/tokens between Pools, where necessary.
+`TroveManager.sol` - contains functionality for liquidations and redemptions. Also contains the state of each trove - i.e. a record of the trove’s collateral and debt. TroveManager does not hold value (i.e. Ether / other tokens). TroveManager functions call in to PooManager to tell it to move Ether/tokens between Pools, where necessary.
 
-`LiquityBase.sol` - Both CDPManager and BorrowerOperations inherit from the parent contract LiquityBase, which contains global constants and some common functions.
+`LiquityBase.sol` - Both TroveManager and BorrowerOperations inherit from the parent contract LiquityBase, which contains global constants and some common functions.
 
-`PoolManager.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated ETH rewards. It also directs the transfers of ether and tokens between Pools.
+`PoolManager.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated ETH rewards. It also directs the transfers of Ether and tokens between Pools.
 
-`CLVToken.sol` - the stablecoin token contract, which implements the ERC20 fungible token standard. The contract mints, burns and transfers CLV tokens.
+`LUSDToken.sol` - the stablecoin token contract, which implements the ERC20 fungible token standard. The contract mints, burns and transfers LUSD tokens.
 
-`SortedCDPs.sol` - a doubly linked list that stores addresses of CDP owners, sorted by their individual collateral ratio (ICR). It inserts and re-inserts CDPs at the correct position, based on their ICR.
+`SortedTroves.sol` - a doubly linked list that stores addresses of trove owners, sorted by their individual collateral ratio (ICR). It inserts and re-inserts troves at the correct position, based on their ICR.
+
+**TODO: Description of PriceFeed.sol to be eventually updated.
 
 `PriceFeed.sol` - Contains functionality for obtaining the current ETH:USD price, which the system uses for calculating collateral ratios. Currently, the price is a state variable that can be manually set by the admin. The PriceFeed contract will eventually store no price data, and when called from within other Liquity contracts, will automatically pull the current and decentralized ETH:USD price data from the Chainlink contract.
 
@@ -228,15 +243,15 @@ The three main contracts - `BorrowerOperations.sol`, `CDPManager.sol` and `PoolM
 
 ### Data and Value Silo Contracts
 
-These contracts hold ether and/or tokens for their respective parts of the system, and contain minimal logic.
+These contracts hold Ether and/or tokens for their respective parts of the system, and contain minimal logic.
 
-`CLVTokenData.sol` - contains the record of stablecoin balances for all addresses.
+`LUSDTokenData.sol` - contains the record of stablecoin balances for all addresses.
 
 `StabilityPool.sol` - holds an ERC20 balance of all stablecoin tokens deposits, and the total ether balance of all the ETH earned by depositors.
 
-`ActivePool.sol` - holds the total ether balance and records the total stablecoin debt of the active loans.
+`ActivePool.sol` - holds the total Ether balance and records the total stablecoin debt of the active troves.
 
-`DefaultPool.sol` - holds the total ether balance and records the total stablecoin debt of the liquidated loans that are pending redistribution to active troves. If a trove has pending ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
+`DefaultPool.sol` - holds the total Ether balance and records the total stablecoin debt of the liquidated loans that are pending redistribution to active troves. If a trove has pending ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
 
 ### Contract Interfaces
 
@@ -246,19 +261,20 @@ These contracts hold ether and/or tokens for their respective parts of the syste
 
 Liquity functions that require the most current ETH:USD price data fetch the price dynamically, as needed, via the core `PriceFeed.sol` contract.
 
+**TODO: To be updated**
 Currently, provisional plans are to use the Chainlink ETH:USD reference contract for the price data source, however, other options are under consideration.
 
 The current PriceFeed contract is a placeholder and contains a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price. In the final deployed version, no price will be stored or set, and `getPrice()` will fetch the latest ETH:USD price from the Chainlink reference contract.
 
 ### Keeping a sorted list of CDPs ordered by ICR
 
-Liquity relies on a particular data structure: a sorted doubly-linked list of troves that remains ordered by individual collateral ratio (ICR).
+Liquity relies on a particular data structure: a sorted doubly-linked list of troves that remains ordered by individual collateral ratio (ICR), i.e. the amount of collateral (in USD) divided by the amount of debt (in LUSD).
 
-This ordered list is critical for gas-efficient redemption sequences and for the `liquidateCDPs` sequence, both of which target troves in ascending order of ICR.
+This ordered list is critical for gas-efficient redemption sequences and for the `liquidateTroves` sequence, both of which target troves in ascending order of ICR.
 
-The sorted doubly-linked list is found in `SortedCDPs.sol`. 
+The sorted doubly-linked list is found in `SortedTroves.sol`. 
 
-Nodes map to active troves in the system - the ID property is the address of a trove owner. The list accepts positional hints for efficient O(1) insertion - please see the hints section for more details.
+Nodes map to active troves in the system - the ID property is the address of a trove owner. The list accepts positional hints for efficient O(1) insertion - please see the [hints](#supplying-hints-to-cdp-operations) section for more details.
 
 ICRs are computed dynamically at runtime, and not stored on the node. This is because ICRs of active troves change dynamically, when:
 
@@ -269,7 +285,7 @@ The list relies on the fact that a collateral and debt redistribution due to a l
 
 The fact that ordering is maintained as redistributions occur, is not immediately obvious: please see the [mathematical proof](https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs) which shows that this holds in Liquity.
 
-A node inserted based on current ICR will maintain the correct position, relative to it's peers, as liquidation rewards accumulate, as long as its raw collateral and debt have not changed.
+A node inserted based on current ICR will maintain the correct position, relative to it's peers, as liquidation gains accumulate, as long as its raw collateral and debt have not changed.
 
 Nodes also remain sorted as the ETH:USD price varies, since price fluctuations change the collateral value of each trove by the same proportion.
 
