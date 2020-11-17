@@ -16,8 +16,8 @@ contract('CLVToken', async accounts => {
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
-      contracts = await deploymentHelper.deployLiquityCore()
-      contracts.clvToken = await CLVTokenTester.new()
+      const contracts = await deploymentHelper.deployLiquityCore()
+      clvToken = await CLVTokenTester.new()
       clvTokenCaller = await CLVTokenCaller.new(clvToken.address)
       await clvToken.setAddresses(
         clvTokenCaller.address,
@@ -28,12 +28,12 @@ contract('CLVToken', async accounts => {
       
       const GTContracts = await deploymentHelper.deployGTContracts()
   
-      clvToken = contracts.clvToken
-      stabilityPool = contracts.stabilityPool
-
       await deploymentHelper.connectCoreContracts(contracts, GTContracts)
       await deploymentHelper.connectGTContracts(GTContracts)
       await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+
+      contracts.clvToken = clvToken
+      contracts.stabilityPool = stabilityPool
 
       // mint some tokens
       await clvTokenCaller.clvMint(alice, 150)

@@ -15,7 +15,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   let borrowerOperations
 
   before(async () => {
-    contracts = await deploymentHelper.deployLiquityCore()
+    const contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
     const GTContracts = await deploymentHelper.deployGTContracts()
 
@@ -27,7 +27,6 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
     borrowerOperations = contracts.borrowerOperations
-    hintHelpers = contracts.hintHelpers
 
     lqtyStaking = GTContracts.lqtyStaking
     growthToken = GTContracts.growthToken
@@ -49,13 +48,13 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('CDPManager', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(cdpManager, 7)
+      await testSetAddresses(cdpManager, 8)
     })
   })
 
   describe('BorrowerOperations', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(borrowerOperations, 8)
+      await testSetAddresses(borrowerOperations, 7)
     })
   })
 
@@ -67,7 +66,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('StabilityPool', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(stabilityPool, 4)
+      await testSetAddresses(stabilityPool, 5)
     })
   })
 

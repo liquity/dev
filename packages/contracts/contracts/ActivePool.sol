@@ -48,6 +48,8 @@ contract ActivePool is Ownable, IPool {
 
     // --- Getters for public variables. Required by IPool interface ---
 
+    /* Returns the ETH state variable at ActivePool address.
+       Not necessarily equal to the raw ether balance - ether can be forcibly sent to contracts. */
     function getETH() external view override returns (uint) {
         return ETH;
     }
@@ -77,40 +79,31 @@ contract ActivePool is Ownable, IPool {
         CLVDebt = CLVDebt.sub(_amount);
     }
 
-    /* Returns the raw ether balance at ActivePool address.
-    Not necessarily equal to the ETH state variable - ether can be forcibly sent to contracts. */
-    function getRawETHBalance() external view override returns (uint) {
-        return address(this).balance;
-    }
-
     // --- 'require' functions ---
 
-    function _requireCallerIsBorrowerOperationsOrDefaultPool internal view {
+    function _requireCallerIsBorrowerOperationsOrDefaultPool() internal view {
         address msgSender = _msgSender();
         require(
             msgSender == borrowerOperationsAddress ||
             msgSender == defaultPoolAddress,
             "ActivePool: Caller is neither BO nor Default Pool");
-        _;
     }
 
-    function _requireCallerIsBOorCDPMorSP internal view {
+    function _requireCallerIsBOorCDPMorSP() internal view {
         address msgSender = _msgSender();
         require(
             msgSender == borrowerOperationsAddress ||
             msgSender == cdpManagerAddress ||
             msgSender == stabilityPoolAddress,
             "ActivePool: Caller is neither BorrowerOperations nor CDPManager nor StabilityPool");
-        _;
     }
 
-    function _requireCallerIsBOorCDPM internal view {
+    function _requireCallerIsBOorCDPM() internal view {
         address msgSender = _msgSender();
         require(
             msgSender == borrowerOperationsAddress ||
             msgSender == cdpManagerAddress,
             "ActivePool: Caller is neither BorrowerOperations nor CDPManager");
-        _;
     }
 
     // --- Fallback function ---

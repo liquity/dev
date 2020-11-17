@@ -37,6 +37,8 @@ contract DefaultPool is Ownable, IPool {
 
     // --- Getters for public variables. Required by IPool interface ---
 
+    /* Returns the ETH state variable at ActivePool address.
+       Not necessarily equal to the raw ether balance - ether can be forcibly sent to contracts. */
     function getETH() external view override returns (uint) {
         return ETH;
     }
@@ -66,19 +68,13 @@ contract DefaultPool is Ownable, IPool {
         CLVDebt = CLVDebt.sub(_amount);
     }
 
-    /* Returns the raw ether balance at DefaultPool address.
-    Not necessarily equal to the ETH state variable - ether can be forcibly sent to contracts. */
-    function getRawETHBalance() external view override returns (uint) {
-        return address(this).balance;
-    }
-
     // --- 'require' functions ---
 
     function _requireCallerIsActivePool() internal view {
         require(_msgSender() == activePoolAddress, "DefaultPool: Caller is not the ActivePool");
     }
 
-    function _requireCallerIsCDPMananger internal view {
+    function _requireCallerIsCDPMananger() internal view {
         require(_msgSender() == cdpManagerAddress, "DefaultPool: Caller is not the CDPManager");
     }
 

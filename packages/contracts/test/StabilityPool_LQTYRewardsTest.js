@@ -8,7 +8,7 @@ const dec = th.dec
 const toBN = th.toBN
 const getDifference = th.getDifference
 
-contract('PoolManager - LQTY Rewards', async accounts => {
+contract('StabilityPool - LQTY Rewards', async accounts => {
 
   const [
     owner,
@@ -22,7 +22,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
 
   let priceFeed
   let clvToken
-  let poolManager
+  let stabilityPool
   let cdpManager
   let borrowerOperations
   let communityIssuanceTester
@@ -47,7 +47,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
 
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
-      poolManager = contracts.poolManager
+      stabilityPool = contracts.stabilityPool
       sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
       activePool = contracts.activePool
@@ -109,24 +109,24 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.equal(await growthToken.balanceOf(C), 0)
 
       // A, B, C deposit
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: C })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: C })
 
       // One year passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // D deposits, triggering LQTY gains for A,B,C. Withdraws immediately after
-      await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
-      await poolManager.withdrawFromSP(dec(1, 18), { from: D })
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
+      await stabilityPool.withdrawFromSP(dec(1, 18), { from: D })
 
       // Expected gains for each depositor after 1 year (50% total issued).  Each deposit gets 1/3 of issuance.
       const expectedLQTYGain_1yr = communityLQTYSupply.div(toBN('2')).div(toBN('3'))
 
       // Check LQTY gain
-      const A_LQTYGain_1yr = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_1yr = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_1yr = await poolManager.getDepositorLQTYGain(C)
+      const A_LQTYGain_1yr = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_1yr = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_1yr = await stabilityPool.getDepositorLQTYGain(C)
 
       // Check gains are correct, error tolerance = 1e-6 of a token
 
@@ -138,16 +138,16 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // D deposits, triggering LQTY gains for A,B,C. Withdraws immediately after
-      await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
-      await poolManager.withdrawFromSP(dec(1, 18), { from: D })
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
+      await stabilityPool.withdrawFromSP(dec(1, 18), { from: D })
 
       // Expected gains for each depositor after 2 years (75% total issued).  Each deposit gets 1/3 of issuance.
       const expectedLQTYGain_2yr = communityLQTYSupply.mul(toBN('3')).div(toBN('4')).div(toBN('3'))
 
       // Check LQTY gain
-      const A_LQTYGain_2yr = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_2yr = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_2yr = await poolManager.getDepositorLQTYGain(C)
+      const A_LQTYGain_2yr = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_2yr = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_2yr = await stabilityPool.getDepositorLQTYGain(C)
 
       // Check gains are correct, error tolerance = 1e-6 of a token
       assert.isAtMost(getDifference(A_LQTYGain_2yr, expectedLQTYGain_2yr), 1e12)
@@ -155,9 +155,9 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isAtMost(getDifference(C_LQTYGain_2yr, expectedLQTYGain_2yr), 1e12)
 
       // Each depositor fully withdraws
-      await poolManager.withdrawFromSP(dec(100, 18), { from: A })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: B })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: C })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: A })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: B })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: C })
 
       // Check LQTY balances increase by correct amount
       assert.isAtMost(getDifference((await growthToken.balanceOf(A)), expectedLQTYGain_2yr), 1e12)
@@ -187,16 +187,16 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.equal(await growthToken.balanceOf(C), 0)
 
       // A, B, C deposit
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
-      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
-      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: C })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
+      await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
+      await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: C })
 
       // One year passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // D deposits, triggering LQTY gains for A,B,C. Withdraws immediately after
-      await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
-      await poolManager.withdrawFromSP(dec(1, 18), { from: D })
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
+      await stabilityPool.withdrawFromSP(dec(1, 18), { from: D })
 
       // Expected gains for each depositor after 1 year (50% total issued)
       const A_expectedLQTYGain_1yr = communityLQTYSupply
@@ -212,9 +212,9 @@ contract('PoolManager - LQTY Rewards', async accounts => {
         .div(toBN('2'))  // C gets 3/6 = 1/2 of the issuance
 
       // Check LQTY gain
-      const A_LQTYGain_1yr = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_1yr = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_1yr = await poolManager.getDepositorLQTYGain(C)
+      const A_LQTYGain_1yr = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_1yr = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_1yr = await stabilityPool.getDepositorLQTYGain(C)
 
       // Check gains are correct, error tolerance = 1e-6 of a toke
       assert.isAtMost(getDifference(A_LQTYGain_1yr, A_expectedLQTYGain_1yr), 1e12)
@@ -225,8 +225,8 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // D deposits, triggering LQTY gains for A,B,C. Withdraws immediately after
-      await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
-      await poolManager.withdrawFromSP(dec(1, 18), { from: D })
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
+      await stabilityPool.withdrawFromSP(dec(1, 18), { from: D })
 
       // Expected gains for each depositor after 2 years (75% total issued).
       const A_expectedLQTYGain_2yr = communityLQTYSupply
@@ -242,9 +242,9 @@ contract('PoolManager - LQTY Rewards', async accounts => {
         .div(toBN('2'))  // C gets 3/6 = 1/2 of the issuance
 
       // Check LQTY gain
-      const A_LQTYGain_2yr = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_2yr = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_2yr = await poolManager.getDepositorLQTYGain(C)
+      const A_LQTYGain_2yr = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_2yr = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_2yr = await stabilityPool.getDepositorLQTYGain(C)
 
       // Check gains are correct, error tolerance = 1e-6 of a token
       assert.isAtMost(getDifference(A_LQTYGain_2yr, A_expectedLQTYGain_2yr), 1e12)
@@ -252,9 +252,9 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isAtMost(getDifference(C_LQTYGain_2yr, C_expectedLQTYGain_2yr), 1e12)
 
       // Each depositor fully withdraws
-      await poolManager.withdrawFromSP(dec(100, 18), { from: A })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: B })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: C })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: A })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: B })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: C })
 
       // Check LQTY balances increase by correct amount
       assert.isAtMost(getDifference((await growthToken.balanceOf(A)), A_expectedLQTYGain_2yr), 1e12)
@@ -288,9 +288,9 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.equal(await growthToken.balanceOf(D), 0)
 
       // A, B, C deposit
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
-      await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
-      await poolManager.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: C })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
+      await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
+      await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: C })
 
       // Year 1 passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -320,9 +320,9 @@ contract('PoolManager - LQTY Rewards', async accounts => {
         .div(toBN('2'))  // C gets 3/6 = 1/2 of the issuance
 
       // Check LQTY gain
-      const A_LQTYGain_Y1 = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_Y1 = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_Y1 = await poolManager.getDepositorLQTYGain(C)
+      const A_LQTYGain_Y1 = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_Y1 = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_Y1 = await stabilityPool.getDepositorLQTYGain(C)
 
       // Check gains are correct, error tolerance = 1e-6 of a toke
       assert.isAtMost(getDifference(A_LQTYGain_Y1, A_expectedLQTYGain_Y1), 1e12)
@@ -330,14 +330,14 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isAtMost(getDifference(C_LQTYGain_Y1, C_expectedLQTYGain_Y1), 1e12)
 
       // D deposits 400
-      await poolManager.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D })
+      await stabilityPool.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D })
 
       // Year 2 passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // E deposits and withdraws, creating LQTY issuance
-      await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: E })
-      await poolManager.withdrawFromSP(dec(1, 18), { from: E })
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: E })
+      await stabilityPool.withdrawFromSP(dec(1, 18), { from: E })
 
       // Expected gains for each depositor during Y2:
       const A_expectedLQTYGain_Y2 = communityLQTYSupply
@@ -357,10 +357,10 @@ contract('PoolManager - LQTY Rewards', async accounts => {
         .mul(toBN('4')).div(toBN('7'))  // D gets 400/700 = 4/7 of the issuance
 
       // Check LQTY gain
-      const A_LQTYGain_AfterY2 = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_AfterY2 = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_AfterY2 = await poolManager.getDepositorLQTYGain(C)
-      const D_LQTYGain_AfterY2 = await poolManager.getDepositorLQTYGain(D)
+      const A_LQTYGain_AfterY2 = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_AfterY2 = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_AfterY2 = await stabilityPool.getDepositorLQTYGain(C)
+      const D_LQTYGain_AfterY2 = await stabilityPool.getDepositorLQTYGain(D)
 
       const A_expectedTotalGain = A_expectedLQTYGain_Y1.add(A_expectedLQTYGain_Y2)
       const B_expectedTotalGain = B_expectedLQTYGain_Y1.add(B_expectedLQTYGain_Y2)
@@ -374,10 +374,10 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isAtMost(getDifference(D_LQTYGain_AfterY2, D_expectedTotalGain), 1e12)
 
       // Each depositor fully withdraws
-      await poolManager.withdrawFromSP(dec(100, 18), { from: A })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: B })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: C })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: D })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: A })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: B })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: C })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: D })
 
       // Check LQTY balances increase by correct amount
       assert.isAtMost(getDifference((await growthToken.balanceOf(A)), A_expectedTotalGain), 1e12)
@@ -431,7 +431,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       const depositors_1 = [A, B]
       for (account of depositors_1) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
+        await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // 1 month passes
@@ -444,7 +444,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       const depositors_2 = [C, D]
       for (account of depositors_2) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
+        await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // 1 month passes
@@ -457,7 +457,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       const depositors_3 = [E, F]
       for (account of depositors_3) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
+        await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // 1 month passes
@@ -470,7 +470,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       const depositors_4 = [G, H]
       for (account of depositors_4) {
         await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
-        await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
+        await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
       // 1 month passes
@@ -481,7 +481,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
 
       // All depositors withdraw from SP
       for (depositor of allDepositors) {
-        await poolManager.withdrawFromSP(dec(100, 18), { from: depositor })
+        await stabilityPool.withdrawFromSP(dec(100, 18), { from: depositor })
       }
 
       /* Each depositor constitutes 50% of the pool from the time they deposit, up until the liquidation.
@@ -515,7 +515,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
         assert.isAtMost(getDifference(LQTYBalance, expectedLQTYGain_M4), 1e15)
       }
 
-      const finalEpoch = (await poolManager.currentEpoch()).toString()
+      const finalEpoch = (await stabilityPool.currentEpoch()).toString()
       assert.equal(finalEpoch, 4)
     })
 
@@ -562,11 +562,11 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       await priceFeed.setPrice(dec(100, 18));
 
       // Check scale is 0
-      assert.equal(await poolManager.currentScale(), '0')
+      assert.equal(await stabilityPool.currentScale(), '0')
 
       // A provides to SP
       await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
 
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
@@ -577,11 +577,11 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isTrue(txL1.receipt.status)
 
       // Check scale is 0
-      assert.equal(await poolManager.currentScale(), '0')
+      assert.equal(await stabilityPool.currentScale(), '0')
 
       // B provides to SP
       await borrowerOperations.openLoan(dec(100, 18), B, { from: B, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
 
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
@@ -592,11 +592,11 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isTrue(txL2.receipt.status)
 
       // Check scale is 1
-      assert.equal(await poolManager.currentScale(), '1')
+      assert.equal(await stabilityPool.currentScale(), '1')
 
       // C provides to SP
       await borrowerOperations.openLoan(dec(100, 18), C, { from: C, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: C })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: C })
 
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
@@ -607,11 +607,11 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isTrue(txL3.receipt.status)
 
       // Check scale is 1
-      assert.equal(await poolManager.currentScale(), '1')
+      assert.equal(await stabilityPool.currentScale(), '1')
 
       // D provides to SP
       await borrowerOperations.openLoan(dec(100, 18), D, { from: D, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: D })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: D })
 
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
@@ -622,11 +622,11 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isTrue(txL4.receipt.status)
 
       // Check scale is 2
-      assert.equal(await poolManager.currentScale(), '2')
+      assert.equal(await stabilityPool.currentScale(), '2')
 
       // E provides to SP
       await borrowerOperations.openLoan(dec(100, 18), E, { from: E, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: E })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: E })
 
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
@@ -637,11 +637,11 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isTrue(txL5.receipt.status)
 
       // Check scale is 2
-      assert.equal(await poolManager.currentScale(), '2')
+      assert.equal(await stabilityPool.currentScale(), '2')
 
       // F provides to SP
       await borrowerOperations.openLoan(dec(100, 18), F, { from: F, value: dec(100, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: F })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: F })
 
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
@@ -652,12 +652,12 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isTrue(txL6.receipt.status)
 
       // Check scale is 3
-      assert.equal(await poolManager.currentScale(), '3')
+      assert.equal(await stabilityPool.currentScale(), '3')
 
       /* All depositors withdraw fully from SP.  Withdraw in reverse order, so that the largest remaining
       deposit (F) withdraws first, and does not get extra LQTY gains from the periods between withdrawals */
       for (depositor of [F, E, D, C, B, A]) {
-        await poolManager.withdrawFromSP(dec(100, 18), { from: depositor })
+        await stabilityPool.withdrawFromSP(dec(100, 18), { from: depositor })
       }
 
       const LQTYGain_A = await growthToken.balanceOf(A)
@@ -685,8 +685,8 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       const kickbackRate_F1 = toBN(dec(5, 17)) // F1 kicks 50% back to depositor
       const kickbackRate_F2 = toBN(dec(80, 16)) // F2 kicks 80% back to depositor
 
-      await poolManager.registerFrontEnd(kickbackRate_F1, { from: frontEnd_1 })
-      await poolManager.registerFrontEnd(kickbackRate_F2, { from: frontEnd_2 })
+      await stabilityPool.registerFrontEnd(kickbackRate_F1, { from: frontEnd_1 })
+      await stabilityPool.registerFrontEnd(kickbackRate_F2, { from: frontEnd_2 })
 
       // Set the deployment time to now
       await communityIssuanceTester.setDeploymentTime()
@@ -712,14 +712,14 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.equal(await growthToken.balanceOf(frontEnd_2), 0)
 
       // A, B, C, D deposit
-      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(100, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(100, 18), frontEnd_2, { from: C })
-      await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: D })
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_2, { from: B })
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_2, { from: C })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: D })
 
       // Check initial frontEnd stakes are correct:
-      F1_stake = await poolManager.frontEndStakes(frontEnd_1)
-      F2_stake = await poolManager.frontEndStakes(frontEnd_2)
+      F1_stake = await stabilityPool.frontEndStakes(frontEnd_1)
+      F2_stake = await stabilityPool.frontEndStakes(frontEnd_2)
 
       assert.equal(F1_stake, dec(100, 18))
       assert.equal(F2_stake, dec(200, 18))
@@ -728,19 +728,19 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // E deposits, triggering LQTY gains for A,B,C,D,F1,F2. Withdraws immediately after
-      await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: E })
-      await poolManager.withdrawFromSP(dec(1, 18), { from: E })
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: E })
+      await stabilityPool.withdrawFromSP(dec(1, 18), { from: E })
 
       // Expected issuance for year 1 is 50% of total supply.
       const expectedIssuance_Y1 = communityLQTYSupply.div(toBN('2'))
 
       // Get actual LQTY gains
-      const A_LQTYGain_Y1 = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_Y1 = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_Y1 = await poolManager.getDepositorLQTYGain(C)
-      const D_LQTYGain_Y1 = await poolManager.getDepositorLQTYGain(D)
-      const F1_LQTYGain_Y1 = await poolManager.getFrontEndLQTYGain(frontEnd_1)
-      const F2_LQTYGain_Y1 = await poolManager.getFrontEndLQTYGain(frontEnd_2)
+      const A_LQTYGain_Y1 = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_Y1 = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_Y1 = await stabilityPool.getDepositorLQTYGain(C)
+      const D_LQTYGain_Y1 = await stabilityPool.getDepositorLQTYGain(D)
+      const F1_LQTYGain_Y1 = await stabilityPool.getFrontEndLQTYGain(frontEnd_1)
+      const F2_LQTYGain_Y1 = await stabilityPool.getFrontEndLQTYGain(frontEnd_2)
 
       // Expected depositor and front-end gains
       const A_expectedGain_Y1 = kickbackRate_F1.mul(expectedIssuance_Y1).div(toBN('4')).div(toBN(dec(1, 18)))
@@ -769,8 +769,8 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // E deposits, triggering LQTY gains for A,B,CD,F1, F2. Withdraws immediately after
-      await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: E })
-      await poolManager.withdrawFromSP(dec(1, 18), { from: E })
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: E })
+      await stabilityPool.withdrawFromSP(dec(1, 18), { from: E })
 
       // Expected gains for each depositor in Y2(25% total issued).  .
       const expectedIssuance_Y2 = communityLQTYSupply.div(toBN('4'))
@@ -792,10 +792,10 @@ contract('PoolManager - LQTY Rewards', async accounts => {
         .div(toBN(dec(1, 18)))
 
       // Each depositor fully withdraws
-      await poolManager.withdrawFromSP(dec(100, 18), { from: A })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: B })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: C })
-      await poolManager.withdrawFromSP(dec(100, 18), { from: D })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: A })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: B })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: C })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: D })
 
       // Check LQTY balances increase by correct amount
       assert.isAtMost(getDifference((await growthToken.balanceOf(A)), A_expectedFinalGain), 1e12)
@@ -829,8 +829,8 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       const F1_kickbackRate = toBN(dec(5, 17)) // F1 kicks 50% back to depositor
       const F2_kickbackRate = toBN(dec(80, 16)) // F2 kicks 80% back to depositor
 
-      await poolManager.registerFrontEnd(F1_kickbackRate, { from: frontEnd_1 })
-      await poolManager.registerFrontEnd(F2_kickbackRate, { from: frontEnd_2 })
+      await stabilityPool.registerFrontEnd(F1_kickbackRate, { from: frontEnd_1 })
+      await stabilityPool.registerFrontEnd(F2_kickbackRate, { from: frontEnd_2 })
 
       // Set the deployment time to now
       await communityIssuanceTester.setDeploymentTime()
@@ -862,18 +862,18 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.equal(await growthToken.balanceOf(frontEnd_2), 0)
 
       // A, B, C, D deposit
-      await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
-      await poolManager.provideToSP(dec(200, 18), frontEnd_2, { from: B })
-      await poolManager.provideToSP(dec(300, 18), frontEnd_2, { from: C })
-      await poolManager.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D })
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+      await stabilityPool.provideToSP(dec(200, 18), frontEnd_2, { from: B })
+      await stabilityPool.provideToSP(dec(300, 18), frontEnd_2, { from: C })
+      await stabilityPool.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D })
 
       // Price Drops, defaulters become undercollateralized
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await cdpManager.checkRecoveryMode())
 
       // Check initial frontEnd stakes are correct:
-      F1_stake = await poolManager.frontEndStakes(frontEnd_1)
-      F2_stake = await poolManager.frontEndStakes(frontEnd_2)
+      F1_stake = await stabilityPool.frontEndStakes(frontEnd_1)
+      F2_stake = await stabilityPool.frontEndStakes(frontEnd_2)
 
       assert.equal(F1_stake, dec(100, 18))
       assert.equal(F2_stake, dec(500, 18))
@@ -918,12 +918,12 @@ contract('PoolManager - LQTY Rewards', async accounts => {
         .div(toBN(dec(1, 18)))
 
       // Check LQTY gain
-      const A_LQTYGain_M1 = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_M1 = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_M1 = await poolManager.getDepositorLQTYGain(C)
-      const D_LQTYGain_M1 = await poolManager.getDepositorLQTYGain(D)
-      const F1_LQTYGain_M1 = await poolManager.getFrontEndLQTYGain(frontEnd_1)
-      const F2_LQTYGain_M1 = await poolManager.getFrontEndLQTYGain(frontEnd_2)
+      const A_LQTYGain_M1 = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_M1 = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_M1 = await stabilityPool.getDepositorLQTYGain(C)
+      const D_LQTYGain_M1 = await stabilityPool.getDepositorLQTYGain(D)
+      const F1_LQTYGain_M1 = await stabilityPool.getFrontEndLQTYGain(frontEnd_1)
+      const F2_LQTYGain_M1 = await stabilityPool.getFrontEndLQTYGain(frontEnd_2)
 
       // Check gains are correct, error tolerance = 1e-3 of a token
       assert.isAtMost(getDifference(A_LQTYGain_M1, A_expectedLQTYGain_M1), 1e15)
@@ -934,7 +934,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isAtMost(getDifference(F2_LQTYGain_M1, F2_expectedLQTYGain_M1), 1e15)
 
       // E deposits 300 via F1
-      await poolManager.provideToSP(dec(300, 18), frontEnd_1, { from: E })
+      await stabilityPool.provideToSP(dec(300, 18), frontEnd_1, { from: E })
 
       assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(800, 18))
 
@@ -984,13 +984,13 @@ contract('PoolManager - LQTY Rewards', async accounts => {
         .div(toBN(dec(1, 18)))
 
       // Check LQTY gains after month 2
-      const A_LQTYGain_After_M2 = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_After_M2 = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_After_M2 = await poolManager.getDepositorLQTYGain(C)
-      const D_LQTYGain_After_M2 = await poolManager.getDepositorLQTYGain(D)
-      const E_LQTYGain_After_M2 = await poolManager.getDepositorLQTYGain(E)
-      const F1_LQTYGain_After_M2 = await poolManager.getFrontEndLQTYGain(frontEnd_1)
-      const F2_LQTYGain_After_M2 = await poolManager.getFrontEndLQTYGain(frontEnd_2)
+      const A_LQTYGain_After_M2 = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_After_M2 = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_After_M2 = await stabilityPool.getDepositorLQTYGain(C)
+      const D_LQTYGain_After_M2 = await stabilityPool.getDepositorLQTYGain(D)
+      const E_LQTYGain_After_M2 = await stabilityPool.getDepositorLQTYGain(E)
+      const F1_LQTYGain_After_M2 = await stabilityPool.getFrontEndLQTYGain(frontEnd_1)
+      const F2_LQTYGain_After_M2 = await stabilityPool.getFrontEndLQTYGain(frontEnd_2)
 
       assert.isAtMost(getDifference(A_LQTYGain_After_M2, A_expectedLQTYGain_M2.add(A_expectedLQTYGain_M1)), 1e15)
       assert.isAtMost(getDifference(B_LQTYGain_After_M2, B_expectedLQTYGain_M2.add(B_expectedLQTYGain_M1)), 1e15)
@@ -1010,7 +1010,7 @@ contract('PoolManager - LQTY Rewards', async accounts => {
 
 
       // B tops up 400 via F2
-      await poolManager.provideToSP(dec(400, 18), frontEnd_2, { from: B })
+      await stabilityPool.provideToSP(dec(400, 18), frontEnd_2, { from: B })
 
       assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(1000, 18))
 
@@ -1056,13 +1056,13 @@ contract('PoolManager - LQTY Rewards', async accounts => {
         .div(toBN(dec(1, 18)))
 
       // Check LQTY gains after month 3
-      const A_LQTYGain_After_M3 = await poolManager.getDepositorLQTYGain(A)
-      const B_LQTYGain_After_M3 = await poolManager.getDepositorLQTYGain(B)
-      const C_LQTYGain_After_M3 = await poolManager.getDepositorLQTYGain(C)
-      const D_LQTYGain_After_M3 = await poolManager.getDepositorLQTYGain(D)
-      const E_LQTYGain_After_M3 = await poolManager.getDepositorLQTYGain(E)
-      const F1_LQTYGain_After_M3 = await poolManager.getFrontEndLQTYGain(frontEnd_1)
-      const F2_LQTYGain_After_M3 = await poolManager.getFrontEndLQTYGain(frontEnd_2)
+      const A_LQTYGain_After_M3 = await stabilityPool.getDepositorLQTYGain(A)
+      const B_LQTYGain_After_M3 = await stabilityPool.getDepositorLQTYGain(B)
+      const C_LQTYGain_After_M3 = await stabilityPool.getDepositorLQTYGain(C)
+      const D_LQTYGain_After_M3 = await stabilityPool.getDepositorLQTYGain(D)
+      const E_LQTYGain_After_M3 = await stabilityPool.getDepositorLQTYGain(E)
+      const F1_LQTYGain_After_M3 = await stabilityPool.getFrontEndLQTYGain(frontEnd_1)
+      const F2_LQTYGain_After_M3 = await stabilityPool.getFrontEndLQTYGain(frontEnd_2)
 
       // Expect A, C, D LQTY system gains to equal their gains from (M1 + M2 + M3)
       assert.isAtMost(getDifference(A_LQTYGain_After_M3, A_expectedLQTYGain_M3.add(A_expectedLQTYGain_M2).add(A_expectedLQTYGain_M1)), 1e15)
@@ -1094,14 +1094,14 @@ contract('PoolManager - LQTY Rewards', async accounts => {
       assert.isAtMost(getDifference(F2_LQTYBalance_After_M3, F2_expectedLQTYGain_M2.add(F2_expectedLQTYGain_M1)), 1e15)
 
       // Expect deposit C now to be 101.25 CLV
-      const C_compoundedCLVDeposit = await poolManager.getCompoundedCLVDeposit(C)
+      const C_compoundedCLVDeposit = await stabilityPool.getCompoundedCLVDeposit(C)
       assert.isAtMost(getDifference(C_compoundedCLVDeposit, dec(10125, 16)), 1000)
 
       // --- C withdraws ---
 
       assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(900, 18))
 
-      await poolManager.withdrawFromSP(dec(100, 18), { from: C })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: C })
 
       assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(800, 18))
 
@@ -1110,8 +1110,8 @@ contract('PoolManager - LQTY Rewards', async accounts => {
 
       // All depositors fully withdraw
       for (depositor of [A, B, C, D, E]) {
-        await poolManager.withdrawFromSP(dec(1000, 18), { from: depositor })
-        const compoundedCLVDeposit = await poolManager.getCompoundedCLVDeposit(depositor)
+        await stabilityPool.withdrawFromSP(dec(1000, 18), { from: depositor })
+        const compoundedCLVDeposit = await stabilityPool.getCompoundedCLVDeposit(depositor)
         assert.equal(compoundedCLVDeposit, '0')
       }
 

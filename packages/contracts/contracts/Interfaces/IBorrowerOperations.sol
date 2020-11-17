@@ -8,22 +8,17 @@ interface IBorrowerOperations {
     // --- Events ---
 
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
-
-    event PoolManagerAddressChanged(address _newPoolManagerAddress);
-
     event ActivePoolAddressChanged(address _activePoolAddress);
-
     event DefaultPoolAddressChanged(address _defaultPoolAddress);
-
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
-    
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
+    event CLVTokenAddressChanged(address _clvTokenAddress);
+    event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
     // --- Functions ---
 
     function setAddresses(
         address _cdpManagerAddress,
-        address _poolManagerAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _priceFeedAddress,

@@ -22,7 +22,7 @@ contract('StabilityPool', async accounts => {
   const [owner, mockActivePoolAddress, alice] = accounts;
   beforeEach(async () => {
     stabilityPool = await StabilityPool.new()
-    await stabilityPool.setAddresses(ZERO_ADDRESS, ZERO_ADDRESS, mockActivePoolAddress, ZERO_ADDRESS)
+    await stabilityPool.setAddresses(ZERO_ADDRESS, ZERO_ADDRESS, mockActivePoolAddress, ZERO_ADDRESS, ZERO_ADDRESS)
   })
 
   it('getETH(): gets the recorded ETH balance', async () => {

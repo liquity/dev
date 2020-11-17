@@ -3279,13 +3279,13 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     // Expected Stability Pool to fully absorb B (92 CLV + 10 virtual debt), 
     // and absorb ~1/3 of E (30 of 81 CLV + 10 virtual debt)
     
-    const stabilityBefore = await stabilityPool.getStabilityPoolCLV()
+    const stabilityBefore = await stabilityPool.getTotalCLVDeposits()
     const dEbtBefore = (await cdpManager.CDPs(E))[0]
 
     await cdpManager.batchLiquidateTroves([B, G, H, I, E])
     
     const dEbtAfter = (await cdpManager.CDPs(E))[0]
-    const stabilityAfter = await stabilityPool.getStabilityPoolCLV()
+    const stabilityAfter = await stabilityPool.getTotalCLVDeposits()
     
     const stabilityDelta = stabilityBefore.sub(stabilityAfter)  
     const dEbtDelta = dEbtBefore.sub(dEbtAfter)

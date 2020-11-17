@@ -203,7 +203,7 @@ class DeploymentHelper {
 
     // set contracts in the CLVToken contract
     await contracts.clvToken.setAddresses(
-      contracts.borrowerOperations.address
+      contracts.borrowerOperations.address,
       contracts.cdpManager.address,
       contracts.stabilityPool.address,
     )

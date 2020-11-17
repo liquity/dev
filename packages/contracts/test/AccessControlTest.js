@@ -243,7 +243,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not CDPManager")
+        assert.include(err.message, "Caller is not the CDPManager")
       }
     })
 
@@ -255,7 +255,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not CDPManager")
+        assert.include(err.message, "Caller is not the CDPManager")
       }
     })
 
@@ -267,7 +267,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not CDPManager")
+        assert.include(err.message, "Caller is not the CDPManager")
       }
     })
 

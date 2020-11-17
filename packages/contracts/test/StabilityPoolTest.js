@@ -86,7 +86,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(stabilityPool_CLV_Before, 0)
 
       // provideToSP()
-      await stabilityPool.provideToSP(200, { from: alice })
+      await stabilityPool.provideToSP(200, ZERO_ADDRESS, { from: alice })
 
       // check CLV balances after
       const alice_CLV_After = await clvToken.balanceOf(alice)
@@ -103,7 +103,7 @@ contract('StabilityPool', async accounts => {
       // --- TEST ---
       // check user's deposit record before
       const alice_depositRecord_Before = await stabilityPool.deposits(alice)
-      assert.equal(alice_depositRecord_Before, 0)
+      assert.equal(alice_depositRecord_Before[0], 0)
 
       // provideToSP()
       await stabilityPool.provideToSP(200, frontEnd_1, { from: alice })
@@ -1329,10 +1329,10 @@ contract('StabilityPool', async accounts => {
       txPromise_C = stabilityPool.provideToSP(0, frontEnd_2, { from: C })
       txPromise_D = stabilityPool.provideToSP(0, ZERO_ADDRESS, { from: D })
 
-      await th.assertRevert(txPromise_A, 'PoolManager: Amount must be non-zero')
-      await th.assertRevert(txPromise_B, 'PoolManager: Amount must be non-zero')
-      await th.assertRevert(txPromise_C, 'PoolManager: Amount must be non-zero')
-      await th.assertRevert(txPromise_D, 'PoolManager: Amount must be non-zero')
+      await th.assertRevert(txPromise_A, 'StabilityPool: Amount must be non-zero')
+      await th.assertRevert(txPromise_B, 'StabilityPool: Amount must be non-zero')
+      await th.assertRevert(txPromise_C, 'StabilityPool: Amount must be non-zero')
+      await th.assertRevert(txPromise_D, 'StabilityPool: Amount must be non-zero')
     })
 
     // --- withdrawFromSP ---
@@ -2760,7 +2760,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(A_deposit, '0')
 
       // --- TEST ---
-      const expectedRevertMessage = "PoolManager: User must have a non-zero deposit"
+      const expectedRevertMessage = "StabilityPool: User must have a non-zero deposit"
 
       // Further withdrawal attempt from A
       const withdrawalPromise_A = stabilityPool.withdrawFromSP(dec(100, 18), { from: A })
@@ -3550,9 +3550,9 @@ contract('StabilityPool', async accounts => {
       const _2ndAttempt_B = stabilityPool.registerFrontEnd('897789897897897', { from: B })
       const _2ndAttempt_C = stabilityPool.registerFrontEnd('99990098', { from: C })
 
-      await th.assertRevert(_2ndAttempt_A, "PoolManager: must not already be a registered front end")
-      await th.assertRevert(_2ndAttempt_B, "PoolManager: must not already be a registered front end")
-      await th.assertRevert(_2ndAttempt_C, "PoolManager: must not already be a registered front end")
+      await th.assertRevert(_2ndAttempt_A, "StabilityPool: must not already be a registered front end")
+      await th.assertRevert(_2ndAttempt_B, "StabilityPool: must not already be a registered front end")
+      await th.assertRevert(_2ndAttempt_C, "StabilityPool: must not already be a registered front end")
     })
 
     it("registerFrontEnd(): reverts if the kickback rate >1", async () => {
@@ -3562,10 +3562,10 @@ contract('StabilityPool', async accounts => {
       const invalidKickbackTx_C = stabilityPool.registerFrontEnd(dec(23423, 45), { from: A })
       const invalidKickbackTx_D = stabilityPool.registerFrontEnd(maxBytes32, { from: A })
 
-      await th.assertRevert(invalidKickbackTx_A, "PoolManager: Kickback rate must be in range [0,1]")
-      await th.assertRevert(invalidKickbackTx_B, "PoolManager: Kickback rate must be in range [0,1]")
-      await th.assertRevert(invalidKickbackTx_C, "PoolManager: Kickback rate must be in range [0,1]")
-      await th.assertRevert(invalidKickbackTx_D, "PoolManager: Kickback rate must be in range [0,1]")
+      await th.assertRevert(invalidKickbackTx_A, "StabilityPool: Kickback rate must be in range [0,1]")
+      await th.assertRevert(invalidKickbackTx_B, "StabilityPool: Kickback rate must be in range [0,1]")
+      await th.assertRevert(invalidKickbackTx_C, "StabilityPool: Kickback rate must be in range [0,1]")
+      await th.assertRevert(invalidKickbackTx_D, "StabilityPool: Kickback rate must be in range [0,1]")
     })
   })
 })

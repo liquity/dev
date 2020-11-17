@@ -25,7 +25,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     IStabilityPool public stabilityPool;
 
-    ICLVToken public CLV;
+    ICLVToken public clvToken;
 
     IPriceFeed public priceFeed;
 
@@ -213,7 +213,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         defaultPool = IPool(_defaultPoolAddress);
         stabilityPool = IStabilityPool(_stabilityPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
-        CLV = ICLVToken(_clvTokenAddress);
+        clvToken = ICLVToken(_clvTokenAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
@@ -720,7 +720,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     function _sendGasCompensation(address _user, uint _CLV, uint _ETH) internal {
         // Send CLV gas compensation to caller
         if (_CLV > 0) {
-            CLV.returnFromPool(GAS_POOL_ADDRESS, _user, _CLV);
+            clvToken.returnFromPool(GAS_POOL_ADDRESS, _user, _CLV);
         }
         // Send ETH gas compensation to caller
         if (_ETH > 0) {
@@ -804,7 +804,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
          * In order to close the trove, the user should get the CLV refunded and use them to repay and close it,
          * but instead we do that all in one step.
          */
-        CLV.burn(GAS_POOL_ADDRESS, _CLV);
+        clvToken.burn(GAS_POOL_ADDRESS, _CLV);
         // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLVDebt(_CLV);
 
@@ -862,7 +862,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _requireCLVBalanceCoversRedemption(redeemer, _CLVamount);
 
         // Confirm redeemer's balance is less than total systemic debt
-        assert(CLV.balanceOf(redeemer) <= (activeDebt.add(defaultedDebt)));
+        assert(clvToken.balanceOf(redeemer) <= (activeDebt.add(defaultedDebt)));
 
         uint remainingCLV = _CLVamount;
         uint price = priceFeed.getPrice();
@@ -918,7 +918,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         T.ETHToSendToRedeemer = T.totalETHDrawn.sub(T.ETHFee);
 
         // Burn the total CLV that is cancelled with debt, and send the redeemed ETH to _msgSender()
-        _activePoolRedeemCollateral(_msgSender(), T.totalCLVtoRedeem, T.totalETHtoSendToRedeemer);
+        _activePoolRedeemCollateral(_msgSender(), T.totalCLVToRedeem, T.ETHToSendToRedeemer);
 
         emit Redemption(_CLVamount, T.totalCLVToRedeem, T.totalETHDrawn, T.ETHFee);
     }
@@ -926,7 +926,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // Burn the received CLV, transfers the redeemed ETH to _account and updates the Active Pool
     function _activePoolRedeemCollateral(address _account, uint _CLV, uint _ETH) internal {
         // Update Active Pool CLV, and send ETH to account
-        CLV.burn(_account, _CLV);
+        clvToken.burn(_account, _CLV);
         activePool.decreaseCLVDebt(_CLV);
 
         activePool.sendETH(_account, _ETH);

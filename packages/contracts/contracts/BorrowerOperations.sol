@@ -55,17 +55,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint stake;
     }
 
-    // --- Events ---
-
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
-    event ActivePoolAddressChanged(address _activePoolAddress);
-    event DefaultPoolAddressChanged(address _defaultPoolAddress);
-    event CLVTokenAddressChanged(address _newCLVTokenAddress);
-    event PriceFeedAddressChanged(address  _newPriceFeedAddress);
-    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
-    event LQTYStakingAddressChanged(address _lqtyStakingAddress);
-    event CLVTokenAddressChanged(address _clvTokenAddress);
-
     enum BorrowerOperation {
         openLoan,
         closeLoan,
@@ -184,14 +173,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);
 
-        // Tell PM to move the ether to the Active Pool
-<<<<<<< variant A
-        poolManager.addColl{ value: msg.value }();
-
->>>>>>> variant B
+        // Move the ether to the Active Pool
         _activePoolAddColl(msg.value);
 
-======= end
         uint debt = cdpManager.getCDPDebt(_user);
         emit CDPUpdated(_user, debt, newColl, stake, BorrowerOperation.addColl);
     }
@@ -225,7 +209,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
 
         // Remove _amount ETH from ActivePool and send it to the user
-        activePool.sendETH(user, _amount);
+        activePool.sendETH(user, _collWithdrawal);
 
         emit CDPUpdated(user, debt, newColl, stake, BorrowerOperation.withdrawColl);
     }
@@ -265,7 +249,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
 
         // Mint the CLV amount (minus fee) to the borrower, and update the ActivePool
-        _withdrawCLV(user, _amount, CLVFee);
+        _withdrawCLV(user, _CLVAmount, CLVFee);
 
         uint stake = cdpManager.getCDPStake(user);
         emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.withdrawCLV);
@@ -461,13 +445,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     function _withdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) internal {
         uint totalCLVDrawn = _CLVAmount.add(_CLVFee);
         activePool.increaseCLVDebt(totalCLVDrawn);
-        CLV.mint(_account, _CLVAmount);
+        clvToken.mint(_account, _CLVAmount);
     }
 
     // Burn the specified amount of CLV from _account and decreases the total active debt
     function _repayCLV(address _account, uint _CLV) internal {
         activePool.decreaseCLVDebt(_CLV);
-        CLV.burn(_account, _CLV);
+        clvToken.burn(_account, _CLV);
     }
 
     // --- 'Require' wrapper functions ---

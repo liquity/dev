@@ -44,22 +44,6 @@ contract BorrowerOperationsTester is BorrowerOperations {
         return _getUSDValue(_coll, _price);
     }
 
-    function pmAddColl(uint _amount) public {
-        poolManager.addColl{value: _amount}(); 
-    }
-
-    function pmWithdrawColl(address _account, uint _ETH) public {
-        poolManager.withdrawColl(_account, _ETH);
-    }
-
-    function pmWithdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) public {
-        poolManager.withdrawCLV(_account, _CLVAmount, _CLVFee);
-    }
-
-    function pmRepayCLV(address _account, uint _CLV) public {
-        poolManager.repayCLV(_account, _CLV);
-    }
-
     // Payable fallback function
     receive() external payable { }
 }

@@ -39,8 +39,9 @@ contract CLVToken is ICLVToken, Ownable {
         address _cdpManagerAddress,
         address _stabilityPoolAddress
     )
-    external
-    onlyOwner
+        external
+        override
+        onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
         cdpManagerAddress = _cdpManagerAddress;
@@ -91,11 +92,11 @@ contract CLVToken is ICLVToken, Ownable {
 
     // --- 'require' functions ---
 
-    function _requireCallerIsBorrowerOperations internal view {
+    function _requireCallerIsBorrowerOperations() internal view {
         require(_msgSender() == borrowerOperationsAddress, "CLVToken: Caller is not BorrowerOperations");
     }
 
-    function _requireCallerIsBOorCDPMorSP internal view {
+    function _requireCallerIsBOorCDPMorSP() internal view {
         address msgSender = _msgSender();
         require(
             msgSender == borrowerOperationsAddress ||
@@ -104,11 +105,11 @@ contract CLVToken is ICLVToken, Ownable {
             "CLVToken: Caller is neither BorrowerOperations nor CDPManager nor StabilityPool");
     }
 
-    function _requireCallerIsStabilityPool internal view {
+    function _requireCallerIsStabilityPool() internal view {
         require(_msgSender() == stabilityPoolAddress, "CLVToken: Caller is not the StabilityPool");
     }
 
-    function _requireCallerIsCDPMorSP internal view {
+    function _requireCallerIsCDPMorSP() internal view {
         address msgSender = _msgSender();
         require(
             msgSender == cdpManagerAddress || msgSender == stabilityPoolAddress,

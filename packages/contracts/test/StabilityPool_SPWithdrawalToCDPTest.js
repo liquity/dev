@@ -1539,8 +1539,8 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       const txPromise_B = stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
 
        // Expect ETH gain per depositor of 1e9 wei to be rounded to 0 by the ETHGainedPerUnitStaked calculation (e / D), where D is ~1e36.
-      await th.assertRevert(txPromise_A, 'PoolManager: caller must have non-zero ETH Gain')
-      await th.assertRevert(txPromise_B, 'PoolManager: caller must have non-zero ETH Gain')
+      await th.assertRevert(txPromise_A, 'StabilityPool: caller must have non-zero ETH Gain')
+      await th.assertRevert(txPromise_B, 'StabilityPool: caller must have non-zero ETH Gain')
 
       aliceCLVDeposit = await stabilityPool.getCompoundedCLVDeposit(alice)
       bobCLVDeposit = await stabilityPool.getCompoundedCLVDeposit(alice)
