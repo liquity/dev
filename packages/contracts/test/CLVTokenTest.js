@@ -2,16 +2,17 @@ const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
 const dec = testHelpers.TestHelper.dec
+const assertRevert = testHelpers.TestHelper.assertRevert
+const ZERO_ADDRESS = testHelpers.TestHelper.ZERO_ADDRESS
 
 const CLVTokenTester = artifacts.require('CLVTokenTester')
 const PoolManagerTester = artifacts.require('PoolManagerTester')
 
 contract('CLVToken', async accounts => {
   const [owner, alice, bob, carol] = accounts;
-  let priceFeed
+
   let clvToken
-  let poolManager
-  let sortedCDPs
+  let poolManager  
   let cdpManager
   let activePool
   let stabilityPool
@@ -21,21 +22,25 @@ contract('CLVToken', async accounts => {
   describe('Basic token functions', async () => {
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      contracts.clvToken = await CLVTokenTester.new()
       contracts.poolManager = await PoolManagerTester.new()
-      
-      const GTContracts = await deploymentHelper.deployGTContracts()
-  
-      priceFeed = contracts.priceFeed
+      contracts.clvToken = await CLVTokenTester.new(
+        contracts.cdpManager.address,
+        contracts.poolManager.address,
+        contracts.activePool.address,
+        contracts.defaultPool.address,
+        contracts.stabilityPool.address,
+        contracts.borrowerOperations.address
+      )
       clvToken = contracts.clvToken
       poolManager = contracts.poolManager
-      sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
       activePool = contracts.activePool
       stabilityPool = contracts.stabilityPool
       defaultPool = contracts.defaultPool
       borrowerOperations = contracts.borrowerOperations
       hintHelpers = contracts.hintHelpers
+
+      const GTContracts = await deploymentHelper.deployGTContracts()
   
       lqtyStaking = GTContracts.lqtyStaking
       growthToken = GTContracts.growthToken
@@ -128,6 +133,27 @@ contract('CLVToken', async accounts => {
       const bob_BalanceAfter = await clvToken.balanceOf(bob)
       assert.equal(stabilityPool_BalanceAfter, 25)
       assert.equal(bob_BalanceAfter, 175)
+    })
+
+    it('transfer(): all of these transfers should fail due to inappropriate recipient', async () => {
+      await assertRevert(clvToken.transfer(clvToken.address, 1, { from: alice }))
+      await assertRevert(clvToken.transfer(ZERO_ADDRESS, 1, { from: alice }))
+      await assertRevert(clvToken.transfer(cdpManager.address, 1, { from: alice }))
+      await assertRevert(clvToken.transfer(poolManager.address, 1, { from: alice }))
+      await assertRevert(clvToken.transfer(activePool.address, 1, { from: alice }))
+      await assertRevert(clvToken.transfer(defaultPool.address, 1, { from: alice }))
+      await assertRevert(clvToken.transfer(stabilityPool.address, 1, { from: alice }))
+      await assertRevert(clvToken.transfer(borrowerOperations.address, 1, { from: alice }))
+    })
+    it('approve(): all of these approvals should fail due to inappropriate spender', async () => {
+      await assertRevert(clvToken.approve(clvToken.address, 1, { from: alice }))
+      await assertRevert(clvToken.approve(ZERO_ADDRESS, 1, { from: alice }))
+      await assertRevert(clvToken.approve(cdpManager.address, 1, { from: alice }))
+      await assertRevert(clvToken.approve(poolManager.address, 1, { from: alice }))
+      await assertRevert(clvToken.approve(activePool.address, 1, { from: alice }))
+      await assertRevert(clvToken.approve(defaultPool.address, 1, { from: alice }))
+      await assertRevert(clvToken.approve(stabilityPool.address, 1, { from: alice }))
+      await assertRevert(clvToken.approve(borrowerOperations.address, 1, { from: alice }))
     })
   })
 })

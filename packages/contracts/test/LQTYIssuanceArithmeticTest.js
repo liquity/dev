@@ -23,7 +23,7 @@ const repeatedlyIssueLQTY = async (poolManagerTester, timeBetweenIssuances, dura
 
   // while current time < 1 month from deployment, issue LQTY every minute
   while (timePassed < duration) {
-    console.log(`timePassed: ${timePassed}`)
+    // console.log(`timePassed: ${timePassed}`)
     await th.fastForwardTime(timeBetweenIssuances, web3.currentProvider)
     await poolManagerTester._unprotectedTriggerLQTYIssuance()
 
@@ -40,14 +40,11 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   const [owner, alice, frontEnd_1] = accounts;
 
-  before(async () => {
-
-  })
-
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     const GTContracts = await deploymentHelper.deployGTTesterContractsBuidler()
     contracts.poolManager = await PoolManagerTester.new()
+    contracts = await deploymentHelper.deployCLVToken(contracts)
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -100,7 +97,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
 
-    console.log(`supply cap: ${await communityIssuanceTester.supplyCap()}`)
+    // console.log(`supply cap: ${await communityIssuanceTester.supplyCap()}`)
 
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
@@ -113,12 +110,12 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '1318772305025'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 100000000)
   })
@@ -138,12 +135,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '79123260066094'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -163,12 +161,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '1897231348441660'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -188,12 +187,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '13205268780628400'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -213,12 +213,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '55378538087966600'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -238,12 +239,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '157105100752037000'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -263,12 +265,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = 289528188821766000
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -288,12 +291,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = dec(5, 17)
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -313,12 +317,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = dec(75, 16)
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -338,12 +343,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = dec(875, 15)
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -363,12 +369,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '937500000000000000'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -388,12 +395,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '999023437500000000'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -413,12 +421,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '999999046325684000'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -438,12 +447,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedIssuanceFraction = '999999999068677000'
 
     const absError = th.toBN(expectedIssuanceFraction).sub(issuanceFraction)
-    console.log(
-      `time since deployment: ${duration}, 
-       issuanceFraction: ${issuanceFraction},  
-       expectedIssuanceFraction: ${expectedIssuanceFraction},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    issuanceFraction: ${issuanceFraction},  
+    //    expectedIssuanceFraction: ${expectedIssuanceFraction},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(issuanceFraction, expectedIssuanceFraction), 1000000000)
   })
@@ -469,12 +479,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '43959076834188000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -497,12 +508,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '2637442002203140000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -525,12 +537,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '63241044948055500000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -553,12 +566,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '440175626020948000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -581,12 +595,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '1845951269598890000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -608,12 +623,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '5236836691734560000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000100000000000000000000)
   })
@@ -635,12 +651,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '9650939627392200000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -662,12 +679,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '16666666666666666666666666'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -689,12 +707,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '25000000000000000000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -716,12 +735,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '29166666666666666666666666'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -743,12 +763,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '31250000000000000000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -770,12 +791,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '33300781250000000000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -797,12 +819,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '33333301544189400000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -824,12 +847,13 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedTotalLQTYIssued = '33333333302289200000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-    console.log(
-      `time since deployment: ${duration}, 
-       totalLQTYIssued: ${totalLQTYIssued},  
-       expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-       abs. error: ${absError}`
-    )
+    
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
 
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
@@ -864,7 +888,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
     const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
-    logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
+    // logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
 
     // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
     assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
@@ -900,16 +924,18 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
     const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
-    logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
+    // logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
 
     // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
     assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
   })
-  /* Results:
 
-  Expected final balance: 33333333302289200000000000,
-  Actual final balance: 33333333302297188866666666,
-  Abs. error: -7988866666666  */
+  /** 
+   * Results:
+   * Expected final balance: 33333333302289200000000000,
+   * Actual final balance: 33333333302297188866666666,
+   * Abs. error: -7988866666666  
+   * */
 
   it.skip("Frequent token issuance: issuance event every minute, for 1 month", async () => {
     // Register front end with kickback rate = 100%
@@ -935,7 +961,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')
     const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
-    logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
+    // logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
 
     // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
     assert.isTrue(diff.lte(th.toBN(dec(1, 18))))
@@ -971,7 +997,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')
     const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
-    logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
+    // logLQTYBalanceAndError(LQTYBalance_A, expectedLQTYBalance_A)
 
     // Check the actual balance differs by no more than 1e18 (i.e. 1 token) from the expected balance
     assert.isTrue(diff.lte(th.toBN(dec(1, 18))))

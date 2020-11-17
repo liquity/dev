@@ -36,8 +36,6 @@ contract('PoolManager', async accounts => {
   let defaultPool
   let borrowerOperations
 
-  let gasPriceInWei
-
   describe("Stability Pool Mechanisms", async () => {
 
     before(async () => {
@@ -792,18 +790,18 @@ contract('PoolManager', async accounts => {
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-      console.log(`supplyCap before: ${await communityIssuance.supplyCap()}`)
-      console.log(`totalLQTYIssued before: ${await communityIssuance.totalLQTYIssued()}`)
-      console.log(`LQTY balance of CI before: ${await growthToken.balanceOf(communityIssuance.address)}`)
+      // console.log(`supplyCap before: ${await communityIssuance.supplyCap()}`)
+      // console.log(`totalLQTYIssued before: ${await communityIssuance.totalLQTYIssued()}`)
+      // console.log(`LQTY balance of CI before: ${await growthToken.balanceOf(communityIssuance.address)}`)
 
       // A, B, C provide to SP
       await poolManager.provideToSP(dec(100, 18), frontEnd_1, { from: A })
       await poolManager.provideToSP(dec(200, 18), frontEnd_2, { from: B })
       await poolManager.provideToSP(dec(300, 18), frontEnd_3, { from: C })
 
-      console.log(`supplyCap after: ${await communityIssuance.supplyCap()}`)
-      console.log(`totalLQTYIssued after: ${await communityIssuance.totalLQTYIssued()}`)
-      console.log(`LQTY balance of CI after: ${await growthToken.balanceOf(communityIssuance.address)}`)
+      // console.log(`supplyCap after: ${await communityIssuance.supplyCap()}`)
+      // console.log(`totalLQTYIssued after: ${await communityIssuance.totalLQTYIssued()}`)
+      // console.log(`LQTY balance of CI after: ${await growthToken.balanceOf(communityIssuance.address)}`)
 
       // Get F1, F2, F3 LQTY balances after, and confirm they have increased
       const frontEnd_1_LQTYBalance_After = await growthToken.balanceOf(frontEnd_1)
@@ -3237,7 +3235,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(20, 18), frontEnd_2, { from: B })
       await poolManager.provideToSP(dec(30, 18), ZERO_ADDRESS, { from: C })
 
-      console.log(`CLV in SP: ${await stabilityPool.getTotalCLVDeposits()}`)
+      // console.log(`CLV in SP: ${await stabilityPool.getTotalCLVDeposits()}`)
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 

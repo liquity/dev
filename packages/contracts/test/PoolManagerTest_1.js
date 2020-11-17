@@ -1,5 +1,5 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
-const { MoneyValues: mv, TestHelper: {dec, assertRevert} } = require("../utils/testHelpers.js")
+const { MoneyValues: mv, TestHelper: { dec, assertRevert } } = require("../utils/testHelpers.js")
 
 const ActivePoolTester = artifacts.require("./TestContracts/ActivePoolTester.sol");
 const DefaultPoolTester = artifacts.require("./TestContracts/DefaultPoolTester.sol");
@@ -27,10 +27,16 @@ contract('PoolManager', async accounts => {
 
     contracts.activePool = await ActivePoolTester.new()
     contracts.defaultPool = await DefaultPoolTester.new()
-    contracts.clvToken = await CLVTokenTester.new()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
     contracts.cdpManager = await CDPManagerTester.new()
-
+    contracts.clvToken = await CLVTokenTester.new(
+      contracts.cdpManager.address,
+      contracts.poolManager.address,
+      contracts.activePool.address,
+      contracts.defaultPool.address,
+      contracts.stabilityPool.address,
+      contracts.borrowerOperations.address
+    )
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManager = contracts.poolManager
@@ -65,8 +71,7 @@ contract('PoolManager', async accounts => {
         defaultPool.address,
         communityIssuance.address,
         { from: owner }
-      ),
-      'Ownable: caller is not the owner'
+      ), 'Ownable: caller is not the owner'
     )
   })
 

@@ -1,4 +1,7 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.11;
+
 import "../GT/CommunityIssuance.sol";
 
 // CommunityIssuance Tester

@@ -215,6 +215,18 @@ class DeploymentHelper {
     return GTContracts
   }
 
+  static async deployCLVToken(contracts) {
+    contracts.clvToken = await CLVToken.new(
+      contracts.cdpManager.address,
+      contracts.poolManager.address,
+      contracts.activePool.address,
+      contracts.defaultPool.address,
+      contracts.stabilityPool.address,
+      contracts.borrowerOperations.address
+    )
+    return contracts
+  }
+
   // Connect contracts to their dependencies
   static async connectCoreContracts(contracts, GTContracts) {
     // set contracts in the PoolManager

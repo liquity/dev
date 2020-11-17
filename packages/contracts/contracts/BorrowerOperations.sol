@@ -43,7 +43,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     Used to hold, return and assign variables inside a function, in order to avoid the error:
     "CompilerError: Stack too deep". */
 
-     struct LocalVariables_adjustLoan {
+    struct LocalVariables_adjustLoan {
         address user;
         uint price;
         uint collChange;

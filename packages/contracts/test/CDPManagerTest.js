@@ -36,8 +36,15 @@ contract('CDPManager', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    contracts.clvToken = await CLVTokenTester.new()
     contracts.cdpManager = await CDPManagerTester.new()
+    contracts.clvToken = await CLVTokenTester.new(
+      contracts.cdpManager.address,
+      contracts.poolManager.address,
+      contracts.activePool.address,
+      contracts.defaultPool.address,
+      contracts.stabilityPool.address,
+      contracts.borrowerOperations.address  
+    )
 
     const GTContracts = await deploymentHelper.deployGTContracts()
 
@@ -2624,7 +2631,7 @@ contract('CDPManager', async accounts => {
 
     therefore remaining ActivePool ETH should be 198 */
     const activePool_coll_after = await activePool.getETH()
-    console.log(`activePool_coll_after: ${activePool_coll_after}`)
+    // console.log(`activePool_coll_after: ${activePool_coll_after}`)
     assert.equal(activePool_coll_after, '198000000000000000000')
 
     // Check Erin's balance after

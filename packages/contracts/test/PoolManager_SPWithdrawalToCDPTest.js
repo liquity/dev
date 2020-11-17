@@ -53,6 +53,7 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       contracts = await deploymentHelper.deployLiquityCore()
       const GTContracts = await deploymentHelper.deployGTContracts()
       contracts.cdpManager = await CDPManagerTester.new()
+      contracts = await deploymentHelper.deployCLVToken(contracts)
   
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
@@ -1503,18 +1504,18 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
       const aliceExpectedETHGain = toBN(dec(4975, 23))
       const aliceETHDiff = aliceExpectedETHGain.sub(toBN(alice_ETHWithdrawn))
 
-      console.log(`alice_ETHWithdrawn: ${alice_ETHWithdrawn}`)
-      console.log(`aliceExpectedETHGain: ${aliceExpectedETHGain}`)
-      console.log(`aliceETHDiff: ${aliceETHDiff}`)
+      // console.log(`alice_ETHWithdrawn: ${alice_ETHWithdrawn}`)
+      // console.log(`aliceExpectedETHGain: ${aliceExpectedETHGain}`)
+      // console.log(`aliceETHDiff: ${aliceETHDiff}`)
 
       assert.isTrue(aliceETHDiff.lte(toBN('1000000000000000000')))
 
       const bobExpectedETHGain = toBN(dec(4975, 23))
       const bobETHDiff = bobExpectedETHGain.sub(toBN(bob_ETHWithdrawn))
 
-      console.log(`bob_ETHWithdrawn: ${bob_ETHWithdrawn}`)
-      console.log(`bobExpectedETHGain: ${bobExpectedETHGain}`)
-      console.log(`bobETHDiff: ${bobETHDiff}`)
+      // console.log(`bob_ETHWithdrawn: ${bob_ETHWithdrawn}`)
+      // console.log(`bobExpectedETHGain: ${bobExpectedETHGain}`)
+      // console.log(`bobETHDiff: ${bobETHDiff}`)
 
       assert.isTrue(bobETHDiff.lte(toBN('1000000000000000000')))
      })
@@ -1525,7 +1526,6 @@ contract('PoolManager - Withdrawal of Stability deposit to CDP - reward calculat
 
       // ETH:USD price is $2 billion per ETH
       await priceFeed.setPrice(dec(2, 27));
-      const price = await priceFeed.getPrice()
 
       const depositors = [alice, bob]
       for (account of depositors) {

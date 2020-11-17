@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.11;
 
 import "../CDPManager.sol";
@@ -12,10 +14,12 @@ import "../SortedCDPs.sol";
 import "./EchidnaProxy.sol";
 //import "../Dependencies/console.sol";
 
+/**
+ * Run with:
+ * rm -f fuzzTests/corpus/* # (optional)
+ * ~/.local/bin/echidna-test contracts/TestContracts/EchidnaTester.sol --contract EchidnaTester --config fuzzTests/echidna_config.yaml
+ */
 
-// Run with:
-// rm -f fuzzTests/corpus/* # (optional)
-// ~/.local/bin/echidna-test contracts/TestContracts/EchidnaTester.sol --contract EchidnaTester --config fuzzTests/echidna_config.yaml
 contract EchidnaTester {
     using SafeMath for uint;
 
@@ -72,7 +76,7 @@ contract EchidnaTester {
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
             echidnaProxies[i] = new EchidnaProxy(cdpManager, borrowerOperations, poolManager, clvToken);
-            (bool success, ) = address(echidnaProxies[i]).call.value(INITIAL_BALANCE)("");
+            (bool success, ) = address(echidnaProxies[i]).call{ value: INITIAL_BALANCE }("");
             require(success);
         }
 
@@ -118,7 +122,7 @@ contract EchidnaTester {
 
     // Borrower Operations
 
-    function getAdjustedETH(uint actorBalance, uint _ETH, uint ratio) internal returns (uint) {
+    function getAdjustedETH(uint actorBalance, uint _ETH, uint ratio) internal view returns (uint) {
         uint price = priceFeed.getPrice();
         require(price > 0);
         uint minETH = ratio.mul(CLV_GAS_COMPENSATION).div(price);
@@ -127,7 +131,7 @@ contract EchidnaTester {
         return ETH;
     }
 
-    function getAdjustedCLV(uint ETH, uint _CLVAmount, uint ratio) internal returns (uint) {
+    function getAdjustedCLV(uint ETH, uint _CLVAmount, uint ratio) internal view returns (uint) {
         uint price = priceFeed.getPrice();
         uint CLVAmount = _CLVAmount;
         uint compositeDebt = CLVAmount.add(CLV_GAS_COMPENSATION);

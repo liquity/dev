@@ -42,7 +42,7 @@ contract CDPManagerTester is CDPManager {
         lastFeeOperationTime = block.timestamp;
     }
 
-     function setBaseRate(uint _baseRate) external {
+    function setBaseRate(uint _baseRate) external {
         baseRate = _baseRate;
     }
 
@@ -66,4 +66,3 @@ contract CDPManagerTester is CDPManager {
         return _getNetDebt(_debtVal);
     }
 }
-

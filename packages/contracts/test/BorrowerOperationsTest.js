@@ -42,6 +42,7 @@ contract('BorrowerOperations', async accounts => {
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
+    contracts = await deploymentHelper.deployCLVToken(contracts)
     const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
@@ -68,7 +69,6 @@ contract('BorrowerOperations', async accounts => {
   })
 
   it("addColl(): Increases the activePool ETH and raw ether balance by correct amount", async () => {
-
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
     const activePool_ETH_Before = await activePool.getETH()
@@ -3344,7 +3344,6 @@ contract('BorrowerOperations', async accounts => {
   //  --- getNewICRFromTroveChange ---
 
   describe("getNewTCRFromTroveChange() returns the correct TCR", async () => {
-
     // 0, 0
     it("collChange = 0, debtChange = 0", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)

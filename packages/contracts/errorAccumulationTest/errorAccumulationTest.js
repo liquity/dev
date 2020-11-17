@@ -41,7 +41,6 @@ contract('CDPManager', async accounts => {
 
   beforeEach(async () => {
     priceFeed = await PriceFeed.new()
-    clvToken = await CLVToken.new()
     poolManager = await PoolManager.new()
     sortedCDPs = await SortedCDPs.new()
     cdpManager = await CDPManager.new()
@@ -53,7 +52,6 @@ contract('CDPManager', async accounts => {
 
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
-    CLVToken.setAsDeployed(clvToken)
     PoolManager.setAsDeployed(poolManager)
     SortedCDPs.setAsDeployed(sortedCDPs)
     CDPManager.setAsDeployed(cdpManager)
@@ -61,6 +59,16 @@ contract('CDPManager', async accounts => {
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
     FunctionCaller.setAsDeployed(functionCaller)
+
+    clvToken = await CLVToken.new(
+      cdpManager.address,
+      poolManager.address,
+      activePool.address,
+      defaultPool.address,
+      stabilityPool.address,
+      borrowerOperations.address
+    )
+    CLVToken.setAsDeployed(clvToken)
 
     contracts = {
       priceFeed,

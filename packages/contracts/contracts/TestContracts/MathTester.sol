@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.11;
 
 import "../Dependencies/Math.sol";
@@ -6,12 +8,12 @@ import "../Dependencies/Math.sol";
 
 contract MathTester {
     // Non-view wrapper for gas test
-    function callDecPowTx(uint _base, uint _n) external returns (uint) {
+    function callDecPowTx(uint _base, uint _n) external pure returns (uint) {
         return Math._decPow(_base, _n);
     }
 
     // External view wrapper
-    function callDecPow(uint _base, uint _n) external view returns (uint) {
+    function callDecPow(uint _base, uint _n) external pure returns (uint) {
         return Math._decPow(_base, _n);
     }
 }

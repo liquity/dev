@@ -11,7 +11,7 @@ interface ICLVToken is IERC20 {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
-    event BorrowerOperationsAddressChanged( address _newBorrowerOperationsAddress);
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
 
     event CLVTokenBalanceUpdated(address _user, uint _amount);
 

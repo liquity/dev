@@ -28,19 +28,6 @@ contract CLVToken is ICLVToken, Ownable {
     
     uint256 public _totalSupply;
 
-    // --- Events ---
-    /*
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
-    event PoolManagerAddressChanged( address _newPoolManagerAddress);    
-    event ActivePoolAddressChanged(address _newActivePoolAddress);
-    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
-    event BorrowerOperationsAddressChanged( address _newBorrowerOperationsAddress);
-
-    event CLVTokenBalanceUpdated(address _user, uint _amount);
-    */
-    // --- Functions ---
-
     constructor( 
         address _cdpManagerAddress,
         address _poolManagerAddress,
@@ -112,6 +99,7 @@ contract CLVToken is ICLVToken, Ownable {
         );
         require(
             recipient != activePoolAddress &&
+            recipient != cdpManagerAddress && 
             recipient != poolManagerAddress && 
             recipient != borrowerOperationsAddress,
             "CLVToken: Use repay function instead to clear your debt"
@@ -129,6 +117,7 @@ contract CLVToken is ICLVToken, Ownable {
             spender != address(this) &&
             spender != activePoolAddress &&
             spender != defaultPoolAddress &&
+            spender != cdpManagerAddress &&
             spender != poolManagerAddress && 
             spender != stabilityPoolAddress &&
             spender != borrowerOperationsAddress,

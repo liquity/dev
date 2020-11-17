@@ -7,8 +7,11 @@ import '../Interfaces/ISortedCDPs.sol';
 import '../Interfaces/IPriceFeed.sol';
 import '../Dependencies/Math.sol';
 
-/* Wrapper contract - used for calculating gas of read-only and internal functions. 
-Not part of the Liquity application. */
+/** 
+ * Wrapper contract - used for calculating gas of read-only and internal functions. 
+ * Not part of the Liquity application. 
+ */
+ 
 contract FunctionCaller {
 
     ICDPManager cdpManager;
@@ -40,13 +43,13 @@ contract FunctionCaller {
     // --- PriceFeed functions -  non-view wrappers ---
 
     // --- CDPManager functions - non-view wrappers ---
-    function cdpManager_getCurrentICR (address _address, uint _price) external returns (uint) {
+    function cdpManager_getCurrentICR (address _address, uint _price) external view returns (uint) {
         return cdpManager.getCurrentICR(_address, _price);  
     }
 
     // --- SortedCDPs functions -  non-view wrappers ---
 
-    function sortedCDPs_findInsertPosition(uint _ICR, uint _price, address _prevId, address _nextId) external returns (address, address) {
+    function sortedCDPs_findInsertPosition(uint _ICR, uint _price, address _prevId, address _nextId) external view returns (address, address) {
         return sortedCDPs.findInsertPosition(_ICR, _price, _prevId, _nextId);
     }
 }
