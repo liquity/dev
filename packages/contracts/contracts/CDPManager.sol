@@ -313,14 +313,15 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.pendingDebtReward,
         L.pendingCollReward) = getEntireDebtAndColl(_user);
 
+        poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
+
         V.collGasCompensation = _getCollGasCompensation(V.entireCDPColl);
         // in case of partial, it will be overriden to zero below
         V.CLVGasCompensation = CLV_GAS_COMPENSATION;
         L.collToLiquidate = V.entireCDPColl.sub(V.collGasCompensation);
 
         // If ICR <= 100%, purely redistribute the CDP across all active CDPs
-        if (_ICR <= _100pct) {
-            poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
+        if (_ICR <= _100pct) { 
             _removeStake(_user);
 
             V.debtToOffset = 0;
@@ -333,7 +334,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > _100pct) && (_ICR < MCR)) {
-            poolManager.movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
             _removeStake(_user);
 
             (V.debtToOffset,
@@ -351,7 +351,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 LiquidationValues memory zeroVals;
                 return zeroVals;
             }
-            _applyPendingRewards(_user);
             _removeStake(_user);
 
             V = _getPartialOffsetVals(_user, V.entireCDPDebt, V.entireCDPColl, _CLVInPool);
