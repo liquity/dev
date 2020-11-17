@@ -671,7 +671,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     function _getTotalsFromBatchLiquidate_NormalMode(
         uint _price, 
         uint _CLVInPool, 
-        address[] memory _troveArray) 
+        address[] memory _troveArray
+    ) 
         internal 
         returns(LiquidationTotals memory T)
     {
