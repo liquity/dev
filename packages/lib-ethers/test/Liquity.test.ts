@@ -1,6 +1,8 @@
 import { describe, before, it } from "mocha";
 import chai, { expect, assert } from "chai";
 import chaiAsPromised from "chai-as-promised";
+import chaiSpies from "chai-spies";
+import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 import { ethers, network } from "@nomiclabs/buidler";
 
@@ -8,12 +10,14 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 import { Trove, StabilityDeposit } from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
-import { LiquityContractAddresses, addressesOf, EthersLiquity, redeemMaxIterations } from "..";
-import { BigNumber } from "ethers";
+import { HintHelpers } from "../types";
+import { LiquityContracts, LiquityContractAddresses, addressesOf } from "../src/contracts";
+import { EthersLiquity, redeemMaxIterations } from "../src/EthersLiquity";
 
 const provider = ethers.provider;
 
 chai.use(chaiAsPromised);
+chai.use(chaiSpies);
 
 // Typed wrapper around Chai's
 function assertStrictEquals<T>(actual: unknown, expected: T, message?: string): asserts actual is T {
@@ -103,12 +107,66 @@ describe("EthersLiquity", () => {
     expect(`${await provider.getBalance(user.getAddress())}`).to.equal(`${targetBalance}`);
   });
 
-  it("should connect to contracts their addresses", async () => {
+  it("should connect to contracts by their addresses", async () => {
     liquity = await EthersLiquity.connect(addresses, user);
   });
 
   it("should get the price", async () => {
     price = await liquity.getPrice();
+  });
+
+  describe("_findHintForCollateralRatio", () => {
+    it("should pick the closest approx hint", async () => {
+      type Resolved<T> = T extends Promise<infer U> ? U : never;
+      type ApproxHint = Resolved<ReturnType<HintHelpers["getApproxHint"]>>;
+
+      const fakeHints: ApproxHint[] = [
+        { diff: BigNumber.from(3), hintAddress: "alice", latestRandomSeed: BigNumber.from(1111) },
+        { diff: BigNumber.from(4), hintAddress: "bob", latestRandomSeed: BigNumber.from(2222) },
+        { diff: BigNumber.from(1), hintAddress: "carol", latestRandomSeed: BigNumber.from(3333) },
+        { diff: BigNumber.from(2), hintAddress: "dennis", latestRandomSeed: BigNumber.from(4444) }
+      ];
+
+      const fakeContracts = {
+        cdpManager: {}, // avoid TypeError in EthersLiquity constructor
+
+        hintHelpers: chai.spy.interface({
+          getApproxHint: (..._args: any) => Promise.resolve(fakeHints.shift())
+        }),
+
+        sortedCDPs: chai.spy.interface({
+          findInsertPosition: (..._args: any) => Promise.resolve(["fake insert position"])
+        })
+      };
+
+      const fakeLiquity = new EthersLiquity(fakeContracts as LiquityContracts);
+
+      const collateralRatio = Decimal.from("1.5");
+      const price = Decimal.from(200);
+
+      await fakeLiquity._findHintForCollateralRatio(collateralRatio, {
+        numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
+        price
+      });
+
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.exactly(4);
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(
+        collateralRatio.bigNumber,
+        price.bigNumber
+      );
+
+      // returned latestRandomSeed should be passed back on the next call
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(1111));
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(2222));
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(3333));
+
+      expect(fakeContracts.sortedCDPs.findInsertPosition).to.have.been.called.once;
+      expect(fakeContracts.sortedCDPs.findInsertPosition).to.have.been.called.with(
+        collateralRatio.bigNumber,
+        price.bigNumber,
+        "carol"
+      );
+    });
   });
 
   describe("Trove", () => {
@@ -499,7 +557,7 @@ describe("EthersLiquity", () => {
         actualTokenAmount: Decimal.from(55),
         collateralReceived: Decimal.from(0.275),
         // fee: Decimal.from("0.084027777777777777")
-        fee: Decimal.from( "0.042013888888888888")
+        fee: Decimal.from("0.042013888888888888")
       });
 
       const balance = new Decimal(await provider.getBalance(user.getAddress()));
