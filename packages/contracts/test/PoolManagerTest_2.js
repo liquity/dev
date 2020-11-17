@@ -792,7 +792,7 @@ contract('PoolManager', async accounts => {
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-      console.log(`supplyCap before: ${await communityIssuance.supplyCap()}`)
+      console.log(`LQTYSupplyCap before: ${await communityIssuance.LQTYSupplyCap()}`)
       console.log(`totalLQTYIssued before: ${await communityIssuance.totalLQTYIssued()}`)
       console.log(`LQTY balance of CI before: ${await growthToken.balanceOf(communityIssuance.address)}`)
 
@@ -801,7 +801,7 @@ contract('PoolManager', async accounts => {
       await poolManager.provideToSP(dec(200, 18), frontEnd_2, { from: B })
       await poolManager.provideToSP(dec(300, 18), frontEnd_3, { from: C })
 
-      console.log(`supplyCap after: ${await communityIssuance.supplyCap()}`)
+      console.log(`LQTYSupplyCap after: ${await communityIssuance.LQTYSupplyCap()}`)
       console.log(`totalLQTYIssued after: ${await communityIssuance.totalLQTYIssued()}`)
       console.log(`LQTY balance of CI after: ${await growthToken.balanceOf(communityIssuance.address)}`)
 

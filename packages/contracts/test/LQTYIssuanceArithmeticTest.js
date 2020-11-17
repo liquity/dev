@@ -100,7 +100,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
 
-    console.log(`supply cap: ${await communityIssuanceTester.supplyCap()}`)
+    console.log(`supply cap: ${await communityIssuanceTester.LQTYSupplyCap()}`)
 
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)

@@ -589,7 +589,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
 
       // Check Factory is OYLC deployer
-      assert.equal(await OYLC.lockupDeployer(), lockupContractFactory.address)
+      assert.equal(await OYLC.deployer(), lockupContractFactory.address)
 
       // Deployer funds the OYLC
       await growthToken.transfer(OYLC.address, dec(100, 18), { from: owner })
@@ -647,16 +647,16 @@ contract('All Liquity functions with intra-system access control restrictions', 
         carol,
         dec(100, 18),
         timeValues.SECONDS_IN_ONE_MONTH,
-        { from: owner })
+        { from: owner }
+      )
 
       const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
 
       // Check Factory is CDLC deployer
-      assert.equal(await CDLC.lockupDeployer(), lockupContractFactory.address)
+      assert.equal(await CDLC.deployer(), lockupContractFactory.address)
 
       // Deployer funds the CDLC
       await growthToken.transfer(CDLC.address, dec(100, 18), { from: owner })
-
 
       try {
         const txAlice = await CDLC.lockContract({ from: alice })
