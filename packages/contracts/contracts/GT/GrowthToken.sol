@@ -46,7 +46,7 @@ contract GrowthToken is IERC20 {
 
     uint public deploymentStartTime;
 
-    address public growthTokenDeployer;
+    address public deployer;
     address public communityIssuanceAddress;
 
     address public lockupFactoryAddress;
@@ -60,7 +60,7 @@ contract GrowthToken is IERC20 {
     // --- Functions ---
 
     constructor(address _communityIssuanceAddress, address _lockupFactoryAddress) public {
-        growthTokenDeployer = msg.sender;
+        deployer = msg.sender;
         deploymentStartTime  = block.timestamp;
         
         communityIssuanceAddress = _communityIssuanceAddress;
@@ -173,7 +173,7 @@ contract GrowthToken is IERC20 {
     // --- Helper functions ---
 
     function _callerIsDeployer() internal view returns (bool) {
-        return (msg.sender == growthTokenDeployer);
+        return (msg.sender == deployer);
     }
 
     function _isFirstYear() internal view returns (bool) {
@@ -188,7 +188,7 @@ contract GrowthToken is IERC20 {
     }
 
     function _requireRecipientIsNotDeployer(address _recipient) internal view {
-        require(_recipient != growthTokenDeployer, "GrowthToken: recipient must not be the deployer");
+        require(_recipient != deployer, "GrowthToken: recipient must not be the deployer");
     }
 
     function _requireCallerIsNotDeployer() internal view {

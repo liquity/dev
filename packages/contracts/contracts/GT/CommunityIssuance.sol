@@ -28,19 +28,23 @@ contract CommunityIssuance is ICommunityIssuance {
     F = 0.999998681227695000 */
     uint constant public ISSUANCE_FACTOR = 999998681227695000;
 
-    address public communityIssuanceDeployer;
+    /* The community LQTY supply cap is the starting balance of the Community Issuance contract.
+    Liquity admin should transfer LQTY to this CommunityIssuance contract before activating it.
+    
+    Set to 1/3 of total LQTY supply.*/
+    uint constant public LQTYSupplyCap = 33333333333333333333333333; // (1/3) * 100 million
+
+    address public deployer;
 
     address public growthTokenAddress;
     IGrowthToken growthToken;
 
     address public poolManagerAddress;
 
-    uint public supplyCap;
-
     uint public totalLQTYIssued;
     uint public deploymentTime;
 
-    bool active;
+    bool public active;
 
     // --- Events ---
 
@@ -50,7 +54,7 @@ contract CommunityIssuance is ICommunityIssuance {
     // --- Functions ---
 
     constructor() public {
-        communityIssuanceDeployer = msg.sender;
+        deployer = msg.sender;
         deploymentTime = block.timestamp;
     }
 
@@ -74,10 +78,8 @@ contract CommunityIssuance is ICommunityIssuance {
     function activateContract() external override {
         _requireCallerIsCommunityIssuanceDeployer();
         _requireContractIsNotActive();
+        _requireLQTYBalanceIsAtLeastSupplyCap();
 
-        /* The community LQTY supply cap is the starting balance of the Community Issuance contract.
-        Liquity admin should transfer LQTY to this CommunityIssuance contract before activating it */
-        supplyCap = growthToken.balanceOf(address(this));
         active = true;
     }
 
@@ -86,7 +88,7 @@ contract CommunityIssuance is ICommunityIssuance {
         _requireCallerIsPoolManager();
         _requireContractIsActive();
 
-        uint latestTotalLQTYIssued = supplyCap.mul(_getCumulativeIssuanceFraction()).div(1e18);
+        uint latestTotalLQTYIssued = LQTYSupplyCap.mul(_getCumulativeIssuanceFraction()).div(1e18);
         uint issuance = latestTotalLQTYIssued.sub(totalLQTYIssued);
       
         totalLQTYIssued = latestTotalLQTYIssued;
@@ -121,7 +123,7 @@ contract CommunityIssuance is ICommunityIssuance {
     // --- 'require' functions ---
 
     function _requireCallerIsCommunityIssuanceDeployer() internal view {
-        require(msg.sender == communityIssuanceDeployer, "CommunityIssuance: caller is not deployer");
+        require(msg.sender == deployer, "CommunityIssuance: caller is not deployer");
     }
 
     function _requireCallerIsPoolManager() internal view {
@@ -134,5 +136,12 @@ contract CommunityIssuance is ICommunityIssuance {
 
     function _requireContractIsNotActive() internal view {
         require(active == false, "CommunityIssuance: Contract must not be active");
+    }
+
+    function _requireLQTYBalanceIsAtLeastSupplyCap() internal view {
+        uint LQTYBalance = growthToken.balanceOf(address(this));
+        
+        require (LQTYBalance >= LQTYSupplyCap, 
+        "CommunityIssuance: Contract must be fully funded with its starting LQTY supply");
     }
 }

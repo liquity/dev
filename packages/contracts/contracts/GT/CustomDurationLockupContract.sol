@@ -7,7 +7,7 @@ contract CustomDurationLockupContract {
     using SafeMath for uint;
 
     // --- Data ---
-    address public lockupDeployer;
+    address public deployer;
     address public beneficiary;
 
     address public growthTokenAddress;
@@ -38,7 +38,7 @@ contract CustomDurationLockupContract {
     )
     public 
     {
-        lockupDeployer = msg.sender;
+        deployer = msg.sender;
 
         growthTokenAddress = _growthTokenAddress;
         growthToken = IGrowthToken(_growthTokenAddress);
@@ -74,7 +74,7 @@ contract CustomDurationLockupContract {
     // --- 'require' functions ---
 
     function _requireCallerIsLockupDeployer() internal view {
-        require(msg.sender == lockupDeployer, "OYLC: caller is not OYLC deployer");
+        require(msg.sender == deployer, "OYLC: caller is not OYLC deployer");
     }
 
     function _requireCallerIsBeneficiary() internal view {
