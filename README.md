@@ -73,7 +73,7 @@ Liquity utilizes a two-step liquidation mechanism in the following order of prio
 
 1. Offset under-collateralized troves against the Stability Pool containing LUSD tokens
 
-2. Redistribute under-collateralized troves to other borrowers
+2. Redistribute under-collateralized troves to other borrowers if the Stability Pool is emptied
 
 Liquity primarily uses the LUSD tokens in its Stability Pool to absorb the under-collateralized debt, i.e. to repay the liquidated borrower's liability.
 
@@ -235,7 +235,7 @@ The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Poo
 
 `SortedTroves.sol` - a doubly linked list that stores addresses of trove owners, sorted by their individual collateral ratio (ICR). It inserts and re-inserts troves at the correct position, based on their ICR.
 
-**TODO: Description of PriceFeed.sol to be eventually updated.
+**TODO: Description of PriceFeed.sol to be eventually updated.**
 
 `PriceFeed.sol` - Contains functionality for obtaining the current ETH:USD price, which the system uses for calculating collateral ratios. Currently, the price is a state variable that can be manually set by the admin. The PriceFeed contract will eventually store no price data, and when called from within other Liquity contracts, will automatically pull the current and decentralized ETH:USD price data from the Chainlink contract.
 
@@ -285,7 +285,7 @@ The list relies on the fact that a collateral and debt redistribution due to a l
 
 The fact that ordering is maintained as redistributions occur, is not immediately obvious: please see the [mathematical proof](https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs) which shows that this holds in Liquity.
 
-A node inserted based on current ICR will maintain the correct position, relative to it's peers, as liquidation gains accumulate, as long as its raw collateral and debt have not changed.
+A node inserted based on current ICR will maintain the correct position, relative to its peers, as liquidation gains accumulate, as long as its raw collateral and debt have not changed.
 
 Nodes also remain sorted as the ETH:USD price varies, since price fluctuations change the collateral value of each trove by the same proportion.
 
@@ -293,70 +293,74 @@ Thus, nodes need only be re-inserted to the sorted list upon a CDP operation - w
 
 ### Flow of Ether in Liquity
 
-Ether in the system lives in three Pools: the ActivePool, the DefaultPool and the StabilityPool. When an operation is made, ether is transferred in one of three ways:
+Ether in the system lives in three Pools: the ActivePool, the DefaultPool and the StabilityPool. When an operation is made, Ether is transferred in one of three ways:
+
+**TODO:Check against https://github.com/liquity/dev/pull/72/commits and maybe add a flow chart?**
 
 - From a user to a Pool
 - From a Pool to a user
 - From one Pool to another Pool
 
-Ether is recorded on an _individual_ level, but stored in _aggregate_ in a Pool. An active trove with collateral and debt has a struct in the CDPManager that stores its ether collateral value in a uint, but its actual ether is in the balance of the ActivePool contract.
+Ether is recorded on an _individual_ level, but stored in _aggregate_ in a Pool. An active trove with collateral and debt has a struct in the TroveManager that stores its ether collateral value in a uint, but its actual Ether is in the balance of the ActivePool contract.
 
-Likewise, a StabilityPool depositor who has earned some ETH gain from their deposit will have a computed ETH gain based on a variable in the PoolManager. But their actual withdrawable ether is in the balance of the StabilityPool contract.
+Likewise, a StabilityPool depositor who has earned some ETH gain from their deposit will have a computed ETH gain based on a variable in the PoolManager. But their actual withdrawable Ether is in the balance of the StabilityPool contract.
 
 **Borrower Operations**
 
-| Function                    | ETH quantity       | Path                                |
-| --------------------------- | ------------------ | ----------------------------------- |
-| openLoan                    | msg.value          | msg.sender->PoolManager->ActivePool |
-| addColl                     | msg.value          | msg.sender->PoolManager->ActivePool |
-| withdrawColl                | \_amount parameter | ActivePool->msg.sender              |
-| adjustLoan: adding ETH      | msg.value          | msg.sender->PoolManager->ActivePool |
-| adjustLoan: withdrawing ETH | \_amount parameter | ActivePool->msg.sender              |
-| closeLoan                   | \_amount parameter | ActivePool->msg.sender              |
+**TODO: To be reviewed and updated according to https://github.com/liquity/dev/issues/60**
 
-**CDP Manager**
+| Function                    | ETH quantity       | Path                                    |
+| --------------------------- | ------------------ | --------------------------------------- |
+| openTrove                   | msg.value          | msg.sender -> PoolManager -> ActivePool |
+| addColl                     | msg.value          | msg.sender -> PoolManager -> ActivePool |
+| withdrawColl                | \_amount parameter | ActivePool -> msg.sender                |
+| adjustTrove: adding ETH     | msg.value          | msg.sender -> PoolManager -> ActivePool |
+| adjustTrove: withdrawing ETH| \_amount parameter | ActivePool -> msg.sender                |
+| closeLoan                   | \_amount parameter | ActivePool -> msg.sender                |
 
-| Function                   | ETH quantity                   | Path                      |
-| -------------------------- | ------------------------------ | ------------------------- |
-| liquidate (offset)         | collateral to be offset        | ActivePool->StabilityPool |
-| liquidate (redistribution) | collateral to be redistributed | ActivePool->DefaultPool   |
-| redeemCollateral           | collateral to be swapped       | ActivePool->msg.sender    |
+**Trove Manager**
+
+| Function                   | ETH quantity                   | Path                        |
+| -------------------------- | ------------------------------ | --------------------------- |
+| liquidate (offset)         | collateral to be offset        | ActivePool -> StabilityPool |
+| liquidate (redistribution) | collateral to be redistributed | ActivePool -> DefaultPool   |
+| redeemCollateral           | collateral to be swapped       | ActivePool -> msg.sender    |
 
 **Pool Manager**
 
-| Function            | ETH quantity                 | Path                                                                        |
-| ------------------- | ---------------------------- | --------------------------------------------------------------------------- |
-| provideToSP         | depositor's current ETH gain | StabilityPool -> msg.sender                                                 |
-| withdrawFromSP      | depositor's current ETH gain | StabilityPool -> msg.sender                                                 |
-| withdrawFromSPtoCDP | depositor's current ETH gain | StabilityPool -> PoolManager ->BorrowerOperations ->PoolManager->ActivePool |
+| Function              | ETH quantity                 | Path                                                                         |
+| --------------------- | ---------------------------- | ---------------------------------------------------------------------------- |
+| provideToSP           | depositor's current ETH gain | StabilityPool -> msg.sender                                                  |
+| withdrawFromSP        | depositor's current ETH gain | StabilityPool -> msg.sender                                                  |
+| withdrawFromSPtoTrove | depositor's current ETH gain | StabilityPool -> PoolManager -> BorrowerOperations -> PoolManager -> ActivePool |
 
 ### Flow of ERC20 tokens in Liquity
 
-When a user issues debt from their trove, CLV tokens are minted to their own address, and a debt is recorded on the trove. Conversely, when they repay their trove’s CLV debt, CLV is burned from their address, and the debt on their trove is reduced.
+When a user issues debt from their trove, LUSD tokens are minted to their own address, and a debt is recorded on the trove. Conversely, when they repay their trove’s LUSD debt, LUSD is burned from their address, and the debt on their trove is reduced.
 
-Redemptions burn CLV from the redeemer’s balance, and reduce the debt of the trove redeemed against.
+Redemptions burn LUSD from the redeemer’s balance, and reduce the debt of the trove redeemed against.
 
-Liquidations that involve a Stability Pool offset burn tokens from the Stability Pool’s balance, and reduced the CLV debt of the liquidated trove.
+Liquidations that involve a Stability Pool offset burn tokens from the Stability Pool’s balance, and reduce the LUSD debt of the liquidated trove.
 
-The only time CLV is transferred to/from a Liquity contract, is when a user deposits CLV to, or withdraws CLV from, the StabilityPool.
+The only time LUSD is transferred to/from a Liquity contract, is when a user deposits LUSD to, or withdraws LUSD from, the StabilityPool.
 
 **Borrower Operations**
 
-| Function                    | ERC20 Operation                       |
-| --------------------------- | ------------------------------------- |
-| openLoan                    | ERC20.\_mint(msg.sender, \_CLVAmount) |
-| withdrawCLV                 | ERC20.\_mint(msg.sender, \_CLVAmount) |
-| repayCLV                    | ERC20.\_burn(msg.sender, \_CLVAmount) |
-| adjustLoan: withdrawing CLV | ERC20.\_mint(msg.sender, \_CLVAmount) |
-| adjustLoan: repaying CLV    | ERC20.\_burn(msg.sender, \_CLVAmount) |
-| closeLoan                   | ERC20.\_burn(msg.sender, \_CLVAmount) |
+| Function                    | ERC20 Operation                        |
+| --------------------------- | -------------------------------------- |
+| openLoan                    | ERC20.\_mint(msg.sender, \_LUSDAmount) |
+| withdrawLUSD                | ERC20.\_mint(msg.sender, \_LUSDAmount) |
+| repayLUSD                   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
+| adjustLoan: withdrawing LUSD| ERC20.\_mint(msg.sender, \_LUSDAmount) |
+| adjustLoan: repaying LUSD   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
+| closeLoan                   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
 
-**CDP Manager**
+**Trove Manager**
 
 | Function           | ERC20 Operation                                     |
 | ------------------ | --------------------------------------------------- |
-| liquidate (offset) | ERC20.\_burn(stabilityPoolAddress, \_debtToOffset); |
-| redeemCollateral   | ERC20.\_burn(msg.sender, \_CLV)                     |
+| liquidate (offset) | ERC20.\_burn(stabilityPoolAddress, \_debtToOffset)  |
+| redeemCollateral   | ERC20.\_burn(msg.sender, \_LUSD)                    |
 
 **Pool Manager**
 
@@ -367,19 +371,21 @@ The only time CLV is transferred to/from a Liquity contract, is when a user depo
 
 ## Expected User Behaviors
 
-Generally, borrowers call functions that trigger CDP operations on their own CDP. Stability Pool users (who may or may not also be borrowers) call functions that trigger Stability Pool operations, such as depositing or withdrawing tokens to/from the Stability Pool.
+Generally, borrowers call functions that trigger trove operations on their own trove. Stability Pool users (who may or may not also be borrowers) call functions that trigger Stability Pool operations, such as depositing or withdrawing tokens to/from the Stability Pool.
 
 Anyone may call the public liquidation functions, and attempt to liquidate one or several CDPs.
 
-CLV token holders may also redeem their tokens, and swap an amount of tokens 1-for-1 in value with ether.
+LUSD token holders may also redeem their tokens, and swap an amount of tokens 1-for-1 in value with Ether.
 
 ## Contract Ownership and Function Permissions
 
 All the core smart contracts inherit from the OpenZeppelin `Ownable.sol` contract template. As such all contracts have a single owning address, which is the deploying address.
 
-Several public and external functions have modifiers such as `onlyCDPManager`, `onlyPoolManager`, etc - ensuring they can only be called by the respective permitted contract.
+Several public and external functions have modifiers such as `onlyTroveManager`, `onlyPoolManager`, etc - ensuring they can only be called by the respective permitted contract.
 
 ## Deployment to a Development Blockchain
+
+**TODO: Check if this is still up to date**
 
 The Buidler migrations script and deployment helpers deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
 
@@ -398,30 +404,30 @@ Below are all quantity state variables used in Liquity, along with their type, r
 | Contract          | type     | Quantity                 | Description                                                                       | Representation           | Units                      |
 | ----------------- | -------- | ------------------------ | --------------------------------------------------------------------------------- | ------------------------ | -------------------------- |
 | **ActivePool**    | uint256  | ETH                      | Total ETH in all active troves                                                    | integer                  | wei (E)                    |
-|                   | uint256  | CLVDebt                  | Total outstanding CLV Debt in active troves                                       | integer                  | attoCLV (C)                |
+|                   | uint256  | TroveDebt                | Total outstanding CLV Debt in active troves                                       | integer                  | attoLUSD (C)               |
 | **DefaultPool**   | uint256  | ETH                      | Total liquidated ETH, pending reward                                              | integer                  | wei (E)                    |
-|                   | uint256  | CLVDebt                  | Total closed CLV debt, pending reward                                             | integer                  | attoCLV (C)                |
+|                   | uint256  | TroveDebt                | Total closed LSUD debt, pending reward                                            | integer                  | attoLUSD (C)               |
 | **StabilityPool** | uint256  | ETH                      | Total accumulated ETH Gains from StabilityPool                                    | integer                  | wei (E)                    |
-|                   | uint256  | totalCLVDeposits         | Total current CLV deposits                                                        | integer                  | attoCLV (C)                |
+|                   | uint256  | totalCLVDeposits         | Total current LUSD deposits                                                       | integer                  | attoLUSD (C)               |
 |                   |          |                          |                                                                                   |                          |                            |
 | **PriceFeed**     | uint256  | price                    | The last recorded price of 1 Ether, in USD                                        | 18 digit decimal         | dollars per ether (\$ / E) |
 |                   |          |                          |                                                                                   |                          |                            |
-| **CDPManager**    | constant | MCR                      | Min collateral ratio.                                                             | 18 digit decimal         | none ( $ / $)              |
-|                   | constant | CCR                      | Critical collateral ratio.                                                        | 18 digit decimal         | none ( $ / $)              |
-|                   | uint256  | totalStakes              | sum of all trove stakes                                                           | integer                  | wei (E)                    |
-|                   | uint256  | totalStakesSnapshot      | snapshot of totalStakes at last liquidation                                       | integer                  | wei (E)                    |
-|                   | uint256  | totalCollateralSnapshot  | snapshot of totalCollateral at last liquidation                                   | integer                  | wei (E)                    |
+| **CDPManager**    | constant | MCR                      | Minimum collateral ratio                                                          | 18 digit decimal         | none ( $ / $)              |
+|                   | constant | CCR                      | Critical collateral ratio                                                         | 18 digit decimal         | none ( $ / $)              |
+|                   | uint256  | totalStakes              | Sum of all trove stakes                                                           | integer                  | wei (E)                    |
+|                   | uint256  | totalStakesSnapshot      | Snapshot of totalStakes at last liquidation                                       | integer                  | wei (E)                    |
+|                   | uint256  | totalCollateralSnapshot  | Snapshot of totalCollateral at last liquidation                                   | integer                  | wei (E)                    |
 |                   |          |                          |                                                                                   |                          |                            |
-|                   | uint256  | L_ETH                    | accumulated ETH reward-per-unit-staked for troves                                 | 18 digit decimal         | none (E / E)               |
-|                   | uint256  | L_CLVDebt                | accumulated CLV Debt reward-per-unit-staked for troves                            | 18 digit decimal         | CLV Debt per ether (C / E) |
+|                   | uint256  | L_ETH                    | Accumulated ETH reward-per-unit-staked for troves                                 | 18 digit decimal         | none (E / E)               |
+|                   | uint256  | L_TroveDebt              | Accumulated CLV Debt reward-per-unit-staked for troves                            | 18 digit decimal         | Trove Debt per ether (C / E) |
 |                   |          |                          |                                                                                   |                          |                            |
-|                   | uint256  | lastETHError_Redist.     | error tracker for the ETH error correction in \_redistributeDebtAndColl()         | 18 digit decimal \* 1e18 | Ether (E)                  |
-|                   | uint256  | lastCLVDebtError_Redist. | error tracker for the CLVDebt error correction in \_redistributeDebtAndColl()     | 18 digit decimal \* 1e18 | CLV (C)                    |
+|                   | uint256  | lastETHError_Redist.     | Error tracker for the ETH error correction in \_redistributeDebtAndColl()         | 18 digit decimal \* 1e18 | Ether (E)                  |
+|                   | uint256  | lastLUSDDebtError_Redist.| Error tracker for the CLVDebt error correction in \_redistributeDebtAndColl()     | 18 digit decimal \* 1e18 | LUSD (C)                   |
 |                   |          |                          |                                                                                   |                          |                            |
-|                   | uint256  | CDP[user].debt           | user's trove debt                                                                 | integer                  | attoCLV(C)                 |
-|                   | uint256  | CDP[user].coll           | user's trove collateral                                                           | integer                  | wei (E)                    |
-|                   | uint256  | CDP[user].stake          | user's trove stake                                                                | integer                  | wei (E)                    |
-|                   | uint256  | CDP[user].arrayIndex     | user's index in the trove owners array                                            | integer                  | none                       |
+|                   | uint256  | Trove[user].debt         | User's trove debt                                                                 | integer                  | attoLUSD (C)               |
+|                   | uint256  | Trove[user].coll         | User's trove collateral                                                           | integer                  | wei (E)                    |
+|                   | uint256  | Trove[user].stake        | User's trove stake                                                                | integer                  | wei (E)                    |
+|                   | uint256  | CDP[user].arrayIndex     | User's index in the trove owners array                                            | integer                  | none                       |
 |                   |          |                          |                                                                                   |                          |                            |
 |                   |          |                          |                                                                                   |                          |                            |
 | **PoolManager**   | uint256  | epochToScaleToSum[S]     | Sum term for the accumulated ETH gain per-unit-deposited                          | 18 digit decimal \* 1e18 | Ether per CLV (E / C)      |
@@ -430,9 +436,9 @@ Below are all quantity state variables used in Liquity, along with their type, r
 |                   | uint256  | currentEpoch             | The number of times the Stability Pool has been fully emptied by a liquidation    | integer                  | none                       |
 |                   |          |                          |                                                                                   |                          |                            |
 |                   | uint256  | lastETHError_Offset      | error tracker for the ETH error correction in \_computeRewardsPerUnitStaked()     | 18 digit decimal \* 1e18 | Ether (E)                  |
-|                   | uint256  | lastCLVLossError_Offset  | error tracker for the CLVLoss error correction in \_computeRewardsPerUnitStaked() | 18 digit decimal \* 1e18 | CLV (C)                    |
+|                   | uint256  | lastLUSDLossError_Offset | error tracker for the CLVLoss error correction in \_computeRewardsPerUnitStaked() | 18 digit decimal \* 1e18 | LUSD (C)                   |
 |                   |          |                          |                                                                                   |                          |                            |
-| **BorrowerOps**   | constant | MCR                      | Min collateral ratio.                                                             | 18 digit decimal         | none ( $ / $)              |
+| **BorrowerOps**   | constant | MCR                      | Minimum collateral ratio.                                                         | 18 digit decimal         | none ( $ / $)              |
 |                   | constant | CCR                      | Critical collateral ratio.                                                        | 18 digit decimal         | none ( $ / $)              |
 |                   | constant | MIN_COLL_IN_USD          | Minimum collateral value (in USD) for opening loan                                | 18 digit decimal         | none ( $ / $)              |
 
@@ -454,67 +460,69 @@ etc.
 
 ## Public Data
 
-All data structures with the ‘public’ visibility specifier are ‘gettable’, with getters automatically generated by the compiler. Simply call `CDPManager::MCR()` to get the MCR, etc.
+All data structures with the ‘public’ visibility specifier are ‘gettable’, with getters automatically generated by the compiler. Simply call `TroveManager::MCR()` to get the MCR, etc.
 
 ## Public User-Facing Functions
 
-### Borrower CDP Operations - _BorrowerOperations.sol_
+### Borrower (Trove) Operations - _BorrowerOperations.sol_
 
-`openLoan(uint _CLVAmount)`: payable function that creates a CDP for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional - the collateral must exceed \$20 in value, and the resulting collateral ratio must exceed the minimum (110% in normal circumstances).
+**TODO: To be reviewed and updated according to https://github.com/liquity/dev/issues/60**
 
-`addColl(address _user, address _hint)`: payable function that adds the received ether to the given user’s active CDP. Allows any user to add ether to any other user’s CDP. The initial ether must exceed \$20 USD in value.
+`openTrove(uint _LUSDAmount)`: payable function that creates a trove for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional mainly on the resulting collateral ratio which must exceed the minimum (110% in Normal Mode).
 
-`withdrawColl(uint _amount, address _hint)`: withdraws `_amount` of collateral from the caller’s CDP. Executes only if the user has an active CDP, and the withdrawal would not pull the user’s CDP below the minimum collateral ratio. If it is a partial withdrawal, it must not leave a remaining collateral with value below \$20 USD.
+`addColl(address _user, address _hint)`: payable function that adds the received Ether to the given user’s active trove. Allows any user to add Ether to any other user’s trove.
 
-`withdrawCLV(uint _amount, address_hint)`: issues `_amount` of CLV from the caller’s CDP to the caller. Executes only if the resultant collateral ratio would remain above the minimum.
+`withdrawColl(uint _amount, address _hint)`: withdraws `_amount` of collateral from the caller’s trove. Executes only if the user has an active trove, the system is in Normal Mode, and the withdrawal would not pull the user’s trove below the minimum collateral ratio. 
 
-`repayCLV(uint _amount, uint _hint)`: repay `_amount` of CLV to the caller’s CDP.
+`withdrawLUSD(uint _amount, address_hint)`: issues `_amount` of LUSD from the caller’s trove to the caller. Executes only if the resultant collateral ratio would remain above the minimum and the system is and would remain in Normal Mode after the withdrawal. 
 
-`adjustLoan(uint _collWithdrawal, int _debtChange, address _hint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
+`repayLUSD(uint _amount, uint _hint)`: repay `_amount` of LUSD to the caller’s trove.
 
-`closeLoan()`: allows a borrower to repay all debt, withdraw all their collateral, and close their loan.
+`adjustTrove(uint _collWithdrawal, int _debtChange, address _hint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
 
-### CDPManager Functions - _CDPManager.sol_
+`closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their trove.
 
-`liquidate(address _user)`: callable by anyone, attempts to liquidate the CDP of `_user`. Executes successfully if `_user`’s CDP meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the CDP's ICR < the system MCR)
+### TroveManager Functions - _TroveManager.sol_
 
-`liquidateCDPs(uint n)`: callable by anyone, checks for under-collateralised CDPs below MCR and liquidates up to `n`, starting from the CDP with the lowest collateral ratio; subject to gas constraints and the actual number of under-collateralized CDPs.
+`liquidate(address _user)`: callable by anyone, attempts to liquidate the trove of `_user`. Executes successfully if `_user`’s trove meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the trove's ICR < the system MCR)
 
-`batchLiquidateTroves( address[] calldata troveList)`: callable by anyone, accepts a custom list of troves/CDPs addresses as an argument. Steps through the provided list and attempts to liquidate every trove/CDP, until it reaches the end or it runs out of gas. A CDP is liquidated only if it meets the conditions for liquidation.
+`liquidateCDPs(uint n)`: callable by anyone, checks for under-collateralised CDPs below MCR and liquidates up to `n`, starting from the trove with the lowest collateral ratio; subject to gas constraints and the actual number of under-collateralized troves.
 
-`redeemCollateral(uint _CLVamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintICR)`: redeems `_CLVamount` of stablecoins for ether from the system. Decreases the caller’s CLV balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient CLV to redeem.
+`batchLiquidateTroves( address[] calldata troveList)`: callable by anyone, accepts a custom list of troves addresses as an argument. Steps through the provided list and attempts to liquidate every trove, until it reaches the end or it runs out of gas. A trove is liquidated only if it meets the conditions for liquidation.
 
-`getCurrentICR(address _user, uint _price)`: computes the user’s individual collateral ratio (ICR) based on their total collateral and total CLV debt. Returns 2^256 -1 if they have 0 debt.
+`redeemCollateral(uint _LUSDamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintICR)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem.
 
-`getCDPOwnersCount()`: get the number of active CDPs in the system
+`getCurrentICR(address _user, uint _price)`: computes the user’s individual collateral ratio (ICR) based on their total collateral and total LUSD debt. Returns 2^256 -1 if they have 0 debt.
 
-`getPendingETHReward(address _user)`: get the pending ETH reward from liquidation redistribution events, for the given CDP.
+`getCDPOwnersCount()`: get the number of active troves in the system.
 
-`getPendingCLVDebtReward(address _user)`: get the pending CLV debt "reward" (i.e. the amount of extra debt assigned to the CDP) from liquidation redistribution events.
+`getPendingETHReward(address _user)`: get the pending ETH reward from liquidation redistribution events, for the given trove.
+
+`getPendingTroveDebtReward(address _user)`: get the pending trove debt "reward" (i.e. the amount of extra debt assigned to the trove) from liquidation redistribution events.
 
 `getTCR()`: returns the total collateral ratio (TCR) of the system.  The TCR is based on the the entire system debt and collateral (including pending rewards).
 
-`checkRecoveryMode()`: reveals whether or not the system is in Recovery Mode (i.e. whether the Total Collateral Ratio (TCR) is below the Critical Collateral Ratio (CCR))
+`checkRecoveryMode()`: reveals whether or not the system is in Recovery Mode (i.e. whether the Total Collateral Ratio (TCR) is below the Critical Collateral Ratio (CCR)).
 
 ### Hint Helper Functions - _HintHelpers.sol_
 
-`getApproxHint(uint _CR, uint _numTrials)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a CDP to the sorted list
+`getApproxHint(uint _CR, uint _numTrials)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a trove to the sorted list.
 
-`getRedemptionHints(uint _CLVamount, uint _price)`: helper function specifically for redemptions. Returns two hints - the first is positional, the second ensures transaction success.
+`getRedemptionHints(uint _LUSDamount, uint _price)`: helper function specifically for redemptions. Returns two hints - the first is positional, the second ensures transaction success (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)).
 
 ### Stability Pool Functions - _PoolManager.sol_
 
-`provideToSP(uint _amount)`: allows stablecoin holders to deposit `_amount` of CLV to the Stability Pool. If they already have tokens in the pool, it sends all accumulated ETH gains to their address. It tops up their CLV deposit by `_amount`, and reduces their CLV balance by `_amount`. This function automatically withdraws the user's entire accumulated ETH gain from the Stability Pool to their address.
+`provideToSP(uint _amount)`: allows stablecoin holders to deposit `_amount` of LUSD to the Stability Pool. If they already have tokens in the pool, it sends all accumulated ETH gains to their address. It tops up their LUSD deposit by `_amount`, and reduces their LUSD balance by `_amount`. This function automatically withdraws the user's entire accumulated ETH gain from the Stability Pool to their address.
 
-`withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of CLV from the Stability Pool, up to the value of their remaining Stability deposit. Sends all their accumulated ETH gains to their address, and increases their CLV balance by `_amount`. If the user makes a partial withdrawal, their deposit remainder will earn further rewards.
+`withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of LUSD from the Stability Pool, up to the value of their remaining Stability deposit. Sends all their accumulated ETH gains to their address, and increases their LUSD balance by `_amount`. If the user makes a partial withdrawal, their deposit remainder will earn further rewards.
 
-`withdrawFromSPtoCDP(address _user, address _hint)`: sends the user's entire accumulated ETH gain to the user's active CDP, and updates their Stability deposit with its accumulated loss from debt absorptions. If called by an externally owned account, the argument \_user must be the calling account.
+`withdrawFromSPtoTrove(address _user, address _hint)`: sends the user's entire accumulated ETH gain to the user's active trove, and updates their Stability deposit with its accumulated loss from debt absorptions. If called by an externally owned account, the argument \_user must be the calling account.
 
 `getTCR()`: returns the Total Collateral Ratio (TCR) of the system, based on the entire (active and defaulted) debt, and the entire (active and defaulted) collateral
 
 `getCurrentETHGain(address _user)`: returns the accumulated ETH gain for a given Stability Pool depositor
 
-`getCompoundedCLVDeposit(address _user)`: returns the remaining deposit amount for a given Stability Pool depositor
+`getCompoundedLUSDDeposit(address _user)`: returns the remaining deposit amount for a given Stability Pool depositor
 
 ### Individual Pool Functions - _StabilityPool.sol_, _ActivePool.sol_, _DefaultPool.sol_
 
