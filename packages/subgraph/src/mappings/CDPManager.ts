@@ -5,10 +5,10 @@ import {
   Liquidation,
   Redemption,
   BorrowerOperationsAddressChanged,
-  PoolManagerAddressChanged,
+  StabilityPoolAddressChanged,
   PriceFeedAddressChanged
 } from "../../generated/CDPManager/CDPManager";
-import { BorrowerOperations, PoolManager, PriceFeed } from "../../generated/templates";
+import { BorrowerOperations, StabilityPool, PriceFeed } from "../../generated/templates";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
@@ -25,8 +25,8 @@ export function handleBorrowerOperationsAddressChanged(
   BorrowerOperations.create(event.params._newBorrowerOperationsAddress);
 }
 
-export function handlePoolManagerAddressChanged(event: PoolManagerAddressChanged): void {
-  PoolManager.create(event.params._newPoolManagerAddress);
+export function handleStabilityPoolAddressChanged(event: StabilityPoolAddressChanged): void {
+  StabilityPool.create(event.params._stabilityPoolAddress);
 }
 
 export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): void {

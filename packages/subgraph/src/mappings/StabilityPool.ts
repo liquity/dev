@@ -1,7 +1,7 @@
 import {
   UserDepositChanged,
   ETHGainWithdrawn
-} from "../../generated/templates/PoolManager/PoolManager";
+} from "../../generated/templates/StabilityPool/StabilityPool";
 
 import {
   updateStabilityDeposit,
