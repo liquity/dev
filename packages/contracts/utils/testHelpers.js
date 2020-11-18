@@ -843,55 +843,55 @@ class TestHelper {
     }
   }
 
-  // --- PoolManager gas functions ---
+  // --- StabilityPool gas functions ---
 
-  static async provideToSP_allAccounts(accounts, poolManager, amount) {
+  static async provideToSP_allAccounts(accounts, stabilityPool, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await poolManager.provideToSP(amount, this.ZERO_ADDRESS, { from: account })
+      const tx = await stabilityPool.provideToSP(amount, this.ZERO_ADDRESS, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async provideToSP_allAccounts_randomAmount(min, max, accounts, poolManager) {
+  static async provideToSP_allAccounts_randomAmount(min, max, accounts, stabilityPool) {
     const gasCostList = []
     for (const account of accounts) {
       const randomCLVAmount = this.randAmountInWei(min, max)
-      const tx = await poolManager.provideToSP(randomCLVAmount, this.ZERO_ADDRESS, { from: account })
+      const tx = await stabilityPool.provideToSP(randomCLVAmount, this.ZERO_ADDRESS, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawFromSP_allAccounts(accounts, poolManager, amount) {
+  static async withdrawFromSP_allAccounts(accounts, stabilityPool, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await poolManager.withdrawFromSP(amount, { from: account })
+      const tx = await stabilityPool.withdrawFromSP(amount, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawFromSP_allAccounts_randomAmount(min, max, accounts, poolManager) {
+  static async withdrawFromSP_allAccounts_randomAmount(min, max, accounts, stabilityPool) {
     const gasCostList = []
     for (const account of accounts) {
       const randomCLVAmount = this.randAmountInWei(min, max)
-      const tx = await poolManager.withdrawFromSP(randomCLVAmount, { from: account })
+      const tx = await stabilityPool.withdrawFromSP(randomCLVAmount, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawETHGainToTrove_allAccounts(accounts, poolManager) {
+  static async withdrawETHGainToTrove_allAccounts(accounts, stabilityPool) {
     const gasCostList = []
     for (const account of accounts) {
 
-      const tx = await poolManager.withdrawETHGainToTrove(account, { from: account })
+      const tx = await stabilityPool.withdrawETHGainToTrove(account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -916,9 +916,9 @@ class TestHelper {
     return CDLC
   }
 
-  static async registerFrontEnds(frontEnds, poolManager) {
+  static async registerFrontEnds(frontEnds, stabilityPool) {
     for (const frontEnd of frontEnds) {
-      await poolManager.registerFrontEnd(this.dec(5, 17), { from: frontEnd })  // default kickback rate of 50%
+      await stabilityPool.registerFrontEnd(this.dec(5, 17), { from: frontEnd })  // default kickback rate of 50%
     }
   }
 
