@@ -148,9 +148,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         // Move the ether to the Active Pool, and mint the CLVAmount to the borrower
         _activePoolAddColl(msg.value);
-        _withdrawCLV(user, _CLVAmount, CLVFee);
+        _withdrawCLV(user, _CLVAmount, rawDebt);
         // Lock CLV gas compensation
-        _withdrawCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION, 0);
+        _withdrawCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION, CLV_GAS_COMPENSATION);
 
         emit CDPUpdated(user, rawDebt, msg.value, stake, BorrowerOperation.openLoan);
         emit LUSDBorrowingFeePaid(user, CLVFee);
@@ -229,9 +229,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint coll = cdpManager.getCDPColl(user);
         uint debt = cdpManager.getCDPDebt(user);
 
-        uint rawdebtIncrease = _CLVAmount.add(CLVFee);
+        uint rawDebtIncrease = _CLVAmount.add(CLVFee);
 
-        uint newICR = _getNewICRFromTroveChange(coll, debt, 0, false, rawdebtIncrease, true, price);   // no coll change, debt increase
+        uint newICR = _getNewICRFromTroveChange(coll, debt, 0, false, rawDebtIncrease, true, price);   // no coll change, debt increase
         _requireICRisAboveMCR(newICR);
 
         _requireNewTCRisAboveCCR(0, false, _CLVAmount, true, price);  // no coll change, debt increase
@@ -241,13 +241,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         clvToken.mint(lqtyStakingAddress, CLVFee);
 
         // Increase the CDP's debt
-        uint newDebt = cdpManager.increaseCDPDebt(user, rawdebtIncrease);
+        uint newDebt = cdpManager.increaseCDPDebt(user, rawDebtIncrease);
 
         // Update CDP's position in sortedCDPs
         sortedCDPs.reInsert(user, newICR, price, _hint, _hint);
 
         // Mint the CLV amount (minus fee) to the borrower, and update the ActivePool
-        _withdrawCLV(user, _CLVAmount, CLVFee);
+        _withdrawCLV(user, _CLVAmount, rawDebtIncrease);
 
         uint stake = cdpManager.getCDPStake(user);
         emit CDPUpdated(user, newDebt, coll, stake, BorrowerOperation.withdrawCLV);
@@ -358,7 +358,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         //  --- Interactions ---
 
         // Pass unmodified _debtChange here, as we don't send the fee to the user
-        _moveTokensAndETHfromAdjustment(L.user, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.CLVFee);
+        _moveTokensAndETHfromAdjustment(L.user, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
 
         emit CDPUpdated(L.user, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
         emit LUSDBorrowingFeePaid(L.user,  L.CLVFee);
@@ -415,12 +415,12 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         bool _isCollIncrease,
         uint _debtChange,
         bool _isDebtIncrease,
-        uint _CLVFee
+        uint _rawDebtChange
     )
         internal
     {
         if (_isDebtIncrease) {
-            _withdrawCLV(_user, _debtChange, _CLVFee);
+            _withdrawCLV(_user, _debtChange, _rawDebtChange);
         } else {
             _repayCLV(_user, _debtChange);
         }
@@ -438,10 +438,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         assert(success == true);
     }
 
-    // Issue the specified amount of CLV to _account and increases the total active debt
-    function _withdrawCLV(address _account, uint _CLVAmount, uint _CLVFee) internal {
-        uint totalCLVDrawn = _CLVAmount.add(_CLVFee);
-        activePool.increaseCLVDebt(totalCLVDrawn);
+    // Issue the specified amount of CLV to _account and increases the total active debt (_rawDebtIncrease potentially includes CLVFee)
+    function _withdrawCLV(address _account, uint _CLVAmount, uint _rawDebtIncrease) internal {
+        activePool.increaseCLVDebt(_rawDebtIncrease);
         clvToken.mint(_account, _CLVAmount);
     }
 
