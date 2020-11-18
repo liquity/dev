@@ -967,7 +967,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
             _updateCDPRewardSnapshots(_user);
 
-            // Tell PM to transfer from DefaultPool to ActivePool
+            // Transfer from DefaultPool to ActivePool
             _movePendingTroveRewardsToActivePool(pendingCLVDebtReward, pendingETHReward);
 
             emit CDPUpdated(_user, CDPs[_user].debt, CDPs[_user].coll, CDPs[_user].stake, CDPManagerOperation.applyPendingRewards);
@@ -1105,8 +1105,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
 
         // Transfer coll and debt from ActivePool to DefaultPool
-        defaultPool.increaseCLVDebt(_debt);
         activePool.decreaseCLVDebt(_debt);
+        defaultPool.increaseCLVDebt(_debt);
         activePool.sendETH(address(defaultPool), _coll);
     }
 

@@ -236,14 +236,14 @@ contract StabilityPool is Ownable, IStabilityPool {
         _requireUserHasTrove(depositor);
         _requireUserHasETHGain(depositor);
 
-        uint deposit = deposits[depositor].initialValue;
+        uint initialDeposit = deposits[depositor].initialValue;
 
         _triggerLQTYIssuance();
 
         uint depositorETHGain = getDepositorETHGain(depositor);
 
         uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
-        uint CLVLoss = deposit.sub(compoundedCLVDeposit); // Needed only for event log
+        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
 
         // First pay out any LQTY gains
         address frontEnd = deposits[depositor].frontEndTag;
@@ -316,23 +316,6 @@ contract StabilityPool is Ownable, IStabilityPool {
         _updateRewardSumAndProduct(ETHGainPerUnitStaked, CLVLossPerUnitStaked);
 
         _moveOffsetCollAndDebt(_collToAdd, _debtToOffset);
-    }
-
-
-    // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
-    function _sendCLVtoStabilityPool(address _address, uint _amount) internal {
-        clvToken.sendToPool(_address, address(this), _amount);
-        uint newTotalCLVDeposits = totalCLVDeposits.add(_amount);
-        totalCLVDeposits = newTotalCLVDeposits;
-        emit CLVBalanceUpdated(newTotalCLVDeposits);
-    }
-
-    // Send CLV to user and decrease CLV in Pool
-    function _sendCLVToUser(address _address, uint CLVWithdrawal) internal {
-        assert(CLVWithdrawal <= totalCLVDeposits);
-
-        clvToken.returnFromPool(address(this), _address, CLVWithdrawal);
-        _decreaseCLV(CLVWithdrawal);
     }
 
     // --- Offset helper functions ---
@@ -571,6 +554,14 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     // --- Sender functions for CLV deposit,  ETH gains and LQTY gains ---
 
+    // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
+    function _sendCLVtoStabilityPool(address _address, uint _amount) internal {
+        clvToken.sendToPool(_address, address(this), _amount);
+        uint newTotalCLVDeposits = totalCLVDeposits.add(_amount);
+        totalCLVDeposits = newTotalCLVDeposits;
+        emit CLVBalanceUpdated(newTotalCLVDeposits);
+    }
+
     function _sendETHGainToDepositor(address _account, uint _amount) internal {
         if (_amount == 0) {return;}
         uint newETH = ETH.sub(_amount);
@@ -584,8 +575,6 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     // Send CLV to user and decrease CLV in Pool
     function _sendCLVToDepositor(address _depositor, uint CLVWithdrawal) internal {
-        assert(CLVWithdrawal <= totalCLVDeposits);
-
         clvToken.returnFromPool(address(this), _depositor, CLVWithdrawal);
         _decreaseCLV(CLVWithdrawal);
     }

@@ -60,7 +60,7 @@ contract ActivePool is Ownable, IPool {
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) public override {
+    function sendETH(address _account, uint _amount) external override {
         _requireCallerIsBOorCDPMorSP();
         ETH = ETH.sub(_amount);
         emit EtherSent(_account, _amount);

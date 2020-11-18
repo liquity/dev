@@ -142,8 +142,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint arrayIndex = cdpManager.addCDPOwnerToArray(user);
         emit CDPCreated(user, arrayIndex);
 
-        // Tell PM to move the ether to the Active Pool, and mint CLV to the borrower
-
         // Send the fee to the staking contract
         clvToken.mint(lqtyStakingAddress, CLVFee);
         lqtyStaking.increaseF_LUSD(CLVFee);
@@ -297,7 +295,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         cdpManager.removeStake(user);
         cdpManager.closeCDP(user);
 
-        // Tell PM to burn the debt from the user's balance, and send the collateral back to the user
+        // Burn the debt from the user's balance, and send the collateral back to the user
         _repayCLV(user, debt.sub(CLV_GAS_COMPENSATION));
         activePool.sendETH(user, coll);
         // Refund gas compensation
@@ -434,9 +432,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
     }
 
-    // Add the received ETH to the total active collateral
+    // Send ETH to Active Pool and increase its recorded ETH balance
     function _activePoolAddColl(uint _amount) internal {
-        // Send ETH to Active Pool and increase its recorded ETH balance
         (bool success, ) = address(activePool).call{value: _amount}("");
         assert(success == true);
     }
