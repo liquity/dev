@@ -191,8 +191,8 @@ contract StabilityPool is Ownable, IStabilityPool {
     If _amount > userDeposit, the user withdraws all of their compounded deposit. */
     function withdrawFromSP(uint _amount) external override {
         address depositor = _msgSender();
-        _requireUserHasDeposit(depositor);
         uint initialDeposit = deposits[depositor].initialValue;
+        _requireUserHasDeposit(initialDeposit);
 
         _triggerLQTYIssuance();
 
@@ -232,11 +232,10 @@ contract StabilityPool is Ownable, IStabilityPool {
     */
     function withdrawETHGainToTrove(address _hint) external override {
         address depositor = _msgSender();
-        _requireUserHasDeposit(depositor);
+        uint initialDeposit = deposits[depositor].initialValue;
+        _requireUserHasDeposit(initialDeposit);
         _requireUserHasTrove(depositor);
         _requireUserHasETHGain(depositor);
-
-        uint initialDeposit = deposits[depositor].initialValue;
 
         _triggerLQTYIssuance();
 
@@ -676,9 +675,8 @@ contract StabilityPool is Ownable, IStabilityPool {
         require(_msgSender() == address(cdpManager), "StabilityPool: Caller is not CDPManager");
     }
 
-    function _requireUserHasDeposit(address _address) internal view {
-        uint initialDeposit = deposits[_address].initialValue;
-        require(initialDeposit > 0, 'StabilityPool: User must have a non-zero deposit');
+    function _requireUserHasDeposit(uint _initialDeposit) internal view {
+        require(_initialDeposit > 0, 'StabilityPool: User must have a non-zero deposit');
     }
 
      function _requireUserHasNoDeposit(address _address) internal view {
