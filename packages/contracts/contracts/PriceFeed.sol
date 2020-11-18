@@ -17,8 +17,7 @@ contract PriceFeed is Ownable, IPriceFeed {
     uint256 public price = 200 * DIGITS;
 
     address public cdpManagerAddress;
-    address public poolManagerAddress;
-    
+
     // Mainnet Chainlink aggregator
     address public priceAggregatorAddress;
     IDeployedAggregator public priceAggregator;
@@ -29,13 +28,11 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     event PriceUpdated(uint256 _newPrice);
     event CDPManagerAddressChanged(address _cdpManagerAddress);
-    event PoolManagerAddressChanged(address _poolManagerAddress);
 
     // --- Dependency setters ---
 
     function setAddresses(
         address _cdpManagerAddress,
-        address _poolManagerAddress,
         address _priceAggregatorAddress,
         address _priceAggregatorAddressTestnet
     )
@@ -44,7 +41,6 @@ contract PriceFeed is Ownable, IPriceFeed {
         onlyOwner
     {
         cdpManagerAddress = _cdpManagerAddress;
-        poolManagerAddress = _poolManagerAddress;
         // Mainnet Chainlink address setter
         priceAggregatorAddress = _priceAggregatorAddress;
         priceAggregator = IDeployedAggregator(_priceAggregatorAddress);
@@ -52,7 +48,6 @@ contract PriceFeed is Ownable, IPriceFeed {
         priceAggregator_Testnet = AggregatorInterface(_priceAggregatorAddressTestnet);
 
         emit CDPManagerAddressChanged(_cdpManagerAddress);
-        emit PoolManagerAddressChanged(_poolManagerAddress);
 
         _renounceOwnership();
     }
@@ -65,7 +60,7 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     // --- DEVELOPMENT FUNCTIONALITY - TODO: remove before mainnet deployment.  ---
 
-    // Manual external price setter. 
+    // Manual external price setter.
     function setPrice(uint256 _price) external override returns (bool) {
         price = _price;
         emit PriceUpdated(price);
@@ -76,7 +71,7 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     // TODO: convert received Chainlink price to precision-18 before setting state variable
     function updatePrice() external override returns (uint256) {
-        _requireCallerIsCDPManagerOrPoolManager();
+        _requireCallerIsCDPManager();
         price = getLatestPrice();
         emit PriceUpdated(price);
         return price;
@@ -141,10 +136,9 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     // --- 'require' functions ---
 
-    function _requireCallerIsCDPManagerOrPoolManager() internal view {
-        require(_msgSender() == cdpManagerAddress ||_msgSender() == poolManagerAddress,
-            "PriceFeed: Caller is neither CDPManager nor PoolManager"
+    function _requireCallerIsCDPManager() internal view {
+        require(_msgSender() == cdpManagerAddress,
+            "PriceFeed: Caller is not CDPManager"
         );
     }
 }
-

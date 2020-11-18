@@ -32,8 +32,8 @@ dataSources:
       eventHandlers:
         - event: BorrowerOperationsAddressChanged(address)
           handler: handleBorrowerOperationsAddressChanged
-        - event: PoolManagerAddressChanged(address)
-          handler: handlePoolManagerAddressChanged
+        - event: StabilityPoolAddressChanged(address)
+          handler: handleStabilityPoolAddressChanged
         - event: PriceFeedAddressChanged(address)
           handler: handlePriceFeedAddressChanged
         - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
@@ -70,13 +70,13 @@ templates:
       eventHandlers:
         - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleCDPUpdated
-  - name: PoolManager
+  - name: StabilityPool
     kind: ethereum/contract
     network: ropsten
     source:
-      abi: PoolManager
+      abi: StabilityPool
     mapping:
-      file: ./src/mappings/PoolManager.ts
+      file: ./src/mappings/StabilityPool.ts
       language: wasm/assemblyscript
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -88,8 +88,8 @@ templates:
         - StabilityDepositChange
         - SystemState
       abis:
-        - name: PoolManager
-          file: ../lib-ethers/abi/PoolManager.json
+        - name: StabilityPool
+          file: ../lib-ethers/abi/StabilityPool.json
       eventHandlers:
         - event: UserDepositChanged(indexed address,uint256)
           handler: handleUserDepositChanged

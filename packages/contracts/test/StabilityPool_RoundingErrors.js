@@ -16,9 +16,8 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
 
   let priceFeed
   let clvToken
-  let poolManager
-  let cdpManager
   let stabilityPool
+  let cdpManager
   let borrowerOperations
 
   beforeEach(async () => {
@@ -26,9 +25,8 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
-    cdpManager = contracts.cdpManager
     stabilityPool = contracts.stabilityPool
+    cdpManager = contracts.cdpManager
     borrowerOperations = contracts.borrowerOperations
 
     const contractAddresses = getAddresses(contracts)
@@ -43,7 +41,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
 
     for (let account of depositors) {
       await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(4, 'ether') })
-      await poolManager.provideToSP(dec(100, 18), { from: account })
+      await stabilityPool.provideToSP(dec(100, 18), { from: account })
     }
 
     // Defaulter opens loan with 200% ICR
@@ -62,8 +60,8 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
 
     const SP_TotalDeposits = await stabilityPool.getTotalCLVDeposits()
     const SP_ETH = await stabilityPool.getETH()
-    const compoundedDeposit = await poolManager.getCompoundedCLVDeposit(depositors[0])
-    const ETH_Gain = await poolManager.getCurrentETHGain(depositors[0])
+    const compoundedDeposit = await stabilityPool.getCompoundedCLVDeposit(depositors[0])
+    const ETH_Gain = await stabilityPool.getCurrentETHGain(depositors[0])
     // Check depostiors receive their share without too much error
     assert.isAtMost(th.getDifference(SP_TotalDeposits.div(th.toBN(depositors.length)), compoundedDeposit), 1000)
     assert.isAtMost(th.getDifference(SP_ETH.div(th.toBN(depositors.length)), ETH_Gain), 1000)

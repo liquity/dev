@@ -12,7 +12,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
   const [owner, alice, bob, carol] = accounts;
   let priceFeed
   let clvToken
-  let poolManager
   let sortedCDPs
   let cdpManager
   let nameRegistry
@@ -28,7 +27,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
     priceFeed = coreContracts.priceFeed
     clvToken = coreContracts.clvToken
-    poolManager = coreContracts.poolManager
     sortedCDPs = coreContracts.sortedCDPs
     cdpManager = coreContracts.cdpManager
     nameRegistry = coreContracts.nameRegistry
@@ -47,7 +45,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     await deploymentHelper.connectCoreContracts(coreContracts, GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
 
-    th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
+    await th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
   })
 
   describe('CDPManager', async accounts => {
@@ -186,214 +184,92 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
   })
 
-  describe('PoolManager', async accounts => {
-
-    // --- onlyCDPManager --- 
-    //liquidate
-    it("liquidate(): reverts when called by an account that is not CDPManager", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await poolManager.liquidate(100, 10, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CDPManager")
-      }
-    })
-
-    // movePendingTroveRewardsToActivePool
-    it("movePendingTroveRewardsToActivePool(): reverts when called by an account that is not CDPManager", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await poolManager.movePendingTroveRewardsToActivePool(100, 10, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CDPManager")
-      }
-    })
-
-    // redeemCollateral
-    it("redeemCollateral(): reverts when called by an account that is not CDPManager", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await poolManager.redeemCollateral(bob, 100, 10, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CDPManager")
-      }
-    })
-
-    // offset
-    it("offset(): reverts when called by an account that is not CDPManager", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await poolManager.offset(100, 10, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CDPManager")
-      }
-    })
-
-
-    // --- onlyBorrowerOperations ---
- 
-    // addColl
-    it("addColl(): reverts when called by an account that is not BorrowerOperations", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await poolManager.addColl({ from: alice, value: 100 })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the BorrowerOperations contract")
-      }
-    })
-
-    // withdrawColl
-    it("withdrawColl(): reverts when called by an account that is not BorrowerOperations", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await poolManager.withdrawColl(alice, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the BorrowerOperations contract")
-      }
-    })
-
-    // withdrawCLV
-    it("withdrawCLV(): reverts when called by an account that is not BorrowerOperations", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await poolManager.withdrawCLV(alice, 100, 10, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the BorrowerOperations contract")
-      }
-    })
-
-    // repayCLV
-    it("repayCLV(): reverts when called by an account that is not BorrowerOperations", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await poolManager.repayCLV(alice, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the BorrowerOperations contract")
-      }
-    })
-
-
-    // fallback (payment)
-    it("fallback(): reverts when called by an account that is not StabilityPool", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await web3.eth.sendTransaction({ from: alice, to: poolManager.address, value: 100 })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-    })
-  })
-
   describe('ActivePool', async accounts => {
-
-    // --- onlyPoolManager ---
-
-    // sendETH onlyPoolManager
-    it("sendETH(): reverts when called by an account that is not PoolManager or CDPM", async () => {
+    // sendETH
+    it("sendETH(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
       // Attempt call from alice
       try {
         const txAlice = await activePool.sendETH(alice, 100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither the PoolManager nor CDPManager")
+        assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager nor StabilityPool")
       }
     })
 
     // increaseCLV	
-    it("increaseCLVDebt(): reverts when called by an account that is not PoolManager", async () => {
+    it("increaseCLVDebt(): reverts when called by an account that is not BO nor CDPM", async () => {
       // Attempt call from alice
       try {
         const txAlice = await activePool.increaseCLVDebt(100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager")
       }
     })
 
     // decreaseCLV
-    it("decreaseCLVDebt(): reverts when called by an account that is not PoolManager", async () => {
+    it("decreaseCLVDebt(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
       // Attempt call from alice
       try {
         const txAlice = await activePool.decreaseCLVDebt(100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager nor StabilityPool")
       }
     })
 
-    // --- onlyPoolManagerOrPool ---
-
     // fallback (payment)	
-    it("fallback(): reverts when called by an account that is neither PoolManager nor Default Pool", async () => {
+    it("fallback(): reverts when called by an account that is not Borrower Operations nor Default Pool", async () => {
       // Attempt call from alice
       try {
         const txAlice = await web3.eth.sendTransaction({ from: alice, to: activePool.address, value: 100 })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "ActivePool: Caller is neither the PoolManager nor Default Pool")
+        assert.include(err.message, "ActivePool: Caller is neither BO nor Default Pool")
       }
     })
   })
 
   describe('DefaultPool', async accounts => {
-    // sendETH onlyPoolManager
-    it("sendETH(): reverts when called by an account that is not PoolManager", async () => {
+    // sendETH
+    it("sendETH(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
         const txAlice = await defaultPool.sendETH(alice, 100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is not the CDPManager")
       }
     })
 
     // increaseCLV	
-    it("increaseCLVDebt(): reverts when called by an account that is not PoolManager", async () => {
+    it("increaseCLVDebt(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
         const txAlice = await defaultPool.increaseCLVDebt(100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is not the CDPManager")
       }
     })
 
     // decreaseCLV	
-    it("decreaseCLV(): reverts when called by an account that is not PoolManager", async () => {
+    it("decreaseCLV(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
         const txAlice = await defaultPool.decreaseCLVDebt(100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is not the CDPManager")
       }
     })
-
-    // --- onlyPoolManagerOrPool ---
 
     // fallback (payment)	
     it("fallback(): reverts when called by an account that is not the Active Pool", async () => {
@@ -409,42 +285,21 @@ contract('All Liquity functions with intra-system access control restrictions', 
   })
 
   describe('StabilityPool', async accounts => {
-    it("sendETH(): reverts when called by an account that is not PoolManager", async () => {
+    // --- onlyCDPManager --- 
+
+    // offset
+    it("offset(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await stabilityPool.sendETH(alice, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        txAlice = await stabilityPool.offset(100, 10, { from: alice })
+        assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is not CDPManager")
       }
     })
 
-    // increaseCLV	
-    it("increaseCLV(): reverts when called by an account that is not PoolManager", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await stabilityPool.increaseCLV(100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
-      }
-    })
-
-    // decreaseCLV	
-    it("decreaseCLV(): reverts when called by an account that is not PoolManager", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await stabilityPool.decreaseCLV(100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
-      }
-    })
-
-    // --- onlyPoolManagerOrPool ---
+    // --- onlyActivePool ---
 
     // fallback (payment)	
     it("fallback(): reverts when called by an account that is not the Active Pool", async () => {
@@ -461,53 +316,51 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
   describe('CLVToken', async accounts => {
 
-    // --- onlyCLVTokenAddress
-
-    // mint
-    it("mint(): reverts when called by an account that is not PoolManager", async () => {
+    //    mint
+    it("mint(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
         const txAlice = await clvToken.mint(bob, 100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
-        // assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the PM or BO")
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not BorrowerOperations")
       }
     })
 
     // burn
-    it("burn(): reverts when called by an account that is not PoolManager", async () => {
+    it("burn(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
       // Attempt call from alice
       try {
         const txAlice = await clvToken.burn(bob, 100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the PoolManager")  
+        assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager nor StabilityPool")
       }
     })
 
     // sendToPool
-    it("sendToPool(): reverts when called by an account that is not PoolManager", async () => {
+    it("sendToPool(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
         const txAlice = await clvToken.sendToPool(bob, activePool.address, 100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is not the StabilityPool")
       }
     })
 
     // returnFromPool
-    it("returnFromPool(): reverts when called by an account that is not PoolManager", async () => {
+    it("returnFromPool(): reverts when called by an account that is not CDPManager nor StabilityPool", async () => {
       // Attempt call from alice
       try {
         const txAlice = await clvToken.returnFromPool(activePool.address, bob, 100, { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the PoolManager")
+        assert.include(err.message, "Caller is neither CDPManager nor StabilityPool")
       }
     })
   })
@@ -554,14 +407,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
   })
 
   describe('PriceFeed', async accounts => {
-    it("updatePrice(): reverts when called by an account that is not CDPManager or PoolManager", async () => {
+    it("updatePrice(): reverts when called by an account that is not CDPManager", async () => {
       // Attempt call from alice
       try {
         const txAlice = await priceFeed.updatePrice({ from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither CDPManager nor PoolManager")
+        assert.include(err.message, "Caller is not CDPManager")
       }
     })
   })

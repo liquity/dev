@@ -339,22 +339,6 @@ contract('Fee arithmetic tests', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const GTContracts = await deploymentHelper.deployGTContracts()
 
-    priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
-    sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
-    activePool = contracts.activePool
-    stabilityPool = contracts.stabilityPool
-    defaultPool = contracts.defaultPool
-    borrowerOperations = contracts.borrowerOperations
-    hintHelpers = contracts.hintHelpers
-
-    lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
-
     await deploymentHelper.connectGTContracts(GTContracts)
     await deploymentHelper.connectCoreContracts(contracts, GTContracts)
     await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)

@@ -2,25 +2,25 @@ pragma solidity 0.6.11;
 
 import "../CDPManager.sol";
 import "../BorrowerOperations.sol";
-import "../PoolManager.sol";
+import "../StabilityPool.sol";
 import "../CLVToken.sol";
 
 
 contract EchidnaProxy {
     CDPManager cdpManager;
     BorrowerOperations borrowerOperations;
-    PoolManager poolManager;
+    StabilityPool stabilityPool;
     CLVToken clvToken;
 
     constructor(
         CDPManager _cdpManager,
         BorrowerOperations _borrowerOperations,
-        PoolManager _poolManager,
+        StabilityPool _stabilityPool,
         CLVToken _clvToken
     ) public {
         cdpManager = _cdpManager;
         borrowerOperations = _borrowerOperations;
-        poolManager = _poolManager;
+        stabilityPool = _stabilityPool;
         clvToken = _clvToken;
     }
 
@@ -83,11 +83,11 @@ contract EchidnaProxy {
 
     // Pool Manager
     function provideToSPPrx(uint _amount, address _frontEndTag) external {
-        poolManager.provideToSP(_amount, _frontEndTag);
+        stabilityPool.provideToSP(_amount, _frontEndTag);
     }
 
     function withdrawFromSPPrx(uint _amount) external {
-        poolManager.withdrawFromSP(_amount);
+        stabilityPool.withdrawFromSP(_amount);
     }
 
     // CLV Token

@@ -1,5 +1,4 @@
 // Buidler script
-const PoolManager = artifacts.require("./PoolManager.sol")
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
@@ -22,7 +21,6 @@ const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const MathTester = artifacts.require("./MathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
-const PoolManagerTester = artifacts.require("./PoolManagerTester.sol")
 const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 
 const dh = require("./deploymentHelpers.js")
@@ -31,7 +29,6 @@ const coreContractABIs = [
   BorrowerOperations,
   PriceFeed,
   CLVToken,
-  PoolManager,
   SortedCDPs,
   CDPManager,
   ActivePool,
@@ -55,7 +52,6 @@ const TesterContractABIs  = [
   MathTester,
   BorrowerOperationsTester,
   CDPManagerTester,
-  PoolManagerTester,
   CLVTokenTester,
 ]
 

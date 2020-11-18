@@ -60,7 +60,6 @@ const deployContracts = async (
       { ...overrides }
     ),
     lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
-    poolManager: await deployContract(deployer, getContractFactory, "PoolManager", { ...overrides }),
     priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
     sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs", { ...overrides }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
@@ -103,7 +102,6 @@ const connectContracts = async (
     hintHelpers,
     lockupContractFactory,
     lqtyStaking,
-    poolManager,
     priceFeed,
     sortedCDPs,
     stabilityPool
@@ -120,23 +118,10 @@ const connectContracts = async (
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce =>
-      clvToken.setAddresses(poolManager.address, borrowerOperations.address, {
+      clvToken.setAddresses(borrowerOperations.address, cdpManager.address, stabilityPool.address, {
         ...overrides,
         nonce
       }),
-
-    nonce =>
-      poolManager.setAddresses(
-        borrowerOperations.address,
-        cdpManager.address,
-        priceFeed.address,
-        clvToken.address,
-        stabilityPool.address,
-        activePool.address,
-        defaultPool.address,
-        communityIssuance.address,
-        { ...overrides, nonce }
-      ),
 
     nonce =>
       sortedCDPs.setParams(1e6, cdpManager.address, borrowerOperations.address, {
@@ -147,7 +132,6 @@ const connectContracts = async (
     nonce =>
       priceFeed.setAddresses(
         cdpManager.address,
-        poolManager.address,
         AddressZero,
         network.name === "ropsten" ? ropstenAggregator : AddressZero,
         {
@@ -159,7 +143,6 @@ const connectContracts = async (
     nonce =>
       cdpManager.setAddresses(
         borrowerOperations.address,
-        poolManager.address,
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
@@ -173,7 +156,6 @@ const connectContracts = async (
     nonce =>
       borrowerOperations.setAddresses(
         cdpManager.address,
-        poolManager.address,
         activePool.address,
         defaultPool.address,
         priceFeed.address,
@@ -186,19 +168,24 @@ const connectContracts = async (
     nonce =>
       stabilityPool.setAddresses(
         borrowerOperations.address,
-        poolManager.address,
+        cdpManager.address,
         activePool.address,
+        clvToken.address,
+        communityIssuance.address,
         { ...overrides, nonce }
       ),
 
     nonce =>
-      activePool.setAddresses(poolManager.address, cdpManager.address, defaultPool.address, {
-        ...overrides,
-        nonce
-      }),
+      activePool.setAddresses(
+        borrowerOperations.address,
+        cdpManager.address,
+        stabilityPool.address,
+        defaultPool.address,
+        { ...overrides, nonce }
+      ),
 
     nonce =>
-      defaultPool.setAddresses(poolManager.address, activePool.address, {
+      defaultPool.setAddresses(cdpManager.address, activePool.address, {
         ...overrides,
         nonce
       }),
@@ -252,7 +239,7 @@ const connectContracts = async (
       }),
 
     nonce =>
-      communityIssuance.setPoolManagerAddress(poolManager.address, {
+      communityIssuance.setStabilityPoolAddress(stabilityPool.address, {
         ...overrides,
         nonce
       })
