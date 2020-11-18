@@ -6,7 +6,7 @@
   - [Liquidation and the Stability Pool](#liquidation-and-the-stability-pool)
   - [Rewards From Liquidations](#rewards-from-liquidations)
   - [Recovery Mode](#recovery-mode)
-  - [CLV Token Redemption](#clv-token-redemption)
+  - [LUSD Token Redemption](#lusd-token-redemption)
   - [Project Structure](#project-structure)
     - [Directories](#directories)
     - [Branches](#branches)
@@ -19,7 +19,7 @@
     - [Data and Value Silo Contracts](#data-and-value-silo-contracts)
     - [Contract Interfaces](#contract-interfaces)
     - [PriceFeed and Oracle](#pricefeed-and-oracle)
-    - [Keeping a sorted list of CDPs ordered by ICR](#keeping-a-sorted-list-of-cdps-ordered-by-icr)
+    - [Keeping a sorted list of troves ordered by ICR](#keeping-a-sorted-list-of-troves-ordered-by-icr)
     - [Flow of Ether in Liquity](#flow-of-ether-in-liquity)
     - [Flow of ERC20 tokens in Liquity](#flow-of-erc20-tokens-in-liquity)
   - [Expected User Behaviors](#expected-user-behaviors)
@@ -93,7 +93,7 @@ Similarly, a trove's accumulated gains from liquidations are automatically appli
 
 ## LUSD Token Redemption
 
-Any LUSD holder (whether or not they have an active trove) may redeem their LUSD directly with the system. Their LUSD is exchanged for ETH, at face value: redeeming x CLV tokens returns \$x worth of ETH (minus a [redemption fee](#redemption-fee)).
+Any LUSD holder (whether or not they have an active trove) may redeem their LUSD directly with the system. Their LUSD is exchanged for ETH, at face value: redeeming x LUSD tokens returns \$x worth of ETH (minus a [redemption fee](#redemption-fee)).
 
 When LUSD is redeemed for ETH, the system cancels the LUSD with debt from troves, and the ETH is drawn from their collateral.
 
@@ -223,7 +223,7 @@ The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Poo
 
 ### Core Smart Contracts
 
-`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their CDP: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment. BorrowerOperations functions call in to CDPManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to PoolManager, telling it to move Ether and/or tokens between Pools, where necessary.
+`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their trove: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment. BorrowerOperations functions call in to TroveManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to PoolManager, telling it to move Ether and/or tokens between Pools, where necessary.
 
 `TroveManager.sol` - contains functionality for liquidations and redemptions. Also contains the state of each trove - i.e. a record of the trove’s collateral and debt. TroveManager does not hold value (i.e. Ether / other tokens). TroveManager functions call in to PooManager to tell it to move Ether/tokens between Pools, where necessary.
 
@@ -255,7 +255,7 @@ These contracts hold Ether and/or tokens for their respective parts of the syste
 
 ### Contract Interfaces
 
-`ICDPManager.sol`, `IPool.sol` etc. These provide specification for a contract’s functions, without implementation. They are similar to interfaces in Java or C#.
+`ITroveManager.sol`, `IPool.sol` etc. These provide specification for a contract’s functions, without implementation. They are similar to interfaces in Java or C#.
 
 ### PriceFeed and Oracle
 
@@ -266,7 +266,7 @@ Currently, provisional plans are to use the Chainlink ETH:USD reference contract
 
 The current PriceFeed contract is a placeholder and contains a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price. In the final deployed version, no price will be stored or set, and `getPrice()` will fetch the latest ETH:USD price from the Chainlink reference contract.
 
-### Keeping a sorted list of CDPs ordered by ICR
+### Keeping a sorted list of troves ordered by ICR
 
 Liquity relies on a particular data structure: a sorted doubly-linked list of troves that remains ordered by individual collateral ratio (ICR), i.e. the amount of collateral (in USD) divided by the amount of debt (in LUSD).
 
@@ -289,7 +289,7 @@ A node inserted based on current ICR will maintain the correct position, relativ
 
 Nodes also remain sorted as the ETH:USD price varies, since price fluctuations change the collateral value of each trove by the same proportion.
 
-Thus, nodes need only be re-inserted to the sorted list upon a CDP operation - when the owner adds or removes collateral or debt to their position.
+Thus, nodes need only be re-inserted to the sorted list upon a trove operation - when the owner adds or removes collateral or debt to their position.
 
 ### Flow of Ether in Liquity
 
@@ -373,7 +373,7 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 
 Generally, borrowers call functions that trigger trove operations on their own trove. Stability Pool users (who may or may not also be borrowers) call functions that trigger Stability Pool operations, such as depositing or withdrawing tokens to/from the Stability Pool.
 
-Anyone may call the public liquidation functions, and attempt to liquidate one or several CDPs.
+Anyone may call the public liquidation functions, and attempt to liquidate one or several troves.
 
 LUSD token holders may also redeem their tokens, and swap an amount of tokens 1-for-1 in value with Ether.
 
@@ -404,39 +404,39 @@ Below are all quantity state variables used in Liquity, along with their type, r
 | Contract          | type     | Quantity                 | Description                                                                       | Representation           | Units                      |
 | ----------------- | -------- | ------------------------ | --------------------------------------------------------------------------------- | ------------------------ | -------------------------- |
 | **ActivePool**    | uint256  | ETH                      | Total ETH in all active troves                                                    | integer                  | wei (E)                    |
-|                   | uint256  | TroveDebt                | Total outstanding CLV Debt in active troves                                       | integer                  | attoLUSD (C)               |
+|                   | uint256  | TroveDebt                | Total outstanding LUSD Debt in active troves                                      | integer                  | attoLUSD (C)               |
 | **DefaultPool**   | uint256  | ETH                      | Total liquidated ETH, pending reward                                              | integer                  | wei (E)                    |
 |                   | uint256  | TroveDebt                | Total closed LSUD debt, pending reward                                            | integer                  | attoLUSD (C)               |
 | **StabilityPool** | uint256  | ETH                      | Total accumulated ETH Gains from StabilityPool                                    | integer                  | wei (E)                    |
-|                   | uint256  | totalCLVDeposits         | Total current LUSD deposits                                                       | integer                  | attoLUSD (C)               |
+|                   | uint256  | totalLUSDDeposits        | Total current LUSD deposits                                                       | integer                  | attoLUSD (C)               |
 |                   |          |                          |                                                                                   |                          |                            |
 | **PriceFeed**     | uint256  | price                    | The last recorded price of 1 Ether, in USD                                        | 18 digit decimal         | dollars per ether (\$ / E) |
 |                   |          |                          |                                                                                   |                          |                            |
-| **CDPManager**    | constant | MCR                      | Minimum collateral ratio                                                          | 18 digit decimal         | none ( $ / $)              |
+| **TroveManager**    | constant | MCR                    | Minimum collateral ratio                                                          | 18 digit decimal         | none ( $ / $)              |
 |                   | constant | CCR                      | Critical collateral ratio                                                         | 18 digit decimal         | none ( $ / $)              |
 |                   | uint256  | totalStakes              | Sum of all trove stakes                                                           | integer                  | wei (E)                    |
 |                   | uint256  | totalStakesSnapshot      | Snapshot of totalStakes at last liquidation                                       | integer                  | wei (E)                    |
 |                   | uint256  | totalCollateralSnapshot  | Snapshot of totalCollateral at last liquidation                                   | integer                  | wei (E)                    |
 |                   |          |                          |                                                                                   |                          |                            |
 |                   | uint256  | L_ETH                    | Accumulated ETH reward-per-unit-staked for troves                                 | 18 digit decimal         | none (E / E)               |
-|                   | uint256  | L_TroveDebt              | Accumulated CLV Debt reward-per-unit-staked for troves                            | 18 digit decimal         | Trove Debt per ether (C / E) |
+|                   | uint256  | L_TroveDebt              | Accumulated LUSD Debt reward-per-unit-staked for troves                           | 18 digit decimal         | Trove Debt per ether (C / E) |
 |                   |          |                          |                                                                                   |                          |                            |
 |                   | uint256  | lastETHError_Redist.     | Error tracker for the ETH error correction in \_redistributeDebtAndColl()         | 18 digit decimal \* 1e18 | Ether (E)                  |
-|                   | uint256  | lastLUSDDebtError_Redist.| Error tracker for the CLVDebt error correction in \_redistributeDebtAndColl()     | 18 digit decimal \* 1e18 | LUSD (C)                   |
+|                   | uint256  | lastLUSDDebtError_Redist.| Error tracker for the LUSD Debt error correction in \_redistributeDebtAndColl()   | 18 digit decimal \* 1e18 | LUSD (C)                   |
 |                   |          |                          |                                                                                   |                          |                            |
 |                   | uint256  | Trove[user].debt         | User's trove debt                                                                 | integer                  | attoLUSD (C)               |
 |                   | uint256  | Trove[user].coll         | User's trove collateral                                                           | integer                  | wei (E)                    |
 |                   | uint256  | Trove[user].stake        | User's trove stake                                                                | integer                  | wei (E)                    |
-|                   | uint256  | CDP[user].arrayIndex     | User's index in the trove owners array                                            | integer                  | none                       |
+|                   | uint256  | Trove[user].arrayIndex     | User's index in the trove owners array                                          | integer                  | none                       |
 |                   |          |                          |                                                                                   |                          |                            |
 |                   |          |                          |                                                                                   |                          |                            |
-| **PoolManager**   | uint256  | epochToScaleToSum[S]     | Sum term for the accumulated ETH gain per-unit-deposited                          | 18 digit decimal \* 1e18 | Ether per CLV (E / C)      |
+| **PoolManager**   | uint256  | epochToScaleToSum[S]     | Sum term for the accumulated ETH gain per-unit-deposited                          | 18 digit decimal \* 1e18 | Ether per LUSD (E / C)      |
 |                   | uint256  | P                        | Product term for the compounded-deposit-per-unit-deposited                        | 18 digit decimal         | none (C / C)               |
 |                   | uint256  | currentScale             | The number of times the scale of P has shifted by 1e-18                           | integer                  | none                       |
 |                   | uint256  | currentEpoch             | The number of times the Stability Pool has been fully emptied by a liquidation    | integer                  | none                       |
 |                   |          |                          |                                                                                   |                          |                            |
 |                   | uint256  | lastETHError_Offset      | error tracker for the ETH error correction in \_computeRewardsPerUnitStaked()     | 18 digit decimal \* 1e18 | Ether (E)                  |
-|                   | uint256  | lastLUSDLossError_Offset | error tracker for the CLVLoss error correction in \_computeRewardsPerUnitStaked() | 18 digit decimal \* 1e18 | LUSD (C)                   |
+|                   | uint256  | lastLUSDLossError_Offset | error tracker for the LUSD Loss error correction in \_computeRewardsPerUnitStaked() | 18 digit decimal \* 1e18 | LUSD (C)                   |
 |                   |          |                          |                                                                                   |                          |                            |
 | **BorrowerOps**   | constant | MCR                      | Minimum collateral ratio.                                                         | 18 digit decimal         | none ( $ / $)              |
 |                   | constant | CCR                      | Critical collateral ratio.                                                        | 18 digit decimal         | none ( $ / $)              |
@@ -486,7 +486,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `liquidate(address _user)`: callable by anyone, attempts to liquidate the trove of `_user`. Executes successfully if `_user`’s trove meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the trove's ICR < the system MCR)
 
-`liquidateCDPs(uint n)`: callable by anyone, checks for under-collateralised CDPs below MCR and liquidates up to `n`, starting from the trove with the lowest collateral ratio; subject to gas constraints and the actual number of under-collateralized troves.
+`liquidateTroves(uint n)`: callable by anyone, checks for under-collateralised troves below MCR and liquidates up to `n`, starting from the trove with the lowest collateral ratio; subject to gas constraints and the actual number of under-collateralized troves.
 
 `batchLiquidateTroves( address[] calldata troveList)`: callable by anyone, accepts a custom list of troves addresses as an argument. Steps through the provided list and attempts to liquidate every trove, until it reaches the end or it runs out of gas. A trove is liquidated only if it meets the conditions for liquidation.
 
@@ -494,7 +494,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `getCurrentICR(address _user, uint _price)`: computes the user’s individual collateral ratio (ICR) based on their total collateral and total LUSD debt. Returns 2^256 -1 if they have 0 debt.
 
-`getCDPOwnersCount()`: get the number of active troves in the system.
+`getTroveOwnersCount()`: get the number of active troves in the system.
 
 `getPendingETHReward(address _user)`: get the pending ETH reward from liquidation redistribution events, for the given trove.
 
