@@ -139,6 +139,7 @@ const contracts = contractArtifacts.map(({ contractName, abi }) => ({
 const output = `
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { Log } from "@ethersproject/abstract-provider";
+import { BytesLike } from "@ethersproject/bytes";
 import {
   Overrides,
   CallOverrides,

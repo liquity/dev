@@ -10,15 +10,28 @@ import "./Dependencies/console.sol";
 
 contract CLVToken is ICLVToken, Ownable {
     using SafeMath for uint256;
+    uint256 public _totalSupply;
 
-    string constant internal NAME = "LUSD";
+    string constant internal NAME = "LUSD Stablecoin";
     string constant internal SYMBOL = "LUSD";
+    string constant internal VERSION = "1";
     uint8 constant internal DECIMALS = 18;
+    
+    // --- Necessary for EIP 2612 ---
+    // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 private immutable _PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+    
+    // Mapping of ChainID to domain separators. This is a very gas efficient way
+    // to not recalculate the domain separator on every call, while still
+    // automatically detecting ChainID changes.
+    mapping (uint256 => bytes32) private _domainSeparators;
+    mapping (address => uint256) private _nonces;
 
     // User data for CLV token
+    mapping (address => mapping (address => uint256)) public allowances;    
     mapping (address => uint256) public balances;
-    mapping (address => mapping (address => uint256)) public allowances;
-    
+
+    // --- Addresses ---
     address public immutable cdpManagerAddress;
     address public immutable poolManagerAddress;
     address public immutable stabilityPoolAddress;
@@ -26,8 +39,6 @@ contract CLVToken is ICLVToken, Ownable {
     address public immutable defaultPoolAddress;
     address public immutable borrowerOperationsAddress;
     
-    uint256 public _totalSupply;
-
     constructor( 
         address _cdpManagerAddress,
         address _poolManagerAddress,
@@ -35,21 +46,26 @@ contract CLVToken is ICLVToken, Ownable {
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
         address _borrowerOperationsAddress
-    ) public Ownable() {    
+    ) public Ownable() {  
         cdpManagerAddress = _cdpManagerAddress;
-        poolManagerAddress = _poolManagerAddress;
-        activePoolAddress = _activePoolAddress;
-        defaultPoolAddress = _defaultPoolAddress;
-        stabilityPoolAddress = _stabilityPoolAddress;
-        borrowerOperationsAddress = _borrowerOperationsAddress;
-
         emit CDPManagerAddressChanged(_cdpManagerAddress);
+        
+        poolManagerAddress = _poolManagerAddress;
         emit PoolManagerAddressChanged(_poolManagerAddress);
-        emit ActivePoolAddressChanged( _activePoolAddress);
-        emit DefaultPoolAddressChanged(_defaultPoolAddress);
-        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
 
+        activePoolAddress = _activePoolAddress;
+        emit ActivePoolAddressChanged( _activePoolAddress);
+
+        defaultPoolAddress = _defaultPoolAddress;
+        emit DefaultPoolAddressChanged(_defaultPoolAddress);
+
+        stabilityPoolAddress = _stabilityPoolAddress;
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+
+        borrowerOperationsAddress = _borrowerOperationsAddress;        
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+        
+        _updateDomainSeparator();
         _renounceOwnership();
     }
   
@@ -90,24 +106,25 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     // --- 'require' functions ---
+    
     function _requireValidRecipient(address recipient) internal view {
         require(
             recipient != address(0) && 
             recipient != address(this) &&
             recipient != defaultPoolAddress, 
-            "CLVToken: Provided transfer recipient is not appropriate"
+            "LUSD: Provided transfer recipient is not appropriate"
         );
         require(
             recipient != activePoolAddress &&
             recipient != cdpManagerAddress && 
             recipient != poolManagerAddress && 
             recipient != borrowerOperationsAddress,
-            "CLVToken: Use repay function instead to clear your debt"
+            "LUSD: Use repay function instead to clear your debt"
         );
         require(
             recipient != stabilityPoolAddress || 
             _msgSender() == poolManagerAddress, 
-            "CLVToken: Sender must be PoolManager if recipient is StabilityPool"
+            "LUSD: Sender must be PoolManager if recipient is StabilityPool"
         );
     }
 
@@ -121,17 +138,17 @@ contract CLVToken is ICLVToken, Ownable {
             spender != poolManagerAddress && 
             spender != stabilityPoolAddress &&
             spender != borrowerOperationsAddress,
-            "CLVToken: Provided spender is not appropriate"
+            "LUSD: Provided spender is not appropriate"
         );
     }
 
     function _requireCallerIsPoolManager() internal view {
-        require(_msgSender() == poolManagerAddress, "CLVToken: Caller is not the PoolManager");
+        require(_msgSender() == poolManagerAddress, "LUSD: Caller is not the PoolManager");
     }
 
     function _requireCallerIsPMorBO() internal view {
         require(_msgSender() == poolManagerAddress || _msgSender() == borrowerOperationsAddress, 
-        "CLVToken: Caller is not the PM or BO");
+        "LUSD: Caller is not the PM or BO");
     }
 
     // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---
@@ -139,20 +156,24 @@ contract CLVToken is ICLVToken, Ownable {
     function totalSupply() external view override returns (uint256) {
         return _totalSupply;
     }
+    
+    function nonces(address owner) public view override returns (uint256) { // FOR EIP 2612
+        return _nonces[owner];
+    }
 
     function balanceOf(address account) public view override returns (uint256) {
         return balances[account];
+    }
+    
+    function allowance(address owner, address spender) external view override returns (uint256) {
+        return getAllowance(owner, spender);
     }
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
-
-    function allowance(address owner, address spender) external view override returns (uint256) {
-        return getAllowance(owner, spender);
-    }
-
+    
     function approve(address spender, uint256 amount) external override returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
@@ -175,6 +196,50 @@ contract CLVToken is ICLVToken, Ownable {
         uint newAllowance = getAllowance(_msgSender(), spender).sub(subtractedValue, "ERC20: decreased allowance below zero");
         _approve(_msgSender(), spender, newAllowance);
         return true;
+    }
+
+    // --- OPENZEPPELIN EIP 2612 FUNCTIONALITY ---
+
+    function permit(address owner, address spender, uint amount, 
+                    uint deadline, uint8 v, bytes32 r, bytes32 s) 
+    external 
+    override 
+    {            
+        require(deadline == 0 || deadline >= now, 'LUSD: EXPIRED');
+        bytes32 digest = keccak256(abi.encodePacked(uint16(0x1901), 
+                      _domainSeparator(), keccak256(abi.encode(
+                      _PERMIT_TYPEHASH, owner, spender, amount, 
+                      _nonces[owner]++, deadline))));
+
+        address recoveredAddress = ecrecover(digest, v, r, s);
+        require(recoveredAddress != address(0) && 
+                recoveredAddress == owner, 'LUSD: BAD_SIG');
+        _approve(owner, spender, amount);
+    }
+
+    // --- Helper functions ---
+
+    // Returns the domain separator, updating it if chainID changes
+    function _domainSeparator() private returns (bytes32) {
+        bytes32 domainSeparator = _domainSeparators[_chainID()];
+        if (domainSeparator != 0x00) {
+            return domainSeparator;
+        } else {
+            return _updateDomainSeparator();
+        }
+    }
+    function _updateDomainSeparator() private returns (bytes32 domainSeparator) {
+        uint256 chainID = _chainID();
+        domainSeparator = keccak256(abi.encode( 
+            keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+            keccak256(bytes(NAME)), keccak256(bytes(VERSION)), chainID, address(this)));
+            
+        _domainSeparators[chainID] = domainSeparator;
+    }
+    function _chainID() private pure returns (uint256 chainID) {
+        assembly {
+            chainID := chainid()
+        }
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal {
@@ -220,6 +285,10 @@ contract CLVToken is ICLVToken, Ownable {
 
     function symbol() external view override returns (string memory) {
         return SYMBOL;
+    }
+
+    function version() external pure returns (string memory) {
+        return VERSION;
     }
 
     function decimals() external view override returns (uint8) {

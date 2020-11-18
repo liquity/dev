@@ -32,7 +32,6 @@ const deployContract = async (
     });
     console.log();
   }
-
   return contract.address;
 };
 
@@ -47,7 +46,6 @@ const deployContracts = async (
       ...overrides
     }),
     cdpManager: await deployContract(deployer, getContractFactory, "CDPManager", { ...overrides }),
-    clvToken: await deployContract(deployer, getContractFactory, "CLVToken", { ...overrides }),
     communityIssuance: await deployContract(deployer, getContractFactory, "CommunityIssuance", {
       ...overrides
     }),
@@ -61,10 +59,20 @@ const deployContracts = async (
       ...overrides
     })
   };
-
   return {
     ...addresses,
-
+    clvToken: await deployContract(
+      deployer, 
+      getContractFactory, 
+      "CLVToken", 
+      addresses.cdpManager,
+      addresses.poolManager,
+      addresses.activePool,
+      addresses.defaultPool,
+      addresses.stabilityPool,
+      addresses.borrowerOperations,
+      { ...overrides }
+    ),
     multiCDPgetter: await deployContract(
       deployer,
       getContractFactory,
@@ -102,12 +110,6 @@ const connectContracts = async (
   const network = await deployer.provider.getNetwork();
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
-    nonce =>
-      clvToken.setAddresses(poolManager.address, borrowerOperations.address, {
-        ...overrides,
-        nonce
-      }),
-
     nonce =>
       poolManager.setAddresses(
         borrowerOperations.address,
