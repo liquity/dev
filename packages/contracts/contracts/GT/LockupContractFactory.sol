@@ -14,8 +14,8 @@ contract LockupContractFactory is ILockupContractFactory {
     // --- Data ---
     uint constant public ONE_YEAR_IN_SECONDS = 31536000;
 
-    uint public factoryDeploymentTimestamp;
-    address public factoryDeployer;
+    uint public deploymentTime;
+    address public deployer;
 
     address public growthTokenAddress;
     IGrowthToken GrowthToken;
@@ -32,8 +32,8 @@ contract LockupContractFactory is ILockupContractFactory {
     // --- Functions ---
 
     constructor () public {
-        factoryDeploymentTimestamp = block.timestamp;
-        factoryDeployer = msg.sender;
+        deploymentTime = block.timestamp;
+        deployer = msg.sender;
     }
 
     function setGrowthTokenAddress(address _growthTokenAddress) external override {
@@ -117,7 +117,7 @@ contract LockupContractFactory is ILockupContractFactory {
     // --- 'require'  functions ---
 
     function _requireCallerIsFactoryDeployer() internal view {
-        require(msg.sender == factoryDeployer, "LCF: caller is not LCF deployer");
+        require(msg.sender == deployer, "LCF: caller is not LCF deployer");
     }
 
     function _requireGTAddressIsSet() internal view {
@@ -125,7 +125,7 @@ contract LockupContractFactory is ILockupContractFactory {
     }
 
     function _requireFactoryIsAtLeastOneYearOld() internal view {
-        require(block.timestamp.sub(factoryDeploymentTimestamp) >= ONE_YEAR_IN_SECONDS,
+        require(block.timestamp.sub(deploymentTime) >= ONE_YEAR_IN_SECONDS,
         "Factory must be at least one year old");
     }
 

@@ -51,6 +51,12 @@ const deployContracts = async (
     }),
     defaultPool: await deployContract(deployer, getContractFactory, "DefaultPool", { ...overrides }),
     hintHelpers: await deployContract(deployer, getContractFactory, "HintHelpers", { ...overrides }),
+    lockupContractFactory: await deployContract(
+      deployer,
+      getContractFactory,
+      "LockupContractFactory",
+      { ...overrides }
+    ),
     lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
     poolManager: await deployContract(deployer, getContractFactory, "PoolManager", { ...overrides }),
     priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
@@ -73,6 +79,14 @@ const deployContracts = async (
       addresses.borrowerOperations,
       { ...overrides }
     ),
+    growthToken: await deployContract(
+      deployer,
+      getContractFactory,
+      "GrowthToken",
+      addresses.communityIssuance,
+      addresses.lockupContractFactory,
+      { ...overrides }
+    ),
     multiCDPgetter: await deployContract(
       deployer,
       getContractFactory,
@@ -92,7 +106,9 @@ const connectContracts = async (
     clvToken,
     communityIssuance,
     defaultPool,
+    growthToken,
     hintHelpers,
+    lockupContractFactory,
     lqtyStaking,
     poolManager,
     priceFeed,
@@ -124,7 +140,7 @@ const connectContracts = async (
       ),
 
     nonce =>
-      sortedCDPs.setParams(10000000, cdpManager.address, borrowerOperations.address, {
+      sortedCDPs.setParams(1e6, cdpManager.address, borrowerOperations.address, {
         ...overrides,
         nonce
       }),
@@ -194,13 +210,23 @@ const connectContracts = async (
         nonce
       }),
 
-    /*
     nonce =>
-    lqtyStaking.setGrowthTokenAddress(TODO.address, {
-      ...overrides,
-      nonce
-    }),
-    */
+      lqtyStaking.setGrowthTokenAddress(growthToken.address, {
+        ...overrides,
+        nonce
+      }),
+
+    nonce =>
+      lockupContractFactory.setGrowthTokenAddress(growthToken.address, {
+        ...overrides,
+        nonce
+      }),
+
+    nonce =>
+      communityIssuance.setGrowthTokenAddress(growthToken.address, {
+        ...overrides,
+        nonce
+      }),
 
     nonce =>
       lqtyStaking.setCLVTokenAddress(clvToken.address, {
@@ -251,8 +277,12 @@ export const deployAndSetupContracts = async (
   silent || (console.log("Deploying contracts..."), console.log());
   const addresses = await deployContracts(deployer, getContractFactory, overrides);
   const contracts = connectToContracts(addresses, deployer);
+
   silent || console.log("Connecting contracts...");
   await connectContracts(contracts, deployer, overrides);
+
+  silent || console.log("Activating CommunityIssuance contract...");
+  await (await contracts.communityIssuance.activateContract({ ...overrides })).wait();
 
   return contracts;
 };

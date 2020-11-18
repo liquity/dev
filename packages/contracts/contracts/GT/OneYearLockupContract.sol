@@ -12,7 +12,7 @@ contract OneYearLockupContract {
 
     uint constant public ONE_YEAR_IN_SECONDS = 31536000; 
 
-    address public lockupDeployer;
+    address public deployer;
     address public beneficiary;
 
     address public growthTokenAddress;
@@ -35,13 +35,13 @@ contract OneYearLockupContract {
 
     constructor 
     (
-    address _growthTokenAddress, 
-    address _beneficiary, 
-    uint _initialEntitlement
+        address _growthTokenAddress, 
+        address _beneficiary, 
+        uint _initialEntitlement
     )
-    public 
+        public 
     {
-        lockupDeployer = msg.sender;
+        deployer = msg.sender;
 
         growthTokenAddress = _growthTokenAddress;
         growthToken = IGrowthToken(_growthTokenAddress);
@@ -76,7 +76,7 @@ contract OneYearLockupContract {
     // --- 'require' functions ---
 
     function _requireCallerIsLockupDeployer() internal view {
-        require(msg.sender == lockupDeployer, "OYLC: caller is not OYLC deployer");
+        require(msg.sender == deployer, "OYLC: caller is not OYLC deployer");
     }
 
     function _requireCallerIsBeneficiary() internal view {

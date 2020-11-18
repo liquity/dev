@@ -177,56 +177,26 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_priceAggregatorAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setAggregator",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_priceAggregatorAddress_Testnet",
-          "type": "address"
-        }
-      ],
-      "name": "setAggregator_Testnet",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "address",
           "name": "_cdpManagerAddress",
           "type": "address"
-        }
-      ],
-      "name": "setCDPManagerAddress",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
+        },
         {
           "internalType": "address",
           "name": "_poolManagerAddress",
           "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_priceAggregatorAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_priceAggregatorAddressTestnet",
+          "type": "address"
         }
       ],
-      "name": "setPoolManagerAddress",
+      "name": "setAddresses",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

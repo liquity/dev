@@ -5,6 +5,7 @@ const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.s
 const th = testHelpers.TestHelper
 
 const dec = th.dec
+const toBN = th.toBN
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
@@ -153,9 +154,9 @@ contract('BorrowerOperations', async accounts => {
   it("addColl(), active CDP: applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
     // --- SETUP ---
     // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether.  Withdraw 90/90/170 CLV (+ 10 CLV for gas compensation)
-    const CLVwithdrawal_A = th.toBN(dec(90, 18))
-    const CLVwithdrawal_B = th.toBN(dec(90, 18))
-    const CLVwithdrawal_C = th.toBN(dec(170, 18))
+    const CLVwithdrawal_A = toBN(dec(90, 18))
+    const CLVwithdrawal_B = toBN(dec(90, 18))
+    const CLVwithdrawal_C = toBN(dec(170, 18))
 
     await borrowerOperations.openLoan(CLVwithdrawal_A, alice, { from: alice, value: dec(15, 'ether') })
     await borrowerOperations.openLoan(CLVwithdrawal_B, bob, { from: bob, value: dec(5, 'ether') })
@@ -199,10 +200,10 @@ contract('BorrowerOperations', async accounts => {
     When Carol defaulted, her liquidated debt and coll was distributed to A and B in proportion to their 
     collateral shares.  
     */
-    const expectedCollReward_A = liquidatedColl_C.mul(th.toBN(dec(15, 'ether'))).div(th.toBN(dec(20, 'ether')))
-    const expectedDebtReward_A = liquidatedDebt_C.mul(th.toBN(dec(15, 'ether'))).div(th.toBN(dec(20, 'ether')))
-    const expectedCollReward_B = liquidatedColl_C.mul(th.toBN(dec(5, 'ether'))).div(th.toBN(dec(20, 'ether')))
-    const expectedDebtReward_B = liquidatedDebt_C.mul(th.toBN(dec(5, 'ether'))).div(th.toBN(dec(20, 'ether')))
+    const expectedCollReward_A = liquidatedColl_C.mul(toBN(dec(15, 'ether'))).div(toBN(dec(20, 'ether')))
+    const expectedDebtReward_A = liquidatedDebt_C.mul(toBN(dec(15, 'ether'))).div(toBN(dec(20, 'ether')))
+    const expectedCollReward_B = liquidatedColl_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
+    const expectedDebtReward_B = liquidatedDebt_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
 
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const alice_CLVDebt_After = alice_CDP_After[0]
@@ -214,11 +215,11 @@ contract('BorrowerOperations', async accounts => {
 
     // Expect Alice coll = 15 + 5  + reward
     // Expect Bob coll = 5 + 1 + reward
-    assert.isAtMost(th.getDifference(alice_Coll_After, th.toBN(dec(20, 'ether')).add(expectedCollReward_A)), 100)
-    assert.isAtMost(th.getDifference(alice_CLVDebt_After, CLVwithdrawal_A.add(expectedDebtReward_A).add(th.toBN(dec(10, 18)))), 100)
+    assert.isAtMost(th.getDifference(alice_Coll_After, toBN(dec(20, 'ether')).add(expectedCollReward_A)), 100)
+    assert.isAtMost(th.getDifference(alice_CLVDebt_After, CLVwithdrawal_A.add(expectedDebtReward_A).add(toBN(dec(10, 18)))), 100)
 
-    assert.isAtMost(th.getDifference(bob_Coll_After, th.toBN(dec(6, 'ether')).add(expectedCollReward_B)), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebt_After, CLVwithdrawal_B.add(expectedDebtReward_B).add(th.toBN(dec(10, 18)))), 100)
+    assert.isAtMost(th.getDifference(bob_Coll_After, toBN(dec(6, 'ether')).add(expectedCollReward_B)), 100)
+    assert.isAtMost(th.getDifference(bob_CLVDebt_After, CLVwithdrawal_B.add(expectedDebtReward_B).add(toBN(dec(10, 18)))), 100)
 
     /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be updated
     to the latest values of L_ETH and L_CLVDebt */
@@ -624,9 +625,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: carol, value: dec(1, 'ether') })
 
     // Alice and Bob withdraw 90CLV, Carol withdraws 170CLV (+10 CLV for gas compensation)
-    const CLVwithdrawal_A = await th.toBN(dec(90, 18))
-    const CLVwithdrawal_B = await th.toBN(dec(90, 18))
-    const CLVwithdrawal_C = await th.toBN(dec(170, 18))
+    const CLVwithdrawal_A = await toBN(dec(90, 18))
+    const CLVwithdrawal_B = await toBN(dec(90, 18))
+    const CLVwithdrawal_C = await toBN(dec(170, 18))
 
     await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
     await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
@@ -666,10 +667,10 @@ contract('BorrowerOperations', async accounts => {
     When Carol defaulted, her liquidated debt and coll was distributed to A and B in proportion to their 
     collateral shares.  
     */
-    const expectedCollReward_A = liquidatedColl_C.mul(th.toBN(dec(15, 'ether'))).div(th.toBN(dec(20, 'ether')))
-    const expectedDebtReward_A = liquidatedDebt_C.mul(th.toBN(dec(15, 'ether'))).div(th.toBN(dec(20, 'ether')))
-    const expectedCollReward_B = liquidatedColl_C.mul(th.toBN(dec(5, 'ether'))).div(th.toBN(dec(20, 'ether')))
-    const expectedDebtReward_B = liquidatedDebt_C.mul(th.toBN(dec(5, 'ether'))).div(th.toBN(dec(20, 'ether')))
+    const expectedCollReward_A = liquidatedColl_C.mul(toBN(dec(15, 'ether'))).div(toBN(dec(20, 'ether')))
+    const expectedDebtReward_A = liquidatedDebt_C.mul(toBN(dec(15, 'ether'))).div(toBN(dec(20, 'ether')))
+    const expectedCollReward_B = liquidatedColl_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
+    const expectedDebtReward_B = liquidatedDebt_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
 
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const alice_CLVDebt_After = alice_CDP_After[0]
@@ -681,11 +682,11 @@ contract('BorrowerOperations', async accounts => {
 
     // Expect Alice coll = 15 - 5  + reward
     // Expect Bob coll = 5 - 1 + reward
-    assert.isAtMost(th.getDifference(alice_Coll_After, th.toBN(dec(10, 'ether')).add(expectedCollReward_A)), 100)
-    assert.isAtMost(th.getDifference(alice_CLVDebt_After, CLVwithdrawal_A.add(expectedDebtReward_A).add(th.toBN(dec(10, 18)))), 100)
+    assert.isAtMost(th.getDifference(alice_Coll_After, toBN(dec(10, 'ether')).add(expectedCollReward_A)), 100)
+    assert.isAtMost(th.getDifference(alice_CLVDebt_After, CLVwithdrawal_A.add(expectedDebtReward_A).add(toBN(dec(10, 18)))), 100)
 
-    assert.isAtMost(th.getDifference(bob_Coll_After, th.toBN(dec(4, 'ether')).add(expectedCollReward_B)), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebt_After, CLVwithdrawal_B.add(expectedDebtReward_B).add(th.toBN(dec(10, 18)))), 100)
+    assert.isAtMost(th.getDifference(bob_Coll_After, toBN(dec(4, 'ether')).add(expectedCollReward_B)), 100)
+    assert.isAtMost(th.getDifference(bob_CLVDebt_After, CLVwithdrawal_B.add(expectedDebtReward_B).add(toBN(dec(10, 18)))), 100)
 
     /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be updated
     to the latest values of L_ETH and L_CLVDebt */
@@ -724,7 +725,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -794,7 +795,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
 
@@ -815,7 +816,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check that now, at least one minute has passed since lastFeeOpTime_1
     const timeNow = await th.getLatestBlockTimestamp(web3)
-    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(60))
+    assert.isTrue(toBN(timeNow).sub(lastFeeOpTime_1).gte(60))
 
     // Borrower C triggers a fee
     await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
@@ -843,7 +844,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 59 minutes pass
     th.fastForwardTime(3540, web3.currentProvider)
@@ -883,7 +884,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -899,6 +900,53 @@ contract('BorrowerOperations', async accounts => {
     // Check GT CLV balance after has increased
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
+  })
+
+  it("withdrawCLV(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyStaking.stake(dec(1, 18), { from: owner })
+
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(toBN('0')))
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    // D withdraws CLV
+    const withdrawal_D = toBN(dec(37, 18))
+
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    const withdrawalTx = await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+
+    const emittedFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(withdrawalTx))
+    assert.isTrue(emittedFee.gt(toBN('0')))
+
+    const gasComp = toBN(dec(10, 18))
+
+    const newDebt = (await cdpManager.CDPs(D))[0]
+
+    console.log(`newDebt ${newDebt}`)
+    console.log(`withdrawal_D ${withdrawal_D}`)
+    console.log(`emittedFee ${emittedFee}`)
+    console.log(`withdrawal_D.add(emittedFee) ${withdrawal_D.add(emittedFee)}`)
+
+    // Check debt on CDP struct equals drawn debt plus emitted fee
+    assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
   })
 
   it("withdrawCLV(): Borrowing at non-zero base rate increases the GT staking contract CLV fees-per-unit-staked", async () => {
@@ -921,7 +969,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -963,14 +1011,14 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
     // D withdraws CLV
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    const CLVRequest_D = th.toBN(dec(40, 18))
+    const CLVRequest_D = toBN(dec(40, 18))
     await borrowerOperations.withdrawCLV(CLVRequest_D, D, { from: D })
 
     // Check GT staking CLV balance has increased
@@ -1053,7 +1101,7 @@ contract('BorrowerOperations', async accounts => {
 
     // D withdraws CLV
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    const CLVRequest_D = th.toBN(dec(40, 18))
+    const CLVRequest_D = toBN(dec(40, 18))
     await borrowerOperations.withdrawCLV(CLVRequest_D, D, { from: D })
 
     // Check D's CLV balance now equals their requested CLV
@@ -1229,7 +1277,7 @@ contract('BorrowerOperations', async accounts => {
     // check after
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const debt_After = alice_CDP_After[0]
-    assert.equal(debt_After.toString(), th.toBN(dec(10, 18)).add(th.toBN(100)).toString())
+    assert.equal(debt_After.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
   })
 
   it("withdrawCLV(): increases CLV debt in ActivePool by correct amount", async () => {
@@ -1245,7 +1293,7 @@ contract('BorrowerOperations', async accounts => {
     // check after
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const debt_After = alice_CDP_After[0]
-    assert.equal(debt_After.toString(), th.toBN(dec(10, 18)).add(th.toBN(100)).toString())
+    assert.equal(debt_After.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
   })
 
   it("withdrawCLV(): increases user CLVToken balance by correct amount", async () => {
@@ -1312,7 +1360,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
     const alice_CDP_Before = await cdpManager.CDPs(alice)
     const debt_Before = alice_CDP_Before[0]
-    assert.equal(debt_Before.toString(), th.toBN(dec(10, 18)).add(th.toBN(100)).toString())
+    assert.equal(debt_Before.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
 
     await borrowerOperations.repayCLV(100, alice, { from: alice })
 
@@ -1328,7 +1376,7 @@ contract('BorrowerOperations', async accounts => {
     //check before
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
     const activePool_CLV_Before = await activePool.getCLVDebt()
-    assert.equal(activePool_CLV_Before.toString(), th.toBN(dec(10, 18)).add(th.toBN(100)).toString())
+    assert.equal(activePool_CLV_Before.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
 
     await borrowerOperations.repayCLV(100, alice, { from: alice })
 
@@ -1369,7 +1417,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -1441,7 +1489,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
 
@@ -1462,7 +1510,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check that now, at least one minute has passed since lastFeeOpTime_1
     const timeNow = await th.getLatestBlockTimestamp(web3)
-    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(60))
+    assert.isTrue(toBN(timeNow).sub(lastFeeOpTime_1).gte(60))
 
     // Borrower C triggers a fee
     await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
@@ -1490,7 +1538,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 59 minutes pass
     th.fastForwardTime(3540, web3.currentProvider)
@@ -1529,7 +1577,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -1545,6 +1593,48 @@ contract('BorrowerOperations', async accounts => {
     // Check GT CLV balance after has increased
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
+  })
+
+  it("adjustLoan(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyStaking.stake(dec(1, 18), { from: owner })
+
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(toBN('0')))
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    const withdrawal_D = toBN(dec(37, 18))
+
+    // D withdraws CLV
+    await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
+    const adjustmentTx = await borrowerOperations.adjustLoan(0, withdrawal_D, true, D, { from: D })
+
+    const emittedFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(adjustmentTx))
+    assert.isTrue(emittedFee.gt(toBN('0')))
+
+    const gasComp = toBN(dec(10, 18))
+
+    const newDebt = (await cdpManager.CDPs(D))[0]
+
+    // Check debt on CDP struct equals drawn debt plus emitted fee
+    assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
   })
 
   it("adjustLoan(): Borrowing at non-zero base rate increases the GT staking contract CLV fees-per-unit-staked", async () => {
@@ -1567,7 +1657,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -1609,14 +1699,14 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    const CLVRequest_D = th.toBN(dec(40, 18))
+    const CLVRequest_D = toBN(dec(40, 18))
     await borrowerOperations.adjustLoan(0, CLVRequest_D, true, D, { from: D })
 
     // Check GT staking CLV balance has increased
@@ -1698,7 +1788,7 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts loan
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
-    const CLVRequest_D = th.toBN(dec(40, 18))
+    const CLVRequest_D = toBN(dec(40, 18))
     await borrowerOperations.adjustLoan(0, CLVRequest_D, true, D, { from: D })
 
     // Check D's CLV balance now equals their requested CLV
@@ -2267,8 +2357,8 @@ contract('BorrowerOperations', async accounts => {
     const L_ETH_A_Snapshot = (await cdpManager.rewardSnapshots(alice))[0]
     const L_CLVDebt_A_Snapshot = (await cdpManager.rewardSnapshots(alice))[1]
 
-    assert.isTrue(L_ETH_A_Snapshot.gt(th.toBN('0')))
-    assert.isTrue(L_CLVDebt_A_Snapshot.gt(th.toBN('0')))
+    assert.isTrue(L_ETH_A_Snapshot.gt(toBN('0')))
+    assert.isTrue(L_CLVDebt_A_Snapshot.gt(toBN('0')))
 
     // Liquidate Carol
     await cdpManager.liquidate(carol)
@@ -2278,8 +2368,8 @@ contract('BorrowerOperations', async accounts => {
     const L_ETH_Snapshot_A_AfterLiquidation = (await cdpManager.rewardSnapshots(alice))[0]
     const L_CLVDebt_Snapshot_A_AfterLiquidation = (await cdpManager.rewardSnapshots(alice))[1]
 
-    assert.isTrue(L_ETH_Snapshot_A_AfterLiquidation.gt(th.toBN('0')))
-    assert.isTrue(L_CLVDebt_Snapshot_A_AfterLiquidation.gt(th.toBN('0')))
+    assert.isTrue(L_ETH_Snapshot_A_AfterLiquidation.gt(toBN('0')))
+    assert.isTrue(L_CLVDebt_Snapshot_A_AfterLiquidation.gt(toBN('0')))
 
     // Alice closes loan
     await borrowerOperations.closeLoan({ from: alice })
@@ -2470,8 +2560,8 @@ contract('BorrowerOperations', async accounts => {
     // Close Alice's loan. Alice's pending rewards should be removed from the DefaultPool when she close.
     await borrowerOperations.closeLoan({ from: alice })
 
-    const expectedCollReward_A = liquidatedColl_C.mul(th.toBN(dec(15, 'ether'))).div(th.toBN(dec(20, 'ether')))
-    const expectedDebtReward_A = liquidatedDebt_C.mul(th.toBN(dec(15, 'ether'))).div(th.toBN(dec(20, 'ether')))
+    const expectedCollReward_A = liquidatedColl_C.mul(toBN(dec(15, 'ether'))).div(toBN(dec(20, 'ether')))
+    const expectedDebtReward_A = liquidatedDebt_C.mul(toBN(dec(15, 'ether'))).div(toBN(dec(20, 'ether')))
 
     const defaultPool_ETH_afterAliceCloses = await defaultPool.getETH()
     const defaultPool_CLVDebt_afterAliceCloses = await defaultPool.getCLVDebt()
@@ -2507,7 +2597,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -2544,7 +2634,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -2603,7 +2693,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
 
@@ -2624,7 +2714,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check that now, at least one hour has passed since lastFeeOpTime_1
     const timeNow = await th.getLatestBlockTimestamp(web3)
-    assert.isTrue(th.toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
+    assert.isTrue(toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
 
     // Borrower E triggers a fee
     await borrowerOperations.openLoan(dec(1, 18), E, { from: E, value: dec(1, 'ether') })
@@ -2652,7 +2742,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 59 minutes pass
     th.fastForwardTime(3540, web3.currentProvider)
@@ -2692,7 +2782,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -2707,6 +2797,47 @@ contract('BorrowerOperations', async accounts => {
     // Check GT CLV balance after has increased
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
+  })
+
+  it("openLoan(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 GT
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyStaking.stake(dec(1, 18), { from: owner })
+
+    await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 CLV
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 CLV
+    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await cdpManager.baseRate()
+    assert.isTrue(baseRate_1.gt(toBN('0')))
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+    const withdrawal_D = toBN(dec(37, 18))
+
+    gasComp = toBN(dec(10, 18))
+
+    // D withdraws CLV
+    const openLoanTx = await borrowerOperations.openLoan(withdrawal_D, D, { from: D, value: dec(5, 'ether') })
+    
+    const emittedFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(openLoanTx))
+    assert.isTrue(toBN(emittedFee).gt(toBN('0')))
+
+    const newDebt = (await cdpManager.CDPs(D))[0]
+
+    // Check debt on CDP struct equals drawn debt plus emitted fee
+    assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
   })
 
   it("openLoan(): Borrowing at non-zero base rate increases the GT staking contract CLV fees-per-unit-staked", async () => {
@@ -2729,7 +2860,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
@@ -2770,13 +2901,13 @@ contract('BorrowerOperations', async accounts => {
 
     // Check baseRate is now non-zero
     const baseRate_1 = await cdpManager.baseRate()
-    assert.isTrue(baseRate_1.gt(th.toBN('0')))
+    assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
     // D opens loan 
-    const CLVRequest_D = th.toBN(dec(40, 18))
+    const CLVRequest_D = toBN(dec(40, 18))
     await borrowerOperations.openLoan(CLVRequest_D, D, { from: D, value: dec(5, 'ether') })
 
     // Check GT staking CLV balance has increased
@@ -2855,7 +2986,7 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
     // D opens loan 
-    const CLVRequest_D = th.toBN(dec(40, 18))
+    const CLVRequest_D = toBN(dec(40, 18))
     await borrowerOperations.openLoan(CLVRequest_D, D, { from: D, value: dec(5, 'ether') })
 
     // Check D's CLV balance now equals their requested CLV
@@ -3142,8 +3273,8 @@ contract('BorrowerOperations', async accounts => {
     const L_ETH = await cdpManager.L_ETH()
     const L_CLV = await cdpManager.L_CLVDebt()
 
-    assert.isAtMost(th.getDifference(L_ETH, liquidatedColl.div(th.toBN('10'))), 100)
-    assert.isAtMost(th.getDifference(L_CLV, liquidatedDebt.div(th.toBN('10'))), 100)
+    assert.isAtMost(th.getDifference(L_ETH, liquidatedColl.div(toBN('10'))), 100)
+    assert.isAtMost(th.getDifference(L_CLV, liquidatedDebt.div(toBN('10'))), 100)
 
     // Bob opens loan
     await borrowerOperations.openLoan('50000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
@@ -3347,8 +3478,8 @@ contract('BorrowerOperations', async accounts => {
     // 0, 0
     it("collChange = 0, debtChange = 0", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      const troveColl = th.toBN(dec(1, 'ether'))
-      const troveDebt = th.toBN(dec(100, 18))
+      const troveColl = toBN(dec(1, 'ether'))
+      const troveDebt = toBN(dec(100, 18))
       await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
       await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
@@ -3377,8 +3508,8 @@ contract('BorrowerOperations', async accounts => {
     // 0, +ve
     it("collChange = 0, debtChange is positive", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      const troveColl = th.toBN(dec(1, 'ether'))
-      const troveDebt = th.toBN(dec(100, 18))
+      const troveColl = toBN(dec(1, 'ether'))
+      const troveDebt = toBN(dec(100, 18))
       await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
       await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
@@ -3398,7 +3529,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
-      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).add(th.toBN(debtChange)))
+      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).add(toBN(debtChange)))
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3406,8 +3537,8 @@ contract('BorrowerOperations', async accounts => {
     // 0, -ve
     it("collChange = 0, debtChange is negative", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      const troveColl = th.toBN(dec(1, 'ether'))
-      const troveDebt = th.toBN(dec(100, 18))
+      const troveColl = toBN(dec(1, 'ether'))
+      const troveDebt = toBN(dec(100, 18))
       await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
       await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
@@ -3426,7 +3557,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
-      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).sub(th.toBN(dec(100, 18))))
+      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).sub(toBN(dec(100, 18))))
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3434,8 +3565,8 @@ contract('BorrowerOperations', async accounts => {
     // +ve, 0
     it("collChange is positive, debtChange is 0", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      const troveColl = th.toBN(dec(1, 'ether'))
-      const troveDebt = th.toBN(dec(100, 18))
+      const troveColl = toBN(dec(1, 'ether'))
+      const troveDebt = toBN(dec(100, 18))
       await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
       await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
@@ -3453,7 +3584,7 @@ contract('BorrowerOperations', async accounts => {
       const debtChange = 0
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price))
 
-      const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(collChange))).mul(price)
+      const expectedTCR = (troveColl.add(liquidatedColl).add(toBN(collChange))).mul(price)
       .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt))
 
       assert.isTrue(newTCR.eq(expectedTCR))
@@ -3462,8 +3593,8 @@ contract('BorrowerOperations', async accounts => {
     // -ve, 0
     it("collChange is negative, debtChange is 0", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      const troveColl = th.toBN(dec(1, 'ether'))
-      const troveDebt = th.toBN(dec(100, 18))
+      const troveColl = toBN(dec(1, 'ether'))
+      const troveDebt = toBN(dec(100, 18))
       await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
       await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
@@ -3482,7 +3613,7 @@ contract('BorrowerOperations', async accounts => {
       const debtChange = 0
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, false, debtChange, true, price))
 
-      const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 'ether')))).mul(price)
+      const expectedTCR = (troveColl.add(liquidatedColl).sub(toBN(dec(1, 'ether')))).mul(price)
                           .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt))
 
       assert.isTrue(newTCR.eq(expectedTCR))
@@ -3491,8 +3622,8 @@ contract('BorrowerOperations', async accounts => {
     // -ve, -ve
     it("collChange is negative, debtChange is negative", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      const troveColl = th.toBN(dec(1, 'ether'))
-      const troveDebt = th.toBN(dec(100, 18))
+      const troveColl = toBN(dec(1, 'ether'))
+      const troveDebt = toBN(dec(100, 18))
       await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
       await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
@@ -3511,8 +3642,8 @@ contract('BorrowerOperations', async accounts => {
       const debtChange = dec(100, 18)
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, false, debtChange, false, price))
 
-      const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 'ether')))).mul(price)
-      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).sub(th.toBN(dec(100, 18)))) 
+      const expectedTCR = (troveColl.add(liquidatedColl).sub(toBN(dec(1, 'ether')))).mul(price)
+      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).sub(toBN(dec(100, 18)))) 
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3520,8 +3651,8 @@ contract('BorrowerOperations', async accounts => {
     // +ve, +ve 
     it("collChange is positive, debtChange is positive", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      const troveColl = th.toBN(dec(1, 'ether'))
-      const troveDebt = th.toBN(dec(100, 18))
+      const troveColl = toBN(dec(1, 'ether'))
+      const troveDebt = toBN(dec(100, 18))
       await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
       await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
@@ -3540,8 +3671,8 @@ contract('BorrowerOperations', async accounts => {
       const debtChange = dec(100, 18)
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price))
 
-      const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(dec(1, 'ether')))).mul(price)
-                          .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).add(th.toBN(dec(100, 18)))) 
+      const expectedTCR = (troveColl.add(liquidatedColl).add(toBN(dec(1, 'ether')))).mul(price)
+                          .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).add(toBN(dec(100, 18)))) 
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3549,8 +3680,8 @@ contract('BorrowerOperations', async accounts => {
     // +ve, -ve
     it("collChange is positive, debtChange is negative", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      const troveColl = th.toBN(dec(1, 'ether'))
-      const troveDebt = th.toBN(dec(100, 18))
+      const troveColl = toBN(dec(1, 'ether'))
+      const troveDebt = toBN(dec(100, 18))
       await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
       await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
@@ -3569,8 +3700,8 @@ contract('BorrowerOperations', async accounts => {
       const debtChange = dec(100, 18)
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, false, price))
 
-      const expectedTCR = (troveColl.add(liquidatedColl).add(th.toBN(dec(1, 'ether')))).mul(price)
-                          .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).sub(th.toBN(dec(100, 18)))) 
+      const expectedTCR = (troveColl.add(liquidatedColl).add(toBN(dec(1, 'ether')))).mul(price)
+                          .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).sub(toBN(dec(100, 18)))) 
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3578,8 +3709,8 @@ contract('BorrowerOperations', async accounts => {
     // -ve, +ve
     it("collChange is negative, debtChange is positive", async () => {
       // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
-      const troveColl = th.toBN(dec(1, 'ether'))
-      const troveDebt = th.toBN(dec(100, 18))
+      const troveColl = toBN(dec(1, 'ether'))
+      const troveDebt = toBN(dec(100, 18))
       await borrowerOperations.openLoan(troveDebt, alice, { from: alice, value: troveColl })
       await borrowerOperations.openLoan(troveDebt, bob, { from: bob, value: troveColl })
 
@@ -3598,8 +3729,8 @@ contract('BorrowerOperations', async accounts => {
       const debtChange = dec(200, 18)
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, false, debtChange, true, price))
 
-      const expectedTCR = (troveColl.add(liquidatedColl).sub(th.toBN(dec(1, 18)))).mul(price)
-            .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).add(th.toBN(debtChange)))  
+      const expectedTCR = (troveColl.add(liquidatedColl).sub(toBN(dec(1, 18)))).mul(price)
+            .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).add(toBN(debtChange)))  
   
       assert.isTrue(newTCR.eq(expectedTCR))
     })

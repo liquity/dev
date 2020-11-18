@@ -145,9 +145,9 @@ contract PoolManager is Ownable, IPoolManager {
         address _defaultPoolAddress,
         address _communityIssuanceAddress
     )
-    external
-    override
-    onlyOwner
+        external
+        override
+        onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
@@ -413,10 +413,13 @@ contract PoolManager is Ownable, IPoolManager {
         return compoundedFrontEndStake;
     }
 
-    function _getCompoundedStakeFromSnapshots(uint initialStake, Snapshots memory snapshots) 
-    internal 
-    view 
-    returns (uint)
+    function _getCompoundedStakeFromSnapshots(
+        uint initialStake, 
+        Snapshots memory snapshots
+    ) 
+        internal 
+        view 
+        returns (uint)
     {
         uint snapshot_P = snapshots.P;
         uint128 scaleSnapshot = snapshots.scale;
@@ -732,9 +735,13 @@ contract PoolManager is Ownable, IPoolManager {
 
     // --- Offset helper functions ---
 
-    function _computeRewardsPerUnitStaked(uint _collToAdd, uint _debtToOffset, uint _totalCLVDeposits) 
-    internal 
-    returns (uint ETHGainPerUnitStaked, uint CLVLossPerUnitStaked) 
+    function _computeRewardsPerUnitStaked(
+        uint _collToAdd, 
+        uint _debtToOffset, 
+        uint _totalCLVDeposits
+    ) 
+        internal 
+        returns (uint ETHGainPerUnitStaked, uint CLVLossPerUnitStaked) 
     {
         uint CLVLossNumerator = _debtToOffset.mul(1e18).sub(lastCLVLossError_Offset);
         uint ETHNumerator = _collToAdd.mul(1e18).add(lastETHError_Offset);

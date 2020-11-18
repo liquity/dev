@@ -106,11 +106,11 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       const OYLC_D = await th.getOYLCFromDeploymentTx(deployedOYLCtx_D)
       const OYLC_E = await th.getOYLCFromDeploymentTx(deployedOYLCtx_E)
 
-      const storedDeployerAddress_A = await OYLC_A.lockupDeployer()
-      const storedDeployerAddress_B = await OYLC_B.lockupDeployer()
-      const storedDeployerAddress_C = await OYLC_C.lockupDeployer()
-      const storedDeployerAddress_D = await OYLC_D.lockupDeployer()
-      const storedDeployerAddress_E = await OYLC_E.lockupDeployer()
+      const storedDeployerAddress_A = await OYLC_A.deployer()
+      const storedDeployerAddress_B = await OYLC_B.deployer()
+      const storedDeployerAddress_C = await OYLC_C.deployer()
+      const storedDeployerAddress_D = await OYLC_D.deployer()
+      const storedDeployerAddress_E = await OYLC_E.deployer()
 
       assert.equal(lockupContractFactory.address, storedDeployerAddress_A)
       assert.equal(lockupContractFactory.address, storedDeployerAddress_B)

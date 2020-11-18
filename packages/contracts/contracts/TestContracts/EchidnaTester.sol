@@ -76,7 +76,9 @@ contract EchidnaTester {
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
             echidnaProxies[i] = new EchidnaProxy(cdpManager, borrowerOperations, poolManager, clvToken);
+
             (bool success, ) = address(echidnaProxies[i]).call{ value: INITIAL_BALANCE }("");
+
             require(success);
         }
 
@@ -117,7 +119,7 @@ contract EchidnaTester {
         uint _partialRedemptionHintICR
     ) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].redeemCollateralPrx(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR);
+        echidnaProxies[actor].redeemCollateralPrx(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, 0);
     }
 
     // Borrower Operations

@@ -1,4 +1,5 @@
 {
     "slither.solcPath": "",
-    "slither.hiddenDetectors": []
+    "slither.hiddenDetectors": [],
+    "solidity.compileUsingRemoteVersion": "v0.6.11+commit.5ef660b1"
 }
