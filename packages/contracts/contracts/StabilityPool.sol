@@ -675,7 +675,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         require(_msgSender() == address(cdpManager), "StabilityPool: Caller is not CDPManager");
     }
 
-    function _requireUserHasDeposit(uint _initialDeposit) internal view {
+    function _requireUserHasDeposit(uint _initialDeposit) internal pure {
         require(_initialDeposit > 0, 'StabilityPool: User must have a non-zero deposit');
     }
 
