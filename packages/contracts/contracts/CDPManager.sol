@@ -453,7 +453,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalCollGasCompensation, T.totalCLVGasCompensation);
 
         // Send gas compensation to caller
-        _sendGasCompensation(_msgSender(), T.totalCLVGasCompensation, T.totalCollGasCompensation);
+        _sendGasCompensation(msg.sender, T.totalCLVGasCompensation, T.totalCollGasCompensation);
     }
 
     function _getTotalFromLiquidationSequence_RecoveryMode(
@@ -581,7 +581,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         emit Liquidation(L.liquidatedDebt, L.liquidatedColl, T.totalCollGasCompensation, T.totalCLVGasCompensation);
 
         // Send gas compensation to caller
-        _sendGasCompensation(_msgSender(), T.totalCLVGasCompensation, T.totalCollGasCompensation);
+        _sendGasCompensation(msg.sender, T.totalCLVGasCompensation, T.totalCollGasCompensation);
     }
 
     function _getTotalFromBatchLiquidate_RecoveryMode(
@@ -852,17 +852,16 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         external
         override
     {
-        address redeemer = _msgSender();
         uint activeDebt = activePool.getCLVDebt();
         uint defaultedDebt = defaultPool.getCLVDebt();
 
         RedemptionTotals memory T;
 
         _requireAmountGreaterThanZero(_CLVamount);
-        _requireCLVBalanceCoversRedemption(redeemer, _CLVamount);
+        _requireCLVBalanceCoversRedemption(msg.sender, _CLVamount);
 
         // Confirm redeemer's balance is less than total systemic debt
-        assert(clvToken.balanceOf(redeemer) <= (activeDebt.add(defaultedDebt)));
+        assert(clvToken.balanceOf(msg.sender) <= (activeDebt.add(defaultedDebt)));
 
         uint remainingCLV = _CLVamount;
         uint price = priceFeed.getPrice();
@@ -917,8 +916,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         T.ETHToSendToRedeemer = T.totalETHDrawn.sub(T.ETHFee);
 
-        // Burn the total CLV that is cancelled with debt, and send the redeemed ETH to _msgSender()
-        _activePoolRedeemCollateral(_msgSender(), T.totalCLVToRedeem, T.ETHToSendToRedeemer);
+        // Burn the total CLV that is cancelled with debt, and send the redeemed ETH to msg.sender
+        _activePoolRedeemCollateral(msg.sender, T.totalCLVToRedeem, T.ETHToSendToRedeemer);
 
         emit Redemption(_CLVamount, T.totalCLVToRedeem, T.totalETHDrawn, T.ETHFee);
     }
@@ -1306,7 +1305,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // --- 'require' wrapper functions ---
 
     function _requireCallerIsBorrowerOperations() internal view {
-        require(_msgSender() == borrowerOperationsAddress, "CDPManager: Caller is not the BorrowerOperations contract");
+        require(msg.sender == borrowerOperationsAddress, "CDPManager: Caller is not the BorrowerOperations contract");
     }
 
     function _requireCDPisActive(address _user) internal view {

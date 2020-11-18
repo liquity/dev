@@ -389,11 +389,11 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     // --- 'require' functions ---
 
     function _requireCallerIsCDPManager() internal view {
-        require(_msgSender() == CDPManagerAddress, "SortedCDPs: Caller is not the CDPManager");
+        require(msg.sender == CDPManagerAddress, "SortedCDPs: Caller is not the CDPManager");
     }
 
     function _requireCallerIsBOorCDPM() internal view {
-        require(_msgSender() == borrowerOperationsAddress || _msgSender() == CDPManagerAddress, 
+        require(msg.sender == borrowerOperationsAddress || msg.sender == CDPManagerAddress,
                 "SortedCDPs: Caller is neither BO nor CDPM");
     }
 }

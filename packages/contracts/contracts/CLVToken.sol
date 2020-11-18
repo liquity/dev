@@ -93,26 +93,24 @@ contract CLVToken is ICLVToken, Ownable {
     // --- 'require' functions ---
 
     function _requireCallerIsBorrowerOperations() internal view {
-        require(_msgSender() == borrowerOperationsAddress, "CLVToken: Caller is not BorrowerOperations");
+        require(msg.sender == borrowerOperationsAddress, "CLVToken: Caller is not BorrowerOperations");
     }
 
     function _requireCallerIsBOorCDPMorSP() internal view {
-        address msgSender = _msgSender();
         require(
-            msgSender == borrowerOperationsAddress ||
-            msgSender == cdpManagerAddress ||
-            msgSender == stabilityPoolAddress,
+            msg.sender == borrowerOperationsAddress ||
+            msg.sender == cdpManagerAddress ||
+            msg.sender == stabilityPoolAddress,
             "CLVToken: Caller is neither BorrowerOperations nor CDPManager nor StabilityPool");
     }
 
     function _requireCallerIsStabilityPool() internal view {
-        require(_msgSender() == stabilityPoolAddress, "CLVToken: Caller is not the StabilityPool");
+        require(msg.sender == stabilityPoolAddress, "CLVToken: Caller is not the StabilityPool");
     }
 
     function _requireCallerIsCDPMorSP() internal view {
-        address msgSender = _msgSender();
         require(
-            msgSender == cdpManagerAddress || msgSender == stabilityPoolAddress,
+            msg.sender == cdpManagerAddress || msg.sender == stabilityPoolAddress,
             "CLVToken: Caller is neither CDPManager nor StabilityPool");
     }
 
@@ -127,7 +125,7 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {
-        _transfer(_msgSender(), recipient, amount);
+        _transfer(msg.sender, recipient, amount);
         return true;
     }
 
@@ -136,26 +134,26 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     function approve(address spender, uint256 amount) external override returns (bool) {
-        _approve(_msgSender(), spender, amount);
+        _approve(msg.sender, spender, amount);
         return true;
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         _transfer(sender, recipient, amount);
-        uint newAllowance = getAllowance(sender, _msgSender()).sub(amount, "ERC20: transfer amount exceeds allowance");
-        _approve(sender, _msgSender(), newAllowance);
+        uint newAllowance = getAllowance(sender, msg.sender).sub(amount, "ERC20: transfer amount exceeds allowance");
+        _approve(sender, msg.sender, newAllowance);
         return true;
     }
 
     function increaseAllowance(address spender, uint256 addedValue) external override returns (bool) {
-        uint newAllowance = getAllowance(_msgSender(),spender).add(addedValue);
-        _approve(_msgSender(), spender, newAllowance);
+        uint newAllowance = getAllowance(msg.sender, spender).add(addedValue);
+        _approve(msg.sender, spender, newAllowance);
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external override returns (bool) {
-        uint newAllowance = getAllowance(_msgSender(), spender).sub(subtractedValue, "ERC20: decreased allowance below zero");
-        _approve(_msgSender(), spender, newAllowance);
+        uint newAllowance = getAllowance(msg.sender, spender).sub(subtractedValue, "ERC20: decreased allowance below zero");
+        _approve(msg.sender, spender, newAllowance);
         return true;
     }
 
