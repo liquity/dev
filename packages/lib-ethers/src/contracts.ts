@@ -10,7 +10,9 @@ import cdpManagerAbi from "../abi/CDPManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
+import growthTokenAbi from "../abi/GrowthToken.json";
 import hintHelpersAbi from "../abi/HintHelpers.json";
+import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
 import poolManagerAbi from "../abi/PoolManager.json";
@@ -31,7 +33,9 @@ import {
   CLVToken,
   CommunityIssuance,
   DefaultPool,
+  GrowthToken,
   HintHelpers,
+  LockupContractFactory,
   LQTYStaking,
   MultiCDPGetter,
   PoolManager,
@@ -47,7 +51,9 @@ export const abi: { [name: string]: JsonFragment[] } = {
   clvToken: clvTokenAbi,
   communityIssuance: communityIssuanceAbi,
   defaultPool: defaultPoolAbi,
+  growthToken: growthTokenAbi,
   hintHelpers: hintHelpersAbi,
+  lockupContractFactory: lockupContractFactoryAbi,
   lqtyStaking: lqtyStakingAbi,
   multiCDPgetter: multiCDPgetterAbi,
   poolManager: poolManagerAbi,
@@ -101,7 +107,9 @@ export interface LiquityContractAddresses {
   clvToken: string;
   communityIssuance: string;
   defaultPool: string;
+  growthToken: string;
   hintHelpers: string;
+  lockupContractFactory: string;
   lqtyStaking: string;
   multiCDPgetter: string;
   poolManager: string;
@@ -119,7 +127,9 @@ export interface LiquityContracts {
   clvToken: CLVToken;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
+  growthToken: GrowthToken;
   hintHelpers: HintHelpers;
+  lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
   multiCDPgetter: MultiCDPGetter;
   poolManager: PoolManager;
@@ -135,7 +145,9 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   clvToken: contracts.clvToken.address,
   communityIssuance: contracts.communityIssuance.address,
   defaultPool: contracts.defaultPool.address,
+  growthToken: contracts.growthToken.address,
   hintHelpers: contracts.hintHelpers.address,
+  lockupContractFactory: contracts.lockupContractFactory.address,
   lqtyStaking: contracts.lqtyStaking.address,
   multiCDPgetter: contracts.multiCDPgetter.address,
   poolManager: contracts.poolManager.address,
@@ -174,7 +186,15 @@ export const connectToContracts = (
 
   defaultPool: create<DefaultPool>(addresses.defaultPool, defaultPoolAbi, signerOrProvider),
 
+  growthToken: create<GrowthToken>(addresses.growthToken, growthTokenAbi, signerOrProvider),
+
   hintHelpers: create<HintHelpers>(addresses.hintHelpers, hintHelpersAbi, signerOrProvider),
+
+  lockupContractFactory: create<LockupContractFactory>(
+    addresses.lockupContractFactory,
+    lockupContractFactoryAbi,
+    signerOrProvider
+  ),
 
   lqtyStaking: create<LQTYStaking>(addresses.lqtyStaking, lqtyStakingAbi, signerOrProvider),
 

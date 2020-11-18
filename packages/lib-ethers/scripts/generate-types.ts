@@ -9,7 +9,9 @@ import CDPManager from "../../contracts/artifacts/CDPManager.json";
 import CLVToken from "../../contracts/artifacts/CLVToken.json";
 import CommunityIssuance from "../../contracts/artifacts/CommunityIssuance.json";
 import DefaultPool from "../../contracts/artifacts/DefaultPool.json";
+import GrowthToken from "../../contracts/artifacts/GrowthToken.json";
 import HintHelpers from "../../contracts/artifacts/HintHelpers.json";
+import LockupContractFactory from "../../contracts/artifacts/LockupContractFactory.json";
 import LQTYStaking from "../../contracts/artifacts/LQTYStaking.json";
 import MultiCDPGetter from "../../contracts/artifacts/MultiCDPGetter.json";
 import PoolManager from "../../contracts/artifacts/PoolManager.json";
@@ -122,7 +124,9 @@ const contractArtifacts = [
   CLVToken,
   CommunityIssuance,
   DefaultPool,
+  GrowthToken,
   HintHelpers,
+  LockupContractFactory,
   LQTYStaking,
   MultiCDPGetter,
   PoolManager,

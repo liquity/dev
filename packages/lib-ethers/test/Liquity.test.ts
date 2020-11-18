@@ -308,7 +308,7 @@ describe("EthersLiquity", () => {
   const connectUsers = (users: Signer[]) =>
     Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
 
-  describe.skip("StabilityPool", () => {
+  describe("StabilityPool", () => {
     before(async () => {
       [deployerLiquity, ...otherLiquities] = await connectUsers([
         deployer,
