@@ -277,7 +277,6 @@ contract('BorrowerOperations', async accounts => {
   // })
 
   it("addColl(): non-trove owner can add collateral to another user's trove", async () => {
-    // console.log(`addr:${borrowerOperations.address}`)
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
     await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
     await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(5, 'ether') })
@@ -376,6 +375,24 @@ contract('BorrowerOperations', async accounts => {
       assert.include(error.message, "CDP does not exist or is closed")
     }
   })
+
+  it('addColl(): can add collateral in Recovery Mode', async () => {
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await priceFeed.setPrice('105000000000000000000')
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: dec(1, 'ether') })
+
+    // Check Alice's collateral
+    const alice_collateral = (await cdpManager.CDPs(alice))[1].toString()
+    assert.equal(alice_collateral, dec(2, 'ether'))
+  })
+
 
   // --- withdrawColl() ---
 
@@ -1398,6 +1415,23 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(alice_CLVTokenBalance_After, 0)
   })
 
+  it('repayCLV(): can repay debt in Recovery Mode', async () => {
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.withdrawCLV(dec(90, 18), alice, { from: alice })
+
+    assert.isFalse(await cdpManager.checkRecoveryMode())
+
+    await priceFeed.setPrice('105000000000000000000')
+
+    assert.isTrue(await cdpManager.checkRecoveryMode())
+
+    await borrowerOperations.repayCLV(dec(50, 18), alice, { from: alice })
+
+    // Check Alice's debt: 90 (withdrawn) + 10 (gas comp) - 50 (repaid)
+    const alice_debt = (await cdpManager.CDPs(alice))[0].toString()
+    assert.equal(alice_debt, dec(50, 18))
+  })
+
   // --- adjustLoan() ---
 
   it("adjustLoan(): decays a non-zero base rate", async () => {
@@ -2201,17 +2235,14 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("adjustLoan():  Deposits the received ether in the trove and ignores requested coll withdrawal if ether is sent", async () => {
+  it("adjustLoan(): Reverts if requested coll withdrawal and ether is sent", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
     const aliceColl_Before = (await cdpManager.CDPs(alice))[1].toString()
     assert.equal(aliceColl_Before, dec(1, 'ether'))
 
-    await borrowerOperations.adjustLoan(dec(1, 'ether'), dec(100, 18), true, alice, { from: alice, value: dec(3, 'ether') })
-
-    const aliceColl_After = (await cdpManager.CDPs(alice))[1].toString()
-    assert.equal(aliceColl_After, dec(4, 'ether'))
+    await assertRevert(borrowerOperations.adjustLoan(dec(1, 'ether'), dec(100, 18), true, alice, { from: alice, value: dec(3, 'ether') }), 'BorrowerOperations: Cannot withdraw and add coll')
   })
 
   // --- closeLoan() ---
