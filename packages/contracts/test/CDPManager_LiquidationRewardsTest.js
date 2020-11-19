@@ -3,6 +3,8 @@ const testHelpers = require("../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
+const toBN = th.toBN
+const getDifference = th.getDifference
 const mv = testHelpers.MoneyValues
 
 contract('CDPManager - Redistribution reward calculations', async accounts => {
@@ -10,6 +12,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   const [
     owner,
     alice, bob, carol, dennis, erin, freddy, greta, harry, ida,
+    A, B, C, D, E,
     whale, defaulter_1, defaulter_2, defaulter_3, defaulter_4] = accounts;
 
   let priceFeed
@@ -24,8 +27,10 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   let functionCaller
   let borrowerOperations
 
+  let contracts
+
   beforeEach(async () => {
-    const contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployLiquityCore()
     const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
@@ -289,6 +294,192 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   })
 
   // ---Trove adds collateral --- 
+
+  // Test based on scenario in: https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
+  it.only("redistribution: A,B,C, D open. Liq(A). B adds coll. Liq(C). B and D have correct coll and debt", async () => {
+    // A, B, C open troves
+    await borrowerOperations.openLoan(dec(100000, 18), A, { from: A, value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(dec(100000, 18), B, { from: B, value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(dec(100000, 18), C, { from: C, value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(dec(10, 18), D, { from: D, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(100000, 18), E, { from: E, value: dec(1000, 'ether') })
+
+    // Price drops to 100 $/E
+    await priceFeed.setPrice(dec(100, 18))
+    const price = await priceFeed.getPrice()
+
+    // Liquidate A
+    console.log(`ICR A: ${await cdpManager.getCurrentICR(A, price)}`)
+    const txA = await cdpManager.liquidate(A)
+    assert.isTrue(txA.receipt.status)
+    assert.isFalse(await sortedCDPs.contains(A))
+
+    // Check entireColl for each trove:
+    const B_entireColl_1 = (await th.getEntireCollAndDebt(contracts, B)).entireColl
+    const C_entireColl_1 = (await th.getEntireCollAndDebt(contracts, C)).entireColl
+    const D_entireColl_1 = (await th.getEntireCollAndDebt(contracts, D)).entireColl
+    const E_entireColl_1 = (await th.getEntireCollAndDebt(contracts, E)).entireColl
+
+    assert.isAtMost(getDifference(B_entireColl_1, '1330564784053160000000'), 1e8)
+    assert.isAtMost(getDifference(C_entireColl_1, '1330564784053160000000'), 1e8)
+    assert.isAtMost(getDifference(D_entireColl_1, '13305647840531600000'), 1e8)
+    assert.isAtMost(getDifference(E_entireColl_1, '1330564784053160000000'), 1e8)
+
+    // Bob adds 1 ETH to his trove
+    await borrowerOperations.addColl(B, B, { from: B, value: dec(1, 'ether') })
+
+    // Liquidate C
+    const txC = await cdpManager.liquidate(C)
+    assert.isTrue(txC.receipt.status)
+    assert.isFalse(await sortedCDPs.contains(C))
+
+    const B_entireColl_2 = (await th.getEntireCollAndDebt(contracts, B)).entireColl
+    const D_entireColl_2 = (await th.getEntireCollAndDebt(contracts, D)).entireColl
+    const E_entireColl_2 = (await th.getEntireCollAndDebt(contracts, E)).entireColl
+
+    console.log(`D_entireColl_2: ${D_entireColl_2}`)
+    console.log(`E_entireColl_2: ${E_entireColl_2}`)
+    assert.isAtMost(getDifference(B_entireColl_2, '1990476101655690000000'), 1e8)
+    assert.isAtMost(getDifference(D_entireColl_2,   '19889812618059900000'), 1e8)
+    assert.isAtMost(getDifference(E_entireColl_2, '1988981261805990000000'), 1e8)
+
+    // Bob adds 1 ETH to his trove
+    await borrowerOperations.addColl(B, B, { from: B, value: dec(1, 'ether') })
+
+    // Liquidate E
+    const txE = await cdpManager.liquidate(E)
+    assert.isTrue(txE.receipt.status)
+    assert.isFalse(await sortedCDPs.contains(E))
+
+    const B_entireColl_3 = (await th.getEntireCollAndDebt(contracts, B)).entireColl
+    const D_entireColl_3 = (await th.getEntireCollAndDebt(contracts, D)).entireColl
+
+    const diff_entireColl_B = getDifference(B_entireColl_3, '3950942342139840000000')
+    const diff_entireColl_D = getDifference(D_entireColl_3,   '39459927630859800000')
+
+    assert.isAtMost(diff_entireColl_B, 1e8)
+    assert.isAtMost(diff_entireColl_D, 1e8)
+  })
+
+  // Test based on scenario in: https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
+  it.only("redistribution: A,B,C,D open. Liq(A). B adds coll. Liq(C). B and D have correct coll and debt", async () => {
+    // A, B, C open troves
+    await borrowerOperations.openLoan(dec(100000, 18), A, { from: A, value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(dec(100000, 18), B, { from: B, value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(dec(100000, 18), C, { from: C, value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(dec(10, 18), D, { from: D, value: dec(10, 'ether') })
+    await borrowerOperations.openLoan(dec(100000, 18), E, { from: E, value: dec(1000, 'ether') })
+
+    // Price drops to 100 $/E
+    await priceFeed.setPrice(dec(100, 18))
+    const price = await priceFeed.getPrice()
+
+    // Check entireColl for each trove:
+    const A_entireColl_0 = (await th.getEntireCollAndDebt(contracts, A)).entireColl
+    const B_entireColl_0 = (await th.getEntireCollAndDebt(contracts, B)).entireColl
+    const C_entireColl_0 = (await th.getEntireCollAndDebt(contracts, C)).entireColl
+    const D_entireColl_0 = (await th.getEntireCollAndDebt(contracts, D)).entireColl
+    const E_entireColl_0 = (await th.getEntireCollAndDebt(contracts, E)).entireColl
+
+    // entireSystemColl, excluding A 
+    const denominatorColl_1 = (await cdpManager.getEntireSystemColl()).sub(A_entireColl_0)
+
+    // Liquidate A
+    console.log(`ICR A: ${await cdpManager.getCurrentICR(A, price)}`)
+    const txA = await cdpManager.liquidate(A)
+    assert.isTrue(txA.receipt.status)
+    assert.isFalse(await sortedCDPs.contains(A))
+
+    const A_collRedistribution = A_entireColl_0.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
+
+    console.log(`A_collRedistribution: ${A_collRedistribution}`)
+    // Check accumulated ETH gain for each trove
+    const B_ETHGain_1 = await cdpManager.getPendingETHReward(B)
+    const C_ETHGain_1 = await cdpManager.getPendingETHReward(C)
+    const D_ETHGain_1 = await cdpManager.getPendingETHReward(D)
+    const E_ETHGain_1 = await cdpManager.getPendingETHReward(E)
+
+    // Check gains are what we'd expect from a distribution proportional to each trove's entire coll
+    const B_expectedPendingETH_1 = A_collRedistribution.mul(B_entireColl_0).div(denominatorColl_1)
+    const C_expectedPendingETH_1 = A_collRedistribution.mul(C_entireColl_0).div(denominatorColl_1)
+    const D_expectedPendingETH_1 = A_collRedistribution.mul(D_entireColl_0).div(denominatorColl_1)
+    const E_expectedPendingETH_1 = A_collRedistribution.mul(E_entireColl_0).div(denominatorColl_1)
+
+    assert.isAtMost(getDifference(B_expectedPendingETH_1, B_ETHGain_1), 1e8)
+    assert.isAtMost(getDifference(C_expectedPendingETH_1, C_ETHGain_1), 1e8)
+    assert.isAtMost(getDifference(D_expectedPendingETH_1, D_ETHGain_1), 1e8)
+    assert.isAtMost(getDifference(E_expectedPendingETH_1, E_ETHGain_1), 1e8)
+
+    // // Bob adds 1 ETH to his trove
+    await borrowerOperations.addColl(B, B, { from: B, value: dec(1, 'ether') })
+
+    // Check entireColl for each trove
+    const B_entireColl_1 = (await th.getEntireCollAndDebt(contracts, B)).entireColl
+    const C_entireColl_1 = (await th.getEntireCollAndDebt(contracts, C)).entireColl
+    const D_entireColl_1 = (await th.getEntireCollAndDebt(contracts, D)).entireColl
+    const E_entireColl_1 = (await th.getEntireCollAndDebt(contracts, E)).entireColl
+
+    // entireSystemColl, excluding C
+    const denominatorColl_2 = (await cdpManager.getEntireSystemColl()).sub(C_entireColl_1)
+
+    // Liquidate C
+    const txC = await cdpManager.liquidate(C)
+    assert.isTrue(txC.receipt.status)
+    assert.isFalse(await sortedCDPs.contains(C))
+
+    const C_collRedistribution = C_entireColl_1.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
+    console.log(`C_collRedistribution: ${C_collRedistribution}`)
+
+    const B_ETHGain_2 = await cdpManager.getPendingETHReward(B)
+    const D_ETHGain_2 = await cdpManager.getPendingETHReward(D)
+    const E_ETHGain_2 = await cdpManager.getPendingETHReward(E)
+
+    // Since B topped up, he has no previous pending ETH gain
+    const B_expectedPendingETH_2 = C_collRedistribution.mul(B_entireColl_1).div(denominatorColl_2)
+
+    // D & E's accumulated pending ETH gain includes their previous gain
+    const D_expectedPendingETH_2 = C_collRedistribution.mul(D_entireColl_1).div(denominatorColl_2)
+      .add(D_expectedPendingETH_1)
+
+    const E_expectedPendingETH_2 = C_collRedistribution.mul(E_entireColl_1).div(denominatorColl_2)
+      .add(E_expectedPendingETH_1)
+
+    assert.isAtMost(getDifference(B_expectedPendingETH_2, B_ETHGain_2), 1e8)
+    assert.isAtMost(getDifference(D_expectedPendingETH_2, D_ETHGain_2), 1e8)
+    assert.isAtMost(getDifference(E_expectedPendingETH_2, E_ETHGain_2), 1e8)
+
+    // // Bob adds 1 ETH to his trove
+    await borrowerOperations.addColl(B, B, { from: B, value: dec(1, 'ether') })
+
+    // Check entireColl for each trove
+    const B_entireColl_2 = (await th.getEntireCollAndDebt(contracts, B)).entireColl
+    const D_entireColl_2 = (await th.getEntireCollAndDebt(contracts, D)).entireColl
+    const E_entireColl_2 = (await th.getEntireCollAndDebt(contracts, E)).entireColl
+
+    // entireSystemColl, excluding E
+    const denominatorColl_3 = (await cdpManager.getEntireSystemColl()).sub(E_entireColl_2)
+
+    // Liquidate E
+    const txE = await cdpManager.liquidate(E)
+    assert.isTrue(txE.receipt.status)
+    assert.isFalse(await sortedCDPs.contains(E))
+
+    const E_collRedistribution = E_entireColl_2.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
+    console.log(`E_collRedistribution: ${E_collRedistribution}`)
+
+    const B_ETHGain_3 = await cdpManager.getPendingETHReward(B)
+    const D_ETHGain_3 = await cdpManager.getPendingETHReward(D)
+
+    // Since B topped up, he has no previous pending ETH gain
+    const B_expectedPendingETH_3 = E_collRedistribution.mul(B_entireColl_2).div(denominatorColl_3)
+
+    // D'S accumulated pending ETH gain includes their previous gain
+    const D_expectedPendingETH_3 = E_collRedistribution.mul(D_entireColl_2).div(denominatorColl_3)
+      .add(D_expectedPendingETH_2)
+
+    assert.isAtMost(getDifference(B_expectedPendingETH_3, B_ETHGain_3), 1e8)
+    assert.isAtMost(getDifference(D_expectedPendingETH_3, D_ETHGain_3), 1e8)
+  })
 
   it("redistribution: A,B,C Open. Liq(C). B adds coll. Liq(A). B acquires all coll and debt", async () => {
     // A, B, C open troves
@@ -978,7 +1169,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
     // Check raw collateral of C, D, E
     assert.isAtMost(th.getDifference(carol_rawColl, dec(4975, 14)), 1000)
-    assert.isAtMost(th.getDifference(dennis_rawColl,'3659440734557000000' ), 1000000)
+    assert.isAtMost(th.getDifference(dennis_rawColl, '3659440734557000000'), 1000000)
     assert.isAtMost(th.getDifference(erin_rawColl, dec(1, 'ether')), 1000)
 
     // Check pending ETH rewards of C, D, E
@@ -1032,7 +1223,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
 
     // D opens trove: 0.035 ETH
     await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: '35000000000000000' })
-   
+
     // Bob adds 11.33909 ETH to his trove
     await borrowerOperations.addColl(bob, bob, { from: bob, value: '11339090000000000000' })
 
@@ -1084,12 +1275,12 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     const erin_rawColl = (await cdpManager.CDPs(erin))[1].toString()
     const erin_pendingETHReward = (await cdpManager.getPendingETHReward(erin)).toString()
     const erin_Stake = (await cdpManager.CDPs(erin))[2].toString()
-    
+
     // Check raw collateral of C, D, E
     assert.isAtMost(th.getDifference(carol_rawColl, '10101130309778191929'), 1000000)
-    assert.isAtMost(th.getDifference(dennis_rawColl,'33189612547926493846' ), 1000000)
+    assert.isAtMost(th.getDifference(dennis_rawColl, '33189612547926493846'), 1000000)
     assert.isAtMost(th.getDifference(erin_rawColl, dec(1, 22)), 1000000)
-   
+
     // Check pending ETH rewards of C, D, E
     assert.isAtMost(th.getDifference(carol_pendingETHReward, '9279941232200579179330'), 10000000)
     assert.isAtMost(th.getDifference(dennis_pendingETHReward, '1196309477113'), 1000000)

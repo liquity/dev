@@ -11,6 +11,7 @@ const testHelpers = require("../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
+const timeValues = testHelpers.TimeValues
 
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 
@@ -1795,7 +1796,7 @@ contract('Gas cost tests', async accounts => {
 
 
   // 50 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 50. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1834,7 +1835,7 @@ contract('Gas cost tests', async accounts => {
   // --- batchLiquidateTroves - pure offset with Stability Pool ---
 
   // 10 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'batchLiquidateTroves(). n = 10. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1964,7 +1965,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 50 troves
-  it("", async () => {
+  it.only("", async () => {
     const message = 'batchLiquidateTroves(). n = 50. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
