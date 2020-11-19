@@ -42,6 +42,9 @@ describe("EthersLiquity", () => {
   let trove: Trove;
   let deposit: StabilityDeposit;
 
+  const connectUsers = (users: Signer[]) =>
+    Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
+
   const sendToEach = async (users: Signer[], value: Decimalish) => {
     const txCount = await provider.getTransactionCount(funder.getAddress());
 
@@ -305,13 +308,13 @@ describe("EthersLiquity", () => {
     });
   });
 
-  const connectUsers = (users: Signer[]) =>
-    Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
-
   describe("StabilityPool", () => {
     before(async () => {
-      [deployerLiquity, ...otherLiquities] = await connectUsers([
+      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+
+      [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
+        user,
         ...otherUsers.slice(0, 1)
       ]);
 
@@ -322,6 +325,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should make a small stability deposit", async () => {
+      await liquity.openTrove(new Trove({ collateral: 1, debt: 100 }));
       await liquity.depositQuiInStabilityPool(10);
     });
 
@@ -379,10 +383,18 @@ describe("EthersLiquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: "2.110142247863247862",
-          debt: "129.333333333333333332"
+          collateral: "1.165213371794871795",
+          debt: 129
         })
       );
+    });
+
+    it("total should equal the Trove", async () => {
+      const numberOfTroves = await liquity.getNumberOfTroves();
+      expect(numberOfTroves).to.equal(1);
+
+      const total = await liquity.getTotal();
+      expect(total.equals(trove)).to.be.true;
     });
 
     it("should transfer the gains to the Trove", async () => {
@@ -392,8 +404,8 @@ describe("EthersLiquity", () => {
 
       expect(trove).to.deep.equal(
         new Trove({
-          collateral: "2.167112376068376062",
-          debt: "129.333333333333333332"
+          collateral: "1.222183499999999995", // ~ 1 + 0.2233 * 0.995
+          debt: 129
         })
       );
 

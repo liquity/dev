@@ -538,8 +538,8 @@ export class EthersLiquity
       [
         this.activePool.getETH({ ...overrides }),
         this.activePool.getCLVDebt({ ...overrides }),
-        this.defaultPool.getCLVDebt({ ...overrides }),
-        this.defaultPool.getETH({ ...overrides })
+        this.defaultPool.getETH({ ...overrides }),
+        this.defaultPool.getCLVDebt({ ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
