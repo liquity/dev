@@ -484,11 +484,11 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### TroveManager Functions - _TroveManager.sol_
 
-`liquidate(address _user)`: callable by anyone, attempts to liquidate the trove of `_user`. Executes successfully if `_user`’s trove meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the trove's ICR < the system MCR)
+`liquidate(address _user)`: callable by anyone, attempts to liquidate the trove of `_user`. Executes successfully if `_user`’s trove meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the trove's ICR < the system MCR).  
 
-`liquidateTroves(uint n)`: callable by anyone, checks for under-collateralised troves below MCR and liquidates up to `n`, starting from the trove with the lowest collateral ratio; subject to gas constraints and the actual number of under-collateralized troves.
+`liquidateTroves(uint n)`: callable by anyone, checks for under-collateralised troves below MCR and liquidates up to `n`, starting from the trove with the lowest collateral ratio; subject to gas constraints and the actual number of under-collateralized troves. The gas costs of `liquidateTroves(uint n)` mainly depend on the number of troves that are liquidated, and whether the troves are offset against the Stability Pool or redistributed. For n=1, the gas costs per liquidated trove are roughly between 240K-400K, for n=5 between 88K-113K, for n=10 between 78K-85K, and for n=40 between 66K-72K.
 
-`batchLiquidateTroves( address[] calldata troveList)`: callable by anyone, accepts a custom list of troves addresses as an argument. Steps through the provided list and attempts to liquidate every trove, until it reaches the end or it runs out of gas. A trove is liquidated only if it meets the conditions for liquidation.
+`batchLiquidateTroves( address[] calldata troveList)`: callable by anyone, accepts a custom list of troves addresses as an argument. Steps through the provided list and attempts to liquidate every trove, until it reaches the end or it runs out of gas. A trove is liquidated only if it meets the conditions for liquidation. For a batch of 10 troves, the gas costs per liquidated trove are roughly between 75K-83K, for a batch of 50 troves between 54K-69K.
 
 `redeemCollateral(uint _LUSDamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintICR)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem.
 
@@ -503,6 +503,10 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 `getTCR()`: returns the total collateral ratio (TCR) of the system.  The TCR is based on the the entire system debt and collateral (including pending rewards).
 
 `checkRecoveryMode()`: reveals whether or not the system is in Recovery Mode (i.e. whether the Total Collateral Ratio (TCR) is below the Critical Collateral Ratio (CCR)).
+
+### Price Feed Functions - _PriceFeed.sol_
+
+**TODO: add function descriptions here once finalized**
 
 ### Hint Helper Functions - _HintHelpers.sol_
 
@@ -526,111 +530,115 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Individual Pool Functions - _StabilityPool.sol_, _ActivePool.sol_, _DefaultPool.sol_
 
-`getRawEtherBalance()`: returns the actual raw ether balance of the contract. Distinct from the ETH public variable, which returns the total recorded ETH deposits.
+`getRawEtherBalance()`: returns the actual raw Ether balance of the contract. Distinct from the ETH ([public variable](#public-data)), which returns the total recorded ETH deposits.
 
-## Supplying Hints to CDP operations
+## Supplying Hints to trove operations
 
-CDPs in Liquity are recorded in a sorted doubly linked list, sorted by their ICR, from high to low.
+Troves in Liquity are recorded in a sorted doubly linked list, sorted by their ICR, from high to low.
 
-All CDP operations that change the collateral ratio need to either insert or reinsert the CDP to the `SortedCDPs` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, a ‘hint’ may be provided.
+All trove operations that change the collateral ratio need to either insert or reinsert the trove to the `SortedCDPs` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, a ‘hint’ may be provided.
 
-A hint is the address of a CDP with a position in the sorted list close to the correct insert position.
+A hint is the address of a trove with a position in the sorted list close to the correct insert position.
 
-All CDP operations take a ‘hint’ argument. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call.
+All trove operations take a ‘hint’ argument. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call.
 
-The `CDPManager::getApproxHint()` function can be used to generate a useful hint, which can then be passed as an argument to the desired CDP operation or to `SortedCDPs::findInsertPosition()` to get an exact hint.
+The `TroveManager::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
 
-`getApproxHint()` takes two arguments: `CR`, and `numTrials`. The function randomly selects `numTrials` amount of CDPs, and returns the one with the closest position in the list to where a CDP with a collateral ratio of `CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case O(sqrt(n)), if k >= 10.
+`getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a collateral ratio of `CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs. **TODO: check if `_price` parameter is really needed. If yes, add a short explanation.**
 
-**CDP operation without a hint**
+**Trove operation without a hint**
 
-1. User performs CDP operation in their browser
-2. Call the CDP operation with `_hint = userAddress`
+1. User performs trove operation in their browser
+2. Call the trove operation with `_hint = userAddress`
 
-Gas cost will be worst case O(n), where n is the size of the `SortedCDPs` list.
+Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` list.
 
-**CDP operation with hint**
+**Trove operation with hint**
 
-1. User performs CDP operation in their browser
+1. User performs trove operation in their browser
 2. The front end computes a new collateral ratio locally, based on the change in collateral and/or debt.
-3. Call `CDPManager::getApproxHint()`, passing it the computed collateral ratio. Returns an address close to the correct insert position
-4. Call `SortedCDPs::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`.
-5. Pass the exact position as an argument to the CDP operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system.)
+3. Call `CDPManager::getApproxHint(...)`, passing it the computed collateral ratio. Returns an address close to the correct insert position
+4. Call `SortedCDPs::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`. **TODO: To be updated according to https://github.com/liquity/dev/issues/91**
+5. Pass the exact position as an argument to the trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system.)
 
-Gas cost of steps 2-4 will be free, and step 5 will be O(1).
+Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
 
-Hints allow cheaper CDP operations for the user, at the expense of a slightly longer time to completion, due to the need to await the result of the two read calls in steps 1 and 2 - which may be sent as JSON-RPC requests to Infura, unless the front end operator is running a full Ethereum node.
+Hints allow cheaper trove operations for the user, at the expense of a slightly longer time to completion, due to the need to await the result of the two read calls in steps 1 and 2 - which may be sent as JSON-RPC requests to Infura, unless the front end operator is running a full Ethereum node.
 
-Each BorrowerOperations function that reinserts a CDP takes a single hint, as does `PoolManager::withdrawFromSPtoCDP`.
+Each BorrowerOperations function that reinserts a troves takes a single hint, as does `PoolManager::withdrawFromSPtoTrove(...)`.
 
 ### Hints for `redeemCollateral`
 
-`CDPManager::redeemCollateral` requires two hints. The first hint provides an accurate reinsert position (as described above), and the second hint ensures the transaction succeeds.
+`TroveManager::redeemCollateral` as a special case requires two hints. The first hint provides an accurate reinsert position (as described above), and the second hint ensures the transaction succeeds.
 
-All CDPs that are fully redeemed from in a redemption sequence are left with zero debt, and are reinserted at the top of the sortedCDPs list.
+**TODO: To be reviewed and updated once https://github.com/liquity/dev/issues/106 is fixed**
 
-It’s likely that the last CDP in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with CLV. In this case, it should be reinserted somewhere between top and bottom of the list. The first hint passed to `redeemCollateral` gives the expected reinsert position.
+All troves that are fully redeemed from in a redemption sequence are left with zero debt, and are reinserted at the top of the sortedTroves list.
 
-However, if during off-chain hint computation a different transaction changes the state of a CDP that would otherwise be hit by the redemption sequence, then the off-chain hint computation could end up totally inaccurate. This could lead to the whole redemption sequence reverting due to out-of-gas error.
+It’s likely that the last trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The first hint passed to `redeemCollateral` gives the expected reinsert position.
 
-To mitigate this, a second hint is provided: the expected ICR of the final partially-redeemed-from CDP. The on-chain redemption function checks whether, after redemption, the ICR of this CDP would equal the ICR hint.
+However, if between the off-chain hint computation and on-chain execution a different transaction changes the state of a trove that would otherwise be hit by the redemption sequence, then the off-chain hint computation could end up totally inaccurate. This could lead to the whole redemption sequence reverting due to out-of-gas error.
 
-If not, the redemption sequence doesn’t perform the final partial redemption, and terminates early. This ensures that the transaction doesn’t revert, and most of the requested CLV redemption can be fulfilled.
+To mitigate this, a second hint needs to be provided: the expected ICR of the final partially-redeemed-from CDP. The on-chain redemption function checks whether, after redemption, the ICR of this trove would equal the ICR hint.
+
+If not, the redemption sequence doesn’t perform the final partial redemption, and terminates early. This ensures that the transaction doesn’t revert, and most of the requested LUSD redemption can be fulfilled.
 
 ## Gas compensation
 
-In Liquity, we want to maximize liquidation throughput, and ensure that undercollateralized troves are liquidated promptly by “liquidators” - agents who also hold Stability Pool deposits, and who expect to profit from liquidations.
+In Liquity, we want to maximize liquidation throughput, and ensure that undercollateralized troves are liquidated promptly by “liquidators” - agents who may also hold Stability Pool deposits, and who expect to profit from liquidations.
 
 However, gas costs in Ethereum are substantial. If the gas costs of our public liquidation functions are too high, this may discourage liquidators from calling them, and leave the system holding too many undercollateralized troves for too long.
 
-Our solution is to directly compensate liquidators for their gas costs, to incentivize prompt liquidations in both normal and extreme periods of high gas prices. Liquidators should be confident that they will at least break even by making liquidation transactions.
+The protocol thus directly compensates liquidators for their gas costs, to incentivize prompt liquidations in both normal and extreme periods of high gas prices. Liquidators should be confident that they will at least break even by making liquidation transactions.
 
-Gas compensation is paid in a mix of CLV and ETH. When a borrower first issues debt, some CLV is reserved for gas compensation. A liquidation transaction draws ETH from the trove(s) it liquidates, and sends the both the reserved CLV and the compensation ETH to the caller, and liquidates the remainder.
+Gas compensation is paid in a mix of LUSD and ETH. While the ETH is taken from the liquidated trove, the LUSD is provided by the borrower. When a borrower first issues debt, some LUSD is reserved for gas compensation. A liquidation transaction thus draws ETH from the trove(s) it liquidates, and sends the both the reserved LUSD and the compensation in ETH to the caller, and liquidates the remainder.
 
-When a liquidation transaction liquidates multiple troves, each trove contributes CLV and ETH towards the total compensation for the transaction.
+When a liquidation transaction liquidates multiple troves, each trove contributes LUSD and ETH towards the total compensation for the transaction.
 
 Gas compensation per liquidated trove is given by the formula:
 
-Gas compensation = `10 CLV + 0.5% of trove’s collateral`
+Gas compensation = `10 LUSD + 0.5% of trove’s collateral (ETH)`
 
 The intentions behind this formula are:
 - To ensure that smaller troves are liquidated promptly in normal times, at least
 - To ensure that larger troves are liquidated promptly even in extreme high gas price periods. The larger the trove, the stronger the incentive to liquidate it.
 
-### Gas compensation Schedule
+### Gas compensation schedule
 
-When a borrower opens a loan, an additional 10 CLVDebt is issued, and 10 CLV is minted and sent to a dedicated gas compensation EOA - the "gas address".
+When a borrower opens a loan, an additional 10 LUSD debt is issued, and 10 LUSD is minted and sent to a dedicated externally owned account (EOA) for gas compensation - the "gas address".
 
-When a borrower closes their active trove, this gas compensation is refunded: 10 CLV is burned from the gas address's balance, and the corresponding 10 CLV debt on the trove is cancelled.
+When a borrower closes their active trove, this gas compensation is refunded: 10 LUSD is burned from the gas address's balance, and the corresponding 10 LUSD debt on the trove is cancelled.
 
-The purpose of the 10 CLV debt is to provide a minimum level of gas compensation, regardless of the trove's collateral size or the current ETH price.
+The purpose of the 10 LUSD debt is to provide a minimum level of gas compensation, regardless of the trove's collateral size or the current ETH price.
 
 ### Liquidation
 
-When a trove is liquidated, 0.5% of their collateral is sent to the liquidator, along with the 10 CLV reserved for gas compensation. Thus, a liquidator always receives `{10 CLV + 0.5% collateral}` per trove that they liquidate. The collateral remainder of the trove is then either offset, redistributed or a combination of both, depending on the amount of CLV in the Stability Pool.
+When a trove is liquidated, 0.5% of its collateral is sent to the liquidator, along with the 10 LUSD reserved for gas compensation. Thus, a liquidator always receives `{10 CLV + 0.5% collateral}` per trove that they liquidate. The collateral remainder of the trove is then either offset, redistributed or a combination of both, depending on the amount of LUSD in the Stability Pool.
 
 #### Edge case: Gas compensation in a partial liquidation in Recovery Mode
 
 A trove can be partially liquidated under specific conditions:
 
 - Recovery mode is active: TCR < 150%  
-- 110% <= trove ICR < 150%
+- 110% <= trove ICR < TCR
 - trove debt > CLV in Stability Pool
 
-In this case, a partial offset occurs: the CLV in the Stability Pool is offset with an equal amount of the trove's debt, which is a fraction of it's total debt. A corresponding fraction of the trove's collateral is liquidated (sent to the Stability Pool).
+In this case, a partial offset occurs: the entire LUSD in the Stability Pool is offset with an equal amount of the trove's debt, which is only a fraction of its total debt. A corresponding fraction of the trove's collateral is liquidated (sent to the Stability Pool).
 
-The trove is left with some CLV Debt and collateral remaining.
+The trove is left with some LUSD Debt and collateral remaining.
 
-For the purposes of a partial liquidation, only the amount (debt - 10) is considered. If the CLV in the Stability Pool is >= (debt - 10), a full liquidation
+For the purposes of a partial liquidation, only the amount (debt - 10) is considered. If the LUSD in the Stability Pool is >= (debt - 10), a full liquidation
 is performed.
 
-In a partial liquidation, The ETH gas compensation is 0.5% of the _collateral fraction_ that corresponds to the partial offset.
+In a partial liquidation, the ETH gas compensation is 0.5% of the _collateral fraction_ that corresponds to the partial offset.
 
 ### Gas compensation and redemptions
 
 When a trove is redeemed from, the redemption is made only against (debt - 10), not the entire debt.
 
-But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed:  the 10 CLV gas compensation is cancelled with its corresponding 10 CLV debt, and the ETH surplus in the trove is sent to the owner.
+**TODO: To be reviewed and updated once https://github.com/liquity/dev/issues/106 is fixed**
+
+But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed: the 10 CLV gas compensation is cancelled with its corresponding 10 CLV debt, and the ETH surplus in the trove is sent back to the owner.
 
 
 ## Gas compensation Functionality
@@ -661,7 +669,7 @@ Stability Pool depositors expect a positive ROI on their initial deposit. That i
 
 When a liquidation hits the Stability Pool, it is known as an **offset**: the debt of the trove is offset against the LUSD in the Pool. When **x** LUSD debt is offset, the debt is cancelled, and **x** LUSD in the Pool is burned. When the LUSD Stability Pool is greater than the debt of the trove, all the trove's debt is cancelled, and all its ETH is shared between depositors. This is a **pure offset**.
 
-It can happen that the LUSD in the Stability Pool is less than the debt of a trove. In this case, the the whole stability Pool will be used to offset a fraction of the trove’s debt, and an equal fraction of the trove’s ETH collateral will be assigned to Stability Pool depositors. The remainder of the trove’s debt and ETH gets redistributed to active troves. This is a **mixed offset and redistribution**.
+It can happen that the LUSD in the Stability Pool is less than the debt of a trove. In this case, the the whole Stability Pool will be used to offset a fraction of the trove’s debt, and an equal fraction of the trove’s ETH collateral will be assigned to Stability Pool depositors. The remainder of the trove’s debt and ETH gets redistributed to active troves. This is a **mixed offset and redistribution**.
 
 Because the ETH collateral fraction matches the offset debt fraction, the effective ICR of the collateral and debt that is offset, is equal to the ICR of the trove. So, for depositors, the ROI per liquidation depends only on the ICR of the liquidated trove.
 
@@ -679,9 +687,9 @@ For example: a liquidation that empties 30% of the Stability Pool will reduce ea
 
 ### Stability Pool example
 
-Here’s an example of the Stablilty Pool absorbing liquidations. The Stability Pool contains 3 depositors, A, B and C, and the ETH:USD price is 100.
+Here’s an example of the Stability Pool absorbing liquidations. The Stability Pool contains 3 depositors, A, B and C, and the ETH:USD price is 100.
 
-There are two Troves to be liquidated, T1 and T2:
+There are two troves to be liquidated, T1 and T2:
 
 |   | Trove | Collateral (ETH) | Debt (LUSD) | ICR         | $(ETH) ($) | Collateral surplus ($) |
 |---|-------|------------------|-------------|-------------|------------|------------------------|
@@ -706,7 +714,7 @@ Now, the first liquidation T1 is absorbed by the Pool: 150 debt is cancelled wit
 | C       | 75                    | 225           | 0.8              | 305                       | 0.01666666667 |
 | Total   | 150                   | 450           | 1.6              | 610                       | 0.01666666667 |
 
-And now the second liquidation, T2, occurs: 225 debt is cancelled with 225 Pool LUSD, and 2.45 ETH is split between depositors.   The accumulated ETH gain includes all ETH gain from T1 and T2.
+And now the second liquidation, T2, occurs: 225 debt is cancelled with 225 Pool LUSD, and 2.45 ETH is split between depositors. The accumulated ETH gain includes all ETH gain from T1 and T2.
 
 | Depositor | Debt absorbed from T2 | Deposit after | Accumulated ETH | $(deposit + ETH gain) ($) | Current ROI |
 |-----------|-----------------------|---------------|-----------------|---------------------------|-------------|
@@ -718,16 +726,16 @@ And now the second liquidation, T2, occurs: 225 debt is cancelled with 225 Pool 
 It’s clear that:
 
 - Each depositor gets the same ROI from a given liquidation
-- Depositors' ROI increases over time, as the deposits absorb liquidations with a positive collateral surplus
+- Depositors return increases over time, as the deposits absorb liquidations with a positive collateral surplus
 
 Eventually, a deposit can be fully “used up” in absorbing debt, and reduced to 0. This happens whenever a liquidation occurs that empties the Stability Pool. A deposit stops earning ETH gains when it has been reduced to 0.
 
 
 ### Stability Pool implementation
 
-A depositor obtain their compounded deposits and corresponding ETH gain in a “pull-based” manner. The system calculates the depositor’s compounded deposit and accumulated ETH gain when the depositor makes an operation that withdraws their ETH gain.
+A depositor obtains their compounded deposits and corresponding ETH gain in a “pull-based” manner. The system calculates the depositor’s compounded deposit and accumulated ETH gain when the depositor makes an operation that changes their ETH deposit.
 
-Depositors deposit CLV via `provideToSP`, and withdraw with `withdrawFromSP`. Their accumulated ETH gain is paid out every time they make a deposit operation - so ETH payout is triggered by both deposit withdrawals and top-ups.
+Depositors deposit LUSD via `provideToSP`, and withdraw with `withdrawFromSP`. Their accumulated ETH gain is paid out every time they make a deposit operation - so ETH payout is triggered by both deposit withdrawals and top-ups.
 
 ### How deposits and ETH gains are tracked
 
@@ -735,17 +743,17 @@ We use a highly scalable method of tracking deposits and ETH gains that has O(1)
 
 When a liquidation occurs, rather than updating each depositor’s deposit and ETH gain, we simply update two intermediate variables: a product `P`, and a sum `S`.
 
-A mathematical manipulation allows us to factor out the initial deposit, and accurately track all depositors’ compounded deposits and accumulated ETH gains over time, as liquidations occur, using just these two variables. When a depositor join the Pool, they get a snapshot of `P` and `S`.
+A mathematical manipulation allows us to factor out the initial deposit, and accurately track all depositors’ compounded deposits and accumulated ETH gains over time, as liquidations occur, using just these two variables. When depositors join the Pool, they get a snapshot of `P` and `S`.
 
 The formula for a depositor’s accumulated ETH gain is derived here:
 
 [Scalable reward distribution for compounding, decreasing stake](https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf)
 
-Each liquidation updates `P` and `S`. After a series of liquidations, a compounded deposit and corresponding ETH gain can be calculcated using the initial deposit, the depositor’s snapshots, and the current values of `P` and `S`.
+Each liquidation updates `P` and `S`. After a series of liquidations, a compounded deposit and corresponding ETH gain can be calculated using the initial deposit, the depositor’s snapshots, and the current values of `P` and `S`.
 
 Any time a depositor updates their deposit (withdrawal, top-up) their ETH gain is paid out, and they receive new snapshots of `P` and `S`.
 
-This is similar in spirit to the simpler [“Batog” pull-based distribution](http://batog.info/papers/scalable-reward-distribution.pdf), however, the mathematics is more involved as we handle a compounding, decreasing stake, and a corresponding ETH reward.
+This is similar in spirit to the simpler [Scalable Reward Distribution on the Ethereum Network by Bogdan Batog et al](http://batog.info/papers/scalable-reward-distribution.pdf), however, the mathematics is more involved as we handle a compounding, decreasing stake, and a corresponding ETH reward.
 
 ## LQTY Issuance to Stability Depositors
 
@@ -763,7 +771,7 @@ The overall community issuance schedule for LQTY is sub-linear and monotonic. We
 
 `supplyCap * 1 - 0.5^t` 
 
-where `t` is years. 
+where `t` is year and `supplyCap` is (provisionally) set to represent 33.33 million LQTY tokens.
 
 It results in the following cumulative issuance schedule for the community LQTY supply:
 
@@ -788,13 +796,13 @@ In a LQTY reward event, the LQTY to be issued is calculated based on time passed
 
 The LQTY produced in this issuance event is shared between depositors, in proportion to their deposit sizes.
 
-To efficiently and accurately track LQTY gains for depositors and front ends as deposits decrease over time from liquidations, we re-use the [algorithm for rewards from a compounding, decreasing stake][LINK]. It is the same algorithm used for the ETH gain from liquidations.
+To efficiently and accurately track LQTY gains for depositors and front ends as deposits decrease over time from liquidations, we re-use the [algorithm for rewards from a compounding, decreasing stake](https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf). It is the same algorithm used for the ETH gain from liquidations.
 
 The same product `P` is used, and a sum `G` is used to track LQTY rewards, and each deposit gets a new snapshot of `P` and `G` when it is updated.
 
 ### Handling the front end LQTY gain
 
-As mentioned, in a LQTY reward event generating `LQTY_d` for a deposit `d` made through a front end with kickback rate `k`, the front end receives `(1-k) * LQTY_d` and the depositor receives `k* LQTY_d`.
+As mentioned in [LQTY Issuance to Stability Depositors](#lqty-issuance-to-stability-depositors), in a LQTY reward event generating `LQTY_d` for a deposit `d` made through a front end with kickback rate `k`, the front end receives `(1-k) * LQTY_d` and the depositor receives `k * LQTY_d`.
 
 The front end should earn a cut of LQTY gains for all deposits tagged with its front end.
 
@@ -810,10 +818,10 @@ When a deposit is changed (top-up, withdrawal):
 - Its ETH and LQTY gains are paid out
 - Its tagged front end’s LQTY gains are paid out to that front end
 - The deposit is updated, with new snapshots of `P`, `S` and `G`
--The front end’s stake updated, with new snapshots of `P` and `G`
+- The front end’s stake updated, with new snapshots of `P` and `G`
 
 When a liquidation occurs:
-- A LQTY reward event occurs, and G is updated
+- A LQTY reward event occurs, and `G` is updated
 
 ## Liquity System Fees
 
