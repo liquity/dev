@@ -1,4 +1,4 @@
-// Buidler script
+// Hardhat script
 const SortedTroves = artifacts.require("./SortedTroves.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
@@ -96,9 +96,9 @@ const logContractBytecodeLengths = (contractABIs) => {
 
 // Run script: log deployment gas costs and bytecode lengths for all contracts
 async function main() {
-  const coreContracts = await dh.deployLiquityCoreBuidler()
-  const LQTYContracts = await dh.deployLQTYContractsBuidler()
-  const testerContracts = await dh.deployTesterContractsBuidler()
+  const coreContracts = await dh.deployLiquityCoreHardhat()
+  const LQTYContracts = await dh.deployLQTYContractsHardhat()
+  const testerContracts = await dh.deployTesterContractsHardhat()
 
   await dh.connectCoreContracts(coreContracts, LQTYContracts)
   await dh.connectLQTYContracts(LQTYContracts)
