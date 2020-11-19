@@ -15,21 +15,18 @@ contract('Gas compensation tests', async accounts => {
     alice, bob, carol, dennis, erin, flyn, graham, harriet, ida,
     defaulter_1, defaulter_2, defaulter_3, defaulter_4, whale] = accounts;
 
-  
-    let priceFeed
-    let clvToken
-    let poolManager
-    let sortedCDPs
-    let cdpManager
-    let activePool
-    let stabilityPool
-    let defaultPool
-    let borrowerOperations
-    let hintHelpers
-  
-    let contracts
-    let cdpManagerTester
-    let borrowerOperationsTester
+  let priceFeed
+  let clvToken
+  let sortedCDPs
+  let cdpManager
+  let activePool
+  let stabilityPool
+  let defaultPool
+  let borrowerOperations
+
+  let contracts
+  let cdpManagerTester
+  let borrowerOperationsTester
 
   const logICRs = (ICRList) => {
     for (let i = 0; i < ICRList.length; i++) {
@@ -51,19 +48,12 @@ contract('Gas compensation tests', async accounts => {
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
     borrowerOperations = contracts.borrowerOperations
-    hintHelpers = contracts.hintHelpers
-
-    lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
 
     await deploymentHelper.connectGTContracts(GTContracts)
     await deploymentHelper.connectCoreContracts(contracts, GTContracts) 
@@ -351,8 +341,8 @@ contract('Gas compensation tests', async accounts => {
     await borrowerOperations.openLoan(dec(1000, 18), erin, { from: erin, value: dec(100, 'ether') })
 
     // D, E each provide 1000 CLV to SP
-    await poolManager.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: dennis })
-    await poolManager.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: dennis })
+    await stabilityPool.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: erin })
 
     const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
 
@@ -468,8 +458,8 @@ contract('Gas compensation tests', async accounts => {
     await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: dennis })
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
 
     const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
@@ -584,8 +574,8 @@ contract('Gas compensation tests', async accounts => {
     await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: dennis })
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
 
     const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
@@ -693,8 +683,8 @@ contract('Gas compensation tests', async accounts => {
     await borrowerOperations.openLoan(dec(1000, 18), erin, { from: erin, value: dec(100, 'ether') })
 
     // D, E each provide 1000 CLV to SP
-    await poolManager.provideToSP(dec(1000, 18),ZERO_ADDRESS, { from: dennis })
-    await poolManager.provideToSP(dec(1000, 18),ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: dennis })
+    await stabilityPool.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: erin })
 
     const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
 
@@ -776,8 +766,8 @@ contract('Gas compensation tests', async accounts => {
     await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: dennis })
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
 
     const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
@@ -883,8 +873,8 @@ contract('Gas compensation tests', async accounts => {
     await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: dennis })
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
 
     const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
@@ -986,8 +976,8 @@ contract('Gas compensation tests', async accounts => {
     await borrowerOperations.openLoan(dec(1, 23), flyn, { from: flyn, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: erin })
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: flyn })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: flyn })
 
     const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
 
@@ -1204,8 +1194,8 @@ contract('Gas compensation tests', async accounts => {
     await borrowerOperations.openLoan(dec(1, 23), flyn, { from: flyn, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: erin })
-    await poolManager.provideToSP(dec(1, 23),ZERO_ADDRESS, { from: flyn })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: flyn })
 
     const CLVinSP_0 = await stabilityPool.getTotalCLVDeposits()
 

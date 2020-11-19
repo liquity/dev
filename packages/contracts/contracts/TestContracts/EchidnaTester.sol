@@ -2,7 +2,6 @@ pragma solidity ^0.6.11;
 
 import "../CDPManager.sol";
 import "../BorrowerOperations.sol";
-import "../PoolManager.sol";
 import "../ActivePool.sol";
 import "../DefaultPool.sol";
 import "../StabilityPool.sol";
@@ -28,7 +27,6 @@ contract EchidnaTester {
 
     CDPManager public cdpManager;
     BorrowerOperations public borrowerOperations;
-    PoolManager public poolManager;
     ActivePool public activePool;
     DefaultPool public defaultPool;
     StabilityPool public stabilityPool;
@@ -43,7 +41,6 @@ contract EchidnaTester {
     constructor() public payable {
         cdpManager = new CDPManager();
         borrowerOperations = new BorrowerOperations();
-        poolManager = new PoolManager();
         activePool = new ActivePool();
         defaultPool = new DefaultPool();
         stabilityPool = new StabilityPool();
@@ -52,20 +49,19 @@ contract EchidnaTester {
         sortedCDPs = new SortedCDPs();
 
         // TODO
-        cdpManager.setAddresses(address(borrowerOperations), address(poolManager), address(activePool), address(defaultPool), address(stabilityPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
+        cdpManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
         // TODO
-        borrowerOperations.setAddresses(address(cdpManager), address(poolManager), address(activePool), address(defaultPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
+        borrowerOperations.setAddresses(address(cdpManager), address(activePool), address(defaultPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
+        activePool.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool), address(defaultPool));
+        defaultPool.setAddresses(address(cdpManager), address(activePool));
         // TODO
-        poolManager.setAddresses(address(borrowerOperations), address(cdpManager), address(priceFeed), address(clvToken), address(stabilityPool), address(activePool), address(defaultPool), address(0));
-        activePool.setAddresses(address(poolManager), address(cdpManager), address(defaultPool));
-        defaultPool.setAddresses(address(poolManager), address(activePool));
-        stabilityPool.setAddresses(address(borrowerOperations), address(poolManager), address(activePool));
-        clvToken.setAddresses(address(poolManager), address(borrowerOperations));
-        priceFeed.setAddresses(address(cdpManager), address(poolManager), address(0), address(0));
+        stabilityPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool), address(clvToken), address(0));
+        clvToken.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool));
+        priceFeed.setAddresses(address(cdpManager), address(0), address(0));
         sortedCDPs.setParams(1e18, address(cdpManager), address(borrowerOperations));
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
-            echidnaProxies[i] = new EchidnaProxy(cdpManager, borrowerOperations, poolManager, clvToken);
+            echidnaProxies[i] = new EchidnaProxy(cdpManager, borrowerOperations, stabilityPool, clvToken);
             (bool success, ) = address(echidnaProxies[i]).call{value: INITIAL_BALANCE}("");
             require(success);
         }
@@ -76,7 +72,7 @@ contract EchidnaTester {
         require(MCR > 0);
         require(CCR > 0);
 
-        GAS_POOL_ADDRESS = poolManager.GAS_POOL_ADDRESS();
+        GAS_POOL_ADDRESS = cdpManager.GAS_POOL_ADDRESS();
 
         // TODO:
         priceFeed.setPrice(1e22);
@@ -338,10 +334,6 @@ contract EchidnaTester {
         }
 
         if (address(borrowerOperations).balance > 0) {
-            return false;
-        }
-
-        if (address(poolManager).balance > 0) {
             return false;
         }
 

@@ -24,7 +24,6 @@ contract('BorrowerOperations', async accounts => {
 
   let priceFeed
   let clvToken
-  let poolManager
   let sortedCDPs
   let cdpManager
   let activePool
@@ -47,7 +46,6 @@ contract('BorrowerOperations', async accounts => {
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
     activePool = contracts.activePool

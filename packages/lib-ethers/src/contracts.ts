@@ -15,7 +15,6 @@ import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
-import poolManagerAbi from "../abi/PoolManager.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
 import sortedCDPsAbi from "../abi/SortedCDPs.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
@@ -38,7 +37,6 @@ import {
   LockupContractFactory,
   LQTYStaking,
   MultiCDPGetter,
-  PoolManager,
   PriceFeed,
   SortedCDPs,
   StabilityPool
@@ -56,7 +54,6 @@ export const abi: { [name: string]: JsonFragment[] } = {
   lockupContractFactory: lockupContractFactoryAbi,
   lqtyStaking: lqtyStakingAbi,
   multiCDPgetter: multiCDPgetterAbi,
-  poolManager: poolManagerAbi,
   priceFeed: priceFeedAbi,
   sortedCDPs: sortedCDPsAbi,
   stabilityPool: stabilityPoolAbi
@@ -112,7 +109,6 @@ export interface LiquityContractAddresses {
   lockupContractFactory: string;
   lqtyStaking: string;
   multiCDPgetter: string;
-  poolManager: string;
   priceFeed: string;
   sortedCDPs: string;
   stabilityPool: string;
@@ -132,7 +128,6 @@ export interface LiquityContracts {
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
   multiCDPgetter: MultiCDPGetter;
-  poolManager: PoolManager;
   priceFeed: PriceFeed;
   sortedCDPs: SortedCDPs;
   stabilityPool: StabilityPool;
@@ -150,7 +145,6 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   lockupContractFactory: contracts.lockupContractFactory.address,
   lqtyStaking: contracts.lqtyStaking.address,
   multiCDPgetter: contracts.multiCDPgetter.address,
-  poolManager: contracts.poolManager.address,
   priceFeed: contracts.priceFeed.address,
   sortedCDPs: contracts.sortedCDPs.address,
   stabilityPool: contracts.stabilityPool.address
@@ -203,8 +197,6 @@ export const connectToContracts = (
     multiCDPgetterAbi,
     signerOrProvider
   ),
-
-  poolManager: create<PoolManager>(addresses.poolManager, poolManagerAbi, signerOrProvider),
 
   priceFeed: create<PriceFeed>(addresses.priceFeed, priceFeedAbi, signerOrProvider),
 
