@@ -319,13 +319,8 @@ contract('All Liquity functions with intra-system access control restrictions', 
     //    mint
     it("mint(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
-      try {
-        const txAlice = await clvToken.mint(bob, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not BorrowerOperations")
-      }
+      const txAlice = clvToken.mint(bob, 100, { from: alice })
+      await th.assertRevert(txAlice, "Caller is not BorrowerOperations")
     })
 
     // burn
