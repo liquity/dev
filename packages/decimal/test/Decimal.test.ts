@@ -2,7 +2,7 @@ import { describe, it } from "mocha";
 import { expect } from "chai";
 import { BigNumber } from "@ethersproject/bignumber";
 
-import { Decimal } from "..";
+import { Decimal } from "../src/Decimal";
 
 describe("Decimal", () => {
   describe(".from()", () => {
@@ -44,6 +44,26 @@ describe("Decimal", () => {
           //                      |<----- 18 ----->|
           /*********/ .to.equal("1123456789123456789");
       });
+
+      describe("in scientific notation", () => {
+        it("should convert it if exponent has no sign", () => {
+          expect(`${Decimal.from("1.23456789e7").bigNumber}`)
+            //                      |<-7->||<----- 18 ----->|
+            /*********/ .to.equal("12345678900000000000000000");
+        });
+
+        it("should convert it if exponent has '+' sign", () => {
+          expect(`${Decimal.from("1.23456789e+9").bigNumber}`)
+            //                      |<- 9 ->||<----- 18 ----->|
+            /*********/ .to.equal("1234567890000000000000000000");
+        });
+
+        it("should convert it if exponent has '-' sign", () => {
+          expect(`${Decimal.from("123456789.123456789e-10").bigNumber}`)
+            //                              |<- 8->|
+            /*********/ .to.equal("12345678912345678");
+        });
+      });
     });
 
     describe("when passing a number", () => {
@@ -51,6 +71,16 @@ describe("Decimal", () => {
         expect(`${Decimal.from(1.23456789).bigNumber}`)
           //                     |<----- 18 ----->|
           /********/ .to.equal("1234567890000000000");
+      });
+
+      it("should convert it even if it's very small", () => {
+        expect(`${Decimal.from(1e-15).bigNumber}`).to.equal("1000");
+      });
+
+      it("should convert it even if it's very large", () => {
+        expect(`${Decimal.from(1e25).bigNumber}`)
+          //          |<--------- 25 -------->||<----- 18 ----->|
+          .to.equal("10000000000000000000000000000000000000000000");
       });
     });
 
@@ -141,19 +171,31 @@ describe("Decimal", () => {
 
   describe(".mul()", () => {
     it("should multiply", () => {
-      expect(Decimal.from(2).mul(3).toString()).to.equal("6");
+      expect(
+        Decimal.from(2)
+          .mul(3)
+          .toString()
+      ).to.equal("6");
     });
   });
 
   describe(".div()", () => {
     it("should divide", () => {
-      expect(Decimal.from(3).div(2).toString()).to.equal("1.5");
+      expect(
+        Decimal.from(3)
+          .div(2)
+          .toString()
+      ).to.equal("1.5");
     });
   });
 
   describe(".mulDiv()", () => {
     it("should multiply then divide", () => {
-      expect(Decimal.from(2).mulDiv(3, 2).toString()).to.equal("3");
+      expect(
+        Decimal.from(2)
+          .mulDiv(3, 2)
+          .toString()
+      ).to.equal("3");
     });
   });
 
