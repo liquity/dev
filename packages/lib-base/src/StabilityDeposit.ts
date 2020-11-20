@@ -24,6 +24,10 @@ export class StabilityDeposit {
     this.deposit = Decimal.from(deposit);
     this.depositAfterLoss = Decimal.from(depositAfterLoss);
     this.pendingCollateralGain = Decimal.from(pendingCollateralGain);
+
+    if (this.depositAfterLoss.gt(this.deposit)) {
+      throw new Error("depositAfterLoss can't be greater than deposit");
+    }
   }
 
   toString(): string {

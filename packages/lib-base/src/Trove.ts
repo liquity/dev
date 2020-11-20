@@ -147,7 +147,7 @@ export class Trove {
       return this.addDebt(debtDifference.absoluteValue!);
     } else if (debtDifference?.negative) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (debtDifference.absoluteValue!.lt(this.collateral)) {
+      if (debtDifference.absoluteValue!.lt(this.debt)) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.subtractDebt(debtDifference.absoluteValue!);
       } else {
