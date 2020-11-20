@@ -137,7 +137,7 @@ contract PriceFeed is Ownable, IPriceFeed {
     // --- 'require' functions ---
 
     function _requireCallerIsCDPManager() internal view {
-        require(_msgSender() == cdpManagerAddress,
+        require(msg.sender == cdpManagerAddress,
             "PriceFeed: Caller is not CDPManager"
         );
     }

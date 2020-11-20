@@ -82,27 +82,24 @@ contract ActivePool is Ownable, IPool {
     // --- 'require' functions ---
 
     function _requireCallerIsBorrowerOperationsOrDefaultPool() internal view {
-        address msgSender = _msgSender();
         require(
-            msgSender == borrowerOperationsAddress ||
-            msgSender == defaultPoolAddress,
+            msg.sender == borrowerOperationsAddress ||
+            msg.sender == defaultPoolAddress,
             "ActivePool: Caller is neither BO nor Default Pool");
     }
 
     function _requireCallerIsBOorCDPMorSP() internal view {
-        address msgSender = _msgSender();
         require(
-            msgSender == borrowerOperationsAddress ||
-            msgSender == cdpManagerAddress ||
-            msgSender == stabilityPoolAddress,
+            msg.sender == borrowerOperationsAddress ||
+            msg.sender == cdpManagerAddress ||
+            msg.sender == stabilityPoolAddress,
             "ActivePool: Caller is neither BorrowerOperations nor CDPManager nor StabilityPool");
     }
 
     function _requireCallerIsBOorCDPM() internal view {
-        address msgSender = _msgSender();
         require(
-            msgSender == borrowerOperationsAddress ||
-            msgSender == cdpManagerAddress,
+            msg.sender == borrowerOperationsAddress ||
+            msg.sender == cdpManagerAddress,
             "ActivePool: Caller is neither BorrowerOperations nor CDPManager");
     }
 

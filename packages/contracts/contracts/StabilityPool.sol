@@ -150,35 +150,34 @@ contract StabilityPool is Ownable, IStabilityPool {
         _requireFrontEndNotRegistered(msg.sender);
         _requireNonZeroAmount(_amount);
 
-        address depositor = _msgSender();
-        uint initialDeposit = deposits[depositor].initialValue;
+        uint initialDeposit = deposits[msg.sender].initialValue;
 
         _triggerLQTYIssuance();
 
-        if (initialDeposit == 0) {_setFrontEndTag(depositor, _frontEndTag);}
-        uint depositorETHGain = getDepositorETHGain(depositor);
-        uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
+        if (initialDeposit == 0) {_setFrontEndTag(msg.sender, _frontEndTag);}
+        uint depositorETHGain = getDepositorETHGain(msg.sender);
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(msg.sender);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
 
         // First pay out any LQTY gains
-        address frontEnd = deposits[depositor].frontEndTag;
-        _payOutLQTYGains(depositor, frontEnd);
+        address frontEnd = deposits[msg.sender].frontEndTag;
+        _payOutLQTYGains(msg.sender, frontEnd);
 
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
         uint newFrontEndStake = compoundedFrontEndStake.add(_amount);
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
-        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, depositor);
+        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
-        _sendCLVtoStabilityPool(depositor, _amount);
+        _sendCLVtoStabilityPool(msg.sender, _amount);
 
         uint newDeposit = compoundedCLVDeposit.add(_amount);
-        _updateDepositAndSnapshots(depositor, newDeposit);
-        emit UserDepositChanged(depositor, newDeposit);
+        _updateDepositAndSnapshots(msg.sender, newDeposit);
+        emit UserDepositChanged(msg.sender, newDeposit);
 
-        _sendETHGainToDepositor(depositor, depositorETHGain);
+        _sendETHGainToDepositor(msg.sender, depositorETHGain);
 
-        emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss); // CLV Loss required for event log
+        emit ETHGainWithdrawn(msg.sender, depositorETHGain, CLVLoss); // CLV Loss required for event log
     }
 
     /* withdrawFromSP():
@@ -190,38 +189,37 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     If _amount > userDeposit, the user withdraws all of their compounded deposit. */
     function withdrawFromSP(uint _amount) external override {
-        address depositor = _msgSender();
-        uint initialDeposit = deposits[depositor].initialValue;
+        uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
 
         _triggerLQTYIssuance();
 
-        uint depositorETHGain = getDepositorETHGain(depositor);
+        uint depositorETHGain = getDepositorETHGain(msg.sender);
 
-        uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(msg.sender);
         uint CLVtoWithdraw = Math._min(_amount, compoundedCLVDeposit);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
 
         // First pay out any LQTY gains
-        address frontEnd = deposits[depositor].frontEndTag;
-        _payOutLQTYGains(depositor, frontEnd);
+        address frontEnd = deposits[msg.sender].frontEndTag;
+        _payOutLQTYGains(msg.sender, frontEnd);
 
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
         uint newFrontEndStake = compoundedFrontEndStake.sub(CLVtoWithdraw);
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
-        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, depositor);
+        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
-        _sendCLVToDepositor(depositor, CLVtoWithdraw);
+        _sendCLVToDepositor(msg.sender, CLVtoWithdraw);
 
         // Update deposit
         uint newDeposit = compoundedCLVDeposit.sub(CLVtoWithdraw);
-        _updateDepositAndSnapshots(depositor, newDeposit);
-        emit UserDepositChanged(depositor, newDeposit);
+        _updateDepositAndSnapshots(msg.sender, newDeposit);
+        emit UserDepositChanged(msg.sender, newDeposit);
 
-        _sendETHGainToDepositor(depositor, depositorETHGain);
+        _sendETHGainToDepositor(msg.sender, depositorETHGain);
 
-        emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss);  // CLV Loss required for event log
+        emit ETHGainWithdrawn(msg.sender, depositorETHGain, CLVLoss);  // CLV Loss required for event log
     }
 
     /* withdrawETHGainToTrove:
@@ -231,43 +229,42 @@ contract StabilityPool is Ownable, IStabilityPool {
     - Updates snapshots for deposit and front end stake
     */
     function withdrawETHGainToTrove(address _hint) external override {
-        address depositor = _msgSender();
-        uint initialDeposit = deposits[depositor].initialValue;
+        uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
-        _requireUserHasTrove(depositor);
-        _requireUserHasETHGain(depositor);
+        _requireUserHasTrove(msg.sender);
+        _requireUserHasETHGain(msg.sender);
 
         _triggerLQTYIssuance();
 
-        uint depositorETHGain = getDepositorETHGain(depositor);
+        uint depositorETHGain = getDepositorETHGain(msg.sender);
 
-        uint compoundedCLVDeposit = getCompoundedCLVDeposit(depositor);
+        uint compoundedCLVDeposit = getCompoundedCLVDeposit(msg.sender);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
 
         // First pay out any LQTY gains
-        address frontEnd = deposits[depositor].frontEndTag;
-        _payOutLQTYGains(depositor, frontEnd);
+        address frontEnd = deposits[msg.sender].frontEndTag;
+        _payOutLQTYGains(msg.sender, frontEnd);
 
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
         uint newFrontEndStake = compoundedFrontEndStake;
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
-        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, depositor);
+        emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
-        _updateDepositAndSnapshots(depositor, compoundedCLVDeposit);
+        _updateDepositAndSnapshots(msg.sender, compoundedCLVDeposit);
 
         /* Emit events before transferring ETH gain to CDP.
          This lets the event log make more sense (i.e. so it appears that first the ETH gain is withdrawn
         and then it is deposited into the CDP, not the other way around). */
-        emit ETHGainWithdrawn(depositor, depositorETHGain, CLVLoss);
-        emit UserDepositChanged(depositor, compoundedCLVDeposit);
+        emit ETHGainWithdrawn(msg.sender, depositorETHGain, CLVLoss);
+        emit UserDepositChanged(msg.sender, compoundedCLVDeposit);
 
         // sendETHGainToTrove
         ETH = ETH.sub(depositorETHGain);
         emit ETHBalanceUpdated(ETH);
-        emit EtherSent(depositor, depositorETHGain);
+        emit EtherSent(msg.sender, depositorETHGain);
 
-        borrowerOperations.addColl{ value: depositorETHGain }(depositor, _hint);
+        borrowerOperations.addColl{ value: depositorETHGain }(msg.sender, _hint);
     }
 
     // --- LQTY issuance functions ---
@@ -668,11 +665,11 @@ contract StabilityPool is Ownable, IStabilityPool {
     // --- 'require' functions ---
 
     function _requireCallerIsActivePool() internal view {
-        require( _msgSender() == activePoolAddress, "StabilityPool: Caller is not ActivePool");
+        require( msg.sender == activePoolAddress, "StabilityPool: Caller is not ActivePool");
     }
 
     function _requireCallerIsCDPManager() internal view {
-        require(_msgSender() == address(cdpManager), "StabilityPool: Caller is not CDPManager");
+        require(msg.sender == address(cdpManager), "StabilityPool: Caller is not CDPManager");
     }
 
     function _requireUserHasDeposit(uint _initialDeposit) internal pure {

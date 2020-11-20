@@ -71,11 +71,11 @@ contract DefaultPool is Ownable, IPool {
     // --- 'require' functions ---
 
     function _requireCallerIsActivePool() internal view {
-        require(_msgSender() == activePoolAddress, "DefaultPool: Caller is not the ActivePool");
+        require(msg.sender == activePoolAddress, "DefaultPool: Caller is not the ActivePool");
     }
 
     function _requireCallerIsCDPMananger() internal view {
-        require(_msgSender() == cdpManagerAddress, "DefaultPool: Caller is not the CDPManager");
+        require(msg.sender == cdpManagerAddress, "DefaultPool: Caller is not the CDPManager");
     }
 
     // --- Fallback function ---
