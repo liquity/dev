@@ -154,7 +154,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit LUSDBorrowingFeePaid(msg.sender, CLVFee);
     }
 
-    // Send ETH as collateral to a CDP
+    /*
+     * Send ETH as collateral to a CDP
+     * It needs to allow for passing in the user instead of msg.sender
+     * because it’s called from StabilityPool.withdrawETHGainToTrove
+     */
     function addColl(address _user, address _hint) external payable override {
         _adjustLoan(_user, 0, 0, false, _hint);
     }
