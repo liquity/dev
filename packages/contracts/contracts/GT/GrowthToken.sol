@@ -30,8 +30,8 @@ contract GrowthToken is IERC20 {
     using SafeMath for uint256;
 
     // --- Data ---
-    string constant internal NAME = "LUSD";
-    string constant internal SYMBOL = "LUSD";
+    string constant internal NAME = "LQTY";
+    string constant internal SYMBOL = "LQTY";
     uint8 constant internal DECIMALS = 18;
 
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;

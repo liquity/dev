@@ -367,8 +367,6 @@ class TestHelper {
     return compositeDebt
   }
 
-  
-
   static async getBorrowerOpsListHint(contracts, newColl, newDebt, price) {
     const compositeDebt = await this.getCompositeDebt(contracts, newDebt)
     const newICR = await contracts.hintHelpers.computeCR(newColl, compositeDebt, price)
