@@ -222,7 +222,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
 
         // --- Checks ---
-        _requireICRisAboveMCR(L.newICR);
+        if (isWithdrawal) {_requireICRisAboveMCR(L.newICR);}
         if (_isDebtIncrease && _debtChange > 0) {
             _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
         }
