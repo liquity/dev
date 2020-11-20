@@ -39,7 +39,7 @@ contract FunctionCaller {
 
     // --- Non-view wrapper functions used for calculating gas ---
     
-    function cdpManager_getCurrentICR (address _address, uint _price) external returns (uint) {
+    function cdpManager_getCurrentICR(address _address, uint _price) external returns (uint) {
         return cdpManager.getCurrentICR(_address, _price);  
     }
 

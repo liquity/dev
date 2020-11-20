@@ -20,7 +20,7 @@ contract('Gas cost tests', async accounts => {
 
   let priceFeed
   let clvToken
-  let poolManager
+
   let sortedCDPs
   let cdpManager
   let activePool
@@ -37,7 +37,6 @@ contract('Gas cost tests', async accounts => {
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
     activePool = contracts.activePool
@@ -485,7 +484,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -548,7 +547,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -609,7 +608,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -669,7 +668,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -730,7 +729,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -790,7 +789,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -851,7 +850,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -911,7 +910,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -971,7 +970,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1053,7 +1052,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1126,7 +1125,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1200,7 +1199,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1273,7 +1272,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1346,7 +1345,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1419,7 +1418,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1492,7 +1491,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1565,7 +1564,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1638,7 +1637,7 @@ contract('Gas cost tests', async accounts => {
     // Whale opens loan and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
-    await poolManager.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
 
     // Check SP has 9e28 CLV
     const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -1835,7 +1834,7 @@ contract('Gas cost tests', async accounts => {
   // --- batchLiquidateTroves - pure offset with Stability Pool ---
 
   // 10 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 10. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1858,7 +1857,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
@@ -1902,7 +1901,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
 
     // Price drops, account[1]'s ICR falls below MCR
@@ -1945,7 +1944,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
 
     // Price drops, account[1]'s ICR falls below MCR
@@ -1965,7 +1964,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   // 50 troves
-  it.only("", async () => {
+  it("", async () => {
     const message = 'batchLiquidateTroves(). n = 50. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV
 
@@ -1988,7 +1987,7 @@ contract('Gas cost tests', async accounts => {
 
     // Whale opens loan and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
-    await poolManager.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
+    await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
 
     // Price drops, account[1]'s ICR falls below MCR

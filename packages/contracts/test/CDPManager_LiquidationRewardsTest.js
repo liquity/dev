@@ -294,7 +294,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   // ---Trove adds collateral --- 
 
   // Test based on scenario in: https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
-  it.only("redistribution: A,B,C, D open. Liq(A). B adds coll. Liq(C). B and D have correct coll and debt", async () => {
+  it("redistribution: A,B,C, D open. Liq(A). B adds coll. Liq(C). B and D have correct coll and debt", async () => {
     // A, B, C open troves
     await borrowerOperations.openLoan(dec(100000, 18), A, { from: A, value: dec(1000, 'ether') })
     await borrowerOperations.openLoan(dec(100000, 18), B, { from: B, value: dec(1000, 'ether') })
@@ -360,7 +360,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
   })
 
   // Test based on scenario in: https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
-  it.only("redistribution: A,B,C,D open. Liq(A). B adds coll. Liq(C). B and D have correct coll and debt", async () => {
+  it("redistribution: A,B,C,D open. Liq(A). B adds coll. Liq(C). B and D have correct coll and debt", async () => {
     // A, B, C open troves
     await borrowerOperations.openLoan(dec(100000, 18), A, { from: A, value: dec(1000, 'ether') })
     await borrowerOperations.openLoan(dec(100000, 18), B, { from: B, value: dec(1000, 'ether') })
