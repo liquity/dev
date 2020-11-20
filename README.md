@@ -613,7 +613,7 @@ The purpose of the 10 LUSD debt is to provide a minimum level of gas compensatio
 
 ### Liquidation
 
-When a trove is liquidated, 0.5% of its collateral is sent to the liquidator, along with the 10 LUSD reserved for gas compensation. Thus, a liquidator always receives `{10 CLV + 0.5% collateral}` per trove that they liquidate. The collateral remainder of the trove is then either offset, redistributed or a combination of both, depending on the amount of LUSD in the Stability Pool.
+When a trove is liquidated, 0.5% of its collateral is sent to the liquidator, along with the 10 LUSD reserved for gas compensation. Thus, a liquidator always receives `{10 LUSD + 0.5% collateral}` per trove that they liquidate. The collateral remainder of the trove is then either offset, redistributed or a combination of both, depending on the amount of LUSD in the Stability Pool.
 
 #### Edge case: Gas compensation in a partial liquidation in Recovery Mode
 
@@ -621,7 +621,7 @@ A trove can be partially liquidated under specific conditions:
 
 - Recovery mode is active: TCR < 150%  
 - 110% <= trove ICR < TCR
-- trove debt > CLV in Stability Pool
+- trove debt > LUSD in Stability Pool
 
 In this case, a partial offset occurs: the entire LUSD in the Stability Pool is offset with an equal amount of the trove's debt, which is only a fraction of its total debt. A corresponding fraction of the trove's collateral is liquidated (sent to the Stability Pool).
 
@@ -638,7 +638,7 @@ When a trove is redeemed from, the redemption is made only against (debt - 10), 
 
 **TODO: To be reviewed and updated once https://github.com/liquity/dev/issues/106 is fixed**
 
-But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed: the 10 CLV gas compensation is cancelled with its corresponding 10 CLV debt, and the ETH surplus in the trove is sent back to the owner.
+But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed: the 10 LUSD gas compensation is cancelled with its corresponding 10 LUSD debt, and the ETH surplus in the trove is sent back to the owner.
 
 
 ## Gas compensation Functionality
@@ -829,25 +829,25 @@ Liquity generates fee revenue from certain operations. Fees are captured by the 
 
 A LQTY holder may stake their LQTY, and earn a share of all system fees, proportional to their share of the total LQTY staked.
 
-Liquity generates revenue in two ways: redemptions, and and new debt issuance.
+Liquity generates revenue in two ways: redemptions, and issuance of new LUSD tokens.
 
-Redemptions fees are paid in ETH. Debt issuance (when a user opens a trove, or issues more CLV from their existing trove) are paid in CLV .
+Redemptions fees are paid in ETH. Issuance fees (when a user opens a trove, or issues more LUSD from their existing trove) are paid in LUSD.
 
 ### Redemption Fee
 
 The redemption fee is taken as a cut of the total ETH drawn from the system in a redemption.
 
-In the` CDPManager`, `redeemCollateral` calculates the ETH fee and transfers it to the staking contract, `LQTYStaking.sol`
+In the `TroveManager`, `redeemCollateral` calculates the ETH fee and transfers it to the staking contract, `LQTYStaking.sol`
 
-### Debt issuance fee
+### Issuance fee
 
-The debt issuance fee is added on top of the user’s requested CLV. 
+The issuance fee is charged on the LUSD drawn by the user and is added to the trove's LUSD debt.
 
-When new debt is drawn via one of the `BorrowerOperations` functions `openLoan`, `withdrawCLV` or `adjustLoan`, an extra amount CLVFee is minted, and an equal amount of debt is added to the user’s trove. The `CLVFee` is transferred to the staking contract, `LQTYStaking.sol`.
+When new LUSD are drawn via one of the `BorrowerOperations` functions `openLoan`, `withdrawLUSD` or `adjustLoan`, an extra amount `LUSDFee` is minted, and an equal amount of debt is added to the user’s trove. The `LUSDFee` is transferred to the staking contract, `LQTYStaking.sol`.
 
 ### Fee Schedule
 
-Redemption and debt issuance fees are based on the `baseRate` state variable in CDPManager, which is dynamically updated. The `baseRate` increases with each redemption, and decays according to time passed since the last fee event - i.e. the last redemption or debt issuance.
+Redemption and issuance fees are based on the `baseRate` state variable in TroveManager, which is dynamically updated. The `baseRate` increases with each redemption, and decays according to time passed since the last fee event - i.e. the last redemption or issuance of LUSD.
 
 The fee formulae are provisional, and subject to change depending on the results of economic modelling.
 
@@ -855,57 +855,58 @@ The current fee schedule:
 
 Upon each redemption:
 - `baseRate` is decayed based on time passed since the last fee event
-- `baseRate` is incremented by an amount proportional to the fraction of the total CLV supply that was redeemed
+- `baseRate` is incremented by an amount proportional to the fraction of the total LUSD supply that was redeemed
 - The redemption fee is given by `baseRate * ETHdrawn`
 
 Upon each debt issuance:
 - `baseRate` is decayed based on time passed since the last fee event
--The debt issuance fee is given `by baseRate * newDebtIssued`
+- The issuance fee is given by `baseRate * newDebtIssued`
 
 ### Intuition behind fees
 
 The larger the redemption volume, the greater the fee percentage.
 
-The longer the time delay since the last operation, the more the baseRate decreases.
+The longer the time delay since the last operation, the more the `baseRate` decreases.
 
 The intent is to throttle large redemptions with higher fees, and to throttle borrowing directly after large redemption volumes. The `baseRate` decay over time ensures that the fee for both borrowers and redeemers will “cool down”, while redemptions volumes are low.
 
 ### Fee decay Implementation
 
-Time is measured in units of minutes. The `baseRate` decay is based on `block.timestamp - lastFeeOpTime`. If less than a minute has passed since the last fee event, then `lastFeeOpTime` is not updated. This prevents “base rate griefing”: i.e. it prevents an attacker stopping the `baseRate` from decaying by making a series of redemptions or debt issuances with time intervals of < 1 minute.
+Time is measured in units of minutes. The `baseRate` decay is based on `block.timestamp - lastFeeOpTime`. If less than a minute has passed since the last fee event, then `lastFeeOpTime` is not updated. This prevents “base rate griefing”: i.e. it prevents an attacker stopping the `baseRate` from decaying by making a series of redemptions or issuing LUSD with time intervals of < 1 minute.
 
-The decay parameter is tuned such that the fee changes by a factor of 0.99 per hour, i.e. it loses 1% of it’s current value per hour. At that rate, after one week, the baseRate decays to 18% of its prior value. The exact decay parameter is subject to change, and will be fine-tuned via economic modelling.
+The decay parameter is tuned such that the fee changes by a factor of 0.99 per hour, i.e. it loses 1% of its current value per hour. At that rate, after one week, the baseRate decays to 18% of its prior value. The exact decay parameter is subject to change, and will be fine-tuned via economic modelling.
 
 ### Staking LQTY and earning fees
 
 LQTY holders may `stake` and `unstake` their LQTY in the `LQTYStaking.sol` contract. 
 
-When a fee event occurs, the LUSD or ETH is sent to the staking contract, and a reward-per-unit-staked sum (F_ETH, or F_LUSD) is incremented. A LQTY stake earns a share of the fee equal to its share of the total LQTY staked, at the instant the fee occurred.
+When a fee event occurs, the fee in LUSD or ETH is sent to the staking contract, and a reward-per-unit-staked sum (`F_ETH`, or `F_LUSD`) is incremented. A LQTY stake earns a share of the fee equal to its share of the total LQTY staked, at the instant the fee occurred.
 
 This staking formula and implementation follows the basic [“Batog” pull-based reward distribution](http://batog.info/papers/scalable-reward-distribution.pdf).
 
 
 ## Redistributions and Corrected Stakes
 
-When a liquidation occurs and the Stability Pool is empty, the redistribution mechanism should distribute the collateral and debt of the liquidated trove, to all active troves in the system, in proportion to their collateral.
+When a liquidation occurs and the Stability Pool is empty or smaller than the liquidated debt, the redistribution mechanism should distribute the remaining collateral and debt of the liquidated trove, to all active troves in the system, in proportion to their collateral.
 
 For two troves A and B with collateral `A.coll > B.coll`, trove A should earn a bigger share of the liquidated collateral and debt.
 
 In Liquity it is important that all active troves remain ordered by their ICR. We have proven that redistribution of the liquidated debt and collateral proportional to active troves’ collateral, preserves the ordering of active troves by ICR, as liquidations occur over time.  Please see the [proofs section](https://github.com/liquity/dev/tree/main/packages/contracts/mathProofs).
 
-However in the Solidity implementation, neither the collateral nor debt of active troves are compounded. When a trove receives redistribution rewards, the system does not update the trove's collateral and debt properties - instead, the trove’s rewards remain "pending" until the borrower's next operation.
+However, when it comes to implementation, Ethereum gas costs make it too expensive to loop over all troves and write new data to storage for each one. When a trove receives redistribution rewards, the system does not update the trove's collateral and debt properties - instead, the trove’s rewards remain "pending" until the borrower's next operation.
 
 These “pending rewards” can not be accounted for in future reward calculations in a scalable way.
 
-However: the ICR of a CDP is always calculated as the ratio of its total collateral to its total debt. So, a trove’s ICR calculation **does** include all its previous accumulated rewards.
+However: the ICR of a trove is always calculated as the ratio of its total collateral to its total debt. So, a trove’s ICR calculation **does** include all its previous accumulated rewards.
 
-**This causes a problem: redistributions proportional to initial collateral can break CDP Ordering.**
+**This causes a problem: redistributions proportional to initial collateral can break trove ordering.**
 
 Consider the case where new trove is created after all active troves have received a redistribution from a liquidation. This “fresh” trove has then experienced fewer rewards than the older troves, and thus, it receives a disproportionate share of subsequent rewards, relative to its total collateral.
 
 The fresh trove would earns rewards based on its **entire** collateral, whereas old troves would earn rewards based only on **some portion** of their collateral - since a part of their collateral is pending, and not included in the trove’s `coll` property.
 
 This can break the ordering of troves by ICR - see the [proofs section](https://github.com/liquity/dev/tree/main/packages/contracts/mathProofs).
+
 ### Corrected Stake Solution
 
 We use a corrected stake to account for this discrepancy, and ensure that newer troves earn the same liquidation rewards per unit of total collateral, as do older troves with pending rewards. Thus the corrected stake ensures the sorted list remains ordered by ICR, as liquidation events occur over time.
@@ -930,26 +931,24 @@ The Liquity implementation relies on some important system properties and mathem
 
 In particular, we have:
 
-- Proofs that CDP ordering is maintained throughout a series of liquidations and new loan issuances
+- Proofs that trove ordering is maintained throughout a series of liquidations and new loan issuances
 - A derivation of a formula and implementation for a highly scalable (O(1) complexity) reward distribution in the Stability Pool, involving compounding and decreasing stakes.
 
 PDFs of these can be found in https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs
 
 ## Definitions
 
-**Note on naming**: Some terms are used interchangeably throughout the docs. CDP/Trove, LQTY/CLV, etc. These names are yet to be finalized.
+_**Trove:**_ a collateralized debt position, bound to a single Ethereum address. Also referred to as a “CDP” in similar protocols.
 
-_**Trove:**_ a collateralized debt position, bound to a single Ethereum address. Also referred to as a “CDP”.
+_**LUSD**_:  The stablecoin that may be issued from a user's collateralized debt position and freely transferred/traded to any Ethereum address. Intended to maintain parity with the US dollar, and can always be redeemed directly with the system: 1 LUSD is always exchangeable for $1 USD worth of ETH.
 
-_**CLV**_:  The stablecoin that may be issued from a user's collateralized debt position and freely transferred/traded to any Ethereum address. Intended to maintain parity with the US dollar, and can always be redeemed directly with the system: 1 CLV is always exchangeable for $1 USD worth of ETH.
+_**Active trove:**_ an Ethereum address owns an “active trove” if there is a node in the sortedTroves list with ID equal to the address, and non-zero collateral is recorded on the trove struct for that address.
 
-_**Active trove:**_ an Ethereum address owns an “active trove” if there is a node in the sortedCDPs list with ID equal to the address, and non-zero collateral is recorded on the CDP struct for that address.
-
-_**Closed trove:**_ a trove that was once active, but now has zero debt and zero collateral recorded on its struct, and there is no node in the sortedCDPs list with ID equal to the owning address.
+_**Closed trove:**_ a trove that was once active, but now has zero debt and zero collateral recorded on its struct, and there is no node in the sortedTroves list with ID equal to the owning address.
 
 _**Active collateral:**_ the amount of ETH collateral recorded on a trove’s struct
 
-_**Active debt:**_ the amount of CLV debt recorded on a trove’s struct
+_**Active debt:**_ the amount of LUSD debt recorded on a trove’s struct
 
 _**Entire collateral:**_ the sum of a trove’s active collateral plus its pending collateral rewards accumulated from distributions
 
@@ -959,11 +958,11 @@ _**Individual collateral ratio (ICR):**_ a trove's ICR is the ratio of the dolla
 
 _**Total active collateral:**_ the sum of active collateral over all troves. Equal to the ETH in the ActivePool.
 
-_**Total active debt:**_ the sum of active debt over all troves. Equal to the CLV in the ActivePool.
+_**Total active debt:**_ the sum of active debt over all troves. Equal to the LUSD in the ActivePool.
 
 _**Total defaulted collateral:**_ the total ETH collateral in the DefaultPool
 
-_**Total defaulted debt:**_ the total CLV debt in the DefaultPool
+_**Total defaulted debt:**_ the total LUSD debt in the DefaultPool
 
 _**Entire system collateral:**_ the sum of the collateral in the ActivePool and DefaultPool
 
@@ -973,15 +972,15 @@ _**Total collateral ratio (TCR):**_ the ratio of the dollar value of the entire 
 
 _**Critical collateral ratio (CCR):**_ 150%. When the TCR is below the CCR, the system enters Recovery Mode.
 
-_**Borrower:**_ an externally owned account or contract that locks collateral in a trove and issues CLV tokens to their own address.They “borrow” CLV tokens against their ETH collateral.
+_**Borrower:**_ an externally owned account or contract that locks collateral in a trove and issues LUSD tokens to their own address.They “borrow” CLV tokens against their ETH collateral.
 
-_**Depositor:**_ an externally owned account or contract that has assigned CLV tokens to the Stability Pool, in order to earn returns from liquidations, and receive GT token issuance.
+_**Depositor:**_ an externally owned account or contract that has assigned LUSD tokens to the Stability Pool, in order to earn returns from liquidations, and receive LQTY token issuance.
 
-_**Redemption:**_ the act of swapping CLV tokens with the system, in return for an equivalent value of ETH. Any account with a CLV token balance may redeem them, whether or not they are a borrower.
+_**Redemption:**_ the act of swapping LUSD tokens with the system, in return for an equivalent value of ETH. Any account with a LUSD token balance may redeem them, whether or not they are a borrower.
 
-When CLV is redeemed for ETH, the ETH is always withdrawn from the lowest collateral troves, in ascending order of their collateral ratio. A redeemer can not selectively target troves with which to swap CLV for ETH.
+When LUSD is redeemed for ETH, the ETH is always withdrawn from the lowest collateral troves, in ascending order of their collateral ratio. A redeemer can not selectively target troves with which to swap LUSD for ETH.
 
-_**Repayment:**_ when a borrower sends CLV tokens to their own trove, reducing their debt, and increasing their collateral ratio.
+_**Repayment:**_ when a borrower sends LUSD tokens to their own trove, reducing their debt, and increasing their collateral ratio.
 
 _**Retrieval:**_ when a borrower with an active trove withdraws some or all of their ETH collateral from their own trove, either reducing their collateral ratio, or closing their trove (if they have zero debt and withdraw all their ETH)
 
@@ -989,17 +988,17 @@ _**Liquidation:**_ the act of force-closing an undercollateralized trove and red
 
 Liquidation functionality is permissionless and publically available - anyone may liquidate an undercollateralized trove, or batch liquidate troves in ascending order of collateral ratio.
 
-_**Collateral Surplus**_: The difference between the dollar value of a trove's ETH collateral, and the dollar value of its CLV debt. In a full liquidation, this is the net gain earned by the recipients of the liquidation.
+_**Collateral Surplus**_: The difference between the dollar value of a trove's ETH collateral, and the dollar value of its LUSD debt. In a full liquidation, this is the net gain earned by the recipients of the liquidation.
 
-_**Offset:**_ cancellation of liquidated debt with CLV in the Stability Pool, and assignment of liquidated collateral to Stability Pool depositors, in proportion to their deposit.
+_**Offset:**_ cancellation of liquidated debt with LUSD in the Stability Pool, and assignment of liquidated collateral to Stability Pool depositors, in proportion to their deposit.
 
 _**Redistribution:**_ assignment of liquidated debt and collateral directly to active troves, in proportion to their collateral.
 
-_**Pure offset:**_  when a trove's debt is entirely cancelled with CLV in the Stability Pool, and all of it's liquidated ETH collateral is assigned to Stability Pool depositors.
+_**Pure offset:**_  when a trove's debt is entirely cancelled with LUSD in the Stability Pool, and all of it's liquidated ETH collateral is assigned to Stability Pool depositors.
 
-_**Mixed offset and redistribution:**_  When the Stability Pool CLV only covers a fraction of the liquidated trove's debt.  This fraction of debt is cancelled with CLV in the Stability Pool, and an equal fraction of the trove's collateral is assigned to depositors. The remaining collateral & debt is redistributed directly to active troves.
+_**Mixed offset and redistribution:**_  When the Stability Pool LUSD only covers a fraction of the liquidated trove's debt.  This fraction of debt is cancelled with CLV in the Stability Pool, and an equal fraction of the trove's collateral is assigned to depositors. The remaining collateral & debt is redistributed directly to active troves.
 
-_**Gas compensation:**_ A refund, in ETH, automatically paid to the caller of a liquidation function, intended to at least cover the gas cost of the transaction. Designed to ensure that liquidators are not dissuaded by potentially high gas costs.
+_**Gas compensation:**_ A refund, in LUSD and ETH, automatically paid to the caller of a liquidation function, intended to at least cover the gas cost of the transaction. Designed to ensure that liquidators are not dissuaded by potentially high gas costs.
 
 ## Development
 
