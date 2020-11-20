@@ -24,6 +24,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     IPool public defaultPool;
 
+    address stabilityPoolAddress;
+
     IPriceFeed public priceFeed;
 
     ILQTYStaking public lqtyStaking;
@@ -74,6 +76,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         address _cdpManagerAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
+        address _stabilityPoolAddress,
         address _priceFeedAddress,
         address _sortedCDPsAddress,
         address _clvTokenAddress,
@@ -86,6 +89,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         cdpManager = ICDPManager(_cdpManagerAddress);
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
+        stabilityPoolAddress = _stabilityPoolAddress;
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         clvToken = ICLVToken(_clvTokenAddress);
@@ -95,6 +99,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit CDPManagerAddressChanged(_cdpManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
@@ -154,12 +159,14 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit LUSDBorrowingFeePaid(msg.sender, CLVFee);
     }
 
-    /*
-     * Send ETH as collateral to a CDP
-     * It needs to allow for passing in the user instead of msg.sender
-     * because it’s called from StabilityPool.withdrawETHGainToTrove
-     */
-    function addColl(address _user, address _hint) external payable override {
+    // Send ETH as collateral to a CDP
+    function addColl(address _hint) external payable override {
+        _adjustLoan(msg.sender, 0, 0, false, _hint);
+    }
+
+    // Send ETH as collateral to a CDP
+    function moveETHGainToTrove(address _user, address _hint) external payable override {
+        _requireCallerIsStabilityPool();
         _adjustLoan(_user, 0, 0, false, _hint);
     }
 
@@ -189,7 +196,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // withdraw collateral or LUSD, operations that remove funds and lower the ICR
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease;
         require(msg.sender == _user || !isWithdrawal, "BorrowerOps: User must be sender for withdrawals");
-        require(msg.value != 0 || _collWithdrawal != 0 || _debtChange != 0, "BorrowerOps: Amount must be larger than 0");
+        require(msg.value != 0 || _collWithdrawal != 0 || _debtChange != 0, "BorrowerOps: There must be either a collateral change or a debt change");
 
         LocalVariables_adjustLoan memory L;
 
@@ -404,6 +411,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         pure
     {
         require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
+    }
+
+    function _requireCallerIsStabilityPool() internal {
+        require(msg.sender == stabilityPoolAddress, "BorrowerOps: Caller is not Stability Pool");
     }
 
     // --- ICR and TCR checks ---

@@ -75,7 +75,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_ETH_Before, dec(1, 'ether'))
     assert.equal(activePool_RawEther_Before, dec(1, 'ether'))
 
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(alice, { from: alice, value: dec(1, 'ether') })
 
     const activePool_ETH_After = await activePool.getETH()
     const activePool_RawEther_After = await web3.eth.getBalance(activePool.address)
@@ -96,7 +96,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(status_Before, 1)
 
     // Alice adds second collateral
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(alice, { from: alice, value: dec(1, 'ether') })
 
     const alice_CDP_After = await cdpManager.CDPs(alice)
     const coll_After = alice_CDP_After[1]
@@ -117,7 +117,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(aliceCDPInList_Before, true)
     assert.equal(listIsEmpty_Before, false)
 
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(alice, { from: alice, value: dec(1, 'ether') })
 
     // check Alice is still in list after
     const aliceCDPInList_After = await sortedCDPs.contains(alice)
@@ -138,7 +138,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(totalStakes_Before, '1000000000000000000')
 
     // Alice tops up CDP collateral with 2 ether
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.addColl(alice, { from: alice, value: dec(2, 'ether') })
 
     // Check stake and total stakes get updated
     const alice_CDP_After = await cdpManager.CDPs(alice)
@@ -190,8 +190,8 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(bob_CLVDebtRewardSnapshot_Before, 0)
 
     // Alice and Bob top up their CDPs
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: dec(5, 'ether') })
-    await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(alice, { from: alice, value: dec(5, 'ether') })
+    await borrowerOperations.addColl(bob, { from: bob, value: dec(1, 'ether') })
 
     /* Check that both alice and Bob have had pending rewards applied in addition to their top-ups. 
     
@@ -254,7 +254,7 @@ contract('BorrowerOperations', async accounts => {
   //   await cdpManager.liquidate(carol, { from: owner });
 
   //   // dennis tops up his loan by 1 ETH
-  //   await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+  //   await borrowerOperations.addColl(dennis, { from: dennis, value: dec(1, 'ether') })
 
   //   /* Check that Dennis's recorded stake is the right corrected stake, less than his collateral. A corrected 
   //   stake is given by the formula: 
@@ -276,56 +276,6 @@ contract('BorrowerOperations', async accounts => {
   //   assert.isAtMost(th.getDifference(dennis_Stake), 100)
   // })
 
-  it("addColl(): non-trove owner can add collateral to another user's trove", async () => {
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(5, 'ether') })
-
-    const activeETH_Before = await activePool.getETH()
-    assert.equal(activeETH_Before, dec(10, 'ether'))
-
-    // Dennis adds collateral to Bob's trove
-    const tx = await borrowerOperations.addColl(bob, bob, { from: dennis, value: dec(5, 'ether') })
-    assert.isTrue(tx.receipt.status)
-
-    // Check Bob's collateral
-    const bob_collateral = (await cdpManager.CDPs(bob))[1].toString()
-    assert.equal(bob_collateral, dec(8, 'ether'))
-
-    // Check Bob's stake
-    const bob_Stake = (await cdpManager.CDPs(bob))[2].toString()
-    assert.equal(bob_Stake, dec(8, 'ether'))
-
-    // Check activePool ETH increased to 15 ETH
-    const activeETH_After = await activePool.getETH()
-    assert.equal(activeETH_After, dec(15, 'ether'))
-  })
-
-  it("addColl(): non-trove owner can add collateral to another user's trove", async () => {
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(5, 'ether') })
-
-    const activeETH_Before = await activePool.getETH()
-    assert.equal(activeETH_Before, dec(10, 'ether'))
-
-    // Carol adds collateral to Bob's trove
-    const tx = await borrowerOperations.addColl(bob, bob, { from: carol, value: dec(5, 'ether') })
-    assert.isTrue(tx.receipt.status)
-
-    // Check Bob's collateral
-    const bob_collateral = (await cdpManager.CDPs(bob))[1].toString()
-    assert.equal(bob_collateral, dec(8, 'ether'))
-
-    // Check Bob's stake
-    const bob_Stake = (await cdpManager.CDPs(bob))[2].toString()
-    assert.equal(bob_Stake, dec(8, 'ether'))
-
-    // Check activePool ETH increased to 15 ETH
-    const activeETH_After = await activePool.getETH()
-    assert.equal(activeETH_After, dec(15, 'ether'))
-  })
-
   it("addColl(), reverts if trove is non-existent or closed", async () => {
     // A, B open troves
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
@@ -333,17 +283,8 @@ contract('BorrowerOperations', async accounts => {
 
     // Carol attempts to add collateral to her non-existent trove
     try {
-      const txCarol = await borrowerOperations.addColl(carol, carol, { from: carol, value: dec(1, 'ether') })
+      const txCarol = await borrowerOperations.addColl(carol, { from: carol, value: dec(1, 'ether') })
       assert.isFalse(txCarol.receipt.status)
-    } catch (error) {
-      assert.include(error.message, "revert")
-      assert.include(error.message, "CDP does not exist or is closed")
-    }
-
-    // Alice attempts to add colalteral to Carol's non-existent trove
-    try {
-      const txCarol_fromAlice = await borrowerOperations.addColl(carol, carol, { from: alice, value: dec(1, 'ether') })
-      assert.isFalse(txCarol_fromAlice.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
       assert.include(error.message, "CDP does not exist or is closed")
@@ -359,17 +300,8 @@ contract('BorrowerOperations', async accounts => {
 
     // Bob attempts to add collateral to his closed trove
     try {
-      const txBob = await borrowerOperations.addColl(bob, bob, { value: dec(1, 'ether') })
+      const txBob = await borrowerOperations.addColl(bob, { value: dec(1, 'ether') })
       assert.isFalse(txBob.receipt.status)
-    } catch (error) {
-      assert.include(error.message, "revert")
-      assert.include(error.message, "CDP does not exist or is closed")
-    }
-
-    // Alice attempts to add colalteral to Bob's closed trove
-    try {
-      const txBob_fromAlice = await borrowerOperations.addColl(bob, bob, { from: alice, value: dec(1, 'ether') })
-      assert.isFalse(txBob_fromAlice.receipt.status)
     } catch (error) {
       assert.include(error.message, "revert")
       assert.include(error.message, "CDP does not exist or is closed")
@@ -386,7 +318,7 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(alice, { from: alice, value: dec(1, 'ether') })
 
     // Check Alice's collateral
     const alice_collateral = (await cdpManager.CDPs(alice))[1].toString()
