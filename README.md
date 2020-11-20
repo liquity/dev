@@ -30,7 +30,7 @@
     - [Integer representations of decimals](#integer-representations-of-decimals)
   - [Public Data](#public-data)
   - [Public User-Facing Functions](#public-user-facing-functions)
-  - [Supplying Hints to CDP operations](#supplying-hints-to-cdp-operations)
+  - [Supplying Hints to Trove operations](#supplying-hints-to-trove-operations)
   - [Gas Compensation](#gas-compensation)
   - [The Stability Pool](#the-stability-pool)
   - [LQTY Issuance to Stability Depositors](#lqty-issuance-to-stability-depositors)
@@ -536,7 +536,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 Troves in Liquity are recorded in a sorted doubly linked list, sorted by their ICR, from high to low.
 
-All trove operations that change the collateral ratio need to either insert or reinsert the trove to the `SortedCDPs` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, a ‘hint’ may be provided.
+All trove operations that change the collateral ratio need to either insert or reinsert the trove to the `SortedTroves` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, a ‘hint’ may be provided.
 
 A hint is the address of a trove with a position in the sorted list close to the correct insert position.
 
@@ -557,8 +557,8 @@ Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` li
 
 1. User performs trove operation in their browser
 2. The front end computes a new collateral ratio locally, based on the change in collateral and/or debt.
-3. Call `CDPManager::getApproxHint(...)`, passing it the computed collateral ratio. Returns an address close to the correct insert position
-4. Call `SortedCDPs::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`. **TODO: To be updated according to https://github.com/liquity/dev/issues/91**
+3. Call `TroveManager::getApproxHint(...)`, passing it the computed collateral ratio. Returns an address close to the correct insert position
+4. Call `SortedTroves::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`. **TODO: To be updated according to https://github.com/liquity/dev/issues/91**
 5. Pass the exact position as an argument to the trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
@@ -573,13 +573,13 @@ Each BorrowerOperations function that reinserts a troves takes a single hint, as
 
 **TODO: To be reviewed and updated once https://github.com/liquity/dev/issues/106 is fixed**
 
-All troves that are fully redeemed from in a redemption sequence are left with zero debt, and are reinserted at the top of the sortedTroves list.
+All troves that are fully redeemed from in a redemption sequence are left with zero debt, and are reinserted at the top of the SortedTroves list.
 
 It’s likely that the last trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The first hint passed to `redeemCollateral` gives the expected reinsert position.
 
 However, if between the off-chain hint computation and on-chain execution a different transaction changes the state of a trove that would otherwise be hit by the redemption sequence, then the off-chain hint computation could end up totally inaccurate. This could lead to the whole redemption sequence reverting due to out-of-gas error.
 
-To mitigate this, a second hint needs to be provided: the expected ICR of the final partially-redeemed-from CDP. The on-chain redemption function checks whether, after redemption, the ICR of this trove would equal the ICR hint.
+To mitigate this, a second hint needs to be provided: the expected ICR of the final partially-redeemed-from trove. The on-chain redemption function checks whether, after redemption, the ICR of this trove would equal the ICR hint.
 
 If not, the redemption sequence doesn’t perform the final partial redemption, and terminates early. This ensures that the transaction doesn’t revert, and most of the requested LUSD redemption can be fulfilled.
 
@@ -942,9 +942,9 @@ _**Trove:**_ a collateralized debt position, bound to a single Ethereum address.
 
 _**LUSD**_:  The stablecoin that may be issued from a user's collateralized debt position and freely transferred/traded to any Ethereum address. Intended to maintain parity with the US dollar, and can always be redeemed directly with the system: 1 LUSD is always exchangeable for $1 USD worth of ETH.
 
-_**Active trove:**_ an Ethereum address owns an “active trove” if there is a node in the sortedTroves list with ID equal to the address, and non-zero collateral is recorded on the trove struct for that address.
+_**Active trove:**_ an Ethereum address owns an “active trove” if there is a node in the `SortedTroves` list with ID equal to the address, and non-zero collateral is recorded on the trove struct for that address.
 
-_**Closed trove:**_ a trove that was once active, but now has zero debt and zero collateral recorded on its struct, and there is no node in the sortedTroves list with ID equal to the owning address.
+_**Closed trove:**_ a trove that was once active, but now has zero debt and zero collateral recorded on its struct, and there is no node in the `SortedTroves` list with ID equal to the owning address.
 
 _**Active collateral:**_ the amount of ETH collateral recorded on a trove’s struct
 
@@ -972,7 +972,7 @@ _**Total collateral ratio (TCR):**_ the ratio of the dollar value of the entire 
 
 _**Critical collateral ratio (CCR):**_ 150%. When the TCR is below the CCR, the system enters Recovery Mode.
 
-_**Borrower:**_ an externally owned account or contract that locks collateral in a trove and issues LUSD tokens to their own address.They “borrow” CLV tokens against their ETH collateral.
+_**Borrower:**_ an externally owned account or contract that locks collateral in a trove and issues LUSD tokens to their own address. They “borrow” LUSD tokens against their ETH collateral.
 
 _**Depositor:**_ an externally owned account or contract that has assigned LUSD tokens to the Stability Pool, in order to earn returns from liquidations, and receive LQTY token issuance.
 
@@ -996,7 +996,7 @@ _**Redistribution:**_ assignment of liquidated debt and collateral directly to a
 
 _**Pure offset:**_  when a trove's debt is entirely cancelled with LUSD in the Stability Pool, and all of it's liquidated ETH collateral is assigned to Stability Pool depositors.
 
-_**Mixed offset and redistribution:**_  When the Stability Pool LUSD only covers a fraction of the liquidated trove's debt.  This fraction of debt is cancelled with CLV in the Stability Pool, and an equal fraction of the trove's collateral is assigned to depositors. The remaining collateral & debt is redistributed directly to active troves.
+_**Mixed offset and redistribution:**_  When the Stability Pool LUSD only covers a fraction of the liquidated trove's debt.  This fraction of debt is cancelled with LUSD in the Stability Pool, and an equal fraction of the trove's collateral is assigned to depositors. The remaining collateral & debt is redistributed directly to active troves.
 
 _**Gas compensation:**_ A refund, in LUSD and ETH, automatically paid to the caller of a liquidation function, intended to at least cover the gas cost of the transaction. Designed to ensure that liquidators are not dissuaded by potentially high gas costs.
 
