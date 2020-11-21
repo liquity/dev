@@ -30,19 +30,15 @@ library Math {
     Uses the efficient "exponentiation by squaring" algorithm. O(log(n)) complexity. 
     
     Called by two functions that represent time in units of minutes:
-
     1) CDPManager._calcDecayedBaseRate
     2) CommunityIssuance._getCumulativeIssuanceFraction 
-
     The exponent is capped avoid reverting due to overflow. The cap 525600000 equals
     "minutes in 1000 years": 60 * 24 * 365 * 1000
     
     If a period of > 1000 years is ever used as an expoenent in either of the above functions, the result will be
     negligibly different from just passing the cap:
-
     1) The decayed base rate will be 0 in either case
     2) The difference in tokens issued will be negligible.
-
     */
     function _decPow(uint _base, uint _minutes) internal pure returns (uint) {
        
@@ -82,4 +78,3 @@ library Math {
         }
     }
 }
-

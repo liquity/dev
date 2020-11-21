@@ -135,7 +135,7 @@ contract('Gas cost tests', async accounts => {
     th.appendData(gasResults, message, data)
   })
 
-  it("", async () => {
+  it.only("", async () => {
     const message = 'openLoan(), 30 accounts, each account adds random ether and random CLV'
     const amountETH = dec(10, 'ether')
     const amountCLV = 0
@@ -239,14 +239,14 @@ contract('Gas cost tests', async accounts => {
   })
 
   it("", async () => {
-    const message = 'adjustLoan(). 30 accounts, each account adjusts up by random amounts. HAS size range transition'
+    const message = 'adjustLoan(). 40 accounts, each account adjusts up by random amounts. HAS size range transition'
     await borrowerOperations.openLoan(0, accounts[999], { from: accounts[999], value: dec(100, 'ether') })
 
     const amountETH = dec(9, 'ether')
     const amountCLV = dec(100, 18)
-    await th.openLoan_allAccounts(_30_Accounts, contracts, amountETH, amountCLV)
+    await th.openLoan_allAccounts(_40_Accounts, contracts, amountETH, amountCLV)
     // Randomly add between 1-9 ETH, and withdraw 1-100 CLV
-    const gasResults = await th.adjustLoan_allAccounts_randomAmount(_30_Accounts, contracts, 1, 9, 1, 100)
+    const gasResults = await th.adjustLoan_allAccounts_randomAmount(_40_Accounts, contracts, 1, 9, 1, 100)
 
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)

@@ -368,9 +368,7 @@ class TestHelper {
   }
 
   static async getBorrowerOpsListHint(contracts, newColl, newDebt, price) {
-    const compositeDebt = await this.getCompositeDebt(contracts, newDebt)
-    const newICR = await contracts.hintHelpers.computeCR(newColl, compositeDebt, price)
-
+    const newICR = await contracts.hintHelpers.computeCR(newColl, newDebt, price)
     const {
       hintAddress: approxfullListHint,
       latestRandomSeed
@@ -502,11 +500,12 @@ class TestHelper {
       const randCLVProportion = this.randAmountInWei(minCLVProportion, maxCLVProportion)
       const proportionalCLV = (web3.utils.toBN(randCLVProportion)).mul(web3.utils.toBN(randCollAmount).div(_1e18))
 
-      const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, proportionalCLV, price)
+      const compositeDebt = await this.getCompositeDebt(contracts, proportionalCLV)
+      const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, compositeDebt, price)
 
       const tx = await contracts.borrowerOperations.openLoan(proportionalCLV, hint, { from: account, value: randCollAmount })
 
-      if (logging === true && tx.receipt.status) {
+      if (logging && tx.receipt.status) {
         i++
         const ICR = await contracts.cdpManager.getCurrentICR(account, price)
         // console.log(`${i}. Loan opened. addr: ${this.squeezeAddr(account)} coll: ${randCollAmount} debt: ${proportionalCLV} ICR: ${ICR}`)
@@ -580,11 +579,12 @@ class TestHelper {
       let isDebtIncrease = CLVChangeBN.gt(zero)
       CLVChangeBN = CLVChangeBN.abs() 
 
+      // Add ETH to trove
       if (ETHChangeBN.gt(zero)) {
         tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
+      // Withdraw ETH from trove
       } else if (ETHChangeBN.lt(zero)) {
         ETHChangeBN = ETHChangeBN.neg()
-        // console.log(`ETHAmountBN: ${ETHAmountBN}`)
         tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
       }
 
@@ -600,7 +600,7 @@ class TestHelper {
 
     for (const account of accounts) {
       let tx;
-
+  
       let ETHChangeBN = this.toBN(this.randAmountInWei(ETHMin, ETHMax))
       let CLVChangeBN = this.toBN(this.randAmountInWei(CLVMin, CLVMax))
 
@@ -612,14 +612,18 @@ class TestHelper {
       let isDebtIncrease = CLVChangeBN.gt(zero)
       CLVChangeBN = CLVChangeBN.abs() 
 
+      // Add ETH to trove
       if (ETHChangeBN.gt(zero)) {
         tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
+      // Withdraw ETH from trove
       } else if (ETHChangeBN.lt(zero)) {
         ETHChangeBN = ETHChangeBN.neg()
         tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
       }
 
       const gas = this.gasUsed(tx)
+      console.log(`ETH change: ${ETHChangeBN},  CLVChange: ${CLVChangeBN}, gas: ${gas} `)
+
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)

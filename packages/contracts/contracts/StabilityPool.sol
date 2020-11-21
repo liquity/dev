@@ -228,8 +228,7 @@ contract StabilityPool is Ownable, IStabilityPool {
     - Issues LQTY gain to depositor and front end
     - Transfers the depositor's entire ETH gain from the Stability Pool to the caller's CDP
     - Leaves their compounded deposit in the Stability Pool
-    - Updates snapshots for deposit and front end stake
-    */
+    - Updates snapshots for deposit and front end stake */
     function withdrawETHGainToTrove(address _hint) external override {
         address depositor = _msgSender();
         uint initialDeposit = deposits[depositor].initialValue;
