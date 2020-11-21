@@ -26,6 +26,7 @@ contract('StabilityPool', async accounts => {
   ] = accounts;
 
   const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
+  let contracts
   let priceFeed
   let clvToken
   let sortedCDPs
