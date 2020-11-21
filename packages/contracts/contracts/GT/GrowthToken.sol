@@ -109,7 +109,7 @@ contract GrowthToken is IERC20 {
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-        if (_isFirstYear()) {_requireRecipientIsNotDeployer(recipient);}
+        if (_isFirstYear()) {_requireSenderIsNotDeployer(sender);}
         
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
@@ -187,8 +187,8 @@ contract GrowthToken is IERC20 {
         "GrowthToken: recipient must be a OYLC registered in the Factory");
     }
 
-    function _requireRecipientIsNotDeployer(address _recipient) internal view {
-        require(_recipient != deployer, "GrowthToken: recipient must not be the deployer");
+    function _requireSenderIsNotDeployer(address _sender) internal view {
+        require(_sender != deployer, "GrowthToken: sender must not be the deployer");
     }
 
     function _requireCallerIsNotDeployer() internal view {

@@ -294,6 +294,8 @@ contract('During the initial lockup period', async accounts => {
         assert.include(error.message, "revert")
       }
     })
+
+    // TODO: Tests for approve, transferFrom, increase/decrease allowance
   })
 
   describe('Deploying CDLCs', async accounts => {
