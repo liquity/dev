@@ -51,6 +51,7 @@
     "test": "run-s test:*",
     "test:contracts": "yarn workspace @liquity/contracts test",
     "test:decimal": "yarn workspace @liquity/decimal test",
+    "test:lib-base": "yarn workspace @liquity/lib-base test",
     "test:lib-ethers": "yarn workspace @liquity/lib-ethers test",
     "test:dev-frontend": "run-s --continue-on-error test:dev-frontend:*",
     "test:dev-frontend:start-dev-chain": "yarn start-dev-chain",

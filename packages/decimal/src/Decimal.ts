@@ -1,8 +1,10 @@
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 
-const MaxUint256 = BigNumber.from(
+const MAX_UINT_256 = BigNumber.from(
   "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
 );
+
+const TEN = BigNumber.from(10);
 
 export type Decimalish = Decimal | number | string;
 
@@ -10,11 +12,11 @@ export class Decimal {
   static readonly PRECISION = 18;
   static readonly DIGITS = Decimal.getDigits(Decimal.PRECISION);
 
-  private static readonly stringRepresentationFormat = /^[0-9]*(\.[0-9]*)?$/;
+  private static readonly stringRepresentationFormat = /^[0-9]*(\.[0-9]*)?(e[-+]?[0-9]+)?$/;
   private static readonly trailingZeros = /0*$/;
   private static readonly magnitudes = ["", "K", "M", "B", "T"];
 
-  static readonly INFINITY = new Decimal(MaxUint256);
+  static readonly INFINITY = new Decimal(MAX_UINT_256);
   static readonly ZERO = Decimal.from(0);
 
   readonly bigNumber: BigNumber;
@@ -23,23 +25,43 @@ export class Decimal {
     if (bigNumber.lt(0)) {
       throw new Error("must not be negative");
     }
+
     this.bigNumber = bigNumber;
   }
 
   private static getDigits(numDigits: number) {
-    return BigNumber.from(10).pow(numDigits);
+    return TEN.pow(numDigits);
   }
 
-  private static fromString(representation: string) {
+  private static fromString(representation: string): Decimal {
     if (!representation || !representation.match(Decimal.stringRepresentationFormat)) {
       throw new Error("bad decimal format");
     }
 
-    if (representation.indexOf(".") < 0) {
+    if (representation.includes("e")) {
+      let [coefficient, exponent] = representation.split("e");
+
+      if (exponent.startsWith("-")) {
+        return new Decimal(
+          Decimal.fromString(coefficient).bigNumber.div(TEN.pow(BigNumber.from(exponent.substr(1))))
+        );
+      }
+
+      if (exponent.startsWith("+")) {
+        exponent = exponent.substr(1);
+      }
+
+      return new Decimal(
+        Decimal.fromString(coefficient).bigNumber.mul(TEN.pow(BigNumber.from(exponent)))
+      );
+    }
+
+    if (!representation.includes(".")) {
       return new Decimal(BigNumber.from(representation).mul(Decimal.DIGITS));
     }
 
     let [characteristic, mantissa] = representation.split(".");
+
     if (mantissa.length < Decimal.PRECISION) {
       mantissa += "0".repeat(Decimal.PRECISION - mantissa.length);
     } else {

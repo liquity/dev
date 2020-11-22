@@ -329,15 +329,6 @@ class TestHelper {
     throw ("The transaction logs do not contain a liquidation event")
   }
 
-  static getETHWithdrawnFromEvent(tx) {
-    for (let i = 0; i < tx.logs.length; i++) {
-      if (tx.logs[i].event === "ETHGainWithdrawn") {
-        return (tx.logs[i].args[1]).toString()
-      }
-    }
-    throw ("The transaction logs do not contain an ETHGainWithdrawn event")
-  }
-
   static getLUSDFeeFromLUSDBorrowingEvent(tx) {
     for (let i = 0; i < tx.logs.length; i++) {
       if (tx.logs[i].event === "LUSDBorrowingFeePaid") {
@@ -347,6 +338,29 @@ class TestHelper {
     throw ("The transaction logs do not contain an LUSDBorrowingFeePaid event")
   }
 
+  static getEventArgByIndex(tx, eventName, argIndex) {
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === eventName) {
+        return tx.logs[i].args[argIndex]
+      }
+    }
+    throw (`The transaction logs do not contain event ${eventName}`)
+  }
+
+  static getEventArgByName(tx, eventName, argName) {
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === eventName) {
+        const keys = Object.keys(tx.logs[i].args)
+        for (let j = 0; j < keys.length; j++) {
+          if (keys[j] === argName) {
+            return tx.logs[i].args[keys[j]]
+          }
+        }
+      }
+    }
+
+    throw (`The transaction logs do not contain event ${eventName} and arg ${argName}`)
+  }
 
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
@@ -354,9 +368,7 @@ class TestHelper {
   }
 
   static async getBorrowerOpsListHint(contracts, newColl, newDebt, price) {
-    const compositeDebt = await this.getCompositeDebt(contracts, newDebt)
-    const newICR = await contracts.hintHelpers.computeCR(newColl, compositeDebt, price)
-
+    const newICR = await contracts.hintHelpers.computeCR(newColl, newDebt, price)
     const {
       hintAddress: approxfullListHint,
       latestRandomSeed
@@ -488,11 +500,12 @@ class TestHelper {
       const randCLVProportion = this.randAmountInWei(minCLVProportion, maxCLVProportion)
       const proportionalCLV = (web3.utils.toBN(randCLVProportion)).mul(web3.utils.toBN(randCollAmount).div(_1e18))
 
-      const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, proportionalCLV, price)
+      const compositeDebt = await this.getCompositeDebt(contracts, proportionalCLV)
+      const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, compositeDebt, price)
 
       const tx = await contracts.borrowerOperations.openLoan(proportionalCLV, hint, { from: account, value: randCollAmount })
 
-      if (logging === true && tx.receipt.status) {
+      if (logging && tx.receipt.status) {
         i++
         const ICR = await contracts.cdpManager.getCurrentICR(account, price)
         // console.log(`${i}. Loan opened. addr: ${this.squeezeAddr(account)} coll: ${randCollAmount} debt: ${proportionalCLV} ICR: ${ICR}`)
@@ -566,11 +579,12 @@ class TestHelper {
       let isDebtIncrease = CLVChangeBN.gt(zero)
       CLVChangeBN = CLVChangeBN.abs() 
 
+      // Add ETH to trove
       if (ETHChangeBN.gt(zero)) {
         tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
+      // Withdraw ETH from trove
       } else if (ETHChangeBN.lt(zero)) {
         ETHChangeBN = ETHChangeBN.neg()
-        // console.log(`ETHAmountBN: ${ETHAmountBN}`)
         tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
       }
 
@@ -586,7 +600,7 @@ class TestHelper {
 
     for (const account of accounts) {
       let tx;
-
+  
       let ETHChangeBN = this.toBN(this.randAmountInWei(ETHMin, ETHMax))
       let CLVChangeBN = this.toBN(this.randAmountInWei(CLVMin, CLVMax))
 
@@ -598,14 +612,18 @@ class TestHelper {
       let isDebtIncrease = CLVChangeBN.gt(zero)
       CLVChangeBN = CLVChangeBN.abs() 
 
+      // Add ETH to trove
       if (ETHChangeBN.gt(zero)) {
         tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
+      // Withdraw ETH from trove
       } else if (ETHChangeBN.lt(zero)) {
         ETHChangeBN = ETHChangeBN.neg()
         tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
       }
 
       const gas = this.gasUsed(tx)
+      console.log(`ETH change: ${ETHChangeBN},  CLVChange: ${CLVChangeBN}, gas: ${gas} `)
+
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
@@ -829,55 +847,55 @@ class TestHelper {
     }
   }
 
-  // --- PoolManager gas functions ---
+  // --- StabilityPool gas functions ---
 
-  static async provideToSP_allAccounts(accounts, poolManager, amount) {
+  static async provideToSP_allAccounts(accounts, stabilityPool, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await poolManager.provideToSP(amount, this.ZERO_ADDRESS, { from: account })
+      const tx = await stabilityPool.provideToSP(amount, this.ZERO_ADDRESS, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async provideToSP_allAccounts_randomAmount(min, max, accounts, poolManager) {
+  static async provideToSP_allAccounts_randomAmount(min, max, accounts, stabilityPool) {
     const gasCostList = []
     for (const account of accounts) {
       const randomCLVAmount = this.randAmountInWei(min, max)
-      const tx = await poolManager.provideToSP(randomCLVAmount, this.ZERO_ADDRESS, { from: account })
+      const tx = await stabilityPool.provideToSP(randomCLVAmount, this.ZERO_ADDRESS, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawFromSP_allAccounts(accounts, poolManager, amount) {
+  static async withdrawFromSP_allAccounts(accounts, stabilityPool, amount) {
     const gasCostList = []
     for (const account of accounts) {
-      const tx = await poolManager.withdrawFromSP(amount, { from: account })
+      const tx = await stabilityPool.withdrawFromSP(amount, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawFromSP_allAccounts_randomAmount(min, max, accounts, poolManager) {
+  static async withdrawFromSP_allAccounts_randomAmount(min, max, accounts, stabilityPool) {
     const gasCostList = []
     for (const account of accounts) {
       const randomCLVAmount = this.randAmountInWei(min, max)
-      const tx = await poolManager.withdrawFromSP(randomCLVAmount, { from: account })
+      const tx = await stabilityPool.withdrawFromSP(randomCLVAmount, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawETHGainToTrove_allAccounts(accounts, poolManager) {
+  static async withdrawETHGainToTrove_allAccounts(accounts, stabilityPool) {
     const gasCostList = []
     for (const account of accounts) {
 
-      const tx = await poolManager.withdrawETHGainToTrove(account, { from: account })
+      const tx = await stabilityPool.withdrawETHGainToTrove(account, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -902,9 +920,9 @@ class TestHelper {
     return CDLC
   }
 
-  static async registerFrontEnds(frontEnds, poolManager) {
+  static async registerFrontEnds(frontEnds, stabilityPool) {
     for (const frontEnd of frontEnds) {
-      await poolManager.registerFrontEnd(this.dec(5, 17), { from: frontEnd })  // default kickback rate of 50%
+      await stabilityPool.registerFrontEnd(this.dec(5, 17), { from: frontEnd })  // default kickback rate of 50%
     }
   }
 
@@ -958,9 +976,12 @@ class TestHelper {
       assert.isFalse(tx.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
+      // TODO !!!
+      /*
       if (message) {
         assert.include(err.message, message)
       }
+      */
     }
   }
 

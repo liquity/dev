@@ -30,15 +30,14 @@ contract('Gas cost tests', async accounts => {
 
   let priceFeed
   let clvToken
-  let poolManager
   let sortedCDPs
   let cdpManager
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
   let borrowerOperations
   let hintHelpers
+  let functionCaller
 
   let data = []
 
@@ -49,7 +48,6 @@ contract('Gas cost tests', async accounts => {
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
-    poolManager = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
     activePool = contracts.activePool
@@ -57,6 +55,8 @@ contract('Gas cost tests', async accounts => {
     defaultPool = contracts.defaultPool
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
+
+    functionCaller = contracts.functionCaller
 
     lqtyStaking = GTContracts.lqtyStaking
     growthToken = GTContracts.growthToken
@@ -135,7 +135,7 @@ contract('Gas cost tests', async accounts => {
     th.appendData(gasResults, message, data)
   })
 
-  it("", async () => {
+  it.only("", async () => {
     const message = 'openLoan(), 30 accounts, each account adds random ether and random CLV'
     const amountETH = dec(10, 'ether')
     const amountCLV = 0
@@ -239,14 +239,14 @@ contract('Gas cost tests', async accounts => {
   })
 
   it("", async () => {
-    const message = 'adjustLoan(). 30 accounts, each account adjusts up by random amounts. HAS size range transition'
+    const message = 'adjustLoan(). 40 accounts, each account adjusts up by random amounts. HAS size range transition'
     await borrowerOperations.openLoan(0, accounts[999], { from: accounts[999], value: dec(100, 'ether') })
 
     const amountETH = dec(9, 'ether')
     const amountCLV = dec(100, 18)
-    await th.openLoan_allAccounts(_30_Accounts, contracts, amountETH, amountCLV)
+    await th.openLoan_allAccounts(_40_Accounts, contracts, amountETH, amountCLV)
     // Randomly add between 1-9 ETH, and withdraw 1-100 CLV
-    const gasResults = await th.adjustLoan_allAccounts_randomAmount(_30_Accounts, contracts, 1, 9, 1, 100)
+    const gasResults = await th.adjustLoan_allAccounts_randomAmount(_40_Accounts, contracts, 1, 9, 1, 100)
 
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
@@ -269,9 +269,10 @@ contract('Gas cost tests', async accounts => {
 
   it("", async () => {
     const message = 'closeLoan(), 20 accounts, each account adds 10 ether and issues less CLV than the previous one. First 10 accounts close their loan. '
+
     await th.openLoan_allAccounts_decreasingCLVAmounts(_20_Accounts, contracts, dec(10, 'ether'), 200)
 
-    const gasResults = await th.closeLoan_allAccounts(_20_Accounts, contracts)
+    const gasResults = await th.closeLoan_allAccounts(_20_Accounts.slice(1), contracts)
 
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
@@ -563,18 +564,6 @@ contract('Gas cost tests', async accounts => {
     const message = 'getCurrentICR(), CDPs with 10 ether and random CLV amount withdrawn'
     await th.openLoan_allAccounts(_10_Accounts, contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts_randomAmount(1, 1800, _10_Accounts, contracts)
-
-    const gasResults = await th.getCurrentICR_allAccounts(_10_Accounts, contracts, functionCaller)
-    th.logGasMetrics(gasResults, message)
-    th.logAllGasCosts(gasResults)
-
-    th.appendData(gasResults, message, data)
-  })
-
-  it("", async () => {
-    const message = 'getCurrentICR(), empty CDPs with no ether and no withdrawals'
-    await th.openLoan_allAccounts(_10_Accounts, contracts, dec(10, 'ether'), 0)
-    await th.withdrawColl_allAccounts(_10_Accounts, contracts, dec(10, 'ether'))
 
     const gasResults = await th.getCurrentICR_allAccounts(_10_Accounts, contracts, functionCaller)
     th.logGasMetrics(gasResults, message)
@@ -948,7 +937,7 @@ contract('Gas cost tests', async accounts => {
 
   //    // acct 999 adds coll, withdraws CLV, sits at 111% ICR
   //    await borrowerOperations.addColl(accounts[999], {from: accounts[999], value:dec(1, 'ether')})
-  //    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[999], { from: accounts[999]})
+  //    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[999], { from: accounts[999]})
 
   //     // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
   //    await priceFeed.setPrice(dec(100, 18))
@@ -1094,7 +1083,7 @@ contract('Gas cost tests', async accounts => {
     await th.withdrawCLV_allAccounts(_10_Accounts, contracts, dec(180, 18))
 
     // first funds provided
-    const gasResults = await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(100, 18))
+    const gasResults = await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(100, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1107,7 +1096,7 @@ contract('Gas cost tests', async accounts => {
     await th.withdrawCLV_allAccounts(_10_Accounts, contracts, dec(180, 18))
 
     // first funds provided
-    const gasResults = await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(180, 18))
+    const gasResults = await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(180, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1120,7 +1109,7 @@ contract('Gas cost tests', async accounts => {
     await th.withdrawCLV_allAccounts(_10_Accounts, contracts, dec(180, 18))
 
     // first funds provided
-    const gasResults = await th.provideToSP_allAccounts_randomAmount(1, 179, _10_Accounts, poolManager)
+    const gasResults = await th.provideToSP_allAccounts_randomAmount(1, 179, _10_Accounts, stabilityPool)
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1133,22 +1122,22 @@ contract('Gas cost tests', async accounts => {
     const message = 'provideToSP(), No pending rewards, deposit part of issued CLV: all accounts withdraw 180 CLV, all make second deposit, provide 50 CLV'
     await th.openLoan_allAccounts(_10_Accounts, contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(_10_Accounts, contracts, dec(180, 18))
-    await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(50, 18))
+    await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(50, 18))
 
     // >>FF time and one account tops up, triggers LQTY gains for all
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
+    await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
 
     // Check the other accounts have LQTY gain
     for (account of _10_Accounts.slice(1)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // top-up of StabilityPool Deposit
-    const gasResults = await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(50, 18))
+    const gasResults = await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(50, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1159,22 +1148,22 @@ contract('Gas cost tests', async accounts => {
     const message = 'provideToSP(), No pending rewards, deposit all issued CLV: all accounts withdraw 180 CLV, make second deposit, provide 90 CLV'
     await th.openLoan_allAccounts(_10_Accounts, contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(_10_Accounts, contracts, dec(180, 18))
-    await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(90, 18))
+    await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(90, 18))
 
     // >>FF time and one account tops up, triggers LQTY gains for all
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
+    await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
 
     // Check the other accounts have LQTY gain
     for (account of _10_Accounts.slice(1)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // top-up of StabilityPool Deposit
-    const gasResults = await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(90, 18))
+    const gasResults = await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(90, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1185,22 +1174,22 @@ contract('Gas cost tests', async accounts => {
     const message = 'provideToSP(), No pending rewards, all accounts withdraw 180 CLV, make second deposit, random CLV amount'
     await th.openLoan_allAccounts(_10_Accounts, contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(_10_Accounts, contracts, dec(180, 18))
-    await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(90, 18))
+    await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(90, 18))
 
     // >>FF time and one account tops up, triggers LQTY gains for all
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
+    await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
 
     // Check the other accounts have LQTY gain
     for (account of _10_Accounts.slice(1)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // top-up of StabilityPool Deposit
-    const gasResults = await th.provideToSP_allAccounts_randomAmount(1, 89, _10_Accounts, poolManager)
+    const gasResults = await th.provideToSP_allAccounts_randomAmount(1, 89, _10_Accounts, stabilityPool)
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1216,7 +1205,7 @@ contract('Gas cost tests', async accounts => {
     // 9 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 50 CLV to Stability Pool
     await th.openLoan_allAccounts(accounts.slice(2, 12), contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(accounts.slice(2, 12), contracts, dec(180, 18))
-    await th.provideToSP_allAccounts(accounts.slice(2, 12), poolManager, dec(50, 18))
+    await th.provideToSP_allAccounts(accounts.slice(2, 12), stabilityPool, dec(50, 18))
 
     //1 acct open CDP with 1 ether and withdraws 170 CLV
     await borrowerOperations.openLoan(dec(170, 18), accounts[1], { from: accounts[1], value: dec(1, 'ether') })
@@ -1231,14 +1220,14 @@ contract('Gas cost tests', async accounts => {
 
     // Check accounts have LQTY gains from liquidations
     for (account of accounts.slice(2, 12)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // 9 active CDPs top up their Stability Pool deposits with 50 CLV
-    const gasResults = await th.provideToSP_allAccounts(accounts.slice(2, 11), poolManager, dec(50, 18))
+    const gasResults = await th.provideToSP_allAccounts(accounts.slice(2, 11), stabilityPool, dec(50, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1250,7 +1239,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 90 CLV to Stability Pool
     await th.openLoan_allAccounts(accounts.slice(2, 12), contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(accounts.slice(2, 12), contracts, dec(180, 18))
-    await th.provideToSP_allAccounts(accounts.slice(2, 12), poolManager, dec(90, 18))
+    await th.provideToSP_allAccounts(accounts.slice(2, 12), stabilityPool, dec(90, 18))
 
     //1 acct open CDP with 1 ether and withdraws 170 CLV
     await borrowerOperations.openLoan(dec(170, 18), accounts[1], { from: accounts[1], value: dec(1, 'ether') })
@@ -1265,14 +1254,14 @@ contract('Gas cost tests', async accounts => {
 
     // Check accounts have LQTY gains from liquidations
     for (account of accounts.slice(2, 12)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // 5 active CDPs top up their Stability Pool deposits with 90 CLV, using up all their issued CLV
-    const gasResults = await th.provideToSP_allAccounts(accounts.slice(7, 12), poolManager, dec(90, 18))
+    const gasResults = await th.provideToSP_allAccounts(accounts.slice(7, 12), stabilityPool, dec(90, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1283,7 +1272,7 @@ contract('Gas cost tests', async accounts => {
     const message = 'provideToSP(), with pending rewards in system. deposit part of issued CLV: all make second deposit, provide random CLV amount'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 90 CLV to Stability Pool
     await th.openLoan_allAccounts(accounts.slice(2, 12), contracts, dec(10, 'ether'), dec(180, 18))
-    await th.provideToSP_allAccounts(accounts.slice(2, 12), poolManager, dec(90, 18))
+    await th.provideToSP_allAccounts(accounts.slice(2, 12), stabilityPool, dec(90, 18))
 
     //1 acct open CDP with 1 ether and withdraws 170 CLV
     await borrowerOperations.openLoan(dec(170, 18), accounts[1], { from: accounts[1], value: dec(1, 'ether') })
@@ -1298,14 +1287,14 @@ contract('Gas cost tests', async accounts => {
 
     // Check accounts have LQTY gains from liquidations
     for (account of accounts.slice(2, 12)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // 5 active CDPs top up their Stability Pool deposits with a random CLV amount
-    const gasResults = await th.provideToSP_allAccounts_randomAmount(1, 89, accounts.slice(7, 12), poolManager)
+    const gasResults = await th.provideToSP_allAccounts_randomAmount(1, 89, accounts.slice(7, 12), stabilityPool)
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1320,20 +1309,20 @@ contract('Gas cost tests', async accounts => {
   it("", async () => {
     const message = 'withdrawFromSP(), no pending rewards. Stability Pool depositors make partial withdrawal - 90 CLV of 180 CLV deposit'
     await th.openLoan_allAccounts(_10_Accounts, contracts, dec(10, 'ether'), dec(190, 18))
-    await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(180, 18))
+    await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(180, 18))
 
     // >>FF time and one account tops up, triggers LQTY gains for all
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
+    await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
 
     // Check the other accounts have LQTY gain
     for (account of _10_Accounts.slice(1)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    const gasResults = await th.withdrawFromSP_allAccounts(_10_Accounts, poolManager, dec(90, 18))
+    const gasResults = await th.withdrawFromSP_allAccounts(_10_Accounts, stabilityPool, dec(90, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1344,20 +1333,20 @@ contract('Gas cost tests', async accounts => {
   it("", async () => {
     const message = 'withdrawFromSP(), no pending rewards. Stability Pool depositors make full withdrawal - 180 CLV of 180 CLV deposit'
     await th.openLoan_allAccounts(_10_Accounts, contracts, dec(10, 'ether'), dec(190, 18))
-    await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(180, 18))
+    await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(180, 18))
 
     // >>FF time and one account tops up, triggers LQTY gains for all
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
+    await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: _10_Accounts[0] })
 
     // Check the other accounts have LQTY gain
     for (account of _10_Accounts.slice(1)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    const gasResults = await th.withdrawFromSP_allAccounts(_10_Accounts, poolManager, dec(180, 18))
+    const gasResults = await th.withdrawFromSP_allAccounts(_10_Accounts, stabilityPool, dec(180, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1368,9 +1357,9 @@ contract('Gas cost tests', async accounts => {
   it("", async () => {
     const message = 'withdrawFromSP(), no pending rewards. Stability Pool depositors make partial withdrawal - random CLV amount, less than 180 CLV deposit'
     await th.openLoan_allAccounts(_10_Accounts, contracts, dec(10, 'ether'), dec(180, 18))
-    await th.provideToSP_allAccounts(_10_Accounts, poolManager, dec(180, 18))
+    await th.provideToSP_allAccounts(_10_Accounts, stabilityPool, dec(180, 18))
 
-    const gasResults = await th.withdrawFromSP_allAccounts_randomAmount(1, 179, _10_Accounts, poolManager)
+    const gasResults = await th.withdrawFromSP_allAccounts_randomAmount(1, 179, _10_Accounts, stabilityPool)
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1386,7 +1375,7 @@ contract('Gas cost tests', async accounts => {
     const message = 'withdrawFromSP(), pending rewards in system. Stability Pool depositors make partial withdrawal - 90 CLV of 180 CLV deposit'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
     await th.openLoan_allAccounts(accounts.slice(2, 12), contracts, dec(10, 'ether'), dec(180, 18))
-    await th.provideToSP_allAccounts(accounts.slice(2, 12), poolManager, dec(180, 18))
+    await th.provideToSP_allAccounts(accounts.slice(2, 12), stabilityPool, dec(180, 18))
 
     //1 acct open CDP with 1 ether and withdraws 170 CLV
     await borrowerOperations.openLoan(0, accounts[1], { from: accounts[1], value: dec(1, 'ether') })
@@ -1401,14 +1390,14 @@ contract('Gas cost tests', async accounts => {
 
     // Check accounts have LQTY gains from liquidations
     for (account of accounts.slice(2, 12)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // 5 active CDPs reduce their Stability Pool deposit by 90 CLV
-    const gasResults = await th.withdrawFromSP_allAccounts(accounts.slice(7, 12), poolManager, dec(90, 18))
+    const gasResults = await th.withdrawFromSP_allAccounts(accounts.slice(7, 12), stabilityPool, dec(90, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1419,7 +1408,7 @@ contract('Gas cost tests', async accounts => {
     const message = 'withdrawFromSP(), pending rewards in system. Stability Pool depositors make full withdrawal - 180 CLV of 180 CLV deposit'
     // 10 accts each open CDP with 10 ether, withdraw 170 CLV, and provide 180 CLV to Stability Pool
     await th.openLoan_allAccounts(accounts.slice(2, 12), contracts, dec(10, 'ether'), dec(180, 18))
-    await th.provideToSP_allAccounts(accounts.slice(2, 12), poolManager, dec(180, 18))
+    await th.provideToSP_allAccounts(accounts.slice(2, 12), stabilityPool, dec(180, 18))
 
     //1 acct open CDP with 1 ether and withdraws 170 CLV
     await borrowerOperations.openLoan(0, accounts[1], { from: accounts[1], value: dec(1, 'ether') })
@@ -1435,14 +1424,14 @@ contract('Gas cost tests', async accounts => {
 
     // Check accounts have LQTY gains from liquidations
     for (account of accounts.slice(2, 12)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // 5 active CDPs reduce their Stability Pool deposit by 180 CLV
-    const gasResults = await th.withdrawFromSP_allAccounts(accounts.slice(7, 12), poolManager, dec(180, 18))
+    const gasResults = await th.withdrawFromSP_allAccounts(accounts.slice(7, 12), stabilityPool, dec(180, 18))
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1453,7 +1442,7 @@ contract('Gas cost tests', async accounts => {
     const message = 'withdrawFromSP(), pending rewards in system. Stability Pool depositors make partial withdrawal - random amount of CLV'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
     await th.openLoan_allAccounts(accounts.slice(2, 12), contracts, dec(10, 'ether'), dec(180, 18))
-    await th.provideToSP_allAccounts(accounts.slice(2, 12), poolManager, dec(180, 18))
+    await th.provideToSP_allAccounts(accounts.slice(2, 12), stabilityPool, dec(180, 18))
 
     //1 acct open CDP with 1 ether and withdraws 170 CLV
     await borrowerOperations.openLoan(0, accounts[1], { from: accounts[1], value: dec(1, 'ether') })
@@ -1468,14 +1457,14 @@ contract('Gas cost tests', async accounts => {
 
     // Check accounts have LQTY gains from liquidations
     for (account of accounts.slice(2, 12)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // 5 active CDPs reduce their Stability Pool deposit by random amount
-    const gasResults = await th.withdrawFromSP_allAccounts_randomAmount(1, 179, accounts.slice(7, 12), poolManager)
+    const gasResults = await th.withdrawFromSP_allAccounts_randomAmount(1, 179, accounts.slice(7, 12), stabilityPool)
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1485,11 +1474,11 @@ contract('Gas cost tests', async accounts => {
   // --- withdrawETHGainToTrove() ---
 
   // --- withdrawETHGainToTrove() - deposit has pending rewards ---
-  it.only("", async () => {
+  it("", async () => {
     const message = 'withdrawETHGainToTrove(), pending rewards in system. Accounts withdraw 180 CLV, provide 180 CLV, then withdraw all to SP after a liquidation'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
     await th.openLoan_allAccounts(accounts.slice(2, 12), contracts, dec(10, 'ether'), dec(180, 18))
-    await th.provideToSP_allAccounts(accounts.slice(2, 12), poolManager, dec(180, 18))
+    await th.provideToSP_allAccounts(accounts.slice(2, 12), stabilityPool, dec(180, 18))
 
     //1 acct open CDP with 1 ether and withdraws 170 CLV
     await borrowerOperations.openLoan(0, accounts[1], { from: accounts[1], value: dec(1, 'ether') })
@@ -1504,25 +1493,25 @@ contract('Gas cost tests', async accounts => {
 
      // Check accounts have LQTY gains from liquidations
      for (account of accounts.slice(2, 12)) {
-      const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+      const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
       assert.isTrue(LQTYGain.gt(toBN('0')))
     }
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // 5 active CDPs reduce their Stability Pool deposit by 90 CLV
-    const gasResults = await th.withdrawETHGainToTrove_allAccounts(accounts.slice(7, 12), poolManager)
+    const gasResults = await th.withdrawETHGainToTrove_allAccounts(accounts.slice(7, 12), stabilityPool)
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
     th.appendData(gasResults, message, data)
   })
 
-  it.only("", async () => {
+  it("", async () => {
     const message = 'withdrawETHGainToTrove(), pending rewards in system. Accounts withdraw 180 CLV, provide a random amount, then withdraw all to SP after a liquidation'
     // 10 accts each open CDP with 10 ether, withdraw 180 CLV, and provide 180 CLV to Stability Pool
     await th.openLoan_allAccounts(accounts.slice(2, 12), contracts, dec(10, 'ether'), dec(180, 18))
-    await await th.provideToSP_allAccounts_randomAmount(1, 179, accounts.slice(2, 12), poolManager)
+    await await th.provideToSP_allAccounts_randomAmount(1, 179, accounts.slice(2, 12), stabilityPool)
 
     //1 acct open CDP with 1 ether and withdraws 170 CLV
     await borrowerOperations.openLoan(0, accounts[1], { from: accounts[1], value: dec(1, 'ether') })
@@ -1537,14 +1526,14 @@ contract('Gas cost tests', async accounts => {
 
        // Check accounts have LQTY gains from liquidations
        for (account of accounts.slice(2, 12)) {
-        const LQTYGain = await poolManager.getDepositorLQTYGain(account)
+        const LQTYGain = await stabilityPool.getDepositorLQTYGain(account)
         assert.isTrue(LQTYGain.gt(toBN('0')))
       }
   
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
   
     // 5 active CDPs reduce their Stability Pool deposit by 90 CLV
-    const gasResults = await th.withdrawETHGainToTrove_allAccounts(accounts.slice(7, 12), poolManager)
+    const gasResults = await th.withdrawETHGainToTrove_allAccounts(accounts.slice(7, 12), stabilityPool)
     th.logGasMetrics(gasResults, message)
     th.logAllGasCosts(gasResults)
 
@@ -1560,7 +1549,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(100, 110), contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(accounts.slice(100, 110), contracts, dec(180, 18))
 
-    //6s acct open CDP with 1 ether and withdraw 180 CLV
+    //6s acct open CDP with 1 ether and withdraw 180 CLV (inc gas comp)
     await th.openLoan_allAccounts(accounts.slice(0, 6), contracts, dec(1, 'ether'), dec(180, 18))
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
@@ -1594,7 +1583,7 @@ contract('Gas cost tests', async accounts => {
 
     const liquidationAcctRange = accounts.slice(1, 10)
 
-    // Accts open CDP with 1 ether and withdraws 180 CLV
+    // Accts open CDP with 1 ether and withdraws 180 CLV (inc gas comp)
     await th.openLoan_allAccounts(liquidationAcctRange, contracts, dec(1, 'ether'), 0)
     await th.withdrawCLV_allAccounts(liquidationAcctRange, contracts, dec(180, 18))
 
@@ -1625,10 +1614,10 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(100, 110), contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(accounts.slice(100, 110), contracts, dec(180, 18))
 
-    //2 acct open CDP with 1 ether and withdraws 180 CLV
+    //2 acct open CDP with 1 ether and withdraws 180 CLV (inc gas comp)
     await th.openLoan_allAccounts(accounts.slice(2, 4), contracts, dec(1, 'ether'), 0)
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[2], { from: accounts[2] })
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[3], { from: accounts[3] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[2], { from: accounts[2] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[3], { from: accounts[3] })
 
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
@@ -1695,18 +1684,18 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(100, 110), contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(accounts.slice(100, 110), contracts, dec(180, 18))
 
-    //3 acct open CDP with 1 ether and withdraws 180 CLV
+    //3 acct open CDP with 1 ether and withdraws 180 CLV (inc gas comp)
     await th.openLoan_allAccounts(accounts.slice(0, 4), contracts, dec(1, 'ether'), 0)
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[1], { from: accounts[1] })
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[2], { from: accounts[2] })
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[3], { from: accounts[3] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[1], { from: accounts[1] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[2], { from: accounts[2] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[3], { from: accounts[3] })
 
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 100 provides 600 CLV to pool
     await borrowerOperations.withdrawCLV(dec(600, 18), accounts[100], { from: accounts[100] })
-    await poolManager.provideToSP(dec(600, 18), ZERO_ADDRESS, { from: accounts[100] })
+    await stabilityPool.provideToSP(dec(600, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     // Initial liquidations - full offset - makes SP reward terms and SP non-zero
     await cdpManager.liquidate(accounts[2], { from: accounts[0] })
@@ -1732,19 +1721,19 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(100, 110), contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(accounts.slice(100, 110), contracts, dec(180, 18))
 
-    // 5 acct open CDP with 1 ether and withdraws 180 CLV
+    // 5 acct open CDP with 1 ether and withdraws 180 CLV (inc gas comp)
     await th.openLoan_allAccounts(accounts.slice(0, 5), contracts, dec(1, 'ether'), 0)
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[1], { from: accounts[1] })
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[2], { from: accounts[2] })
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[3], { from: accounts[3] })
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[4], { from: accounts[4] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[1], { from: accounts[1] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[2], { from: accounts[2] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[3], { from: accounts[3] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[4], { from: accounts[4] })
 
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 100 provides 360 CLV to SP
     await borrowerOperations.withdrawCLV(dec(600, 18), accounts[100], { from: accounts[100] })
-    await poolManager.provideToSP(dec(360, 18), ZERO_ADDRESS, { from: accounts[100] })
+    await stabilityPool.provideToSP(dec(360, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     // Initial liquidations - full offset - makes SP reward terms and SP non-zero
     await cdpManager.liquidate(accounts[2], { from: accounts[0] })
@@ -1754,7 +1743,7 @@ contract('Gas cost tests', async accounts => {
     await cdpManager.liquidate(accounts[4], { from: accounts[0] })
 
     // Account 5 provides another 200 to the SP
-    await poolManager.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: accounts[100] })
+    await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     const hasPendingRewards = await cdpManager.hasPendingRewards(accounts[1])
     console.log("Liquidee has pending rewards: " + hasPendingRewards)
@@ -1776,24 +1765,24 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(100, 110), contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(accounts.slice(100, 110), contracts, dec(180, 18))
 
-    //4 acct open CDP with 1 ether and withdraws 180 CLV
+    //4 acct open CDP with 1 ether and withdraws 180 CLV (inc gas comp)
     await th.openLoan_allAccounts(accounts.slice(0, 4), contracts, dec(1, 'ether'), 0)
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[1], { from: accounts[1] })
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[2], { from: accounts[2] })
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[3], { from: accounts[3] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[1], { from: accounts[1] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[2], { from: accounts[2] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[3], { from: accounts[3] })
 
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Set up some "previous" liquidations triggering partial offsets, and pending rewards for all troves
-    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[100] })
+    await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[100] })
     await cdpManager.liquidate(accounts[2], { from: accounts[0] })
 
-    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[101] })
+    await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[101] })
     await cdpManager.liquidate(accounts[3], { from: accounts[0] })
 
     // pool refilled with 100 CLV
-    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[102] })
+    await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[102] })
 
     const hasPendingRewards = await cdpManager.hasPendingRewards(accounts[1])
     console.log("Liquidee has pending rewards: " + hasPendingRewards)
@@ -1815,27 +1804,27 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(100, 110), contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(accounts.slice(100, 110), contracts, dec(180, 18))
 
-    //2 acct open CDP with 1 ether and withdraws 180 CLV
+    //2 acct open CDP with 1 ether and withdraws 180 CLV (inc gas comp)
     await th.openLoan_allAccounts(accounts.slice(2, 4), contracts, dec(1, 'ether'), 0)
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[2], { from: accounts[2] })
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[3], { from: accounts[3] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[2], { from: accounts[2] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[3], { from: accounts[3] })
 
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Set up some "previous" liquidations that trigger partial offsets, 
     //and create pending rewards for all troves
-    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[100] })
+    await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[100] })
     await cdpManager.liquidate(accounts[2], { from: accounts[0] })
 
-    await poolManager.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[101] })
+    await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[101] })
     await cdpManager.liquidate(accounts[3], { from: accounts[0] })
 
     // Pool refilled with 50 CLV
-    await poolManager.provideToSP(dec(50, 18), ZERO_ADDRESS, { from: accounts[102] })
+    await stabilityPool.provideToSP(dec(50, 18), ZERO_ADDRESS, { from: accounts[102] })
 
     // Account 1 opens loan
-    await borrowerOperations.openLoan(dec(90, 18), accounts[1], { from: accounts[1], value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(dec(70, 18), accounts[1], { from: accounts[1], value: dec(1, 'ether') })
 
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(50, 18))
@@ -1845,7 +1834,7 @@ contract('Gas cost tests', async accounts => {
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    // account 1 90 CLV liquidated  - partial offset against 50 CLV in SP
+    // account 1 70 CLV liquidated  - partial offset against 50 CLV in SP
     const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0] })
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -1859,22 +1848,22 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether
     await th.openLoan_allAccounts(accounts.slice(100, 110), contracts, dec(10, 'ether'), 0)
 
-    //Account 99 and 98 each open CDP with 1 ether, and withdraw 180 CLV
+    //Account 99 and 98 each open CDP with 1 ether, and withdraw 180 CLV (inc gas comp)
     await th.openLoan_allAccounts([accounts[99]], contracts, dec(1, 'ether'), 0)
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[99], { from: accounts[99] })
-    await th.openLoan_allAccounts([accounts[98]], borrowerOperations, dec(1, 'ether'), 0)
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[98], { from: accounts[98] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[99], { from: accounts[99] })
+    await th.openLoan_allAccounts([accounts[98]], contracts, dec(1, 'ether'), 0)
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[98], { from: accounts[98] })
 
     // Acct 99 deposits 1 CLV to SP
-    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: accounts[99] })
+    await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: accounts[99] })
 
-    //Account 97 opens CDP with 1 ether and withdraws 180 CLV
-    await th.openLoan_allAccounts([accounts[97]], borrowerOperations, dec(1, 'ether'), 0)
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[97], { from: accounts[97] })
+    //Account 97 opens CDP with 1 ether and withdraws 180 CLV (inc gas comp)
+    await th.openLoan_allAccounts([accounts[97]], contracts, dec(1, 'ether'), 0)
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[97], { from: accounts[97] })
 
     // Acct 100 withdraws 1800 CLV and deposits it to the SP
     await borrowerOperations.withdrawCLV(dec(1800, 18), accounts[100], { from: accounts[100] })
-    await poolManager.provideToSP(dec(1800, 18), ZERO_ADDRESS, { from: accounts[100] })
+    await stabilityPool.provideToSP(dec(1800, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     // Price drops too $100, accounts 99 and 100 ICR fall below MCR
     await priceFeed.setPrice(dec(100, 18))
@@ -1886,13 +1875,13 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[97]))
 
     // Acct 100 withdraws deposit and gains from SP
-    await poolManager.withdrawFromSP(dec(1800, 18), { from: accounts[100] })
+    await stabilityPool.withdrawFromSP(dec(1800, 18), { from: accounts[100] })
 
     // Account 98 is liquidated, with nothing in SP pool.  This creates pending rewards from distribution.
     await cdpManager.liquidate(accounts[98], { from: accounts[0] })
 
     // Account 7 deposits 1 CLV in the Stability Pool
-    await poolManager.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: accounts[100] })
+    await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
@@ -1912,11 +1901,11 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(100, 130), contracts, dec(10, 'ether'), 0)
     await th.withdrawCLV_allAccounts(accounts.slice(100, 130), contracts, dec(180, 18))
 
-    await poolManager.provideToSP(dec(180, 18), ZERO_ADDRESS, { from: accounts[100] })
+    await stabilityPool.provideToSP(dec(180, 18), ZERO_ADDRESS, { from: accounts[100] })
 
-    //1 acct open CDP with 1 ether and withdraws 180 CLV
+    //1 acct open CDP with 1 ether and withdraws 180 CLV (inc gas comp)
     await th.openLoan_allAccounts([accounts[1]], contracts, dec(1, 'ether'), 0)
-    await borrowerOperations.withdrawCLV(dec(180, 18), accounts[1], { from: accounts[1] })
+    await borrowerOperations.withdrawCLV(dec(170, 18), accounts[1], { from: accounts[1] })
 
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))

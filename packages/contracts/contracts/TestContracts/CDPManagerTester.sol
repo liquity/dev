@@ -50,18 +50,6 @@ contract CDPManagerTester is CDPManager {
         _getRedemptionFee(_ETHDrawn);
     }  
 
-    function pmLiquidate(uint _CLV, uint _ETH) external {
-        poolManager.liquidate(_CLV, _ETH);
-    }
-
-    function pmRedeemCollateral(address _account, uint _CLV, uint _ETH) external {
-        poolManager.redeemCollateral(_account, _CLV, _ETH);
-    }
-
-    function pmMovePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) external {
-        poolManager.movePendingTroveRewardsToActivePool(_CLV, _ETH);
-    }
-
     function getActualDebtFromComposite(uint _debtVal) external pure returns (uint) {
         return _getNetDebt(_debtVal);
     }

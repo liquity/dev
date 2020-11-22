@@ -2,7 +2,7 @@ const Decimal = require("decimal.js");
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
-const PoolManagerTester = artifacts.require("./PoolManagerTester.sol")
+const StabilityPool = artifacts.require("./StabilityPool.sol")
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
@@ -17,7 +17,7 @@ const logLQTYBalanceAndError = (LQTYBalance_A, expectedLQTYBalance_A) => {
   )
 }
 
-const repeatedlyIssueLQTY = async (poolManagerTester, timeBetweenIssuances, duration) => {
+const repeatedlyIssueLQTY = async (stabilityPool, timeBetweenIssuances, duration) => {
   const startTimestamp = th.toBN(await th.getLatestBlockTimestamp(web3))
   let timePassed = 0
 
@@ -25,7 +25,7 @@ const repeatedlyIssueLQTY = async (poolManagerTester, timeBetweenIssuances, dura
   while (timePassed < duration) {
     // console.log(`timePassed: ${timePassed}`)
     await th.fastForwardTime(timeBetweenIssuances, web3.currentProvider)
-    await poolManagerTester._unprotectedTriggerLQTYIssuance()
+    await stabilityPool._unprotectedTriggerLQTYIssuance()
 
     const currentTimestamp = th.toBN(await th.getLatestBlockTimestamp(web3))
     timePassed = currentTimestamp.sub(startTimestamp)
@@ -35,14 +35,17 @@ const repeatedlyIssueLQTY = async (poolManagerTester, timeBetweenIssuances, dura
 
 contract('LQTY community issuance arithmetic tests', async accounts => {
   let contracts
+  let borrowerOperations
   let communityIssuanceTester
-  let poolManagerTester
+  let growthToken
+  let stabilityPool
 
   const [owner, alice, frontEnd_1] = accounts;
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     const GTContracts = await deploymentHelper.deployGTTesterContractsBuidler()
+<<<<<<< HEAD
     contracts.poolManager = await PoolManagerTester.new()
     
     priceFeed = contracts.priceFeed
@@ -51,15 +54,15 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
     activePool = contracts.activePool
-    stabilityPool = contracts.stabilityPool
-    defaultPool = contracts.defaultPool
-    borrowerOperations = contracts.borrowerOperations
-    hintHelpers = contracts.hintHelpers
+=======
+    contracts.stabilityPool = await StabilityPool.new()
 
-    lqtyStaking = GTContracts.lqtyStaking
+>>>>>>> 351a8f1e79e71a1c4522ac90d97460153604b47f
+    stabilityPool = contracts.stabilityPool
+    borrowerOperations = contracts.borrowerOperations
+
     growthToken = GTContracts.growthToken
     communityIssuanceTester = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
 
     await deploymentHelper.connectGTContracts(GTContracts)
     await deploymentHelper.connectCoreContracts(contracts, GTContracts)
@@ -865,23 +868,23 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   it.skip("Frequent token issuance: issuance event every year, for 30 years", async () => {
     // Register front end with kickback rate = 100%
-    await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
+    await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
     // Alice opens loan and deposits to SP
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
+    await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
-    assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
+    assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
 
     const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_YEAR
     const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
 
-    await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
+    await repeatedlyIssueLQTY(stabilityPool, timeBetweenIssuances, duration)
 
     // Depositor withdraws their deposit and accumulated LQTY
-    await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
+    await stabilityPool.withdrawFromSP(dec(1, 18), { from: alice })
 
     const LQTYBalance_A = await growthToken.balanceOf(alice)
     const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
@@ -901,23 +904,23 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   it.skip("Frequent token issuance: issuance event every day, for 30 years", async () => {
     // Register front end with kickback rate = 100%
-    await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
+    await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
     // Alice opens loan and deposits to SP
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
+    await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
-    assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
+    assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
 
     const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_DAY
     const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
 
-    await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
+    await repeatedlyIssueLQTY(stabilityPool, timeBetweenIssuances, duration)
 
     // Depositor withdraws their deposit and accumulated LQTY
-    await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
+    await stabilityPool.withdrawFromSP(dec(1, 18), { from: alice })
 
     const LQTYBalance_A = await growthToken.balanceOf(alice)
     const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
@@ -938,23 +941,23 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   it.skip("Frequent token issuance: issuance event every minute, for 1 month", async () => {
     // Register front end with kickback rate = 100%
-    await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
+    await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
     // Alice opens loan and deposits to SP
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
+    await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
-    assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
+    assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
 
     const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_MINUTE
     const duration = timeValues.SECONDS_IN_ONE_MONTH
 
-    await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
+    await repeatedlyIssueLQTY(stabilityPool, timeBetweenIssuances, duration)
 
     // Depositor withdraws their deposit and accumulated LQTY
-    await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
+    await stabilityPool.withdrawFromSP(dec(1, 18), { from: alice })
 
     const LQTYBalance_A = await growthToken.balanceOf(alice)
     const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')
@@ -974,23 +977,23 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   it.skip("Frequent token issuance: issuance event every minute, for 1 year", async () => {
     // Register front end with kickback rate = 100%
-    await poolManagerTester.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
+    await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
     // Alice opens loan and deposits to SP
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await poolManagerTester.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
+    await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
-    assert.isTrue(await poolManagerTester.isEligibleForLQTY(alice))
+    assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
 
     const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_MINUTE
     const duration = timeValues.SECONDS_IN_ONE_YEAR
 
-    await repeatedlyIssueLQTY(poolManagerTester, timeBetweenIssuances, duration)
+    await repeatedlyIssueLQTY(stabilityPool, timeBetweenIssuances, duration)
 
     // Depositor withdraws their deposit and accumulated LQTY
-    await poolManagerTester.withdrawFromSP(dec(1, 18), { from: alice })
+    await stabilityPool.withdrawFromSP(dec(1, 18), { from: alice })
 
     const LQTYBalance_A = await growthToken.balanceOf(alice)
     const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')

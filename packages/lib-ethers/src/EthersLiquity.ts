@@ -35,7 +35,6 @@ import {
   BorrowerOperations,
   SortedCDPs,
   PriceFeed,
-  PoolManager,
   ActivePool,
   DefaultPool,
   StabilityPool,
@@ -61,7 +60,7 @@ enum CDPManagerOperation {
 
 const debouncingDelayMs = 50;
 // With 85 iterations redemption costs about ~10M gas, and each iteration accounts for ~118,500 more
-export const redeemMaxIterations = 85;
+export const redeemMaxIterations = 86;
 
 const debounce = (listener: (latestBlock: number) => void) => {
   let timeoutId: any = undefined;
@@ -184,7 +183,6 @@ export class EthersLiquity
   private readonly priceFeed: PriceFeed;
   private readonly sortedCDPs: SortedCDPs;
   private readonly clvToken: CLVToken;
-  private readonly poolManager: PoolManager;
   private readonly activePool: ActivePool;
   private readonly defaultPool: DefaultPool;
   private readonly stabilityPool: StabilityPool;
@@ -199,7 +197,6 @@ export class EthersLiquity
     this.priceFeed = contracts.priceFeed;
     this.sortedCDPs = contracts.sortedCDPs;
     this.clvToken = contracts.clvToken;
-    this.poolManager = contracts.poolManager;
     this.activePool = contracts.activePool;
     this.defaultPool = contracts.defaultPool;
     this.stabilityPool = contracts.stabilityPool;
@@ -539,10 +536,10 @@ export class EthersLiquity
   async getTotal(overrides?: EthersCallOverrides) {
     const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
       [
-        this.poolManager.getActiveColl({ ...overrides }),
-        this.poolManager.getActiveDebt({ ...overrides }),
-        this.poolManager.getLiquidatedColl({ ...overrides }),
-        this.poolManager.getClosedDebt({ ...overrides })
+        this.activePool.getETH({ ...overrides }),
+        this.activePool.getCLVDebt({ ...overrides }),
+        this.defaultPool.getETH({ ...overrides }),
+        this.defaultPool.getCLVDebt({ ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
@@ -633,9 +630,9 @@ export class EthersLiquity
 
   async getStabilityDeposit(address = this.requireAddress(), overrides?: EthersCallOverrides) {
     const [depositStruct, depositAfterLoss, pendingCollateralGain] = await Promise.all([
-      this.poolManager.deposits(address, { ...overrides }),
-      this.poolManager.getCompoundedCLVDeposit(address, { ...overrides }).then(decimalify),
-      this.poolManager.getDepositorETHGain(address, { ...overrides }).then(decimalify)
+      this.stabilityPool.deposits(address, { ...overrides }),
+      this.stabilityPool.getCompoundedCLVDeposit(address, { ...overrides }).then(decimalify),
+      this.stabilityPool.getDepositorETHGain(address, { ...overrides }).then(decimalify)
     ]);
 
     const deposit = decimalify(depositStruct.initialValue);
@@ -647,7 +644,7 @@ export class EthersLiquity
     onStabilityDepositChanged: (deposit: StabilityDeposit) => void,
     address = this.requireAddress()
   ) {
-    const { UserDepositChanged } = this.poolManager.filters;
+    const { UserDepositChanged } = this.stabilityPool.filters;
     const { EtherSent } = this.activePool.filters;
 
     const userDepositChanged = UserDepositChanged(address);
@@ -665,11 +662,11 @@ export class EthersLiquity
       }
     };
 
-    this.poolManager.on(userDepositChanged, depositListener);
+    this.stabilityPool.on(userDepositChanged, depositListener);
     this.activePool.on(etherSent, etherSentListener);
 
     return () => {
-      this.poolManager.removeListener(userDepositChanged, depositListener);
+      this.stabilityPool.removeListener(userDepositChanged, depositListener);
       this.activePool.removeListener(etherSent, etherSentListener);
     };
   }
@@ -680,7 +677,7 @@ export class EthersLiquity
     overrides?: EthersTransactionOverrides
   ) {
     return this.wrapSimpleTransaction(
-      await this.poolManager.provideToSP(Decimal.from(depositedQui).bigNumber, frontEndTag, {
+      await this.stabilityPool.provideToSP(Decimal.from(depositedQui).bigNumber, frontEndTag, {
         ...overrides
       })
     );
@@ -691,7 +688,7 @@ export class EthersLiquity
     overrides?: EthersTransactionOverrides
   ) {
     return this.wrapSimpleTransaction(
-      await this.poolManager.withdrawFromSP(Decimal.from(withdrawnQui).bigNumber, { ...overrides })
+      await this.stabilityPool.withdrawFromSP(Decimal.from(withdrawnQui).bigNumber, { ...overrides })
     );
   }
 
@@ -705,7 +702,7 @@ export class EthersLiquity
     );
 
     return this.wrapSimpleTransaction(
-      await this.poolManager.withdrawETHGainToTrove(
+      await this.stabilityPool.withdrawETHGainToTrove(
         await this._findHint(finalTrove, hintOptionalParams),
         { ...overrides }
       )
@@ -713,7 +710,7 @@ export class EthersLiquity
   }
 
   async getQuiInStabilityPool(overrides?: EthersCallOverrides) {
-    return new Decimal(await this.poolManager.getStabilityPoolCLV({ ...overrides }));
+    return new Decimal(await this.stabilityPool.getTotalCLVDeposits({ ...overrides }));
   }
 
   watchQuiInStabilityPool(onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) {

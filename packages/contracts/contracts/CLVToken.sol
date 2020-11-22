@@ -47,24 +47,24 @@ contract CLVToken is ICLVToken, Ownable {
         
         _renounceOwnership();
     }
-  
+
     function mint(address _account, uint256 _amount) external override {
-        _requireCallerIsBO();
-        _mint(_account, _amount); 
+        _requireCallerIsBorrowerOperations();
+        _mint(_account, _amount);
     }
-    
+
     function burn(address _account, uint256 _amount) external override {
-        // _requireCallerIsPoolManager();
-        _burn(_account, _amount); 
+        _requireCallerIsBOorCDPMorSP();
+        _burn(_account, _amount);
     }
-    
+
     function sendToPool(address _sender,  address _poolAddress, uint256 _amount) external override {
-        // _requireCallerIsPoolManager();
+        _requireCallerIsStabilityPool();
         _transfer(_sender, _poolAddress, _amount);
     }
-    
+
     function returnFromPool(address _poolAddress, address _receiver, uint256 _amount) external override {
-        // _requireCallerIsPoolManager();
+        _requireCallerIsCDPMorSP();
         _transfer(_poolAddress, _receiver, _amount);
     }
 
@@ -98,13 +98,28 @@ contract CLVToken is ICLVToken, Ownable {
             recipient != borrowerOperationsAddress,
             "LUSD: Use repay function instead to clear your debt"
         );
-        // require(
-        //     "LUSD: Sender must be PoolManager if recipient is StabilityPool"
-        // );
+    }
+    
+    function _requireCallerIsBorrowerOperations() internal view {
+        require(msg.sender == borrowerOperationsAddress, "LUSD: Caller is not the BO"");
     }
 
-    function _requireCallerIsBO() internal view {
-        require(_msgSender() == borrowerOperationsAddress, "LUSD: Caller is not the BO");
+    function _requireCallerIsBOorCDPMorSP() internal view {
+        require(
+            msg.sender == borrowerOperationsAddress ||
+            msg.sender == cdpManagerAddress ||
+            msg.sender == stabilityPoolAddress,
+            "CLVToken: Caller is neither BorrowerOperations nor CDPManager nor StabilityPool");
+    }
+
+    function _requireCallerIsStabilityPool() internal view {
+        require(msg.sender == stabilityPoolAddress, "CLVToken: Caller is not the StabilityPool");
+    }
+
+    function _requireCallerIsCDPMorSP() internal view {
+        require(
+            msg.sender == cdpManagerAddress || msg.sender == stabilityPoolAddress,
+            "CLVToken: Caller is neither CDPManager nor StabilityPool");
     }
 
     // --- OPENZEPPELIN ERC20 FUNCTIONALITY ---
@@ -126,31 +141,31 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {
-        _transfer(_msgSender(), recipient, amount);
+        _transfer(msg.sender, recipient, amount);
         return true;
     }
     
     function approve(address spender, uint256 amount) external override returns (bool) {
-        _approve(_msgSender(), spender, amount);
+        _approve(msg.sender, spender, amount);
         return true;
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         _transfer(sender, recipient, amount);
-        uint newAllowance = getAllowance(sender, _msgSender()).sub(amount, "ERC20: transfer amount exceeds allowance");
-        _approve(sender, _msgSender(), newAllowance);
+        uint newAllowance = getAllowance(sender, msg.sender).sub(amount, "ERC20: transfer amount exceeds allowance");
+        _approve(sender, msg.sender, newAllowance);
         return true;
     }
 
     function increaseAllowance(address spender, uint256 addedValue) external override returns (bool) {
-        uint newAllowance = getAllowance(_msgSender(),spender).add(addedValue);
-        _approve(_msgSender(), spender, newAllowance);
+        uint newAllowance = getAllowance(msg.sender, spender).add(addedValue);
+        _approve(msg.sender, spender, newAllowance);
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external override returns (bool) {
-        uint newAllowance = getAllowance(_msgSender(), spender).sub(subtractedValue, "ERC20: decreased allowance below zero");
-        _approve(_msgSender(), spender, newAllowance);
+        uint newAllowance = getAllowance(msg.sender, spender).sub(subtractedValue, "ERC20: decreased allowance below zero");
+        _approve(msg.sender, spender, newAllowance);
         return true;
     }
 
@@ -199,12 +214,12 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     function _burn(address account, uint256 amount) internal {
-        require(account != address(0), "ERC20: burn from the zero address");  
+        require(account != address(0), "ERC20: burn from the zero address");
         _subFromBalance(account, amount);
-        
-        _totalSupply = _totalSupply.sub(amount);  
 
-        emit Transfer(account, address(0), amount); 
+        _totalSupply = _totalSupply.sub(amount);
+
+        emit Transfer(account, address(0), amount);
     }
 
     function _approve(address owner, address spender, uint256 amount) internal {

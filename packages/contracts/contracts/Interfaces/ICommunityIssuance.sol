@@ -6,12 +6,12 @@ interface ICommunityIssuance {
     // --- Events ---
     event GrowthTokenAddressSet(address _growthTokenAddress);
     
-    event PoolManagerAddressSet(address _poolManagerAddress);
+    event StabilityPoolAddressSet(address _stabilityPoolAddress);
 
     // --- Functions ---
     function setGrowthTokenAddress(address _growthTokenAddress) external;
 
-    function setPoolManagerAddress(address _poolManagerAddress) external;
+    function setStabilityPoolAddress(address _stabilityPoolAddress) external;
 
     function activateContract() external;
 

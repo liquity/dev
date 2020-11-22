@@ -329,7 +329,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      * @param _ICR Node's ICR
      * @param _startId Id of node to start descending the list from
      */
-    function _ascendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {
+    function _ascendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {       
         // If `_startId` is the tail, check if the insert position is after the tail
         if (data.tail == _startId && _ICR <= cdpManager.getCurrentICR(_startId, _price)) {
             return (_startId, address(0));
@@ -389,11 +389,11 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     // --- 'require' functions ---
 
     function _requireCallerIsCDPManager() internal view {
-        require(_msgSender() == CDPManagerAddress, "SortedCDPs: Caller is not the CDPManager");
+        require(msg.sender == CDPManagerAddress, "SortedCDPs: Caller is not the CDPManager");
     }
 
     function _requireCallerIsBOorCDPM() internal view {
-        require(_msgSender() == borrowerOperationsAddress || _msgSender() == CDPManagerAddress, 
+        require(msg.sender == borrowerOperationsAddress || msg.sender == CDPManagerAddress,
                 "SortedCDPs: Caller is neither BO nor CDPM");
     }
 }

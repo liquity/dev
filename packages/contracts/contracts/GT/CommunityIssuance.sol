@@ -14,13 +14,13 @@ contract CommunityIssuance is ICommunityIssuance {
     // --- Data ---
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
-    
+
     /* The issuance factor determines the curvature of the issuance curve.
-    
+
     Minutes in one year: 60*24*365 = 525600
-   
+
     For 50% of remaining tokens issued each year, with minutes as time units, we have:
-    
+
     F ** 525600 = 0.5
 
     Re-arranging:
@@ -32,7 +32,7 @@ contract CommunityIssuance is ICommunityIssuance {
 
     /* The community LQTY supply cap is the starting balance of the Community Issuance contract.
     Liquity admin should transfer LQTY to this CommunityIssuance contract before activating it.
-    
+
     Set to 1/3 of total LQTY supply.*/
     uint constant public LQTYSupplyCap = 33333333333333333333333333; // (1/3) * 100 million
 
@@ -41,7 +41,7 @@ contract CommunityIssuance is ICommunityIssuance {
     address public growthTokenAddress;
     IGrowthToken growthToken;
 
-    address public poolManagerAddress;
+    address public stabilityPoolAddress;
 
     uint public totalLQTYIssued;
     uint public deploymentTime;
@@ -51,7 +51,7 @@ contract CommunityIssuance is ICommunityIssuance {
     // --- Events ---
 
     event GrowthTokenAddressSet(address _growthTokenAddress);
-    event PoolManagerAddressSet(address _poolManagerAddress);
+    event StabilityPoolAddressSet(address _stabilityPoolAddress);
 
     // --- Functions ---
 
@@ -63,18 +63,18 @@ contract CommunityIssuance is ICommunityIssuance {
     function setGrowthTokenAddress(address _growthTokenAddress) external override {
         _requireCallerIsCommunityIssuanceDeployer();
         _requireContractIsNotActive();
-        
+
         growthTokenAddress = _growthTokenAddress;
         growthToken = IGrowthToken(growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 
-    function setPoolManagerAddress(address _poolManagerAddress) external override {
+    function setStabilityPoolAddress(address _stabilityPoolAddress) external override {
         _requireCallerIsCommunityIssuanceDeployer();
         _requireContractIsNotActive();
-        
-        poolManagerAddress = _poolManagerAddress;
-        emit PoolManagerAddressSet(_poolManagerAddress);
+
+        stabilityPoolAddress = _stabilityPoolAddress;
+        emit StabilityPoolAddressSet(_stabilityPoolAddress);
     }
 
     function activateContract() external override {
@@ -86,13 +86,13 @@ contract CommunityIssuance is ICommunityIssuance {
     }
 
     function issueLQTY() external override returns (uint) {
-        // check caller is PM
-        _requireCallerIsPoolManager();
+        // check caller is SP
+        _requireCallerIsStabilityPool();
         _requireContractIsActive();
 
         uint latestTotalLQTYIssued = LQTYSupplyCap.mul(_getCumulativeIssuanceFraction()).div(1e18);
         uint issuance = latestTotalLQTYIssued.sub(totalLQTYIssued);
-      
+
         totalLQTYIssued = latestTotalLQTYIssued;
         return issuance;
     }
@@ -113,12 +113,12 @@ contract CommunityIssuance is ICommunityIssuance {
         assert(cumulativeIssuanceFraction >= 0 && cumulativeIssuanceFraction <= 1e18);
 
         return cumulativeIssuanceFraction;
-    } 
+    }
 
     function sendLQTY(address _account, uint _LQTYamount) external override {
-        _requireCallerIsPoolManager();
+        _requireCallerIsStabilityPool();
         _requireContractIsActive();
-    
+
         growthToken.transfer(_account, _LQTYamount);
     }
 
@@ -128,8 +128,8 @@ contract CommunityIssuance is ICommunityIssuance {
         require(msg.sender == deployer, "CommunityIssuance: caller is not deployer");
     }
 
-    function _requireCallerIsPoolManager() internal view {
-        require(msg.sender == poolManagerAddress, "CommunityIssuance: caller is not PM");
+    function _requireCallerIsStabilityPool() internal view {
+        require(msg.sender == stabilityPoolAddress, "CommunityIssuance: caller is not SP");
     }
 
     function _requireContractIsActive() internal view {
@@ -142,8 +142,8 @@ contract CommunityIssuance is ICommunityIssuance {
 
     function _requireLQTYBalanceIsAtLeastSupplyCap() internal view {
         uint LQTYBalance = growthToken.balanceOf(address(this));
-        
-        require (LQTYBalance >= LQTYSupplyCap, 
+
+        require (LQTYBalance >= LQTYSupplyCap,
         "CommunityIssuance: Contract must be fully funded with its starting LQTY supply");
     }
 }

@@ -14,7 +14,6 @@ import HintHelpers from "../../contracts/artifacts/HintHelpers.json";
 import LockupContractFactory from "../../contracts/artifacts/LockupContractFactory.json";
 import LQTYStaking from "../../contracts/artifacts/LQTYStaking.json";
 import MultiCDPGetter from "../../contracts/artifacts/MultiCDPGetter.json";
-import PoolManager from "../../contracts/artifacts/PoolManager.json";
 import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
 import SortedCDPs from "../../contracts/artifacts/SortedCDPs.json";
 import StabilityPool from "../../contracts/artifacts/StabilityPool.json";
@@ -129,7 +128,6 @@ const contractArtifacts = [
   LockupContractFactory,
   LQTYStaking,
   MultiCDPGetter,
-  PoolManager,
   PriceFeed,
   SortedCDPs,
   StabilityPool

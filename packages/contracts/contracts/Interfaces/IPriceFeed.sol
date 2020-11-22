@@ -2,22 +2,20 @@
 
 pragma solidity 0.6.11;
 
-interface IPriceFeed { 
+interface IPriceFeed {
     // --- Events ---
     event PriceUpdated(uint _newPrice);
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
-    event PoolManagerAddressChanged(address _newPoolManagerAddress);
+    event CDPManagerAddressChanged(address _cdpManagerAddress);
 
     // --- Functions ---
     function setAddresses(
         address _cdpManagerAddress,
-        address _poolManagerAddress,
         address _priceAggregatorAddress,
         address _priceAggregatorAddressTestnet
     ) external;
 
     function setPrice(uint _price) external returns (bool);
-        
+
     function getPrice() external view returns (uint);
 
     // --- Chainlink Mainnet functions ---
@@ -29,7 +27,7 @@ interface IPriceFeed {
 
     function getLatestTimestamp() external view returns (uint256);
 
-    // --- Chainlink Testnet functions --- 
+    // --- Chainlink Testnet functions ---
     function updatePrice_Testnet() external returns (uint256);
 
     function getLatestPrice_Testnet() external view returns (uint256);

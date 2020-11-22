@@ -8,8 +8,6 @@ interface ICDPManager {
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
 
-    event PoolManagerAddressChanged(address _newPoolManagerAddress);
-
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
 
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
@@ -22,6 +20,8 @@ interface ICDPManager {
 
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
+    event LQTYStakingAddressChanged(address _lqtyStakingAddress);
+
     event CDPCreated(address indexed _user, uint arrayIndex);
 
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, uint8 operation);
@@ -32,7 +32,6 @@ interface ICDPManager {
 
     function setAddresses(
         address _borrowerOperationsAddress,
-        address _poolManagerAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,

@@ -2,7 +2,6 @@ const Decimal = require("decimal.js");
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
-const PoolManagerTester = artifacts.require("./PoolManagerTester.sol")
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
@@ -17,6 +16,7 @@ contract('Fee arithmetic tests', async accounts => {
 
   const [owner, A, B, C, D, E, F, G, whale] = accounts;
 
+  let borrowerOperations
   let growthToken
   let lqtyStaking
   

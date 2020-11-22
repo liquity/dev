@@ -32,8 +32,8 @@ contract GrowthToken is IERC20 {
     using SafeMath for uint256;
 
     // --- Data ---
-    string constant internal NAME = "LUSD";
-    string constant internal SYMBOL = "LUSD";
+    string constant internal NAME = "LQTY";
+    string constant internal SYMBOL = "LQTY";
     uint8 constant internal DECIMALS = 18;
 
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;
@@ -111,7 +111,7 @@ contract GrowthToken is IERC20 {
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-        if (_isFirstYear()) {_requireRecipientIsNotDeployer(recipient);}
+        if (_isFirstYear()) {_requireSenderIsNotDeployer(sender);}
         
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
@@ -189,8 +189,8 @@ contract GrowthToken is IERC20 {
         "GrowthToken: recipient must be a OYLC registered in the Factory");
     }
 
-    function _requireRecipientIsNotDeployer(address _recipient) internal view {
-        require(_recipient != deployer, "GrowthToken: recipient must not be the deployer");
+    function _requireSenderIsNotDeployer(address _sender) internal view {
+        require(_sender != deployer, "GrowthToken: sender must not be the deployer");
     }
 
     function _requireCallerIsNotDeployer() internal view {

@@ -9,6 +9,8 @@ common functions. */
 contract LiquityBase {
     using SafeMath for uint;
 
+    address constant public GAS_POOL_ADDRESS = 0x00000000000000000000000000000000000009A5;
+
     uint constant public _100pct = 1000000000000000000; // 1e18 == 100%
 
     // Minimum collateral ratio for individual troves
