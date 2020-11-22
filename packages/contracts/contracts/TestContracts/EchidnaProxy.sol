@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.11;
 
 import "../CDPManager.sol";
 import "../BorrowerOperations.sol";
 import "../StabilityPool.sol";
 import "../CLVToken.sol";
-
 
 contract EchidnaProxy {
     CDPManager cdpManager;

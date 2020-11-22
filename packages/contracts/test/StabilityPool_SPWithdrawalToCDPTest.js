@@ -14,9 +14,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
     defaulter_2,
     defaulter_3,
     defaulter_4,
-    defaulter_5,
+    //defaulter_5,
     whale,
-    whale_2,
+    //whale_2,
     alice,
     bob,
     carol,
@@ -1495,18 +1495,18 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       const aliceExpectedETHGain = toBN(dec(4975, 23))
       const aliceETHDiff = aliceExpectedETHGain.sub(toBN(alice_ETHWithdrawn))
 
-      console.log(`alice_ETHWithdrawn: ${alice_ETHWithdrawn}`)
-      console.log(`aliceExpectedETHGain: ${aliceExpectedETHGain}`)
-      console.log(`aliceETHDiff: ${aliceETHDiff}`)
+      // console.log(`alice_ETHWithdrawn: ${alice_ETHWithdrawn}`)
+      // console.log(`aliceExpectedETHGain: ${aliceExpectedETHGain}`)
+      // console.log(`aliceETHDiff: ${aliceETHDiff}`)
 
       assert.isTrue(aliceETHDiff.lte(toBN('1000000000000000000')))
 
       const bobExpectedETHGain = toBN(dec(4975, 23))
       const bobETHDiff = bobExpectedETHGain.sub(toBN(bob_ETHWithdrawn))
 
-      console.log(`bob_ETHWithdrawn: ${bob_ETHWithdrawn}`)
-      console.log(`bobExpectedETHGain: ${bobExpectedETHGain}`)
-      console.log(`bobETHDiff: ${bobETHDiff}`)
+      // console.log(`bob_ETHWithdrawn: ${bob_ETHWithdrawn}`)
+      // console.log(`bobExpectedETHGain: ${bobExpectedETHGain}`)
+      // console.log(`bobETHDiff: ${bobETHDiff}`)
 
       assert.isTrue(bobETHDiff.lte(toBN('1000000000000000000')))
      })

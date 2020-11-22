@@ -4,7 +4,9 @@ pragma solidity 0.6.11;
 
 // Common interface for the Pools.
 interface IPool {
+    
     // --- Events ---
+    
     event ETHBalanceUpdated(uint _newBalance);
 
     event CLVBalanceUpdated(uint _newBalance);
@@ -18,6 +20,7 @@ interface IPool {
     event EtherSent(address _to, uint _amount);
 
     // --- Functions ---
+    
     function getETH() external view returns (uint);
 
     function getCLVDebt() external view returns (uint);

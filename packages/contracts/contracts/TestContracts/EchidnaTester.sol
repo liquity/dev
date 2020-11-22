@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.11;
 
 import "../CDPManager.sol";
@@ -11,10 +13,10 @@ import "../SortedCDPs.sol";
 import "./EchidnaProxy.sol";
 //import "../Dependencies/console.sol";
 
-
 // Run with:
 // rm -f fuzzTests/corpus/* # (optional)
 // ~/.local/bin/echidna-test contracts/TestContracts/EchidnaTester.sol --contract EchidnaTester --config fuzzTests/echidna_config.yaml
+
 contract EchidnaTester {
     using SafeMath for uint;
 

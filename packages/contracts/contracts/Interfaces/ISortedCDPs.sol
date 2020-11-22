@@ -4,11 +4,14 @@ pragma solidity 0.6.11;
 
 // Common interface for the SortedCDPs Doubly Linked List.
 interface ISortedCDPs {
-// --- Events ---
-event SortedCDPsAddressChanged(address _sortedDoublyLLAddress);
-event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
 
-// --- Functions ---
+    // --- Events ---
+    
+    event SortedCDPsAddressChanged(address _sortedDoublyLLAddress);
+    event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
+
+    // --- Functions ---
+    
     function setParams(uint256 _size, address _CDPManagerAddress, address _borrowerOperationsAddress) external;
 
     function insert(address _id, uint256 _ICR, uint price, address _prevId, address _nextId) external;

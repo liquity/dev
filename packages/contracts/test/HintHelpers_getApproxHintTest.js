@@ -28,13 +28,13 @@ contract('CDPManager', async accounts => {
  // Open CDPs in parallel, then withdraw CLV in parallel
  const makeCDPsInParallel = async (accounts, n) => {
   activeAccounts = accounts.slice(0,n)
-  console.log(`number of accounts used is: ${activeAccounts.length}`)
-  console.time("makeCDPsInParallel")
+  // console.log(`number of accounts used is: ${activeAccounts.length}`)
+  // console.time("makeCDPsInParallel")
   const openCDPpromises = activeAccounts.map((account, index) => openCDP(account, index))
   await Promise.all(openCDPpromises)
   const withdrawCLVpromises = activeAccounts.map(account => withdrawCLVfromCDP(account))
   await Promise.all(withdrawCLVpromises)
-  console.timeEnd("makeCDPsInParallel")
+  // console.timeEnd("makeCDPsInParallel")
  }
 
  const openCDP = async (account, index) => {
@@ -50,11 +50,11 @@ contract('CDPManager', async accounts => {
  // Sequentially add coll and withdraw CLV, 1 account at a time
    const makeCDPsInSequence = async (accounts, n) => {
     activeAccounts = accounts.slice(0,n)
-    console.log(`number of accounts used is: ${activeAccounts.length}`)
+    // console.log(`number of accounts used is: ${activeAccounts.length}`)
 
     let amountFinney = 2000
 
-    console.time('makeCDPsInSequence')
+    // console.time('makeCDPsInSequence')
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
       await borrowerOperations.openLoan(0, account, { from: account, value: coll })
@@ -62,7 +62,7 @@ contract('CDPManager', async accounts => {
   
       amountFinney += 10
     }
-    console.timeEnd('makeCDPsInSequence')
+    // console.timeEnd('makeCDPsInSequence')
   }
 
   before(async () => {

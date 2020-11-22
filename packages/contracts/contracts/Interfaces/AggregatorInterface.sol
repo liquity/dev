@@ -3,9 +3,14 @@
 pragma solidity >=0.5.16;
 
 interface AggregatorInterface {
-    event AnswerUpdated(int256 indexed current,  uint256 indexed roundId, uint256 timestamp);
+    
+    // --- Events ---
 
+    event AnswerUpdated(int256 indexed current,  uint256 indexed roundId, uint256 timestamp);
+    
     event NewRound(uint256 indexed roundId, address indexed startedBy);
+
+    // --- Functions ---
 
     function latestAnswer() external view returns (int256);
 

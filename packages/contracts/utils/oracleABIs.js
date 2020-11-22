@@ -406,19 +406,6 @@ const TestnetPriceFeedABI =  [
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "_poolManagerAddress",
-        "type": "address"
-      }
-    ],
-    "name": "PoolManagerAddressChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "uint256",
         "name": "_newPrice",
         "type": "uint256"
@@ -461,21 +448,6 @@ const TestnetPriceFeedABI =  [
     "constant": true,
     "inputs": [],
     "name": "owner",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "poolManagerAddress",
     "outputs": [
       {
         "internalType": "address",
@@ -566,21 +538,6 @@ const TestnetPriceFeedABI =  [
       }
     ],
     "name": "setCDPManagerAddress",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_poolManagerAddress",
-        "type": "address"
-      }
-    ],
-    "name": "setPoolManagerAddress",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",

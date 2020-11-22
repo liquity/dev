@@ -3,7 +3,9 @@
 pragma solidity 0.6.11;
 
 interface IStabilityPool {
+    
     // --- Events ---
+    
     event ETHBalanceUpdated(uint _newBalance);
     event CLVBalanceUpdated(uint _newBalance);
 
@@ -33,6 +35,7 @@ interface IStabilityPool {
     event EtherSent(address _to, uint _amount);
 
     // --- Functions ---
+    
     function setAddresses(
         address _borrowerOperationsAddress,
         address _cdpManagerAddress,
@@ -58,6 +61,5 @@ interface IStabilityPool {
 
     function getCompoundedCLVDeposit(address _depositor) external view returns (uint);
     function getCompoundedFrontEndStake(address _frontEnd) external view returns (uint);
-
     function getFrontEndTag(address _depositor) external view returns (address);
 }

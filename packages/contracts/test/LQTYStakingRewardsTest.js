@@ -9,11 +9,9 @@ const dec = th.dec
 
 const toBN = th.toBN
 
-
 contract('Fee arithmetic tests', async accounts => {
   let contracts
   
-
   const [owner, A, B, C, D, E, F, G, whale] = accounts;
 
   let borrowerOperations
@@ -26,7 +24,6 @@ contract('Fee arithmetic tests', async accounts => {
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
-    poolManagerTester = contracts.poolManager
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
     activePool = contracts.activePool
@@ -56,7 +53,7 @@ contract('Fee arithmetic tests', async accounts => {
     // Owner transfers LQTY to staker A
     await growthToken.transfer(A, dec(100, 18), {from: owner})
 
-    console.log(`A lqty bal: ${await growthToken.balanceOf(A)}`)
+    // console.log(`A lqty bal: ${await growthToken.balanceOf(A)}`)
 
     // A makes stake
     await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
@@ -294,7 +291,7 @@ contract('Fee arithmetic tests', async accounts => {
     await lqtyStaking.stake(dec(300, 18), {from: C})
 
     // Confirm staking contract holds 600 LQTY
-    console.log(`lqty staking LQTY bal: ${await growthToken.balanceOf(lqtyStaking.address)}`)
+    // console.log(`lqty staking LQTY bal: ${await growthToken.balanceOf(lqtyStaking.address)}`)
     assert.equal(await growthToken.balanceOf(lqtyStaking.address), dec(600, 18))
     assert.equal(await lqtyStaking.totalLQTYStaked(), dec(600, 18))
 
@@ -433,8 +430,5 @@ contract('Fee arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedETHGain_D, D_ETHGain), 1000)
     assert.isAtMost(th.getDifference(expectedLUSDGain_D, D_LUSDGain), 1000)
   })
-
   // - all depositors can leave pool
-
-
 })

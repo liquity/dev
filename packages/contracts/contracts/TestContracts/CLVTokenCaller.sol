@@ -4,7 +4,6 @@ pragma solidity 0.6.11;
 
 import "../Interfaces/ICLVToken.sol";
 
-
 contract CLVTokenCaller {
     ICLVToken CLV;
 

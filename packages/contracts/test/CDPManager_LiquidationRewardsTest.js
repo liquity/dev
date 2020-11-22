@@ -307,7 +307,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     const price = await priceFeed.getPrice()
 
     // Liquidate A
-    console.log(`ICR A: ${await cdpManager.getCurrentICR(A, price)}`)
+    // console.log(`ICR A: ${await cdpManager.getCurrentICR(A, price)}`)
     const txA = await cdpManager.liquidate(A)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(A))
@@ -335,8 +335,8 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     const D_entireColl_2 = (await th.getEntireCollAndDebt(contracts, D)).entireColl
     const E_entireColl_2 = (await th.getEntireCollAndDebt(contracts, E)).entireColl
 
-    console.log(`D_entireColl_2: ${D_entireColl_2}`)
-    console.log(`E_entireColl_2: ${E_entireColl_2}`)
+    // console.log(`D_entireColl_2: ${D_entireColl_2}`)
+    // console.log(`E_entireColl_2: ${E_entireColl_2}`)
     assert.isAtMost(getDifference(B_entireColl_2, '1990476101655690000000'), 1e8)
     assert.isAtMost(getDifference(D_entireColl_2,   '19889812618059900000'), 1e8)
     assert.isAtMost(getDifference(E_entireColl_2, '1988981261805990000000'), 1e8)
@@ -383,14 +383,14 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     const denominatorColl_1 = (await cdpManager.getEntireSystemColl()).sub(A_entireColl_0)
 
     // Liquidate A
-    console.log(`ICR A: ${await cdpManager.getCurrentICR(A, price)}`)
+    // console.log(`ICR A: ${await cdpManager.getCurrentICR(A, price)}`)
     const txA = await cdpManager.liquidate(A)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(A))
 
     const A_collRedistribution = A_entireColl_0.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
 
-    console.log(`A_collRedistribution: ${A_collRedistribution}`)
+    // console.log(`A_collRedistribution: ${A_collRedistribution}`)
     // Check accumulated ETH gain for each trove
     const B_ETHGain_1 = await cdpManager.getPendingETHReward(B)
     const C_ETHGain_1 = await cdpManager.getPendingETHReward(C)
@@ -426,7 +426,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(C))
 
     const C_collRedistribution = C_entireColl_1.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
-    console.log(`C_collRedistribution: ${C_collRedistribution}`)
+    // console.log(`C_collRedistribution: ${C_collRedistribution}`)
 
     const B_ETHGain_2 = await cdpManager.getPendingETHReward(B)
     const D_ETHGain_2 = await cdpManager.getPendingETHReward(D)
@@ -463,7 +463,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(E))
 
     const E_collRedistribution = E_entireColl_2.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
-    console.log(`E_collRedistribution: ${E_collRedistribution}`)
+    // console.log(`E_collRedistribution: ${E_collRedistribution}`)
 
     const B_ETHGain_3 = await cdpManager.getPendingETHReward(B)
     const D_ETHGain_3 = await cdpManager.getPendingETHReward(D)

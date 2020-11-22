@@ -11,9 +11,7 @@ import "./Dependencies/Ownable.sol";
 contract HintHelpers is LiquityBase, Ownable {
 
     IPriceFeed public priceFeed;
-
     ISortedCDPs public sortedCDPs;
-
     ICDPManager public cdpManager;
 
     // --- Events ---
@@ -50,6 +48,7 @@ contract HintHelpers is LiquityBase, Ownable {
      * Find the first and last CDPs that will modified by calling redeemCollateral() with the same _CLVamount and _price,
      * and return the address of the first one and the final ICR of the last one.
      */
+
     function getRedemptionHints(
         uint _CLVamount, 
         uint _price
@@ -74,18 +73,17 @@ contract HintHelpers is LiquityBase, Ownable {
             if (CLVDebt > remainingCLV) {
                 uint ETH = cdpManager.getCDPColl(currentCDPuser)
                                      .add(cdpManager.getPendingETHReward(currentCDPuser));
+                
                 uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
-
                 uint newDebt = CLVDebt.sub(remainingCLV);
+                
                 uint compositeDebt = _getCompositeDebt(newDebt);
-
                 partialRedemptionHintICR = Math._computeCR(newColl, compositeDebt, _price);
 
                 break;
             } else {
                 remainingCLV = remainingCLV.sub(CLVDebt);
             }
-
             currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
         }
     }
@@ -130,7 +128,6 @@ contract HintHelpers is LiquityBase, Ownable {
                 diff = currentDiff;
                 hintAddress = currentAddress;
             }
-
             i++;
         }
     }

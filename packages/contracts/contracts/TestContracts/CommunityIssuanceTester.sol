@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.11;
+
 import "../GT/CommunityIssuance.sol";
 
-// CommunityIssuance Tester
 contract CommunityIssuanceTester is CommunityIssuance {
     function obtainGT(uint _amount) external {
         growthToken.transfer(msg.sender, _amount);

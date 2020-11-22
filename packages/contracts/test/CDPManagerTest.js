@@ -31,7 +31,6 @@ contract('CDPManager', async accounts => {
   let hintHelpers
 
   let contracts
-  let cdpManagerTester
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
@@ -2669,7 +2668,7 @@ contract('CDPManager', async accounts => {
 
     therefore remaining ActivePool ETH should be 198 */
     const activePool_coll_after = await activePool.getETH()
-    console.log(`activePool_coll_after: ${activePool_coll_after}`)
+    // console.log(`activePool_coll_after: ${activePool_coll_after}`)
     assert.equal(activePool_coll_after, '198000000000000000000')
 
     // Check Erin's balance after
