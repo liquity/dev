@@ -101,7 +101,7 @@ contract CLVToken is ICLVToken, Ownable {
     }
     
     function _requireCallerIsBorrowerOperations() internal view {
-        require(msg.sender == borrowerOperationsAddress, "LUSD: Caller is not the BO"");
+        require(msg.sender == borrowerOperationsAddress, "LUSD: Caller is not the BO");
     }
 
     function _requireCallerIsBOorCDPMorSP() internal view {

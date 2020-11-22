@@ -56,11 +56,6 @@ class DeploymentHelper {
 
   static async deployLiquityCoreBuidler() {
     const priceFeed = await PriceFeed.new()
-<<<<<<< HEAD
-    const poolManager = await PoolManager.new()
-=======
-    const clvToken = await CLVToken.new()
->>>>>>> 351a8f1e79e71a1c4522ac90d97460153604b47f
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
     const activePool = await ActivePool.new()
@@ -72,11 +67,6 @@ class DeploymentHelper {
 
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
-<<<<<<< HEAD
-    PoolManager.setAsDeployed(poolManager)
-=======
-    CLVToken.setAsDeployed(clvToken)
->>>>>>> 351a8f1e79e71a1c4522ac90d97460153604b47f
     SortedCDPs.setAsDeployed(sortedCDPs)
     CDPManager.setAsDeployed(cdpManager)
     ActivePool.setAsDeployed(activePool)
@@ -167,11 +157,6 @@ class DeploymentHelper {
 
   static async deployLiquityCoreTruffle() {
     const priceFeed = await PriceFeed.new()
-<<<<<<< HEAD
-    const poolManager = await PoolManager.new()
-=======
-    const clvToken = await CLVToken.new()
->>>>>>> 351a8f1e79e71a1c4522ac90d97460153604b47f
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
     const activePool = await ActivePool.new()
@@ -302,26 +287,16 @@ class DeploymentHelper {
     await GTContracts.lockupContractFactory.setGrowthTokenAddress(GTContracts.growthToken.address)
     await GTContracts.communityIssuance.setGrowthTokenAddress(GTContracts.growthToken.address)
   }
-<<<<<<< HEAD
-=======
 
->>>>>>> 351a8f1e79e71a1c4522ac90d97460153604b47f
   static async connectGTContractsToCore(GTContracts, coreContracts) {
     await GTContracts.lqtyStaking.setCLVTokenAddress(coreContracts.clvToken.address)
     await GTContracts.lqtyStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
     await GTContracts.lqtyStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
     await GTContracts.lqtyStaking.setActivePoolAddress(coreContracts.activePool.address)
-
-<<<<<<< HEAD
-    await GTContracts.communityIssuance.setPoolManagerAddress(coreContracts.poolManager.address)
-    await GTContracts.communityIssuance.activateContract();
-  }
-=======
     await GTContracts.communityIssuance.setStabilityPoolAddress(coreContracts.stabilityPool.address)
     await GTContracts.communityIssuance.activateContract();
   }
 
->>>>>>> 351a8f1e79e71a1c4522ac90d97460153604b47f
 }
 
 module.exports = DeploymentHelper
