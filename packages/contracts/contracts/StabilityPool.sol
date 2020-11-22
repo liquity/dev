@@ -92,6 +92,8 @@ contract StabilityPool is Ownable, IStabilityPool {
        In each case, the LQTY reward is issued (G is updated), before other state changes are made. */
     mapping (uint => mapping(uint => uint)) public epochToScaleToG;
 
+    // Error tracker for the error correction in the LQTY issuance calculation
+    uint public lastLQTYError;
     // Error trackers for the error correction in the offset calculation
     uint public lastETHError_Offset;
     uint public lastCLVLossError_Offset;
@@ -276,9 +278,8 @@ contract StabilityPool is Ownable, IStabilityPool {
     function _updateG(uint _LQTYIssuance) internal {
         uint totalCLV = totalCLVDeposits; // cached to save an SLOAD
 
-        /* When total deposits is 0, G is not updated. In this case, the LQTY issued
-        can not be obtained by later depositors - it is missed out on, and remains in the balance
-        of the CommunityIssuance contract. */
+        /* When total deposits is 0, G is not updated. In this case, the LQTY issued can not be obtained by later 
+        depositors - it is missed out on, and remains in the balanceof the CommunityIssuance contract. */
         if (totalCLV == 0) {return;}
 
         uint LQTYPerUnitStaked;
@@ -288,9 +289,13 @@ contract StabilityPool is Ownable, IStabilityPool {
         epochToScaleToG[currentEpoch][currentScale] = epochToScaleToG[currentEpoch][currentScale].add(marginalLQTYGain);
     }
 
-    // TODO: Error correction here?
-    function _computeLQTYPerUnitStaked (uint _LQTYIssuance, uint _totalCLVDeposits) internal pure returns (uint) {
-        return _LQTYIssuance.mul(1e18).div(_totalCLVDeposits);
+    function _computeLQTYPerUnitStaked(uint _LQTYIssuance, uint _totalCLVDeposits) internal returns (uint) {
+        uint LQTYNumerator = _LQTYIssuance.mul(1e18).add(lastLQTYError);
+
+        uint LQTYPerUnitStaked = LQTYNumerator.div(_totalCLVDeposits);
+        lastLQTYError = LQTYNumerator.sub(LQTYPerUnitStaked.mul(_totalCLVDeposits));
+
+        return LQTYPerUnitStaked;
     }
 
     // --- Liquidation functions ---
@@ -331,8 +336,10 @@ contract StabilityPool is Ownable, IStabilityPool {
             CLVLossPerUnitStaked = 1e18;
             lastCLVLossError_Offset = 0;
         } else {
-            CLVLossPerUnitStaked = (CLVLossNumerator.div(_totalCLVDeposits)).add(1); // add 1 to make error in quotient positive
-             lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(_totalCLVDeposits)).sub(CLVLossNumerator);
+            /* Add 1 to make error in quotient positive. We want "slightly too much" CLV loss,
+            which ensures the error in any given compoundedCLVDeposit favors the Stability Pool. */
+            CLVLossPerUnitStaked = (CLVLossNumerator.div(_totalCLVDeposits)).add(1); 
+            lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(_totalCLVDeposits)).sub(CLVLossNumerator);
         }
 
         ETHGainPerUnitStaked = ETHNumerator.div(_totalCLVDeposits);

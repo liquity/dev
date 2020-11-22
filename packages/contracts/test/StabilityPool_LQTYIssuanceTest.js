@@ -809,6 +809,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
     // A, B, C, D deposit 100,200,300,400.
     // F1: A
     // F2: B, C
+    // D makes a naked deposit (no front end)
     // Pool size: 1000
     // 1 month passes. 1st liquidation: 500. All deposits reduced by 500/1000 = 50%.  A:50,   B:100, C:150,   D:200
     // Pool size: 500
@@ -824,7 +825,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
     // Pool size 800
     // 1 month passes.
     // All withdraw
-    it("withdrawFromSP(): Depositors with varying initial deposit withdraw correct LQTY gain. No liquidations. No front end.", async () => {
+    it("withdrawFromSP(): Depositors with varying initial deposit withdraw correct LQTY gain. Front ends and kickback rates", async () => {
       // Register 2 front ends
       const F1_kickbackRate = toBN(dec(5, 17)) // F1 kicks 50% back to depositor
       const F2_kickbackRate = toBN(dec(80, 16)) // F2 kicks 80% back to depositor

@@ -661,8 +661,7 @@ contract('Fee arithmetic tests', async accounts => {
 
 
     // for base = 1, returns 1 for any exponent
-    it("decPow(): for base = 0, returns 0 for any exponent other than 1", async () => {
-
+    it("decPow(): for base = 1, returns 1 for any exponent", async () => {
       const ONE = dec(1, 18)
       const res_a = await mathTester.callDecPow(ONE, 1)
       const res_b = await mathTester.callDecPow(ONE, 3)
@@ -674,6 +673,7 @@ contract('Fee arithmetic tests', async accounts => {
       const res_h = await mathTester.callDecPow(ONE, dec(1, 9))
       const res_i = await mathTester.callDecPow(ONE, dec(1, 12))
       const res_j = await mathTester.callDecPow(ONE, dec(1, 18))
+      const res_k = await mathTester.callDecPow(ONE, 0)
 
       assert.equal(res_a, ONE)
       assert.equal(res_b, ONE)
@@ -685,6 +685,7 @@ contract('Fee arithmetic tests', async accounts => {
       assert.equal(res_h, ONE)
       assert.equal(res_i, ONE)
       assert.equal(res_j, ONE)
+      assert.equal(res_k, ONE)
     })
 
     // for exponent = 2, returns base**2
