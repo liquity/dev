@@ -19,7 +19,6 @@ const CLVTokenCaller = artifacts.require('CLVTokenCaller')
 
 contract('CLVToken', async accounts => {
   const [owner, alice, bob, carol] = accounts;
-<<<<<<< HEAD
 
   // from https://github.com/liquity/dev/blob/main/packages/contracts/buidlerAccountsList2k.js#L3
   // the first account our buidlerenv creates
@@ -30,54 +29,25 @@ contract('CLVToken', async accounts => {
   console.log("CHAINID", chainId)
 
   let clvToken
+  let clvTokenCaller
   let tokenName
   let poolManager  
   let cdpManager
   let activePool
-=======
-  let clvToken
-  let clvTokenCaller
->>>>>>> 351a8f1e79e71a1c4522ac90d97460153604b47f
   let stabilityPool
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
-<<<<<<< HEAD
-      contracts = await deploymentHelper.deployLiquityCore()
-      contracts.poolManager = await PoolManagerTester.new()
-      contracts.clvToken = await CLVTokenTester.new(
+      const contracts = await deploymentHelper.deployLiquityCore()
+      clvToken = await CLVTokenTester.new(
         contracts.cdpManager.address,
         contracts.stabilityPool.address,
         contracts.borrowerOperations.address
       )
-      clvToken = contracts.clvToken
-      tokenName = clvToken.name()
-      hintHelpers = contracts.hintHelpers
-      poolManager = contracts.poolManager
-      cdpManager = contracts.cdpManager
-      activePool = contracts.activePool
-      stabilityPool = contracts.stabilityPool
-      defaultPool = contracts.defaultPool
-      borrowerOperations = contracts.borrowerOperations
-
-      const GTContracts = await deploymentHelper.deployGTContracts()
-      lqtyStaking = GTContracts.lqtyStaking
-      growthToken = GTContracts.growthToken
-      communityIssuance = GTContracts.communityIssuance
-      lockupContractFactory = GTContracts.lockupContractFactory
-=======
-      const contracts = await deploymentHelper.deployLiquityCore()
-      clvToken = await CLVTokenTester.new()
       clvTokenCaller = await CLVTokenCaller.new(clvToken.address)
-      await clvToken.setAddresses(
-        clvTokenCaller.address,
-        clvTokenCaller.address,
-        clvTokenCaller.address
-      )
       stabilityPool = clvTokenCaller
       
       const GTContracts = await deploymentHelper.deployGTContracts()
->>>>>>> 351a8f1e79e71a1c4522ac90d97460153604b47f
   
       await deploymentHelper.connectCoreContracts(contracts, GTContracts)
       await deploymentHelper.connectGTContracts(GTContracts)

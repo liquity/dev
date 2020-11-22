@@ -76,7 +76,6 @@ const deployContracts = async (
       addresses.borrowerOperations,
       { ...overrides }
     ),
-
     growthToken: await deployContract(
       deployer,
       getContractFactory,
@@ -85,7 +84,6 @@ const deployContracts = async (
       addresses.lockupContractFactory,
       { ...overrides }
     ),
-
     multiCDPgetter: await deployContract(
       deployer,
       getContractFactory,
