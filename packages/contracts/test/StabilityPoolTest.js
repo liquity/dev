@@ -1,6 +1,5 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-
 const th = testHelpers.TestHelper
 const dec = th.dec
 const toBN = th.toBN
@@ -41,7 +40,6 @@ contract('StabilityPool', async accounts => {
   describe("Stability Pool Mechanisms", async () => {
 
     before(async () => {
-
       gasPriceInWei = await web3.eth.getGasPrice()
     })
 

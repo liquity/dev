@@ -1,111 +1,71 @@
-const PoolManager = artifacts.require("./PoolManager.sol")
-const SortedCDPs = artifacts.require("./SortedCDPs.sol")
-const CDPManager = artifacts.require("./CDPManager.sol")
-const PriceFeed = artifacts.require("./PriceFeed.sol")
-const CLVToken = artifacts.require("./CLVToken.sol")
-const NameRegistry = artifacts.require("./NameRegistry.sol")
-const ActivePool = artifacts.require("./ActivePool.sol");
-const DefaultPool = artifacts.require("./DefaultPool.sol");
-const StabilityPool = artifacts.require("./StabilityPool.sol")
-const FunctionCaller = artifacts.require("./FunctionCaller.sol")
-
+const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const dec = testHelpers.TestHelper.dec
+const th = testHelpers.TestHelper
+const dec = th.dec
 
-const provideToSP_allAccounts = testHelpers.provideToSP_allAccounts
-const openLoan_allAccounts = testHelpers.openLoan_allAccounts
-const openLoan_allAccounts_randomETH = testHelpers.openLoan_allAccounts_randomETH
-const openLoan_allAccounts_randomETH_ProportionalCLV = testHelpers.openLoan_allAccounts_randomETH_ProportionalCLV
-const provideToSP_allAccounts_randomAmount = testHelpers.provideToSP_allAccounts_randomAmount
+const randAmountInWei = th.randAmountInWei
+const randAmountInGwei = th.randAmountInGwei
 
-const randAmountInWei = testHelpers.randAmountInWei
-const randAmountInGwei = testHelpers.randAmountInGwei
-
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
-const getAddresses = deploymentHelpers.getAddresses
-const setNameRegistry = deploymentHelpers.setNameRegistry
-const connectContracts = deploymentHelpers.connectContracts
-const getAddressesFromNameRegistry = deploymentHelpers.getAddressesFromNameRegistry
+const ZERO_ADDRESS = th.ZERO_ADDRESS
 
 contract('CDPManager', async accounts => {
   let priceFeed
-  let clvToken
-  let poolManager
-  let sortedCDPs
   let cdpManager
-  let nameRegistry
   let activePool
   let stabilityPool
   let defaultPool
-  let functionCaller
+  let borrowerOperations
 
+  let contracts 
   beforeEach(async () => {
-    priceFeed = await PriceFeed.new()
-    clvToken = await CLVToken.new()
-    poolManager = await PoolManager.new()
-    sortedCDPs = await SortedCDPs.new()
-    cdpManager = await CDPManager.new()
-    nameRegistry = await NameRegistry.new()
-    activePool = await ActivePool.new()
-    stabilityPool = await StabilityPool.new()
-    defaultPool = await DefaultPool.new()
-    functionCaller = await FunctionCaller.new()
+    contracts = await deploymentHelper.deployLiquityCore()
+    const GTContracts = await deploymentHelper.deployGTContracts()
 
-    DefaultPool.setAsDeployed(defaultPool)
-    PriceFeed.setAsDeployed(priceFeed)
-    CLVToken.setAsDeployed(clvToken)
-    PoolManager.setAsDeployed(poolManager)
-    SortedCDPs.setAsDeployed(sortedCDPs)
-    CDPManager.setAsDeployed(cdpManager)
-    NameRegistry.setAsDeployed(nameRegistry)
-    ActivePool.setAsDeployed(activePool)
-    StabilityPool.setAsDeployed(stabilityPool)
-    FunctionCaller.setAsDeployed(functionCaller)
+    priceFeed = contracts.priceFeed
+    clvToken = contracts.clvToken
+    sortedCDPs = contracts.sortedCDPs
+    cdpManager = contracts.cdpManager
+    activePool = contracts.activePool
+    stabilityPool = contracts.stabilityPool
+    defaultPool = contracts.defaultPool
+    borrowerOperations = contracts.borrowerOperations
+  
 
-    contracts = {
-      priceFeed,
-      clvToken,
-      poolManager,
-      sortedCDPs,
-      cdpManager,
-      nameRegistry,
-      activePool,
-      stabilityPool,
-      defaultPool,
-      functionCaller
-    }
+    lqtyStaking = GTContracts.lqtyStaking
+    growthToken = GTContracts.growthToken
+    communityIssuance = GTContracts.communityIssuance
+    lockupContractFactory = GTContracts.lockupContractFactory
 
-    const contractAddresses = getAddresses(contracts)
-    await setNameRegistry(contractAddresses, nameRegistry, { from: accounts[0] })
-    const registeredAddresses = await getAddressesFromNameRegistry(nameRegistry)
-
-    await connectContracts(contracts, registeredAddresses)
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
   })
 
   // --- Check accumulation from repeatedly applying rewards ---
 
   it("11 accounts with random coll. 1 liquidation. 10 accounts do CDP operations (apply rewards)", async () => {
-    await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: dec(100, 'ether') })
-    await cdpManager.openLoan(dec(180, 18), accounts[0], { from: accounts[0], value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, accounts[99], { from: accounts[99], value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(dec(170, 18), accounts[0], { from: accounts[0], value: dec(1, 'ether') })
 
-    await openLoan_allAccounts_randomETH(1, 2, accounts.slice(1, 10), cdpManager, dec(180, 18))
+    await th.openLoan_allAccounts_randomETH(1, 2, accounts.slice(1, 10), contracts, dec(170, 18))
 
     await priceFeed.setPrice(dec(100, 18))
 
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 10)) {
-      cdpManager.addColl(account, account, { from: account, value: 1 })
+      borrowerOperations.addColl(account, account, { from: account, value: 1 })
     }
 
-    await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
+    await borrowerOperations.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
     
     // check DefaultPool
     const ETH_DefaultPool = await defaultPool.getETH()
-    const CLVDebt_DefaultPool = await defaultPool.getCLV()
+    const CLVDebt_DefaultPool = await defaultPool.getCLVDebt()
     console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
   })
+
   /*
   ABDK64, no error correction:
   ETH left in Default Pool is: 34
@@ -121,23 +81,23 @@ contract('CDPManager', async accounts => {
   */
 
   it("101 accounts with random coll. 1 liquidation. 100 accounts do a CDP operation (apply rewards)", async () => {
-    await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
-    await cdpManager.openLoan(dec(180, 18), accounts[0], { from: accounts[0], value: dec(1, 'ether') })
+    await borrowerOperations.openLoan(0, accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(dec(170, 18), accounts[0], { from: accounts[0], value: dec(1, 'ether') })
 
-    await openLoan_allAccounts_randomETH(1, 2, accounts.slice(1, 100), cdpManager, dec(180, 18))
+    await th.openLoan_allAccounts_randomETH(1, 2, accounts.slice(1, 100), contracts, dec(170, 18))
 
     await priceFeed.setPrice(dec(100, 18))
 
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 100)) {
-      cdpManager.addColl(account, account, { from: account, value: 1 })
+      borrowerOperations.addColl(account, account, { from: account, value: 1 })
     }
    
-    await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: 1 })
+    await borrowerOperations.addColl(accounts[999], accounts[999], { from: accounts[999], value: 1 })
     // check DefaultPool
     const ETH_DefaultPool = await defaultPool.getETH()
-    const CLVDebt_DefaultPool = await defaultPool.getCLV()
+    const CLVDebt_DefaultPool = await defaultPool.getCLVDebt()
     console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
   })
@@ -155,22 +115,22 @@ contract('CDPManager', async accounts => {
     */
 
   it("11 accounts. 1 liquidation. 10 accounts do CDP operations (apply rewards)", async () => {
-    await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(0,  accounts[99], { from: accounts[99], value: dec(100, 'ether') })
 
-    await openLoan_allAccounts(accounts.slice(0, 10), cdpManager, dec(1, 'ether'), dec(180, 18))
+    await th.openLoan_allAccounts(accounts.slice(0, 10), contracts, dec(1, 'ether'), dec(170, 18))
 
     await priceFeed.setPrice(dec(100, 18))
 
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 10)) {
-      cdpManager.addColl(account, account, { from: account, value: 1 })
+      borrowerOperations.addColl(account, account, { from: account, value: 1 })
     }
 
-    await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
+    await borrowerOperations.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
     // check DefaultPool
     const ETH_DefaultPool = await defaultPool.getETH()
-    const CLVDebt_DefaultPool = await defaultPool.getCLV()
+    const CLVDebt_DefaultPool = await defaultPool.getCLVDebt()
     console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
   })
@@ -189,22 +149,22 @@ contract('CDPManager', async accounts => {
   */
 
   it("101 accounts. 1 liquidation. 100 accounts do CDP operations (apply rewards)", async () => {
-    await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(0,  accounts[99], { from: accounts[99], value: dec(100, 'ether') })
 
-    await openLoan_allAccounts(accounts.slice(0, 99), cdpManager, dec(1, 'ether'), dec(180, 18))
+    await th.openLoan_allAccounts(accounts.slice(0, 99), contracts, dec(1, 'ether'), dec(170, 18))
 
     await priceFeed.setPrice(dec(100, 18))
 
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 99)) {
-      cdpManager.addColl(account, account, { from: account, value: 1 })
+      borrowerOperations.addColl(account, account, { from: account, value: 1 })
     }
-    await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
+    await borrowerOperations.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
 
     // check DefaultPool
     const ETH_DefaultPool = await defaultPool.getETH()
-    const CLVDebt_DefaultPool = await defaultPool.getCLV()
+    const CLVDebt_DefaultPool = await defaultPool.getCLVDebt()
     console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
   })
@@ -221,22 +181,22 @@ contract('CDPManager', async accounts => {
   */
 
   it("1001 accounts. 1 liquidation. 1000 accounts do CDP operations (apply rewards)", async () => {
-    await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
 
-    await openLoan_allAccounts(accounts.slice(0, 999), cdpManager, dec(1, 'ether'), dec(180, 18))
+    await th.openLoan_allAccounts(accounts.slice(0, 999), contracts, dec(1, 'ether'), dec(170, 18))
 
     await priceFeed.setPrice(dec(100, 18))
 
     await cdpManager.liquidate(accounts[0])
 
     for (account of accounts.slice(1, 999)) {
-      cdpManager.addColl(account, account, { from: account, value: 1 })
+      borrowerOperations.addColl(account, account, { from: account, value: 1 })
     }
-    await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: 1 })
+    await borrowerOperations.addColl(accounts[999], accounts[999], { from: accounts[999], value: 1 })
 
     // check DefaultPool
     const ETH_DefaultPool = await defaultPool.getETH()
-    const CLVDebt_DefaultPool = await defaultPool.getCLV()
+    const CLVDebt_DefaultPool = await defaultPool.getCLVDebt()
     console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
     console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}:`)
   })
@@ -263,9 +223,9 @@ contract('CDPManager', async accounts => {
   //  loop: CDPs are liquidated. Coll and debt difference between (activePool - defaultPool) is
 
   it("11 accounts. 10 liquidations. Check (ActivePool - DefaultPool) differences", async () => {
-    await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(0,  accounts[99], { from: accounts[99], value: dec(100, 'ether') })
 
-    await openLoan_allAccounts(accounts.slice(0, 11), cdpManager, dec(1, 'ether'), dec(180, 18))
+    await th.openLoan_allAccounts(accounts.slice(0, 11), contracts, dec(1, 'ether'), dec(170, 18))
 
     await priceFeed.setPrice(dec(100, 18))
 
@@ -282,7 +242,7 @@ contract('CDPManager', async accounts => {
       await cdpManager.liquidate(account)
 
       const defaultPoolETH = await defaultPool.getETH()
-      const defaultPoolCLVDebt = await defaultPool.getCLV()
+      const defaultPoolCLVDebt = await defaultPool.getCLVDebt()
 
       totalETHPoolDifference.add(activePoolETH.sub(defaultPoolETH))
       totalCLVDebtPoolDifference.add(activePoolCLVDebt.sub(defaultPoolCLVDebt))
@@ -306,9 +266,9 @@ Accumulated CLVDebt difference between Active and Default Pools is: 0
 */
 
   it("11 accounts. 10 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
-    await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: dec(100, 'ether') })
+    await borrowerOperations.openLoan(0,  accounts[99], { from: accounts[99], value: dec(100, 'ether') })
 
-    await openLoan_allAccounts(accounts.slice(0, 11), cdpManager, dec(1, 'ether'), dec(180, 18))
+    await th.openLoan_allAccounts(accounts.slice(0, 11), contracts, dec(1, 'ether'), dec(170, 18))
 
     await priceFeed.setPrice(dec(100, 18))
 
@@ -328,7 +288,7 @@ Accumulated CLVDebt difference between Active and Default Pools is: 0
     const totalCLVRewards = (totalColl.mul(L_CLVDebt)).div(_1e18_BN)
 
     const defaultPoolETH = await defaultPool.getETH()
-    const defaultPoolCLVDebt = await defaultPool.getCLV()
+    const defaultPoolCLVDebt = await defaultPool.getCLVDebt()
 
     const ETHRewardDifference = defaultPoolETH.sub(totalETHRewards)
     const CLVDebtRewardDifference = defaultPoolCLVDebt.sub(totalCLVRewards)
@@ -354,9 +314,9 @@ CLVDebt difference between total pending rewards and DefaultPool: 0
   */
 
   it("101 accounts. 100 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
-    await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
 
-    await openLoan_allAccounts(accounts.slice(0, 101), cdpManager, dec(1, 'ether'), dec(180, 18))
+    await th.openLoan_allAccounts(accounts.slice(0, 101), contracts, dec(1, 'ether'), dec(170, 18))
 
     await priceFeed.setPrice(dec(100, 18))
 
@@ -376,7 +336,7 @@ CLVDebt difference between total pending rewards and DefaultPool: 0
     const totalCLVRewards = (totalColl.mul(L_CLVDebt)).div(_1e18_BN)
 
     const defaultPoolETH = await defaultPool.getETH()
-    const defaultPoolCLVDebt = await defaultPool.getCLV()
+    const defaultPoolCLVDebt = await defaultPool.getCLVDebt()
 
     const ETHRewardDifference = defaultPoolETH.sub(totalETHRewards)
     const CLVDebtRewardDifference = defaultPoolCLVDebt.sub(totalCLVRewards)
@@ -402,9 +362,9 @@ CLVDebt difference between total pending rewards and DefaultPool: 0
   */
 
  it("11 accounts with random ETH and proportional CLV (180:1). 10 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
-  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(100, 'ether') })
+  await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
 
-  await openLoan_allAccounts_randomETH_ProportionalCLV(1, 2, accounts.slice(0, 11), cdpManager, 180)
+  await th.openLoan_allAccounts_randomETH_ProportionalCLV(1, 2, accounts.slice(0, 11), contracts, 180)
 
   await priceFeed.setPrice(dec(100, 18))
 
@@ -424,7 +384,7 @@ CLVDebt difference between total pending rewards and DefaultPool: 0
   const totalCLVRewards = (totalColl.mul(L_CLVDebt)).div(_1e18_BN)
 
   const defaultPoolETH = await defaultPool.getETH()
-  const defaultPoolCLVDebt = await defaultPool.getCLV()
+  const defaultPoolCLVDebt = await defaultPool.getCLVDebt()
 
   const ETHRewardDifference = defaultPoolETH.sub(totalETHRewards)
   const CLVDebtRewardDifference = defaultPoolCLVDebt.sub(totalCLVRewards)
@@ -450,9 +410,9 @@ CLVDebt difference between total pending rewards and DefaultPool: 100
 */
 
   it("101 accounts with random ETH and proportional CLV (180:1). 100 liquidations. Check 1) (DefaultPool - totalDistributionRewards) difference, and 2) ", async () => {
-    await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
+    await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
 
-    await openLoan_allAccounts_randomETH_ProportionalCLV(1, 2, accounts.slice(0, 101), cdpManager, 180)
+    await th.openLoan_allAccounts_randomETH_ProportionalCLV(1, 2, accounts.slice(0, 101), contracts, 180)
 
     await priceFeed.setPrice(dec(100, 18))
 
@@ -473,7 +433,7 @@ CLVDebt difference between total pending rewards and DefaultPool: 100
     const totalCLVRewards = (totalColl.mul(L_CLVDebt)).div(_1e18_BN)
 
     const defaultPoolETH = await defaultPool.getETH()
-    const defaultPoolCLVDebt = await defaultPool.getCLV()
+    const defaultPoolCLVDebt = await defaultPool.getCLVDebt()
 
     const ETHRewardDifference = defaultPoolETH.sub(totalETHRewards)
     const CLVDebtRewardDifference = defaultPoolCLVDebt.sub(totalCLVRewards)
@@ -503,17 +463,17 @@ CLVDebt difference between total pending rewards and DefaultPool: 100
 
   it("11 accounts. 10 liquidations, partial offsets. Check (DefaultPool - totalRewards) differences", async () => {
    // Acct 99 opens loan with 100 CLV
-    await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: dec(100, 'ether') })
-    await cdpManager.withdrawCLV(dec(100, 18), accounts[99], {from: accounts[99]})
+    await borrowerOperations.openLoan(0,  accounts[99], { from: accounts[99], value: dec(100, 'ether') })
+    await borrowerOperations.withdrawCLV(dec(100, 18), accounts[99], {from: accounts[99]})
     
-    await openLoan_allAccounts(accounts.slice(0, 11), cdpManager, dec(1, 'ether'), dec(180, 18))
+    await th.openLoan_allAccounts(accounts.slice(0, 11), contracts, dec(1, 'ether'), dec(170, 18))
 
     await priceFeed.setPrice(dec(100, 18))
     await cdpManager.liquidate(accounts[0])
 
     // On loop: Account[99] adds 10 CLV to pool -> a trove gets liquidated and partially offset against SP, emptying the SP
     for (account of accounts.slice(1, 11)) {
-      await poolManager.provideToSP(dec(10, 18), {from: account[99]})
+      await stabilityPool.provideToSP(dec(10, 18), ZERO_ADDRESS, {from: account[99]})
       await cdpManager.liquidate(account)
     }
     // check (DefaultPool - totalRewards from distribution)
@@ -527,7 +487,7 @@ CLVDebt difference between total pending rewards and DefaultPool: 100
     const totalCLVRewards_Distribution = (totalColl.mul(L_CLVDebt)).div(_1e18_BN)
 
     const defaultPoolETH = await defaultPool.getETH()
-    const defaultPoolCLVDebt = await defaultPool.getCLV()
+    const defaultPoolCLVDebt = await defaultPool.getCLVDebt()
 
     const ETHRewardDifference = defaultPoolETH.sub(totalETHRewards_Distribution)
     const CLVDebtRewardDifference = defaultPoolCLVDebt.sub(totalCLVRewards_Distribution)
@@ -550,17 +510,17 @@ CLVDebt difference between total pending rewards and DefaultPool: 100
 
   it("101 accounts. 100 liquidations, partial offsets. Check (DefaultPool - totalRewards) differences", async () => {
     // Acct 99 opens loan with 100 CLV
-     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await cdpManager.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
+     await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
-     await openLoan_allAccounts(accounts.slice(0, 101), cdpManager, dec(1, 'ether'), dec(180, 18))
+     await th.openLoan_allAccounts(accounts.slice(0, 101), contracts, dec(1, 'ether'), dec(170, 18))
  
      await priceFeed.setPrice(dec(100, 18))
      await cdpManager.liquidate(accounts[0])
  
      // On loop: Account[99] adds 10 CLV to pool -> a trove gets liquidated and partially offset against SP, emptying the SP
      for (account of accounts.slice(1, 101)) {
-       await poolManager.provideToSP(dec(10, 18), {from: account[99]})
+       await stabilityPool.provideToSP(dec(10, 18),ZERO_ADDRESS, {from: account[99]})
        await cdpManager.liquidate(account)
      }
      // check (DefaultPool - totalRewards from distribution)
@@ -574,7 +534,7 @@ CLVDebt difference between total pending rewards and DefaultPool: 100
      const totalCLVRewards_Distribution = (totalColl.mul(L_CLVDebt)).div(_1e18_BN)
  
      const defaultPoolETH = await defaultPool.getETH()
-     const defaultPoolCLVDebt = await defaultPool.getCLV()
+     const defaultPoolCLVDebt = await defaultPool.getCLVDebt()
  
      const ETHRewardDifference = defaultPoolETH.sub(totalETHRewards_Distribution)
      const CLVDebtRewardDifference = defaultPoolCLVDebt.sub(totalCLVRewards_Distribution)
@@ -599,32 +559,32 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 0
 
   it("11 accounts. 10 Borrowers add to SP. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens loan with 100 CLV
-     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await cdpManager.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
+     await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
      // Account 0 (to be liquidated) opens a loan
-     await cdpManager.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
+     await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
      // 9 Accounts open loans and provide to SP
-     await openLoan_allAccounts(accounts.slice(1, 11), cdpManager, dec(1, 'ether'), dec(100, 18))
-     await provideToSP_allAccounts(accounts.slice(1,11), poolManager, dec(50, 18))
+     await th.openLoan_allAccounts(accounts.slice(1, 11), contracts, dec(1, 'ether'), dec(100, 18))
+     await th.provideToSP_allAccounts(accounts.slice(1,11), stabilityPool, dec(50, 18))
      
      await priceFeed.setPrice(dec(100, 18))
      await cdpManager.liquidate(accounts[0])
  
      // All but one depositors withdraw their deposit
      for (account of accounts.slice(2, 11)) {
-       await poolManager.withdrawFromSP(dec(50, 18), {from: account})
+       await stabilityPool.withdrawFromSP(dec(50, 18), {from: account})
      }
 
     /* Sometimes, the error causes the last CLV withdrawal from SP to underflow and fail. 
     So provideToSP from the whale, so that the last 'rewarded' depositor, account[1] can withdraw */
     const whaleSPDeposit = dec(100, 18)
-    await poolManager.provideToSP(whaleSPDeposit, {from: accounts[999]} )
+    await stabilityPool.provideToSP(whaleSPDeposit,ZERO_ADDRESS, {from: accounts[999]} )
     
-    await poolManager.withdrawFromSP(dec(50, 18), {from: accounts[1]} )
+    await stabilityPool.withdrawFromSP(dec(50, 18), {from: accounts[1]} )
     const SP_ETH = await stabilityPool.getETH()
-    const SP_CLV = await stabilityPool.getCLV()  
+    const SP_CLV = await stabilityPool.getTotalCLVDeposits()  
 
     const SP_CLV_Insufficiency = web3.utils.toBN(whaleSPDeposit).sub(SP_CLV)
 
@@ -653,32 +613,32 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 0
 
    it("101 accounts. 100 Borrowers add to SP. 1 liquidation, 100 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens loan with 100 CLV
-     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await cdpManager.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
+     await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
      // Account 0 (to be liquidated) opens a loan
-     await cdpManager.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
+     await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
      // 10 Accounts open loans and provide to SP
-     await openLoan_allAccounts(accounts.slice(1, 101), cdpManager, dec(1, 'ether'), dec(100, 18))
-     await provideToSP_allAccounts(accounts.slice(1,101), poolManager, dec(50, 18))
+     await th.openLoan_allAccounts(accounts.slice(1, 101), contracts, dec(1, 'ether'), dec(100, 18))
+     await th.provideToSP_allAccounts(accounts.slice(1,101), stabilityPool, dec(50, 18))
      
      await priceFeed.setPrice(dec(100, 18))
      await cdpManager.liquidate(accounts[0])
  
      // All but one depositors withdraw their deposit
      for (account of accounts.slice(2, 101)) {
-       await poolManager.withdrawFromSP(dec(50, 18), {from: account})
+       await stabilityPool.withdrawFromSP(dec(50, 18), {from: account})
      }
 
     /* Sometimes, the error causes the last CLV withdrawal from SP to underflow and fail. 
     So provideToSP from the whale, so that the last 'rewarded' depositor, account[1] can withdraw */
     const whaleSPDeposit = dec(100, 18)
-    await poolManager.provideToSP(whaleSPDeposit, {from: accounts[999]} )
+    await stabilityPool.provideToSP(whaleSPDeposit,ZERO_ADDRESS, {from: accounts[999]} )
     
-    await poolManager.withdrawFromSP(dec(50, 18), {from: accounts[1]} )
+    await stabilityPool.withdrawFromSP(dec(50, 18), {from: accounts[1]} )
     const SP_ETH = await stabilityPool.getETH()
-    const SP_CLV = await stabilityPool.getCLV()  
+    const SP_CLV = await stabilityPool.getTotalCLVDeposits()  
 
     const SP_CLV_Insufficiency = web3.utils.toBN(whaleSPDeposit).sub(SP_CLV)
 
@@ -702,18 +662,18 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 0
 
    it("11 accounts. 10 Borrowers add to SP, random CLV amounts. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens loan with 100 CLV
-     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await cdpManager.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
+     await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
      // Account 0 (to be liquidated) opens a loan
-     await cdpManager.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
+     await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
      // 10 Accounts open loans and provide to SP
-     await openLoan_allAccounts(accounts.slice(1, 11), cdpManager, dec(1, 'ether'), dec(100, 18))
-     await provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,11), poolManager)
+     await th.openLoan_allAccounts(accounts.slice(1, 11), contracts, dec(1, 'ether'), dec(100, 18))
+     await th.th.provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,11), stabilityPool)
 
      const account1SPDeposit = dec(50, 18)
-     await poolManager.provideToSP(account1SPDeposit, {from: accounts[1]} )
+     await stabilityPool.provideToSP(account1SPDeposit, ZERO_ADDRESS, {from: accounts[1]} )
      
      await priceFeed.setPrice(dec(100, 18))
      await cdpManager.liquidate(accounts[0])
@@ -721,17 +681,17 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 0
      // All but one depositors withdraw their deposit
      
      for (account of accounts.slice(2, 11)) {
-       await poolManager.withdrawFromSP(dec(100, 18), {from: account})
+       await stabilityPool.withdrawFromSP(dec(100, 18), {from: account})
      }
 
     /* Sometimes, the error causes the last CLV withdrawal from SP to underflow and fail. 
     So provideToSP from the whale, so that the last 'rewarded' depositor, account[1] can withdraw */
     const whaleSPDeposit = dec(100, 18)
-    await poolManager.provideToSP(whaleSPDeposit, {from: accounts[999]} )
+    await stabilityPool.provideToSP(whaleSPDeposit, ZERO_ADDRESS, {from: accounts[999]} )
     
-    await poolManager.withdrawFromSP(account1SPDeposit, {from: accounts[1]} )
+    await stabilityPool.withdrawFromSP(account1SPDeposit, {from: accounts[1]} )
     const SP_ETH = await stabilityPool.getETH()
-    const SP_CLV = await stabilityPool.getCLV()  
+    const SP_CLV = await stabilityPool.getTotalCLVDeposits()  
 
     const SP_CLV_Insufficiency = web3.utils.toBN(whaleSPDeposit).sub(SP_CLV)
 
@@ -761,36 +721,36 @@ CLVDebt difference between total pending distribution rewards and DefaultPool: 0
 
    it("101 accounts. 100 Borrowers add to SP, random CLV amounts. 1 liquidation, 100 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens loan with 100 CLV
-     await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await cdpManager.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
+     await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
      // Account 0 (to be liquidated) opens a loan
-     await cdpManager.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
+     await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
      // 100 Accounts open loans and provide to SP
-     await openLoan_allAccounts(accounts.slice(1, 101), cdpManager, dec(1, 'ether'), dec(100, 18))
-     await provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,101), poolManager)
+     await th.openLoan_allAccounts(accounts.slice(1, 101), contracts, dec(1, 'ether'), dec(100, 18))
+     await th.th.provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,101), stabilityPool)
 
      const account1SPDeposit = dec(50, 18)
-     await poolManager.provideToSP(account1SPDeposit, {from: accounts[1]} )
+     await stabilityPool.provideToSP(account1SPDeposit,ZERO_ADDRESS, {from: accounts[1]} )
      
      await priceFeed.setPrice(dec(100, 18))
      await cdpManager.liquidate(accounts[0])
  
      // All but one depositors withdraw their deposit
      for (account of accounts.slice(2, 101)) {
-       await poolManager.withdrawFromSP(dec(100, 18), {from: account})
+       await stabilityPool.withdrawFromSP(dec(100, 18), {from: account})
      }
 
     /* Sometimes, the error causes the last CLV withdrawal from SP to underflow and fail. 
     So provideToSP from the whale, so that the last 'rewarded' depositor, account[1] can withdraw */
     const whaleSPDeposit = dec(100, 18)
-    await poolManager.provideToSP(whaleSPDeposit, {from: accounts[999]} )
+    await stabilityPool.provideToSP(whaleSPDeposit,ZERO_ADDRESS, {from: accounts[999]} )
     
-    await poolManager.withdrawFromSP(account1SPDeposit, {from: accounts[1]} )
+    await stabilityPool.withdrawFromSP(account1SPDeposit, {from: accounts[1]} )
 
     const SP_ETH = await stabilityPool.getETH()
-    const SP_CLV = await stabilityPool.getCLV()  
+    const SP_CLV = await stabilityPool.getTotalCLVDeposits()  
 
     const SP_CLV_Insufficiency = web3.utils.toBN(whaleSPDeposit).sub(SP_CLV)
 
@@ -818,36 +778,36 @@ CLV insufficiency in Stability Pool is 1960
 
  it("501 accounts. 500 Borrowers add to SP, random CLV amounts. 1 liquidation, 500 Borrowers withdraw all their SP funds", async () => {
   // Acct 99 opens loan with 100 CLV
-   await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-   await cdpManager.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
+   await borrowerOperations.openLoan(0, accounts[999], { from: accounts[999], value: dec(100, 'ether') })
+   await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
    
    // Account 0 (to be liquidated) opens a loan
-   await cdpManager.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
+   await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
    // 500 Accounts open loans and provide to SP
-   await openLoan_allAccounts(accounts.slice(1, 501), cdpManager, dec(1, 'ether'), dec(100, 18))
-   await provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,501), poolManager)
+   await th.openLoan_allAccounts(accounts.slice(1, 501), contracts, dec(1, 'ether'), dec(100, 18))
+   await th.th.provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,501), stabilityPool)
 
    const account1SPDeposit = dec(50, 18)
-   await poolManager.provideToSP(account1SPDeposit, {from: accounts[1]} )
+   await stabilityPool.provideToSP(account1SPDeposit, ZERO_ADDRESS, {from: accounts[1]} )
    
    await priceFeed.setPrice(dec(100, 18))
    await cdpManager.liquidate(accounts[0])
 
    // All but one depositors withdraw their deposit
    for (account of accounts.slice(2, 501)) {
-     await poolManager.withdrawFromSP(dec(100, 18), {from: account})
+     await stabilityPool.withdrawFromSP(dec(100, 18), {from: account})
    }
 
   /* Sometimes, the error causes the last CLV withdrawal from SP to underflow and fail. 
   So provideToSP from the whale, so that the last 'rewarded' depositor, account[1] can withdraw */
   const whaleSPDeposit = dec(100, 18)
-  await poolManager.provideToSP(whaleSPDeposit, {from: accounts[999]} )
+  await stabilityPool.provideToSP(whaleSPDeposit,ZERO_ADDRESS, {from: accounts[999]} )
   
-  await poolManager.withdrawFromSP(account1SPDeposit, {from: accounts[1]} )
+  await stabilityPool.withdrawFromSP(account1SPDeposit, {from: accounts[1]} )
 
   const SP_ETH = await stabilityPool.getETH()
-  const SP_CLV = await stabilityPool.getCLV()  
+  const SP_CLV = await stabilityPool.getTotalCLVDeposits()  
 
   const SP_CLV_Insufficiency = web3.utils.toBN(whaleSPDeposit).sub(SP_CLV)
 
@@ -873,8 +833,8 @@ CLV insufficiency in Stability Pool is 6037
 
 
  it("10 accounts. 10x liquidate -> addColl. Check stake and totalStakes (On-chain data vs off-chain simulation)", async () => {
-  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
-  await openLoan_allAccounts(accounts.slice(1, 11), cdpManager, dec(1, 'ether'), dec(180, 18))
+  await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
+  await th.openLoan_allAccounts(accounts.slice(1, 11), contracts, dec(1, 'ether'), dec(170, 18))
 
   await priceFeed.setPrice(dec(100, 18))
  
@@ -902,7 +862,7 @@ CLV insufficiency in Stability Pool is 6037
    
     // Liquidate CDP 'i', and open loan from account '999 - i'
     await cdpManager.liquidate(accounts[i], {from: accounts[0]})
-    await cdpManager.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
+    await borrowerOperations.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
   
     // Grab new stake and totalStakes on-chain
     const newStake = (await cdpManager.CDPs(accounts[999 - i]))[2] 
@@ -929,8 +889,8 @@ CLV insufficiency in Stability Pool is 6037
 
 
  it("10 accounts. 10x liquidate -> addColl. Random coll. Check stake and totalStakes (On-chain data vs off-chain simulation)", async () => {
-  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
-  await openLoan_allAccounts(accounts.slice(1, 11), cdpManager, dec(1, 'ether'), dec(180, 18))
+  await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
+  await th.openLoan_allAccounts(accounts.slice(1, 11), contracts, dec(1, 'ether'), dec(170, 18))
 
   await priceFeed.setPrice(dec(100, 18))
  
@@ -958,7 +918,7 @@ CLV insufficiency in Stability Pool is 6037
    
     // Liquidate CDP 'i', and open loan from account '999 - i'
     await cdpManager.liquidate(accounts[i], {from: accounts[0]})
-    await cdpManager.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
+    await borrowerOperations.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
   
     // Grab new stake and totalStakes on-chain
     const newStake = (await cdpManager.CDPs(accounts[999 - i]))[2] 
@@ -985,8 +945,8 @@ Pure integer division, no correction:
 */
 
 it("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and totalStakes (On-chain data vs off-chain simulation)", async () => {
-  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
-  await openLoan_allAccounts(accounts.slice(1, 101), cdpManager, dec(1, 'ether'), dec(180, 18))
+  await borrowerOperations.openLoan(0, accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
+  await th.openLoan_allAccounts(accounts.slice(1, 101), contracts, dec(1, 'ether'), dec(170, 18))
 
   await priceFeed.setPrice(dec(100, 18))
  
@@ -1014,7 +974,7 @@ it("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and totalS
    
     // Liquidate CDP 'i', and open loan from account '999 - i'
     await cdpManager.liquidate(accounts[i], {from: accounts[0]})
-    await cdpManager.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
+    await borrowerOperations.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
   
     // Grab new stake and totalStakes on-chain
     const newStake = (await cdpManager.CDPs(accounts[999 - i]))[2] 
@@ -1044,11 +1004,11 @@ Final difference in the last totalStakes value, between on-chain and actual: 0
 // --- Applied rewards, large coll and debt ---
 
 it("11 accounts with random large coll, magnitude ~1e8 ether. 1 liquidation. 10 accounts do CDP operations (apply rewards)", async () => {
-  await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: dec(100, 'ether') })
-  await cdpManager.openLoan(dec(180, 18), accounts[0], { from: accounts[0], value: dec(1, 'ether') })
+  await borrowerOperations.openLoan(0,  accounts[99], { from: accounts[99], value: dec(100, 'ether') })
+  await borrowerOperations.openLoan(dec(170, 18), accounts[0], { from: accounts[0], value: dec(1, 'ether') })
 
   // Troves open with 100-200 million ether
-  await openLoan_allAccounts_randomETH(100000000, 200000000, accounts.slice(1, 10), cdpManager, dec(180, 18))
+  await th.openLoan_allAccounts_randomETH(100000000, 200000000, accounts.slice(1, 10), contracts, dec(170, 18))
 
   await priceFeed.setPrice(dec(100, 18))
 
@@ -1056,13 +1016,13 @@ it("11 accounts with random large coll, magnitude ~1e8 ether. 1 liquidation. 10 
 
   for (account of accounts.slice(1, 10)) {
     // apply rewards
-    cdpManager.addColl(account, account, { from: account, value: 1 })
+    borrowerOperations.addColl(account, account, { from: account, value: 1 })
   }
 
-  await cdpManager.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
+  await borrowerOperations.addColl(accounts[99], accounts[99], { from: accounts[99], value: 1 })
   // check DefaultPool
   const ETH_DefaultPool = await defaultPool.getETH()
-  const CLVDebt_DefaultPool = await defaultPool.getCLV()
+  const CLVDebt_DefaultPool = await defaultPool.getCLVDebt()
   console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
   console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
 })
@@ -1082,11 +1042,11 @@ CLVDebt left in Default Pool is: 535042995
 */
 
 it("101 accounts with random large coll, magnitude ~1e8 ether. 1 liquidation. 500 accounts do a CDP operation (apply rewards)", async () => {
-  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
-  await cdpManager.openLoan(dec(180, 18), accounts[0], { from: accounts[0], value: dec(1, 'ether') })
+  await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(1000, 'ether') })
+  await borrowerOperations.openLoan(dec(170, 18), accounts[0], { from: accounts[0], value: dec(1, 'ether') })
 
    // Troves open with 100-200 million ether
-  await openLoan_allAccounts_randomETH(100000000, 200000000, accounts.slice(1, 100), cdpManager, dec(180, 18))
+  await th.openLoan_allAccounts_randomETH(100000000, 200000000, accounts.slice(1, 100), contracts, dec(170, 18))
 
   await priceFeed.setPrice(dec(100, 18))
 
@@ -1094,13 +1054,13 @@ it("101 accounts with random large coll, magnitude ~1e8 ether. 1 liquidation. 50
 
   for (account of accounts.slice(1, 100)) {
     // apply rewards
-    cdpManager.addColl(account, account, { from: account, value: 1 })
+    borrowerOperations.addColl(account, account, { from: account, value: 1 })
   }
  
-  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: 1 })
+  await borrowerOperations.addColl(accounts[999], accounts[999], { from: accounts[999], value: 1 })
   // check DefaultPool
   const ETH_DefaultPool = await defaultPool.getETH()
-  const CLVDebt_DefaultPool = await defaultPool.getCLV()
+  const CLVDebt_DefaultPool = await defaultPool.getCLVDebt()
   console.log(`ETH left in Default Pool is: ${ETH_DefaultPool}`)
   console.log(`CLVDebt left in Default Pool is: ${CLVDebt_DefaultPool}`)
 })
@@ -1118,10 +1078,10 @@ it("101 accounts with random large coll, magnitude ~1e8 ether. 1 liquidation. 50
 // --- Liquidations, large coll and debt ---
 
 it("11 accounts with random ETH and proportional CLV (180:1). 10 liquidations. Check (DefaultPool - totalRewards) differences", async () => {
-  await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1, 27) })
+  await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(1, 27) })
 
   // Troves open with 100-200 million ether and proportional CLV Debt
-  await openLoan_allAccounts_randomETH_ProportionalCLV(100000000, 200000000, accounts.slice(0, 11), cdpManager, 180)
+  await th.openLoan_allAccounts_randomETH_ProportionalCLV(100000000, 200000000, accounts.slice(0, 11), contracts, 180)
 
   await priceFeed.setPrice(dec(100, 18))
 
@@ -1141,7 +1101,7 @@ it("11 accounts with random ETH and proportional CLV (180:1). 10 liquidations. C
   const totalCLVRewards = (totalColl.mul(L_CLVDebt)).div(_1e18_BN)
 
   const defaultPoolETH = await defaultPool.getETH()
-  const defaultPoolCLVDebt = await defaultPool.getCLV()
+  const defaultPoolCLVDebt = await defaultPool.getCLVDebt()
 
   const ETHRewardDifference = defaultPoolETH.sub(totalETHRewards)
   const CLVDebtRewardDifference = defaultPoolCLVDebt.sub(totalCLVRewards)
@@ -1160,10 +1120,10 @@ CLVDebt difference between total pending rewards and DefaultPool: 1000000000
 */
 
   it("101 accounts with random ETH and proportional CLV (180:1). 100 liquidations. Check 1) (DefaultPool - totalDistributionRewards) difference, and 2) ", async () => {
-    await cdpManager.addColl(accounts[999], accounts[999], { from: accounts[999], value: dec(1, 28) })
+    await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(1, 28) })
 
     // Troves open with 100-200 million ether and proportional CLV Debt
-    await openLoan_allAccounts_randomETH_ProportionalCLV(100000000, 200000000, accounts.slice(0, 101), cdpManager, 180)
+    await th.openLoan_allAccounts_randomETH_ProportionalCLV(100000000, 200000000, accounts.slice(0, 101), contracts, 180)
 
     await priceFeed.setPrice(dec(100, 18))
 
@@ -1185,7 +1145,7 @@ CLVDebt difference between total pending rewards and DefaultPool: 1000000000
     const totalCLVRewards = (totalColl.mul(L_CLVDebt)).div(_1e18_BN)
 
     const defaultPoolETH = await defaultPool.getETH()
-    const defaultPoolCLVDebt = await defaultPool.getCLV()
+    const defaultPoolCLVDebt = await defaultPool.getCLVDebt()
 
     const ETHRewardDifference = defaultPoolETH.sub(totalETHRewards)
     const CLVDebtRewardDifference = defaultPoolCLVDebt.sub(totalCLVRewards)
