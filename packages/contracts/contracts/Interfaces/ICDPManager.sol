@@ -60,7 +60,8 @@ interface ICDPManager {
         uint _CLVAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
-        uint _partialRedemptionHintICR
+        uint _partialRedemptionHintICR,
+        uint _maxIterations
     ) external; 
 
     function updateStakeAndTotalStakes(address _user) external returns (uint);
@@ -75,9 +76,23 @@ interface ICDPManager {
 
     function getPendingCLVDebtReward(address _user) external view returns (uint);
 
-    function getEntireSystemColl() external view returns (uint entireSystemColl);
+     function hasPendingRewards(address _user) external view returns (bool);
 
-    function getEntireSystemDebt() external view returns (uint entireSystemDebt);
+    function getEntireDebtAndColl(
+        address _user
+    ) 
+        external 
+        view 
+    returns (
+        uint debt, 
+        uint coll, 
+        uint pendingCLVDebtReward, 
+        uint pendingETHReward
+    );
+
+    function getEntireSystemColl() external view returns (uint);
+
+    function getEntireSystemDebt() external view returns (uint);
 
     function getTCR() external view returns (uint TCR);
 

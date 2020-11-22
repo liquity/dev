@@ -932,5 +932,56 @@ contract('Fee arithmetic tests', async accounts => {
         }
       }
     })
+
+    it.skip("decPow(): overflow test: doesn't overflow for exponent = minutes in 1000 years", async () => {
+      const exponent = (timeValues.MINUTES_IN_ONE_YEAR * 1000) + 9
+
+      // Test base = 0
+      const response_0 = await mathTester.callDecPowTx(0, exponent)
+      console.log(response_0)
+      assert.isTrue(response_0.receipt.status)
+
+      // test base = 1
+      const response_1 = await mathTester.callDecPowTx(1, exponent)
+      assert.isTrue(response_1.receipt.status)
+
+      // test full range
+      for (let i = 1; i <= 1000; i++) {
+        const base = th.randDecayFactor(0.000000000000000001, 0.999999999999999999)
+        const baseAsDecimal = BNConverter.makeDecimal(base, 18)
+
+        // Calculate actual expected value
+        let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
+        expected = BNConverter.makeBN(expected)
+
+        const response = await mathTester.callDecPowTx(base, exponent) // non-view call, to check reversion
+        assert.isTrue(response.receipt.status)
+
+        const result = await mathTester.callDecPow(base, exponent)
+    
+        const error = expected.sub(result).abs()
+
+        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, res: ${result}, error: ${error}`)
+      }
+
+      // Use a high base to fully test high exponent, without prematurely decaying to 0
+      for (let i = 1; i <= 1000; i++) {
+        const base = th.randDecayFactor(0.9999999999999, 0.999999999999999999)
+        const baseAsDecimal = BNConverter.makeDecimal(base, 18)
+
+        // Calculate actual expected value
+        let expected = Decimal.pow(baseAsDecimal, exponent).toFixed(18)
+        expected = BNConverter.makeBN(expected)
+
+        const response = await mathTester.callDecPowTx(base, exponent) // non-view call, to check reversion
+        assert.isTrue(response.receipt.status)
+
+        const result = await mathTester.callDecPow(base, exponent)
+    
+        const error = expected.sub(result).abs()
+
+        console.log(`run: ${i}. base: ${base}, exp: ${exponent}, res: ${result}, error: ${error}`)
+      }
+    })
   })
 })

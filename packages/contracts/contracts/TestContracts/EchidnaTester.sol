@@ -53,9 +53,6 @@ contract EchidnaTester {
         stabilityPool = new StabilityPool();
         clvToken = new CLVToken(
             address(cdpManager),
-            address(poolManager),
-            address(activePool),
-            address(defaultPool),
             address(stabilityPool),
             address(borrowerOperations)
         );
@@ -117,7 +114,7 @@ contract EchidnaTester {
         uint _partialRedemptionHintICR
     ) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].redeemCollateralPrx(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR);
+        echidnaProxies[actor].redeemCollateralPrx(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, 0);
     }
 
     // Borrower Operations

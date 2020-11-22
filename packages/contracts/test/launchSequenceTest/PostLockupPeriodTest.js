@@ -190,11 +190,11 @@ contract('After the initial lockup period has passed', async accounts => {
       const CDLC_D = await th.getCDLCFromDeploymentTx(deployedCDLCtx_D)
       const CDLC_E = await th.getCDLCFromDeploymentTx(deployedCDLCtx_E)
 
-      const storedDeployerAddress_A = await CDLC_A.lockupDeployer()
-      const storedDeployerAddress_B = await CDLC_B.lockupDeployer()
-      const storedDeployerAddress_C = await CDLC_C.lockupDeployer()
-      const storedDeployerAddress_D = await CDLC_D.lockupDeployer()
-      const storedDeployerAddress_E = await CDLC_E.lockupDeployer()
+      const storedDeployerAddress_A = await CDLC_A.deployer()
+      const storedDeployerAddress_B = await CDLC_B.deployer()
+      const storedDeployerAddress_C = await CDLC_C.deployer()
+      const storedDeployerAddress_D = await CDLC_D.deployer()
+      const storedDeployerAddress_E = await CDLC_E.deployer()
 
       assert.equal(lockupContractFactory.address, storedDeployerAddress_A)
       assert.equal(lockupContractFactory.address, storedDeployerAddress_B)

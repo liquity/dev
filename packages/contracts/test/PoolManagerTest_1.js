@@ -31,9 +31,6 @@ contract('PoolManager', async accounts => {
     contracts.cdpManager = await CDPManagerTester.new()
     contracts.clvToken = await CLVTokenTester.new(
       contracts.cdpManager.address,
-      contracts.poolManager.address,
-      contracts.activePool.address,
-      contracts.defaultPool.address,
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
     )

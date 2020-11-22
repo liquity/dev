@@ -8,9 +8,6 @@ import "./console.sol";
 library Math {
     using SafeMath for uint;
 
-    // The virtual debt assigned to all troves. 
-    uint constant virtualDebt = 6e18;
-  
     function _min(uint _a, uint _b) internal pure returns (uint) {
         return (_a < _b) ? _a : _b;
     }
@@ -29,21 +26,40 @@ library Math {
         decProd = prod_xy.add(1e18 / 2).div(1e18);
     }
 
-    /* Exponentiation function for 18-digit decimal base, and integer exponent n. 
-    Uses the efficient "exponentiation by squaring" algorithm. O(log(n)) complexity. */
-    function _decPow(uint _base, uint _n) internal pure returns (uint) {
-        if (_n == 0) {return 1e18;}
+    /* _decPow: Exponentiation function for 18-digit decimal base, and integer exponent n. 
+    Uses the efficient "exponentiation by squaring" algorithm. O(log(n)) complexity. 
+    
+    Called by two functions that represent time in units of minutes:
+
+    1) CDPManager._calcDecayedBaseRate
+    2) CommunityIssuance._getCumulativeIssuanceFraction 
+
+    The exponent is capped avoid reverting due to overflow. The cap 525600000 equals
+    "minutes in 1000 years": 60 * 24 * 365 * 1000
+    
+    If a period of > 1000 years is ever used as an expoenent in either of the above functions, the result will be
+    negligibly different from just passing the cap:
+
+    1) The decayed base rate will be 0 in either case
+    2) The difference in tokens issued will be negligible.
+
+    */
+    function _decPow(uint _base, uint _minutes) internal pure returns (uint) {
+       
+        if (_minutes > 525600000) {_minutes = 525600000;}  // cap to avoid overflow
+    
+        if (_minutes == 0) {return 1e18;}
 
         uint y = 1e18;
 
-        while (_n > 1) {
-            if (_n % 2 == 0) {
+        while (_minutes > 1) {
+            if (_minutes % 2 == 0) {
                 _base = decMul(_base, _base);
-                _n = _n.div(2);
-            } else if (_n % 2 != 0) {
+                _minutes = _minutes.div(2);
+            } else if (_minutes % 2 != 0) {
                 y = decMul(_base, y);
                 _base = decMul(_base, _base);
-                _n = (_n.sub(1)).div(2);
+                _minutes = (_minutes.sub(1)).div(2);
             }
         }
 

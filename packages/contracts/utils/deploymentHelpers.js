@@ -81,9 +81,6 @@ class DeploymentHelper {
 
     const clvToken = await CLVToken.new(
       cdpManager.address,
-      poolManager.address,
-      activePool.address,
-      defaultPool.address,
       stabilityPool.address,
       borrowerOperations.address
     )
@@ -177,9 +174,6 @@ class DeploymentHelper {
     const hintHelpers = await HintHelpers.new()
     const clvToken = await CLVToken.new(
       cdpManager.address,
-      poolManager.address,
-      activePool.address,
-      defaultPool.address,
       stabilityPool.address,
       borrowerOperations.address
     )
@@ -218,9 +212,6 @@ class DeploymentHelper {
   static async deployCLVToken(contracts) {
     contracts.clvToken = await CLVToken.new(
       contracts.cdpManager.address,
-      contracts.poolManager.address,
-      contracts.activePool.address,
-      contracts.defaultPool.address,
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
     )

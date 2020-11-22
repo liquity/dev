@@ -8,10 +8,7 @@ import "../Dependencies/IERC2612.sol";
 interface ICLVToken is IERC20, IERC2612 { 
     
     // --- Events ---
-    event PoolManagerAddressChanged(address _newPoolManagerAddress);
     event CDPManagerAddressChanged(address _cdpManagerAddress);
-    event ActivePoolAddressChanged(address _newActivePoolAddress);
-    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
 

@@ -122,7 +122,7 @@ In Liquity, collateral and debt shares from liquidations are proportional to the
 
 The “strawman” approach in 6, with rewards proportional to the initial stake, neglects this: it over-rewards fresh troves, and under-rewards older troves. \\
 
-We introduce a corrected stake to restore proportional reward distribution. \\
+We introduce a corrected stake $s_i$ to restore proportional reward distribution:
 
 \begin{equation} \label{eq:2}
     s_i=
@@ -133,7 +133,9 @@ We introduce a corrected stake to restore proportional reward distribution. \\
 \end{equation}
 
 \bigskip
-Where $S_\emptyset$ and $C_\emptyset$ are the respective snapshots of the total stakes and total collateral in the system, taken immediately after the last liquidation event. Note that with this terminology, the total collateral includes the total stakes, and therefore $C_\emptyset \ge S_\emptyset$
+The corrected stake $s_i$ is chosen such that it earns rewards from liquidations equivalent to a trove that would have accumulated $c_i$ total collateral by the time the fresh trove $i$ was created.
+ 
+$S_\emptyset$ and $C_\emptyset$ are the respective snapshots of the total stakes and total collateral in the system, taken immediately after the last liquidation event. Note that with this terminology, the total collateral includes the total stakes, and therefore $C_\emptyset \ge S_\emptyset$
 \\
 
 By extending the original formula from $\cite{Batog}$, we can thus express the collateral and debt share received by a trove by:
@@ -153,14 +155,7 @@ As mentioned above, we aim to prove that the corrected stake approach leaves the
 
 Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be  ensured that redistributions do not break trove ordering.
 
-To that end, we make use of the following definitions and notation. 
-
-\subsection{Notation}
-
-Note that the collateral and debt include all previously accumulated rewards from past liquidations. Further, let $\gamma_1$ denote the ICR of a trove 1 and $\gamma_2$ denote the ICR of a trove 2. \\
-
-
-We also introduce the notion of \textit{system order}. 
+To break up the proof, we introduce the notion of \textit{system order}. 
 
 \subsection{System Order Evolution}
 In general, a system of troves increases from order $N$ to order $N+1$ when the following sequence of events occurs:
@@ -177,29 +172,48 @@ We capture the system order in a system evolution function:
 \end{equation}
 
 \bigskip
-Let $\Gamma_1$ define a system of troves with past liquidations, in which all active troves have received reward shares from all past liquidations. $\Gamma_1$ is a first-order system, and contains only first-order stakes. Each stake $s_i$ is equal to it’s collateral $c_i$, and \textit{S} $= \sum s_i = \sum c_i$.\\
+Let $\Gamma_0$ define a system of troves with no past liquidations.\\
 
-Let $\Gamma_2$ define an evolution of $\Gamma_1$, i.e. $\Gamma_2 = f(\Gamma_1)$. $\Gamma_2$ is a system with past liquidations, with \textit{S} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added $trove_j$. $S_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
+Let $\Gamma_1$ define a system of troves with past liquidations, in which all active troves have received reward shares from all past liquidations. $\Gamma_1$ is a first-order system, and contains only stakes of first-order troves. Each first-order stake $s_i$ is equal to it’s collateral $c_i$, and \textit{S} $= \sum s_i = \sum c_i$.\\
 
-In general, $\Gamma_n$ is a system with $n$ sequential pairs, each consisting of a trove creation period and a liquidation period. trove's made in a given trove creation period t have experienced only those liquidations that occurred in liquidation period t or greater.
+Let $\Gamma_2$ define an evolution of $\Gamma_1$, i.e. $\Gamma_2 = f(\Gamma_1)$. $\Gamma_2$ is a system with past liquidations, with \textit{S} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added trove $j$. $S_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
 
+In general, $\Gamma_n$ is a system with $n$ sequential pairs, each consisting of a trove creation period and a liquidation period. Troves created in a given trove creation period $t$ have experienced only those liquidations that occurred in liquidation period $t$ or greater.
+
+
+\subsection*{Core Lemma}
+We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the liquidation of a trove $k$ that was created in $\Gamma_0$, no subsequent liquidations in $\Gamma_2$, and exactly one trove $j$ that was created in $\Gamma_1$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+
+%Formal notation becomes unwieldy
+%$\forall{\{\Gamma_2, i,j,k| k \in$ $\Gamma_0, k \notin$ $\Gamma_1 }}: 
+% (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$)
+
+%\begin{itemize}
+%  \item Proof: $\gamma_1=\gamma_2$. $1^{st}$ order, M past liquidations. %Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
+%\end{itemize}
+
+
+\subsection*{Generalizations}
+\begin{itemize}
+  %\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations %Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
+  
+  \item Proof: We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the liquidation of a trove $k$ that was created in $\Gamma_0$ and exactly one trove $j$ that was created in $\Gamma_1$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+  
+  %\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations %Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
+  
+  \item Proof: We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the liquidation of a trove $k$ that was created in $\Gamma_0$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+  
+  \item Proof: For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  
+  \item Proof: For every $N^{th}$ order system $\Gamma_N$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+    
+  %\item Show $2^{nd}$ order system is equivalent to first order 
+  
+  %\item Show that $n^{th}$ order system is equivalent to first order
+\end{itemize}
 
 \subsection*{Core Proof}
-\begin{itemize}
-  \item Proof: $\gamma_1=\gamma_2$. $1^{st}$ order, M past liquidations. Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
-\end{itemize}
-
-
-\subsection*{Extensions}
-\begin{itemize}
-  \item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
-  \item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
-  \item Show $2^{nd}$ order system is equivalent to first order 
-  \item Show that $n^{th}$ order system is equivalent to first order
-\end{itemize}
-
-
-
+For every system $\Gamma_N$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{N+1}$, the corrected stake approach maintains maintains $\gamma_i > \gamma_j$.
 
 
 \subsection{At First-Order, Stake Equals Initial Collateral}
@@ -213,7 +227,6 @@ for all $s_i$, $c_i$ in an $\Gamma_1$ system.
 
 \subsection{Intuition Behind Choice of Corrected Stake}
 
-The corrected stake $s_i$ is chosen such that it earns rewards from liquidations equivalent to a trove that would have accumulated $c_i$ total collateral by the time the fresh $trove_i$ was created.\\
 
 The corrected stake effectively models the fresh trove’s collateral $c_i$ as a total collateral, which includes ‘virtual’ accumulated rewards. The corrected stake earns rewards for the trove as if the trove was first-order, and had been in the system from the beginning - thus maintaining proportional reward growth.\\
 

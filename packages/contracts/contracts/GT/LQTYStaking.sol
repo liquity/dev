@@ -13,7 +13,7 @@ contract LQTYStaking is ILQTYStaking {
     using SafeMath for uint;
 
     // --- Data ---
-    address public stakingContractDeployer;
+    address public deployer;
 
     mapping( address => uint) stakes;
     uint public totalLQTYStaked;
@@ -50,7 +50,7 @@ contract LQTYStaking is ILQTYStaking {
     // --- Functions ---
 
      constructor() public {
-        stakingContractDeployer = msg.sender;
+        deployer = msg.sender;
     }
 
     function setGrowthTokenAddress(address _growthTokenAddress) external override {
@@ -196,7 +196,7 @@ contract LQTYStaking is ILQTYStaking {
     // --- 'require' functions ---
 
     function  _requireCallerIsStakingContractDeployer() internal view {
-        require(msg.sender == stakingContractDeployer, "LQTYStaking: caller is not deployer");
+        require(msg.sender == deployer, "LQTYStaking: caller is not deployer");
     }
 
     function _requireCallerIsCDPManager() internal view {

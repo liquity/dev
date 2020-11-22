@@ -44,8 +44,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const GTContracts = await deploymentHelper.deployGTTesterContractsBuidler()
     contracts.poolManager = await PoolManagerTester.new()
-    contracts = await deploymentHelper.deployCLVToken(contracts)
-
+    
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     poolManagerTester = contracts.poolManager

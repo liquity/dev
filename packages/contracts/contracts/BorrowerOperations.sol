@@ -388,11 +388,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         return usdValue;
     }
 
-    function _getCollChange(uint _collReceived, uint _requestedCollWithdrawal) internal pure returns
-    (
-        uint collChange,
-        bool isCollIncrease
-    )
+    function _getCollChange(
+        uint _collReceived, 
+        uint _requestedCollWithdrawal
+    ) 
+        internal 
+        pure 
+        returns(uint collChange, bool isCollIncrease)
     {
         if (_collReceived != 0) {
             collChange = _collReceived;
@@ -411,8 +413,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint _debtChange,
         bool _isDebtIncrease
     )
-    internal
-    returns (uint, uint)
+        internal
+        returns (uint, uint)
     {
         uint newColl = (_isCollIncrease) ? cdpManager.increaseCDPColl(_user, _collChange)
                                         : cdpManager.decreaseCDPColl(_user, _collChange);
@@ -431,7 +433,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         bool _isDebtIncrease,
         uint _CLVFee
     )
-    internal
+        internal
     {
         if (_isDebtIncrease) {
             poolManager.withdrawCLV(_user, _debtChange, _CLVFee);
@@ -478,8 +480,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         bool _isDebtIncrease,
         uint _price
     )
-    internal
-    view
+        internal
+        view
     {
         uint newTCR = _getNewTCRFromTroveChange(_collChange, _isCollIncrease, _debtChange, _isDebtIncrease, _price);
         require(newTCR >= CCR, "BorrowerOps: An operation that would result in TCR < CCR is not permitted");
@@ -494,8 +496,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)
-    internal
-    pure
+        internal
+        pure
     {
         require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
     }
@@ -513,9 +515,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         bool _isDebtIncrease,
         uint _price
     )
-    pure
-    internal
-    returns (uint)
+        pure
+        internal
+        returns (uint)
     {
         uint newColl = _coll;
         uint newDebt = _debt;
@@ -529,15 +531,15 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function _getNewTCRFromTroveChange
     (
-    uint _collChange,
-    bool _isCollIncrease,
-    uint _debtChange,
-    bool _isDebtIncrease,
-    uint _price
+        uint _collChange,
+        bool _isCollIncrease,
+        uint _debtChange,
+        bool _isDebtIncrease,
+        uint _price
     )
-    internal
-    view
-    returns (uint)
+        internal
+        view
+        returns (uint)
     {
         uint totalColl = activePool.getETH().add(defaultPool.getETH());
         uint totalDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());

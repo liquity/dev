@@ -62,9 +62,6 @@ contract('CDPManager', async accounts => {
 
     clvToken = await CLVToken.new(
       cdpManager.address,
-      poolManager.address,
-      activePool.address,
-      defaultPool.address,
       stabilityPool.address,
       borrowerOperations.address
     )

@@ -15,6 +15,7 @@ pragma solidity ^0.6.0;
  */
 
 interface IERC2612 {
+    
     /**
      * @dev Sets `amount` as the allowance of `spender` over `owner`'s tokens,
      * given `owner`'s signed approval.
@@ -37,8 +38,10 @@ interface IERC2612 {
      * https://eips.ethereum.org/EIPS/eip-2612#specification[relevant EIP
      * section].
      */
+
     function permit(address owner, address spender, uint256 amount, 
                     uint256 deadline, uint8 v, bytes32 r, bytes32 s) external;
+    
     /**
      * @dev Returns the current ERC2612 nonce for `owner`. This value must be
      * included whenever a signature is generated for {permit}.
@@ -50,5 +53,6 @@ interface IERC2612 {
      * a value in the near future. The deadline argument can be set to uint(-1) to 
      * create Permits that effectively never expire.
      */
+
     function nonces(address owner) external view returns (uint256);
 }

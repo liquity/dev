@@ -1,19 +1,23 @@
 import { describe, before, it } from "mocha";
 import chai, { expect, assert } from "chai";
 import chaiAsPromised from "chai-as-promised";
+import chaiSpies from "chai-spies";
+import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
-import { ethers } from "@nomiclabs/buidler";
+import { ethers, network } from "@nomiclabs/buidler";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 import { Trove, StabilityDeposit } from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
-import { LiquityContractAddresses, addressesOf, EthersLiquity } from "..";
-import { BigNumber } from "ethers";
+import { HintHelpers } from "../types";
+import { LiquityContracts, LiquityContractAddresses, addressesOf } from "../src/contracts";
+import { EthersLiquity, redeemMaxIterations } from "../src/EthersLiquity";
 
 const provider = ethers.provider;
 
 chai.use(chaiAsPromised);
+chai.use(chaiSpies);
 
 // Typed wrapper around Chai's
 function assertStrictEquals<T>(actual: unknown, expected: T, message?: string): asserts actual is T {
@@ -41,7 +45,7 @@ describe("EthersLiquity", () => {
   const sendToEach = async (users: Signer[], value: Decimalish) => {
     const txCount = await provider.getTransactionCount(funder.getAddress());
 
-    return Promise.all(
+    const txs = await Promise.all(
       users.map((user, i) =>
         funder.sendTransaction({
           to: user.getAddress(),
@@ -50,6 +54,9 @@ describe("EthersLiquity", () => {
         })
       )
     );
+
+    // Wait for the last tx to be mined.
+    await txs[txs.length - 1].wait();
   };
 
   before(async () => {
@@ -100,12 +107,66 @@ describe("EthersLiquity", () => {
     expect(`${await provider.getBalance(user.getAddress())}`).to.equal(`${targetBalance}`);
   });
 
-  it("should connect to contracts their addresses", async () => {
+  it("should connect to contracts by their addresses", async () => {
     liquity = await EthersLiquity.connect(addresses, user);
   });
 
   it("should get the price", async () => {
     price = await liquity.getPrice();
+  });
+
+  describe("_findHintForCollateralRatio", () => {
+    it("should pick the closest approx hint", async () => {
+      type Resolved<T> = T extends Promise<infer U> ? U : never;
+      type ApproxHint = Resolved<ReturnType<HintHelpers["getApproxHint"]>>;
+
+      const fakeHints: ApproxHint[] = [
+        { diff: BigNumber.from(3), hintAddress: "alice", latestRandomSeed: BigNumber.from(1111) },
+        { diff: BigNumber.from(4), hintAddress: "bob", latestRandomSeed: BigNumber.from(2222) },
+        { diff: BigNumber.from(1), hintAddress: "carol", latestRandomSeed: BigNumber.from(3333) },
+        { diff: BigNumber.from(2), hintAddress: "dennis", latestRandomSeed: BigNumber.from(4444) }
+      ];
+
+      const fakeContracts = {
+        cdpManager: {}, // avoid TypeError in EthersLiquity constructor
+
+        hintHelpers: chai.spy.interface({
+          getApproxHint: (..._args: any) => Promise.resolve(fakeHints.shift())
+        }),
+
+        sortedCDPs: chai.spy.interface({
+          findInsertPosition: (..._args: any) => Promise.resolve(["fake insert position"])
+        })
+      };
+
+      const fakeLiquity = new EthersLiquity(fakeContracts as LiquityContracts);
+
+      const collateralRatio = Decimal.from("1.5");
+      const price = Decimal.from(200);
+
+      await fakeLiquity._findHintForCollateralRatio(collateralRatio, {
+        numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
+        price
+      });
+
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.exactly(4);
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(
+        collateralRatio.bigNumber,
+        price.bigNumber
+      );
+
+      // returned latestRandomSeed should be passed back on the next call
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(1111));
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(2222));
+      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(3333));
+
+      expect(fakeContracts.sortedCDPs.findInsertPosition).to.have.been.called.once;
+      expect(fakeContracts.sortedCDPs.findInsertPosition).to.have.been.called.with(
+        collateralRatio.bigNumber,
+        price.bigNumber,
+        "carol"
+      );
+    });
   });
 
   describe("Trove", () => {
@@ -247,7 +308,7 @@ describe("EthersLiquity", () => {
   const connectUsers = (users: Signer[]) =>
     Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
 
-  describe.skip("StabilityPool", () => {
+  describe("StabilityPool", () => {
     before(async () => {
       [deployerLiquity, ...otherLiquities] = await connectUsers([
         deployer,
@@ -343,13 +404,14 @@ describe("EthersLiquity", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
         addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+        const otherUsersSubset = otherUsers.slice(0, 2);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
-          ...otherUsers.slice(0, 2)
+          ...otherUsersSubset
         ]);
 
-        await sendToEach(otherUsers, 1.1);
+        await sendToEach(otherUsersSubset, 1.1);
 
         price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
@@ -394,13 +456,14 @@ describe("EthersLiquity", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
         addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+        const otherUsersSubset = otherUsers.slice(0, 5);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
           user,
-          ...otherUsers.slice(0, 5)
+          ...otherUsersSubset
         ]);
 
-        await sendToEach(otherUsers, 2.1);
+        await sendToEach(otherUsersSubset, 2.1);
 
         price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
@@ -453,13 +516,14 @@ describe("EthersLiquity", () => {
     before(async () => {
       // Deploy new instances of the contracts, for a clean slate
       addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      const otherUsersSubset = otherUsers.slice(0, 3);
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
         user,
-        ...otherUsers.slice(0, 3)
+        ...otherUsersSubset
       ]);
 
-      await sendToEach(otherUsers, 1.1);
+      await sendToEach(otherUsersSubset, 1.1);
 
       await liquity.openTrove(new Trove({ collateral: 20, debt: 110 }));
       await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 20 }));
@@ -492,17 +556,62 @@ describe("EthersLiquity", () => {
         attemptedTokenAmount: Decimal.from(55),
         actualTokenAmount: Decimal.from(55),
         collateralReceived: Decimal.from(0.275),
-        fee: Decimal.from("0.084027777777777777")
+        // fee: Decimal.from("0.084027777777777777")
+        fee: Decimal.from("0.042013888888888888")
       });
 
       const balance = new Decimal(await provider.getBalance(user.getAddress()));
-      expect(`${balance}`).to.equal("100.190972222222222223");
+      expect(`${balance}`).to.equal("100.232986111111111112");
 
       expect(`${await liquity.getQuiBalance()}`).to.equal("45");
 
       expect(`${(await otherLiquities[0].getTrove()).debt}`).to.equal("15");
       expect((await otherLiquities[1].getTrove()).isEmpty).to.be.true;
       expect((await otherLiquities[2].getTrove()).isEmpty).to.be.true;
+    });
+  });
+
+  describe("Redemption, gas checks", function () {
+    this.timeout("5m");
+
+    before(async function () {
+      if (network.name === "dev") {
+        // Only about the first 40 accounts work when testing on the dev chain due to a not yet
+        // known issue.
+
+        // Since this test needs more than that, let's skip it on dev for now.
+        this.skip();
+      }
+
+      // Deploy new instances of the contracts, for a clean slate
+      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      const otherUsersSubset = otherUsers.slice(0, redeemMaxIterations);
+      expect(otherUsersSubset).to.have.length(redeemMaxIterations);
+
+      [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
+        deployer,
+        user,
+        ...otherUsersSubset
+      ]);
+
+      await sendToEach(otherUsersSubset, 1.1);
+
+      await liquity.openTrove(new Trove({ collateral: 50, debt: 410 }));
+      for (let otherLiquity of otherLiquities) {
+        await otherLiquity.openTrove(new Trove({ collateral: 1, debt: 11 }));
+      }
+    });
+
+    it("should redeem using the maximum iterations and almost all gas", async () => {
+      const tx = await liquity.redeemCollateral(redeemMaxIterations);
+
+      const receipt = await tx.waitForReceipt();
+      assertStrictEquals(receipt.status, "succeeded" as const);
+
+      const gasUsed = receipt.rawReceipt.gasUsed.toNumber();
+      // gasUsed is ~half the real used amount because of how refunds work, see:
+      // https://ethereum.stackexchange.com/a/859/9205
+      expect(gasUsed).to.be.at.least(5e6, "should use at least 10M gas");
     });
   });
 });
