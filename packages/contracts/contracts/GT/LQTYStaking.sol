@@ -85,9 +85,7 @@ contract LQTYStaking is ILQTYStaking {
         emit BorrowerOperationsAddressSet(_activePoolAddress);
     }
 
-    /* Staking expects that this StakingContract is allowed to spend at least _amount of 
-    the caller's LQTY tokens.
-    If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. */
+    // If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. 
     function stake(uint _LQTYamount) external override {
         uint currentStake = stakes[msg.sender];
 
@@ -106,7 +104,7 @@ contract LQTYStaking is ILQTYStaking {
         totalLQTYStaked = totalLQTYStaked.add(_LQTYamount);
 
         // Transfer LQTY from caller to this contract
-        growthToken.transferFrom(msg.sender, address(this), _LQTYamount);
+        growthToken.sendToLQTYStaking(msg.sender, _LQTYamount);
 
         // Send accumulated LUSD and ETH gains to the caller
         clvToken.transfer(msg.sender, LUSDGain);

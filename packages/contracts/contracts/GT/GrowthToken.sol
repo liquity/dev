@@ -2,8 +2,8 @@
 
 pragma solidity 0.6.11;
 
-import "../Dependencies/IERC20.sol";
 import "../Dependencies/SafeMath.sol";
+import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ILockupContractFactory.sol";
 import "../Dependencies/console.sol";
 
@@ -28,7 +28,7 @@ After one year has passed since deployment of the GrowthToken, the restrictions 
 and the deployer has the same rights as any other address.
  */
 
-contract GrowthToken is IERC20 {
+contract GrowthToken is IERC20, IGrowthToken {
     using SafeMath for uint256;
 
     // --- Data ---
@@ -50,6 +50,7 @@ contract GrowthToken is IERC20 {
 
     address public deployer;
     address public communityIssuanceAddress;
+    address public lqtyStakingAddress;
 
     address public lockupFactoryAddress;
     ILockupContractFactory lockupContractFactory;
@@ -57,15 +58,24 @@ contract GrowthToken is IERC20 {
     // --- Events ---
 
     event CommunityIssuanceAddressSet(address _communityIssuanceAddress);
+    event LQTYStakingAddressSet(address _lqtyStakingAddress);
     event LockupContractFactoryAddressSet(address _lockupContractFactoryAddress);
 
     // --- Functions ---
 
-    constructor(address _communityIssuanceAddress, address _lockupFactoryAddress) public {
+    constructor
+    (
+        address _communityIssuanceAddress, 
+        address _lqtyStakingAddress,
+        address _lockupFactoryAddress
+    ) 
+        public 
+    {
         deployer = msg.sender;
         deploymentStartTime  = block.timestamp;
         
         communityIssuanceAddress = _communityIssuanceAddress;
+        lqtyStakingAddress = _lqtyStakingAddress;
         lockupFactoryAddress = _lockupFactoryAddress;
         lockupContractFactory = ILockupContractFactory(_lockupFactoryAddress);
         
@@ -132,6 +142,11 @@ contract GrowthToken is IERC20 {
         return true;
     }
 
+    function sendToLQTYStaking(address _sender, uint256 _amount) external override {
+        _requireCallerIsLQTYStaking();
+        _transfer(_sender, lqtyStakingAddress, _amount);
+    }
+
     // --- Internal operations ---
 
     function _transfer(address sender, address recipient, uint256 amount) internal {
@@ -195,6 +210,10 @@ contract GrowthToken is IERC20 {
 
     function _requireCallerIsNotDeployer() internal view {
         require(!_callerIsDeployer(), "GrowthToken: caller must not be the deployer");
+    }
+
+    function _requireCallerIsLQTYStaking() internal view {
+         require(msg.sender == lqtyStakingAddress, "GrowthToken: caller must be the LQTYStaking contract");
     }
 
     // --- Optional functions ---

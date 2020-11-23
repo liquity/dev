@@ -6,6 +6,7 @@ const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
 
 const dec = th.dec
+const toBN = th.toBN
 
 contract('All Liquity functions with intra-system access control restrictions', async accounts => {
 
@@ -491,12 +492,12 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
       // deploy new CDLC with 1 month duration and Carol as beneficiary
       const deployedCDLCtx = await lockupContractFactory
-      .deployCustomDurationLockupContract(
-        carol,
-        dec(100, 18),
-        timeValues.SECONDS_IN_ONE_MONTH,
-        { from: owner }
-      )
+        .deployCustomDurationLockupContract(
+          carol,
+          dec(100, 18),
+          timeValues.SECONDS_IN_ONE_MONTH,
+          { from: owner }
+        )
 
       const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
 
@@ -518,16 +519,16 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     it("withdrawGT(): reverts when caller is not beneficiary", async () => {
-       // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
-       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+      // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // deploy new CDLC with 1 month duration and Carol as beneficiary
       const deployedCDLCtx = await lockupContractFactory
-      .deployCustomDurationLockupContract(
-        carol,
-        dec(100, 18),
-        timeValues.SECONDS_IN_ONE_MONTH,
-        { from: owner })
+        .deployCustomDurationLockupContract(
+          carol,
+          dec(100, 18),
+          timeValues.SECONDS_IN_ONE_MONTH,
+          { from: owner })
 
       const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
 
@@ -555,7 +556,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
   })
 
-  describe('LQTYStaking', async accounts => { 
+  describe('LQTYStaking', async accounts => {
     it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
       try {
         const txAlice = await lqtyStaking.setGrowthTokenAddress(growthToken.address, { from: alice })
@@ -565,7 +566,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       }
 
       // Deployer can successfully set address
-      const txDeployer =  lqtyStaking.setGrowthTokenAddress(growthToken.address, { from: owner })
+      const txDeployer = lqtyStaking.setGrowthTokenAddress(growthToken.address, { from: owner })
     })
 
     it("setCLVTokenAddress(): reverts when caller is not  deployer", async () => {
@@ -577,7 +578,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       }
 
       // Deployer can successfully set address
-      const txDeployer =  lqtyStaking.setCLVTokenAddress(clvToken.address, { from: owner })
+      const txDeployer = lqtyStaking.setCLVTokenAddress(clvToken.address, { from: owner })
     })
 
     it("setCDPManagerAddress(): reverts when caller is not deployer", async () => {
@@ -606,7 +607,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
     it("addETHFee(): reverts when caller is not CDPManager", async () => {
       try {
-        const txAlice = await lqtyStaking.increaseF_ETH(dec(1, 'ether'), { from: alice})
+        const txAlice = await lqtyStaking.increaseF_ETH(dec(1, 'ether'), { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
@@ -615,7 +616,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
     it("addLQTYFee(): reverts when caller is not CDPManager", async () => {
       try {
-        const txAlice = await lqtyStaking.increaseF_LUSD(dec(1, 18), { from: alice})
+        const txAlice = await lqtyStaking.increaseF_LUSD(dec(1, 18), { from: alice })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
@@ -623,10 +624,10 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
   })
 
-  describe('CommunityIssuance', async accounts => { 
+  describe('CommunityIssuance', async accounts => {
     it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
-      
-      const CINew = await CommunityIssuance.new() 
+
+      const CINew = await CommunityIssuance.new()
 
       try {
         const txAlice = await CINew.setGrowthTokenAddress(growthToken.address, { from: alice })
@@ -636,8 +637,39 @@ contract('All Liquity functions with intra-system access control restrictions', 
       }
 
       // Deployer can successfully set address
-      const txDeployer =  CINew.setGrowthTokenAddress(growthToken.address, { from: owner })
+      const txDeployer = CINew.setGrowthTokenAddress(growthToken.address, { from: owner })
+    })
+  })
+
+  describe('GrowthToken', async accounts => {
+    it.only("sendToLQTYStaking(): reverts when caller is not the LQTYSstaking", async () => {
+      // Check owner has some LQTY
+      assert.isTrue((await growthToken.balanceOf(owner)).gt(toBN('0')))
+
+      // Owner tries to call it
+      try {
+        const tx = await growthToken.sendToLQTYStaking(owner, 1, { from: owner })
+        assert.isFalse(tx.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
+
+      // FF >> time one year
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+
+      // Owner transfers 1 LQTY to bob
+      await growthToken.transfer(bob, dec(1, 18), { from: owner })
+      assert.equal((await growthToken.balanceOf(bob)), dec(1, 18))
+
+      // Bob tries to call it
+      try {
+        const tx = await growthToken.sendToLQTYStaking(bob, dec(1, 18), { from: bob })
+        assert.isFalse(tx.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+      }
     })
   })
 })
+
 

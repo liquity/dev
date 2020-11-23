@@ -40,7 +40,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
   })
 
-  it('sets the correct PriceFeed address in CDPManager', async () => {
+  it('Sets the correct PriceFeed address in CDPManager', async () => {
     const priceFeedAddress = priceFeed.address
 
     const recordedPriceFeedAddress = await cdpManager.priceFeed()
@@ -48,7 +48,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(priceFeedAddress, recordedPriceFeedAddress)
   })
 
-  it('sets the correct CLVToken address in CDPManager', async () => {
+  it('Sets the correct CLVToken address in CDPManager', async () => {
     const clvTokenAddress = clvToken.address
 
     const recordedClvTokenAddress = await cdpManager.clvToken()
@@ -56,7 +56,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(clvTokenAddress, recordedClvTokenAddress)
   })
 
-  it('sets the correct SortedCDPs address in CDPManager', async () => {
+  it('Sets the correct SortedCDPs address in CDPManager', async () => {
     const sortedCDPsAddress = sortedCDPs.address
 
     const recordedSortedCDPsAddress = await cdpManager.sortedCDPs()
@@ -64,7 +64,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(sortedCDPsAddress, recordedSortedCDPsAddress)
   })
 
-  it('sets the correct BorrowerOperations address in CDPManager', async () => {
+  it('Sets the correct BorrowerOperations address in CDPManager', async () => {
     const borrowerOperationsAddress = borrowerOperations.address
 
     const recordedBorrowerOperationsAddress = await cdpManager.borrowerOperationsAddress()
@@ -73,7 +73,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // ActivePool in CDPM
-  it('sets the correct ActivePool address in CDPManager', async () => {
+  it('Sets the correct ActivePool address in CDPManager', async () => {
     const activePoolAddress = activePool.address
 
     const recordedActivePoolAddresss = await cdpManager.activePool()
@@ -82,7 +82,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // DefaultPool in CDPM
-  it('sets the correct DefaultPool address in CDPManager', async () => {
+  it('Sets the correct DefaultPool address in CDPManager', async () => {
     const defaultPoolAddress = defaultPool.address
 
     const recordedDefaultPoolAddresss = await cdpManager.defaultPool()
@@ -91,7 +91,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // StabilityPool in CDPM
-  it('sets the correct StabilityPool address in CDPManager', async () => {
+  it('Sets the correct StabilityPool address in CDPManager', async () => {
     const stabilityPoolAddress = stabilityPool.address
 
     const recordedStabilityPoolAddresss = await cdpManager.stabilityPool()
@@ -100,7 +100,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // GT Staking in CDPM
-  it('sets the correct LQTYStaking address in CDPManager', async () => {
+  it('Sets the correct LQTYStaking address in CDPManager', async () => {
     const lqtyStakingAddress = lqtyStaking.address
 
     const recordedLQTYStakingAddress = await cdpManager.lqtyStakingAddress()
@@ -109,7 +109,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
 
   // Active Pool
 
-  it('sets the correct StabilityPool address in ActivePool', async () => {
+  it('Sets the correct StabilityPool address in ActivePool', async () => {
     const stabilityPoolAddress = stabilityPool.address
 
     const recordedStabilityPoolAddress = await activePool.stabilityPoolAddress()
@@ -117,7 +117,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
   })
 
-  it('sets the correct DefaultPool address in ActivePool', async () => {
+  it('Sets the correct DefaultPool address in ActivePool', async () => {
     const defaultPoolAddress = defaultPool.address
 
     const recordedDefaultPoolAddress = await activePool.defaultPoolAddress()
@@ -125,7 +125,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
   })
 
-  it('sets the correct BorrowerOperations address in ActivePool', async () => {
+  it('Sets the correct BorrowerOperations address in ActivePool', async () => {
     const borrowerOperationsAddress = borrowerOperations.address
 
     const recordedBorrowerOperationsAddress = await activePool.borrowerOperationsAddress()
@@ -133,7 +133,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  it('sets the correct CDPManager address in ActivePool', async () => {
+  it('Sets the correct CDPManager address in ActivePool', async () => {
     const cdpManagerAddress = cdpManager.address
 
     const recordedCDPManagerAddress = await activePool.cdpManagerAddress()
@@ -142,14 +142,14 @@ contract('Deployment script - Sets correct contract addresses dependencies after
 
   // Stability Pool
 
-  it('sets the correct ActivePool address in StabilityPool', async () => {
+  it('Sets the correct ActivePool address in StabilityPool', async () => {
     const activePoolAddress = activePool.address
 
     const recordedActivePoolAddress = await stabilityPool.activePoolAddress()
     assert.equal(activePoolAddress, recordedActivePoolAddress)
   })
 
-  it('sets the correct BorrowerOperations address in StabilityPool', async () => {
+  it('Sets the correct BorrowerOperations address in StabilityPool', async () => {
     const borrowerOperationsAddress = borrowerOperations.address
 
     const recordedBorrowerOperationsAddress = await stabilityPool.borrowerOperations()
@@ -157,7 +157,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  it('sets the correct CLVToken address in StabilityPool', async () => {
+  it('Sets the correct CLVToken address in StabilityPool', async () => {
     const clvTokenAddress = clvToken.address
 
     const recordedClvTokenAddress = await stabilityPool.clvToken()
@@ -165,7 +165,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(clvTokenAddress, recordedClvTokenAddress)
   })
 
-  it('sets the correct CDPManager address in StabilityPool', async () => {
+  it('Sets the correct CDPManager address in StabilityPool', async () => {
     const cdpManagerAddress = cdpManager.address
 
     const recordedCDPManagerAddress = await stabilityPool.cdpManager()
@@ -174,28 +174,28 @@ contract('Deployment script - Sets correct contract addresses dependencies after
 
   // Default Pool
 
-  it('sets the correct CDPManager address in DefaultPool', async () => {
+  it('Sets the correct CDPManager address in DefaultPool', async () => {
     const cdpManagerAddress = cdpManager.address
 
     const recordedCDPManagerAddress = await defaultPool.cdpManagerAddress()
     assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
   })
 
-  it('sets the correct ActivePool address in DefaultPool', async () => {
+  it('Sets the correct ActivePool address in DefaultPool', async () => {
     const activePoolAddress = activePool.address
 
     const recordedActivePoolAddress = await defaultPool.activePoolAddress()
     assert.equal(activePoolAddress, recordedActivePoolAddress)
   })
 
-  it('sets the correct CDPManager address in SortedCDPs', async () => {
+  it('Sets the correct CDPManager address in SortedCDPs', async () => {
     const borrowerOperationsAddress = borrowerOperations.address
 
     const recordedBorrowerOperationsAddress = await sortedCDPs.borrowerOperationsAddress()
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  it('sets the correct BorrowerOperations address in SortedCDPs', async () => {
+  it('Sets the correct BorrowerOperations address in SortedCDPs', async () => {
     const cdpManagerAddress = cdpManager.address
 
     const recordedCDPManagerAddress = await sortedCDPs.CDPManagerAddress()
@@ -205,7 +205,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   //--- BorrowerOperations ---
 
   // CDPManager in BO
-  it('sets the correct CDPManager address in BorrowerOperations', async () => {
+  it('Sets the correct CDPManager address in BorrowerOperations', async () => {
     const cdpManagerAddress = cdpManager.address
 
     const recordedCDPManagerAddress = await borrowerOperations.cdpManager()
@@ -213,7 +213,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // setPriceFeed in BO
-  it('sets the correct PriceFeed address in BorrowerOperations', async () => {
+  it('Sets the correct PriceFeed address in BorrowerOperations', async () => {
     const priceFeedAddress = priceFeed.address
 
     const recordedPriceFeedAddress = await borrowerOperations.priceFeed()
@@ -221,7 +221,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // setSortedCDPs in BO
-  it('sets the correct SortedCDPs address in BorrowerOperations', async () => {
+  it('Sets the correct SortedCDPs address in BorrowerOperations', async () => {
     const sortedCDPsAddress = sortedCDPs.address
 
     const recordedSortedCDPsAddress = await borrowerOperations.sortedCDPs()
@@ -229,7 +229,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // setActivePool in BO
-  it('sets the correct ActivePool address in BorrowerOperations', async () => {
+  it('Sets the correct ActivePool address in BorrowerOperations', async () => {
     const activePoolAddress = activePool.address
 
     const recordedActivePoolAddress = await borrowerOperations.activePool()
@@ -237,7 +237,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // setDefaultPool in BO
-  it('sets the correct DefaultPool address in BorrowerOperations', async () => {
+  it('Sets the correct DefaultPool address in BorrowerOperations', async () => {
     const defaultPoolAddress = defaultPool.address
 
     const recordedDefaultPoolAddress = await borrowerOperations.defaultPool()
@@ -245,7 +245,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // GT Staking in BO
-  it('sets the correct LQTYStaking address in BorrowerOperations', async () => {
+  it('Sets the correct LQTYStaking address in BorrowerOperations', async () => {
     const lqtyStakingAddress = lqtyStaking.address
 
     const recordedLQTYStakingAddress = await borrowerOperations.lqtyStakingAddress()
@@ -255,61 +255,96 @@ contract('Deployment script - Sets correct contract addresses dependencies after
 
   // --- LQTY Staking ---
 
-  // sets GrowthToken in LQTYStaking
-  it('sets the correct GrowthToken address in LQTYStaking', async () => {
+  // Sets GrowthToken in LQTYStaking
+  it('Sets the correct GrowthToken address in LQTYStaking', async () => {
     const growthTokenAddress = growthToken.address
 
     const recordedGrowthTokenAddress = await lqtyStaking.growthTokenAddress()
     assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
   })
 
-  // sets ActivePool in LQTYStaking
-  it('sets the correct ActivePool address in LQTYStaking', async () => {
+  // Sets ActivePool in LQTYStaking
+  it('Sets the correct ActivePool address in LQTYStaking', async () => {
     const activePoolAddress = activePool.address
 
     const recordedActivePoolAddress = await lqtyStaking.activePoolAddress()
     assert.equal(activePoolAddress, recordedActivePoolAddress)
   })
 
-  // sets CLVToken in LQTYStaking
-  it('sets the correct ActivePool address in LQTYStaking', async () => {
+  // Sets CLVToken in LQTYStaking
+  it('Sets the correct ActivePool address in LQTYStaking', async () => {
     const clvTokenAddress = clvToken.address
 
     const recordedCLVTokenAddress = await lqtyStaking.clvTokenAddress()
     assert.equal(clvTokenAddress, recordedCLVTokenAddress)
   })
 
-  // sets CDPManager in LQTYStaking
-  it('sets the correct ActivePool address in LQTYStaking', async () => {
+  // Sets CDPManager in LQTYStaking
+  it('Sets the correct ActivePool address in LQTYStaking', async () => {
     const cdpManagerAddress = cdpManager.address
 
     const recordedCDPManagerAddress = await lqtyStaking.cdpManagerAddress()
     assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
   })
 
-  // sets BorrowerOperations in LQTYStaking
-  it('sets the correct BorrowerOperations address in LQTYStaking', async () => {
+  // Sets BorrowerOperations in LQTYStaking
+  it('Sets the correct BorrowerOperations address in LQTYStaking', async () => {
     const borrowerOperationsAddress = borrowerOperations.address
 
     const recordedBorrowerOperationsAddress = await lqtyStaking.borrowerOperationsAddress()
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  // ---
+  // ---  GrowthToken ---
 
-  // sets GrowthToken in LockupContractFactory
-  it('sets the correct GrowthToken address in LockupContractFactory', async () => {
+  // Sets CI in GrowthToken
+  it('Sets the correct CommunityIssuance address in GrowthToken', async () => {
+    const communityIssuanceAddress = communityIssuance.address
+
+    const recordedcommunityIssuanceAddress = await growthToken.communityIssuanceAddress()
+    assert.equal(communityIssuanceAddress, recordedcommunityIssuanceAddress)
+  })
+
+  // Sets LQTYStaking in GrowthToken
+  it('Sets the correct LQTYStaking address in GrowthToken', async () => {
+    const lqtyStakingAddress = lqtyStaking.address
+
+    const recordedLQTYStakingAddress =  await growthToken.lqtyStakingAddress()
+    assert.equal(lqtyStakingAddress, recordedLQTYStakingAddress)
+  })
+
+  // Sets LCF in GrowthToken
+  it('Sets the correct LockupContractFactory address in GrowthToken', async () => {
+    const LCFAddress = lockupContractFactory.address
+
+    const recordedLCFAddress =  await growthToken.lockupFactoryAddress()
+    assert.equal(LCFAddress, recordedLCFAddress)
+  })
+
+  // --- LCF  ---
+
+  // Sets GrowthToken in LockupContractFactory
+  it('Sets the correct GrowthToken address in LockupContractFactory', async () => {
     const growthTokenAddress = growthToken.address
 
     const recordedGrowthTokenAddress = await lockupContractFactory.growthTokenAddress()
     assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
   })
 
-  // sets GrowthToken in CommunityIssuance
-  it('sets the correct GrowthToken address in LockupContractFactory', async () => {
+  // --- CI ---
+
+  // Sets GrowthToken in CommunityIssuance
+  it('Sets the correct GrowthToken address in CommunityIssuance', async () => {
     const growthTokenAddress = growthToken.address
 
     const recordedGrowthTokenAddress = await communityIssuance.growthTokenAddress()
     assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+  })
+
+  it('Sets the correct StabilityPool address in CommunityIssuance', async () => {
+    const stabilityPoolAddress = stabilityPool.address
+
+    const recordedStabilityPoolAddress = await communityIssuance.stabilityPoolAddress()
+    assert.equal(stabilityPoolAddress, recordedStabilityPoolAddress)
   })
 })
