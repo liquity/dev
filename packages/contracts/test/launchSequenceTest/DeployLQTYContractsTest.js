@@ -67,7 +67,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ',
     })
 
     it("Stores the LockupContractFactory address", async () => {
-      const storedLCFAddress = await growthToken.lockupFactoryAddress()
+      const storedLCFAddress = await growthToken.lockupContractFactory()
 
       assert.equal(lockupContractFactory.address, storedLCFAddress)
     })
@@ -100,7 +100,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ',
     })
 
     it("Stores the growthToken address", async () => {
-      const storedGrowthTokenAddress = await communityIssuance.growthTokenAddress()
+      const storedGrowthTokenAddress = await communityIssuance.growthToken()
 
       assert.equal(storedGrowthTokenAddress, growthToken.address)
     })
@@ -124,14 +124,14 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ',
       
       const growthTokenAddress = growthToken.address
 
-      const recordedGrowthTokenAddress = await lqtyStaking.growthTokenAddress()
+      const recordedGrowthTokenAddress = await lqtyStaking.growthToken()
       assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
     })
 
     it('sets the correct GrowthToken address in LockupContractFactory', async () => {
       const growthTokenAddress = growthToken.address
 
-      const recordedGrowthTokenAddress = await lockupContractFactory.growthTokenAddress()
+      const recordedGrowthTokenAddress = await lockupContractFactory.growthToken()
       assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
     })
 
@@ -141,7 +141,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ',
 
       const growthTokenAddress = growthToken.address
 
-      const recordedGrowthTokenAddress = await communityIssuance.growthTokenAddress()
+      const recordedGrowthTokenAddress = await communityIssuance.growthToken()
       assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
     })
   })

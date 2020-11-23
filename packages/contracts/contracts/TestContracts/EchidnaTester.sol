@@ -58,7 +58,7 @@ contract EchidnaTester {
         cdpManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
         
         // TODO
-        borrowerOperations.setAddresses(address(cdpManager), address(activePool), address(defaultPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
+        borrowerOperations.setAddresses(address(cdpManager), address(activePool), address(defaultPool), address(stabilityPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
         activePool.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool), address(defaultPool));
         defaultPool.setAddresses(address(cdpManager), address(activePool));
         
@@ -161,19 +161,19 @@ contract EchidnaTester {
         echidnaProxies[actor].openLoanPrx(_ETH, _CLVAmount, _hint);
     }
 
-    function addCollExt(uint _i, uint _ETH, address _user) external payable {
+    function addCollExt(uint _i, uint _ETH) external payable {
         uint actor = _i % NUMBER_OF_ACTORS;
         EchidnaProxy echidnaProxy = echidnaProxies[actor];
         uint actorBalance = address(echidnaProxy).balance;
 
         uint ETH = getAdjustedETH(actorBalance, _ETH, MCR);
 
-        echidnaProxy.addCollPrx(ETH, _user, address(0));
+        echidnaProxy.addCollPrx(ETH, address(0));
     }
 
-    function addCollRawExt(uint _i, uint _ETH, address _user, address _hint) external payable {
+    function addCollRawExt(uint _i, uint _ETH, address _hint) external payable {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].addCollPrx(_ETH, _user, _hint);
+        echidnaProxies[actor].addCollPrx(_ETH, _hint);
     }
 
     function withdrawCollExt(uint _i, uint _amount, address _hint) external {

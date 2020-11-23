@@ -12,8 +12,7 @@ contract CustomDurationLockupContract {
     address public deployer;
     address public beneficiary;
 
-    address public growthTokenAddress;
-    IGrowthToken growthToken;
+    IGrowthToken public growthToken;
 
     uint public initialEntitlement;
 
@@ -42,7 +41,6 @@ contract CustomDurationLockupContract {
     {
         deployer = msg.sender;
 
-        growthTokenAddress = _growthTokenAddress;
         growthToken = IGrowthToken(_growthTokenAddress);
 
         beneficiary =  _beneficiary;

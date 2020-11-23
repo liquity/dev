@@ -29,11 +29,8 @@ contract LQTYStaking is ILQTYStaking {
         uint F_LUSD_Snapshot;
     }
     
-    address public growthTokenAddress;
-    IGrowthToken growthToken;
-
-    address public clvTokenAddress;
-    ICLVToken clvToken;
+    IGrowthToken public growthToken;
+    ICLVToken public clvToken;
 
     address public cdpManagerAddress;
     address public borrowerOperationsAddress;
@@ -55,14 +52,12 @@ contract LQTYStaking is ILQTYStaking {
 
     function setGrowthTokenAddress(address _growthTokenAddress) external override {
         _requireCallerIsStakingContractDeployer();
-        growthTokenAddress = _growthTokenAddress;
-        growthToken = IGrowthToken(growthTokenAddress);
+        growthToken = IGrowthToken(_growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 
     function setCLVTokenAddress(address _clvTokenAddress) external override {
         _requireCallerIsStakingContractDeployer();
-        clvTokenAddress = _clvTokenAddress;
         clvToken = ICLVToken(_clvTokenAddress);
         emit GrowthTokenAddressSet(_clvTokenAddress);
     }
@@ -85,9 +80,7 @@ contract LQTYStaking is ILQTYStaking {
         emit BorrowerOperationsAddressSet(_activePoolAddress);
     }
 
-    /* Staking expects that this StakingContract is allowed to spend at least _amount of 
-    the caller's LQTY tokens.
-    If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. */
+    // If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. 
     function stake(uint _LQTYamount) external override {
         uint currentStake = stakes[msg.sender];
 
@@ -106,7 +99,7 @@ contract LQTYStaking is ILQTYStaking {
         totalLQTYStaked = totalLQTYStaked.add(_LQTYamount);
 
         // Transfer LQTY from caller to this contract
-        growthToken.transferFrom(msg.sender, address(this), _LQTYamount);
+        growthToken.sendToLQTYStaking(msg.sender, _LQTYamount);
 
         // Send accumulated LUSD and ETH gains to the caller
         clvToken.transfer(msg.sender, LUSDGain);

@@ -17,8 +17,7 @@ contract LockupContractFactory is ILockupContractFactory {
     uint public deploymentTime;
     address public deployer;
 
-    address public growthTokenAddress;
-    IGrowthToken GrowthToken;
+    IGrowthToken public growthToken;
     
     mapping (address => address) public oneYearLockupContractToDeployer;
     mapping (address => address) public customDurationLockupContractToDeployer;
@@ -38,15 +37,14 @@ contract LockupContractFactory is ILockupContractFactory {
 
     function setGrowthTokenAddress(address _growthTokenAddress) external override {
         _requireCallerIsFactoryDeployer();
-        growthTokenAddress = _growthTokenAddress;
-        GrowthToken = IGrowthToken(growthTokenAddress);
+        growthToken = IGrowthToken(_growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 
     function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external override {
         _requireGTAddressIsSet();
         OneYearLockupContract oneYearLockupContract = new OneYearLockupContract(
-                                                        growthTokenAddress, 
+                                                        address(growthToken), 
                                                         beneficiary, 
                                                         initialEntitlement);
 
@@ -59,7 +57,7 @@ contract LockupContractFactory is ILockupContractFactory {
         _requireFactoryIsAtLeastOneYearOld();
     
         CustomDurationLockupContract customDurationLockupContract = new CustomDurationLockupContract( 
-                                                                        growthTokenAddress, 
+                                                                        address(growthToken), 
                                                                         beneficiary, 
                                                                         initialEntitlement, 
                                                                         lockupDuration);
@@ -121,7 +119,7 @@ contract LockupContractFactory is ILockupContractFactory {
     }
 
     function _requireGTAddressIsSet() internal view {
-        require(growthTokenAddress != address(0), "LCF: GT Address is not set");
+        require(address(growthToken) != address(0), "LCF: GT Address is not set");
     }
 
     function _requireFactoryIsAtLeastOneYearOld() internal view {

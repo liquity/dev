@@ -15,8 +15,7 @@ contract OneYearLockupContract {
     address public deployer;
     address public beneficiary;
 
-    address public growthTokenAddress;
-    IGrowthToken growthToken;
+    IGrowthToken public growthToken;
 
     uint public initialEntitlement;
 
@@ -43,7 +42,6 @@ contract OneYearLockupContract {
     {
         deployer = msg.sender;
 
-        growthTokenAddress = _growthTokenAddress;
         growthToken = IGrowthToken(_growthTokenAddress);
 
         beneficiary =  _beneficiary;

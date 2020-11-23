@@ -2,8 +2,8 @@
 
 pragma solidity 0.6.11;
 
-import "../Dependencies/IERC20.sol";
 import "../Dependencies/SafeMath.sol";
+import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ILockupContractFactory.sol";
 import "../Dependencies/console.sol";
 
@@ -28,7 +28,7 @@ After one year has passed since deployment of the GrowthToken, the restrictions 
 and the deployer has the same rights as any other address.
  */
 
-contract GrowthToken is IERC20 {
+contract GrowthToken is IERC20, IGrowthToken {
     using SafeMath for uint256;
 
     // --- Data ---
@@ -50,23 +50,31 @@ contract GrowthToken is IERC20 {
 
     address public deployer;
     address public communityIssuanceAddress;
+    address public lqtyStakingAddress;
 
-    address public lockupFactoryAddress;
-    ILockupContractFactory lockupContractFactory;
+    ILockupContractFactory public lockupContractFactory;
 
     // --- Events ---
 
     event CommunityIssuanceAddressSet(address _communityIssuanceAddress);
+    event LQTYStakingAddressSet(address _lqtyStakingAddress);
     event LockupContractFactoryAddressSet(address _lockupContractFactoryAddress);
 
     // --- Functions ---
 
-    constructor(address _communityIssuanceAddress, address _lockupFactoryAddress) public {
+    constructor
+    (
+        address _communityIssuanceAddress, 
+        address _lqtyStakingAddress,
+        address _lockupFactoryAddress
+    ) 
+        public 
+    {
         deployer = msg.sender;
         deploymentStartTime  = block.timestamp;
         
         communityIssuanceAddress = _communityIssuanceAddress;
-        lockupFactoryAddress = _lockupFactoryAddress;
+        lqtyStakingAddress = _lqtyStakingAddress;
         lockupContractFactory = ILockupContractFactory(_lockupFactoryAddress);
         
         // mint 2/3 to deployer
@@ -104,14 +112,14 @@ contract GrowthToken is IERC20 {
     }
 
     function approve(address spender, uint256 amount) public override returns (bool) {
-        if (_isFirstYear()) {_requireCallerIsNotDeployer();}
+        if (_isFirstYear()) { _requireCallerIsNotDeployer(); }
 
         _approve(msg.sender, spender, amount);
         return true;
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-        if (_isFirstYear()) {_requireSenderIsNotDeployer(sender);}
+        if (_isFirstYear()) { _requireSenderIsNotDeployer(sender); }
         
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
@@ -119,17 +127,23 @@ contract GrowthToken is IERC20 {
     }
 
     function increaseAllowance(address spender, uint256 addedValue) public override returns (bool) {
-        if (_isFirstYear()) {_requireCallerIsNotDeployer();}
+        if (_isFirstYear()) { _requireCallerIsNotDeployer(); }
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) public override returns (bool) {
-        if (_isFirstYear()) {_requireCallerIsNotDeployer();}
+        if (_isFirstYear()) { _requireCallerIsNotDeployer(); }
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
+    }
+
+    function sendToLQTYStaking(address _sender, uint256 _amount) external override {
+        _requireCallerIsLQTYStaking();
+        if (_isFirstYear()) { _requireSenderIsNotDeployer(_sender); }
+        _transfer(_sender, lqtyStakingAddress, _amount);
     }
 
     // --- Internal operations ---
@@ -195,6 +209,10 @@ contract GrowthToken is IERC20 {
 
     function _requireCallerIsNotDeployer() internal view {
         require(!_callerIsDeployer(), "GrowthToken: caller must not be the deployer");
+    }
+
+    function _requireCallerIsLQTYStaking() internal view {
+         require(msg.sender == lqtyStakingAddress, "GrowthToken: caller must be the LQTYStaking contract");
     }
 
     // --- Optional functions ---

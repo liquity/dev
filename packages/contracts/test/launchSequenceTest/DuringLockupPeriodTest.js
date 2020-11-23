@@ -7,6 +7,7 @@ const testHelpers = require("../../utils/testHelpers.js")
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
 const dec = th.dec
+const assertRevert = th.assertRevert
 
 
 contract('During the initial lockup period', async accounts => {
@@ -31,6 +32,7 @@ contract('During the initial lockup period', async accounts => {
 
 
   let GTContracts
+  let coreContracts
 
   // OYLCs for team members on vesting schedules
   let OYLC_T1
@@ -52,13 +54,18 @@ contract('During the initial lockup period', async accounts => {
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
+    coreContracts = await deploymentHelper.deployLiquityCore()
     GTContracts = await deploymentHelper.deployGTContracts()
-    await deploymentHelper.connectGTContracts(GTContracts)
 
     lqtyStaking = GTContracts.lqtyStaking
     growthToken = GTContracts.growthToken
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
+
+    await deploymentHelper.connectGTContracts(GTContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, GTContracts)
+    await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
+
 
     // Deploy 3 OYLCs for team members on vesting schedules
     const deployedOYLCtx_T1 = await lockupContractFactory.deployOneYearLockupContract(teamMember_1, teamMemberInitialEntitlement_1, { from: liquityAG })
@@ -296,6 +303,71 @@ contract('During the initial lockup period', async accounts => {
     })
 
     // TODO: Tests for approve, transferFrom, increase/decrease allowance
+    it("GT deployer can not transfer to an EOA or Liquity contract", async () => {
+      // Deployer attempts GT transfer to EOAs
+      const GTtransferTxPromise_1 = growthToken.transfer(A, dec(1, 18), { from: liquityAG })
+      const GTtransferTxPromise_2 = growthToken.transfer(B, dec(1, 18), { from: liquityAG })
+      await assertRevert(GTtransferTxPromise_1)
+      await assertRevert(GTtransferTxPromise_2)
+
+      // Deployer attempts GT transfer to core Liquity contracts
+      for (const contract of Object.keys(coreContracts)) {
+        const GTtransferTxPromise = growthToken.transfer(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(GTtransferTxPromise)
+      }
+
+      // Deployer attempts GT transfer to GT contracts (excluding OYLCs)
+      for (const contract of Object.keys(GTContracts)) {
+        const GTtransferTxPromise = growthToken.transfer(GTContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(GTtransferTxPromise)
+      }
+    })
+
+    it("GT deployer can not approve any EOA or Liquity contract to spend their LQTY", async () => {
+      // Deployer attempts to approve EOAs to spend LQTY
+      const GTtransferTxPromise_1 = growthToken.approve(A, dec(1, 18), { from: liquityAG })
+      const GTtransferTxPromise_2 = growthToken.approve(B, dec(1, 18), { from: liquityAG })
+      await assertRevert(GTtransferTxPromise_1)
+      await assertRevert(GTtransferTxPromise_2)
+
+      // Deployer attempts to approve Liquity contracts to spend LQTY
+      for (const contract of Object.keys(coreContracts)) {
+        const GTtransferTxPromise = growthToken.approve(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(GTtransferTxPromise)
+      }
+
+      // Deployer attempts to approve GT contracts to spend LQTY (excluding OYLCs)
+      for (const contract of Object.keys(GTContracts)) {
+        const GTtransferTxPromise = growthToken.approve(GTContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(GTtransferTxPromise)
+      }
+    })
+
+    // Increase allowance
+    it("GT deployer can not increaseAllowance for any EOA or Liquity contract", async () => {
+      // Deployer attempts to approve EOAs to spend LQTY
+      const GTtransferTxPromise_1 = growthToken.increaseAllowance(A, dec(1, 18), { from: liquityAG })
+      const GTtransferTxPromise_2 = growthToken.increaseAllowance(B, dec(1, 18), { from: liquityAG })
+      await assertRevert(GTtransferTxPromise_1)
+      await assertRevert(GTtransferTxPromise_2)
+
+      // Deployer attempts to approve Liquity contracts to spend LQTY
+      for (const contract of Object.keys(coreContracts)) {
+        const GTtransferTxPromise = growthToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(GTtransferTxPromise)
+      }
+
+      // Deployer attempts to approve GT contracts to spend LQTY (excluding OYLCs)
+      for (const contract of Object.keys(GTContracts)) {
+        const GTtransferTxPromise = growthToken.increaseAllowance(GTContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(GTtransferTxPromise)
+      }
+    })
+
+    it("GT deployer can not stake their LQTY in the staking contract", async () => {
+      const GTtransferTxPromise_1 = lqtyStaking.stake(dec(1, 18), { from: liquityAG })
+      await assertRevert(GTtransferTxPromise_1)
+    })
   })
 
   describe('Deploying CDLCs', async accounts => {
@@ -417,10 +489,10 @@ contract('During the initial lockup period', async accounts => {
       // D locks their deployed OYLC
       await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: D })
 
-     
+
       const variousEOAs = [teamMember_1, liquityAG, investor_1, A, B, C, D, E]
-      
-       // Several EOAs attempt to withdraw from OYLC deployed by D
+
+      // Several EOAs attempt to withdraw from OYLC deployed by D
       for (account of variousEOAs) {
         try {
           const withdrawalAttempt = await OYLC_B.withdrawGT({ from: account })
