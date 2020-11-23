@@ -324,7 +324,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isAtMost(getDifference(E_entireColl_1, '1330564784053160000000'), 1e8)
 
     // Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(B, { from: B, value: dec(1, 'ether') })
 
     // Liquidate C
     const txC = await cdpManager.liquidate(C)
@@ -342,7 +342,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isAtMost(getDifference(E_entireColl_2, '1988981261805990000000'), 1e8)
 
     // Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(B, { from: B, value: dec(1, 'ether') })
 
     // Liquidate E
     const txE = await cdpManager.liquidate(E)
@@ -409,7 +409,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isAtMost(getDifference(E_expectedPendingETH_1, E_ETHGain_1), 1e8)
 
     // // Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(B, { from: B, value: dec(1, 'ether') })
 
     // Check entireColl for each trove
     const B_entireColl_1 = (await th.getEntireCollAndDebt(contracts, B)).entireColl
@@ -447,7 +447,7 @@ contract('CDPManager - Redistribution reward calculations', async accounts => {
     assert.isAtMost(getDifference(E_expectedPendingETH_2, E_ETHGain_2), 1e8)
 
     // // Bob adds 1 ETH to his trove
-    await borrowerOperations.addColl(B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.addColl(B, { from: B, value: dec(1, 'ether') })
 
     // Check entireColl for each trove
     const B_entireColl_2 = (await th.getEntireCollAndDebt(contracts, B)).entireColl
