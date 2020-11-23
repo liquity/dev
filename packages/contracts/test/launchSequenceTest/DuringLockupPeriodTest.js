@@ -303,7 +303,7 @@ contract('During the initial lockup period', async accounts => {
     })
 
     // TODO: Tests for approve, transferFrom, increase/decrease allowance
-    it.only("GT deployer can not transfer to an EOA or Liquity contract", async () => {
+    it("GT deployer can not transfer to an EOA or Liquity contract", async () => {
       // Deployer attempts GT transfer to EOAs
       const GTtransferTxPromise_1 = growthToken.transfer(A, dec(1, 18), { from: liquityAG })
       const GTtransferTxPromise_2 = growthToken.transfer(B, dec(1, 18), { from: liquityAG })
@@ -323,7 +323,7 @@ contract('During the initial lockup period', async accounts => {
       }
     })
 
-    it.only("GT deployer can not approve any EOA or Liquity contract to spend their LQTY", async () => {
+    it("GT deployer can not approve any EOA or Liquity contract to spend their LQTY", async () => {
       // Deployer attempts to approve EOAs to spend LQTY
       const GTtransferTxPromise_1 = growthToken.approve(A, dec(1, 18), { from: liquityAG })
       const GTtransferTxPromise_2 = growthToken.approve(B, dec(1, 18), { from: liquityAG })
@@ -344,7 +344,7 @@ contract('During the initial lockup period', async accounts => {
     })
 
     // Increase allowance
-    it.only("GT deployer can not increaseAllowance for any EOA or Liquity contract", async () => {
+    it("GT deployer can not increaseAllowance for any EOA or Liquity contract", async () => {
       // Deployer attempts to approve EOAs to spend LQTY
       const GTtransferTxPromise_1 = growthToken.increaseAllowance(A, dec(1, 18), { from: liquityAG })
       const GTtransferTxPromise_2 = growthToken.increaseAllowance(B, dec(1, 18), { from: liquityAG })
@@ -364,14 +364,10 @@ contract('During the initial lockup period', async accounts => {
       }
     })
 
-    // stake 
-    it.only("GT deployer can not stake their LQTY in the staking contract", async () => {
+    it("GT deployer can not stake their LQTY in the staking contract", async () => {
       const GTtransferTxPromise_1 = lqtyStaking.stake(dec(1, 18), { from: liquityAG })
       await assertRevert(GTtransferTxPromise_1)
     })
-
-
-
   })
 
   describe('Deploying CDLCs', async accounts => {
