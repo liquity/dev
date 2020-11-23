@@ -409,7 +409,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
     }
 
-    function _requireCallerIsStabilityPool() internal {
+    function _requireCallerIsStabilityPool() internal view {
         require(msg.sender == stabilityPoolAddress, "BorrowerOps: Caller is not Stability Pool");
     }
 
