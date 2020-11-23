@@ -142,6 +142,7 @@ contract GrowthToken is IERC20, IGrowthToken {
 
     function sendToLQTYStaking(address _sender, uint256 _amount) external override {
         _requireCallerIsLQTYStaking();
+        if (_isFirstYear()) {_requireSenderIsNotDeployer(_sender);}
         _transfer(_sender, lqtyStakingAddress, _amount);
     }
 

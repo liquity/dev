@@ -8,6 +8,11 @@ const timeValues = testHelpers.TimeValues
 const dec = th.dec
 const toBN = th.toBN
 
+/* The majority of access control tests are contained in this file. However, tests for restrictions 
+on the Liquity admin address's capabilities during the first year are found in:
+
+test/launchSequenceTest/DuringLockupPeriodTest.js */
+
 contract('All Liquity functions with intra-system access control restrictions', async accounts => {
 
   const [owner, alice, bob, carol] = accounts;
