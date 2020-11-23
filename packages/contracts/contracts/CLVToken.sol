@@ -10,47 +10,41 @@ import "./Dependencies/console.sol";
 
 contract CLVToken is ICLVToken, Ownable {
     using SafeMath for uint256;
-
-    string constant internal NAME = "LUSD";
-    string constant internal SYMBOL = "LUSD";
-    uint8 constant internal DECIMALS = 18;
-
-    // User data for CLV token
-    mapping (address => uint256) public balances;
-    mapping (address => mapping (address => uint256)) public allowances;
-
-    address public borrowerOperationsAddress;
-    address public cdpManagerAddress;
-    address public stabilityPoolAddress;
-
+    
     uint256 public _totalSupply;
-
-    // --- Events ---
-
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
-    event StabilityPoolAddressChanged(address _stabilityPoolAddress);
-    event CLVTokenBalanceUpdated(address _user, uint _amount);
-
-    // --- Functions ---
-
-    function setAddresses(
-        address _borrowerOperationsAddress,
+    string constant internal _NAME = "LUSD Stablecoin";
+    string constant internal _SYMBOL = "LUSD";
+    string constant internal _VERSION = "1";
+    uint8 constant internal _DECIMALS = 18;
+    
+    // --- Necessary for EIP 2612 ---
+    // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 constant internal _PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+    mapping (address => uint256) private _nonces;
+    
+    // User data for CLV token
+    mapping (address => mapping (address => uint256)) public allowances;    
+    mapping (address => uint256) public balances;
+    
+    // --- Addresses ---
+    address public immutable cdpManagerAddress;
+    address public immutable stabilityPoolAddress;
+    address public immutable borrowerOperationsAddress;
+    
+    constructor( 
         address _cdpManagerAddress,
-        address _stabilityPoolAddress
-    )
-        external
-        override
-        onlyOwner
-    {
-        borrowerOperationsAddress = _borrowerOperationsAddress;
+        address _stabilityPoolAddress,
+        address _borrowerOperationsAddress
+    ) public Ownable() {  
         cdpManagerAddress = _cdpManagerAddress;
-        stabilityPoolAddress = _stabilityPoolAddress;
-
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
+
+        stabilityPoolAddress = _stabilityPoolAddress;
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
 
+        borrowerOperationsAddress = _borrowerOperationsAddress;        
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+        
         _renounceOwnership();
     }
 
@@ -91,6 +85,20 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     // --- 'require' functions ---
+
+    function _requireValidRecipient(address recipient) internal view {
+        require(
+            recipient != address(0) && 
+            recipient != address(this) &&
+            recipient != stabilityPoolAddress,
+            "LUSD: Provided transfer recipient is not appropriate"
+        );
+        require(
+            recipient != cdpManagerAddress && 
+            recipient != borrowerOperationsAddress,
+            "LUSD: Use repay function instead to clear your debt"
+        );
+    }
 
     function _requireCallerIsBorrowerOperations() internal view {
         require(msg.sender == borrowerOperationsAddress, "CLVToken: Caller is not BorrowerOperations");
@@ -157,10 +165,45 @@ contract CLVToken is ICLVToken, Ownable {
         return true;
     }
 
+    // --- OPENZEPPELIN EIP 2612 FUNCTIONALITY ---
+
+    function domainSeparator() external view override returns (bytes32) {    
+        return keccak256(abi.encode( 
+               keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+               keccak256(bytes(_NAME)), 
+               keccak256(bytes(_VERSION)), 
+               _chainID(), address(this)));
+    }
+    function permit(address owner, address spender, uint amount, 
+                    uint deadline, uint8 v, bytes32 r, bytes32 s) 
+    external 
+    override 
+    {            
+        require(deadline == 0 || deadline >= now, 'LUSD: EXPIRED');
+        bytes32 digest = keccak256(abi.encodePacked(uint16(0x1901), 
+                         this.domainSeparator(), keccak256(abi.encode(
+                         _PERMIT_TYPEHASH, owner, spender, amount, 
+                         _nonces[owner]++, deadline))));
+        address recoveredAddress = ecrecover(digest, v, r, s);
+        require(recoveredAddress != address(0) && 
+                recoveredAddress == owner, 'LUSD: BAD_SIG');
+        _approve(owner, spender, amount);
+    }
+    function nonces(address owner) public view override returns (uint256) { // FOR EIP 2612
+        return _nonces[owner];
+    }
+    function _chainID() private pure returns (uint256 chainID) {
+        assembly {
+            chainID := chainid()
+        }
+    }
+
+    // --- Helper functions ---
+
     function _transfer(address sender, address recipient, uint256 amount) internal {
         require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
-
+        require(recipient != sender, "ERC20: transfer sender and recipient are the same");
+        _requireValidRecipient(recipient);
         _subFromBalance(sender, amount);
         _addToBalance(recipient, amount);
         emit Transfer(sender, recipient, amount);
@@ -184,9 +227,9 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     function _approve(address owner, address spender, uint256 amount) internal {
+        require(spender != owner, "ERC20: approver and spender are the same address");
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
-
         allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
@@ -194,14 +237,22 @@ contract CLVToken is ICLVToken, Ownable {
     // --- Optional functions ---
 
     function name() external view override returns (string memory) {
-        return NAME;
+        return _NAME;
     }
 
     function symbol() external view override returns (string memory) {
-        return SYMBOL;
+        return _SYMBOL;
     }
 
     function decimals() external view override returns (uint8) {
-        return DECIMALS;
+        return _DECIMALS;
+    }
+
+    function version() external view override returns (string memory) {
+        return _VERSION;
+    }
+
+    function permitTypeHash() external view override returns (bytes32) {
+        return _PERMIT_TYPEHASH;
     }
 }

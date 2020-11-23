@@ -42,6 +42,7 @@ contract('BorrowerOperations', async accounts => {
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
+    contracts = await deploymentHelper.deployCLVToken(contracts)
     const GTContracts = await deploymentHelper.deployGTContracts()
 
     priceFeed = contracts.priceFeed
@@ -278,6 +279,7 @@ contract('BorrowerOperations', async accounts => {
 
   it("addColl(): non-trove owner can add collateral to another user's trove", async () => {
     // console.log(`addr:${borrowerOperations.address}`)
+
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
     await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
     await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(5, 'ether') })
@@ -2266,8 +2268,8 @@ contract('BorrowerOperations', async accounts => {
 
     // Alice attempts to close her loan
     try {
-      const txCarol = await borrowerOperations.closeLoan({ from: alice })
-      assert.isFalse(txCarol.receipt.status)
+      const txAlice = await borrowerOperations.closeLoan({ from: alice })
+      assert.isFalse(txAlice.receipt.status)
     } catch (err) {
       // assert.include(err.message, "revert")
       // assert.include(err.message, "CDPManager: Only one trove in the system")

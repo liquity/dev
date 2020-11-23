@@ -3,20 +3,17 @@
 pragma solidity 0.6.11;
 
 import "../Dependencies/IERC20.sol";
+import "../Dependencies/IERC2612.sol";
 
-interface ICLVToken is IERC20 {
+interface ICLVToken is IERC20, IERC2612 { 
     
     // --- Events ---
-    
     event CLVTokenBalanceUpdated(address _user, uint _amount);
+    event CDPManagerAddressChanged(address _cdpManagerAddress);
+    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
 
     // --- Functions ---
-    
-    function setAddresses(
-        address _borrowerOperationsAddress,
-        address _cdpManagerAddress,
-        address _stabilityPoolAddress
-    ) external;
 
     function mint(address _account, uint256 _amount) external;
 

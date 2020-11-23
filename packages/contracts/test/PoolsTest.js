@@ -11,8 +11,6 @@ const ZERO_ADDRESS = th.ZERO_ADDRESS
 
 const _minus_1_Ether = web3.utils.toWei('-1', 'ether')
 
-
-
 contract('StabilityPool', async accounts => {
   /* mock* are EOA’s, temporarily used to call protected functions.
   TODO: Replace with mock contracts, and later complete transactions from EOA

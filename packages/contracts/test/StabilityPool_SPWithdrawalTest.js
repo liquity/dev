@@ -52,6 +52,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       contracts = await deploymentHelper.deployLiquityCore()
       const GTContracts = await deploymentHelper.deployGTContracts()
       contracts.cdpManager = await CDPManagerTester.new()
+      contracts = await deploymentHelper.deployCLVToken(contracts)
   
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken

@@ -43,6 +43,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       contracts = await deploymentHelper.deployLiquityCore()
       const GTContracts = await deploymentHelper.deployGTTesterContractsBuidler()
       contracts.cdpManager = await CDPManagerTester.new()
+      contracts = await deploymentHelper.deployCLVToken(contracts)
       communityIssuanceTester = GTContracts.communityIssuance
 
       priceFeed = contracts.priceFeed

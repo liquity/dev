@@ -20,16 +20,16 @@ contract('CDPManager', async accounts => {
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     const GTContracts = await deploymentHelper.deployGTContracts()
-
-    priceFeed = contracts.priceFeed
+    
     clvToken = contracts.clvToken
+    priceFeed = contracts.priceFeed
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
-    borrowerOperations = contracts.borrowerOperations
-  
+    borrowerOperations = contracts.borrowerOperations  
+    
     lqtyStaking = GTContracts.lqtyStaking
     growthToken = GTContracts.growthToken
     communityIssuance = GTContracts.communityIssuance

@@ -46,19 +46,24 @@ contract EchidnaTester {
         activePool = new ActivePool();
         defaultPool = new DefaultPool();
         stabilityPool = new StabilityPool();
-        clvToken = new CLVToken();
+        clvToken = new CLVToken(
+            address(cdpManager),
+            address(stabilityPool),
+            address(borrowerOperations)
+        );
         priceFeed = new PriceFeed();
         sortedCDPs = new SortedCDPs();
 
         // TODO
         cdpManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
+        
         // TODO
         borrowerOperations.setAddresses(address(cdpManager), address(activePool), address(defaultPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
         activePool.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool), address(defaultPool));
         defaultPool.setAddresses(address(cdpManager), address(activePool));
+        
         // TODO
         stabilityPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool), address(clvToken), address(0));
-        clvToken.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool));
         priceFeed.setAddresses(address(cdpManager), address(0), address(0));
         sortedCDPs.setParams(1e18, address(cdpManager), address(borrowerOperations));
 

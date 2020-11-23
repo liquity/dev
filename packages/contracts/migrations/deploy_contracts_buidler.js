@@ -18,24 +18,26 @@ const connectContracts = deploymentHelpers.connectContracts
 module.exports = async () => {
   const borrowerOperations = await BorrowerOperations.new()
   const priceFeed = await PriceFeed.new()
-  const clvToken = await CLVToken.new()
-
   const sortedCDPs = await SortedCDPs.new()
   const cdpManager = await CDPManager.new()
   const activePool = await ActivePool.new()
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
-
+  const clvToken = await CLVToken.new(
+    cdpManager.address,
+    stabilityPool.address,
+    borrowerOperations.address
+  )
   BorrowerOperations.setAsDeployed(borrowerOperations)
   PriceFeed.setAsDeployed(priceFeed)
-  CLVToken.setAsDeployed(clvToken)
   SortedCDPs.setAsDeployed(sortedCDPs)
   CDPManager.setAsDeployed(cdpManager)
   ActivePool.setAsDeployed(activePool)
   StabilityPool.setAsDeployed(stabilityPool)
   DefaultPool.setAsDeployed(defaultPool)
   FunctionCaller.setAsDeployed(functionCaller)
+  CLVToken.setAsDeployed(clvToken)
 
   const contracts = {
     borrowerOperations,
