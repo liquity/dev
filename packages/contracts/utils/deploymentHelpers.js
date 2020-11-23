@@ -256,6 +256,7 @@ class DeploymentHelper {
       contracts.cdpManager.address,
       contracts.activePool.address,
       contracts.defaultPool.address,
+      contracts.stabilityPool.address,
       contracts.priceFeed.address,
       contracts.sortedCDPs.address,
       contracts.clvToken.address,

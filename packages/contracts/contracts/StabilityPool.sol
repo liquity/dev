@@ -265,7 +265,7 @@ contract StabilityPool is Ownable, IStabilityPool {
         emit ETHBalanceUpdated(ETH);
         emit EtherSent(msg.sender, depositorETHGain);
 
-        borrowerOperations.addColl{ value: depositorETHGain }(msg.sender, _hint);
+        borrowerOperations.moveETHGainToTrove{ value: depositorETHGain }(msg.sender, _hint);
     }
 
     // --- LQTY issuance functions ---

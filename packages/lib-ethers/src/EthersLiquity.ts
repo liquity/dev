@@ -396,13 +396,11 @@ export class EthersLiquity
     { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const address = this.requireAddress();
     const initialTrove = trove ?? (await this.getTrove());
     const finalTrove = initialTrove.addCollateral(depositedEther);
 
     return this.wrapSimpleTransaction(
       await this.borrowerOperations.addColl(
-        address,
         await this._findHint(finalTrove, hintOptionalParams),
         {
           value: Decimal.from(depositedEther).bigNumber,
