@@ -133,6 +133,7 @@ contract CLVToken is ICLVToken, Ownable {
     }
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {
+        _requireValidRecipient(recipient);
         _transfer(msg.sender, recipient, amount);
         return true;
     }
@@ -174,10 +175,19 @@ contract CLVToken is ICLVToken, Ownable {
                keccak256(bytes(_VERSION)), 
                _chainID(), address(this)));
     }
-    function permit(address owner, address spender, uint amount, 
-                    uint deadline, uint8 v, bytes32 r, bytes32 s) 
-    external 
-    override 
+
+    function permit
+    (
+        address owner, 
+        address spender, 
+        uint amount, 
+        uint deadline, 
+        uint8 v, 
+        bytes32 r, 
+        bytes32 s
+    ) 
+        external 
+        override 
     {            
         require(deadline == 0 || deadline >= now, 'LUSD: EXPIRED');
         bytes32 digest = keccak256(abi.encodePacked(uint16(0x1901), 
@@ -189,9 +199,11 @@ contract CLVToken is ICLVToken, Ownable {
                 recoveredAddress == owner, 'LUSD: BAD_SIG');
         _approve(owner, spender, amount);
     }
+
     function nonces(address owner) public view override returns (uint256) { // FOR EIP 2612
         return _nonces[owner];
     }
+
     function _chainID() private pure returns (uint256 chainID) {
         assembly {
             chainID := chainid()
@@ -203,7 +215,6 @@ contract CLVToken is ICLVToken, Ownable {
     function _transfer(address sender, address recipient, uint256 amount) internal {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != sender, "ERC20: transfer sender and recipient are the same");
-        _requireValidRecipient(recipient);
         _subFromBalance(sender, amount);
         _addToBalance(recipient, amount);
         emit Transfer(sender, recipient, amount);

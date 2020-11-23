@@ -336,7 +336,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // sendToPool
-    it("sendToPool(): reverts when called by an account that is not StabilityPool", async () => {
+    it.only("sendToPool(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
         const txAlice = await clvToken.sendToPool(bob, activePool.address, 100, { from: alice })
@@ -348,7 +348,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // returnFromPool
-    it("returnFromPool(): reverts when called by an account that is not CDPManager nor StabilityPool", async () => {
+    it.only("returnFromPool(): reverts when called by an account that is not CDPManager nor StabilityPool", async () => {
       // Attempt call from alice
       try {
         const txAlice = await clvToken.returnFromPool(activePool.address, bob, 100, { from: alice })
