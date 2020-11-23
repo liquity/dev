@@ -4,6 +4,7 @@ pragma solidity 0.6.11;
 
 // Common interface for the CDP Manager.
 interface ICDPManager {
+    
     // --- Events ---
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
@@ -77,12 +78,7 @@ interface ICDPManager {
 
      function hasPendingRewards(address _user) external view returns (bool);
 
-    function getEntireDebtAndColl(
-        address _user
-    ) 
-        external 
-        view 
-    returns (
+    function getEntireDebtAndColl(address _user) external view returns (
         uint debt, 
         uint coll, 
         uint pendingCLVDebtReward, 

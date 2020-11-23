@@ -1,5 +1,5 @@
+
 const BN = require('bn.js')
-const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
 const CustomDurationLockupContract = artifacts.require(("./CustomDurationLockupContract.sol"))
 const Destructible = artifacts.require("./TestContracts/Destructible.sol")
@@ -27,15 +27,15 @@ const MoneyValues = {
 }
 
 const TimeValues = {
-  SECONDS_IN_ONE_MINUTE:        60,
-  SECONDS_IN_ONE_HOUR:          60 * 60,
-  SECONDS_IN_ONE_DAY:           60 * 60 * 24,
-  SECONDS_IN_ONE_WEEK:          60 * 60 * 24 * 7,
-  SECONDS_IN_ONE_MONTH:         60 * 60 * 24 * 30,
-  SECONDS_IN_ONE_YEAR:          60 * 60 * 24 * 365,
-  MINUTES_IN_ONE_WEEK:          60 *24 * 30,
-  MINUTES_IN_ONE_MONTH:         60 *24 * 30,
-  MINUTES_IN_ONE_YEAR:          60 * 24 * 365
+  SECONDS_IN_ONE_MINUTE:  60,
+  SECONDS_IN_ONE_HOUR:    60 * 60,
+  SECONDS_IN_ONE_DAY:     60 * 60 * 24,
+  SECONDS_IN_ONE_WEEK:    60 * 60 * 24 * 7,
+  SECONDS_IN_ONE_MONTH:   60 * 60 * 24 * 30,
+  SECONDS_IN_ONE_YEAR:    60 * 60 * 24 * 365,
+  MINUTES_IN_ONE_WEEK:    60 *24 * 30,
+  MINUTES_IN_ONE_MONTH:   60 *24 * 30,
+  MINUTES_IN_ONE_YEAR:    60 * 24 * 365
 }
 
 class TestHelper {
@@ -184,10 +184,11 @@ class TestHelper {
   static logGasMetrics(gasResults, message) {
     console.log(
       `\n ${message} \n
-    min gas: ${gasResults.minGas} \n
-    max gas: ${gasResults.maxGas} \n
-    mean gas: ${gasResults.meanGas} \n
-    median gas: ${gasResults.medianGas} \n`)
+      min gas: ${gasResults.minGas} \n
+      max gas: ${gasResults.maxGas} \n
+      mean gas: ${gasResults.meanGas} \n
+      median gas: ${gasResults.medianGas} \n`
+    )
   }
 
   static logAllGasCosts(gasResults) {
@@ -199,7 +200,7 @@ class TestHelper {
   static logGas(gas, message) {
     console.log(
       `\n ${message} \n
-    gas used: ${gas} \n`
+      gas used: ${gas} \n`
     )
   }
 
@@ -217,7 +218,6 @@ class TestHelper {
 
     let i = 0
     while (i < n) {
-
       const squeezedAddr = this.squeezeAddr(account)
       const coll = (await contracts.cdpManager.CDPs(account))[1]
       const debt = (await contracts.cdpManager.CDPs(account))[0]
@@ -270,10 +270,8 @@ class TestHelper {
       const remainingColl = this.getCollMinusGasComp(trove, contracts)
       totalCollRemainder = totalCollRemainder.add(remainingColl)
     }
-
     return totalCollRemainder
   }
-
 
   static getEmittedRedemptionValues(redemptionTx) {
     for (let i = 0; i < redemptionTx.logs.length; i++) {
@@ -287,7 +285,6 @@ class TestHelper {
         return [CLVAmount, totalCLVRedeemed, totalETHDrawn, ETHFee]
       }
     }
-
     throw ("The transaction logs do not contain a redemption event")
   }
 
@@ -302,10 +299,8 @@ class TestHelper {
         return [liquidatedDebt, liquidatedColl, collGasComp, clvGasComp]
       }
     }
-
     throw ("The transaction logs do not contain a liquidation event")
   }
-
 
   static getEmittedLiquidatedDebt(liquidationTx) {
     return this.getLiquidationEventArg(liquidationTx, 0)  // LiquidatedDebt is position 0 in the Liquidation event
@@ -431,8 +426,8 @@ class TestHelper {
   static async getCollAndDebtFromAdjustment(contracts, account, ETHChange, CLVChange) {
     const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
 
-    const coll = (await contracts.cdpManager.CDPs(account))[1]
-    const debt = (await contracts.cdpManager.CDPs(account))[0]
+    // const coll = (await contracts.cdpManager.CDPs(account))[1]
+    // const debt = (await contracts.cdpManager.CDPs(account))[0]
 
     const newColl = entireColl.add(ETHChange)
     const newDebt = entireDebt.add(CLVChange)
@@ -662,7 +657,6 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  // 
   static async withdrawColl_allAccounts(accounts, contracts, amount) {
     const price = await contracts.priceFeed.getPrice()
 

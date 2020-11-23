@@ -17,10 +17,10 @@ contract('BorrowerOperations', async accounts => {
   const [
     owner, alice, bob, carol, dennis, whale,
     A, B, C, D, E,
-    defaulter_1, defaulter_2,
+    // defaulter_1, defaulter_2,
     frontEnd_1, frontEnd_2, frontEnd_3] = accounts;
 
-  const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
+  // const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
 
   let priceFeed
   let clvToken
@@ -277,7 +277,7 @@ contract('BorrowerOperations', async accounts => {
   // })
 
   it("addColl(): non-trove owner can add collateral to another user's trove", async () => {
-    console.log(`addr:${borrowerOperations.address}`)
+    // console.log(`addr:${borrowerOperations.address}`)
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
     await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
     await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(5, 'ether') })
@@ -711,9 +711,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    console.log(`activePool raw ETH bal: ${await web3.eth.getBalance(activePool.address)}`)
-    console.log(`activePool ETH tracker: ${await activePool.getETH()}`)
-    console.log(`activePool in CDPManager: ${await cdpManager.activePool()}`)
+    // console.log(`activePool raw ETH bal: ${await web3.eth.getBalance(activePool.address)}`)
+    // console.log(`activePool ETH tracker: ${await activePool.getETH()}`)
+    // console.log(`activePool in CDPManager: ${await cdpManager.activePool()}`)
 
     // A redeems 10 CLV
     await th.redeemCollateral(A, contracts, dec(10, 18))
@@ -938,10 +938,10 @@ contract('BorrowerOperations', async accounts => {
 
     const newDebt = (await cdpManager.CDPs(D))[0]
 
-    console.log(`newDebt ${newDebt}`)
-    console.log(`withdrawal_D ${withdrawal_D}`)
-    console.log(`emittedFee ${emittedFee}`)
-    console.log(`withdrawal_D.add(emittedFee) ${withdrawal_D.add(emittedFee)}`)
+    // console.log(`newDebt ${newDebt}`)
+    // console.log(`withdrawal_D ${withdrawal_D}`)
+    // console.log(`emittedFee ${emittedFee}`)
+    // console.log(`withdrawal_D.add(emittedFee) ${withdrawal_D.add(emittedFee)}`)
 
     // Check debt on CDP struct equals drawn debt plus emitted fee
     assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))

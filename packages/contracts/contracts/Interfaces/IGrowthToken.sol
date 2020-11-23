@@ -1,11 +1,17 @@
-pragma solidity 0.6.11;
-interface IGrowthToken { 
-    // --- Events ---
-    event CommunityIssuanceAddressSet(address _communityIssuanceAddress);
+// SPDX-License-Identifier: MIT
 
+pragma solidity 0.6.11;
+
+interface IGrowthToken { 
+   
+    // --- Events ---
+    
+    event CommunityIssuanceAddressSet(address _communityIssuanceAddress);
+    
     event LockupContractFactoryAddressSet(address _lockupContractFactoryAddress);
 
     // --- Functions ---
+    
     function totalSupply() external view returns (uint256);
 
     function balanceOf(address account) external view returns (uint256);

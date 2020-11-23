@@ -1071,8 +1071,6 @@ contract('Gas cost tests', async accounts => {
   //   th.appendData({gas: gas}, message, data)
   // })
 
-  // --- PoolManager functions ---
-
   // --- provideToSP(): No pending rewards
 
   // --- First deposit ---

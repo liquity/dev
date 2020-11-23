@@ -52,7 +52,7 @@ contract DefaultPool is Ownable, IPool {
     function sendETH(address _account, uint _amount) external override {
         _requireCallerIsCDPMananger();
         ETH = ETH.sub(_amount);
-         emit EtherSent(_account, _amount);
+        emit EtherSent(_account, _amount);
 
         (bool success, ) = _account.call{ value: _amount }("");  // use call.value()('') as per Consensys latest advice
         require(success, "DefaultPool: sending ETH failed");

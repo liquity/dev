@@ -1,14 +1,12 @@
 // Buidler-Truffle fixture for deployment to Buidler EVM
 
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
-const PoolManager = artifacts.require("./PoolManager.sol")
 const ActivePool = artifacts.require("./ActivePool.sol")
 const DefaultPool = artifacts.require("./DefaultPool.sol")
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
-const DeciMath = artifacts.require("./DeciMath.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
@@ -21,7 +19,7 @@ module.exports = async () => {
   const borrowerOperations = await BorrowerOperations.new()
   const priceFeed = await PriceFeed.new()
   const clvToken = await CLVToken.new()
-  const poolManager = await PoolManager.new()
+
   const sortedCDPs = await SortedCDPs.new()
   const cdpManager = await CDPManager.new()
   const activePool = await ActivePool.new()
@@ -32,7 +30,6 @@ module.exports = async () => {
   BorrowerOperations.setAsDeployed(borrowerOperations)
   PriceFeed.setAsDeployed(priceFeed)
   CLVToken.setAsDeployed(clvToken)
-  PoolManager.setAsDeployed(poolManager)
   SortedCDPs.setAsDeployed(sortedCDPs)
   CDPManager.setAsDeployed(cdpManager)
   ActivePool.setAsDeployed(activePool)
@@ -40,12 +37,10 @@ module.exports = async () => {
   DefaultPool.setAsDeployed(defaultPool)
   FunctionCaller.setAsDeployed(functionCaller)
 
-
   const contracts = {
     borrowerOperations,
     priceFeed,
     clvToken,
-    poolManager,
     sortedCDPs,
     cdpManager,
     activePool,

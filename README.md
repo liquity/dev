@@ -59,7 +59,7 @@ The stablecoin tokens are economically geared towards maintaining value of 1 LUS
 
 2. The stablecoins are fully redeemable - users can always swap $x worth of LUSD for $x worth of ETH (minus fees), directly with the system.
 
-3. The system algorithmically controls the generation of LUSD through a variable debt issuance fee.
+3. The system algorithmically controls the generation of LUSD through a variable issuance fee.
 
 After opening a trove with some Ether, users may issue ("borrow") tokens such that the collateral ratio of their trove remains above 110%. A user with $1000 worth of ETH in a trove can issue up to $909.09 worth of trove.
 

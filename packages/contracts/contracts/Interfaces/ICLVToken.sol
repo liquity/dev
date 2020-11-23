@@ -5,10 +5,13 @@ pragma solidity 0.6.11;
 import "../Dependencies/IERC20.sol";
 
 interface ICLVToken is IERC20 {
+    
     // --- Events ---
+    
     event CLVTokenBalanceUpdated(address _user, uint _amount);
 
     // --- Functions ---
+    
     function setAddresses(
         address _borrowerOperationsAddress,
         address _cdpManagerAddress,

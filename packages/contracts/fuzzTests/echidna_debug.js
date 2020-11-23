@@ -2,7 +2,6 @@ const { TestHelper: { dec } } = require("../utils/testHelpers.js")
 
 const EchidnaTester = artifacts.require('EchidnaTester')
 const CDPManager = artifacts.require('CDPManager')
-const PoolManager = artifacts.require('PoolManager')
 const CLVToken = artifacts.require('CLVToken')
 const ActivePool = artifacts.require('ActivePool')
 const DefaultPool = artifacts.require('DefaultPool')
@@ -14,7 +13,6 @@ const StabilityPool = artifacts.require('StabilityPool')
 contract('Echidna debugger', async accounts => {
   let echidnaTester
   let cdpManager
-  let poolManager
   let clvToken
   let activePool
   let defaultPool
@@ -24,12 +22,11 @@ contract('Echidna debugger', async accounts => {
   before(async () => {
     echidnaTester = await EchidnaTester.new({ value: dec(11, 25) })
     cdpManager = await CDPManager.at(await echidnaTester.cdpManager())
-    poolManager = await PoolManager.at(await echidnaTester.poolManager())
     clvToken = await CLVToken.at(await echidnaTester.clvToken())
     activePool = await ActivePool.at(await echidnaTester.activePool())
     defaultPool = await DefaultPool.at(await echidnaTester.defaultPool())
     stabilityPool = await StabilityPool.at(await echidnaTester.stabilityPool())
-    GAS_POOL_ADDRESS = await poolManager.GAS_POOL_ADDRESS();
+    GAS_POOL_ADDRESS = await cdpManager.GAS_POOL_ADDRESS();
   })
 
   it('openLoan', async () => {

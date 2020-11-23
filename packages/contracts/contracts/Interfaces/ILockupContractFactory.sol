@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.11;
     
 interface ILockupContractFactory {
@@ -21,6 +23,4 @@ interface ILockupContractFactory {
     function isRegisteredOneYearLockup(address _addr) external view returns (bool);
 
     function isRegisteredCustomDurationLockup(address _contractAddress) external view returns (bool);
-
-    
 }

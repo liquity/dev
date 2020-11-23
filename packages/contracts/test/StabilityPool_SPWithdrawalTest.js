@@ -16,7 +16,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     defaulter_5,
     defaulter_6,
     whale,
-    whale_2,
+    // whale_2,
     alice,
     bob,
     carol,
