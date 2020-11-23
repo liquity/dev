@@ -104,7 +104,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const recoveryMode_Before = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_Before)
 
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: '1' })
+    await borrowerOperations.addColl(alice, { from: alice, value: '1' })
 
     const recoveryMode_After = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_After)
@@ -147,7 +147,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     const recoveryMode_Before = await cdpManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_Before)
 
-    await borrowerOperations.addColl(alice, alice, { from: alice, value: _10_Ether })
+    await borrowerOperations.addColl(alice, { from: alice, value: _10_Ether })
 
     const recoveryMode_After = await cdpManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_After)

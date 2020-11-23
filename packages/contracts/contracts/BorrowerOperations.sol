@@ -24,6 +24,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     IPool public defaultPool;
 
+    address stabilityPoolAddress;
+
     IPriceFeed public priceFeed;
 
     ILQTYStaking public lqtyStaking;
@@ -74,6 +76,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         address _cdpManagerAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
+        address _stabilityPoolAddress,
         address _priceFeedAddress,
         address _sortedCDPsAddress,
         address _clvTokenAddress,
@@ -86,6 +89,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         cdpManager = ICDPManager(_cdpManagerAddress);
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
+        stabilityPoolAddress = _stabilityPoolAddress;
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         clvToken = ICLVToken(_clvTokenAddress);
@@ -95,6 +99,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit CDPManagerAddressChanged(_cdpManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
@@ -155,126 +160,100 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     // Send ETH as collateral to a CDP
-    function addColl(address _user, address _hint) external payable override {
-        _requireCDPisActive(_user);
+    function addColl(address _hint) external payable override {
+        _adjustLoan(msg.sender, 0, 0, false, _hint);
+    }
 
-        uint price = priceFeed.getPrice();
-
-        cdpManager.applyPendingRewards(_user);
-
-        // Update the CDP's coll and stake
-        uint newColl = cdpManager.increaseCDPColl(_user, msg.value);
-        uint stake = cdpManager.updateStakeAndTotalStakes(_user);
-        uint newICR = cdpManager.getCurrentICR(_user, price);
-
-        sortedCDPs.reInsert(_user, newICR, price, _hint, _hint);
-
-        // Move the ether to the Active Pool
-        _activePoolAddColl(msg.value);
-
-        uint debt = cdpManager.getCDPDebt(_user);
-        emit CDPUpdated(_user, debt, newColl, stake, BorrowerOperation.addColl);
+    // Send ETH as collateral to a CDP
+    function moveETHGainToTrove(address _user, address _hint) external payable override {
+        _requireCallerIsStabilityPool();
+        _adjustLoan(_user, 0, 0, false, _hint);
     }
 
     // Withdraw ETH collateral from a CDP
     function withdrawColl(uint _collWithdrawal, address _hint) external override {
-        _requireCDPisActive(msg.sender);
-        _requireNonZeroAmount(_collWithdrawal);
-        _requireNotInRecoveryMode();
-
-        uint price = priceFeed.getPrice();
-        cdpManager.applyPendingRewards(msg.sender);
-
-        uint debt = cdpManager.getCDPDebt(msg.sender);
-        uint coll = cdpManager.getCDPColl(msg.sender);
-
-        _requireCollAmountIsWithdrawable(coll, _collWithdrawal);
-
-        uint newICR = _getNewICRFromTroveChange(coll, debt, _collWithdrawal, false, 0, false, price); // coll decrease, no debt change
-        _requireICRisAboveMCR(newICR);
-
-        // Update the CDP's coll and stake
-        uint newColl = cdpManager.decreaseCDPColl(msg.sender, _collWithdrawal);
-        uint stake = cdpManager.updateStakeAndTotalStakes(msg.sender);
-
-        if (newColl == 0) {
-            cdpManager.closeCDP(msg.sender);
-        }  else {
-            sortedCDPs.reInsert(msg.sender, newICR, price, _hint, _hint);
-        }
-
-        // Remove _amount ETH from ActivePool and send it to the user
-        activePool.sendETH(msg.sender, _collWithdrawal);
-
-        emit CDPUpdated(msg.sender, debt, newColl, stake, BorrowerOperation.withdrawColl);
+        _adjustLoan(msg.sender, _collWithdrawal, 0, false, _hint);
     }
 
     // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
     function withdrawCLV(uint _CLVAmount, address _hint) external override {
-        _requireCDPisActive(msg.sender);
-        _requireNonZeroAmount(_CLVAmount);
-        _requireNotInRecoveryMode();
-
-        uint price = priceFeed.getPrice();
-        cdpManager.applyPendingRewards(msg.sender);
-
-        // Decay baseRate and get the fee
-        cdpManager.decayBaseRateFromBorrowing();
-        uint CLVFee = cdpManager.getBorrowingFee(_CLVAmount);
-
-        uint coll = cdpManager.getCDPColl(msg.sender);
-        uint debt = cdpManager.getCDPDebt(msg.sender);
-
-        uint rawDebtIncrease = _CLVAmount.add(CLVFee);
-
-        uint newICR = _getNewICRFromTroveChange(coll, debt, 0, false, rawDebtIncrease, true, price);   // no coll change, debt increase
-        _requireICRisAboveMCR(newICR);
-
-        _requireNewTCRisAboveCCR(0, false, _CLVAmount, true, price);  // no coll change, debt increase
-
-        // Send fee to GT staking contract
-        lqtyStaking.increaseF_LUSD(CLVFee);
-        clvToken.mint(lqtyStakingAddress, CLVFee);
-
-        // Increase the CDP's debt
-        uint newDebt = cdpManager.increaseCDPDebt(msg.sender, rawDebtIncrease);
-
-        // Update CDP's position in sortedCDPs
-        sortedCDPs.reInsert(msg.sender, newICR, price, _hint, _hint);
-
-        // Mint the CLV amount (minus fee) to the borrower, and update the ActivePool
-        _withdrawCLV(msg.sender, _CLVAmount, rawDebtIncrease);
-
-        uint stake = cdpManager.getCDPStake(msg.sender);
-        emit CDPUpdated(msg.sender, newDebt, coll, stake, BorrowerOperation.withdrawCLV);
-        emit LUSDBorrowingFeePaid(msg.sender, CLVFee);
+        _adjustLoan(msg.sender, 0, _CLVAmount, true, _hint);
     }
 
     // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the debt accordingly
-    function repayCLV(uint _CLVamount, address _hint) external override {
-        _requireCDPisActive(msg.sender);
-        _requireNonZeroAmount(_CLVamount);
+    function repayCLV(uint _CLVAmount, address _hint) external override {
+        _adjustLoan(msg.sender, 0, _CLVAmount, false, _hint);
+    }
 
-        uint price = priceFeed.getPrice();
-        cdpManager.applyPendingRewards(msg.sender);
+    /* If ether is sent, the operation is considered as an increase in ether, and the first parameter
+    _collWithdrawal must be zero */
+    function adjustLoan(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable override {
+        _adjustLoan(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+    }
 
-        uint debt = cdpManager.getCDPDebt(msg.sender);
-        _requireCLVRepaymentAllowed(debt, _CLVamount);
+    function _adjustLoan(address _user, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) internal {
+        require(msg.value == 0 || _collWithdrawal == 0, "BorrowerOperations: Cannot withdraw and add coll");
+        // withdraw collateral or LUSD, operations that remove funds and lower the ICR
+        bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease;
+        require(msg.sender == _user || !isWithdrawal, "BorrowerOps: User must be sender for withdrawals");
+        require(msg.value != 0 || _collWithdrawal != 0 || _debtChange != 0, "BorrowerOps: There must be either a collateral change or a debt change");
 
-        // Update the CDP's debt
-        uint newDebt = cdpManager.decreaseCDPDebt(msg.sender, _CLVamount);
+        LocalVariables_adjustLoan memory L;
 
-        uint newICR = cdpManager.getCurrentICR(msg.sender, price);
+        _requireCDPisActive(_user);
+        if (isWithdrawal) {_requireNotInRecoveryMode();}
 
-        // Update CDP's position in sortedCDPs
-        sortedCDPs.reInsert(msg.sender, newICR, price, _hint, _hint);
+        L.price = priceFeed.getPrice();
 
-        // Burn the received amount of CLV from the user's balance, and remove it from the ActivePool
-        _repayCLV(msg.sender, _CLVamount);
+        cdpManager.applyPendingRewards(_user);
 
-        uint coll = cdpManager.getCDPColl(msg.sender);
-        uint stake = cdpManager.getCDPStake(msg.sender);
-        emit CDPUpdated(msg.sender, newDebt, coll, stake, BorrowerOperation.repayCLV);
+        (L.collChange, L.isCollIncrease) = _getCollChange(msg.value, _collWithdrawal);
+
+        L.rawDebtChange = _debtChange;
+        if (_isDebtIncrease && _debtChange > 0) {
+            // Decay baseRate and get the fee
+            cdpManager.decayBaseRateFromBorrowing();
+            L.CLVFee = cdpManager.getBorrowingFee(_debtChange);
+
+            // Raw debt change includes the fee, if there was one
+            L.rawDebtChange = L.rawDebtChange.add(L.CLVFee);
+
+            // Send fee to GT staking contract
+            lqtyStaking.increaseF_LUSD(L.CLVFee);
+            clvToken.mint(lqtyStakingAddress, L.CLVFee);
+        }
+
+        L.debt = cdpManager.getCDPDebt(_user);
+        L.coll = cdpManager.getCDPColl(_user);
+
+        L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
+
+        // --- Checks ---
+        if (isWithdrawal) {_requireICRisAboveMCR(L.newICR);}
+        if (_isDebtIncrease && _debtChange > 0) {
+            _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
+        }
+        if (!L.isCollIncrease) {_requireCollAmountIsWithdrawable(L.coll, L.collChange);}
+        if (!_isDebtIncrease && _debtChange > 0) {_requireCLVRepaymentAllowed(L.debt, L.rawDebtChange);}
+
+        // --- Effects ---
+        (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_user, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
+        L.stake = cdpManager.updateStakeAndTotalStakes(_user);
+
+        // Close a CDP if it is empty, otherwise, re-insert it in the sorted list
+        if (L.newDebt == 0 && L.newColl == 0) {
+            cdpManager.closeCDP(_user);
+        } else {
+            sortedCDPs.reInsert(_user, L.newICR, L.price, _hint, _hint);
+        }
+
+        //  --- Interactions ---
+
+        // Pass unmodified _debtChange here, as we don't send the fee to the user
+        _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
+
+        emit CDPUpdated(_user, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
+        emit LUSDBorrowingFeePaid(msg.sender,  L.CLVFee);
     }
 
     function closeLoan() external override {
@@ -296,65 +275,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _repayCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION);
 
         emit CDPUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeLoan);
-    }
-
-    /* If ether is sent, the operation is considered as an increase in ether, and the first parameter
-    _collWithdrawal is ignored  */
-    function adjustLoan(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable override {
-        LocalVariables_adjustLoan memory L;
-
-        _requireCDPisActive(msg.sender);
-        _requireNotInRecoveryMode();
-
-        L.price = priceFeed.getPrice();
-
-        cdpManager.applyPendingRewards(msg.sender);
-
-        (L.collChange, L.isCollIncrease) = _getCollChange(msg.value, _collWithdrawal);
-
-        L.rawDebtChange = _debtChange;
-        if (_isDebtIncrease) {
-            // Decay baseRate and get the fee
-            cdpManager.decayBaseRateFromBorrowing();
-            L.CLVFee = cdpManager.getBorrowingFee(_debtChange);
-
-            // Raw debt change includes the fee, if there was one
-            L.rawDebtChange = L.rawDebtChange.add(L.CLVFee);
-
-            // Send fee to GT staking contract
-            lqtyStaking.increaseF_LUSD(L.CLVFee);
-            clvToken.mint(lqtyStakingAddress, L.CLVFee);
-        }
-
-        L.debt = cdpManager.getCDPDebt(msg.sender);
-        L.coll = cdpManager.getCDPColl(msg.sender);
-
-        L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
-
-        // --- Checks ---
-        _requireICRisAboveMCR(L.newICR);
-        _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
-        _requireCollAmountIsWithdrawable(L.coll, _collWithdrawal);
-        if (!_isDebtIncrease) {_requireCLVRepaymentAllowed(L.debt, L.rawDebtChange);}
-
-        // --- Effects ---
-        (L.newColl, L.newDebt) = _updateTroveFromAdjustment(msg.sender, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
-        L.stake = cdpManager.updateStakeAndTotalStakes(msg.sender);
-
-        // Close a CDP if it is empty, otherwise, re-insert it in the sorted list
-        if (L.newDebt == 0 && L.newColl == 0) {
-            cdpManager.closeCDP(msg.sender);
-        } else {
-            sortedCDPs.reInsert(msg.sender, L.newICR, L.price, _hint, _hint);
-        }
-
-        //  --- Interactions ---
-
-        // Pass unmodified _debtChange here, as we don't send the fee to the user
-        _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
-
-        emit CDPUpdated(msg.sender, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
-        emit LUSDBorrowingFeePaid(msg.sender,  L.CLVFee);
     }
 
     // --- Helper functions ---
@@ -486,15 +406,15 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(_debtRepayment <= _currentDebt.sub(CLV_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the CDP's debt");
     }
 
-    function _requireNonZeroAmount(uint _amount) internal pure {
-        require(_amount > 0, "BorrowerOps: Amount must be larger than 0");
-    }
-
     function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)
         internal
         pure
     {
         require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
+    }
+
+    function _requireCallerIsStabilityPool() internal {
+        require(msg.sender == stabilityPoolAddress, "BorrowerOps: Caller is not Stability Pool");
     }
 
     // --- ICR and TCR checks ---

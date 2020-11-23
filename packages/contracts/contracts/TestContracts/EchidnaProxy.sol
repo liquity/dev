@@ -58,8 +58,8 @@ contract EchidnaProxy {
         borrowerOperations.openLoan{value: _ETH}(_CLVAmount, _hint);
     }
 
-    function addCollPrx(uint _ETH, address _user, address _hint) external payable {
-        borrowerOperations.addColl{value: _ETH}(_user, _hint);
+    function addCollPrx(uint _ETH, address _hint) external payable {
+        borrowerOperations.addColl{value: _ETH}(_hint);
     }
 
     function withdrawCollPrx(uint _amount, address _hint) external {

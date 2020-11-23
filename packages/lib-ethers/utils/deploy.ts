@@ -158,6 +158,7 @@ const connectContracts = async (
         cdpManager.address,
         activePool.address,
         defaultPool.address,
+        stabilityPool.address,
         priceFeed.address,
         sortedCDPs.address,
         clvToken.address,
