@@ -228,7 +228,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
 
-        // --- Checks ---
         if (isWithdrawal) {_requireICRisAboveMCR(L.newICR);}
         if (_isDebtIncrease && _debtChange > 0) {
             _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
@@ -236,7 +235,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         if (!L.isCollIncrease) {_requireCollAmountIsWithdrawable(L.coll, L.collChange);}
         if (!_isDebtIncrease && _debtChange > 0) {_requireCLVRepaymentAllowed(L.debt, L.rawDebtChange);}
 
-        // --- Effects ---
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_user, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
         L.stake = cdpManager.updateStakeAndTotalStakes(_user);
 
@@ -246,8 +244,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         } else {
             sortedCDPs.reInsert(_user, L.newICR, L.price, _hint, _hint);
         }
-
-        //  --- Interactions ---
 
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
