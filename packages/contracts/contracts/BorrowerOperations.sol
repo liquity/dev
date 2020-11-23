@@ -116,6 +116,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         _requireCDPisNotActive(msg.sender);
 
+        // Get pending collateral from previous redemptions
+        uint collateral = msg.value + cdpManager.getCDPColl(msg.sender);
+
         // Decay the base rate, and calculate the borrowing fee
         cdpManager.decayBaseRateFromBorrowing();
         uint CLVFee = cdpManager.getBorrowingFee(_CLVAmount);
@@ -124,13 +127,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // ICR is based on the composite debt, i.e the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
-        uint ICR = Math._computeCR(msg.value, compositeDebt, price);
+        uint ICR = Math._computeCR(collateral, compositeDebt, price);
 
         if (_checkRecoveryMode()) {
             _requireICRisAboveR_MCR(ICR);
         } else {
             _requireICRisAboveMCR(ICR);
-            _requireNewTCRisAboveCCR(msg.value, true, compositeDebt, true, price);  // coll increase, debt increase
+            _requireNewTCRisAboveCCR(collateral, true, compositeDebt, true, price);  // coll increase, debt increase
         }
 
         // Update loan properties
@@ -271,6 +274,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _repayCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION);
 
         emit CDPUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeLoan);
+    }
+
+    function claimRedeemedCollateral(address _user) external override {
+        cdpManager.claimRedeemedCollateral(_user);
     }
 
     // --- Helper functions ---

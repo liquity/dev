@@ -29,6 +29,8 @@ interface ICDPManager {
 
     event CDPLiquidated(address indexed _user, uint _debt, uint _coll, uint8 operation);
 
+    event RedeemedCollateralClaimed(address indexed _user, uint _coll);
+
     // --- Functions ---
 
     function setAddresses(
@@ -63,6 +65,8 @@ interface ICDPManager {
         uint _partialRedemptionHintICR,
         uint _maxIterations
     ) external; 
+
+    function claimRedeemedCollateral(address _user) external;
 
     function updateStakeAndTotalStakes(address _user) external returns (uint);
 

@@ -763,9 +763,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (newDebt == CLV_GAS_COMPENSATION) {
             // No debt left in the CDP (except for the gas compensation), therefore the trove is closed
             _removeStake(_cdpUser);
-            _closeCDP(_cdpUser);
-            _activePoolRedeemCloseLoan(_cdpUser, CLV_GAS_COMPENSATION, newColl);
-
+            _redeemCloseLoan(_cdpUser, CLV_GAS_COMPENSATION, newColl);
         } else {
             uint newICR = Math._computeCR(newColl, newDebt, _price);
 
@@ -792,10 +790,25 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return V;
     }
 
-    /* Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
+    /* Burn the remaining gas compensation CLV, updates the Active Pool,
+     * and leaves the remaining ETH claimable by owner,
      * when after redemption there’s only gas compensation left as debt
      */
-    function _activePoolRedeemCloseLoan(address _account, uint _CLV, uint _ETH) internal {
+    function _redeemCloseLoan(address _user, uint _CLV, uint _ETH) internal {
+        uint CDPOwnersArrayLength = CDPOwners.length;
+        _requireMoreThanOneTroveInSystem(CDPOwnersArrayLength);
+
+        // The coll is not reset, so it can be claimed by the user
+        CDPs[_user].status = Status.closed;
+        CDPs[_user].coll = _ETH;
+        CDPs[_user].debt = 0;
+
+        rewardSnapshots[_user].ETH = 0;
+        rewardSnapshots[_user].CLVDebt = 0;
+
+        _removeCDPOwner(_user, CDPOwnersArrayLength);
+        sortedCDPs.remove(_user);
+
         /*
          * When the redemption drains all the trove and there’s only the gas compensation left.
          * The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left correspond to the remaining collateral.
@@ -805,8 +818,21 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         clvToken.burn(GAS_POOL_ADDRESS, _CLV);
         // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLVDebt(_CLV);
+    }
 
-        activePool.sendETH(_account, _ETH);
+    function claimRedeemedCollateral(address _user) external override {
+        _requireCallerIsBorrowerOperations();
+        CDP storage cdp = CDPs[_user];
+        require(cdp.status == Status.closed, "CDPManager: Trove must be closed to claim ETH");
+        require(cdp.coll > 0, "CDPManager: No collateral available to claim");
+
+        uint claimableColl = cdp.coll;
+        cdp.coll = 0;
+
+        // send ETH from Active Pool to owner
+        activePool.sendETH(_user, claimableColl);
+
+        emit RedeemedCollateralClaimed(_user, claimableColl);
     }
 
     function _isValidFirstRedemptionHint(address _firstRedemptionHint, uint _price) internal view returns (bool) {
