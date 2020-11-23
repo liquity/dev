@@ -8,14 +8,18 @@ import './Interfaces/IPool.sol';
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/ICDPManager.sol';
 import './Interfaces/ICLVToken.sol';
+import './Interfaces/ISortedCDPs.sol';
+import './Interfaces/IPriceFeed.sol';
 import "./Interfaces/ICommunityIssuance.sol";
+import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Math.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/SafeMath128.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
-contract StabilityPool is Ownable, IStabilityPool {
+
+contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     using SafeMath for uint256;
     using SafeMath128 for uint128;
 
@@ -27,6 +31,10 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     IPool public activePool;
     address public activePoolAddress;
+
+    // Needed to check if there are pending liquidations
+    ISortedCDPs public sortedCDPs;
+    IPriceFeed public priceFeed;
 
     ICommunityIssuance public communityIssuance;
     address public communityIssuanceAddress;
@@ -105,6 +113,8 @@ contract StabilityPool is Ownable, IStabilityPool {
         address _cdpManagerAddress,
         address _activePoolAddress,
         address _clvTokenAddress,
+        address _sortedCDPsAddress,
+        address _priceFeedAddress,
         address _communityIssuanceAddress
     )
         external
@@ -116,6 +126,8 @@ contract StabilityPool is Ownable, IStabilityPool {
         activePool = IPool(_activePoolAddress);
         activePoolAddress = _activePoolAddress;
         clvToken = ICLVToken(_clvTokenAddress);
+        sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
+        priceFeed = IPriceFeed(_priceFeedAddress);
         communityIssuanceAddress = _communityIssuanceAddress;
         communityIssuance = ICommunityIssuance(_communityIssuanceAddress);
 
@@ -123,6 +135,8 @@ contract StabilityPool is Ownable, IStabilityPool {
         emit CDPManagerAddressChanged(_cdpManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
+        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
+        emit PriceFeedAddressChanged(_priceFeedAddress);
         emit CommunityIssuanceAddressChanged(_communityIssuanceAddress);
 
         _renounceOwnership();
@@ -191,6 +205,7 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     If _amount > userDeposit, the user withdraws all of their compounded deposit. */
     function withdrawFromSP(uint _amount) external override {
+        _requireNoPendingLiquidations();
         uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
 
@@ -230,6 +245,7 @@ contract StabilityPool is Ownable, IStabilityPool {
     - Leaves their compounded deposit in the Stability Pool
     - Updates snapshots for deposit and front end stake */
     function withdrawETHGainToTrove(address _hint) external override {
+        _requireNoPendingLiquidations();
         uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
         _requireUserHasTrove(msg.sender);
@@ -676,6 +692,13 @@ contract StabilityPool is Ownable, IStabilityPool {
 
     function _requireCallerIsCDPManager() internal view {
         require(msg.sender == address(cdpManager), "StabilityPool: Caller is not CDPManager");
+    }
+
+    function _requireNoPendingLiquidations() internal view {
+        uint price = priceFeed.getPrice();
+        address lowestTrove = sortedCDPs.getLast();
+        uint ICR = cdpManager.getCurrentICR(lowestTrove, price);
+        require(ICR >= MCR, "StabilityPool: Cannot withdraw while pending liquidations");
     }
 
     function _requireUserHasDeposit(uint _initialDeposit) internal pure {
