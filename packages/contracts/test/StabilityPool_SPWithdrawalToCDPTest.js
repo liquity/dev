@@ -726,8 +726,11 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await cdpManager.liquidate(defaulter_1, { from: owner });
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
-       // Dennis withdraws his deposit and ETH gain
+      // Dennis withdraws his deposit and ETH gain
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txD = await stabilityPool.withdrawFromSP(dec(5000, 18), { from: dennis })
+      await priceFeed.setPrice(dec(100, 18))
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
       // 3*0.995 * 400/975
@@ -791,7 +794,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txD = await stabilityPool.withdrawFromSP(dec(5000, 18), { from: dennis })
+      await priceFeed.setPrice(dec(100, 18))
 
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)

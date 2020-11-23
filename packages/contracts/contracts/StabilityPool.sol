@@ -245,7 +245,6 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     - Leaves their compounded deposit in the Stability Pool
     - Updates snapshots for deposit and front end stake */
     function withdrawETHGainToTrove(address _hint) external override {
-        _requireNoPendingLiquidations();
         uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
         _requireUserHasTrove(msg.sender);
