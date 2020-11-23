@@ -19,10 +19,11 @@ Functionality added specific to the GrowthToken:
 -1/3 of supply minted to CommunityIssuance contract at deployment
 
 -Until one year from deployment:
-    -Deployer may only transfer tokens to OneYearLockupContracts that have been deployed via & registered in the 
-    Factory 
+    -Deployer may only transfer() tokens to OneYearLockupContracts that have been deployed via & registered in the 
+    LockupContractFactory 
     -approve(), increaseAllowance(), decreaseAllowance() revert when called by the deployer
     -transferFrom() reverts when deployer is the sender
+    -sendToLQTYStaking() reverts when deployer is sender, blocking the deployer from staking their LQTY.
 
 After one year has passed since deployment of the GrowthToken, the restrictions on deployer operations are lifted
 and the deployer has the same rights as any other address.
@@ -36,7 +37,7 @@ contract GrowthToken is IERC20, IGrowthToken {
     string constant internal SYMBOL = "LQTY";
     uint8 constant internal DECIMALS = 18;
 
-    uint public constant ONE_YEAR_IN_SECONDS = 31536000;
+    uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
 
     uint public _100_MILLION = 1e26;  // non-constant, for use with SafeMath
 
@@ -49,8 +50,9 @@ contract GrowthToken is IERC20, IGrowthToken {
     uint public deploymentStartTime;
 
     address public deployer;
-    address public communityIssuanceAddress;
-    address public lqtyStakingAddress;
+
+    address public immutable communityIssuanceAddress;
+    address public immutable lqtyStakingAddress;
 
     ILockupContractFactory public lockupContractFactory;
 
@@ -83,7 +85,7 @@ contract GrowthToken is IERC20, IGrowthToken {
 
         // mint 1/3 to CommunityIssuance
         uint communityEntitlement = _100_MILLION.mul(1).div(3);
-        _mint(communityIssuanceAddress, communityEntitlement);
+        _mint(_communityIssuanceAddress, communityEntitlement);
     }
 
     // --- Public functions ---
@@ -101,6 +103,8 @@ contract GrowthToken is IERC20, IGrowthToken {
         if (_callerIsDeployer() && _isFirstYear()) {
             _requireRecipientIsRegisteredOYLC(recipient);
         }
+
+        _requireValidRecipient(recipient);
 
         // Otherwise, standard transfer functionality
         _transfer(msg.sender, recipient, amount);
@@ -197,6 +201,19 @@ contract GrowthToken is IERC20, IGrowthToken {
     }
 
     // --- 'require' functions ---
+    
+    function _requireValidRecipient(address _recipient) internal view {
+        require(
+            _recipient != address(0) && 
+            _recipient != address(this),
+            "LQTY: Cannot transfer tokens directly to the LQTY token contract or the zero address"
+        );
+        require(
+            _recipient != communityIssuanceAddress &&
+            _recipient != lqtyStakingAddress,
+            "LQTY: Cannot transfer tokens directly to the community issuance or staking contract"
+        );
+    }
 
     function _requireRecipientIsRegisteredOYLC(address _recipient) internal view {
         require(lockupContractFactory.isRegisteredOneYearLockup(_recipient), 

@@ -8,12 +8,13 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./TestContracts/FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
-const LQTYStaking = artifacts.require("./GT/LQTYStaking.sol")
-const GrowthToken = artifacts.require("./GT/GrowthToken.sol")
-const LockupContractFactory = artifacts.require("./GT/LockupContractFactory.sol")
-const CommunityIssuance = artifacts.require("./GT/CommunityIssuance.sol")
+const LQTYStaking = artifacts.require("./LQTYStaking.sol")
+const GrowthToken = artifacts.require("./GrowthToken.sol")
+const LockupContractFactory = artifacts.require("./LockupContractFactory.sol")
+const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
 
-const CommunityIssuanceTester = artifacts.require("./GT/CommunityIssuanceTester.sol")
+const GrowthTokenTester = artifacts.require("./GrowthTokenTester.sol")
+const CommunityIssuanceTester = artifacts.require("./CommunityIssuanceTester.sol")
 const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const MathTester = artifacts.require("./MathTester.sol")
@@ -143,12 +144,12 @@ class DeploymentHelper {
     CommunityIssuanceTester.setAsDeployed(communityIssuance)
 
     // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
-    const growthToken = await GrowthToken.new(
+    const growthToken = await GrowthTokenTester.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
     )
-    GrowthToken.setAsDeployed(growthToken)
+    GrowthTokenTester.setAsDeployed(growthToken)
 
     const LQTYContracts = {
       lqtyStaking,
