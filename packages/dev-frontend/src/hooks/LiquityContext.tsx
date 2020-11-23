@@ -40,8 +40,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   loader,
   unsupportedNetworkFallback
 }) => {
-  const { library: provider, account, chainId: buggyChainId } = useWeb3React<Web3Provider>();
-  const chainId = buggyChainId === 1337 ? DEV_CHAIN_ID : buggyChainId;
+  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
 
   useEffect(() => {
     if (provider && chainId) {
