@@ -642,7 +642,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
   })
 
   describe('GrowthToken', async accounts => {
-    it.only("sendToLQTYStaking(): reverts when caller is not the LQTYSstaking", async () => {
+    it("sendToLQTYStaking(): reverts when caller is not the LQTYSstaking", async () => {
       // Check owner has some LQTY
       assert.isTrue((await growthToken.balanceOf(owner)).gt(toBN('0')))
 

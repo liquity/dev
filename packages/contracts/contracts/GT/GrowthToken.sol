@@ -52,8 +52,7 @@ contract GrowthToken is IERC20, IGrowthToken {
     address public communityIssuanceAddress;
     address public lqtyStakingAddress;
 
-    address public lockupFactoryAddress;
-    ILockupContractFactory lockupContractFactory;
+    ILockupContractFactory public lockupContractFactory;
 
     // --- Events ---
 
@@ -76,7 +75,6 @@ contract GrowthToken is IERC20, IGrowthToken {
         
         communityIssuanceAddress = _communityIssuanceAddress;
         lqtyStakingAddress = _lqtyStakingAddress;
-        lockupFactoryAddress = _lockupFactoryAddress;
         lockupContractFactory = ILockupContractFactory(_lockupFactoryAddress);
         
         // mint 2/3 to deployer

@@ -259,7 +259,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct GrowthToken address in LQTYStaking', async () => {
     const growthTokenAddress = growthToken.address
 
-    const recordedGrowthTokenAddress = await lqtyStaking.growthTokenAddress()
+    const recordedGrowthTokenAddress = await lqtyStaking.growthToken()
     assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
   })
 
@@ -275,7 +275,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct ActivePool address in LQTYStaking', async () => {
     const clvTokenAddress = clvToken.address
 
-    const recordedCLVTokenAddress = await lqtyStaking.clvTokenAddress()
+    const recordedCLVTokenAddress = await lqtyStaking.clvToken()
     assert.equal(clvTokenAddress, recordedCLVTokenAddress)
   })
 
@@ -317,7 +317,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct LockupContractFactory address in GrowthToken', async () => {
     const LCFAddress = lockupContractFactory.address
 
-    const recordedLCFAddress =  await growthToken.lockupFactoryAddress()
+    const recordedLCFAddress =  await growthToken.lockupContractFactory()
     assert.equal(LCFAddress, recordedLCFAddress)
   })
 
@@ -327,7 +327,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct GrowthToken address in LockupContractFactory', async () => {
     const growthTokenAddress = growthToken.address
 
-    const recordedGrowthTokenAddress = await lockupContractFactory.growthTokenAddress()
+    const recordedGrowthTokenAddress = await lockupContractFactory.growthToken()
     assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
   })
 
@@ -337,7 +337,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct GrowthToken address in CommunityIssuance', async () => {
     const growthTokenAddress = growthToken.address
 
-    const recordedGrowthTokenAddress = await communityIssuance.growthTokenAddress()
+    const recordedGrowthTokenAddress = await communityIssuance.growthToken()
     assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
   })
 

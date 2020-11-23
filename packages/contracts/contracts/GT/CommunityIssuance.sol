@@ -38,8 +38,7 @@ contract CommunityIssuance is ICommunityIssuance {
 
     address public deployer;
 
-    address public growthTokenAddress;
-    IGrowthToken growthToken;
+    IGrowthToken public growthToken;
 
     address public stabilityPoolAddress;
 
@@ -64,8 +63,7 @@ contract CommunityIssuance is ICommunityIssuance {
         _requireCallerIsCommunityIssuanceDeployer();
         _requireContractIsNotActive();
 
-        growthTokenAddress = _growthTokenAddress;
-        growthToken = IGrowthToken(growthTokenAddress);
+        growthToken = IGrowthToken(_growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 

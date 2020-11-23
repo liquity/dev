@@ -29,11 +29,8 @@ contract LQTYStaking is ILQTYStaking {
         uint F_LUSD_Snapshot;
     }
     
-    address public growthTokenAddress;
-    IGrowthToken growthToken;
-
-    address public clvTokenAddress;
-    ICLVToken clvToken;
+    IGrowthToken public growthToken;
+    ICLVToken public clvToken;
 
     address public cdpManagerAddress;
     address public borrowerOperationsAddress;
@@ -55,14 +52,12 @@ contract LQTYStaking is ILQTYStaking {
 
     function setGrowthTokenAddress(address _growthTokenAddress) external override {
         _requireCallerIsStakingContractDeployer();
-        growthTokenAddress = _growthTokenAddress;
-        growthToken = IGrowthToken(growthTokenAddress);
+        growthToken = IGrowthToken(_growthTokenAddress);
         emit GrowthTokenAddressSet(_growthTokenAddress);
     }
 
     function setCLVTokenAddress(address _clvTokenAddress) external override {
         _requireCallerIsStakingContractDeployer();
-        clvTokenAddress = _clvTokenAddress;
         clvToken = ICLVToken(_clvTokenAddress);
         emit GrowthTokenAddressSet(_clvTokenAddress);
     }

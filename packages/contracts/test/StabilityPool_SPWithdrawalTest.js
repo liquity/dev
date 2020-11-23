@@ -1575,7 +1575,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '995000000009950000'), 1000000000)
     })
 
-    it.only("withdrawFromSP(): 2 depositors can withdraw after each receiving half of a pool-emptying liquidation", async () => {
+    it("withdrawFromSP(): 2 depositors can withdraw after each receiving half of a pool-emptying liquidation", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
