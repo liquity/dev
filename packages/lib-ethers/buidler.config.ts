@@ -15,7 +15,7 @@ import { abi, addressesOf, LiquityDeployment } from ".";
 
 import accounts from "./accounts.json";
 
-const numAccounts = 100;
+const numAccounts = 102;
 
 dotenv.config();
 
