@@ -9,11 +9,9 @@ const fs = require('fs')
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
-const mv = testHelpers.MoneyValues
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
 const dec = th.dec
-const toBN = th.toBN
 
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 

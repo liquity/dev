@@ -169,11 +169,13 @@ contract CLVToken is ICLVToken, Ownable {
     // --- OPENZEPPELIN EIP 2612 FUNCTIONALITY ---
 
     function domainSeparator() external view override returns (bytes32) {    
+        // console.log('chain_id', _chainID());
         return keccak256(abi.encode( 
                keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
                keccak256(bytes(_NAME)), 
                keccak256(bytes(_VERSION)), 
                _chainID(), address(this)));
+        // console.log('chain_id', _chainID());
     }
 
     function permit

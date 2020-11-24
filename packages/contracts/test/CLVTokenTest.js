@@ -6,11 +6,12 @@ const { defaultAbiCoder } = require('@ethersproject/abi');
 const { toUtf8Bytes } = require('@ethersproject/strings');
 const { pack } = require('@ethersproject/solidity');
 const { BigNumberish } = require('@ethersproject/bignumber');
-const { ecsign } = require('ethereumjs-util');
+const { keccakFromString, bufferToHex, ecsign } = require('ethereumjs-util');
 
 const getDifference = testHelpers.getDifference
 const moneyVals = testHelpers.MoneyValues
 const dec = testHelpers.TestHelper.dec
+const toBN = testHelpers.TestHelper.toBN
 const assertRevert = testHelpers.TestHelper.assertRevert
 const ZERO_ADDRESS = testHelpers.TestHelper.ZERO_ADDRESS
 
@@ -25,17 +26,21 @@ contract('CLVToken', async accounts => {
   const ownerPrivateKey = Buffer.from(
     '0x60ddFE7f579aB6867cbE7A2Dc03853dC141d7A4aB6DBEFc0Dae2d2B1Bd4e487F', 'hex'
   )
-  const chainId = await web3.eth.getChainId()
-
+  let chainId
   let clvToken
   let clvTokenCaller
   let tokenName
+
   let cdpManager
   let stabilityPool
+  let borrowerOperations
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
+      chainId = await web3.eth.getChainId()
+    
       const contracts = await deploymentHelper.deployLiquityCore()
+ 
       clvTokenCaller = await CLVTokenCaller.new()
       clvToken = await CLVTokenTester.new(
         clvTokenCaller.address,
@@ -43,17 +48,17 @@ contract('CLVToken', async accounts => {
         clvTokenCaller.address
       )
       await clvTokenCaller.setCLV(clvToken.address)
+      tokenName = await clvToken.name()
+
+      cdpManager = clvTokenCaller
       stabilityPool = clvTokenCaller
-      tokenName = clvToken.name()
+      borrowerOperations = clvTokenCaller
       
       const GTContracts = await deploymentHelper.deployGTContracts()
   
       await deploymentHelper.connectCoreContracts(contracts, GTContracts)
       await deploymentHelper.connectGTContracts(GTContracts)
       await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
-
-      contracts.clvToken = clvToken
-      contracts.stabilityPool = stabilityPool
 
       // mint some tokens
       await clvTokenCaller.clvMint(alice, 150)
@@ -128,6 +133,7 @@ contract('CLVToken', async accounts => {
       assert.equal(stabilityPool_BalanceAfter, 25)
       assert.equal(bob_BalanceAfter, 175)
     })
+
     it('transfer(): all of these transfers should fail due to inappropriate recipient', async () => {
       await assertRevert(clvToken.transfer(clvToken.address, 1, { from: alice }))
       // await assertRevert(clvToken.transfer(alice.address, 1, { from: alice })) //todo 
@@ -137,6 +143,8 @@ contract('CLVToken', async accounts => {
       await assertRevert(clvToken.transfer(borrowerOperations.address, 1, { from: alice }))
     })
     
+    // EIP2612 tests
+
     it('initializes DOMAIN_SEPARATOR and PERMIT_TYPEHASH correctly', async () => {
       assert.equal(await clvToken.permitTypeHash(), PERMIT_TYPEHASH)
       assert.equal(await clvToken.domainSeparator(), getDomainSeparator(tokenName, clvToken.address, chainId))
@@ -144,9 +152,9 @@ contract('CLVToken', async accounts => {
     })
 
     it('initial nonce is 0', async function () {
-      expect(await clvToken.nonces(spender)).to.be.bignumber.equal('0');
+      assert.equal(toBN(await clvToken.nonces(alice)).toString(), '0');
     });
-
+    /*
     it('permits and emits Approval (replay safe)', async () => {
       // Create the approval request
       const approve = {
@@ -185,6 +193,7 @@ contract('CLVToken', async accounts => {
           approve.spender, approve.value, deadline, '0x99',
           r, s), 'ERC20Permit: invalid signature')
     })
+  */
   })
 })
 
@@ -194,16 +203,17 @@ const sign = (digest, privateKey) => {
 const PERMIT_TYPEHASH = keccak256(
   toUtf8Bytes('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)')
 )
+
+// Gets the EIP712 domain separator
+
 // Gets the EIP712 domain separator
 const getDomainSeparator = (name, contractAddress, chainId)  => {
-  return keccak256(
-    defaultAbiCoder.encode(
-      ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
-      [keccak256(toUtf8Bytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
-       keccak256(toUtf8Bytes(name)),
-       keccak256(toUtf8Bytes('1')),
-       chainId, contractAddress,
-      ]))
+  return bufferToHex(keccakFromString(
+    bufferToHex(keccakFromString('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')) +
+    bufferToHex(keccakFromString(name)) +
+    bufferToHex(keccakFromString('1')) +
+    chainId + contractAddress
+  ));
 }
 // Returns the EIP712 hash which should be signed by the user
 // in order to make a call to `permit`
