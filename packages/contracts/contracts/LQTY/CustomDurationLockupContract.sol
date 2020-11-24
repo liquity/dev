@@ -51,7 +51,7 @@ contract CustomDurationLockupContract {
     function lockContract() public returns (bool) {
         _requireCallerIsLockupDeployer();
         _requireContractIsNotActive();
-        _requireGTBalanceAtLeastEqualsEntitlement();
+        _requireLQTYBalanceAtLeastEqualsEntitlement();
 
         lockupStartTimeInSeconds = block.timestamp;
         active = true; 
@@ -59,13 +59,13 @@ contract CustomDurationLockupContract {
         return true;
     }
 
-    function withdrawGT() public {
+    function withdrawLQTY() public {
         _requireCallerIsBeneficiary();
         _requireContractIsActive();
         _requireLockupDurationHasPassed();
         
-        uint GTBalance = growthToken.balanceOf(address(this));
-        growthToken.transfer(msg.sender, GTBalance);
+        uint LQTYBalance = growthToken.balanceOf(address(this));
+        growthToken.transfer(msg.sender, LQTYBalance);
         
         active = false;
         emit CDLCUnlockedAndEmptied(block.timestamp);
@@ -93,8 +93,8 @@ contract CustomDurationLockupContract {
         require(block.timestamp.sub(lockupStartTimeInSeconds) >= lockupDurationInSeconds, "CDLC: The lockup duration must have passed");
     }
 
-    function _requireGTBalanceAtLeastEqualsEntitlement() internal view {
-        uint GTBalance = growthToken.balanceOf(address(this));
-        require(GTBalance >= initialEntitlement, "CDLC: GT balance of this CDLC must cover the initial entitlement");
+    function _requireLQTYBalanceAtLeastEqualsEntitlement() internal view {
+        uint LQTYBalance = growthToken.balanceOf(address(this));
+        require(LQTYBalance >= initialEntitlement, "CDLC: LQTY balance of this CDLC must cover the initial entitlement");
     }
 }

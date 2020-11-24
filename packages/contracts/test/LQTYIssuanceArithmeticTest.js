@@ -48,18 +48,18 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const GTContracts = await deploymentHelper.deployGTTesterContractsBuidler()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
     contracts.stabilityPool = await StabilityPool.new()
 
     stabilityPool = contracts.stabilityPool
     borrowerOperations = contracts.borrowerOperations
 
-    growthToken = GTContracts.growthToken
-    communityIssuanceTester = GTContracts.communityIssuance
+    growthToken = LQTYContracts.growthToken
+    communityIssuanceTester = LQTYContracts.communityIssuance
 
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
   // Accuracy tests

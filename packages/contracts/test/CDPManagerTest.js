@@ -37,7 +37,7 @@ contract('CDPManager', async accounts => {
     contracts.clvToken = await CLVTokenTester.new()
     contracts.cdpManager = await CDPManagerTester.new()
 
-    const GTContracts = await deploymentHelper.deployGTContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -49,14 +49,14 @@ contract('CDPManager', async accounts => {
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
 
-    lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
+    lqtyStaking = LQTYContracts.lqtyStaking
+    growthToken = LQTYContracts.growthToken
+    communityIssuance = LQTYContracts.communityIssuance
+    lockupContractFactory = LQTYContracts.lockupContractFactory
 
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
   it('liquidate(): closes a CDP that has ICR < MCR', async () => {
@@ -3029,7 +3029,7 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): a redemption made when base rate is non-zero increases the base rate, for negligible time passed", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -3118,8 +3118,8 @@ contract('CDPManager', async accounts => {
     assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
   })
 
-  it("redeemCollateral(): a redemption made at zero base rate send a non-zero ETHFee to GT staking contract", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("redeemCollateral(): a redemption made at zero base rate send a non-zero ETHFee to LQTY staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -3133,7 +3133,7 @@ contract('CDPManager', async accounts => {
     // Check baseRate == 0
     assert.equal(await cdpManager.baseRate(), '0')
 
-    // Check GT Staking contract balance before is zero
+    // Check LQTY Staking contract balance before is zero
     const lqtyStakingBalance_Before = await web3.eth.getBalance(lqtyStaking.address)
     assert.equal(lqtyStakingBalance_Before, '0')
 
@@ -3147,13 +3147,13 @@ contract('CDPManager', async accounts => {
     const baseRate_1 = await cdpManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    // Check GT Staking contract balance after is non-zero
+    // Check LQTY Staking contract balance after is non-zero
     const lqtyStakingBalance_After = toBN(await web3.eth.getBalance(lqtyStaking.address))
     assert.isTrue(lqtyStakingBalance_After.gt(toBN('0')))
   })
 
-  it("redeemCollateral(): a redemption made at zero base increases the ETH-fees-per-GT-staked in GT Staking contract", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("redeemCollateral(): a redemption made at zero base increases the ETH-fees-per-LQTY-staked in LQTY Staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -3167,7 +3167,7 @@ contract('CDPManager', async accounts => {
     // Check baseRate == 0
     assert.equal(await cdpManager.baseRate(), '0')
 
-    // Check GT Staking ETH-fees-per-GT-staked before is zero
+    // Check LQTY Staking ETH-fees-per-LQTY-staked before is zero
     const F_ETH_Before = await lqtyStaking.F_ETH()
     assert.equal(F_ETH_Before, '0')
 
@@ -3181,13 +3181,13 @@ contract('CDPManager', async accounts => {
     const baseRate_1 = await cdpManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    // Check GT Staking ETH-fees-per-GT-staked after is non-zero
+    // Check LQTY Staking ETH-fees-per-LQTY-staked after is non-zero
     const F_ETH_After = await lqtyStaking.F_ETH()
     assert.isTrue(F_ETH_After.gt('0'))
   })
 
-  it("redeemCollateral(): a redemption made at a non-zero base rate send a non-zero ETHFee to GT staking contract", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("redeemCollateral(): a redemption made at a non-zero base rate send a non-zero ETHFee to LQTY staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -3221,12 +3221,12 @@ contract('CDPManager', async accounts => {
 
     const lqtyStakingBalance_After = toBN(await web3.eth.getBalance(lqtyStaking.address))
 
-    // check GT Staking balance has increased
+    // check LQTY Staking balance has increased
     assert.isTrue(lqtyStakingBalance_After.gt(lqtyStakingBalance_Before))
   })
 
-  it("redeemCollateral(): a redemption made at a non-zero base rate increases ETH-per-GT-staked in the staking contract", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("redeemCollateral(): a redemption made at a non-zero base rate increases ETH-per-LQTY-staked in the staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -3250,7 +3250,7 @@ contract('CDPManager', async accounts => {
     const baseRate_1 = await cdpManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    // Check GT Staking ETH-fees-per-GT-staked before is zero
+    // Check LQTY Staking ETH-fees-per-LQTY-staked before is zero
     const F_ETH_Before = await lqtyStaking.F_ETH()
 
     // B redeems 10 CLV
@@ -3261,12 +3261,12 @@ contract('CDPManager', async accounts => {
 
     const F_ETH_After = await lqtyStaking.F_ETH()
 
-    // check GT Staking balance has increased
+    // check LQTY Staking balance has increased
     assert.isTrue(F_ETH_After.gt(F_ETH_Before))
   })
 
   it("redeemCollateral(): a redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -3307,7 +3307,7 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): a full redemption (leaving trove with 0 debt), closes the trove", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -3336,7 +3336,7 @@ contract('CDPManager', async accounts => {
   })
 
   it("redeemCollateral(): a redemption that close a trove sends the trove's ETH surplus (collateral - ETH drawn) to the trove owner", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })

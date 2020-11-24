@@ -337,11 +337,11 @@ contract('Fee arithmetic tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const GTContracts = await deploymentHelper.deployGTContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
   it("minutesPassedSinceLastFeeOp(): returns minutes passed for no time increase", async () => {

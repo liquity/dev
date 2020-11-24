@@ -15,16 +15,16 @@ contract('Growth Token', async accounts => {
 
 beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const GTContracts = await deploymentHelper.deployGTTesterContractsBuidler()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
 
-    lqtyStaking = GTContracts.lqtyStaking
-    growthTokenTester = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
+    lqtyStaking = LQTYContracts.lqtyStaking
+    growthTokenTester = LQTYContracts.growthToken
+    communityIssuance = LQTYContracts.communityIssuance
+    lockupContractFactory = LQTYContracts.lockupContractFactory
 
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
   it('sendToLQTYStaking: changes balances of LQTYStaking and calling account by the correct amounts', async () => {

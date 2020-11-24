@@ -40,8 +40,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
     uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // 18 digit decimal. Corresponds to an hourly decay factor of 0.99
 
-    /* BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction,
-    in order to calc the new base rate from a redemption. Corresponds to (1 / ALPHA) in the white paper. */
+    /* BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base 
+    rate from a redemption. Corresponds to (1 / ALPHA) in the white paper. */
     uint constant public BETA = 2;
 
     uint public baseRate;
@@ -52,7 +52,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     enum Status { nonExistent, active, closed }
 
-    // Store the necessary data for a Collateralized Debt Position (CDP)
+    // Store the necessary data for a trove
     struct CDP {
         uint debt;
         uint coll;
@@ -65,29 +65,29 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     uint public totalStakes;
 
-    // snapshot of the value of totalStakes immediately after the last liquidation
+    // Snapshot of the value of totalStakes immediately after the last liquidation
     uint public totalStakesSnapshot;
 
-    // snapshot of the total collateral in ActivePool and DefaultPool, immediately after the last liquidation.
+    // Snapshot of the total collateral in ActivePool and DefaultPool, immediately after the last liquidation.
     uint public totalCollateralSnapshot;
 
-    /* L_ETH and L_CLVDebt track the sums of accumulated liquidation rewards per unit staked. During it's lifetime, each stake earns:
+    /* L_ETH and L_CLVDebt track the sums of accumulated liquidation rewards per unit staked. During its lifetime, each stake earns:
     *
     * An ETH gain of ( stake * [L_ETH - L_ETH(0)] )
-    * A CLVDebt gain  of ( stake * [L_CLVDebt - L_CLVDebt(0)] )
+    * A CLVDebt increase  of ( stake * [L_CLVDebt - L_CLVDebt(0)] )
     *
     * Where L_ETH(0) and L_CLVDebt(0) are snapshots of L_ETH and L_CLVDebt for the active CDP taken at the instant the stake was made
     */
     uint public L_ETH;
     uint public L_CLVDebt;
 
-    // Map addresses with active CDPs to their RewardSnapshot
+    // Map addresses with active troves to their RewardSnapshot
     mapping (address => RewardSnapshot) public rewardSnapshots;
 
-    // Object containing the ETH and CLV snapshots for a given active CDP
+    // Object containing the ETH and CLV snapshots for a given active trove
     struct RewardSnapshot { uint ETH; uint CLVDebt;}
 
-    // Array of all active CDP addresses - used to compute “approx hint” for list insertion
+    // Array of all active trove addresses - used to to compute an approximate hint off-chain, for the sorted list insertion
     address[] public CDPOwners;
 
     // Error trackers for the trove redistribution calculation
@@ -192,7 +192,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint _stake, CDPManagerOperation _operation);
     event CDPLiquidated(address indexed _user, uint _debt, uint _coll, CDPManagerOperation _operation);
 
-    // --- Dependency setters ---
+    // --- Dependency setter ---
 
     function setAddresses(
         address _borrowerOperationsAddress,
@@ -242,8 +242,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- CDP Liquidation functions ---
 
-    /* Single liquidation function. Closes the CDP of the specified user if its individual
-    collateral ratio is lower than the minimum collateral ratio. */
+    /* Single liquidation function. Closes the trove of the specified user if its individual
+    collateral ratio (ICR) is lower than the minimum collateral ratio. */
     function liquidate(address _user) external override {
         _requireCDPisActive(_user);
 
@@ -300,7 +300,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
 
         V.collGasCompensation = _getCollGasCompensation(V.entireCDPColl);
-        // in case of partial, it will be overriden to zero below
+        // In case of a partial liquidation, it will be overriden to zero in the third branch below
         V.CLVGasCompensation = CLV_GAS_COMPENSATION;
         L.collToLiquidate = V.entireCDPColl.sub(V.collGasCompensation);
 
@@ -401,16 +401,14 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         offset as much as possible, and do not redistribute the remainder.
         Gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. */
         else if (_entireCDPDebt > _CLVInPool) {
-            // Partially liquidated pool can’t fall under gas compensation amount of debt
+            // Remaining debt in trove is lower-bounded by the trove's gas compensation
             V.partialNewDebt = Math._max(_entireCDPDebt.sub(_CLVInPool), CLV_GAS_COMPENSATION);
-            // V.partialNewDebt >= _entireCDPDebt - _CLVInPool =>
-            // _entireCDPDebt - V.partialNewDebt <= _entireCDPDebt - (_entireCDPDebt - _CLVInPool) =>
-            // _entireCDPDebt - V.partialNewDebt <= _CLVInPool =>
-            // V.debtToOffset <= _CLVInPool
+          
             V.debtToOffset = _entireCDPDebt.sub(V.partialNewDebt);
+
             uint collFraction = _entireCDPColl.mul(V.debtToOffset).div(_entireCDPDebt);
             V.collGasCompensation = _getCollGasCompensation(collFraction);
-            // CLV gas compensation remains untouched, so minimum debt rests assured
+            // CLV gas compensation remains untouched in a partial liquidation
             V.CLVGasCompensation = 0;
 
             V.collToSendToSP = collFraction.sub(V.collGasCompensation);
@@ -907,7 +905,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         // Decay the baseRate due to time passed, and increase the baserate due to this redemption
         _updateBaseRateFromRedemption(T.totalETHDrawn, price);
 
-        // Calculate the ETH fee and send it to GT staking contract
+        // Calculate the ETH fee and send it to LQTY staking contract
         T.ETHFee = _getRedemptionFee(T.totalETHDrawn);
 
         // Move ETHFee -> LQTYStaking contract

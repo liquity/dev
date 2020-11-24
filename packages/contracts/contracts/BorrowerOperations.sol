@@ -218,7 +218,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             // Raw debt change includes the fee, if there was one
             L.rawDebtChange = L.rawDebtChange.add(L.CLVFee);
 
-            // Send fee to GT staking contract
+            // Send fee to LQTY staking contract
             lqtyStaking.increaseF_LUSD(L.CLVFee);
             clvToken.mint(lqtyStakingAddress, L.CLVFee);
         }

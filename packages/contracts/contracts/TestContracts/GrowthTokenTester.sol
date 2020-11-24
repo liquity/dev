@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import "../GT/GrowthToken.sol";
+import "../LQTY/GrowthToken.sol";
 
 contract GrowthTokenTester is GrowthToken {
     constructor

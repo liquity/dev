@@ -51,7 +51,7 @@ contract OneYearLockupContract {
     function lockContract() external returns (bool) {
         _requireCallerIsLockupDeployer();
         _requireContractIsNotActive();
-        _requireGTBalanceAtLeastEqualsEntitlement();
+        _requireLQTYBalanceAtLeastEqualsEntitlement();
 
         active = true; 
         lockupStartTime = block.timestamp;
@@ -59,15 +59,15 @@ contract OneYearLockupContract {
         return true;
     }
 
-    function withdrawGT() external {
+    function withdrawLQTY() external {
         _requireCallerIsBeneficiary();
         _requireContractIsActive();
         _requireOneYearPassedSinceLockup();
         
         active = false;
 
-        uint GTBalance = growthToken.balanceOf(address(this));
-        growthToken.transfer(beneficiary, GTBalance);
+        uint LQTYBalance = growthToken.balanceOf(address(this));
+        growthToken.transfer(beneficiary, LQTYBalance);
         emit OYLCUnlockedAndEmptied(block.timestamp);
     }
 
@@ -93,8 +93,8 @@ contract OneYearLockupContract {
         require(block.timestamp.sub(lockupStartTime) >= ONE_YEAR_IN_SECONDS, "OYLC: At least one year since lockup must have passed");
     }
 
-    function _requireGTBalanceAtLeastEqualsEntitlement() internal view {
-        uint GTBalance = growthToken.balanceOf(address(this));
-        require(GTBalance >= initialEntitlement, "OYLC: GT balance of this OYLC must cover the initial entitlement");
+    function _requireLQTYBalanceAtLeastEqualsEntitlement() internal view {
+        uint LQTYBalance = growthToken.balanceOf(address(this));
+        require(LQTYBalance >= initialEntitlement, "OYLC: LQTY balance of this OYLC must cover the initial entitlement");
     }
 }

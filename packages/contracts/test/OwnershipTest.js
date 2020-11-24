@@ -17,7 +17,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   before(async () => {
     const contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
-    const GTContracts = await deploymentHelper.deployGTContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -28,10 +28,10 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     defaultPool = contracts.defaultPool
     borrowerOperations = contracts.borrowerOperations
 
-    lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
+    lqtyStaking = LQTYContracts.lqtyStaking
+    growthToken = LQTYContracts.growthToken
+    communityIssuance = LQTYContracts.communityIssuance
+    lockupContractFactory = LQTYContracts.lockupContractFactory
   })
 
   const testSetAddresses = async (contract, numberOfAddresses) => {

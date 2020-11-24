@@ -41,9 +41,9 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      const GTContracts = await deploymentHelper.deployGTTesterContractsBuidler()
+      const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
       contracts.cdpManager = await CDPManagerTester.new()
-      communityIssuanceTester = GTContracts.communityIssuance
+      communityIssuanceTester = LQTYContracts.communityIssuance
 
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
@@ -56,13 +56,13 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       borrowerOperations = contracts.borrowerOperations
       hintHelpers = contracts.hintHelpers
 
-      lqtyStaking = GTContracts.lqtyStaking
-      growthToken = GTContracts.growthToken
-      lockupContractFactory = GTContracts.lockupContractFactory
+      lqtyStaking = LQTYContracts.lqtyStaking
+      growthToken = LQTYContracts.growthToken
+      lockupContractFactory = LQTYContracts.lockupContractFactory
 
-      await deploymentHelper.connectGTContracts(GTContracts)
-      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-      await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+      await deploymentHelper.connectLQTYContracts(LQTYContracts)
+      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
       // Check community issuance starts with 33.333... million LQTY
       communityLQTYSupply = toBN(await growthToken.balanceOf(communityIssuanceTester.address))

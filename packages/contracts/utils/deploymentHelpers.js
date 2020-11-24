@@ -24,7 +24,7 @@ const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 
 /* "Liquity core" consists of all contracts in the core Liquity system.
 
-GT contracts consist of only those contracts related to the Growth Token:the token itself, 
+LQTY contracts consist of only those contracts related to the Growth Token:the token itself, 
 and lockup, staking and community issuance coreContracts. */
 
 const ZERO_ADDRESS = '0x' + '0'.repeat(40)
@@ -43,15 +43,15 @@ class DeploymentHelper {
     }
   }
 
-  static async deployGTContracts() {
+  static async deployLQTYContracts() {
     const cmdLineArgs = process.argv
     const frameworkPath = cmdLineArgs[1]
     // console.log(`Framework used:  ${frameworkPath}`)
 
     if (frameworkPath.includes("buidler")) {
-      return this.deployGTContractsBuidler()
+      return this.deployLQTYContractsBuidler()
     } else if (frameworkPath.includes("truffle")) {
-      return this.deployGTContractsTruffle()
+      return this.deployLQTYContractsTruffle()
     }
   }
 
@@ -107,7 +107,7 @@ class DeploymentHelper {
     return testerContracts
   }
 
-  static async deployGTContractsBuidler() {
+  static async deployLQTYContractsBuidler() {
     const lqtyStaking = await LQTYStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
@@ -124,17 +124,17 @@ class DeploymentHelper {
     )
     GrowthToken.setAsDeployed(growthToken)
 
-    const GTContracts = {
+    const LQTYContracts = {
       lqtyStaking,
       lockupContractFactory,
       communityIssuance,
       growthToken
     }
 
-    return GTContracts
+    return LQTYContracts
   }
 
-  static async deployGTTesterContractsBuidler() {
+  static async deployLQTYTesterContractsBuidler() {
     const lqtyStaking = await LQTYStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuanceTester.new()
@@ -189,7 +189,7 @@ class DeploymentHelper {
     return coreContracts
   }
 
-  static async deployGTContractsTruffle() {
+  static async deployLQTYContractsTruffle() {
     const lqtyStaking = await lqtyStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
@@ -202,18 +202,18 @@ class DeploymentHelper {
       lockupContractFactory.address
     )
 
-    const GTContracts = {
+    const LQTYContracts = {
       lqtyStaking,
       lockupContractFactory,
       communityIssuance,
       growthToken
     }
 
-    return GTContracts
+    return LQTYContracts
   }
 
   // Connect contracts to their dependencies
-  static async connectCoreContracts(contracts, GTContracts) {
+  static async connectCoreContracts(contracts, LQTYContracts) {
 
     // set contracts in the CLVToken contract
     await contracts.clvToken.setAddresses(
@@ -249,7 +249,7 @@ class DeploymentHelper {
       contracts.priceFeed.address,
       contracts.clvToken.address,
       contracts.sortedCDPs.address,
-      GTContracts.lqtyStaking.address
+      LQTYContracts.lqtyStaking.address
     )
 
     // set contracts in BorrowerOperations 
@@ -261,7 +261,7 @@ class DeploymentHelper {
       contracts.priceFeed.address,
       contracts.sortedCDPs.address,
       contracts.clvToken.address,
-      GTContracts.lqtyStaking.address
+      LQTYContracts.lqtyStaking.address
     )
 
     // set contracts in the Pools
@@ -270,7 +270,7 @@ class DeploymentHelper {
       contracts.cdpManager.address,
       contracts.activePool.address,
       contracts.clvToken.address,
-      GTContracts.communityIssuance.address
+      LQTYContracts.communityIssuance.address
     )
 
     await contracts.activePool.setAddresses(
@@ -293,21 +293,21 @@ class DeploymentHelper {
     )
   }
 
-  static async connectGTContracts(GTContracts) {
+  static async connectLQTYContracts(LQTYContracts) {
     // Set GrowthToken address in LCF, lqtyStaking, and CI
-    await GTContracts.lqtyStaking.setGrowthTokenAddress(GTContracts.growthToken.address)
-    await GTContracts.lockupContractFactory.setGrowthTokenAddress(GTContracts.growthToken.address)
-    await GTContracts.communityIssuance.setGrowthTokenAddress(GTContracts.growthToken.address)
+    await LQTYContracts.lqtyStaking.setGrowthTokenAddress(LQTYContracts.growthToken.address)
+    await LQTYContracts.lockupContractFactory.setGrowthTokenAddress(LQTYContracts.growthToken.address)
+    await LQTYContracts.communityIssuance.setGrowthTokenAddress(LQTYContracts.growthToken.address)
   }
 
-  static async connectGTContractsToCore(GTContracts, coreContracts) {
-    await GTContracts.lqtyStaking.setCLVTokenAddress(coreContracts.clvToken.address)
-    await GTContracts.lqtyStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
-    await GTContracts.lqtyStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
-    await GTContracts.lqtyStaking.setActivePoolAddress(coreContracts.activePool.address)
+  static async connectLQTYContractsToCore(LQTYContracts, coreContracts) {
+    await LQTYContracts.lqtyStaking.setCLVTokenAddress(coreContracts.clvToken.address)
+    await LQTYContracts.lqtyStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
+    await LQTYContracts.lqtyStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
+    await LQTYContracts.lqtyStaking.setActivePoolAddress(coreContracts.activePool.address)
 
-    await GTContracts.communityIssuance.setStabilityPoolAddress(coreContracts.stabilityPool.address)
-    await GTContracts.communityIssuance.activateContract();
+    await LQTYContracts.communityIssuance.setStabilityPoolAddress(coreContracts.stabilityPool.address)
+    await LQTYContracts.communityIssuance.activateContract();
   }
 
 }

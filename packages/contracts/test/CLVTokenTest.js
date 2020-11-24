@@ -26,11 +26,11 @@ contract('CLVToken', async accounts => {
       )
       stabilityPool = clvTokenCaller
       
-      const GTContracts = await deploymentHelper.deployGTContracts()
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts()
   
-      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-      await deploymentHelper.connectGTContracts(GTContracts)
-      await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+      await deploymentHelper.connectLQTYContracts(LQTYContracts)
+      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
       contracts.clvToken = clvToken
       contracts.stabilityPool = stabilityPool

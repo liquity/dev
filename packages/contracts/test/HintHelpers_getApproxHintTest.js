@@ -67,7 +67,7 @@ contract('CDPManager', async accounts => {
 
   before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const GTContracts = await deploymentHelper.deployGTContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
     sortedCDPs = contracts.sortedCDPs
@@ -75,9 +75,9 @@ contract('CDPManager', async accounts => {
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
   
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
     numAccounts = 10
     price = await priceFeed.getPrice()

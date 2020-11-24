@@ -29,7 +29,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
   before(async () => {
     const coreContracts = await deploymentHelper.deployLiquityCore()
-    const GTContracts = await deploymentHelper.deployGTContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = coreContracts.priceFeed
     clvToken = coreContracts.clvToken
@@ -42,14 +42,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
     functionCaller = coreContracts.functionCaller
     borrowerOperations = coreContracts.borrowerOperations
 
-    lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
+    lqtyStaking = LQTYContracts.lqtyStaking
+    growthToken = LQTYContracts.growthToken
+    communityIssuance = LQTYContracts.communityIssuance
+    lockupContractFactory = LQTYContracts.lockupContractFactory
 
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(coreContracts, GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
     await th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
   })
@@ -460,7 +460,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       assert.isTrue(txOwner.receipt.status)
     })
 
-    it("withdrawGT(): reverts when caller is not beneficiary", async () => {
+    it("withdrawLQTY(): reverts when caller is not beneficiary", async () => {
       // deploy new OYLC with Carol as beneficiary
       const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, dec(100, 18), { from: owner })
 
@@ -476,16 +476,16 @@ contract('All Liquity functions with intra-system access control restrictions', 
       // Fast-forward one year, so that beneficiary can withdraw
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-      // Bob attempts to withdraw GT
+      // Bob attempts to withdraw LQTY
       try {
-        const txBob = await OYLC.withdrawGT({ from: bob })
+        const txBob = await OYLC.withdrawLQTY({ from: bob })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
       }
 
       // Confirm beneficiary, Carol, can withdraw
-      const txCarol = await OYLC.withdrawGT({ from: carol })
+      const txCarol = await OYLC.withdrawLQTY({ from: carol })
       assert.isTrue(txCarol.receipt.status)
     })
   })
@@ -523,7 +523,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
       const txOwner1 = await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
     })
 
-    it("withdrawGT(): reverts when caller is not beneficiary", async () => {
+    it("withdrawLQTY(): reverts when caller is not beneficiary", async () => {
       // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
@@ -547,16 +547,16 @@ contract('All Liquity functions with intra-system access control restrictions', 
       // Fast-forward one month, so that beneficiary can withdraw
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // Bob attempts to withdraw GT
+      // Bob attempts to withdraw LQTY
       try {
-        const txBob = await CDLC.withdrawGT({ from: bob })
+        const txBob = await CDLC.withdrawLQTY({ from: bob })
         assert.isFalse(txAlice.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
       }
 
       // Confirm beneficiary, Carol, can withdraw
-      const txCarol = await CDLC.withdrawGT({ from: carol })
+      const txCarol = await CDLC.withdrawLQTY({ from: carol })
       assert.isTrue(txCarol.receipt.status)
     })
   })

@@ -896,7 +896,7 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  // --- GT & Lockup Contract functions ---
+  // --- LQTY & Lockup Contract functions ---
 
   static getLCAddressFromDeploymentTx(deployedLCTx) {
     return deployedLCTx.logs[0].args[0]

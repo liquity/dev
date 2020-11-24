@@ -44,7 +44,7 @@ contract('Gas compensation tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const GTContracts = await deploymentHelper.deployGTContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -55,9 +55,9 @@ contract('Gas compensation tests', async accounts => {
     defaultPool = contracts.defaultPool
     borrowerOperations = contracts.borrowerOperations
 
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts) 
-    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts) 
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
   // --- Raw gas compensation calculations ---
