@@ -22,12 +22,13 @@ import {
   ObservableLiquity,
   HintedTransactionOptionalParams,
   TroveChangeOptionalParams,
-  StabilityDepositTransferOptionalParams,
-  HintedLiquity,
+  CollateralGainTransferOptionalParams,
+  Hinted,
   LiquityReceipt,
-  LiquityTransaction,
-  ParsedLiquidation,
-  ParsedRedemption
+  SentLiquityTransaction,
+  LiquidationDetails,
+  RedemptionDetails,
+  SendableLiquity
 } from "@liquity/lib-base";
 
 import {
@@ -123,7 +124,7 @@ function* generateTrials(totalNumberOfTrials: number) {
 }
 
 class ParsedEthersTransaction<T = unknown>
-  implements LiquityTransaction<TransactionResponse, LiquityReceipt<TransactionReceipt, T>> {
+  implements SentLiquityTransaction<TransactionResponse, LiquityReceipt<TransactionReceipt, T>> {
   readonly rawTransaction: TransactionResponse;
 
   private readonly parse: (rawReceipt: TransactionReceipt) => T;
@@ -180,7 +181,7 @@ export class EthersLiquity
   implements
     ReadableLiquity,
     ObservableLiquity,
-    HintedLiquity<TransactionResponse, TransactionReceipt> {
+    Hinted<SendableLiquity<TransactionResponse, TransactionReceipt>> {
   readonly userAddress?: string;
 
   private readonly cdpManager: CDPManager;
@@ -567,7 +568,7 @@ export class EthersLiquity
     };
   }
 
-  parseLiquidation({ logs }: TransactionReceipt): ParsedLiquidation {
+  parseLiquidation({ logs }: TransactionReceipt): LiquidationDetails {
     const fullyLiquidated = this.cdpManager
       .extractEvents(logs, "CDPLiquidated")
       .map(({ args: { _user } }) => _user);
@@ -696,7 +697,7 @@ export class EthersLiquity
   }
 
   async transferCollateralGainToTrove(
-    { deposit, trove, ...hintOptionalParams }: StabilityDepositTransferOptionalParams = {},
+    { deposit, trove, ...hintOptionalParams }: CollateralGainTransferOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
     const initialTrove = trove ?? (await this.getTrove());
@@ -815,7 +816,7 @@ export class EthersLiquity
         this.cdpManager.extractEvents(logs, "Redemption").map(
           ({
             args: { _ETHSent, _ETHFee, _actualCLVAmount, _attemptedCLVAmount }
-          }): ParsedRedemption => ({
+          }): RedemptionDetails => ({
             attemptedTokenAmount: new Decimal(_attemptedCLVAmount),
             actualTokenAmount: new Decimal(_actualCLVAmount),
             collateralReceived: new Decimal(_ETHSent),

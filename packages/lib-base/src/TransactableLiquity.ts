@@ -2,7 +2,16 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 
 import { Trove, TroveChange } from "./Trove";
 
-export type LiquityTransaction<T = unknown, U extends LiquityReceipt = LiquityReceipt> = {
+export type PopulatedLiquityTransaction<
+  T = unknown,
+  U extends SentLiquityTransaction = SentLiquityTransaction
+> = {
+  rawTransaction: T;
+
+  send(): Promise<U>;
+};
+
+export type SentLiquityTransaction<T = unknown, U extends LiquityReceipt = LiquityReceipt> = {
   rawTransaction: T;
 
   getReceipt(): Promise<U>;
@@ -22,7 +31,7 @@ export type SuccessfulReceipt<T = unknown, U = unknown> = {
 export type MinedReceipt<T = unknown, U = unknown> = FailedReceipt<T> | SuccessfulReceipt<T, U>;
 export type LiquityReceipt<T = unknown, U = unknown> = PendingReceipt | MinedReceipt<T, U>;
 
-export type ParsedLiquidation = {
+export type LiquidationDetails = {
   fullyLiquidated: string[];
   partiallyLiquidated?: string;
 
@@ -31,44 +40,52 @@ export type ParsedLiquidation = {
   collateralGasCompensation: Decimal;
 };
 
-export type ParsedRedemption = {
+export type RedemptionDetails = {
   attemptedTokenAmount: Decimal;
   actualTokenAmount: Decimal;
   collateralReceived: Decimal;
   fee: Decimal;
 };
 
-export type LiquidationReceipt<T = unknown> = LiquityReceipt<T, ParsedLiquidation>;
-export type RedemptionReceipt<T = unknown> = LiquityReceipt<T, ParsedRedemption>;
+export interface TransactableLiquity {
+  openTrove(trove: Trove): Promise<void>;
+  closeTrove(): Promise<void>;
 
-export type SimpleTransaction<T, U> = LiquityTransaction<T, LiquityReceipt<U>>;
-export type Liquidation<T, U> = LiquityTransaction<T, LiquidationReceipt<U>>;
-export type Redemption<T, U> = LiquityTransaction<T, RedemptionReceipt<U>>;
+  depositEther(depositedEther: Decimalish): Promise<void>;
+  withdrawEther(withdrawnEther: Decimalish): Promise<void>;
+  borrowQui(borrowedQui: Decimalish): Promise<void>;
+  repayQui(repaidQui: Decimalish): Promise<void>;
+  changeTrove(change: TroveChange): Promise<void>;
 
-export interface TransactableLiquity<T = unknown, U = unknown> {
-  openTrove(trove: Trove): Promise<SimpleTransaction<T, U>>;
-  closeTrove(): Promise<SimpleTransaction<T, U>>;
+  setPrice(price: Decimalish): Promise<void>;
+  updatePrice(): Promise<void>;
 
-  depositEther(depositedEther: Decimalish): Promise<SimpleTransaction<T, U>>;
-  withdrawEther(withdrawnEther: Decimalish): Promise<SimpleTransaction<T, U>>;
-  borrowQui(borrowedQui: Decimalish): Promise<SimpleTransaction<T, U>>;
-  repayQui(repaidQui: Decimalish): Promise<SimpleTransaction<T, U>>;
-  changeTrove(change: TroveChange): Promise<SimpleTransaction<T, U>>;
+  liquidate(address: string): Promise<LiquidationDetails>;
+  liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDetails>;
 
-  setPrice(price: Decimalish): Promise<SimpleTransaction<T, U>>;
-  updatePrice(): Promise<SimpleTransaction<T, U>>;
+  depositQuiInStabilityPool(depositedQui: Decimalish, frontEndTag?: string): Promise<void>;
+  withdrawQuiFromStabilityPool(withdrawnQui: Decimalish): Promise<void>;
+  transferCollateralGainToTrove(): Promise<void>;
 
-  liquidate(address: string): Promise<Liquidation<T, U>>;
-  liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<Liquidation<T, U>>;
+  sendQui(toAddress: string, amount: Decimalish): Promise<void>;
 
-  depositQuiInStabilityPool(
-    depositedQui: Decimalish,
-    frontEndTag?: string
-  ): Promise<SimpleTransaction<T, U>>;
-  withdrawQuiFromStabilityPool(withdrawnQui: Decimalish): Promise<SimpleTransaction<T, U>>;
-  transferCollateralGainToTrove(): Promise<SimpleTransaction<T, U>>;
-
-  sendQui(toAddress: string, amount: Decimalish): Promise<SimpleTransaction<T, U>>;
-
-  redeemCollateral(exchangedQui: Decimalish): Promise<Redemption<T, U>>;
+  redeemCollateral(exchangedQui: Decimalish): Promise<RedemptionDetails>;
 }
+
+export type SendableLiquity<T, U> = {
+  [P in keyof TransactableLiquity]: TransactableLiquity[P] extends (
+    ...args: infer A
+  ) => Promise<infer R>
+    ? (...args: A) => Promise<SentLiquityTransaction<T, LiquityReceipt<U, R>>>
+    : never;
+};
+
+export type PopulatableLiquity<T, U, V> = {
+  [P in keyof SendableLiquity<U, V>]: SendableLiquity<U, V>[P] extends (
+    ...args: infer A
+  ) => Promise<SentLiquityTransaction<U, LiquityReceipt<V, infer R>>>
+    ? (
+        ...args: A
+      ) => Promise<PopulatedLiquityTransaction<T, SentLiquityTransaction<U, LiquityReceipt<V, R>>>>
+    : never;
+};

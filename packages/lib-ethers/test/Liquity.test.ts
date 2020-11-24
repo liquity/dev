@@ -12,7 +12,7 @@ import {
   StabilityDeposit,
   LiquityReceipt,
   SuccessfulReceipt,
-  LiquityTransaction
+  SentLiquityTransaction
 } from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
@@ -32,7 +32,7 @@ function assertSucceeded<T extends LiquityReceipt>(
 }
 
 const waitForSuccess = async <T extends LiquityReceipt>(
-  tx: Promise<LiquityTransaction<unknown, T>>
+  tx: Promise<SentLiquityTransaction<unknown, T>>
 ): Promise<Extract<T, SuccessfulReceipt>> => {
   const receipt = await (await tx).waitForReceipt();
   assertSucceeded(receipt);
