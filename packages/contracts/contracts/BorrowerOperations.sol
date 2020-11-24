@@ -33,7 +33,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     ICLVToken public clvToken;
 
-
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
 
@@ -121,7 +120,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint CLVFee = cdpManager.getBorrowingFee(_CLVAmount);
         uint rawDebt = _CLVAmount.add(CLVFee);
 
-        // ICR is based on the composite debt, i.e the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
+        // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
         uint ICR = Math._computeCR(msg.value, compositeDebt, price);
@@ -130,10 +129,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             _requireICRisAboveR_MCR(ICR);
         } else {
             _requireICRisAboveMCR(ICR);
-            _requireNewTCRisAboveCCR(msg.value, true, compositeDebt, true, price);  // coll increase, debt increase
+            _requireNewTCRisAboveCCR(msg.value, true, compositeDebt, true, price);  // bools: coll increase, debt increase
         }
 
-        // Update loan properties
+        // Set the trove struct's properties
         cdpManager.setCDPStatus(msg.sender, 1);
         cdpManager.increaseCDPColl(msg.sender, msg.value);
         cdpManager.increaseCDPDebt(msg.sender, compositeDebt);
@@ -145,55 +144,57 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint arrayIndex = cdpManager.addCDPOwnerToArray(msg.sender);
         emit CDPCreated(msg.sender, arrayIndex);
 
-        // Send the fee to the staking contract
+        // Send the LUSD borrowing fee to the staking contract
         clvToken.mint(lqtyStakingAddress, CLVFee);
         lqtyStaking.increaseF_LUSD(CLVFee);
 
         // Move the ether to the Active Pool, and mint the CLVAmount to the borrower
         _activePoolAddColl(msg.value);
         _withdrawCLV(msg.sender, _CLVAmount, rawDebt);
-        // Lock CLV gas compensation
+        // Move the CLV gas compensation to the Gas Pool
         _withdrawCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION, CLV_GAS_COMPENSATION);
 
         emit CDPUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openLoan);
         emit LUSDBorrowingFeePaid(msg.sender, CLVFee);
     }
 
-    // Send ETH as collateral to a CDP
+    // Send ETH as collateral to a trove
     function addColl(address _hint) external payable override {
         _adjustLoan(msg.sender, 0, 0, false, _hint);
     }
 
-    // Send ETH as collateral to a CDP
+    // Send ETH as collateral to a trove. Called by only the Stability Pool.
     function moveETHGainToTrove(address _user, address _hint) external payable override {
         _requireCallerIsStabilityPool();
         _adjustLoan(_user, 0, 0, false, _hint);
     }
 
-    // Withdraw ETH collateral from a CDP
+    // Withdraw ETH collateral from a trove
     function withdrawColl(uint _collWithdrawal, address _hint) external override {
         _adjustLoan(msg.sender, _collWithdrawal, 0, false, _hint);
     }
 
-    // Withdraw CLV tokens from a CDP: mint new CLV to the owner, and increase the debt accordingly
+    // Withdraw CLV tokens from a trove: mint new CLV tokens to the owner, and increase the trove's debt accordingly
     function withdrawCLV(uint _CLVAmount, address _hint) external override {
         _adjustLoan(msg.sender, 0, _CLVAmount, true, _hint);
     }
 
-    // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the debt accordingly
+    // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the trove's debt accordingly
     function repayCLV(uint _CLVAmount, address _hint) external override {
         _adjustLoan(msg.sender, 0, _CLVAmount, false, _hint);
     }
 
-    /* If ether is sent, the operation is considered as an increase in ether, and the first parameter
-    _collWithdrawal must be zero */
+    /**
+    * If ETH is sent, the operation is considered as a collateral increase, and the first parameter
+    * _collWithdrawal must be zero 
+    */
     function adjustLoan(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable override {
         _adjustLoan(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
     }
 
     function _adjustLoan(address _user, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) internal {
         require(msg.value == 0 || _collWithdrawal == 0, "BorrowerOperations: Cannot withdraw and add coll");
-        // withdraw collateral or LUSD, operations that remove funds and lower the ICR
+        // The operation "isWithdrawal" if it removes collateral or LUSD, i.e. it removes funds and lowers the ICR
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease;
         require(msg.sender == _user || !isWithdrawal, "BorrowerOps: User must be sender for withdrawals");
         require(msg.value != 0 || _collWithdrawal != 0 || _debtChange != 0, "BorrowerOps: There must be either a collateral change or a debt change");
@@ -211,11 +212,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         L.rawDebtChange = _debtChange;
         if (_isDebtIncrease && _debtChange > 0) {
-            // Decay baseRate and get the fee
+            // Decay the baseRate and get the fee
             cdpManager.decayBaseRateFromBorrowing();
             L.CLVFee = cdpManager.getBorrowingFee(_debtChange);
 
-            // Raw debt change includes the fee, if there was one
+            // The raw debt change includes the fee, if there was one
             L.rawDebtChange = L.rawDebtChange.add(L.CLVFee);
 
             // Send fee to LQTY staking contract
@@ -347,7 +348,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         assert(success == true);
     }
 
-    // Issue the specified amount of CLV to _account and increases the total active debt (_rawDebtIncrease potentially includes CLVFee)
+    // Issue the specified amount of CLV to _account and increases the total active debt (_rawDebtIncrease potentially includes a CLVFee)
     function _withdrawCLV(address _account, uint _CLVAmount, uint _rawDebtIncrease) internal {
         activePool.increaseCLVDebt(_rawDebtIncrease);
         clvToken.mint(_account, _CLVAmount);

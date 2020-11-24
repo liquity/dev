@@ -1097,7 +1097,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (totalStakes > 0) {
             /** 
             * Add distributed coll and debt rewards-per-unit-staked to the running totals.
-            * Division uses error correction, to keep the rounding error in L_ETH and L_CLVDebt low. 
+            * Division uses a "feedback" error correction, to keep the cumulative error in
+            * the  L_ETH and L_CLVDebt state variables low. 
             */
             uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
             uint CLVDebtNumerator = _debt.mul(1e18).add(lastCLVDebtError_Redistribution);
