@@ -40,14 +40,15 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
     uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // 18 digit decimal. Corresponds to an hourly decay factor of 0.99
 
-    /* BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base 
-    rate from a redemption. Corresponds to (1 / ALPHA) in the white paper. */
+    /** 
+    * BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base rate from a redemption. 
+    * Corresponds to (1 / ALPHA) in the white paper. 
+    */
     uint constant public BETA = 2;
 
     uint public baseRate;
 
-    /* Records the timestamp of the last fee operation. To avoid base-rate griefing, it is only updated by
-    * fees that occur more than one hour after the last recorded value.  */
+    // The timestamp of the latest fee operation (redemption or new LUSD issuance) 
     uint public lastFeeOperationTime;
 
     enum Status { nonExistent, active, closed }
@@ -65,13 +66,14 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     uint public totalStakes;
 
-    // Snapshot of the value of totalStakes immediately after the last liquidation
+    // Snapshot of the value of totalStakes, taken immediately after the latest liquidation
     uint public totalStakesSnapshot;
 
-    // Snapshot of the total collateral in ActivePool and DefaultPool, immediately after the last liquidation.
+    // Snapshot of the total collateral across the ActivePool and DefaultPool, immediately after the latest liquidation.
     uint public totalCollateralSnapshot;
 
-    /* L_ETH and L_CLVDebt track the sums of accumulated liquidation rewards per unit staked. During its lifetime, each stake earns:
+    /**
+    * L_ETH and L_CLVDebt track the sums of accumulated liquidation rewards per unit staked. During its lifetime, each stake earns:
     *
     * An ETH gain of ( stake * [L_ETH - L_ETH(0)] )
     * A CLVDebt increase  of ( stake * [L_CLVDebt - L_CLVDebt(0)] )
@@ -94,14 +96,16 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     uint public lastETHError_Redistribution;
     uint public lastCLVDebtError_Redistribution;
 
-    /* --- Variable container structs for liquidations ---
-
-    These structs are used to hold, return and assign variables inside the liquidation functions,
-    in order to avoid the error: "CompilerError: Stack too deep". */
+    /** 
+    * --- Variable container structs for liquidations ---
+    *
+    * These structs are used to hold, return and assign variables inside the liquidation functions,
+    * in order to avoid the error: "CompilerError: Stack too deep". 
+    **/
 
     struct LocalVariables_OuterLiquidationFunction {
         uint price;
-        uint CLVInPool;
+        uint CLVInStabPool;
         bool recoveryModeAtStart;
         uint liquidatedDebt;
         uint liquidatedColl;
@@ -114,21 +118,13 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     struct LocalVariables_LiquidationSequence {
-        uint remainingCLVInPool;
+        uint remainingCLVInStabPool;
         uint i;
         uint ICR;
         address user;
         bool backToNormalMode;
         uint entireSystemDebt;
         uint entireSystemColl;
-    }
-
-    struct LocalVariables_BatchLiquidation {
-        uint price;
-        uint remainingCLVInPool;
-        uint ICR;
-        bool recoveryModeAtStart;
-        bool backToNormalMode;
     }
 
     struct LiquidationValues {
@@ -242,21 +238,19 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- CDP Liquidation functions ---
 
-    /* Single liquidation function. Closes the trove of the specified user if its individual
-    collateral ratio (ICR) is lower than the minimum collateral ratio. */
-    function liquidate(address _user) external override {
-        _requireCDPisActive(_user);
+    // Single liquidation function. Closes the trove if its ICR is lower than the minimum collateral ratio. 
+    function liquidate(address _borrower) external override {
+        _requireCDPisActive(_borrower);
 
-        address[] memory users = new address[](1);
-        users[0] = _user;
-        batchLiquidateTroves(users);
+        address[] memory borrowers = new address[](1);
+        users[0] = _borrower;
+        batchLiquidateTroves(borrowers);
     }
 
-    // --- Inner liquidation functions ---
+    // --- Inner single liquidation functions ---
 
-    function _liquidateNormalMode(address _user, uint _ICR, uint _CLVInPool) internal
-    returns (LiquidationValues memory V)
-    {
+    // Liquidate one trove, in Normal Mode.
+    function _liquidateNormalMode(address _user, uint _ICR, uint _CLVInStabPool) internal returns (LiquidationValues memory V) {
         LocalVariables_InnerSingleLiquidateFunction memory L;
 
         // If ICR >= MCR, or is last trove, don't liquidate
@@ -277,7 +271,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         (V.debtToOffset,
         V.collToSendToSP,
         V.debtToRedistribute,
-        V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, collToLiquidate, _CLVInPool);
+        V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, collToLiquidate, _CLVInStabPool);
 
         _closeCDP(_user);
         emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInNormalMode);
@@ -285,9 +279,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return V;
     }
 
-    function _liquidateRecoveryMode(address _user, uint _ICR, uint _CLVInPool, uint _TCR) internal
-    returns (LiquidationValues memory V)
-    {
+    // Liquidate one trove, in Recovery Mode.
+    function _liquidateRecoveryMode(address _user, uint _ICR, uint _CLVInStabPool, uint _TCR) internal returns (LiquidationValues memory V) {
         LocalVariables_InnerSingleLiquidateFunction memory L;
         // If is last trove, don't liquidate
         if (CDPOwners.length <= 1) { return V; }
@@ -300,7 +293,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _movePendingTroveRewardsToActivePool(L.pendingDebtReward, L.pendingCollReward);
 
         V.collGasCompensation = _getCollGasCompensation(V.entireCDPColl);
-        // In case of a partial liquidation, it will be overriden to zero in the third branch below
+        // In case of a partial liquidation, V.CLVGasCompensation will be overwritten to zero, in the third branch below
         V.CLVGasCompensation = CLV_GAS_COMPENSATION;
         L.collToLiquidate = V.entireCDPColl.sub(V.collGasCompensation);
 
@@ -323,21 +316,23 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             (V.debtToOffset,
             V.collToSendToSP,
             V.debtToRedistribute,
-            V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, L.collToLiquidate, _CLVInPool);
+            V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, L.collToLiquidate, _CLVInStabPool);
 
             _closeCDP(_user);
             emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
-        /* If 110% <= ICR < current TCR (accounting for the preceding liquidations in the current sequence)
-         * and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution) */
+        /** 
+        * If 110% <= ICR < current TCR (accounting for the preceding liquidations in the current sequence)
+        * and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution) 
+        */
         } else if ((_ICR >= MCR) && (_ICR < _TCR)) {
-            if (_CLVInPool == 0) {
+            if (_CLVInStabPool == 0) {
                 LiquidationValues memory zeroVals;
                 return zeroVals;
             }
             _removeStake(_user);
 
-            V = _getPartialOffsetVals(_user, V.entireCDPDebt, V.entireCDPColl, _CLVInPool);
+            V = _getPartialOffsetVals(_user, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
 
             _closeCDP(_user);
         }
@@ -349,20 +344,26 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return V;
     }
 
-    function _getOffsetAndRedistributionVals(
+    // In a full liquidation, returns the values for a trove's coll and debt to be offset, and coll and debt to be distributed.
+    function _getOffsetAndRedistributionVals
+    (
         uint _debt,
         uint _coll,
-        uint _CLVInPool
+        uint _CLVInStabPool
     )
         internal
         pure
         returns (uint debtToOffset, uint collToSendToSP, uint debtToRedistribute, uint collToRedistribute)
     {
-         // Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder
-        if (_CLVInPool > 0) {
-        /* If the debt is larger than the deposited CLV, offset an amount of debt equal to the latter,
-        and send collateral in proportion to the cancelled debt */
-            debtToOffset = Math._min(_debt, _CLVInPool);
+        if (_CLVInStabPool > 0) {
+        /** 
+        * Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder.
+        *  If the trove's debt is larger than the deposited CLV in the Stability Pool:
+        *
+        *  - Offset an amount of the trove's debt equal to the CLV in the Stability Pool
+        *  - Send a fraction of the trove's collateral to the Stability Pool, equal to the fraction of its offset debt
+        */
+            debtToOffset = Math._min(_debt, _CLVInStabPool);
             collToSendToSP = _coll.mul(debtToOffset).div(_debt);
             debtToRedistribute = _debt.sub(debtToOffset);
             collToRedistribute = _coll.sub(collToSendToSP);
@@ -374,19 +375,25 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    function _getPartialOffsetVals(
+    /** 
+    * In a partial liquidation, returns the values for a trove's offset coll and debt, along with it's new debt and coll,
+    * and the ETH gas compensation.
+    */
+    function _getPartialOffsetVals
+    (
         address _user,
         uint _entireCDPDebt,
         uint _entireCDPColl,
-        uint _CLVInPool)
+        uint _CLVInStabPool
+    )
         internal
         returns (LiquidationValues memory V)
     {
         V.entireCDPDebt = _entireCDPDebt;
         V.entireCDPColl = _entireCDPColl;
 
-        // When Pool can fully absorb the trove's debt, perform a full offset
-        if (_entireCDPDebt <= _CLVInPool) {
+        // When Stability Pool can fully absorb the trove's debt, perform a full offset
+        if (_entireCDPDebt <= _CLVInStabPool) {
             V.collGasCompensation = _getCollGasCompensation(_entireCDPColl);
             V.CLVGasCompensation = CLV_GAS_COMPENSATION;
 
@@ -397,19 +404,22 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
             emit CDPLiquidated(_user, _entireCDPDebt, _entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
         }
-        /* When trove's debt is greater than the Pool, perform a partial liquidation:
-        offset as much as possible, and do not redistribute the remainder.
-        Gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. */
-        else if (_entireCDPDebt > _CLVInPool) {
-            // Remaining debt in trove is lower-bounded by the trove's gas compensation
-            V.partialNewDebt = Math._max(_entireCDPDebt.sub(_CLVInPool), CLV_GAS_COMPENSATION);
+        /** 
+        * When trove's debt is greater than the Pool, perform a partial liquidation: offset as much as possible,
+        * and do not redistribute the remainder. The trove remains active, with a reduced collateral and debt.
+        * ETH gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. 
+        * CLV gas compensation is left untouched. 
+        */
+        else if (_entireCDPDebt > _CLVInStabPool) {
+            // Remaining debt in the trove is lower-bounded by the trove's gas compensation
+            V.partialNewDebt = Math._max(_entireCDPDebt.sub(_CLVInStabPool), CLV_GAS_COMPENSATION);
           
             V.debtToOffset = _entireCDPDebt.sub(V.partialNewDebt);
 
             uint collFraction = _entireCDPColl.mul(V.debtToOffset).div(_entireCDPDebt);
             V.collGasCompensation = _getCollGasCompensation(collFraction);
-            // CLV gas compensation remains untouched in a partial liquidation
-            V.CLVGasCompensation = 0;
+          
+            V.CLVGasCompensation = 0;  // CLV gas compensation remains untouched
 
             V.collToSendToSP = collFraction.sub(V.collGasCompensation);
             V.collToRedistribute = 0;
@@ -420,22 +430,24 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    /* Liquidate a sequence of troves. Closes a maximum number of n under-collateralized CDPs,
-    starting from the one with the lowest collateral ratio in the system */
+    /** 
+    * Liquidate a sequence of troves. Closes a maximum number of n under-collateralized CDPs,
+    * starting from the one with the lowest collateral ratio in the system, and moving upwards
+    */
     function liquidateCDPs(uint _n) external override {
         LocalVariables_OuterLiquidationFunction memory L;
 
         LiquidationTotals memory T;
 
         L.price = priceFeed.getPrice();
-        L.CLVInPool = stabilityPool.getTotalCLVDeposits();
+        L.CLVInStabPool = stabilityPool.getTotalCLVDeposits();
         L.recoveryModeAtStart = checkRecoveryMode();
 
-        // Perform the appropriate liquidation sequence - tally values and obtain their totals
+        // Perform the appropriate liquidation sequence - tally the values, and obtain their totals
         if (L.recoveryModeAtStart == true) {
-            T = _getTotalFromLiquidationSequence_RecoveryMode(L.price, L.CLVInPool, _n);
+            T = _getTotalsFromLiquidateCDPsSequence_RecoveryMode(L.price, L.CLVInStabPool, _n);
         } else if (L.recoveryModeAtStart == false) {
-            T = _getTotalsFromLiquidationSequence_NormalMode(L.price, L.CLVInPool, _n);
+            T = _getTotalsFromLiquidateCDPsSequence_NormalMode(L.price, L.CLVInStabPool, _n);
         }
 
         // Move liquidated ETH and CLV to the appropriate pools
@@ -454,17 +466,23 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _sendGasCompensation(msg.sender, T.totalCLVGasCompensation, T.totalCollGasCompensation);
     }
 
-    function _getTotalFromLiquidationSequence_RecoveryMode(
+    /**
+    * This function is used when the liquidateCDPs sequence starts during Recovery Mode. However, it
+    * handle the case where the system *leaves* Recovery Mode, part way through the liquidation sequence
+    */
+    function _getTotalsFromLiquidateCDPsSequence_RecoveryMode
+    (
         uint _price,
-        uint _CLVInPool,
-        uint _n)
+        uint _CLVInStabPool,
+        uint _n
+    )
         internal
         returns(LiquidationTotals memory T)
     {
         LocalVariables_LiquidationSequence memory L;
         LiquidationValues memory V;
 
-        L.remainingCLVInPool = _CLVInPool;
+        L.remainingCLVInStabPool = _CLVInStabPool;
         L.backToNormalMode = false;
         L.entireSystemDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());
         L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
@@ -474,18 +492,16 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             L.user = sortedCDPs.getLast();
             L.ICR = getCurrentICR(L.user, _price);
 
-            // Attempt to close CDP
             if (L.backToNormalMode == false) {
-
                 // Break the loop if ICR is greater than MCR and Stability Pool is empty
-                if (L.ICR >= MCR && L.remainingCLVInPool == 0) { break; }
+                if (L.ICR >= MCR && L.remainingCLVInStabPool == 0) { break; }
 
                 uint TCR = Math._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
-
-                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInPool, TCR);
+        
+                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInStabPool, TCR);
 
                 // Update aggregate trackers
-                L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
+                L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
                 L.entireSystemDebt = L.entireSystemDebt.sub(V.debtToOffset);
                 L.entireSystemColl = L.entireSystemColl.sub(V.collToSendToSP);
 
@@ -498,9 +514,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInPool);
+                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInStabPool);
 
-                L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
+                L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
 
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
@@ -514,17 +530,19 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    function _getTotalsFromLiquidationSequence_NormalMode(
+    function _getTotalFromLiquidateCDPsSequence_NormalMode
+    (
         uint _price,
-        uint _CLVInPool,
-        uint _n)
+        uint _CLVInStabPool,
+        uint _n
+    )
         internal
         returns(LiquidationTotals memory T)
     {
         LocalVariables_LiquidationSequence memory L;
         LiquidationValues memory V;
 
-        L.remainingCLVInPool = _CLVInPool;
+        L.remainingCLVInStabPool = _CLVInStabPool;
 
         L.i = 0;
         while (L.i < _n) {
@@ -532,9 +550,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             L.ICR = getCurrentICR(L.user, _price);
 
             if (L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInPool);
+                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInStabPool);
 
-                L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
+                L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
 
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
@@ -547,8 +565,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    /* Attempt to liquidate a custom set of troves provided by the caller.  Stops if a partial liquidation is
-    performed, and thus leaves optimization of the order troves up to the caller.  */
+    /** 
+    * Attempt to liquidate a custom list of troves provided by the caller. The liquidation sequence stops if
+    * a partial liquidation is performed, so it's up to the caller to order the troves in the _troveArray parameter.
+    */
     function batchLiquidateTroves(address[] memory _troveArray) public override {
         require(_troveArray.length != 0, "CDPManager: Calldata address array must not be empty");
 
@@ -556,14 +576,14 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         LiquidationTotals memory T;
 
         L.price = priceFeed.getPrice();
-        L.CLVInPool = stabilityPool.getTotalCLVDeposits();
+        L.CLVInStabPool = stabilityPool.getTotalCLVDeposits();
         L.recoveryModeAtStart = checkRecoveryMode();
 
-        // Perform the appropriate liquidation sequence - tally values and obtain their totals
+        // Perform the appropriate liquidation sequence - tally values and obtain their totals.
         if (L.recoveryModeAtStart == true) {
-           T = _getTotalFromBatchLiquidate_RecoveryMode(L.price, L.CLVInPool, _troveArray);
+           T = _getTotalFromBatchLiquidate_RecoveryMode(L.price, L.CLVInStabPool, _troveArray);
         } else if (L.recoveryModeAtStart == false) {
-            T = _getTotalsFromBatchLiquidate_NormalMode(L.price, L.CLVInPool, _troveArray);
+            T = _getTotalsFromBatchLiquidate_NormalMode(L.price, L.CLVInStabPool, _troveArray);
         }
 
         // Move liquidated ETH and CLV to the appropriate pools
@@ -582,40 +602,42 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _sendGasCompensation(msg.sender, T.totalCLVGasCompensation, T.totalCollGasCompensation);
     }
 
-    function _getTotalFromBatchLiquidate_RecoveryMode(
+    /** 
+    * This function is used when the batch liquidation sequence starts during Recovery Mode. However, it
+    * handle the case where the system *leaves* Recovery Mode, part way through the liquidation sequence
+    */
+    function _getTotalFromBatchLiquidate_RecoveryMode
+    (
         uint _price,
-        uint _CLVInPool,
+        uint _CLVInStabPool,
         address[] memory _troveArray)
         internal
         returns(LiquidationTotals memory T)
     {
         LocalVariables_LiquidationSequence memory L;
         LiquidationValues memory V;
-        uint troveArrayLength = _troveArray.length;
 
-        L.remainingCLVInPool = _CLVInPool;
+        L.remainingCLVInStabPool = _CLVInStabPool;
         L.backToNormalMode = false;
         L.entireSystemDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());
         L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
 
         L.i = 0;
-        for (L.i = 0; L.i < troveArrayLength; L.i++) {
+        for (L.i = 0; L.i < troveArray.length; L.i++) {
             L.user = _troveArray[L.i];
-
             L.ICR = getCurrentICR(L.user, _price);
 
-            // Attempt to close trove
             if (L.backToNormalMode == false) {
 
                 // Skip this trove if ICR is greater than MCR and Stability Pool is empty
-                if (L.ICR >= MCR && L.remainingCLVInPool == 0) { continue; }
+                if (L.ICR >= MCR && L.remainingCLVInStabPool == 0) { continue; }
 
                 uint TCR = Math._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
 
-                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInPool, TCR);
+                V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInStabPool, TCR);
 
                 // Update aggregate trackers
-                L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
+                L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
                 L.entireSystemDebt = L.entireSystemDebt.sub(V.debtToOffset);
                 L.entireSystemColl = L.entireSystemColl.sub(V.collToSendToSP);
 
@@ -629,8 +651,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             }
 
             else if (L.backToNormalMode == true && L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInPool);
-                L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
+                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInStabPool);
+                L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
 
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
@@ -638,9 +660,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    function _getTotalsFromBatchLiquidate_NormalMode(
+    function _getTotalsFromBatchLiquidate_NormalMode
+    (
         uint _price,
-        uint _CLVInPool,
+        uint _CLVInStabPool,
         address[] memory _troveArray
     )
         internal
@@ -648,17 +671,16 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     {
         LocalVariables_LiquidationSequence memory L;
         LiquidationValues memory V;
-        uint troveArrayLength = _troveArray.length;
 
-        L.remainingCLVInPool = _CLVInPool;
+        L.remainingCLVInStabPool = _CLVInStabPool;
 
-        for (L.i = 0; L.i < troveArrayLength; L.i++) {
+        for (L.i = 0; L.i < troveArray.length; L.i++) {
             L.user = _troveArray[L.i];
             L.ICR = getCurrentICR(L.user, _price);
 
             if (L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInPool);
-                L.remainingCLVInPool = L.remainingCLVInPool.sub(V.debtToOffset);
+                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInStabPool);
+                L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
 
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
@@ -671,23 +693,17 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     function _addLiquidationValuesToTotals(LiquidationTotals memory T1, LiquidationValues memory V)
     internal pure returns(LiquidationTotals memory T2) {
 
-        // Tally gas compensation
+        // Tally all the values with their respective running totals
         T2.totalCollGasCompensation = T1.totalCollGasCompensation.add(V.collGasCompensation);
         T2.totalCLVGasCompensation = T1.totalCLVGasCompensation.add(V.CLVGasCompensation);
-
-        // Tally the total initial debt and coll of troves impacted by the sequence
         T2.totalDebtInSequence = T1.totalDebtInSequence.add(V.entireCDPDebt);
         T2.totalCollInSequence = T1.totalCollInSequence.add(V.entireCDPColl);
-
-        // Tally the debt and coll to offset
         T2.totalDebtToOffset = T1.totalDebtToOffset.add(V.debtToOffset);
         T2.totalCollToSendToSP = T1.totalCollToSendToSP.add(V.collToSendToSP);
-
-        // Tally the debt and coll to redistribute
         T2.totalDebtToRedistribute = T1.totalDebtToRedistribute.add(V.debtToRedistribute);
         T2.totalCollToRedistribute = T1.totalCollToRedistribute.add(V.collToRedistribute);
 
-        // Assign the address of the partially liquidated trove and debt/coll values
+        // Assign the address of the partially liquidated trove, and its new debt and coll values
         T2.partialAddr = V.partialAddr;
         T2.partialNewDebt = V.partialNewDebt;
         T2.partialNewColl = V.partialNewColl;
@@ -695,7 +711,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return T2;
     }
 
-    // Update coll, debt, stake and snapshot of partially liquidated trove, and insert it back to the list
+    // Update the properties of the partially liquidated trove, and insert it back to the list
     function _updatePartiallyLiquidatedTrove(address _user, uint _newDebt, uint _newColl, uint _price) internal {
         if ( _user == address(0)) { return; }
 
@@ -715,20 +731,19 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         emit CDPUpdated(_user, _newDebt, _newColl, CDPs[_user].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
     }
 
-    function _sendGasCompensation(address _user, uint _CLV, uint _ETH) internal {
-        // Send CLV gas compensation to caller
+    function _sendGasCompensation(address _liquidator, uint _CLV, uint _ETH) internal {
+        // Send CLV gas compensation to the liquidator
         if (_CLV > 0) {
-            clvToken.returnFromPool(GAS_POOL_ADDRESS, _user, _CLV);
+            clvToken.returnFromPool(GAS_POOL_ADDRESS, _liquidator, _CLV);
         }
-        // Send ETH gas compensation to caller
+        // Send ETH gas compensation to the liquidator
         if (_ETH > 0) {
-            activePool.sendETH(_user, _ETH);
+            activePool.sendETH(_liquidator, _ETH);
         }
     }
 
     // Move a CDP's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
     function _movePendingTroveRewardsToActivePool(uint _CLV, uint _ETH) internal {
-        // Transfer the debt & coll from the Default Pool to the Active Pool
         defaultPool.decreaseCLVDebt(_CLV);
         activePool.increaseCLVDebt(_CLV);
         defaultPool.sendETH(address(activePool), _ETH);
@@ -736,9 +751,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Redemption functions ---
 
-    // Redeem as much collateral as possible from _cdpUser's CDP in exchange for CLV up to _maxCLVamount
+    // Redeem as much collateral as possible from _borrower's CDP in exchange for CLV up to _maxCLVamount
     function _redeemCollateralFromCDP(
-        address _cdpUser,
+        address _borrower,
         uint _maxCLVamount,
         uint _price,
         address _partialRedemptionHint,
@@ -747,24 +762,20 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         internal returns (SingleRedemptionValues memory V)
     {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP minus the gas compensation
-        V.CLVLot = Math._min(_maxCLVamount, CDPs[_cdpUser].debt.sub(CLV_GAS_COMPENSATION));
+        V.CLVLot = Math._min(_maxCLVamount, CDPs[_borrower].debt.sub(CLV_GAS_COMPENSATION));
 
         // Get the ETHLot of equivalent value in USD
         V.ETHLot = V.CLVLot.mul(1e18).div(_price);
 
         // Decrease the debt and collateral of the current CDP according to the CLV lot and corresponding ETH to send
-        uint newDebt = (CDPs[_cdpUser].debt).sub(V.CLVLot);
-        uint newColl = (CDPs[_cdpUser].coll).sub(V.ETHLot);
+        uint newDebt = (CDPs[_borrower].debt).sub(V.CLVLot);
+        uint newColl = (CDPs[_borrower].coll).sub(V.ETHLot);
 
-        // V.CLVLot <= CDPs[_cdpUser].debt - CLV_GAS_COMPENSATION =>
-        // newDebt = CDPs[_cdpUser].debt - V.CLVLot >=
-        //  >= CDPs[_cdpUser].debt - (CDPs[_cdpUser].debt - CLV_GAS_COMPENSATION) =>
-        //  newDebt >= CLV_GAS_COMPENSATION
         if (newDebt == CLV_GAS_COMPENSATION) {
-            // No debt left in the CDP (except for the gas compensation), therefore the trove is closed
-            _removeStake(_cdpUser);
-            _closeCDP(_cdpUser);
-            _activePoolRedeemCloseLoan(_cdpUser, CLV_GAS_COMPENSATION, newColl);
+            // No debt left in the CDP (except for the gas compensation), therefore the trove gets closed
+            _removeStake(_borrower);
+            _closeCDP(_borrower);
+            _activePoolRedeemCloseLoan(_borrower, CLV_GAS_COMPENSATION, newColl);
 
         } else {
             uint newICR = Math._computeCR(newColl, newDebt, _price);
@@ -777,31 +788,29 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 return V;
             }
 
-            sortedCDPs.reInsert(_cdpUser, newICR, _price, _partialRedemptionHint, _partialRedemptionHint);
+            sortedCDPs.reInsert(_borrower, newICR, _price, _partialRedemptionHint, _partialRedemptionHint);
 
-            CDPs[_cdpUser].debt = newDebt;
-            CDPs[_cdpUser].coll = newColl;
-            _updateStakeAndTotalStakes(_cdpUser);
+            CDPs[_borrower].debt = newDebt;
+            CDPs[_borrower].coll = newColl;
+            _updateStakeAndTotalStakes(_borrower);
         }
         emit CDPUpdated(
-            _cdpUser,
+            _borrower,
             newDebt, newColl,
-            CDPs[_cdpUser].stake,
+            CDPs[_borrower].stake,
             CDPManagerOperation.redeemCollateral
         );
         return V;
     }
 
-    /* Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
-     * when after redemption there’s only gas compensation left as debt
-     */
+    
+    /** 
+    * Called when a full redemption occurs, and closes the trove.
+    * The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left corresponds to the remaining debt.
+    * In order to close the trove, the 10 CLV gas compensation is burned, and 10 debt is removed from the active pool.
+    * The debt recorded on the trove's struct is zero'd elswhere, in _closeCDP.
+    */ 
     function _activePoolRedeemCloseLoan(address _account, uint _CLV, uint _ETH) internal {
-        /*
-         * When the redemption drains all the trove and there’s only the gas compensation left.
-         * The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left correspond to the remaining collateral.
-         * In order to close the trove, the user should get the CLV refunded and use them to repay and close it,
-         * but instead we do that all in one step.
-         */
         clvToken.burn(GAS_POOL_ADDRESS, _CLV);
         // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLVDebt(_CLV);
@@ -821,25 +830,27 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return nextCDP == address(0) || getCurrentICR(nextCDP, _price) < MCR;
     }
 
-    /* Send _CLVamount CLV to the system and redeem the corresponding amount of collateral from as many CDPs as are needed to fill the redemption
-     request.  Applies pending rewards to a CDP before reducing its debt and coll.
-
-    Note that if _amount is very large, this function can run out of gas, specially if traversed troves are small. This can be easily avoided by splitting the total _amount
-    in appropriate chunks and calling the function multiple times.
-    Param `_maxIterations` can also be provided, so the loop through CDPs is capped. (If it’s zero it will be ignored)
-    This makes it easier to avoid OOG for the frontend, as only knowing approximately the average cost of an iteration is enough, without needing to know the “topology” of the trove list.
-    It also avoids the need to set the cap in stone in the contract, nor doing gas calculations, as both gas price and opcode costs can vary.
-
-    All CDPs that are redeemed from -- with the likely exception of the last one -- will end up with no debt left, therefore they will be closed
-    If the last CDP does have some remaining debt, the reinsertion could be anywhere in the
-    list, therefore it requires a hint. A frontend should use getRedemptionHints() to calculate what the ICR of this CDP will be
-    after redemption, and pass a hint for its position in the sortedCDPs list along with the ICR value that the hint was found for.
-
-    If another transaction modifies the list between calling getRedemptionHints() and passing the hints to redeemCollateral(), it
-    is very likely that the last (partially) redeemed CDP would end up with a different ICR than what the hint is for. In this case the
-    redemption will stop after the last completely redeemed CDP and the sender will keep the remaining CLV amount, which they can attempt
-    to redeem later.
-     */
+    /** Send _CLVamount CLV to the system and redeem the corresponding amount of collateral from as many CDPs as are needed to fill the redemption
+    * request.  Applies pending rewards to a CDP before reducing its debt and coll.
+    *
+    * Note that if _amount is very large, this function can run out of gas, specially if traversed troves are small. This can be easily avoided by 
+    * splitting the total _amount in appropriate chunks and calling the function multiple times.
+    * 
+    * Param `_maxIterations` can also be provided, so the loop through CDPs is capped (if it’s zero, it will be ignored).This makes it easier to 
+    * avoid OOG for the frontend, as only knowing approximately the average cost of an iteration is enough, without needing to know the “topology” 
+    * of the trove list. It also avoids the need to set the cap in stone in the contract, nor doing gas calculations, as both gas price and opcode 
+    * costs can vary.
+    * 
+    * All CDPs that are redeemed from -- with the likely exception of the last one -- will end up with no debt left, therefore they will be closed.
+    * If the last CDP does have some remaining debt, it has a finite ICR, and the reinsertion could be anywhere in the list, therefore it requires a hint. 
+    * A frontend should use getRedemptionHints() to calculate what the ICR of this CDP will be after redemption, and pass a hint for its position 
+    * in the sortedCDPs list along with the ICR value that the hint was found for.
+    * 
+    * If another transaction modifies the list between calling getRedemptionHints() and passing the hints to redeemCollateral(), it
+    * is very likely that the last (partially) redeemed CDP would end up with a different ICR than what the hint is for. In this case the
+    * redemption will stop after the last completely redeemed CDP and the sender will keep the remaining CLV amount, which they can attempt
+    * to redeem later.
+    */
     function redeemCollateral(
         uint _CLVamount,
         address _firstRedemptionHint,
@@ -863,30 +874,29 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         uint remainingCLV = _CLVamount;
         uint price = priceFeed.getPrice();
-        address currentCDPuser;
+        address currentBorrower;
 
-        // TODO: This is to jump into the first non undercollaterallized trove, right?
         if (_isValidFirstRedemptionHint(_firstRedemptionHint, price)) {
-            currentCDPuser = _firstRedemptionHint;
+            currentBorrower = _firstRedemptionHint;
         } else {
-            currentCDPuser = sortedCDPs.getLast();
-
-            while (currentCDPuser != address(0) && getCurrentICR(currentCDPuser, price) < MCR) {
-                currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
+            currentBorrower = sortedCDPs.getLast();
+            // Find the first trove with ICR >= MCR
+            while (currentBorrower != address(0) && getCurrentICR(currentBorrower, price) < MCR) {
+                currentBorrower = sortedCDPs.getPrev(currentBorrower);
             }
         }
 
         // Loop through the CDPs starting from the one with lowest collateral ratio until _amount of CLV is exchanged for collateral
         if (_maxIterations == 0) { _maxIterations = uint(-1); }
-        while (currentCDPuser != address(0) && remainingCLV > 0 && _maxIterations > 0) {
+        while (currentBorrower != address(0) && remainingCLV > 0 && _maxIterations > 0) {
             _maxIterations--;
             // Save the address of the CDP preceding the current one, before potentially modifying the list
-            address nextUserToCheck = sortedCDPs.getPrev(currentCDPuser);
+            address nextUserToCheck = sortedCDPs.getPrev(currentBorrower);
 
-            _applyPendingRewards(currentCDPuser);
+            _applyPendingRewards(currentBorrower);
 
             SingleRedemptionValues memory V = _redeemCollateralFromCDP(
-                currentCDPuser,
+                currentBorrower,
                 remainingCLV,
                 price,
                 _partialRedemptionHint,
@@ -899,16 +909,14 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             T.totalETHDrawn = T.totalETHDrawn.add(V.ETHLot);
 
             remainingCLV = remainingCLV.sub(V.CLVLot);
-            currentCDPuser = nextUserToCheck;
+            currentBorrower = nextUserToCheck;
         }
 
-        // Decay the baseRate due to time passed, and increase the baserate due to this redemption
+        // Decay the baseRate due to time passed, and then increase it according to the size of this redemption
         _updateBaseRateFromRedemption(T.totalETHDrawn, price);
 
-        // Calculate the ETH fee and send it to LQTY staking contract
+        // Calculate the ETH fee and send it to the LQTY staking contract
         T.ETHFee = _getRedemptionFee(T.totalETHDrawn);
-
-        // Move ETHFee -> LQTYStaking contract
         activePool.sendETH(lqtyStakingAddress, T.ETHFee);
         lqtyStaking.increaseF_ETH(T.ETHFee);
 
@@ -920,19 +928,19 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         emit Redemption(_CLVamount, T.totalCLVToRedeem, T.totalETHDrawn, T.ETHFee);
     }
 
-    // Burn the received CLV, transfers the redeemed ETH to _account and updates the Active Pool
-    function _activePoolRedeemCollateral(address _account, uint _CLV, uint _ETH) internal {
+    // Burn the received CLV, transfer the redeemed ETH to _redeemer and updates the Active Pool
+    function _activePoolRedeemCollateral(address _redeemer, uint _CLV, uint _ETH) internal {
         // Update Active Pool CLV, and send ETH to account
-        clvToken.burn(_account, _CLV);
+        clvToken.burn(_redeemer, _CLV);
         activePool.decreaseCLVDebt(_CLV);
 
-        activePool.sendETH(_account, _ETH);
+        activePool.sendETH(_redeemer, _ETH);
     }
 
     // --- Helper functions ---
 
 
-    // Return the current collateral ratio (ICR) of a given CDP. Takes pending coll/debt rewards into account.
+    // Return the current collateral ratio (ICR) of a given CDP. Takes a trove's pending coll and debt rewards from redistributions into account.
     function getCurrentICR(address _user, uint _price) public view override returns (uint) {
         uint pendingETHReward = getPendingETHReward(_user);
         uint pendingCLVDebtReward = getPendingCLVDebtReward(_user);
@@ -949,133 +957,134 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return _applyPendingRewards(_user);
     }
 
-    // Add the user's coll and debt rewards earned from liquidations, to their CDP
-    function _applyPendingRewards(address _user) internal {
-        if (hasPendingRewards(_user)) {
-            _requireCDPisActive(_user);
+    // Add the borrowers's coll and debt rewards earned from redistributions, to their CDP
+    function _applyPendingRewards(address _borrower) internal {
+        if (hasPendingRewards(_borrower)) {
+            _requireCDPisActive(_borrower);
 
             // Compute pending rewards
-            uint pendingETHReward = getPendingETHReward(_user);
-            uint pendingCLVDebtReward = getPendingCLVDebtReward(_user);
+            uint pendingETHReward = getPendingETHReward(_borrower);
+            uint pendingCLVDebtReward = getPendingCLVDebtReward(_borrower);
 
             // Apply pending rewards to trove's state
-            CDPs[_user].coll = CDPs[_user].coll.add(pendingETHReward);
-            CDPs[_user].debt = CDPs[_user].debt.add(pendingCLVDebtReward);
+            CDPs[_borrower].coll = CDPs[_borrower].coll.add(pendingETHReward);
+            CDPs[_borrower].debt = CDPs[_borrower].debt.add(pendingCLVDebtReward);
 
-            _updateCDPRewardSnapshots(_user);
+            _updateCDPRewardSnapshots(_borrower);
 
             // Transfer from DefaultPool to ActivePool
             _movePendingTroveRewardsToActivePool(pendingCLVDebtReward, pendingETHReward);
 
-            emit CDPUpdated(_user, CDPs[_user].debt, CDPs[_user].coll, CDPs[_user].stake, CDPManagerOperation.applyPendingRewards);
+            emit CDPUpdated(_borrower, CDPs[_user].debt, CDPs[_borrower].coll, CDPs[_borrower].stake, CDPManagerOperation.applyPendingRewards);
         }
     }
 
-    // Update user's snapshots of L_ETH and L_CLVDebt to reflect the current values
-    function updateCDPRewardSnapshots(address _user) external override {
+    // Update borrower's snapshots of L_ETH and L_CLVDebt to reflect the current values
+    function updateCDPRewardSnapshots(address _borrower) external override {
         _requireCallerIsBorrowerOperations();
-       return _updateCDPRewardSnapshots(_user);
+       return _updateCDPRewardSnapshots(_borrower);
     }
 
-    function _updateCDPRewardSnapshots(address _user) internal {
-        rewardSnapshots[_user].ETH = L_ETH;
-        rewardSnapshots[_user].CLVDebt = L_CLVDebt;
+    function _updateCDPRewardSnapshots(address _borrower) internal {
+        rewardSnapshots[_borrower].ETH = L_ETH;
+        rewardSnapshots[_borrower].CLVDebt = L_CLVDebt;
     }
 
-    // Get the user's pending accumulated ETH reward, earned by its stake
-    function getPendingETHReward(address _user) public view override returns (uint) {
-        uint snapshotETH = rewardSnapshots[_user].ETH;
+    // Get the borrower's pending accumulated ETH reward, earned by their stake
+    function getPendingETHReward(address _borrower) public view override returns (uint) {
+        uint snapshotETH = rewardSnapshots[_borrower].ETH;
         uint rewardPerUnitStaked = L_ETH.sub(snapshotETH);
 
         if ( rewardPerUnitStaked == 0 ) { return 0; }
 
-        uint stake = CDPs[_user].stake;
+        uint stake = CDPs[_borrower].stake;
 
         uint pendingETHReward = stake.mul(rewardPerUnitStaked).div(1e18);
 
         return pendingETHReward;
     }
 
-     // Get the user's pending accumulated CLV reward, earned by its stake
-    function getPendingCLVDebtReward(address _user) public view override returns (uint) {
-        uint snapshotCLVDebt = rewardSnapshots[_user].CLVDebt;
+     // Get the borrower's pending accumulated CLV reward, earned by their stake
+    function getPendingCLVDebtReward(address _borrower) public view override returns (uint) {
+        uint snapshotCLVDebt = rewardSnapshots[_borrower].CLVDebt;
         uint rewardPerUnitStaked = L_CLVDebt.sub(snapshotCLVDebt);
 
         if ( rewardPerUnitStaked == 0 ) { return 0; }
 
-        uint stake =  CDPs[_user].stake;
+        uint stake =  CDPs[_borrower].stake;
 
         uint pendingCLVDebtReward = stake.mul(rewardPerUnitStaked).div(1e18);
 
         return pendingCLVDebtReward;
     }
 
-    function hasPendingRewards(address _user) public view override returns (bool) {
-        /* A CDP has pending rewards if its snapshot is less than the current rewards per-unit-staked sum:
-        this indicates that rewards have occured since the snapshot was made, and the user therefore has
-        pending rewards */
-        return (rewardSnapshots[_user].ETH < L_ETH);
+    function hasPendingRewards(address _borrower) public view override returns (bool) {
+        /** 
+        * A CDP has pending rewards if its snapshot is less than the current rewards per-unit-staked sum:
+        * this indicates that rewards have occured since the snapshot was made, and the user therefore has
+        * pending rewards 
+        */
+        return (rewardSnapshots[_borrower].ETH < L_ETH);
     }
 
-    // Returns the CDPs entire debt and coll, including distribution pending rewards.
+    // Return the CDPs entire debt and coll, including pending rewards from redistributions.
     function getEntireDebtAndColl(
-        address _user
+        address _borrower
     )
         public
         view
         override
-        returns (uint debt, uint coll, uint pendingCLVDebtReward,  uint pendingETHReward)
+        returns (uint debt, uint coll, uint pendingCLVDebtReward, uint pendingETHReward)
     {
-        debt = CDPs[_user].debt;
-        coll = CDPs[_user].coll;
+        debt = CDPs[_borrower].debt;
+        coll = CDPs[_borrower].coll;
 
-        pendingCLVDebtReward = getPendingCLVDebtReward(_user);
-        pendingETHReward = getPendingETHReward(_user);
+        pendingCLVDebtReward = getPendingCLVDebtReward(_borrower);
+        pendingETHReward = getPendingETHReward(_borrower);
 
         debt = debt.add(pendingCLVDebtReward);
         coll = coll.add(pendingETHReward);
     }
 
-    function removeStake(address _user) external override {
+    function removeStake(address _borrower) external override {
         _requireCallerIsBorrowerOperations();
-        return _removeStake(_user);
+        return _removeStake(_borrower);
     }
 
-    // Remove use's stake from the totalStakes sum, and set their stake to 0
-    function _removeStake(address _user) internal {
+    // Remove borrower's stake from the totalStakes sum, and set their stake to 0
+    function _removeStake(address _borrower) internal {
         uint stake = CDPs[_user].stake;
         totalStakes = totalStakes.sub(stake);
         CDPs[_user].stake = 0;
     }
 
-    function updateStakeAndTotalStakes(address _user) external override returns (uint) {
+    function updateStakeAndTotalStakes(address _borrower) external override returns (uint) {
         _requireCallerIsBorrowerOperations();
-        return _updateStakeAndTotalStakes(_user);
+        return _updateStakeAndTotalStakes(_borrower);
     }
 
-    // Update user's stake based on their latest collateral value
-    function _updateStakeAndTotalStakes(address _user) internal returns (uint) {
-        uint newStake = _computeNewStake(CDPs[_user].coll);
-        uint oldStake = CDPs[_user].stake;
-        CDPs[_user].stake = newStake;
+    // Update borrower's stake based on their latest collateral value
+    function _updateStakeAndTotalStakes(address _borrower) internal returns (uint) {
+        uint newStake = _computeNewStake(CDPs[_borrower].coll);
+        uint oldStake = CDPs[_borrower].stake;
+        CDPs[_borrower].stake = newStake;
         totalStakes = totalStakes.sub(oldStake).add(newStake);
 
         return newStake;
     }
 
-    /* Calculate a new stake based on the snapshots of the totalStakes and totalCollateral
-    taken at the last liquidation */
+    // Calculate a new stake based on the snapshots of the totalStakes and totalCollateral taken at the last liquidation
     function _computeNewStake(uint _coll) internal view returns (uint) {
         uint stake;
         if (totalCollateralSnapshot == 0) {
             stake = _coll;
         } else {
-            /* The following condition holds true for 2 reasons:
-             * Because don’t allow to close or liquidate the last trove.
-             * Because when we close or liquidate a trove, we redistribute the pending rewards,
-             * so if all troves were closed/liquidated, rewards would’ve been emptied
-             * and totalCollateralSnapshot would be zero too.
-             */
+            /**  
+            * The following assert() holds true because:
+            * - The system always contains >= 1 trove 
+            * - When we close or liquidate a trove, we redistribute the pending rewards, so if all troves were closed/liquidated, 
+            * rewards would’ve been emptied and totalCollateralSnapshot would be zero too.
+            */
             assert(totalStakesSnapshot > 0);
             stake = _coll.mul(totalStakesSnapshot).div(totalCollateralSnapshot);
         }
@@ -1086,8 +1095,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (_debt == 0) { return; }
 
         if (totalStakes > 0) {
-            /* Add distributed coll and debt rewards-per-unit-staked to the running totals.
-            Division uses error correction. */
+            /** 
+            * Add distributed coll and debt rewards-per-unit-staked to the running totals.
+            * Division uses error correction, to keep the rounding error in L_ETH and L_CLVDebt low. 
+            */
             uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
             uint CLVDebtNumerator = _debt.mul(1e18).add(lastCLVDebtError_Redistribution);
 
@@ -1127,7 +1138,13 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         sortedCDPs.remove(_user);
     }
 
-    // Updates snapshots of system stakes and system collateral, excluding a given collateral remainder from the calculation
+    /** 
+    * Updates snapshots of system stakes and system collateral, excluding a given collateral remainder from the calculation.
+    *
+    * This is used in a liquidation sequence, when we need to calculate the system stakes & collateral before making a new stake for
+    * the partially liquidated trove. Rather than moving the partially liquidated trove's remaining collateral out and back to
+    * to the Active Pool, we simply exclude it from the calculation.
+    */
     function _updateSystemSnapshots_excludeCollRemainder(uint _collRemainder) internal {
         totalStakesSnapshot = totalStakes;
 
@@ -1155,8 +1172,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return index;
     }
 
-    /* Remove a CDP owner from the CDPOwners array, not preserving order. Removing owner 'B' does the following:
-    [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. */
+    /** 
+    * Remove a CDP owner from the CDPOwners array, not preserving array order. Removing owner 'B' does the following:
+    * [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. 
+    */
     function _removeCDPOwner(address _user, uint CDPOwnersArrayLength) internal {
         require(CDPs[_user].status == Status.closed, "CDPManager: CDP is still active");
 
@@ -1185,8 +1204,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    /* Check whether or not the system *would be* in Recovery Mode,
-    given an ETH:USD price, and total system coll and debt. */
+    // Check whether or not the system *would be* in Recovery Mode, given an ETH:USD price, and the entire system coll and debt.
     function _checkPotentialRecoveryMode(
         uint _entireSystemColl,
         uint _entireSystemDebt,
@@ -1230,7 +1248,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Redemption fee functions ---
 
-    /* This function has two impacts on the baseRate state variable:
+    /** 
+    * This function has two impacts on the baseRate state variable:
     * 1) decays the baseRate based on time passed since last redemption or LUSD borrowing operation.
     * then,
     * 2) increases the baseRate based on the amount redeemed, as a proportion of total supply
@@ -1248,9 +1267,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         uint newBaseRate = decayedBaseRate.add(redeemedCLVFraction.div(BETA));
 
-        // update the baseRate state variable
-        baseRate = newBaseRate < 1e18 ? newBaseRate : 1e18;  // cap baseRate at maximum 100%
-        assert(baseRate <= 1e18 && baseRate > 0);
+        // Update the baseRate state variable
+        baseRate = newBaseRate < 1e18 ? newBaseRate : 1e18;  // cap baseRate at a maximum of 100%
+        assert(baseRate <= 1e18 && baseRate > 0); // A redemption should always increase the baseRate
 
         _updateLastFeeOpTime();
 
@@ -1272,7 +1291,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _requireCallerIsBorrowerOperations();
 
         baseRate = _calcDecayedBaseRate();
-        assert(baseRate >= 0 && baseRate <= 1e18);
+        assert(baseRate >= 0 && baseRate <= 1e18);  // The baseRate can decay to 0
 
         _updateLastFeeOpTime();
         return baseRate;
@@ -1344,7 +1363,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return CDPs[_user].coll;
     }
 
-    // --- Trove property setters ---
+    // --- Trove property setters, called by BorrowerOperations ---
 
     function setCDPStatus(address _user, uint _num) external override {
         _requireCallerIsBorrowerOperations();
