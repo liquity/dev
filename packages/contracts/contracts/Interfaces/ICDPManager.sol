@@ -19,6 +19,8 @@ interface ICDPManager {
 
     event StabilityPoolAddressChanged(address _stabilityPoolAddress);
 
+    event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
+
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
@@ -29,8 +31,6 @@ interface ICDPManager {
 
     event CDPLiquidated(address indexed _user, uint _debt, uint _coll, uint8 operation);
 
-    event RedeemedCollateralClaimed(address indexed _user, uint _coll);
-
     // --- Functions ---
 
     function setAddresses(
@@ -38,6 +38,7 @@ interface ICDPManager {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _clvTokenAddress,
         address _sortedCDPsAddress,
@@ -65,8 +66,6 @@ interface ICDPManager {
         uint _partialRedemptionHintICR,
         uint _maxIterations
     ) external; 
-
-    function claimRedeemedCollateral(address _user) external;
 
     function updateStakeAndTotalStakes(address _user) external returns (uint);
 

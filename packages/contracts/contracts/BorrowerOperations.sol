@@ -6,6 +6,7 @@ import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/ICLVToken.sol";
 import "./Interfaces/IPool.sol";
+import "./Interfaces/ICollSurplusPool.sol";
 import './Interfaces/ICLVToken.sol';
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
@@ -25,6 +26,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     IPool public defaultPool;
 
     address stabilityPoolAddress;
+
+    ICollSurplusPool collSurplusPool;
 
     IPriceFeed public priceFeed;
 
@@ -77,6 +80,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _sortedCDPsAddress,
         address _clvTokenAddress,
@@ -90,6 +94,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
+        collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         clvToken = ICLVToken(_clvTokenAddress);
@@ -100,6 +105,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
@@ -116,8 +122,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         _requireCDPisNotActive(msg.sender);
 
-        // Get pending collateral from previous redemptions
-        uint collateral = msg.value + cdpManager.getCDPColl(msg.sender);
+        // Get pending collateral from previous redemptions and remove it from CollSurplus
+        // CollSurplus pool will call back and send the available collateral to this contract
+        uint collateral = msg.value.add(collSurplusPool.useCollateralToReopenTrove(msg.sender));
 
         // Decay the base rate, and calculate the borrowing fee
         cdpManager.decayBaseRateFromBorrowing();
@@ -138,7 +145,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         // Update loan properties
         cdpManager.setCDPStatus(msg.sender, 1);
-        cdpManager.increaseCDPColl(msg.sender, msg.value);
+        cdpManager.increaseCDPColl(msg.sender, collateral);
         cdpManager.increaseCDPDebt(msg.sender, compositeDebt);
 
         cdpManager.updateCDPRewardSnapshots(msg.sender);
@@ -153,12 +160,12 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         lqtyStaking.increaseF_LUSD(CLVFee);
 
         // Move the ether to the Active Pool, and mint the CLVAmount to the borrower
-        _activePoolAddColl(msg.value);
+        _activePoolAddColl(collateral);
         _withdrawCLV(msg.sender, _CLVAmount, rawDebt);
         // Lock CLV gas compensation
         _withdrawCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION, CLV_GAS_COMPENSATION);
 
-        emit CDPUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openLoan);
+        emit CDPUpdated(msg.sender, rawDebt, collateral, stake, BorrowerOperation.openLoan);
         emit LUSDBorrowingFeePaid(msg.sender, CLVFee);
     }
 
@@ -277,7 +284,18 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     function claimRedeemedCollateral(address _user) external override {
-        cdpManager.claimRedeemedCollateral(_user);
+        _requireCDPisNotActive(_user);
+
+        // send ETH from CollSurplus Pool to owner
+        collSurplusPool.claimColl(_user);
+
+        emit RedeemedCollateralClaimed(_user);
+    }
+
+    // --- Fallback function ---
+
+    receive() external payable {
+        _requireCallerIsCollSurplusPool();
     }
 
     // --- Helper functions ---
@@ -418,6 +436,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function _requireCallerIsStabilityPool() internal view {
         require(msg.sender == stabilityPoolAddress, "BorrowerOps: Caller is not Stability Pool");
+    }
+
+    function _requireCallerIsCollSurplusPool() internal view {
+        require(msg.sender == address(collSurplusPool), "BorrowerOps: Caller is not CollSurplus Pool");
     }
 
     // --- ICR and TCR checks ---

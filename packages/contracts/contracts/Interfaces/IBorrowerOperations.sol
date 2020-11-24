@@ -15,6 +15,8 @@ interface IBorrowerOperations {
 
     event StabilityPoolAddressChanged(address _stabilityPoolAddress);
 
+    event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
+
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
 
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
@@ -23,6 +25,8 @@ interface IBorrowerOperations {
 
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
+    event RedeemedCollateralClaimed(address indexed _user);
+
     // --- Functions ---
 
     function setAddresses(
@@ -30,6 +34,7 @@ interface IBorrowerOperations {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _sortedCDPsAddress,
         address _clvTokenAddress,

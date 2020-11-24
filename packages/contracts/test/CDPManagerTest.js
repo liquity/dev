@@ -3386,14 +3386,16 @@ contract('CDPManager', async accounts => {
     const C_balanceAfter = toBN(await web3.eth.getBalance(C))
     const D_balanceAfter = toBN(await web3.eth.getBalance(D))
 
-    // check A, B, C (fully redeemed-from troves), and D's (the partially redeemed-from trove) trove collateral balances have decreased
+    // Check A, B, C’s trove collateral balance is zero (fully redeemed-from troves)
     const A_collAfter = await cdpManager.getCDPColl(A)
     const B_collAfter = await cdpManager.getCDPColl(B)
     const C_collAfter = await cdpManager.getCDPColl(C)
+    assert.isTrue(A_collAfter.eq(toBN(0)))
+    assert.isTrue(B_collAfter.eq(toBN(0)))
+    assert.isTrue(C_collAfter.eq(toBN(0)))
+
+    // check D's trove collateral balances have decreased (the partially redeemed-from trove)
     const D_collAfter = await cdpManager.getCDPColl(D)
-    assert.isTrue(A_collAfter.lt(A_collBefore))
-    assert.isTrue(B_collAfter.lt(B_collBefore))
-    assert.isTrue(C_collAfter.lt(C_collBefore))
     assert.isTrue(D_collAfter.lt(D_collBefore))
 
     // Check A, B, C (fully redeemed-from troves), and D's (the partially redeemed-from trove) balance has not changed
