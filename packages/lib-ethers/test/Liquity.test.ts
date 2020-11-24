@@ -7,7 +7,13 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { ethers, network } from "@nomiclabs/buidler";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
-import { Trove, StabilityDeposit } from "@liquity/lib-base";
+import {
+  Trove,
+  StabilityDeposit,
+  LiquityReceipt,
+  SuccessfulReceipt,
+  LiquityTransaction
+} from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
 import { HintHelpers } from "../types";
@@ -19,10 +25,20 @@ const provider = ethers.provider;
 chai.use(chaiAsPromised);
 chai.use(chaiSpies);
 
-// Typed wrapper around Chai's
-function assertStrictEquals<T>(actual: unknown, expected: T, message?: string): asserts actual is T {
-  assert.strictEqual(actual, expected, message);
+function assertSucceeded<T extends LiquityReceipt>(
+  receipt: T
+): asserts receipt is Extract<T, SuccessfulReceipt> {
+  assert.strictEqual(receipt.status, "succeeded");
 }
+
+const waitForSuccess = async <T extends LiquityReceipt>(
+  tx: Promise<LiquityTransaction<unknown, T>>
+): Promise<Extract<T, SuccessfulReceipt>> => {
+  const receipt = await (await tx).waitForReceipt();
+  assertSucceeded(receipt);
+
+  return receipt;
+};
 
 // TODO make the testcases isolated
 
@@ -344,12 +360,9 @@ describe("EthersLiquity", () => {
     });
 
     it("should liquidate other user's Trove", async () => {
-      const tx = await liquity.liquidateUpTo(1);
+      const { details } = await waitForSuccess(liquity.liquidateUpTo(1));
 
-      const receipt = await tx.waitForReceipt();
-      assertStrictEquals(receipt.status, "succeeded" as const);
-
-      expect(receipt.details).to.deep.equal({
+      expect(details).to.deep.equal({
         fullyLiquidated: [otherLiquities[0].userAddress],
         partiallyLiquidated: undefined,
 
@@ -559,12 +572,9 @@ describe("EthersLiquity", () => {
     });
 
     it("should redeem some collateral", async () => {
-      const tx = await liquity.redeemCollateral(55, {}, { gasPrice: 0 });
+      const { details } = await waitForSuccess(liquity.redeemCollateral(55, {}, { gasPrice: 0 }));
 
-      const receipt = await tx.waitForReceipt();
-      assertStrictEquals(receipt.status, "succeeded" as const);
-
-      expect(receipt.details).to.deep.equal({
+      expect(details).to.deep.equal({
         attemptedTokenAmount: Decimal.from(55),
         actualTokenAmount: Decimal.from(55),
         collateralReceived: Decimal.from(0.275),
@@ -615,12 +625,9 @@ describe("EthersLiquity", () => {
     });
 
     it("should redeem using the maximum iterations and almost all gas", async () => {
-      const tx = await liquity.redeemCollateral(redeemMaxIterations);
+      const { rawReceipt } = await waitForSuccess(liquity.redeemCollateral(redeemMaxIterations));
 
-      const receipt = await tx.waitForReceipt();
-      assertStrictEquals(receipt.status, "succeeded" as const);
-
-      const gasUsed = receipt.rawReceipt.gasUsed.toNumber();
+      const gasUsed = rawReceipt.gasUsed.toNumber();
       // gasUsed is ~half the real used amount because of how refunds work, see:
       // https://ethereum.stackexchange.com/a/859/9205
       expect(gasUsed).to.be.at.least(4950000, "should use close to 10M gas");

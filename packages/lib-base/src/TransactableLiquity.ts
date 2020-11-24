@@ -5,14 +5,22 @@ import { Trove, TroveChange } from "./Trove";
 export type LiquityTransaction<T = unknown, U extends LiquityReceipt = LiquityReceipt> = {
   rawTransaction: T;
 
-  getReceipt(): Promise<U | undefined>;
-  waitForReceipt(): Promise<U>;
+  getReceipt(): Promise<U>;
+  waitForReceipt(): Promise<Extract<U, MinedReceipt>>;
 };
 
-export type LiquityReceipt<T = unknown, U = unknown> =
-  | { status: "pending" }
-  | { status: "failed"; rawReceipt: T }
-  | { status: "succeeded"; rawReceipt: T; details: U };
+export type PendingReceipt = { status: "pending" };
+
+export type FailedReceipt<T = unknown> = { status: "failed"; rawReceipt: T };
+
+export type SuccessfulReceipt<T = unknown, U = unknown> = {
+  status: "succeeded";
+  rawReceipt: T;
+  details: U;
+};
+
+export type MinedReceipt<T = unknown, U = unknown> = FailedReceipt<T> | SuccessfulReceipt<T, U>;
+export type LiquityReceipt<T = unknown, U = unknown> = PendingReceipt | MinedReceipt<T, U>;
 
 export type ParsedLiquidation = {
   fullyLiquidated: string[];

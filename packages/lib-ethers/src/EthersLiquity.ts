@@ -152,7 +152,12 @@ class ParsedEthersTransaction<T = unknown>
   }
 
   async waitForReceipt() {
-    return this.receiptFrom(await this.provider.waitForTransaction(this.rawTransaction.hash));
+    const receipt = this.receiptFrom(
+      await this.provider.waitForTransaction(this.rawTransaction.hash)
+    );
+
+    assert(receipt.status !== "pending");
+    return receipt;
   }
 }
 
