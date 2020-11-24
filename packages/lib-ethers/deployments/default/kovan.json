@@ -14,7 +14,8 @@
     "poolManager": "0x85F359cA7fa787b3E8e32628cBce4B0e093B23F3",
     "priceFeed": "0xA3B701A02097c93E242FeFB515F5Dd50cb705B2F",
     "sortedCDPs": "0x2E756d1635114E84936ed97535C1acDC06582e2C",
-    "stabilityPool": "0x75E7F939AEc5CA455E4e32CD4b6567B70323bd4A"
+    "stabilityPool": "0x75E7F939AEc5CA455E4e32CD4b6567B70323bd4A",
+    "collSurplusPool": ""
   },
   "version": "1fe9301410a48ff1a8f3173d87d850621c561a2f",
   "deploymentDate": 1603706183057,

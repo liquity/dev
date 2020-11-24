@@ -59,8 +59,8 @@ enum CDPManagerOperation {
 }
 
 const debouncingDelayMs = 50;
-// With 99 iterations redemption costs about ~10M gas, and each iteration accounts for ~100k more
-export const redeemMaxIterations = 99;
+// With 68 iterations redemption costs about ~10M gas, and each iteration accounts for ~144k more
+export const redeemMaxIterations = 68;
 
 const debounce = (listener: (latestBlock: number) => void) => {
   let timeoutId: any = undefined;
