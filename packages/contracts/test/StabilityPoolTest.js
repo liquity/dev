@@ -1361,6 +1361,23 @@ contract('StabilityPool', async accounts => {
       }
     })
 
+    it("withdrawFromSP(): reverts when there is a pending liquidation", async () => {
+      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
+
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
+
+      const alice_initialDeposit = ((await stabilityPool.deposits(alice))[0]).toString()
+      assert.equal(alice_initialDeposit, dec(100, 18))
+
+      // defaulter opens trove
+      await borrowerOperations.openLoan(dec(89, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+
+      // ETH drops, defaulter is in liquidation range (but not liquidated yet)
+      await priceFeed.setPrice(dec(100, 18))
+
+      await th.assertRevert(stabilityPool.withdrawFromSP(dec(100, 18), { from: alice }))
+    })
+
     it("withdrawFromSP(): partial retrieval - retrieves correct CLV amount and the entire ETH Gain, and updates deposit", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
