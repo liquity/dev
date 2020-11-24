@@ -5,6 +5,7 @@ const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.s
 contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   const [owner, alice, bob] = accounts;
+  let contracts
   let priceFeed
   let clvToken
   let sortedCDPs
@@ -15,7 +16,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   let borrowerOperations
 
   before(async () => {
-    const contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
     contracts = await deploymentHelper.deployCLVToken(contracts)
     const GTContracts = await deploymentHelper.deployGTContracts()
