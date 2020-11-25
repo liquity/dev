@@ -240,11 +240,6 @@ contract GrowthToken is IERC20, IGrowthToken {
         emit Approval(owner, spender, amount);
     }
 
-    function _burnFrom(address account, uint256 amount) internal {
-        _burn(account, amount);
-        _approve(account, msg.sender, _allowances[account][msg.sender].sub(amount, "ERC20: burn amount exceeds allowance"));
-    }
-
     // --- Helper functions ---
 
     function _callerIsDeployer() internal view returns (bool) {

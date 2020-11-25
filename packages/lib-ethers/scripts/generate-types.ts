@@ -17,6 +17,7 @@ import MultiCDPGetter from "../../contracts/artifacts/MultiCDPGetter.json";
 import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
 import SortedCDPs from "../../contracts/artifacts/SortedCDPs.json";
 import StabilityPool from "../../contracts/artifacts/StabilityPool.json";
+import CollSurplusPool from "../../contracts/artifacts/CollSurplusPool.json";
 
 const getTupleType = (components: ParamType[], flexible: boolean) => {
   if (components.every(component => component.name)) {
@@ -130,7 +131,8 @@ const contractArtifacts = [
   MultiCDPGetter,
   PriceFeed,
   SortedCDPs,
-  StabilityPool
+  StabilityPool,
+  CollSurplusPool
 ];
 
 const contracts = contractArtifacts.map(({ contractName, abi }) => ({

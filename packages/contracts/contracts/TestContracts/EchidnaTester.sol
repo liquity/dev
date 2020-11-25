@@ -7,6 +7,7 @@ import "../BorrowerOperations.sol";
 import "../ActivePool.sol";
 import "../DefaultPool.sol";
 import "../StabilityPool.sol";
+import "../CollSurplusPool.sol";
 import "../CLVToken.sol";
 import "../PriceFeed.sol";
 import "../SortedCDPs.sol";
@@ -32,6 +33,7 @@ contract EchidnaTester {
     ActivePool public activePool;
     DefaultPool public defaultPool;
     StabilityPool public stabilityPool;
+    CollSurplusPool public collSurplusPool;
     CLVToken public clvToken;
     PriceFeed priceFeed;
     SortedCDPs sortedCDPs;
@@ -46,18 +48,20 @@ contract EchidnaTester {
         activePool = new ActivePool();
         defaultPool = new DefaultPool();
         stabilityPool = new StabilityPool();
+        collSurplusPool = new CollSurplusPool();
         clvToken = new CLVToken();
         priceFeed = new PriceFeed();
         sortedCDPs = new SortedCDPs();
 
         // TODO
-        cdpManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
+        cdpManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
         // TODO
-        borrowerOperations.setAddresses(address(cdpManager), address(activePool), address(defaultPool), address(stabilityPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
+        borrowerOperations.setAddresses(address(cdpManager), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
         activePool.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool), address(defaultPool));
         defaultPool.setAddresses(address(cdpManager), address(activePool));
         // TODO
-        stabilityPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool), address(clvToken), address(0));
+        stabilityPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool), address(clvToken), address(sortedCDPs), address(priceFeed), address(0));
+        collSurplusPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool));
         clvToken.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool));
         priceFeed.setAddresses(address(cdpManager), address(0), address(0));
         sortedCDPs.setParams(1e18, address(cdpManager), address(borrowerOperations));
