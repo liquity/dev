@@ -712,8 +712,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, open loans 
-      await borrowerOperations.openLoan(dec(105, 18), A, { from: A, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(205, 18), B, { from: B, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(205, 18), A, { from: A, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(305, 18), B, { from: B, value: dec(4, 'ether') })
       await borrowerOperations.openLoan(dec(10, 18), C, { from: C, value: dec(2, 'ether') })
 
 
