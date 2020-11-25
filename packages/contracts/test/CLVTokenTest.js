@@ -139,7 +139,7 @@ contract('CLVToken', async accounts => {
 
     it('transfer(): all of these transfers should fail due to inappropriate recipient', async () => {
       await assertRevert(clvToken.transfer(clvToken.address, 1, { from: alice }))
-      // await assertRevert(clvToken.transfer(alice.address, 1, { from: alice })) //todo 
+      await assertRevert(clvToken.transfer(alice, 1, { from: alice }))
       await assertRevert(clvToken.transfer(ZERO_ADDRESS, 1, { from: alice }))
       await assertRevert(clvToken.transfer(cdpManager.address, 1, { from: alice }))
       await assertRevert(clvToken.transfer(stabilityPool.address, 1, { from: alice }))
