@@ -12,7 +12,7 @@ import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
-import "./Dependencies/console.sol";
+//import "./Dependencies/console.sol";
 
 contract CDPManager is LiquityBase, Ownable, ICDPManager {
 

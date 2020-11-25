@@ -3,7 +3,7 @@
 pragma solidity 0.6.11;
 
 import "../Dependencies/SafeMath.sol";
-import "../Dependencies/console.sol";
+//import "../Dependencies/console.sol";
 import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ILQTYStaking.sol";
 import "../Dependencies/Math.sol";

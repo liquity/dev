@@ -5,7 +5,7 @@ pragma solidity 0.6.11;
 import './Interfaces/IPool.sol';
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
-import "./Dependencies/console.sol";
+//import "./Dependencies/console.sol";
 
 contract ActivePool is Ownable, IPool {
     using SafeMath for uint256;

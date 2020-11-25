@@ -13,7 +13,7 @@ import "./Dependencies/Math.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/SafeMath128.sol";
 import "./Dependencies/Ownable.sol";
-import "./Dependencies/console.sol";
+//import "./Dependencies/console.sol";
 
 contract StabilityPool is Ownable, IStabilityPool {
     using SafeMath for uint256;

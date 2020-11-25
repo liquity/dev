@@ -8,7 +8,7 @@ import "./Interfaces/IDeployedAggregator.sol";
 import "./Interfaces/AggregatorInterface.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
-import "./Dependencies/console.sol";
+//import "./Dependencies/console.sol";
 
 contract PriceFeed is Ownable, IPriceFeed {
     using SafeMath for uint256;

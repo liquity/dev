@@ -6,7 +6,7 @@ import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ILockupContractFactory.sol";
 import "./OneYearLockupContract.sol";
 import "./CustomDurationLockupContract.sol";
-import "../Dependencies/console.sol";
+//import "../Dependencies/console.sol";
 
 contract LockupContractFactory is ILockupContractFactory {
     using SafeMath for uint;

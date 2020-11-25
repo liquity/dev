@@ -3539,7 +3539,7 @@ contract('StabilityPool', async accounts => {
       assert.equal((await stabilityPool.frontEnds(E))[0], '0')
     })
 
-    it("registerFrontEnd(): reverts if the front end is already registered", async () => {
+    it.only("registerFrontEnd(): reverts if the front end is already registered", async () => {
 
       await stabilityPool.registerFrontEnd(dec(1, 18), { from: A })
       await stabilityPool.registerFrontEnd('897789897897897', { from: B })

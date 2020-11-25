@@ -13,7 +13,7 @@ import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
-import "./Dependencies/console.sol";
+//import "./Dependencies/console.sol";
 
 contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 

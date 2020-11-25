@@ -7,7 +7,7 @@ import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
-import "./Dependencies/console.sol";
+//import "./Dependencies/console.sol";
 
 /* 
 A sorted doubly linked list with nodes sorted in descending order.

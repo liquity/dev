@@ -5,7 +5,7 @@ pragma solidity 0.6.11;
 import "../Dependencies/SafeMath.sol";
 import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ILockupContractFactory.sol";
-import "../Dependencies/console.sol";
+//import "../Dependencies/console.sol";
 
 /**
 Based upon OpenZeppelin's last ERC20 contract for Solidity 0.5.x:

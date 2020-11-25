@@ -6,7 +6,7 @@ import "./Interfaces/ICLVToken.sol";
 import "./Dependencies/IERC20.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
-import "./Dependencies/console.sol";
+//import "./Dependencies/console.sol";
 
 contract CLVToken is ICLVToken, Ownable {
     using SafeMath for uint256;
