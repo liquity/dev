@@ -243,7 +243,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _requireCDPisActive(_borrower);
 
         address[] memory borrowers = new address[](1);
-        users[0] = _borrower;
+        borrowers[0] = _borrower;
         batchLiquidateTroves(borrowers);
     }
 
@@ -530,7 +530,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    function _getTotalFromLiquidateCDPsSequence_NormalMode
+    function _getTotalsFromLiquidateCDPsSequence_NormalMode
     (
         uint _price,
         uint _CLVInStabPool,
@@ -623,7 +623,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
 
         L.i = 0;
-        for (L.i = 0; L.i < troveArray.length; L.i++) {
+        for (L.i = 0; L.i < _troveArray.length; L.i++) {
             L.user = _troveArray[L.i];
             L.ICR = getCurrentICR(L.user, _price);
 
@@ -674,7 +674,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         L.remainingCLVInStabPool = _CLVInStabPool;
 
-        for (L.i = 0; L.i < troveArray.length; L.i++) {
+        for (L.i = 0; L.i < _troveArray.length; L.i++) {
             L.user = _troveArray[L.i];
             L.ICR = getCurrentICR(L.user, _price);
 
@@ -975,7 +975,13 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             // Transfer from DefaultPool to ActivePool
             _movePendingTroveRewardsToActivePool(pendingCLVDebtReward, pendingETHReward);
 
-            emit CDPUpdated(_borrower, CDPs[_user].debt, CDPs[_borrower].coll, CDPs[_borrower].stake, CDPManagerOperation.applyPendingRewards);
+            emit CDPUpdated(
+                _borrower, 
+                CDPs[_borrower].debt, 
+                CDPs[_borrower].coll, 
+                CDPs[_borrower].stake, 
+                CDPManagerOperation.applyPendingRewards
+            );
         }
     }
 
@@ -1053,9 +1059,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // Remove borrower's stake from the totalStakes sum, and set their stake to 0
     function _removeStake(address _borrower) internal {
-        uint stake = CDPs[_user].stake;
+        uint stake = CDPs[_borrower].stake;
         totalStakes = totalStakes.sub(stake);
-        CDPs[_user].stake = 0;
+        CDPs[_borrower].stake = 0;
     }
 
     function updateStakeAndTotalStakes(address _borrower) external override returns (uint) {

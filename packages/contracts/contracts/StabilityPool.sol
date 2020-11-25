@@ -100,7 +100,9 @@ import "./Dependencies/console.sol";
  * and also for scale after, taking care to divide the latter by a factor of 1e18:
  * e_2 = d_t * (S - S_t) / (P_t * 1e18)
  * 
- * The sum of (e_1 + e_2) captures the depositor's total accumulated ETH gain, handling the case where their deposit spanned one scale change.
+ * The sum of (e_1 + e_2) captures the depositor's total accumulated ETH gain, handling the case where their 
+ * deposit spanned one scale change. We only care about gains across one scale change, since the compounded
+ * deposit is defined as being 0 once it has spanned more than one scale change.
  * 
  * --- UPDATING P WHEN A LIQUIDATION OCCURS --- 
  *
