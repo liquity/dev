@@ -23,8 +23,10 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
   let priceFeed
   let clvToken
   let stabilityPool
+  let sortedCDPs
   let cdpManager
   let borrowerOperations
+  let growthToken
   let communityIssuanceTester
 
   let communityLQTYSupply
@@ -49,18 +51,10 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       stabilityPool = contracts.stabilityPool
       sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
-      activePool = contracts.activePool
       stabilityPool = contracts.stabilityPool
-      defaultPool = contracts.defaultPool
       borrowerOperations = contracts.borrowerOperations
-      hintHelpers = contracts.hintHelpers
 
-      const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
-      
-      lqtyStaking = LQTYContracts.lqtyStaking
       growthToken = LQTYContracts.growthToken
-      communityIssuanceTester = LQTYContracts.communityIssuance
-      lockupContractFactory = LQTYContracts.lockupContractFactory
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -179,9 +173,9 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
-      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(4, 'ether') })
       await borrowerOperations.openLoan(dec(1, 18), D, { from: D, value: dec(1, 'ether') })
 
       // Check all LQTY balances are initially 0
@@ -276,11 +270,11 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
-      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(3, 'ether') })
-      await borrowerOperations.openLoan(dec(400, 18), D, { from: D, value: dec(4, 'ether') })
-      await borrowerOperations.openLoan(dec(400, 18), E, { from: E, value: dec(4, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(4, 'ether') })
+      await borrowerOperations.openLoan(dec(400, 18), D, { from: D, value: dec(5, 'ether') })
+      await borrowerOperations.openLoan(dec(400, 18), E, { from: E, value: dec(6, 'ether') })
 
       await borrowerOperations.openLoan(dec(290, 18), defaulter_1, { from: defaulter_1, value: dec(3, 'ether') })
 
@@ -845,10 +839,10 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
-      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(600, 18), B, { from: B, value: dec(6, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(3, 'ether') })
-      await borrowerOperations.openLoan(dec(400, 18), D, { from: D, value: dec(4, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(600, 18), B, { from: B, value: dec(7, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(4, 'ether') })
+      await borrowerOperations.openLoan(dec(400, 18), D, { from: D, value: dec(5, 'ether') })
 
       await borrowerOperations.openLoan(dec(300, 18), E, { from: E, value: dec(4, 'ether') })
 

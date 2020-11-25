@@ -26,6 +26,7 @@ contract('CDPManager', async accounts => {
   let cdpManager
   let activePool
   let stabilityPool
+  let collSurplusPool
   let defaultPool
   let borrowerOperations
   let hintHelpers
@@ -49,6 +50,7 @@ contract('CDPManager', async accounts => {
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
+    collSurplusPool = contracts.collSurplusPool
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
 
@@ -3338,7 +3340,7 @@ contract('CDPManager', async accounts => {
     assert.isTrue(await sortedCDPs.contains(D))
   })
 
-  it("redeemCollateral(): a redemption that close a trove sends the trove's ETH surplus (collateral - ETH drawn) to the trove owner", async () => {
+  const redeemCollateral3Full1Partial = async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -3355,6 +3357,11 @@ contract('CDPManager', async accounts => {
     const B_balanceBefore = toBN(await web3.eth.getBalance(B))
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
     const D_balanceBefore = toBN(await web3.eth.getBalance(D))
+
+    const A_collBefore = await cdpManager.getCDPColl(A)
+    const B_collBefore = await cdpManager.getCDPColl(B)
+    const C_collBefore = await cdpManager.getCDPColl(C)
+    const D_collBefore = await cdpManager.getCDPColl(D)
 
     // Confirm baseRate before redemption is 0
     const baseRate = await cdpManager.baseRate()
@@ -3384,13 +3391,76 @@ contract('CDPManager', async accounts => {
     const C_balanceAfter = toBN(await web3.eth.getBalance(C))
     const D_balanceAfter = toBN(await web3.eth.getBalance(D))
 
-    // check A, B, C's balances have increased by correct amount (fully redeemed-from troves)
-    assert.isTrue(A_balanceAfter.gt(A_balanceBefore))
-    assert.isTrue(B_balanceAfter.gt(B_balanceBefore))
-    assert.isTrue(C_balanceAfter.gt(C_balanceBefore))
+    // Check A, B, C’s trove collateral balance is zero (fully redeemed-from troves)
+    const A_collAfter = await cdpManager.getCDPColl(A)
+    const B_collAfter = await cdpManager.getCDPColl(B)
+    const C_collAfter = await cdpManager.getCDPColl(C)
+    assert.isTrue(A_collAfter.eq(toBN(0)))
+    assert.isTrue(B_collAfter.eq(toBN(0)))
+    assert.isTrue(C_collAfter.eq(toBN(0)))
 
-    // Check D's balance has not changed (the partially redeemed-from trove)
+    // check D's trove collateral balances have decreased (the partially redeemed-from trove)
+    const D_collAfter = await cdpManager.getCDPColl(D)
+    assert.isTrue(D_collAfter.lt(D_collBefore))
+
+    // Check A, B, C (fully redeemed-from troves), and D's (the partially redeemed-from trove) balance has not changed
+    assert.isTrue(A_balanceAfter.eq(A_balanceBefore))
+    assert.isTrue(B_balanceAfter.eq(B_balanceBefore))
+    assert.isTrue(C_balanceAfter.eq(C_balanceBefore))
     assert.isTrue(D_balanceAfter.eq(D_balanceBefore))
+  }
+
+  it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to claim", async () => {
+    await redeemCollateral3Full1Partial()
+
+    const A_balanceBefore = toBN(await web3.eth.getBalance(A))
+    const B_balanceBefore = toBN(await web3.eth.getBalance(B))
+    const C_balanceBefore = toBN(await web3.eth.getBalance(C))
+
+    // CDPManager endpoint cannot be called directly
+    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(D), 'CDPManager: Caller is not the BorrowerOperations contract')
+
+    await borrowerOperations.claimRedeemedCollateral(A)
+    await borrowerOperations.claimRedeemedCollateral(B)
+    await borrowerOperations.claimRedeemedCollateral(C)
+
+    const A_balanceAfter = toBN(await web3.eth.getBalance(A))
+    const B_balanceAfter = toBN(await web3.eth.getBalance(B))
+    const C_balanceAfter = toBN(await web3.eth.getBalance(C))
+
+    assert.isTrue(A_balanceAfter.eq(A_balanceBefore.add(toBN(dec(5, 17)))))
+    assert.isTrue(B_balanceAfter.eq(B_balanceBefore.add(toBN(dec(4, 17)))))
+    assert.isTrue(C_balanceAfter.eq(C_balanceBefore.add(toBN(dec(35, 16)))))
+
+    // D is not closed, so cannot claim
+    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(D), 'Trove must be closed to claim ETH')
+  })
+
+  it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to use re-opening loan", async () => {
+    await redeemCollateral3Full1Partial()
+
+    const A_collSent = toBN(dec(2, 18))
+    const B_collSent = toBN(dec(4, 17))
+    const C_collSent = toBN(dec(36, 16))
+
+    await borrowerOperations.openLoan(dec(100, 18), ZERO_ADDRESS, { from: A, value: A_collSent })
+    await borrowerOperations.openLoan(dec(10, 18), ZERO_ADDRESS, { from: B, value: B_collSent })
+    await borrowerOperations.openLoan(0, ZERO_ADDRESS, { from: C, value: C_collSent })
+
+    const A_collAfter = await cdpManager.getCDPColl(A)
+    const B_collAfter = await cdpManager.getCDPColl(B)
+    const C_collAfter = await cdpManager.getCDPColl(C)
+
+    assert.isTrue(A_collAfter.eq(A_collSent))
+    assert.isTrue(B_collAfter.eq(B_collSent))
+    assert.isTrue(C_collAfter.eq(C_collSent))
+
+    assert.isTrue((await collSurplusPool.getCollateral(A)).eq(toBN(dec(5, 17))))
+    assert.isTrue((await collSurplusPool.getCollateral(B)).eq(toBN(dec(4, 17))))
+    assert.isTrue((await collSurplusPool.getCollateral(C)).eq(toBN(dec(35, 16))))
+
+    // D is not closed, so cannot open trove
+    await th.assertRevert(borrowerOperations.openLoan(D, ZERO_ADDRESS), 'BorrowerOps: CDP is active')
   })
 
   it("getPendingCLVDebtReward(): Returns 0 if there is no pending CLVDebt reward", async () => {

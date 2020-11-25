@@ -20,8 +20,14 @@ contract GrowthTokenTester is GrowthToken {
     )
     {} 
 
+    function unprotectedMint(address account, uint256 amount) external {
+        // No check for the caller here
+
+        _mint(account, amount);
+    }
+
     function unprotectedSendToLQTYStaking(address _sender, uint256 _amount) external {
-        // Don't require caller is LQTYStaking here
+        // No check for the caller here
         
         if (_isFirstYear()) {_requireSenderIsNotDeployer(_sender);}
         _transfer(_sender, lqtyStakingAddress, _amount);

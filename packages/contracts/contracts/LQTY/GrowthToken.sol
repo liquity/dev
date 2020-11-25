@@ -11,6 +11,9 @@ import "../Dependencies/console.sol";
 Based upon OpenZeppelin's last ERC20 contract for Solidity 0.5.x:
 https://github.com/OpenZeppelin/openzeppelin-contracts/blob/54ee1c7ff59462bc300c0dc96cb71eb1e3cbdb45/contracts/token/ERC20/ERC20.sol
 
+and their EIP2612 (ERC20Permit) functionality:
+https://github.com/OpenZeppelin/openzeppelin-contracts/blob/53516bc555a454862470e7860a9b5254db4d00f5/contracts/token/ERC20/ERC20Permit.sol
+
 Functionality added specific to the GrowthToken:
 
 -Supply hard-capped at 100 million
@@ -32,23 +35,29 @@ and the deployer has the same rights as any other address.
 contract GrowthToken is IERC20, IGrowthToken {
     using SafeMath for uint256;
 
-    // --- Data ---
-    string constant internal NAME = "LQTY";
-    string constant internal SYMBOL = "LQTY";
-    uint8 constant internal DECIMALS = 18;
+    // --- ERC20 Data ---
 
-    uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
-
-    uint public _100_MILLION = 1e26;  // non-constant, for use with SafeMath
+    string constant internal _NAME = "LQTY";
+    string constant internal _SYMBOL = "LQTY";
+    string constant internal _VERSION = "1";
+    uint8 constant internal  _DECIMALS = 18;
 
     mapping (address => uint256) private _balances;
-
     mapping (address => mapping (address => uint256)) private _allowances;
-
     uint private _totalSupply;
 
-    uint public deploymentStartTime;
+    // --- EIP 2612 Data ---
 
+    // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 constant internal _PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+    mapping (address => uint256) private _nonces;
+
+    // --- GrowthToken specific data ---
+
+    uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
+    uint public _100_MILLION = 1e26;  // non-constant, for use with SafeMath
+
+    uint public deploymentStartTime;
     address public deployer;
 
     address public immutable communityIssuanceAddress;
@@ -125,6 +134,8 @@ contract GrowthToken is IERC20, IGrowthToken {
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
         if (_isFirstYear()) { _requireSenderIsNotDeployer(sender); }
         
+        _requireValidRecipient(recipient);
+
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;
@@ -148,6 +159,50 @@ contract GrowthToken is IERC20, IGrowthToken {
         _requireCallerIsLQTYStaking();
         if (_isFirstYear()) { _requireSenderIsNotDeployer(_sender); }
         _transfer(_sender, lqtyStakingAddress, _amount);
+    }
+
+    // --- EIP 2612 functionality ---
+
+    function domainSeparator() public view override returns (bytes32) {    
+        return keccak256(abi.encode( 
+               keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+               keccak256(bytes(_NAME)), 
+               keccak256(bytes(_VERSION)), 
+               _chainID(),address(this)));
+    }
+
+    function permit
+    (
+        address owner, 
+        address spender, 
+        uint amount, 
+        uint deadline, 
+        uint8 v, 
+        bytes32 r, 
+        bytes32 s
+    ) 
+        external 
+        override 
+    {            
+        require(deadline == 0 || deadline >= now, 'LUSD: Signature has expired');
+        bytes32 digest = keccak256(abi.encodePacked(uint16(0x1901), 
+                         domainSeparator(), keccak256(abi.encode(
+                         _PERMIT_TYPEHASH, owner, spender, amount, 
+                         _nonces[owner]++, deadline))));
+        address recoveredAddress = ecrecover(digest, v, r, s);
+        require(recoveredAddress != address(0) && 
+                recoveredAddress == owner, 'LUSD: Recovered address from the sig is not the owner');
+        _approve(owner, spender, amount);
+    }
+
+    function nonces(address owner) public view override returns (uint256) { // FOR EIP 2612
+        return _nonces[owner];
+    }
+
+    function _chainID() private pure returns (uint256 chainID) {
+        assembly {
+            chainID := chainid()
+        }
     }
 
     // --- Internal operations ---
@@ -184,12 +239,7 @@ contract GrowthToken is IERC20, IGrowthToken {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
-
-    function _burnFrom(address account, uint256 amount) internal {
-        _burn(account, amount);
-        _approve(account, msg.sender, _allowances[account][msg.sender].sub(amount, "ERC20: burn amount exceeds allowance"));
-    }
-
+    
     // --- Helper functions ---
 
     function _callerIsDeployer() internal view returns (bool) {
@@ -235,14 +285,22 @@ contract GrowthToken is IERC20, IGrowthToken {
     // --- Optional functions ---
 
     function name() external view override returns (string memory) {
-        return NAME;
+        return _NAME;
     }
 
     function symbol() external view override returns (string memory) {
-        return SYMBOL;
+        return _SYMBOL;
     }
 
     function decimals() external view override returns (uint8) {
-        return DECIMALS;
+        return _DECIMALS;
+    }
+
+    function version() external view override returns (string memory) {
+        return _VERSION;
+    }
+
+    function permitTypeHash() external view override returns (bytes32) {
+        return _PERMIT_TYPEHASH;
     }
 }

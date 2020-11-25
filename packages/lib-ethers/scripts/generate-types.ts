@@ -18,6 +18,7 @@ import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
 import PriceFeedTestnet from "../../contracts/artifacts/PriceFeedTestnet.json";
 import SortedCDPs from "../../contracts/artifacts/SortedCDPs.json";
 import StabilityPool from "../../contracts/artifacts/StabilityPool.json";
+import CollSurplusPool from "../../contracts/artifacts/CollSurplusPool.json";
 
 const getTupleType = (components: ParamType[], flexible: boolean) => {
   if (components.every(component => component.name)) {
@@ -132,7 +133,8 @@ const contractArtifacts = [
   PriceFeed,
   PriceFeedTestnet,
   SortedCDPs,
-  StabilityPool
+  StabilityPool,
+  CollSurplusPool
 ];
 
 const contracts = contractArtifacts.map(({ contractName, abi }) => ({

@@ -23,7 +23,11 @@ contract PriceFeedTestnet is Ownable, IPriceFeedTestnet {
     event CDPManagerAddressChanged(address _cdpManagerAddress);
 
     // --- Dependency setters ---
-
+    /**
+     * Network: Kovan
+     * Aggregator: ETH/USD
+     * Address: 0x9326BFA02ADD2366b30bacB125260Af641031331
+     */
     function setAddresses(
         address _cdpManagerAddress,
         address _priceAggregatorAddress
@@ -61,6 +65,17 @@ contract PriceFeedTestnet is Ownable, IPriceFeedTestnet {
         return price;
     }
 
+    /** https://docs.chain.link/docs/get-the-latest-price
+    function getLatestPrice() public view returns (int) {
+        (
+            uint80 roundID, 
+            int price,
+            uint startedAt,
+            uint timeStamp,
+            uint80 answeredInRound
+        ) = priceFeed.latestRoundData();
+        return price;
+    */
     function getLatestPrice() public view override returns (uint256) {
         int256 intPrice = priceAggregator.latestAnswer();
         require( intPrice >= 0, "Price response from aggregator is negative int");

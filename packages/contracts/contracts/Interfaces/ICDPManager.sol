@@ -19,6 +19,8 @@ interface ICDPManager {
 
     event StabilityPoolAddressChanged(address _stabilityPoolAddress);
 
+    event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
+
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
@@ -36,6 +38,7 @@ interface ICDPManager {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _clvTokenAddress,
         address _sortedCDPsAddress,

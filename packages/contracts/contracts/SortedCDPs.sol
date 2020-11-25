@@ -9,37 +9,37 @@ import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
-/* 
-A sorted doubly linked list with nodes sorted in descending order.
-
-Nodes map to active CDPs in the system - the ID property is the address of a CDP owner. 
-Nodes are ordered according to their current individual collateral ratio (ICR).
-
-The list optionally accepts insert position hints.
-
-ICRs are computed dynamically at runtime, and not stored on the Node. This is because ICRs of active CDPs 
-change dynamically as liquidation events occur.
-
-The list relies on the fact that liquidation events preserve ordering: a liquidation decreases the ICRs of all active CDPs, 
-but maintains their order. A node inserted based on current ICR will maintain the correct position, 
-relative to it's peers, as rewards accumulate, as long as it's raw collateral and debt have not changed.
-Thus, Nodes remain sorted by current ICR.
-
-Nodes need only be re-inserted upon a CDP operation - when the owner adds or removes collateral or debt 
-to their position.
-
-The list is a modification of the following audited SortedDoublyLinkedList:
-https://github.com/livepeer/protocol/blob/master/contracts/libraries/SortedDoublyLL.sol
-
-
-Changes made in the Liquity implementation:
-
-- Keys have been removed from nodes
-
-- Ordering checks for insertion are performed by comparing an ICR argument to the current ICR, calculated at runtime. 
-The list relies on the property that ordering by ICR is maintained as the ETH:USD price varies.
-
-- Public functions with parameters have been made internal to save gas, and given an external wrapper function for external access
+/** 
+* A sorted doubly linked list with nodes sorted in descending order.
+* 
+* Nodes map to active CDPs in the system - the ID property is the address of a CDP owner. 
+* Nodes are ordered according to their current individual collateral ratio (ICR).
+* 
+* The list optionally accepts insert position hints.
+* 
+* ICRs are computed dynamically at runtime, and not stored on the Node. This is because ICRs of active CDPs 
+* change dynamically as liquidation events occur.
+* 
+* The list relies on the fact that liquidation events preserve ordering: a liquidation decreases the ICRs of all active CDPs, 
+* but maintains their order. A node inserted based on current ICR will maintain the correct position, 
+* relative to it's peers, as rewards accumulate, as long as it's raw collateral and debt have not changed.
+* Thus, Nodes remain sorted by current ICR.
+* 
+* Nodes need only be re-inserted upon a CDP operation - when the owner adds or removes collateral or debt 
+* to their position.
+*
+* The list is a modification of the following audited SortedDoublyLinkedList:
+* https://github.com/livepeer/protocol/blob/master/contracts/libraries/SortedDoublyLL.sol
+* 
+*
+* Changes made in the Liquity implementation:
+*
+* - Keys have been removed from nodes
+*
+* - Ordering checks for insertion are performed by comparing an ICR argument to the current ICR, calculated at runtime. 
+*   The list relies on the property that ordering by ICR is maintained as the ETH:USD price varies.
+*
+* - Public functions with parameters have been made internal to save gas, and given an external wrapper function for external access
 */
 contract SortedCDPs is Ownable, ISortedCDPs {
     using SafeMath for uint256;
