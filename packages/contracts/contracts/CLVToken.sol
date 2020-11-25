@@ -95,6 +95,7 @@ contract CLVToken is ICLVToken {
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
+        _requireValidRecipient(recipient);
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;

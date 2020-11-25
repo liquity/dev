@@ -125,6 +125,8 @@ contract GrowthToken is IERC20, IGrowthToken {
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
         if (_isFirstYear()) { _requireSenderIsNotDeployer(sender); }
         
+        _requireValidRecipient(recipient);
+
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;
@@ -184,12 +186,7 @@ contract GrowthToken is IERC20, IGrowthToken {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
-
-    function _burnFrom(address account, uint256 amount) internal {
-        _burn(account, amount);
-        _approve(account, msg.sender, _allowances[account][msg.sender].sub(amount, "ERC20: burn amount exceeds allowance"));
-    }
-
+    
     // --- Helper functions ---
 
     function _callerIsDeployer() internal view returns (bool) {
