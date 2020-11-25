@@ -5,209 +5,12 @@ const { keccak256 } = require('@ethersproject/keccak256');
 const { defaultAbiCoder } = require('@ethersproject/abi');
 const { toUtf8Bytes } = require('@ethersproject/strings');
 const { pack } = require('@ethersproject/solidity');
-const { BigNumberish } = require('@ethersproject/bignumber');
 const { hexlify } = require("@ethersproject/bytes");
 const { ecsign } = require('ethereumjs-util');
-
-const getDifference = testHelpers.getDifference
-const moneyVals = testHelpers.MoneyValues
 
 const toBN = testHelpers.TestHelper.toBN
 const assertRevert = testHelpers.TestHelper.assertRevert
 const ZERO_ADDRESS = testHelpers.TestHelper.ZERO_ADDRESS
-
-const CLVTokenTester = artifacts.require('CLVTokenTester')
-const CLVTokenCaller = artifacts.require('CLVTokenCaller')
-
-contract('CLVToken', async accounts => {
-  const [owner, alice, bob, carol] = accounts;
-
-  // the second account our buidlerenv creates (for Alice)
-  // from https://github.com/liquity/dev/blob/main/packages/contracts/buidlerAccountsList2k.js#L3
-  const alicePrivateKey = '0xeaa445c85f7b438dEd6e831d06a4eD0CEBDc2f8527f84Fcda6EBB5fCfAd4C0e9'
-
-  let chainId
-  let clvToken
-  let clvTokenCaller
-  let tokenName
-  let tokenVersion
-
-  let cdpManager
-  let stabilityPool
-  let borrowerOperations
-
-  describe('Basic token functions', async () => {
-    beforeEach(async () => {
-      chainId = await web3.eth.getChainId()
-    
-      const contracts = await deploymentHelper.deployLiquityCore()
- 
-      clvTokenCaller = await CLVTokenCaller.new()
-      contracts.clvToken = await CLVTokenTester.new(
-        clvTokenCaller.address,
-        clvTokenCaller.address,
-        clvTokenCaller.address
-      )
-      clvToken = contracts.clvToken
-      await clvTokenCaller.setCLV(clvToken.address)
-      tokenVersion = await clvToken.version()
-      tokenName = await clvToken.name()
-    
-      cdpManager = clvTokenCaller
-      stabilityPool = clvTokenCaller
-      borrowerOperations = clvTokenCaller
-      
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts()
-  
-      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-      await deploymentHelper.connectLQTYContracts(LQTYContracts)
-      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
-
-      // mint some tokens
-      await clvTokenCaller.clvMint(alice, 150)
-      await clvTokenCaller.clvMint(bob, 100)
-      await clvTokenCaller.clvMint(carol, 50)
-    })
-
-    it('balanceOf: gets the balance of the account', async () => {
-      const aliceBalance = (await clvToken.balanceOf(alice)).toNumber()
-      const bobBalance = (await clvToken.balanceOf(bob)).toNumber()
-      const carolBalance = (await clvToken.balanceOf(carol)).toNumber()
-
-      assert.equal(aliceBalance, 150)
-      assert.equal(bobBalance, 100)
-      assert.equal(carolBalance, 50)
-    })
-
-    it('_totalSupply(): gets the total supply', async () => {
-      const total = (await clvToken._totalSupply()).toString()
-      assert.equal(total, '300') // 300
-    })
-
-    it('mint(): issues correct amount of tokens to the given address', async () => {
-      const alice_balanceBefore = await clvToken.balanceOf(alice)
-      assert.equal(alice_balanceBefore, 150)
-
-      await clvTokenCaller.clvMint(alice, 100)
-
-      const alice_BalanceAfter = await clvToken.balanceOf(alice)
-      assert.equal(alice_BalanceAfter, 250)
-    })
-
-    it('burn(): burns correct amount of tokens from the given address', async () => {
-      const alice_balanceBefore = await clvToken.balanceOf(alice)
-      assert.equal(alice_balanceBefore, 150)
-
-      await clvTokenCaller.clvBurn(alice, 70)
-
-      const alice_BalanceAfter = await clvToken.balanceOf(alice)
-      assert.equal(alice_BalanceAfter, 80)
-    })
-
-    // TODO: Rewrite this test - it should check the actual clvTokenCaller's balance.
-    it('sendToPool(): changes balances of Stability pool and user by the correct amounts', async () => {
-      const stabilityPool_BalanceBefore = await clvToken.balanceOf(stabilityPool.address)
-      const bob_BalanceBefore = await clvToken.balanceOf(bob)
-      assert.equal(stabilityPool_BalanceBefore, 0)
-      assert.equal(bob_BalanceBefore, 100)
-
-      await clvTokenCaller.clvSendToPool(bob, stabilityPool.address, 75)
-
-      const stabilityPool_BalanceAfter = await clvToken.balanceOf(stabilityPool.address)
-      const bob_BalanceAfter = await clvToken.balanceOf(bob)
-      assert.equal(stabilityPool_BalanceAfter, 75)
-      assert.equal(bob_BalanceAfter, 25)
-    })
-
-    it('returnFromPool(): changes balances of Stability pool and user by the correct amounts', async () => {
-      /// --- SETUP --- give pool 100 CLV
-      await clvTokenCaller.clvMint(stabilityPool.address, 100)
-      
-      /// --- TEST --- 
-      const stabilityPool_BalanceBefore = await clvToken.balanceOf(stabilityPool.address)
-      const  bob_BalanceBefore = await clvToken.balanceOf(bob)
-      assert.equal(stabilityPool_BalanceBefore, 100)
-      assert.equal(bob_BalanceBefore, 100)
-
-      await clvTokenCaller.clvReturnFromPool(stabilityPool.address, bob, 75)
-
-      const stabilityPool_BalanceAfter = await clvToken.balanceOf(stabilityPool.address)
-      const bob_BalanceAfter = await clvToken.balanceOf(bob)
-      assert.equal(stabilityPool_BalanceAfter, 25)
-      assert.equal(bob_BalanceAfter, 175)
-    })
-
-    it('transfer(): all of these transfers should fail due to inappropriate recipient', async () => {
-      await assertRevert(clvToken.transfer(clvToken.address, 1, { from: alice }))
-      await assertRevert(clvToken.transfer(alice, 1, { from: alice }))
-      await assertRevert(clvToken.transfer(ZERO_ADDRESS, 1, { from: alice }))
-      await assertRevert(clvToken.transfer(cdpManager.address, 1, { from: alice }))
-      await assertRevert(clvToken.transfer(stabilityPool.address, 1, { from: alice }))
-      await assertRevert(clvToken.transfer(borrowerOperations.address, 1, { from: alice }))
-    })
-    
-    // EIP2612 tests
-
-    it('initializes PERMIT_TYPEHASH correctly', async () => {
-      assert.equal(await clvToken.permitTypeHash(), PERMIT_TYPEHASH)
-    })
-
-    it('initializes DOMAIN_SEPARATOR correctly', async () => {
-      assert.equal(await clvToken.domainSeparator(), 
-        getDomainSeparator(tokenName, clvToken.address, chainId, tokenVersion))
-    })
-
-    it('initial nonce is 0', async function () {
-      assert.equal(toBN(await clvToken.nonces(alice)).toString(), '0');
-    });
-    
-    it('permits and emits Approval (replay safe)', async () => {
-      // Create the approval request
-      const approve = {
-        owner: alice,
-        spender: bob,
-        value: 1,
-      }
-      // deadline as much as you want in the future
-      const deadline = 100000000000000
-      // Get the user's nonce
-      const nonce = await clvToken.nonces(approve.owner)
-      // Get the EIP712 digest
-      const digest = getPermitDigest(
-        tokenName, clvToken.address, 
-        chainId, tokenVersion, 
-        approve.owner, approve.spender,
-        approve.value, nonce, deadline
-      )
-      // NOTE: Using web3.eth.sign will hash the message internally again which
-      // we do not want, so we're manually signing here
-      const { v, r, s } = sign(digest, alicePrivateKey)
-      
-      // Approve it
-      const receipt = await clvToken.permit(
-        approve.owner, approve.spender, approve.value, 
-        deadline, v, hexlify(r), hexlify(s)
-      )
-      const event = receipt.logs[0]
-      // It worked!
-
-      assert.equal(event.event, 'Approval')
-      assert.equal(await clvToken.nonces(approve.owner), 1)
-      assert.equal(await clvToken.allowance(approve.owner, approve.spender), approve.value)
-      
-      // Re-using the same sig doesn't work since the nonce has been incremented
-      // on the contract level for replay-protection
-      assertRevert(clvToken.permit(
-        approve.owner, approve.spender, approve.value, 
-        deadline, v, r, s), 'LUSD: BAD_SIG')
-     
-      // invalid ecrecover's return address(0x0), so we must also guarantee that
-      // this case fails
-      assertRevert(clvToken.permit('0x0000000000000000000000000000000000000000', 
-        approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: BAD_SIG')
-    })
-  })
-})
 
 const sign = (digest, privateKey) => {
   return ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKey.slice(2), 'hex'))
@@ -242,5 +45,185 @@ const getPermitDigest = ( name, address, chainId, version,
         [PERMIT_TYPEHASH, owner, spender, value, nonce, deadline])),
     ]))
 }
+
+contract('CLVToken', async accounts => {
+  const [owner, alice, bob, carol] = accounts;
+
+  // the second account our buidlerenv creates (for Alice)
+  // from https://github.com/liquity/dev/blob/main/packages/contracts/buidlerAccountsList2k.js#L3
+  const alicePrivateKey = '0xeaa445c85f7b438dEd6e831d06a4eD0CEBDc2f8527f84Fcda6EBB5fCfAd4C0e9'
+
+  let chainId
+  let clvTokenTester
+  let stabilityPool
+  let cdpManager
+  let borrowerOperations
+
+  let tokenName
+  let tokenVersion
+
+  describe('Basic token functions', async () => {
+    beforeEach(async () => {
+      chainId = await web3.eth.getChainId()
+    
+      const contracts = await deploymentHelper.deployTesterContractsBuidler()
+ 
+      clvTokenTester = contracts.clvToken
+      stabilityPool = contracts.stabilityPool
+      cdpManager = contracts.stabilityPool
+      borrowerOperations = contracts.borrowerOperations
+
+      tokenVersion = await clvTokenTester.version()
+      tokenName = await clvTokenTester.name()
+    
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+  
+      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+      await deploymentHelper.connectLQTYContracts(LQTYContracts)
+      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+      // mint some tokens
+      await clvTokenTester.unprotectedMint(alice, 150)
+      await clvTokenTester.unprotectedMint(bob, 100)
+      await clvTokenTester.unprotectedMint(carol, 50)
+    })
+
+    it('balanceOf: gets the balance of the account', async () => {
+      const aliceBalance = (await clvTokenTester.balanceOf(alice)).toNumber()
+      const bobBalance = (await clvTokenTester.balanceOf(bob)).toNumber()
+      const carolBalance = (await clvTokenTester.balanceOf(carol)).toNumber()
+
+      assert.equal(aliceBalance, 150)
+      assert.equal(bobBalance, 100)
+      assert.equal(carolBalance, 50)
+    })
+
+    it('totalSupply(): gets the total supply', async () => {
+      const total = (await clvTokenTester.totalSupply()).toString()
+      assert.equal(total, '300') // 300
+    })
+
+    it('mint(): issues correct amount of tokens to the given address', async () => {
+      const alice_balanceBefore = await clvTokenTester.balanceOf(alice)
+      assert.equal(alice_balanceBefore, 150)
+
+      await clvTokenTester.unprotectedMint(alice, 100)
+
+      const alice_BalanceAfter = await clvTokenTester.balanceOf(alice)
+      assert.equal(alice_BalanceAfter, 250)
+    })
+
+    it('burn(): burns correct amount of tokens from the given address', async () => {
+      const alice_balanceBefore = await clvTokenTester.balanceOf(alice)
+      assert.equal(alice_balanceBefore, 150)
+
+      await clvTokenTester.unprotectedBurn(alice, 70)
+
+      const alice_BalanceAfter = await clvTokenTester.balanceOf(alice)
+      assert.equal(alice_BalanceAfter, 80)
+    })
+
+    // TODO: Rewrite this test - it should check the actual clvTokenTester's balance.
+    it('sendToPool(): changes balances of Stability pool and user by the correct amounts', async () => {
+      const stabilityPool_BalanceBefore = await clvTokenTester.balanceOf(stabilityPool.address)
+      const bob_BalanceBefore = await clvTokenTester.balanceOf(bob)
+      assert.equal(stabilityPool_BalanceBefore, 0)
+      assert.equal(bob_BalanceBefore, 100)
+
+      await clvTokenTester.unprotectedSendToPool(bob, stabilityPool.address, 75)
+
+      const stabilityPool_BalanceAfter = await clvTokenTester.balanceOf(stabilityPool.address)
+      const bob_BalanceAfter = await clvTokenTester.balanceOf(bob)
+      assert.equal(stabilityPool_BalanceAfter, 75)
+      assert.equal(bob_BalanceAfter, 25)
+    })
+
+    it('returnFromPool(): changes balances of Stability pool and user by the correct amounts', async () => {
+      /// --- SETUP --- give pool 100 CLV
+      await clvTokenTester.unprotectedMint(stabilityPool.address, 100)
+      
+      /// --- TEST --- 
+      const stabilityPool_BalanceBefore = await clvTokenTester.balanceOf(stabilityPool.address)
+      const  bob_BalanceBefore = await clvTokenTester.balanceOf(bob)
+      assert.equal(stabilityPool_BalanceBefore, 100)
+      assert.equal(bob_BalanceBefore, 100)
+
+      await clvTokenTester.unprotectedReturnFromPool(stabilityPool.address, bob, 75)
+
+      const stabilityPool_BalanceAfter = await clvTokenTester.balanceOf(stabilityPool.address)
+      const bob_BalanceAfter = await clvTokenTester.balanceOf(bob)
+      assert.equal(stabilityPool_BalanceAfter, 25)
+      assert.equal(bob_BalanceAfter, 175)
+    })
+
+    it('transfer(): all of these transfers should fail due to inappropriate recipient', async () => {
+      await assertRevert(clvTokenTester.transfer(clvTokenTester.address, 1, { from: alice }))
+      await assertRevert(clvTokenTester.transfer(ZERO_ADDRESS, 1, { from: alice }))
+      await assertRevert(clvTokenTester.transfer(cdpManager.address, 1, { from: alice }))
+      await assertRevert(clvTokenTester.transfer(stabilityPool.address, 1, { from: alice }))
+      await assertRevert(clvTokenTester.transfer(borrowerOperations.address, 1, { from: alice }))
+    })
+    
+    // EIP2612 tests
+
+    it('Initializes PERMIT_TYPEHASH correctly', async () => {
+      assert.equal(await clvTokenTester.permitTypeHash(), PERMIT_TYPEHASH)
+    })
+
+    it('Initializes DOMAIN_SEPARATOR correctly', async () => {
+      assert.equal(await clvTokenTester.domainSeparator(), 
+      getDomainSeparator(tokenName, clvTokenTester.address, chainId, tokenVersion))
+    })
+
+    it('Initial nonce for a given address is 0', async function () {
+      assert.equal(toBN(await clvTokenTester.nonces(alice)).toString(), '0');
+    });
+    
+    it('permits and emits an Approval event (replay protected)', async () => {
+      // Create the approval tx data
+      const approve = {
+        owner: alice,
+        spender: bob,
+        value: 1,
+      }
+
+      const deadline = 100000000000000
+      const nonce = await clvTokenTester.nonces(approve.owner)
+     
+      // Get the EIP712 digest
+      const digest = getPermitDigest(
+        tokenName, clvTokenTester.address, 
+        chainId, tokenVersion, 
+        approve.owner, approve.spender,
+        approve.value, nonce, deadline
+      )
+     
+      const { v, r, s } = sign(digest, alicePrivateKey)
+      
+      // Approve it
+      const receipt = await clvTokenTester.permit(
+        approve.owner, approve.spender, approve.value, 
+        deadline, v, hexlify(r), hexlify(s)
+      )
+      const event = receipt.logs[0]
+
+      // Check that approval was successful
+      assert.equal(event.event, 'Approval')
+      assert.equal(await clvTokenTester.nonces(approve.owner), 1)
+      assert.equal(await clvTokenTester.allowance(approve.owner, approve.spender), approve.value)
+      
+      // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
+      assertRevert(clvTokenTester.permit(
+        approve.owner, approve.spender, approve.value, 
+        deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
+     
+      // Check that the zero address fails
+      assertRevert(clvTokenTester.permit('0x0000000000000000000000000000000000000000', 
+        approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
+    })
+  })
+})
+
+
 
 contract('Reset chain state', async accounts => {})

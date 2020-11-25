@@ -101,17 +101,26 @@ class DeploymentHelper {
 
   static async deployTesterContractsBuidler() {
     const testerContracts = {}
-    testerContracts.communityIssuanceTester = await CommunityIssuanceTester.new()
-    testerContracts.stabilityPoolTester = await StabilityPoolTester.new()
-    testerContracts.activePoolTester = await ActivePoolTester.new()
-    testerContracts.defaultPoolTester = await DefaultPoolTester.new()
-    testerContracts.mathTester = await MathTester.new()
-    testerContracts.borrowerOperationsTester = await BorrowerOperationsTester.new()
-    testerContracts.cdpManagerTester = await CDPManagerTester.new()
-    testerContracts.clvTokenTester =  await CLVTokenTester.new(
-      testerContracts.cdpManagerTester.address,
-      testerContracts.stabilityPoolTester.address,
-      testerContracts.borrowerOperationsTester.address
+
+    // Contract without testers (yet)
+    testerContracts.priceFeed = await PriceFeed.new()
+    testerContracts.sortedCDPs = await SortedCDPs.new()
+
+    // Actual tester contracts
+    testerContracts.communityIssuance = await CommunityIssuanceTester.new()
+    testerContracts.stabilityPool = await StabilityPoolTester.new()
+    testerContracts.activePool = await ActivePoolTester.new()
+    testerContracts.defaultPool = await DefaultPoolTester.new()
+    testerContracts.stabilityPool = await StabilityPoolTester.new()
+    testerContracts.math = await MathTester.new()
+    testerContracts.borrowerOperations = await BorrowerOperationsTester.new()
+    testerContracts.cdpManager = await CDPManagerTester.new()
+    testerContracts.functionCaller = await FunctionCaller.new()
+    testerContracts.hintHelpers = await HintHelpers.new()
+    testerContracts.clvToken =  await CLVTokenTester.new(
+      testerContracts.cdpManager.address,
+      testerContracts.stabilityPool.address,
+      testerContracts.borrowerOperations.address
     )
     return testerContracts
   }
