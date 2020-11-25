@@ -78,6 +78,7 @@ const deployContracts = async (
       getContractFactory,
       "GrowthToken",
       addresses.communityIssuance,
+      addresses.lqtyStaking,
       addresses.lockupContractFactory,
       { ...overrides }
     ),
