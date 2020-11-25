@@ -1,6 +1,5 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
@@ -43,8 +42,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore() 
-      contracts.cdpManager = await CDPManagerTester.new()
-      contracts = await deploymentHelper.deployCLVToken(contracts)
+      LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
      
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
@@ -55,6 +53,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       borrowerOperations = contracts.borrowerOperations
 
       growthToken = LQTYContracts.growthToken
+      communityIssuanceTester = LQTYContracts.communityIssuance
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
