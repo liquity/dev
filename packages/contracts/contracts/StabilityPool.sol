@@ -468,8 +468,7 @@ contract StabilityPool is Ownable, IStabilityPool {
 
         assert(_CLVLossPerUnitStaked <= 1e18);
         /**
-        * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool
-        * CLV in the liquidation. 
+        * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool CLV in the liquidation. 
         * We make the product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
         */
         uint newProductFactor = _CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_CLVLossPerUnitStaked);
@@ -508,7 +507,6 @@ contract StabilityPool is Ownable, IStabilityPool {
         emit P_Updated(newP);
     }
 
- 
     function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal {
         // Cancel the liquidated CLV debt with the CLV in the stability pool
         activePool.decreaseCLVDebt(_debtToOffset);
@@ -691,9 +689,15 @@ contract StabilityPool is Ownable, IStabilityPool {
             compoundedStake = 0;
         }
 
-        // If compounded deposit is less than a billionth of the initial deposit, return 0
-        // TODO: confirm the reason:
-        // to make sure that any numerical error from floor-division always "favors the system"
+        /**
+        * If compounded deposit is less than a billionth of the initial deposit, return 0.  
+        *
+        * NOTE: originally, this line was in place to stop rounding errors making the deposit too large. However, the error 
+        * corrections should ensure the error in P "favors the Pool", i.e. any given compounded deposit should slightly less
+        * than it's theoretical value.
+        *
+        * Thus it's unclear whether this line is still really needed.
+        */
         if (compoundedStake < initialStake.div(1e9)) {return 0;}
 
         return compoundedStake;
