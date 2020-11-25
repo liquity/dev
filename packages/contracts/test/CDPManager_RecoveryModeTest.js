@@ -3271,7 +3271,10 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isTrue(await cdpManager.checkRecoveryMode())
 
     // Whale withdraws entire deposit, and re-deposits 132 CLV
+    // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+    await priceFeed.setPrice(dec(200, 18))
     await stabilityPool.withdrawFromSP(dec(1000, 18), {from: whale})
+    await priceFeed.setPrice(dec(110, 18))
     await stabilityPool.provideToSP(dec(132, 18), ZERO_ADDRESS, {from: whale})
 
     // B and E are still in range 110-TCR.

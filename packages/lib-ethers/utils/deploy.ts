@@ -64,6 +64,9 @@ const deployContracts = async (
     sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs", { ...overrides }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
+    }),
+    collSurplusPool: await deployContract(deployer, getContractFactory, "CollSurplusPool", {
+      ...overrides
     })
   };
 
@@ -80,6 +83,7 @@ const deployContracts = async (
       getContractFactory,
       "GrowthToken",
       addresses.communityIssuance,
+      addresses.lqtyStaking,
       addresses.lockupContractFactory,
       { ...overrides }
     ),
@@ -109,7 +113,8 @@ const connectContracts = async (
     lqtyStaking,
     priceFeed,
     sortedCDPs,
-    stabilityPool
+    stabilityPool,
+    collSurplusPool
   }: LiquityContracts,
   deployer: Signer,
   overrides?: Overrides
@@ -145,6 +150,7 @@ const connectContracts = async (
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
+        collSurplusPool.address,
         priceFeed.address,
         clvToken.address,
         sortedCDPs.address,
@@ -158,6 +164,7 @@ const connectContracts = async (
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
+        collSurplusPool.address,
         priceFeed.address,
         sortedCDPs.address,
         clvToken.address,
@@ -171,6 +178,8 @@ const connectContracts = async (
         cdpManager.address,
         activePool.address,
         clvToken.address,
+        sortedCDPs.address,
+        priceFeed.address,
         communityIssuance.address,
         { ...overrides, nonce }
       ),
@@ -189,6 +198,14 @@ const connectContracts = async (
         ...overrides,
         nonce
       }),
+
+    nonce =>
+      collSurplusPool.setAddresses(
+        borrowerOperations.address,
+        cdpManager.address,
+        activePool.address,
+        { ...overrides, nonce }
+      ),
 
     nonce =>
       hintHelpers.setAddresses(priceFeed.address, sortedCDPs.address, cdpManager.address, {

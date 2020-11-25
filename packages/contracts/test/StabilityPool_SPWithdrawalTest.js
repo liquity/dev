@@ -302,10 +302,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
-      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
       await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
-      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(4, 'ether') })
       await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: carol })
 
       // 2 Defaulters open loan with 200% ICR
@@ -348,10 +348,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
-      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
       await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
 
-      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(4, 'ether') })
       await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: carol })
 
       // Defaulters open loan with 200% ICR
@@ -665,7 +665,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txD = await stabilityPool.withdrawFromSP(dec(100, 18), { from: dennis })
+      await priceFeed.setPrice(dec(100, 18))
 
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '50000000000000000000'), 1000)
@@ -738,7 +741,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await cdpManager.liquidate(defaulter_2, { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txD = await stabilityPool.withdrawFromSP(dec(5000, 18), { from: dennis })
+      await priceFeed.setPrice(dec(100, 18))
 
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
@@ -803,7 +809,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await cdpManager.liquidate(defaulter_3, { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txD = await stabilityPool.withdrawFromSP(dec(100, 18), { from: dennis })
+      await priceFeed.setPrice(dec(100, 18))
 
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
       assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)
@@ -1262,7 +1271,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await cdpManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await stabilityPool.P()).toString(), '9')
 
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txA = await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
+      await priceFeed.setPrice(dec(100, 18))
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = await th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -1311,7 +1323,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await cdpManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await stabilityPool.P()).toString(), '9')
 
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txA = await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
+      await priceFeed.setPrice(dec(100, 18))
 
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
@@ -1384,7 +1399,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txA = await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
+      await priceFeed.setPrice(dec(100, 18))
       // Bob deposits 100 CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
@@ -1430,7 +1448,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txA = await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
+      await priceFeed.setPrice(dec(100, 18))
 
       // B, C, D deposit 100, 200, 300 CLV
       await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(100, 'ether') })
@@ -1622,8 +1643,11 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(SPCLVBalance_1, '0')
 
       // Attempt withdrawals
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txA = await stabilityPool.withdrawFromSP(dec(10, 18), { from: A })
       const txB = await stabilityPool.withdrawFromSP(dec(10, 18), { from: B })
+      await priceFeed.setPrice(dec(100, 18))
       assert.isTrue(txA.receipt.status)
       assert.isTrue(txB.receipt.status)
 
@@ -1658,8 +1682,11 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(SPCLVBalance_2, '0')
 
       // Attempt withdrawals
+      // Increasing the price for a moment to avoid pending liquidations to block withdrawal
+      await priceFeed.setPrice(dec(200, 18))
       const txC = await stabilityPool.withdrawFromSP(dec(10, 18), { from: C })
       const txD = await stabilityPool.withdrawFromSP(dec(10, 18), { from: D })
+      await priceFeed.setPrice(dec(100, 18))
       assert.isTrue(txC.receipt.status)
       assert.isTrue(txD.receipt.status)
 
@@ -1685,7 +1712,6 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Check SP tracker is zero
       const CLVinSP_3 = await stabilityPool.getTotalCLVDeposits()
-      console.log(`CLVinSP_3: ${CLVinSP_3}`)
       assert.equal(CLVinSP_3, '0')
 
       // Check SP CLV balance is zero
@@ -1783,7 +1809,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       const depositors = [alice, bob]
       for (account of depositors) {
-        await borrowerOperations.openLoan(dec(1, 36), account, { from: account, value: dec(1, 27) })
+        await borrowerOperations.openLoan(dec(1, 36), account, { from: account, value: dec(2, 27) })
         await stabilityPool.provideToSP(dec(1, 36), ZERO_ADDRESS, { from: account })
       }
 
@@ -1840,7 +1866,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       const depositors = [alice, bob]
       for (account of depositors) {
-        await borrowerOperations.openLoan(dec(1, 36), account, { from: account, value: dec(1, 27) })
+        await borrowerOperations.openLoan(dec(1, 36), account, { from: account, value: dec(2, 27) })
         await stabilityPool.provideToSP(dec(1, 36), ZERO_ADDRESS, { from: account })
       }
 

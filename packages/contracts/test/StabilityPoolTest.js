@@ -34,6 +34,7 @@ contract('StabilityPool', async accounts => {
   let stabilityPool
   let defaultPool
   let borrowerOperations
+  let growthToken
 
   let gasPriceInWei
 
@@ -57,10 +58,8 @@ contract('StabilityPool', async accounts => {
       borrowerOperations = contracts.borrowerOperations
       hintHelpers = contracts.hintHelpers
 
-      lqtyStaking = LQTYContracts.lqtyStaking
       growthToken = LQTYContracts.growthToken
-      communityIssuance = LQTYContracts.communityIssuance
-      lockupContractFactory = LQTYContracts.lockupContractFactory
+      //communityIssuance = LQTYContracts.communityIssuance
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -713,12 +712,12 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, open loans 
-      await borrowerOperations.openLoan(dec(105, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(205, 18), B, { from: B, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(205, 18), A, { from: A, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(305, 18), B, { from: B, value: dec(4, 'ether') })
       await borrowerOperations.openLoan(dec(10, 18), C, { from: C, value: dec(2, 'ether') })
 
 
-      await borrowerOperations.openLoan(dec(10, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // --- SETUP --- 
 
@@ -1362,6 +1361,23 @@ contract('StabilityPool', async accounts => {
       }
     })
 
+    it("withdrawFromSP(): reverts when there is a pending liquidation", async () => {
+      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
+
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
+
+      const alice_initialDeposit = ((await stabilityPool.deposits(alice))[0]).toString()
+      assert.equal(alice_initialDeposit, dec(100, 18))
+
+      // defaulter opens trove
+      await borrowerOperations.openLoan(dec(89, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+
+      // ETH drops, defaulter is in liquidation range (but not liquidated yet)
+      await priceFeed.setPrice(dec(100, 18))
+
+      await th.assertRevert(stabilityPool.withdrawFromSP(dec(100, 18), { from: alice }))
+    })
+
     it("withdrawFromSP(): partial retrieval - retrieves correct CLV amount and the entire ETH Gain, and updates deposit", async () => {
       // --- SETUP ---
       // Whale deposits 1850 CLV in StabilityPool
@@ -1517,14 +1533,14 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan('1850000000000000000000', whale, { from: whale, value: dec(50, 'ether') })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 2 CDPs opened, 180 CLV withdrawn
+      // 2 CDPs opened, 180 CLV debt
       await borrowerOperations.openLoan(dec(170, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(dec(170, 18), defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
 
       // --- TEST ---
 
       // Alice makes deposit #1: 150 CLV
-      await borrowerOperations.openLoan(dec(150, 18), alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(dec(150, 18), alice, { from: alice, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
       // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
@@ -1667,7 +1683,7 @@ contract('StabilityPool', async accounts => {
       // 6 Accounts open loans and provide to SP
       const depositors = [alice, bob, carol, dennis, erin, flyn]
       for (account of depositors) {
-        await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(1, 'ether') })
+        await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: dec(2, 'ether') })
         await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: account })
       }
 
@@ -1737,9 +1753,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans and make Stability Pool deposits
-      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(4, 'ether') })
 
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
       await stabilityPool.provideToSP(dec(200, 18), frontEnd_1, { from: bob })
@@ -1793,9 +1809,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans and make Stability Pool deposits
-      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(4, 'ether') })
 
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
       await stabilityPool.provideToSP(dec(200, 18), frontEnd_1, { from: bob })
@@ -1843,9 +1859,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans and make Stability Pool deposits
-      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(4, 'ether') })
 
       // A, B and C provide to SP
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
@@ -1943,9 +1959,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans and provide to Stability Pool
-      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(4, 'ether') })
 
       // Would-be defaulters open loans
       await borrowerOperations.openLoan(dec(1000, 18), defaulter_1, { from: defaulter_1, value: dec(10, 'ether') })
@@ -1990,9 +2006,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
-      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(4, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
@@ -2045,9 +2061,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
-      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(4, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
@@ -2089,9 +2105,9 @@ contract('StabilityPool', async accounts => {
       // --- SETUP ---
 
       // A, B, C open loans 
-      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(4, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
@@ -2435,12 +2451,12 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C, open loans 
-      await borrowerOperations.openLoan(dec(200, 18), A, { from: A, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(400, 18), B, { from: B, value: dec(4, 'ether') })
-      await borrowerOperations.openLoan(dec(600, 18), C, { from: C, value: dec(6, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), A, { from: A, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(400, 18), B, { from: B, value: dec(5, 'ether') })
+      await borrowerOperations.openLoan(dec(600, 18), C, { from: C, value: dec(7, 'ether') })
 
       // D opens loan
-      await borrowerOperations.openLoan(dec(1000, 18), D, { from: D, value: dec(10, 'ether') })
+      await borrowerOperations.openLoan(dec(1000, 18), D, { from: D, value: dec(12, 'ether') })
 
       await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
@@ -3138,9 +3154,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C open loans 
-      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(2, 'ether') })
-      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(2, 'ether') })
+      await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(3, 'ether') })
+      await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(4, 'ether') })
 
       // A and B provide to SP
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A })

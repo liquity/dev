@@ -7,13 +7,20 @@ import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
+/** 
+ * The Default Pool holds the ETH and LUSD debt (but not LUSD tokens) from liquidations that have been redistributed
+ * to active troves but not yet "applied", i.e. not yet recorded on a recipient active trove's struct.
+ * 
+ * When a trove makes an operation that applies its pending ETH and LUSD debt, its pending ETH and LUSD debt is moved
+ * from the Default Pool to the Active Pool.
+ */
 contract DefaultPool is Ownable, IPool {
     using SafeMath for uint256;
 
     address public cdpManagerAddress;
     address public activePoolAddress;
-    uint256 internal ETH;  // deposited ether tracker
-    uint256 internal CLVDebt;  // total outstanding CDP debt
+    uint256 internal ETH;  // deposited ETH tracker
+    uint256 internal CLVDebt;  // debt 
 
     event CDPManagerAddressChanged(address _newCDPManagerAddress);
 
@@ -37,8 +44,11 @@ contract DefaultPool is Ownable, IPool {
 
     // --- Getters for public variables. Required by IPool interface ---
 
-    /* Returns the ETH state variable at ActivePool address.
-       Not necessarily equal to the raw ether balance - ether can be forcibly sent to contracts. */
+    /** 
+    * Returns the ETH state variable.
+    *
+    * Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts. 
+    */
     function getETH() external view override returns (uint) {
         return ETH;
     }
@@ -54,7 +64,7 @@ contract DefaultPool is Ownable, IPool {
         ETH = ETH.sub(_amount);
         emit EtherSent(_account, _amount);
 
-        (bool success, ) = _account.call{ value: _amount }("");  // use call.value()('') as per Consensys latest advice
+        (bool success, ) = _account.call{ value: _amount }(""); 
         require(success, "DefaultPool: sending ETH failed");
     }
 

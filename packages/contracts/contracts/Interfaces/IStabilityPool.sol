@@ -14,6 +14,8 @@ interface IStabilityPool {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     event CLVTokenAddressChanged(address _newCLVTokenAddress);
+    event SortedCDPsAddressChanged(address _newSortedCDPsAddress);
+    event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
 
     event P_Updated(uint _P);
@@ -41,6 +43,8 @@ interface IStabilityPool {
         address _cdpManagerAddress,
         address _activePoolAddress,
         address _clvTokenAddress,
+        address _sortedCDPsAddress,
+        address _priceFeedAddress,
         address _communityIssuanceAddress
     ) external;
 
