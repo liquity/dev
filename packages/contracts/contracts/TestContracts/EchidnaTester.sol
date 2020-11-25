@@ -65,7 +65,6 @@ contract EchidnaTester {
         
         stabilityPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool), address(clvToken), address(sortedCDPs), address(priceFeed), address(0));
         collSurplusPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool));
-        clvToken.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool));
         priceFeed.setAddresses(address(cdpManager), address(0), address(0));
         sortedCDPs.setParams(1e18, address(cdpManager), address(borrowerOperations));
 
