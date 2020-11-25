@@ -40,12 +40,10 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
   describe("LQTY Rewards", async () => {
 
     beforeEach(async () => {
-      contracts = await deploymentHelper.deployLiquityCore()
-      const GTContracts = await deploymentHelper.deployGTTesterContractsBuidler()
+      contracts = await deploymentHelper.deployLiquityCore() 
       contracts.cdpManager = await CDPManagerTester.new()
       contracts = await deploymentHelper.deployCLVToken(contracts)
-      communityIssuanceTester = GTContracts.communityIssuance
-
+     
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
       stabilityPool = contracts.stabilityPool
@@ -57,29 +55,33 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       borrowerOperations = contracts.borrowerOperations
       hintHelpers = contracts.hintHelpers
 
-      lqtyStaking = GTContracts.lqtyStaking
-      growthToken = GTContracts.growthToken
-      lockupContractFactory = GTContracts.lockupContractFactory
+      const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+      
+      lqtyStaking = LQTYContracts.lqtyStaking
+      growthToken = LQTYContracts.growthToken
+      communityIssuanceTester = LQTYContracts.communityIssuance
+      lockupContractFactory = LQTYContracts.lockupContractFactory
 
-      await deploymentHelper.connectGTContracts(GTContracts)
-      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-      await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+      await deploymentHelper.connectLQTYContracts(LQTYContracts)
+      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
       // Check community issuance starts with 33.333... million LQTY
       communityLQTYSupply = toBN(await growthToken.balanceOf(communityIssuanceTester.address))
       assert.isAtMost(getDifference(communityLQTYSupply, '33333333333333333333333333'), 1000)
 
       /* Monthly LQTY issuance
-    
-      Expected fraction of total supply issued per month, for a yearly halving schedule:
   
-      Month 1: 0.055378538087966600
-      Month 2: 0.052311755607206100
-      Month 3: 0.049414807056864200
-      Month 4: 0.046678287282156100
-      Month 5: 0.044093311972020200
-      Month 6: 0.041651488815552900
-     */
+        Expected fraction of total supply issued per month, for a yearly halving schedule:
+    
+        Month 1: 0.055378538087966600
+        Month 2: 0.052311755607206100
+        Month 3: 0.049414807056864200
+        Month 4: 0.046678287282156100
+        Month 5: 0.044093311972020200
+        Month 6: 0.041651488815552900
+      */
+
       issuance_M1 = toBN('55378538087966600').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
       issuance_M2 = toBN('52311755607206100').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
       issuance_M3 = toBN('49414807056864200').mul(communityLQTYSupply).div(toBN(dec(1, 18)))

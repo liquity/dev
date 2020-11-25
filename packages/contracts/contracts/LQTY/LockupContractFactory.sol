@@ -42,7 +42,7 @@ contract LockupContractFactory is ILockupContractFactory {
     }
 
     function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external override {
-        _requireGTAddressIsSet();
+        _requireLQTYAddressIsSet();
         OneYearLockupContract oneYearLockupContract = new OneYearLockupContract(
                                                         address(growthToken), 
                                                         beneficiary, 
@@ -53,7 +53,7 @@ contract LockupContractFactory is ILockupContractFactory {
     }
 
     function deployCustomDurationLockupContract(address beneficiary, uint initialEntitlement, uint lockupDuration) external override {
-        _requireGTAddressIsSet();
+        _requireLQTYAddressIsSet();
         _requireFactoryIsAtLeastOneYearOld();
     
         CustomDurationLockupContract customDurationLockupContract = new CustomDurationLockupContract( 
@@ -118,8 +118,8 @@ contract LockupContractFactory is ILockupContractFactory {
         require(msg.sender == deployer, "LCF: caller is not LCF deployer");
     }
 
-    function _requireGTAddressIsSet() internal view {
-        require(address(growthToken) != address(0), "LCF: GT Address is not set");
+    function _requireLQTYAddressIsSet() internal view {
+        require(address(growthToken) != address(0), "LCF: LQTY Address is not set");
     }
 
     function _requireFactoryIsAtLeastOneYearOld() internal view {

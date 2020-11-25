@@ -2,10 +2,10 @@
 
 pragma solidity 0.6.11;
 
-import "../GT/CommunityIssuance.sol";
+import "../LQTY/CommunityIssuance.sol";
 
 contract CommunityIssuanceTester is CommunityIssuance {
-    function obtainGT(uint _amount) external {
+    function obtainLQTY(uint _amount) external {
         growthToken.transfer(msg.sender, _amount);
     }
 

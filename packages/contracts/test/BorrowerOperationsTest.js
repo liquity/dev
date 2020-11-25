@@ -43,7 +43,7 @@ contract('BorrowerOperations', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
     contracts = await deploymentHelper.deployCLVToken(contracts)
-    const GTContracts = await deploymentHelper.deployGTContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -55,14 +55,14 @@ contract('BorrowerOperations', async accounts => {
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
 
-    lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
+    lqtyStaking = LQTYContracts.lqtyStaking
+    growthToken = LQTYContracts.growthToken
+    communityIssuance = LQTYContracts.communityIssuance
+    lockupContractFactory = LQTYContracts.lockupContractFactory
 
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
     CLV_GAS_COMPENSATION = await borrowerOperations.CLV_GAS_COMPENSATION()
   })
@@ -812,8 +812,8 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("withdrawCLV(): borrowing at non-zero base rate sends CLV fee to GT staking contract", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("withdrawCLV(): borrowing at non-zero base rate sends CLV fee to LQTY staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -837,7 +837,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT CLV balance before == 0
+    // Check LQTY CLV balance before == 0
     const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
@@ -845,13 +845,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
 
-    // Check GT CLV balance after has increased
+    // Check LQTY CLV balance after has increased
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
   })
 
   it("withdrawCLV(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -897,8 +897,8 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
   })
 
-  it("withdrawCLV(): Borrowing at non-zero base rate increases the GT staking contract CLV fees-per-unit-staked", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("withdrawCLV(): Borrowing at non-zero base rate increases the LQTY staking contract CLV fees-per-unit-staked", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -922,7 +922,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT contract CLV fees-per-unit-staked is zero
+    // Check LQTY contract CLV fees-per-unit-staked is zero
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
@@ -930,13 +930,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
 
-    // Check GT contract CLV fees-per-unit-staked has increased
+    // Check LQTY contract CLV fees-per-unit-staked has increased
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
   })
 
   it("withdrawCLV(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -950,7 +950,7 @@ contract('BorrowerOperations', async accounts => {
     // A redeems 10 CLV
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check GT Staking contract balance before == 0
+    // Check LQTY Staking contract balance before == 0
     const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
@@ -969,7 +969,7 @@ contract('BorrowerOperations', async accounts => {
     const CLVRequest_D = toBN(dec(40, 18))
     await borrowerOperations.withdrawCLV(CLVRequest_D, D, { from: D })
 
-    // Check GT staking CLV balance has increased
+    // Check LQTY staking CLV balance has increased
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
 
@@ -978,7 +978,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
 
-  it("withdrawCLV(): Borrowing at zero base rate does not change CLV balance of GT staking contract", async () => {
+  it("withdrawCLV(): Borrowing at zero base rate does not change CLV balance of LQTY staking contract", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -992,7 +992,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT CLV balance before == 0
+    // Check LQTY CLV balance before == 0
     const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
@@ -1000,12 +1000,12 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
 
-    // Check GT CLV balance after == 0
+    // Check LQTY CLV balance after == 0
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_After, '0')
   })
 
-  it("withdrawCLV(): Borrowing at zero base rate does not change GT staking contract CLV fees-per-unit-staked", async () => {
+  it("withdrawCLV(): Borrowing at zero base rate does not change LQTY staking contract CLV fees-per-unit-staked", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1019,7 +1019,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT CLV balance before == 0
+    // Check LQTY CLV balance before == 0
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
@@ -1027,7 +1027,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
 
-    // Check GT CLV balance after == 0
+    // Check LQTY CLV balance after == 0
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_After, '0')
   })
@@ -1522,8 +1522,8 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
-  it("adjustLoan(): borrowing at non-zero base rate sends CLV fee to GT staking contract", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("adjustLoan(): borrowing at non-zero base rate sends CLV fee to LQTY staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -1547,7 +1547,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT CLV balance before == 0
+    // Check LQTY CLV balance before == 0
     const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
@@ -1555,13 +1555,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
-    // Check GT CLV balance after has increased
+    // Check LQTY CLV balance after has increased
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
   })
 
   it("adjustLoan(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -1602,8 +1602,8 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
   })
 
-  it("adjustLoan(): Borrowing at non-zero base rate increases the GT staking contract CLV fees-per-unit-staked", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("adjustLoan(): Borrowing at non-zero base rate increases the LQTY staking contract CLV fees-per-unit-staked", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -1627,7 +1627,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT contract CLV fees-per-unit-staked is zero
+    // Check LQTY contract CLV fees-per-unit-staked is zero
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
@@ -1635,13 +1635,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
-    // Check GT contract CLV fees-per-unit-staked has increased
+    // Check LQTY contract CLV fees-per-unit-staked has increased
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
   })
 
   it("adjustLoan(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -1655,7 +1655,7 @@ contract('BorrowerOperations', async accounts => {
     // A redeems 10 CLV
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check GT Staking contract balance before == 0
+    // Check LQTY Staking contract balance before == 0
     const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
@@ -1674,7 +1674,7 @@ contract('BorrowerOperations', async accounts => {
     const CLVRequest_D = toBN(dec(40, 18))
     await borrowerOperations.adjustLoan(0, CLVRequest_D, true, D, { from: D })
 
-    // Check GT staking CLV balance has increased
+    // Check LQTY staking CLV balance has increased
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
 
@@ -1683,7 +1683,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
 
-  it("adjustLoan(): Borrowing at zero base rate does not change CLV balance of GT staking contract", async () => {
+  it("adjustLoan(): Borrowing at zero base rate does not change CLV balance of LQTY staking contract", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1697,7 +1697,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT CLV balance before == 0
+    // Check LQTY CLV balance before == 0
     const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
@@ -1705,12 +1705,12 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
-    // Check GT CLV balance after == 0
+    // Check LQTY CLV balance after == 0
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_After, '0')
   })
 
-  it("adjustLoan(): Borrowing at zero base rate does not change GT staking contract CLV fees-per-unit-staked", async () => {
+  it("adjustLoan(): Borrowing at zero base rate does not change LQTY staking contract CLV fees-per-unit-staked", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1724,7 +1724,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT CLV balance before == 0
+    // Check LQTY CLV balance before == 0
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
@@ -1732,7 +1732,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
-    // Check GT CLV balance after == 0
+    // Check LQTY CLV balance after == 0
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_After, '0')
   })
@@ -2723,8 +2723,8 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
-  it("openLoan(): borrowing at non-zero base rate sends CLV fee to GT staking contract", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("openLoan(): borrowing at non-zero base rate sends CLV fee to LQTY staking contract", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -2748,20 +2748,20 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT CLV balance before == 0
+    // Check LQTY CLV balance before == 0
     const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // D opens loan 
     await borrowerOperations.openLoan(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
-    // Check GT CLV balance after has increased
+    // Check LQTY CLV balance after has increased
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
   })
 
   it("openLoan(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -2801,8 +2801,8 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
   })
 
-  it("openLoan(): Borrowing at non-zero base rate increases the GT staking contract CLV fees-per-unit-staked", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+  it("openLoan(): Borrowing at non-zero base rate increases the LQTY staking contract CLV fees-per-unit-staked", async () => {
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -2826,20 +2826,20 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT contract CLV fees-per-unit-staked is zero
+    // Check LQTY contract CLV fees-per-unit-staked is zero
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
     // D opens loan 
     await borrowerOperations.openLoan(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
-    // Check GT contract CLV fees-per-unit-staked has increased
+    // Check LQTY contract CLV fees-per-unit-staked has increased
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
   })
 
   it("openLoan(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
-    // time fast-forwards 1 year, and owner stakes 1 GT
+    // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
@@ -2853,7 +2853,7 @@ contract('BorrowerOperations', async accounts => {
     // A redeems 10 CLV
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check GT Staking contract balance before == 0
+    // Check LQTY Staking contract balance before == 0
     const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
@@ -2871,7 +2871,7 @@ contract('BorrowerOperations', async accounts => {
     const CLVRequest_D = toBN(dec(40, 18))
     await borrowerOperations.openLoan(CLVRequest_D, D, { from: D, value: dec(5, 'ether') })
 
-    // Check GT staking CLV balance has increased
+    // Check LQTY staking CLV balance has increased
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
 
@@ -2880,7 +2880,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
 
-  it("openLoan(): Borrowing at zero base rate does not change CLV balance of GT staking contract", async () => {
+  it("openLoan(): Borrowing at zero base rate does not change CLV balance of LQTY staking contract", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2894,19 +2894,19 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT CLV balance before == 0
+    // Check LQTY CLV balance before == 0
     const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // D opens loan 
     await borrowerOperations.openLoan(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
-    // Check GT CLV balance after == 0
+    // Check LQTY CLV balance after == 0
     const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_After, '0')
   })
 
-  it("openLoan(): Borrowing at zero base rate does not change GT staking contract CLV fees-per-unit-staked", async () => {
+  it("openLoan(): Borrowing at zero base rate does not change LQTY staking contract CLV fees-per-unit-staked", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2920,14 +2920,14 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check GT CLV balance before == 0
+    // Check LQTY CLV balance before == 0
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
     // D opens loan 
     await borrowerOperations.openLoan(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
-    // Check GT CLV balance after == 0
+    // Check LQTY CLV balance after == 0
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_After, '0')
   })

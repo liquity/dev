@@ -20,7 +20,7 @@ contract('Fee arithmetic tests', async accounts => {
   
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const GTContracts = await deploymentHelper.deployGTTesterContractsBuidler()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
@@ -32,12 +32,12 @@ contract('Fee arithmetic tests', async accounts => {
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
 
-    growthToken = GTContracts.growthToken
-    lqtyStaking = GTContracts.lqtyStaking
+    growthToken = LQTYContracts.growthToken
+    lqtyStaking = LQTYContracts.lqtyStaking
     
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
   it("ETH fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {

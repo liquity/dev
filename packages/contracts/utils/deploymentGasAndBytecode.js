@@ -9,13 +9,13 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
-const LQTYStaking = artifacts.require("./GT/LQTYStaking.sol")
-const GrowthToken = artifacts.require("./GT/GrowthToken.sol")
-const LockupContractFactory = artifacts.require("./GT/LockupContractFactory.sol")
-const CommunityIssuance = artifacts.require("./GT/CommunityIssuance.sol")
+const LQTYStaking = artifacts.require("./LQTY/LQTYStaking.sol")
+const GrowthToken = artifacts.require("./LQTY/GrowthToken.sol")
+const LockupContractFactory = artifacts.require("./LQTY/LockupContractFactory.sol")
+const CommunityIssuance = artifacts.require("./LQTY/CommunityIssuance.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
 
-const CommunityIssuanceTester = artifacts.require("./GT/CommunityIssuanceTester.sol")
+const CommunityIssuanceTester = artifacts.require("./LQTY/CommunityIssuanceTester.sol")
 const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const MathTester = artifacts.require("./MathTester.sol")
@@ -38,7 +38,7 @@ const coreContractABIs = [
   HintHelpers,
 ]
 
-const GTContractABIs = [
+const LQTYContractABIs = [
   LQTYStaking,
   GrowthToken,
   LockupContractFactory,
@@ -97,19 +97,19 @@ const logContractBytecodeLengths = (contractABIs) => {
 // Run script: log deployment gas costs and bytecode lengths for all contracts
 async function main() {
   const coreContracts = await dh.deployLiquityCoreBuidler()
-  const GTContracts = await dh.deployGTContractsBuidler()
+  const LQTYContracts = await dh.deployLQTYContractsBuidler()
   const testerContracts = await dh.deployTesterContractsBuidler()
 
-  await dh.connectCoreContracts(coreContracts, GTContracts)
-  await dh.connectGTContracts(GTContracts)
-  await dh.connectGTContractsToCore(GTContracts, coreContracts)
+  await dh.connectCoreContracts(coreContracts, LQTYContracts)
+  await dh.connectLQTYContracts(LQTYContracts)
+  await dh.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
 
   console.log(`\n`)
-  console.log(`GT CONTRACTS`)
-  await logContractDeploymentCosts(GTContracts)
+  console.log(`LQTY CONTRACTS`)
+  await logContractDeploymentCosts(LQTYContracts)
   console.log(`\n`)
-  logContractBytecodeLengths(GTContractABIs)
+  logContractBytecodeLengths(LQTYContractABIs)
   console.log(`\n`)
 
   console.log(`CORE CONTRACTS`)

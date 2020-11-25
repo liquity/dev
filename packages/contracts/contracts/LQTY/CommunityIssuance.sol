@@ -7,7 +7,7 @@ import "../Interfaces/ICommunityIssuance.sol";
 import "../Dependencies/Math.sol";
 import "../Dependencies/SafeMath.sol";
 
-//TODO: Decide upon and implement GT community issuance schedule.
+//TODO: Decide upon and implement LQTY community issuance schedule.
 contract CommunityIssuance is ICommunityIssuance {
     using SafeMath for uint;
 

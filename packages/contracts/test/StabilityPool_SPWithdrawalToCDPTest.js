@@ -50,7 +50,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      const GTContracts = await deploymentHelper.deployGTContracts()
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts()
       contracts.cdpManager = await CDPManagerTester.new()
       contracts = await deploymentHelper.deployCLVToken(contracts)
   
@@ -63,9 +63,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       defaultPool = contracts.defaultPool
       borrowerOperations = contracts.borrowerOperations
 
-      await deploymentHelper.connectGTContracts(GTContracts)
-      await deploymentHelper.connectCoreContracts(contracts, GTContracts)
-      await deploymentHelper.connectGTContractsToCore(GTContracts, contracts)
+      await deploymentHelper.connectLQTYContracts(LQTYContracts)
+      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
     })
 
     // --- withdrawETHGainToTrove() ---

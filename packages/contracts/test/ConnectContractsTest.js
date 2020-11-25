@@ -18,7 +18,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
 
   before(async () => {
     const coreContracts = await deploymentHelper.deployLiquityCore()
-    const GTContracts = await deploymentHelper.deployGTContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = coreContracts.priceFeed
     clvToken = coreContracts.clvToken
@@ -30,14 +30,14 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     functionCaller = coreContracts.functionCaller
     borrowerOperations = coreContracts.borrowerOperations
 
-    lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
+    lqtyStaking = LQTYContracts.lqtyStaking
+    growthToken = LQTYContracts.growthToken
+    communityIssuance = LQTYContracts.communityIssuance
+    lockupContractFactory = LQTYContracts.lockupContractFactory
 
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(coreContracts, GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
   })
 
   it('Sets the correct PriceFeed address in CDPManager', async () => {
@@ -99,7 +99,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(stabilityPoolAddress, recordedStabilityPoolAddresss)
   })
 
-  // GT Staking in CDPM
+  // LQTY Staking in CDPM
   it('Sets the correct LQTYStaking address in CDPManager', async () => {
     const lqtyStakingAddress = lqtyStaking.address
 
@@ -244,7 +244,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
   })
 
-  // GT Staking in BO
+  // LQTY Staking in BO
   it('Sets the correct LQTYStaking address in BorrowerOperations', async () => {
     const lqtyStakingAddress = lqtyStaking.address
 

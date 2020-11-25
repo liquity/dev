@@ -1,22 +1,22 @@
 const deploymentHelper = require("../../utils/deploymentHelpers.js")
 const testHelpers = require("../../utils/testHelpers.js")
-const CommunityIssuance = artifacts.require("./GT/CommunityIssuance.sol")
+const CommunityIssuance = artifacts.require("./LQTY/CommunityIssuance.sol")
 
 const th = testHelpers.TestHelper
 
 contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ', async accounts => {
   const [liquityAG] = accounts;
 
-  let GTContracts
+  let LQTYContracts
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    GTContracts = await deploymentHelper.deployGTContracts()
-    await deploymentHelper.connectGTContracts(GTContracts)
+    LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
 
-    lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
+    lqtyStaking = LQTYContracts.lqtyStaking
+    growthToken = LQTYContracts.growthToken
+    communityIssuance = LQTYContracts.communityIssuance
+    lockupContractFactory = LQTYContracts.lockupContractFactory
   })
 
   describe('LockupContractFactory deployment', async accounts => {
@@ -73,12 +73,12 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ',
     })
 
     it("Mints the correct LQTY amount to the deployer's address: (2/3 * 100million)", async () => {
-      const deployerGTEntitlement = await growthToken.balanceOf(liquityAG)
+      const deployerLQTYEntitlement = await growthToken.balanceOf(liquityAG)
 
       // (2/3 * 100million ), as a uint representation of 18-digit decimal
       const _twentySix_Sixes = "6".repeat(26)
 
-      assert.equal(_twentySix_Sixes, deployerGTEntitlement)
+      assert.equal(_twentySix_Sixes, deployerLQTYEntitlement)
     })
 
     it("Mints the correct LQTY amount to the CommunityIssuance contract address: (1/3 * 100million)", async () => {
@@ -120,7 +120,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ',
   describe('Connecting GrowthToken to LCF, CI and LQTYStaking', async accounts => {
     it('sets the correct GrowthToken address in LQTYStaking', async () => { 
       // Set the GrowthToken address in the LCF, CI and LQTYStaking
-      await deploymentHelper.connectGTContracts(GTContracts)
+      await deploymentHelper.connectLQTYContracts(LQTYContracts)
       
       const growthTokenAddress = growthToken.address
 
@@ -137,7 +137,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ',
 
     it('sets the correct GrowthToken address in CommunityIssuance', async () => {
        // Set the GrowthToken address in the LCF, CI and LQTYStaking
-       await deploymentHelper.connectGTContracts(GTContracts)
+       await deploymentHelper.connectLQTYContracts(LQTYContracts)
 
       const growthTokenAddress = growthToken.address
 

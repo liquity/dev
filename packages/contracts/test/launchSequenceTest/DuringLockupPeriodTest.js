@@ -31,7 +31,7 @@ contract('During the initial lockup period', async accounts => {
   const SECONDS_IN_364_DAYS = timeValues.SECONDS_IN_ONE_DAY * 364
 
 
-  let GTContracts
+  let LQTYContracts
   let coreContracts
 
   // OYLCs for team members on vesting schedules
@@ -55,16 +55,16 @@ contract('During the initial lockup period', async accounts => {
   beforeEach(async () => {
     // Deploy all contracts from the first account
     coreContracts = await deploymentHelper.deployLiquityCore()
-    GTContracts = await deploymentHelper.deployGTContracts()
+    LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
-    communityIssuance = GTContracts.communityIssuance
-    lockupContractFactory = GTContracts.lockupContractFactory
+    lqtyStaking = LQTYContracts.lqtyStaking
+    growthToken = LQTYContracts.growthToken
+    communityIssuance = LQTYContracts.communityIssuance
+    lockupContractFactory = LQTYContracts.lockupContractFactory
 
-    await deploymentHelper.connectGTContracts(GTContracts)
-    await deploymentHelper.connectCoreContracts(coreContracts, GTContracts)
-    await deploymentHelper.connectGTContractsToCore(GTContracts, coreContracts)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
 
     // Deploy 3 OYLCs for team members on vesting schedules
@@ -86,7 +86,7 @@ contract('During the initial lockup period', async accounts => {
     OYLC_I2 = await th.getOYLCFromDeploymentTx(deployedOYLCtx_I2)
     OYLC_I3 = await th.getOYLCFromDeploymentTx(deployedOYLCtx_I3)
 
-    // LiquityAG transfers initial GT entitlements to OYLCs
+    // LiquityAG transfers initial LQTY entitlements to OYLCs
     await growthToken.transfer(OYLC_T1.address, teamMemberInitialEntitlement_1, { from: liquityAG })
     await growthToken.transfer(OYLC_T2.address, teamMemberInitialEntitlement_2, { from: liquityAG })
     await growthToken.transfer(OYLC_T3.address, teamMemberInitialEntitlement_3, { from: liquityAG })
@@ -105,62 +105,62 @@ contract('During the initial lockup period', async accounts => {
       OYLC_I2.address,
       OYLC_I3.address
     ]
-    // GT deployer locks the OYLCs they deployed
+    // LQTY deployer locks the OYLCs they deployed
     await lockupContractFactory.lockOneYearContracts(OYLCsToLock, { from: liquityAG })
 
     // Fast forward time 364 days, so that still less than 1 year since launch has passed
     await th.fastForwardTime(SECONDS_IN_364_DAYS, web3.currentProvider)
   })
 
-  describe('Transferring GT to OYLCs', async accounts => {
-    it("GT deployer can transfer GT (vesting) to one-year lockup contracts they deployed", async () => {
-      const initialGTBalanceOfOYLC_T1 = await growthToken.balanceOf(OYLC_T1.address)
-      const initialGTBalanceOfOYLC_T2 = await growthToken.balanceOf(OYLC_T2.address)
-      const initialGTBalanceOfOYLC_T3 = await growthToken.balanceOf(OYLC_T3.address)
+  describe('Transferring LQTY to OYLCs', async accounts => {
+    it("LQTY deployer can transfer LQTY (vesting) to one-year lockup contracts they deployed", async () => {
+      const initialLQTYBalanceOfOYLC_T1 = await growthToken.balanceOf(OYLC_T1.address)
+      const initialLQTYBalanceOfOYLC_T2 = await growthToken.balanceOf(OYLC_T2.address)
+      const initialLQTYBalanceOfOYLC_T3 = await growthToken.balanceOf(OYLC_T3.address)
 
       // Check initial OYLC balances == entitlements
-      assert.equal(initialGTBalanceOfOYLC_T1, teamMemberInitialEntitlement_1)
-      assert.equal(initialGTBalanceOfOYLC_T2, teamMemberInitialEntitlement_2)
-      assert.equal(initialGTBalanceOfOYLC_T3, teamMemberInitialEntitlement_3)
+      assert.equal(initialLQTYBalanceOfOYLC_T1, teamMemberInitialEntitlement_1)
+      assert.equal(initialLQTYBalanceOfOYLC_T2, teamMemberInitialEntitlement_2)
+      assert.equal(initialLQTYBalanceOfOYLC_T3, teamMemberInitialEntitlement_3)
 
       // One month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // GT deployer transfers vesting amount
+      // LQTY deployer transfers vesting amount
       await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
       await growthToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
       await growthToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
 
-      // Get new OYLC GT balances
-      const GTBalanceOfOYLC_T1_1 = await growthToken.balanceOf(OYLC_T1.address)
-      const GTBalanceOfOYLC_T2_1 = await growthToken.balanceOf(OYLC_T2.address)
-      const GTBalanceOfOYLC_T3_1 = await growthToken.balanceOf(OYLC_T3.address)
+      // Get new OYLC LQTY balances
+      const LQTYBalanceOfOYLC_T1_1 = await growthToken.balanceOf(OYLC_T1.address)
+      const LQTYBalanceOfOYLC_T2_1 = await growthToken.balanceOf(OYLC_T2.address)
+      const LQTYBalanceOfOYLC_T3_1 = await growthToken.balanceOf(OYLC_T3.address)
 
       // // Check team member OYLC balances have increased 
-      assert.isTrue(GTBalanceOfOYLC_T1_1.eq(th.toBN(initialGTBalanceOfOYLC_T1).add(th.toBN(dec(1, 24)))))
-      assert.isTrue(GTBalanceOfOYLC_T2_1.eq(th.toBN(initialGTBalanceOfOYLC_T2).add(th.toBN(dec(1, 24)))))
-      assert.isTrue(GTBalanceOfOYLC_T3_1.eq(th.toBN(initialGTBalanceOfOYLC_T3).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(LQTYBalanceOfOYLC_T1_1.eq(th.toBN(initialLQTYBalanceOfOYLC_T1).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(LQTYBalanceOfOYLC_T2_1.eq(th.toBN(initialLQTYBalanceOfOYLC_T2).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(LQTYBalanceOfOYLC_T3_1.eq(th.toBN(initialLQTYBalanceOfOYLC_T3).add(th.toBN(dec(1, 24)))))
 
       // Another month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // GT deployer transfers vesting amount
+      // LQTY deployer transfers vesting amount
       await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
       await growthToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
       await growthToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
 
-      // Get new OYLC GT balances
-      const GTBalanceOfOYLC_T1_2 = await growthToken.balanceOf(OYLC_T1.address)
-      const GTBalanceOfOYLC_T2_2 = await growthToken.balanceOf(OYLC_T2.address)
-      const GTBalanceOfOYLC_T3_2 = await growthToken.balanceOf(OYLC_T3.address)
+      // Get new OYLC LQTY balances
+      const LQTYBalanceOfOYLC_T1_2 = await growthToken.balanceOf(OYLC_T1.address)
+      const LQTYBalanceOfOYLC_T2_2 = await growthToken.balanceOf(OYLC_T2.address)
+      const LQTYBalanceOfOYLC_T3_2 = await growthToken.balanceOf(OYLC_T3.address)
 
       // Check team member OYLC balances have increased again
-      assert.isTrue(GTBalanceOfOYLC_T1_2.eq(GTBalanceOfOYLC_T1_1.add(th.toBN(dec(1, 24)))))
-      assert.isTrue(GTBalanceOfOYLC_T2_2.eq(GTBalanceOfOYLC_T2_1.add(th.toBN(dec(1, 24)))))
-      assert.isTrue(GTBalanceOfOYLC_T3_2.eq(GTBalanceOfOYLC_T3_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(LQTYBalanceOfOYLC_T1_2.eq(LQTYBalanceOfOYLC_T1_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(LQTYBalanceOfOYLC_T2_2.eq(LQTYBalanceOfOYLC_T2_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(LQTYBalanceOfOYLC_T3_2.eq(LQTYBalanceOfOYLC_T3_1.add(th.toBN(dec(1, 24)))))
     })
 
-    it("GT deployer can transfer GT to one-year lockup contracts deployed by anyone", async () => {
+    it("LQTY deployer can transfer LQTY to one-year lockup contracts deployed by anyone", async () => {
       // A, B, C each deploy a lockup contract ith themself as beneficiary
       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 24), { from: A })
       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 24), { from: B })
@@ -179,7 +179,7 @@ contract('During the initial lockup period', async accounts => {
       // One month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // GT deployer transfers GT to OYLCs deployed by other accounts
+      // LQTY deployer transfers LQTY to OYLCs deployed by other accounts
       await growthToken.transfer(OYLC_A.address, dec(1, 24), { from: liquityAG })
       await growthToken.transfer(OYLC_B.address, dec(2, 24), { from: liquityAG })
       await growthToken.transfer(OYLC_C.address, dec(3, 24), { from: liquityAG })
@@ -192,8 +192,8 @@ contract('During the initial lockup period', async accounts => {
   })
 
   describe('Deploying new OYLCs', async accounts => {
-    it("GT Deployer can deploy OYLCs through the Factory", async () => {
-      // GT deployer deploys OYLCs
+    it("LQTY Deployer can deploy OYLCs through the Factory", async () => {
+      // LQTY deployer deploys OYLCs
       const OYLCDeploymentTx_A = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 18), { from: liquityAG })
       const OYLCDeploymentTx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(1, 18), { from: liquityAG })
       const OYLCDeploymentTx_C = await lockupContractFactory.deployOneYearLockupContract(C, '9595995999999900000023423234', { from: liquityAG })
@@ -216,8 +216,8 @@ contract('During the initial lockup period', async accounts => {
       assert.isTrue(OYLCDeploymentTx_4.receipt.status)
     })
 
-    it("GT Deployer can deploy OYLCs directly", async () => {
-      // GT deployer deploys CDLCs
+    it("LQTY Deployer can deploy OYLCs directly", async () => {
+      // LQTY deployer deploys CDLCs
       const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, dec(1, 18), { from: liquityAG })
       const OYLC_A_txReceipt = await web3.eth.getTransactionReceipt(OYLC_A.transactionHash)
 
@@ -251,122 +251,122 @@ contract('During the initial lockup period', async accounts => {
     })
   })
 
-  describe('GT transfer during first year after GT deployment', async accounts => {
-    it("GT deployer can not transfer GT to a OYLC that was not deployed by the Factory", async () => {
-      // GT deployer deploys OYLC_A
+  describe('LQTY transfer during first year after LQTY deployment', async accounts => {
+    it("LQTY deployer can not transfer LQTY to a OYLC that was not deployed by the Factory", async () => {
+      // LQTY deployer deploys OYLC_A
       const OYLC_A = await OneYearLockupContract.new(growthToken.address, A, dec(1, 18), { from: liquityAG })
 
       // Account F deploys OYLC_B
       const OYLC_B = await OneYearLockupContract.new(growthToken.address, B, dec(1, 18), { from: F })
 
-      // GT deployer attempts GT transfer to OYLC_A
+      // LQTY deployer attempts LQTY transfer to OYLC_A
       try {
-        const GTtransferTx_A = await growthToken.transfer(OYLC_A.address, dec(1, 18), { from: liquityAG })
-        assert.isFalse(GTtransferTx_A.receipt.status)
+        const LQTYtransferTx_A = await growthToken.transfer(OYLC_A.address, dec(1, 18), { from: liquityAG })
+        assert.isFalse(LQTYtransferTx_A.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
 
-      // GT deployer attempts GT transfer to OYLC_B
+      // LQTY deployer attempts LQTY transfer to OYLC_B
       try {
-        const GTtransferTx_B = await growthToken.transfer(OYLC_B.address, dec(1, 18), { from: liquityAG })
-        assert.isFalse(GTtransferTx_B.receipt.status)
+        const LQTYtransferTx_B = await growthToken.transfer(OYLC_B.address, dec(1, 18), { from: liquityAG })
+        assert.isFalse(LQTYtransferTx_B.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
     })
 
-    it("GT deployer can not transfer GT to a CDLC that they deployed directly", async () => {
-      // GT deployer deploys CDLC directly
+    it("LQTY deployer can not transfer LQTY to a CDLC that they deployed directly", async () => {
+      // LQTY deployer deploys CDLC directly
       const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, dec(1, 18), SECONDS_IN_ONE_MONTH, { from: liquityAG })
 
-      // GT deployer attempts GT transfer to CDLC
+      // LQTY deployer attempts LQTY transfer to CDLC
       try {
-        const GTtransferTx = await growthToken.transfer(CDLC_A.address, dec(1, 18), { from: liquityAG })
-        assert.isFalse(GTtransferTx.receipt.status)
+        const LQTYtransferTx = await growthToken.transfer(CDLC_A.address, dec(1, 18), { from: liquityAG })
+        assert.isFalse(LQTYtransferTx.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
     })
 
-    it("GT deployer can not transfer GT to a CDLC that someone else deployed directly", async () => {
-      // GT deployer deploys CDLC directly
+    it("LQTY deployer can not transfer LQTY to a CDLC that someone else deployed directly", async () => {
+      // LQTY deployer deploys CDLC directly
       const CDLC_A = await CustomDurationLockupContract.new(growthToken.address, A, dec(1, 18), SECONDS_IN_ONE_MONTH, { from: D })
 
-      // GT deployer attempts GT transfer to CDLC
+      // LQTY deployer attempts LQTY transfer to CDLC
       try {
-        const GTtransferTx = await growthToken.transfer(CDLC_A.address, dec(1, 18), { from: liquityAG })
-        assert.isFalse(GTtransferTx.receipt.status)
+        const LQTYtransferTx = await growthToken.transfer(CDLC_A.address, dec(1, 18), { from: liquityAG })
+        assert.isFalse(LQTYtransferTx.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
     })
 
     // TODO: Tests for approve, transferFrom, increase/decrease allowance
-    it("GT deployer can not transfer to an EOA or Liquity contract", async () => {
-      // Deployer attempts GT transfer to EOAs
-      const GTtransferTxPromise_1 = growthToken.transfer(A, dec(1, 18), { from: liquityAG })
-      const GTtransferTxPromise_2 = growthToken.transfer(B, dec(1, 18), { from: liquityAG })
-      await assertRevert(GTtransferTxPromise_1)
-      await assertRevert(GTtransferTxPromise_2)
+    it("LQTY deployer can not transfer to an EOA or Liquity contract", async () => {
+      // Deployer attempts LQTY transfer to EOAs
+      const LQTYtransferTxPromise_1 = growthToken.transfer(A, dec(1, 18), { from: liquityAG })
+      const LQTYtransferTxPromise_2 = growthToken.transfer(B, dec(1, 18), { from: liquityAG })
+      await assertRevert(LQTYtransferTxPromise_1)
+      await assertRevert(LQTYtransferTxPromise_2)
 
-      // Deployer attempts GT transfer to core Liquity contracts
+      // Deployer attempts LQTY transfer to core Liquity contracts
       for (const contract of Object.keys(coreContracts)) {
-        const GTtransferTxPromise = growthToken.transfer(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
-        await assertRevert(GTtransferTxPromise)
+        const LQTYtransferTxPromise = growthToken.transfer(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(LQTYtransferTxPromise)
       }
 
-      // Deployer attempts GT transfer to GT contracts (excluding OYLCs)
-      for (const contract of Object.keys(GTContracts)) {
-        const GTtransferTxPromise = growthToken.transfer(GTContracts[contract].address, dec(1, 18), { from: liquityAG })
-        await assertRevert(GTtransferTxPromise)
+      // Deployer attempts LQTY transfer to LQTY contracts (excluding OYLCs)
+      for (const contract of Object.keys(LQTYContracts)) {
+        const LQTYtransferTxPromise = growthToken.transfer(LQTYContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(LQTYtransferTxPromise)
       }
     })
 
-    it("GT deployer can not approve any EOA or Liquity contract to spend their LQTY", async () => {
+    it("LQTY deployer can not approve any EOA or Liquity contract to spend their LQTY", async () => {
       // Deployer attempts to approve EOAs to spend LQTY
-      const GTtransferTxPromise_1 = growthToken.approve(A, dec(1, 18), { from: liquityAG })
-      const GTtransferTxPromise_2 = growthToken.approve(B, dec(1, 18), { from: liquityAG })
-      await assertRevert(GTtransferTxPromise_1)
-      await assertRevert(GTtransferTxPromise_2)
+      const LQTYtransferTxPromise_1 = growthToken.approve(A, dec(1, 18), { from: liquityAG })
+      const LQTYtransferTxPromise_2 = growthToken.approve(B, dec(1, 18), { from: liquityAG })
+      await assertRevert(LQTYtransferTxPromise_1)
+      await assertRevert(LQTYtransferTxPromise_2)
 
       // Deployer attempts to approve Liquity contracts to spend LQTY
       for (const contract of Object.keys(coreContracts)) {
-        const GTtransferTxPromise = growthToken.approve(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
-        await assertRevert(GTtransferTxPromise)
+        const LQTYtransferTxPromise = growthToken.approve(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(LQTYtransferTxPromise)
       }
 
-      // Deployer attempts to approve GT contracts to spend LQTY (excluding OYLCs)
-      for (const contract of Object.keys(GTContracts)) {
-        const GTtransferTxPromise = growthToken.approve(GTContracts[contract].address, dec(1, 18), { from: liquityAG })
-        await assertRevert(GTtransferTxPromise)
+      // Deployer attempts to approve LQTY contracts to spend LQTY (excluding OYLCs)
+      for (const contract of Object.keys(LQTYContracts)) {
+        const LQTYtransferTxPromise = growthToken.approve(LQTYContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(LQTYtransferTxPromise)
       }
     })
 
     // Increase allowance
-    it("GT deployer can not increaseAllowance for any EOA or Liquity contract", async () => {
+    it("LQTY deployer can not increaseAllowance for any EOA or Liquity contract", async () => {
       // Deployer attempts to approve EOAs to spend LQTY
-      const GTtransferTxPromise_1 = growthToken.increaseAllowance(A, dec(1, 18), { from: liquityAG })
-      const GTtransferTxPromise_2 = growthToken.increaseAllowance(B, dec(1, 18), { from: liquityAG })
-      await assertRevert(GTtransferTxPromise_1)
-      await assertRevert(GTtransferTxPromise_2)
+      const LQTYtransferTxPromise_1 = growthToken.increaseAllowance(A, dec(1, 18), { from: liquityAG })
+      const LQTYtransferTxPromise_2 = growthToken.increaseAllowance(B, dec(1, 18), { from: liquityAG })
+      await assertRevert(LQTYtransferTxPromise_1)
+      await assertRevert(LQTYtransferTxPromise_2)
 
       // Deployer attempts to approve Liquity contracts to spend LQTY
       for (const contract of Object.keys(coreContracts)) {
-        const GTtransferTxPromise = growthToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
-        await assertRevert(GTtransferTxPromise)
+        const LQTYtransferTxPromise = growthToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(LQTYtransferTxPromise)
       }
 
-      // Deployer attempts to approve GT contracts to spend LQTY (excluding OYLCs)
-      for (const contract of Object.keys(GTContracts)) {
-        const GTtransferTxPromise = growthToken.increaseAllowance(GTContracts[contract].address, dec(1, 18), { from: liquityAG })
-        await assertRevert(GTtransferTxPromise)
+      // Deployer attempts to approve LQTY contracts to spend LQTY (excluding OYLCs)
+      for (const contract of Object.keys(LQTYContracts)) {
+        const LQTYtransferTxPromise = growthToken.increaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assertRevert(LQTYtransferTxPromise)
       }
     })
 
-    it("GT deployer can not stake their LQTY in the staking contract", async () => {
-      const GTtransferTxPromise_1 = lqtyStaking.stake(dec(1, 18), { from: liquityAG })
-      await assertRevert(GTtransferTxPromise_1)
+    it("LQTY deployer can not stake their LQTY in the staking contract", async () => {
+      const LQTYtransferTxPromise_1 = lqtyStaking.stake(dec(1, 18), { from: liquityAG })
+      await assertRevert(LQTYtransferTxPromise_1)
     })
   })
 
@@ -413,31 +413,31 @@ contract('During the initial lockup period', async accounts => {
   })
 
   describe('Withdrawal Attempts from locked OYLCs', async accounts => {
-    it("GT Deployer can't withdraw from a locked and funded OYLC they deployed through the Factory", async () => {
+    it("LQTY Deployer can't withdraw from a locked and funded OYLC they deployed through the Factory", async () => {
 
-      // GT deployer attempts withdrawal from OYLC they deployed through the Factory
+      // LQTY deployer attempts withdrawal from OYLC they deployed through the Factory
       try {
-        const withdrawalAttempt = await OYLC_T1.withdrawGT({ from: liquityAG })
+        const withdrawalAttempt = await OYLC_T1.withdrawLQTY({ from: liquityAG })
         assert.isFalse(withdrawalAttempt.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
     })
 
-    it("GT Deployer can't withdraw from a locked and funded OYLC that someone else deployed", async () => {
+    it("LQTY Deployer can't withdraw from a locked and funded OYLC that someone else deployed", async () => {
       // Account D deploys a new OYLC via the Factory
       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 18), { from: D })
       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
-      //GT deployer fund the newly deployed OYLCs
+      //LQTY deployer fund the newly deployed OYLCs
       await growthToken.transfer(OYLC_B.address, dec(2, 18), { from: liquityAG })
 
       // D locks their deployed OYLC
       await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: D })
 
-      // GT deployer attempts withdrawal from OYLCs
+      // LQTY deployer attempts withdrawal from OYLCs
       try {
-        const withdrawalAttempt_B = await OYLC_B.withdrawGT({ from: liquityAG })
+        const withdrawalAttempt_B = await OYLC_B.withdrawLQTY({ from: liquityAG })
         assert.isFalse(withdrawalAttempt_B.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
@@ -449,7 +449,7 @@ contract('During the initial lockup period', async accounts => {
       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 18), { from: D })
       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
-      // GT deployer funds contracts
+      // LQTY deployer funds contracts
       await growthToken.transfer(OYLC_B.address, dec(2, 18), { from: liquityAG })
 
       // D locks their deployed OYLC
@@ -470,7 +470,7 @@ contract('During the initial lockup period', async accounts => {
       for (OYLC of OYLCs) {
         try {
           const beneficiary = await OYLC.beneficiary()
-          const withdrawalAttempt = await OYLC.withdrawGT({ from: beneficiary })
+          const withdrawalAttempt = await OYLC.withdrawLQTY({ from: beneficiary })
           assert.isFalse(withdrawalAttempt.receipt.status)
         } catch (error) {
           assert.include(error.message, "revert")
@@ -483,7 +483,7 @@ contract('During the initial lockup period', async accounts => {
       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(2, 18), { from: D })
       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
-      // GT deployer funds contracts
+      // LQTY deployer funds contracts
       await growthToken.transfer(OYLC_B.address, dec(2, 18), { from: liquityAG })
 
       // D locks their deployed OYLC
@@ -495,17 +495,17 @@ contract('During the initial lockup period', async accounts => {
       // Several EOAs attempt to withdraw from OYLC deployed by D
       for (account of variousEOAs) {
         try {
-          const withdrawalAttempt = await OYLC_B.withdrawGT({ from: account })
+          const withdrawalAttempt = await OYLC_B.withdrawLQTY({ from: account })
           assert.isFalse(withdrawalAttempt.receipt.status)
         } catch (error) {
           assert.include(error.message, "revert")
         }
       }
 
-      // Several EOAs attempt to withdraw from OYLC_T1 deployed by GT deployer
+      // Several EOAs attempt to withdraw from OYLC_T1 deployed by LQTY deployer
       for (account of variousEOAs) {
         try {
-          const withdrawalAttempt = await OYLC_T1.withdrawGT({ from: account })
+          const withdrawalAttempt = await OYLC_T1.withdrawLQTY({ from: account })
           assert.isFalse(withdrawalAttempt.receipt.status)
         } catch (error) {
           assert.include(error.message, "revert")
