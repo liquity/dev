@@ -278,6 +278,8 @@ class DeploymentHelper {
       contracts.cdpManager.address,
       contracts.activePool.address,
       contracts.clvToken.address,
+      contracts.sortedCDPs.address,
+      contracts.priceFeed.address,
       LQTYContracts.communityIssuance.address
     )
 

@@ -179,6 +179,8 @@ const connectContracts = async (
         cdpManager.address,
         activePool.address,
         clvToken.address,
+        sortedCDPs.address,
+        priceFeed.address,
         communityIssuance.address,
         { ...overrides, nonce }
       ),
