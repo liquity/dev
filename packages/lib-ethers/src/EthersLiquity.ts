@@ -35,6 +35,7 @@ import {
   BorrowerOperations,
   SortedCDPs,
   PriceFeed,
+  PriceFeedTestnet,
   ActivePool,
   DefaultPool,
   StabilityPool,
@@ -181,6 +182,7 @@ export class EthersLiquity
   private readonly cdpManager: CDPManager;
   private readonly borrowerOperations: BorrowerOperations;
   private readonly priceFeed: PriceFeed;
+  private readonly priceFeedTestnet: PriceFeedTestnet;
   private readonly sortedCDPs: SortedCDPs;
   private readonly clvToken: CLVToken;
   private readonly activePool: ActivePool;
@@ -195,6 +197,7 @@ export class EthersLiquity
     this.cdpManager = contracts.cdpManager;
     this.borrowerOperations = contracts.borrowerOperations;
     this.priceFeed = contracts.priceFeed;
+    this.priceFeedTestnet = contracts.priceFeedTestnet;
     this.sortedCDPs = contracts.sortedCDPs;
     this.clvToken = contracts.clvToken;
     this.activePool = contracts.activePool;
@@ -523,12 +526,12 @@ export class EthersLiquity
 
   async setPrice(price: Decimalish, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.priceFeed.setPrice(Decimal.from(price).bigNumber, { ...overrides })
+      await this.priceFeedTestnet.setPrice(Decimal.from(price).bigNumber, { ...overrides })
     );
   }
 
   async updatePrice(overrides?: EthersTransactionOverrides) {
-    return this.wrapSimpleTransaction(await this.priceFeed.updatePrice_Testnet({ ...overrides }));
+    return this.wrapSimpleTransaction(await this.priceFeedTestnet.updatePrice({ ...overrides }));
   }
 
   async getTotal(overrides?: EthersCallOverrides) {

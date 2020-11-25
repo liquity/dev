@@ -16,6 +16,7 @@ import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
+import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedCDPsAbi from "../abi/SortedCDPs.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
 
@@ -38,6 +39,7 @@ import {
   LQTYStaking,
   MultiCDPGetter,
   PriceFeed,
+  PriceFeedTestnet,
   SortedCDPs,
   StabilityPool
 } from "../types";
@@ -55,6 +57,7 @@ export const abi: { [name: string]: JsonFragment[] } = {
   lqtyStaking: lqtyStakingAbi,
   multiCDPgetter: multiCDPgetterAbi,
   priceFeed: priceFeedAbi,
+  priceFeedTestnet: priceFeedTestnetAbi,
   sortedCDPs: sortedCDPsAbi,
   stabilityPool: stabilityPoolAbi
 };
@@ -110,6 +113,7 @@ export interface LiquityContractAddresses {
   lqtyStaking: string;
   multiCDPgetter: string;
   priceFeed: string;
+  priceFeedTestnet: string;
   sortedCDPs: string;
   stabilityPool: string;
 }
@@ -129,6 +133,7 @@ export interface LiquityContracts {
   lqtyStaking: LQTYStaking;
   multiCDPgetter: MultiCDPGetter;
   priceFeed: PriceFeed;
+  priceFeedTestnet: PriceFeedTestnet;
   sortedCDPs: SortedCDPs;
   stabilityPool: StabilityPool;
 }
@@ -146,6 +151,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   lqtyStaking: contracts.lqtyStaking.address,
   multiCDPgetter: contracts.multiCDPgetter.address,
   priceFeed: contracts.priceFeed.address,
+  priceFeedTestnet: contracts.priceFeedTestnet.address,
   sortedCDPs: contracts.sortedCDPs.address,
   stabilityPool: contracts.stabilityPool.address
 });
@@ -199,6 +205,8 @@ export const connectToContracts = (
   ),
 
   priceFeed: create<PriceFeed>(addresses.priceFeed, priceFeedAbi, signerOrProvider),
+
+  priceFeedTestnet: create<PriceFeedTestnet>(addresses.priceFeedTestnet, priceFeedTestnetAbi, signerOrProvider),
 
   sortedCDPs: create<SortedCDPs>(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider),
 

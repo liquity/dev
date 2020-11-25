@@ -8,7 +8,7 @@ import "../ActivePool.sol";
 import "../DefaultPool.sol";
 import "../StabilityPool.sol";
 import "../CLVToken.sol";
-import "../PriceFeed.sol";
+import "../PriceFeedTestnet.sol";
 import "../SortedCDPs.sol";
 import "./EchidnaProxy.sol";
 //import "../Dependencies/console.sol";
@@ -33,7 +33,7 @@ contract EchidnaTester {
     DefaultPool public defaultPool;
     StabilityPool public stabilityPool;
     CLVToken public clvToken;
-    PriceFeed priceFeed;
+    PriceFeedTestnet priceFeed;
     SortedCDPs sortedCDPs;
 
     EchidnaProxy[NUMBER_OF_ACTORS] public echidnaProxies;
@@ -51,7 +51,7 @@ contract EchidnaTester {
             address(stabilityPool),
             address(borrowerOperations)
         );
-        priceFeed = new PriceFeed();
+        priceFeed = new PriceFeedTestnet();
         sortedCDPs = new SortedCDPs();
 
         // TODO
@@ -64,7 +64,7 @@ contract EchidnaTester {
         
         // TODO
         stabilityPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool), address(clvToken), address(0));
-        priceFeed.setAddresses(address(cdpManager), address(0), address(0));
+        priceFeed.setAddresses(address(cdpManager), address(0));
         sortedCDPs.setParams(1e18, address(cdpManager), address(borrowerOperations));
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {

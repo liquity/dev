@@ -61,6 +61,7 @@ const deployContracts = async (
     ),
     lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
     priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
+    priceFeedTestnet: await deployContract(deployer, getContractFactory, "PriceFeedTestnet", { ...overrides }),
     sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs", { ...overrides }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
@@ -108,6 +109,7 @@ const connectContracts = async (
     lockupContractFactory,
     lqtyStaking,
     priceFeed,
+    priceFeedTestnet,
     sortedCDPs,
     stabilityPool
   }: LiquityContracts,
@@ -132,11 +134,14 @@ const connectContracts = async (
       priceFeed.setAddresses(
         cdpManager.address,
         AddressZero,
-        network.name === "ropsten" ? ropstenAggregator : AddressZero,
-        {
-          ...overrides,
-          nonce
-        }
+        { ...overrides, nonce }
+      ),
+
+    nonce =>
+      priceFeedTestnet.setAddresses(
+        cdpManager.address,
+        ropstenAggregator,
+        { ...overrides, nonce }
       ),
 
     nonce =>
