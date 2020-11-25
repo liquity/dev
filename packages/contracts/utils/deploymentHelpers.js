@@ -5,6 +5,7 @@ const CLVToken = artifacts.require("./CLVToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const CollSurplusPool = artifacts.require("./CollSurplusPool.sol")
 const FunctionCaller = artifacts.require("./TestContracts/FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
@@ -63,6 +64,7 @@ class DeploymentHelper {
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
     const defaultPool = await DefaultPool.new()
+    const collSurplusPool = await CollSurplusPool.new()
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
@@ -74,6 +76,7 @@ class DeploymentHelper {
     CDPManager.setAsDeployed(cdpManager)
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
+    CollSurplusPool.setAsDeployed(collSurplusPool)
     FunctionCaller.setAsDeployed(functionCaller)
     BorrowerOperations.setAsDeployed(borrowerOperations)
     HintHelpers.setAsDeployed(hintHelpers)
@@ -86,6 +89,7 @@ class DeploymentHelper {
       activePool,
       stabilityPool,
       defaultPool,
+      collSurplusPool,
       functionCaller,
       borrowerOperations,
       hintHelpers
@@ -169,6 +173,7 @@ class DeploymentHelper {
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
     const defaultPool = await DefaultPool.new()
+    const collSurplusPool = await CollSurplusPool.new()
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
@@ -181,6 +186,7 @@ class DeploymentHelper {
       activePool,
       stabilityPool,
       defaultPool,
+      collSurplusPool,
       functionCaller,
       borrowerOperations,
       hintHelpers
@@ -246,6 +252,7 @@ class DeploymentHelper {
       contracts.activePool.address,
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
+      contracts.collSurplusPool.address,
       contracts.priceFeed.address,
       contracts.clvToken.address,
       contracts.sortedCDPs.address,
@@ -258,6 +265,7 @@ class DeploymentHelper {
       contracts.activePool.address,
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
+      contracts.collSurplusPool.address,
       contracts.priceFeed.address,
       contracts.sortedCDPs.address,
       contracts.clvToken.address,
@@ -281,6 +289,12 @@ class DeploymentHelper {
     )
 
     await contracts.defaultPool.setAddresses(
+      contracts.cdpManager.address,
+      contracts.activePool.address,
+    )
+
+    await contracts.collSurplusPool.setAddresses(
+      contracts.borrowerOperations.address,
       contracts.cdpManager.address,
       contracts.activePool.address,
     )

@@ -18,6 +18,7 @@ import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
 import sortedCDPsAbi from "../abi/SortedCDPs.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
+import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 
 import dev from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
@@ -39,7 +40,8 @@ import {
   MultiCDPGetter,
   PriceFeed,
   SortedCDPs,
-  StabilityPool
+  StabilityPool,
+  CollSurplusPool
 } from "../types";
 
 export const abi: { [name: string]: JsonFragment[] } = {
@@ -56,7 +58,8 @@ export const abi: { [name: string]: JsonFragment[] } = {
   multiCDPgetter: multiCDPgetterAbi,
   priceFeed: priceFeedAbi,
   sortedCDPs: sortedCDPsAbi,
-  stabilityPool: stabilityPoolAbi
+  stabilityPool: stabilityPoolAbi,
+  collSurplusPool: collSurplusPoolAbi
 };
 
 export interface TypedLogDescription<T> extends LogDescription {
@@ -112,6 +115,7 @@ export interface LiquityContractAddresses {
   priceFeed: string;
   sortedCDPs: string;
   stabilityPool: string;
+  collSurplusPool: string;
 }
 
 export interface LiquityContracts {
@@ -131,6 +135,7 @@ export interface LiquityContracts {
   priceFeed: PriceFeed;
   sortedCDPs: SortedCDPs;
   stabilityPool: StabilityPool;
+  collSurplusPool: CollSurplusPool;
 }
 
 export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses => ({
@@ -147,7 +152,8 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   multiCDPgetter: contracts.multiCDPgetter.address,
   priceFeed: contracts.priceFeed.address,
   sortedCDPs: contracts.sortedCDPs.address,
-  stabilityPool: contracts.stabilityPool.address
+  stabilityPool: contracts.stabilityPool.address,
+  collSurplusPool: contracts.collSurplusPool.address
 });
 
 const create = <T extends TypedContract<LiquityContract, unknown>>(
@@ -202,7 +208,9 @@ export const connectToContracts = (
 
   sortedCDPs: create<SortedCDPs>(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider),
 
-  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider)
+  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider),
+
+  collSurplusPool: create<CollSurplusPool>(addresses.collSurplusPool, collSurplusPoolAbi, signerOrProvider)
 });
 
 export type LiquityDeployment = {

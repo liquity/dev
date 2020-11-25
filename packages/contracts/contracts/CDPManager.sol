@@ -5,6 +5,7 @@ pragma solidity 0.6.11;
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IPool.sol";
 import "./Interfaces/IStabilityPool.sol";
+import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ICLVToken.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPriceFeed.sol";
@@ -24,6 +25,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     IPool public defaultPool;
 
     IStabilityPool public stabilityPool;
+
+    ICollSurplusPool collSurplusPool;
 
     ICLVToken public clvToken;
 
@@ -199,6 +202,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _clvTokenAddress,
         address _sortedCDPsAddress,
@@ -212,6 +216,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
         stabilityPool = IStabilityPool(_stabilityPoolAddress);
+        collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         clvToken = ICLVToken(_clvTokenAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
@@ -222,6 +227,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
@@ -764,8 +770,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             // No debt left in the CDP (except for the gas compensation), therefore the trove is closed
             _removeStake(_cdpUser);
             _closeCDP(_cdpUser);
-            _activePoolRedeemCloseLoan(_cdpUser, CLV_GAS_COMPENSATION, newColl);
-
+            _redeemCloseLoan(_cdpUser, CLV_GAS_COMPENSATION, newColl);
         } else {
             uint newICR = Math._computeCR(newColl, newDebt, _price);
 
@@ -792,10 +797,11 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return V;
     }
 
-    /* Burn the remaining gas compensation CLV, transfers the remaining ETH to _account and updates the Active Pool
+    /* Burn the remaining gas compensation CLV, updates the Active Pool,
+     * and sends the remaining ETH claimable by owner to the CollSurplus pool,
      * when after redemption there’s only gas compensation left as debt
      */
-    function _activePoolRedeemCloseLoan(address _account, uint _CLV, uint _ETH) internal {
+    function _redeemCloseLoan(address _user, uint _CLV, uint _ETH) internal {
         /*
          * When the redemption drains all the trove and there’s only the gas compensation left.
          * The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left correspond to the remaining collateral.
@@ -806,7 +812,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLVDebt(_CLV);
 
-        activePool.sendETH(_account, _ETH);
+        // send ETH from Active Pool to CollSurplus Pool
+        collSurplusPool.accountSurplus(_user, _ETH);
+        activePool.sendETH(address(collSurplusPool), _ETH);
     }
 
     function _isValidFirstRedemptionHint(address _firstRedemptionHint, uint _price) internal view returns (bool) {

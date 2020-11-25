@@ -6,6 +6,7 @@ import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/ICLVToken.sol";
 import "./Interfaces/IPool.sol";
+import "./Interfaces/ICollSurplusPool.sol";
 import './Interfaces/ICLVToken.sol';
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
@@ -25,6 +26,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     IPool public defaultPool;
 
     address stabilityPoolAddress;
+
+    ICollSurplusPool collSurplusPool;
 
     IPriceFeed public priceFeed;
 
@@ -77,6 +80,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _sortedCDPsAddress,
         address _clvTokenAddress,
@@ -90,6 +94,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
+        collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         clvToken = ICLVToken(_clvTokenAddress);
@@ -100,6 +105,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
@@ -273,6 +279,15 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit CDPUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeLoan);
     }
 
+    function claimRedeemedCollateral(address _user) external override {
+        _requireCDPisNotActive(_user);
+
+        // send ETH from CollSurplus Pool to owner
+        collSurplusPool.claimColl(_user);
+
+        emit RedeemedCollateralClaimed(_user);
+    }
+
     // --- Helper functions ---
 
     function _getUSDValue(uint _coll, uint _price) internal pure returns (uint) {
@@ -409,7 +424,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
     }
 
-    function _requireCallerIsStabilityPool() internal {
+    function _requireCallerIsStabilityPool() internal view {
         require(msg.sender == stabilityPoolAddress, "BorrowerOps: Caller is not Stability Pool");
     }
 

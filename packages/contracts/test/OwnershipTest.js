@@ -48,13 +48,13 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('CDPManager', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(cdpManager, 8)
+      await testSetAddresses(cdpManager, 9)
     })
   })
 
   describe('BorrowerOperations', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(borrowerOperations, 8)
+      await testSetAddresses(borrowerOperations, 9)
     })
   })
 
