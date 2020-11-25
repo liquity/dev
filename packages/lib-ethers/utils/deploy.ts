@@ -123,12 +123,6 @@ const connectContracts = async (
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce =>
-      clvToken.setAddresses(borrowerOperations.address, cdpManager.address, stabilityPool.address, {
-        ...overrides,
-        nonce
-      }),
-
-    nonce =>
       sortedCDPs.setParams(1e6, cdpManager.address, borrowerOperations.address, {
         ...overrides,
         nonce
