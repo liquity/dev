@@ -122,10 +122,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         _requireCDPisNotActive(msg.sender);
 
-        // Get pending collateral from previous redemptions and remove it from CollSurplus
-        // CollSurplus pool will call back and send the available collateral to this contract
-        uint collateral = msg.value.add(collSurplusPool.useCollateralToReopenTrove(msg.sender));
-
         // Decay the base rate, and calculate the borrowing fee
         cdpManager.decayBaseRateFromBorrowing();
         uint CLVFee = cdpManager.getBorrowingFee(_CLVAmount);
@@ -134,18 +130,18 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // ICR is based on the composite debt, i.e the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
-        uint ICR = Math._computeCR(collateral, compositeDebt, price);
+        uint ICR = Math._computeCR(msg.value, compositeDebt, price);
 
         if (_checkRecoveryMode()) {
             _requireICRisAboveR_MCR(ICR);
         } else {
             _requireICRisAboveMCR(ICR);
-            _requireNewTCRisAboveCCR(collateral, true, compositeDebt, true, price);  // coll increase, debt increase
+            _requireNewTCRisAboveCCR(msg.value, true, compositeDebt, true, price);  // coll increase, debt increase
         }
 
         // Update loan properties
         cdpManager.setCDPStatus(msg.sender, 1);
-        cdpManager.increaseCDPColl(msg.sender, collateral);
+        cdpManager.increaseCDPColl(msg.sender, msg.value);
         cdpManager.increaseCDPDebt(msg.sender, compositeDebt);
 
         cdpManager.updateCDPRewardSnapshots(msg.sender);
@@ -160,12 +156,12 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         lqtyStaking.increaseF_LUSD(CLVFee);
 
         // Move the ether to the Active Pool, and mint the CLVAmount to the borrower
-        _activePoolAddColl(collateral);
+        _activePoolAddColl(msg.value);
         _withdrawCLV(msg.sender, _CLVAmount, rawDebt);
         // Lock CLV gas compensation
         _withdrawCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION, CLV_GAS_COMPENSATION);
 
-        emit CDPUpdated(msg.sender, rawDebt, collateral, stake, BorrowerOperation.openLoan);
+        emit CDPUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openLoan);
         emit LUSDBorrowingFeePaid(msg.sender, CLVFee);
     }
 

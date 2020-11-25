@@ -25,6 +25,4 @@ interface ICollSurplusPool {
     function accountSurplus(address _account, uint _amount) external;
 
     function claimColl(address _account) external;
-
-    function useCollateralToReopenTrove(address _account) external returns (uint);
 }

@@ -26,6 +26,7 @@ contract('CDPManager', async accounts => {
   let cdpManager
   let activePool
   let stabilityPool
+  let collSurplusPool
   let defaultPool
   let borrowerOperations
   let hintHelpers
@@ -46,6 +47,7 @@ contract('CDPManager', async accounts => {
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
+    collSurplusPool = contracts.collSurplusPool
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
 
@@ -3435,8 +3437,8 @@ contract('CDPManager', async accounts => {
     await redeemCollateral3Full1Partial()
 
     const A_collSent = toBN(dec(2, 18))
-    const B_collSent = toBN(0)
-    const C_collSent = toBN(dec(1, 16))
+    const B_collSent = toBN(dec(4, 17))
+    const C_collSent = toBN(dec(36, 16))
 
     await borrowerOperations.openLoan(dec(100, 18), ZERO_ADDRESS, { from: A, value: A_collSent })
     await borrowerOperations.openLoan(dec(10, 18), ZERO_ADDRESS, { from: B, value: B_collSent })
@@ -3446,9 +3448,13 @@ contract('CDPManager', async accounts => {
     const B_collAfter = await cdpManager.getCDPColl(B)
     const C_collAfter = await cdpManager.getCDPColl(C)
 
-    assert.isTrue(A_collAfter.eq(A_collSent.add(toBN(dec(5, 17)))))
-    assert.isTrue(B_collAfter.eq(B_collSent.add(toBN(dec(4, 17)))))
-    assert.isTrue(C_collAfter.eq(C_collSent.add(toBN(dec(35, 16)))))
+    assert.isTrue(A_collAfter.eq(A_collSent))
+    assert.isTrue(B_collAfter.eq(B_collSent))
+    assert.isTrue(C_collAfter.eq(C_collSent))
+
+    assert.isTrue((await collSurplusPool.getCollateral(A)).eq(toBN(dec(5, 17))))
+    assert.isTrue((await collSurplusPool.getCollateral(B)).eq(toBN(dec(4, 17))))
+    assert.isTrue((await collSurplusPool.getCollateral(C)).eq(toBN(dec(35, 16))))
 
     // D is not closed, so cannot open trove
     await th.assertRevert(borrowerOperations.openLoan(D, ZERO_ADDRESS), 'BorrowerOps: CDP is active')

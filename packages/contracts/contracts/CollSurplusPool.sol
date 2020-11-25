@@ -64,33 +64,18 @@ contract CollSurplusPool is Ownable, ICollSurplusPool {
     }
 
     function claimColl(address _account) external override {
-        _claimColl(_account, _account);
-    }
-
-    function useCollateralToReopenTrove(address _account) external override returns (uint) {
-        return _claimColl(_account, borrowerOperationsAddress);
-    }
-
-    function _claimColl(address _account, address _recipient) internal returns (uint) {
         _requireCallerIsBorrowerOperations();
-
         uint claimableColl = balances[_account];
+        require(claimableColl > 0, "CollSurplus: No collateral available to claim");
 
-        if (claimableColl > 0) {
-            balances[_account] = 0;
-            emit CollBalanceUpdated(_account, 0);
-        } else {
-            // this will only happen if it’s a regular claim, not if it’s called from openLoan
-            require(_account != _recipient, "CollSurplus: No collateral available to claim");
-        }
+        balances[_account] = 0;
+        emit CollBalanceUpdated(_account, 0);
 
         ETH = ETH.sub(claimableColl);
-        emit EtherSent(_recipient, claimableColl);
+        emit EtherSent(_account, claimableColl);
 
-        (bool success, ) = _recipient.call{ value: claimableColl }("");
+        (bool success, ) = _account.call{ value: claimableColl }("");
         require(success, "CollSurplusPool: sending ETH failed");
-
-        return claimableColl;
     }
 
     // --- 'require' functions ---
