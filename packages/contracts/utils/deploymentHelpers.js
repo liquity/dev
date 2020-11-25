@@ -116,6 +116,7 @@ class DeploymentHelper {
     testerContracts.activePool = await ActivePoolTester.new()
     testerContracts.defaultPool = await DefaultPoolTester.new()
     testerContracts.stabilityPool = await StabilityPoolTester.new()
+    testerContracts.collSurplusPool = await CollSurplusPool.new()
     testerContracts.math = await MathTester.new()
     testerContracts.borrowerOperations = await BorrowerOperationsTester.new()
     testerContracts.cdpManager = await CDPManagerTester.new()
