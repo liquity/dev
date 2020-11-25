@@ -970,12 +970,9 @@ class TestHelper {
       assert.isFalse(tx.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
-      // TODO !!!
-      /*
       if (message) {
         assert.include(err.message, message)
       }
-      */
     }
   }
 
