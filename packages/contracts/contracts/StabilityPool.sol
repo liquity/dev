@@ -205,7 +205,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     If _amount > userDeposit, the user withdraws all of their compounded deposit. */
     function withdrawFromSP(uint _amount) external override {
-        _requireNoPendingLiquidations();
+        _requireNoUnderCollateralizedTroves();
         uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
 
@@ -693,7 +693,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         require(msg.sender == address(cdpManager), "StabilityPool: Caller is not CDPManager");
     }
 
-    function _requireNoPendingLiquidations() internal view {
+    function _requireNoUnderCollateralizedTroves() internal view {
         uint price = priceFeed.getPrice();
         address lowestTrove = sortedCDPs.getLast();
         uint ICR = cdpManager.getCurrentICR(lowestTrove, price);
