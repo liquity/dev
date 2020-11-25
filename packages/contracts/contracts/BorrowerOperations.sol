@@ -288,12 +288,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit RedeemedCollateralClaimed(_user);
     }
 
-    // --- Fallback function ---
-
-    receive() external payable {
-        _requireCallerIsCollSurplusPool();
-    }
-
     // --- Helper functions ---
 
     function _getUSDValue(uint _coll, uint _price) internal pure returns (uint) {
@@ -432,10 +426,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function _requireCallerIsStabilityPool() internal view {
         require(msg.sender == stabilityPoolAddress, "BorrowerOps: Caller is not Stability Pool");
-    }
-
-    function _requireCallerIsCollSurplusPool() internal view {
-        require(msg.sender == address(collSurplusPool), "BorrowerOps: Caller is not CollSurplus Pool");
     }
 
     // --- ICR and TCR checks ---

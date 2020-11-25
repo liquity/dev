@@ -45,5 +45,5 @@ contract BorrowerOperationsTester is BorrowerOperations {
     }
 
     // Payable fallback function
-    //receive() external override payable { }
+    receive() external payable { }
 }
