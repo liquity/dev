@@ -14,6 +14,9 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   let defaultPool
   let borrowerOperations
 
+  let lqtyStaking
+  let communityIssuance
+
   before(async () => {
     const contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
@@ -29,9 +32,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     borrowerOperations = contracts.borrowerOperations
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
     communityIssuance = LQTYContracts.communityIssuance
-    lockupContractFactory = LQTYContracts.lockupContractFactory
   })
 
   const testSetAddresses = async (contract, numberOfAddresses) => {
@@ -100,6 +101,18 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   describe('PriceFeed', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
       await testSetAddresses(priceFeed, 3)
+    })
+  })
+
+  describe('CommunityIssuance', async accounts => {
+    it("setAddresses(): reverts when called by non-owner", async () => {
+      await testSetAddresses(communityIssuance, 2)
+    })
+  })
+
+  describe('LQTYStaking', async accounts => {
+    it("setAddresses(): reverts when called by non-owner", async () => {
+      await testSetAddresses(lqtyStaking, 5)
     })
   })
 })

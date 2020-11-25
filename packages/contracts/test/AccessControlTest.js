@@ -13,7 +13,7 @@ on the Liquity admin address's capabilities during the first year are found in:
 
 test/launchSequenceTest/DuringLockupPeriodTest.js */
 
-contract('All Liquity functions with intra-system access control restrictions', async accounts => {
+contract('Access Control: Liquity functions with the caller restricted to Liquity contract(s)', async accounts => {
 
   const [owner, alice, bob, carol] = accounts;
   let priceFeed
@@ -562,54 +562,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
   })
 
   describe('LQTYStaking', async accounts => {
-    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
-      try {
-        const txAlice = await lqtyStaking.setGrowthTokenAddress(growthToken.address, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Deployer can successfully set address
-      const txDeployer = lqtyStaking.setGrowthTokenAddress(growthToken.address, { from: owner })
-    })
-
-    it("setCLVTokenAddress(): reverts when caller is not  deployer", async () => {
-      try {
-        const txAlice = await lqtyStaking.setCLVTokenAddress(clvToken.address, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Deployer can successfully set address
-      const txDeployer = lqtyStaking.setCLVTokenAddress(clvToken.address, { from: owner })
-    })
-
-    it("setCDPManagerAddress(): reverts when caller is not deployer", async () => {
-      try {
-        const txAlice = await lqtyStaking.setCDPManagerAddress(cdpManager.address, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Deployer can successfully set address
-      const txDeployer = lqtyStaking.setCDPManagerAddress(cdpManager.address, { from: owner })
-    })
-
-    it("setBorrowerOperationsAddress(): reverts when caller is not deployer", async () => {
-      try {
-        const txAlice = await lqtyStaking.setBorrowerOperationsAddress(borrowerOperations.address, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Deployer can successfully set address
-      const txDeployer = lqtyStaking.setBorrowerOperationsAddress(borrowerOperations.address, { from: owner })
-    })
-
     it("addETHFee(): reverts when caller is not CDPManager", async () => {
       try {
         const txAlice = await lqtyStaking.increaseF_ETH(dec(1, 'ether'), { from: alice })
@@ -626,23 +578,6 @@ contract('All Liquity functions with intra-system access control restrictions', 
       } catch (err) {
         assert.include(err.message, "revert")
       }
-    })
-  })
-
-  describe('CommunityIssuance', async accounts => {
-    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
-
-      const CINew = await CommunityIssuance.new()
-
-      try {
-        const txAlice = await CINew.setGrowthTokenAddress(growthToken.address, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Deployer can successfully set address
-      const txDeployer = CINew.setGrowthTokenAddress(growthToken.address, { from: owner })
     })
   })
 

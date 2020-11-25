@@ -4,15 +4,14 @@ pragma solidity 0.6.11;
 
 interface ILQTYStaking {
 
-    function setGrowthTokenAddress(address _growthTokenAddress) external;
-
-    function setCLVTokenAddress(address _clvTokenAddress) external;
-
-    function setCDPManagerAddress(address _cdpManagerAddress) external;
-
-    function setBorrowerOperationsAddress(address _borrowerOperationsAddress) external;
-
-    function setActivePoolAddress(address _activePoolAddress) external;
+    function setAddresses
+    (
+        address _growthTokenAddress,
+        address _clvTokenAddress,
+        address _cdpManagerAddress, 
+        address _borrowerOperationsAddress,
+        address _activePoolAddress
+    )  external;
 
     function stake(uint _LQTYamount) external;
 
