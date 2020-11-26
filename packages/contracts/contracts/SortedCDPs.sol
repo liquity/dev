@@ -304,7 +304,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     /*
      * @dev Descend the list (larger ICRs to smaller ICRs) to find a valid insert position
      * @param _ICR Node's ICR
-     * @param _startId Id of node to start ascending the list from
+     * @param _startId Id of node to start descending the list from
      */
     function _descendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {
         // If `_startId` is the head, check if the insert position is before the head
@@ -327,7 +327,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     /*
      * @dev Ascend the list (smaller ICRs to larger ICRs) to find a valid insert position
      * @param _ICR Node's ICR
-     * @param _startId Id of node to start descending the list from
+     * @param _startId Id of node to start ascending the list from
      */
     function _ascendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {       
         // If `_startId` is the tail, check if the insert position is after the tail

@@ -347,8 +347,6 @@ class DeploymentHelper {
       LQTYContracts.growthToken.address,
       coreContracts.stabilityPool.address
     )
-
-    await LQTYContracts.communityIssuance.activateContract();
   }
 }
 module.exports = DeploymentHelper

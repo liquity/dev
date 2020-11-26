@@ -16,19 +16,20 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
 
-    /* The issuance factor determines the curvature of the issuance curve.
-
-    Minutes in one year: 60*24*365 = 525600
-
-    For 50% of remaining tokens issued each year, with minutes as time units, we have:
-
-    F ** 525600 = 0.5
-
-    Re-arranging:
-
-    525600 * ln(F) = ln(0.5)
-    F = 0.5 ** (1/525600)
-    F = 0.999998681227695000 */
+   /* The issuance factor F determines the curvature of the issuance curve.
+    *
+    * Minutes in one year: 60*24*365 = 525600
+    *
+    * For 50% of remaining tokens issued each year, with minutes as time units, we have:
+    * 
+    * F ** 525600 = 0.5
+    * 
+    * Re-arranging:
+    * 
+    * 525600 * ln(F) = ln(0.5)
+    * F = 0.5 ** (1/525600)
+    * F = 0.999998681227695000 
+    */
     uint constant public ISSUANCE_FACTOR = 999998681227695000;
 
     /* The community LQTY supply cap is the starting balance of the Community Issuance contract.
@@ -55,6 +56,10 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
         deploymentTime = block.timestamp;
     }
 
+    function getLQTYSupplyCap() external pure returns (uint) {
+        return LQTYSupplyCap;
+    }
+
     function setAddresses
     (
         address _growthTokenAddress, 
@@ -66,6 +71,10 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
     {
         growthToken = IGrowthToken(_growthTokenAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
+
+        // When GrowthToken deployed, it should have transferred CommunityIssuance's LQTY entitlement
+        uint LQTYBalance = growthToken.balanceOf(address(this));
+        assert(LQTYBalance >= LQTYSupplyCap);
 
         emit GrowthTokenAddressSet(_growthTokenAddress);
         emit StabilityPoolAddressSet(_stabilityPoolAddress);
@@ -111,12 +120,5 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
 
     function _requireCallerIsStabilityPool() internal view {
         require(msg.sender == stabilityPoolAddress, "CommunityIssuance: caller is not SP");
-    }
-
-    function _requireLQTYBalanceIsAtLeastSupplyCap() internal view {
-        uint LQTYBalance = growthToken.balanceOf(address(this));
-
-        require (LQTYBalance >= LQTYSupplyCap,
-        "CommunityIssuance: Contract must be fully funded with its starting LQTY supply");
     }
 }

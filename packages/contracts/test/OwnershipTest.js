@@ -17,6 +17,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   let lqtyStaking
   let communityIssuance
+  let growthToken 
 
   before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
@@ -35,6 +36,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
     lqtyStaking = LQTYContracts.lqtyStaking
     communityIssuance = LQTYContracts.communityIssuance
+    growthToken = LQTYContracts.growthToken
   })
 
   const testSetAddresses = async (contract, numberOfAddresses) => {
@@ -101,8 +103,16 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   })
 
   describe('CommunityIssuance', async accounts => {
-    it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(communityIssuance, 2)
+    it.only("setAddresses(): reverts when called by non-owner", async () => {
+      const params = [growthToken.address,stabilityPool.address]
+      await th.assertRevert(communityIssuance.setAddresses(...params, { from: alice }))
+
+      // Owner can successfully set any address
+      const txOwner = await communityIssuance.setAddresses(...params, { from: owner })
+
+      assert.isTrue(txOwner.receipt.status)
+      // fails if called twice
+      await th.assertRevert(communityIssuance.setAddresses(...params, { from: owner }))
     })
   })
 
