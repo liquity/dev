@@ -41,13 +41,13 @@ const deployContracts = async (
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   overrides?: Overrides
 ): Promise<LiquityContractAddresses> => {
-  const addresses = {
+  let addresses
+  addresses = {
     activePool: await deployContract(deployer, getContractFactory, "ActivePool", { ...overrides }),
     borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations", {
       ...overrides
     }),
     cdpManager: await deployContract(deployer, getContractFactory, "CDPManager", { ...overrides }),
-    clvToken: await deployContract(deployer, getContractFactory, "CLVToken", { ...overrides }),
     communityIssuance: await deployContract(deployer, getContractFactory, "CommunityIssuance", {
       ...overrides
     }),
@@ -72,7 +72,12 @@ const deployContracts = async (
 
   return {
     ...addresses,
-
+    clvToken: await deployContract(deployer, getContractFactory, "CLVToken",
+      addresses.cdpManager,
+      addresses.stabilityPool,
+      addresses.borrowerOperations,
+    { ...overrides }),
+    
     growthToken: await deployContract(
       deployer,
       getContractFactory,
@@ -122,12 +127,6 @@ const connectContracts = async (
   const network = await deployer.provider.getNetwork();
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
-    nonce =>
-      clvToken.setAddresses(borrowerOperations.address, cdpManager.address, stabilityPool.address, {
-        ...overrides,
-        nonce
-      }),
-
     nonce =>
       sortedCDPs.setParams(1e6, cdpManager.address, borrowerOperations.address, {
         ...overrides,

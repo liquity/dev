@@ -1,6 +1,5 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
@@ -42,11 +41,9 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
   describe("LQTY Rewards", async () => {
 
     beforeEach(async () => {
-      contracts = await deploymentHelper.deployLiquityCore()
-      const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
-      contracts.cdpManager = await CDPManagerTester.new()
-      communityIssuanceTester = LQTYContracts.communityIssuance
-
+      contracts = await deploymentHelper.deployLiquityCore() 
+      LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+     
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
       stabilityPool = contracts.stabilityPool
@@ -56,6 +53,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       borrowerOperations = contracts.borrowerOperations
 
       growthToken = LQTYContracts.growthToken
+      communityIssuanceTester = LQTYContracts.communityIssuance
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -66,16 +64,17 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.isAtMost(getDifference(communityLQTYSupply, '33333333333333333333333333'), 1000)
 
       /* Monthly LQTY issuance
-    
-      Expected fraction of total supply issued per month, for a yearly halving schedule:
   
-      Month 1: 0.055378538087966600
-      Month 2: 0.052311755607206100
-      Month 3: 0.049414807056864200
-      Month 4: 0.046678287282156100
-      Month 5: 0.044093311972020200
-      Month 6: 0.041651488815552900
-     */
+        Expected fraction of total supply issued per month, for a yearly halving schedule:
+    
+        Month 1: 0.055378538087966600
+        Month 2: 0.052311755607206100
+        Month 3: 0.049414807056864200
+        Month 4: 0.046678287282156100
+        Month 5: 0.044093311972020200
+        Month 6: 0.041651488815552900
+      */
+
       issuance_M1 = toBN('55378538087966600').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
       issuance_M2 = toBN('52311755607206100').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
       issuance_M3 = toBN('49414807056864200').mul(communityLQTYSupply).div(toBN(dec(1, 18)))

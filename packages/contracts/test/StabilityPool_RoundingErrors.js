@@ -1,4 +1,5 @@
-const deploymentHelpers = require("../utils/deploymentHelpers.js")
+
+const deploymentHelpers = require("../utils/truffleDeploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
 const deployLiquity = deploymentHelpers.deployLiquity
@@ -22,7 +23,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
 
   beforeEach(async () => {
     contracts = await deployLiquity()
-
+    
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     stabilityPool = contracts.stabilityPool
@@ -62,6 +63,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
     const SP_ETH = await stabilityPool.getETH()
     const compoundedDeposit = await stabilityPool.getCompoundedCLVDeposit(depositors[0])
     const ETH_Gain = await stabilityPool.getCurrentETHGain(depositors[0])
+
     // Check depostiors receive their share without too much error
     assert.isAtMost(th.getDifference(SP_TotalDeposits.div(th.toBN(depositors.length)), compoundedDeposit), 1000)
     assert.isAtMost(th.getDifference(SP_ETH.div(th.toBN(depositors.length)), ETH_Gain), 1000)
