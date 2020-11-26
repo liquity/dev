@@ -11,7 +11,6 @@ const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
 const deployLiquity = async () => {
   const priceFeed = await PriceFeed.new()
-  const clvToken = await CLVToken.new()
   const sortedCDPs = await SortedCDPs.new()
   const cdpManager = await CDPManager.new()
   const activePool = await ActivePool.new()
@@ -19,7 +18,11 @@ const deployLiquity = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
-
+  const clvToken = await CLVToken.new(
+    cdpManager.address,
+    stabilityPool.address,
+    borrowerOperations.address
+  )
   DefaultPool.setAsDeployed(defaultPool)
   PriceFeed.setAsDeployed(priceFeed)
   CLVToken.setAsDeployed(clvToken)
@@ -103,10 +106,8 @@ const connectEchidnaProxy = async (echidnaProxy, addresses) => {
 }
 
 module.exports = {
-
   connectEchidnaProxy: connectEchidnaProxy,
   getAddresses: getAddresses,
   deployLiquity: deployLiquity,
   connectContracts: connectContracts
 }
-

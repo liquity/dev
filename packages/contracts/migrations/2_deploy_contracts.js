@@ -18,23 +18,23 @@ const connectContracts = deploymentHelpers.connectContracts
 module.exports = function(deployer) {
   deployer.deploy(BorrowerOperations)
   deployer.deploy(PriceFeed)
-  deployer.deploy(CLVToken)
   deployer.deploy(SortedCDPs)
   deployer.deploy(CDPManager)
   deployer.deploy(ActivePool)
   deployer.deploy(StabilityPool)
   deployer.deploy(DefaultPool)
+  deployer.deploy(CLVToken)
   deployer.deploy(FunctionCaller)
 
   deployer.then(async () => {
     const borrowerOperations = await BorrowerOperations.deployed()
     const priceFeed = await PriceFeed.deployed()
-    const clvToken = await CLVToken.deployed()
     const sortedCDPs = await SortedCDPs.deployed()
     const cdpManager = await CDPManager.deployed()
     const activePool = await ActivePool.deployed()
     const stabilityPool = await StabilityPool.deployed()
     const defaultPool = await DefaultPool.deployed()
+    const clvToken = await CLVToken.deployed()
     const functionCaller = await FunctionCaller.deployed()
 
     const liquityContracts = {

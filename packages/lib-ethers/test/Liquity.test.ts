@@ -623,7 +623,7 @@ describe("EthersLiquity", () => {
       const gasUsed = receipt.rawReceipt.gasUsed.toNumber();
       // gasUsed is ~half the real used amount because of how refunds work, see:
       // https://ethereum.stackexchange.com/a/859/9205
-      expect(gasUsed).to.be.at.least(5e6, "should use at least 10M gas");
+      expect(gasUsed).to.be.at.least(4950000, "should use close to 10M gas");
     });
   });
 });

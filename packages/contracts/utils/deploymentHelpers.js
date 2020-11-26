@@ -1,3 +1,4 @@
+
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
@@ -9,13 +10,15 @@ const CollSurplusPool = artifacts.require("./CollSurplusPool.sol")
 const FunctionCaller = artifacts.require("./TestContracts/FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
+
 const LQTYStaking = artifacts.require("./LQTYStaking.sol")
 const GrowthToken = artifacts.require("./GrowthToken.sol")
 const LockupContractFactory = artifacts.require("./LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
-
 const GrowthTokenTester = artifacts.require("./GrowthTokenTester.sol")
 const CommunityIssuanceTester = artifacts.require("./CommunityIssuanceTester.sol")
+
+const StabilityPoolTester = artifacts.require("./StabilityPoolTester.sol")
 const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const MathTester = artifacts.require("./MathTester.sol")
@@ -58,7 +61,6 @@ class DeploymentHelper {
 
   static async deployLiquityCoreBuidler() {
     const priceFeed = await PriceFeed.new()
-    const clvToken = await CLVToken.new()
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
     const activePool = await ActivePool.new()
@@ -68,10 +70,14 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-
+    const clvToken = await CLVToken.new(
+      cdpManager.address,
+      stabilityPool.address,
+      borrowerOperations.address
+    )
+    CLVToken.setAsDeployed(clvToken)
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
-    CLVToken.setAsDeployed(clvToken)
     SortedCDPs.setAsDeployed(sortedCDPs)
     CDPManager.setAsDeployed(cdpManager)
     ActivePool.setAsDeployed(activePool)
@@ -99,15 +105,28 @@ class DeploymentHelper {
 
   static async deployTesterContractsBuidler() {
     const testerContracts = {}
-    testerContracts.communityIssuanceTester = await CommunityIssuanceTester.new()
 
-    testerContracts.activePoolTester =  await ActivePoolTester.new()
-    testerContracts.defaultPoolTester = await DefaultPoolTester.new()
-    testerContracts.mathTester = await  MathTester.new()
-    testerContracts.borrowerOperationsTester = await  BorrowerOperationsTester.new()
-    testerContracts.cdpManagerTester = await CDPManagerTester.new()
-    testerContracts.clvTokenTester =  await CLVTokenTester.new()
+    // Contract without testers (yet)
+    testerContracts.priceFeed = await PriceFeed.new()
+    testerContracts.sortedCDPs = await SortedCDPs.new()
 
+    // Actual tester contracts
+    testerContracts.communityIssuance = await CommunityIssuanceTester.new()
+    testerContracts.stabilityPool = await StabilityPoolTester.new()
+    testerContracts.activePool = await ActivePoolTester.new()
+    testerContracts.defaultPool = await DefaultPoolTester.new()
+    testerContracts.stabilityPool = await StabilityPoolTester.new()
+    testerContracts.collSurplusPool = await CollSurplusPool.new()
+    testerContracts.math = await MathTester.new()
+    testerContracts.borrowerOperations = await BorrowerOperationsTester.new()
+    testerContracts.cdpManager = await CDPManagerTester.new()
+    testerContracts.functionCaller = await FunctionCaller.new()
+    testerContracts.hintHelpers = await HintHelpers.new()
+    testerContracts.clvToken =  await CLVTokenTester.new(
+      testerContracts.cdpManager.address,
+      testerContracts.stabilityPool.address,
+      testerContracts.borrowerOperations.address
+    )
     return testerContracts
   }
 
@@ -134,7 +153,6 @@ class DeploymentHelper {
       communityIssuance,
       growthToken
     }
-
     return LQTYContracts
   }
 
@@ -161,13 +179,11 @@ class DeploymentHelper {
       communityIssuance,
       growthToken
     }
-
     return LQTYContracts
   }
 
   static async deployLiquityCoreTruffle() {
     const priceFeed = await PriceFeed.new()
-    const clvToken = await CLVToken.new()
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
     const activePool = await ActivePool.new()
@@ -177,7 +193,11 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-
+    const clvToken = await CLVToken.new(
+      cdpManager.address,
+      stabilityPool.address,
+      borrowerOperations.address
+    )
     const coreContracts = {
       priceFeed,
       clvToken,
@@ -191,7 +211,6 @@ class DeploymentHelper {
       borrowerOperations,
       hintHelpers
     }
-
     return coreContracts
   }
 
@@ -214,19 +233,20 @@ class DeploymentHelper {
       communityIssuance,
       growthToken
     }
-
     return LQTYContracts
+  }
+
+  static async deployCLVToken(contracts) {
+    contracts.clvToken = await CLVToken.new(
+      contracts.cdpManager.address,
+      contracts.stabilityPool.address,
+      contracts.borrowerOperations.address
+    )
+    return contracts
   }
 
   // Connect contracts to their dependencies
   static async connectCoreContracts(contracts, LQTYContracts) {
-
-    // set contracts in the CLVToken contract
-    await contracts.clvToken.setAddresses(
-      contracts.borrowerOperations.address,
-      contracts.cdpManager.address,
-      contracts.stabilityPool.address,
-    )
 
     // set CDPManager addr in SortedCDPs
     await contracts.sortedCDPs.setParams(
@@ -331,7 +351,4 @@ class DeploymentHelper {
     await LQTYContracts.communityIssuance.activateContract();
   }
 }
-
 module.exports = DeploymentHelper
-
-

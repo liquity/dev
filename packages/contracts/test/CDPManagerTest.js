@@ -35,9 +35,12 @@ contract('CDPManager', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    contracts.clvToken = await CLVTokenTester.new()
     contracts.cdpManager = await CDPManagerTester.new()
-
+    contracts.clvToken = await CLVTokenTester.new(
+      contracts.cdpManager.address,
+      contracts.stabilityPool.address,
+      contracts.borrowerOperations.address
+    )
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed

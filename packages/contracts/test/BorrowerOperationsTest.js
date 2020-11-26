@@ -42,6 +42,7 @@ contract('BorrowerOperations', async accounts => {
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
+    contracts = await deploymentHelper.deployCLVToken(contracts)
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
@@ -2229,8 +2230,8 @@ contract('BorrowerOperations', async accounts => {
 
     // Alice attempts to close her loan
     try {
-      const txCarol = await borrowerOperations.closeLoan({ from: alice })
-      assert.isFalse(txCarol.receipt.status)
+      const txAlice = await borrowerOperations.closeLoan({ from: alice })
+      assert.isFalse(txAlice.receipt.status)
     } catch (err) {
       // assert.include(err.message, "revert")
       // assert.include(err.message, "CDPManager: Only one trove in the system")

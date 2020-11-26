@@ -125,14 +125,14 @@ contract GrowthToken is IERC20, IGrowthToken {
     }
 
     function approve(address spender, uint256 amount) public override returns (bool) {
-        if (_isFirstYear()) {_requireCallerIsNotDeployer();}
+        if (_isFirstYear()) { _requireCallerIsNotDeployer(); }
 
         _approve(msg.sender, spender, amount);
         return true;
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-        if (_isFirstYear()) {_requireSenderIsNotDeployer(sender);}
+        if (_isFirstYear()) { _requireSenderIsNotDeployer(sender); }
         
         _requireValidRecipient(recipient);
 
@@ -142,14 +142,14 @@ contract GrowthToken is IERC20, IGrowthToken {
     }
 
     function increaseAllowance(address spender, uint256 addedValue) public override returns (bool) {
-        if (_isFirstYear()) {_requireCallerIsNotDeployer();}
+        if (_isFirstYear()) { _requireCallerIsNotDeployer(); }
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) public override returns (bool) {
-        if (_isFirstYear()) {_requireCallerIsNotDeployer();}
+        if (_isFirstYear()) { _requireCallerIsNotDeployer(); }
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
@@ -157,7 +157,7 @@ contract GrowthToken is IERC20, IGrowthToken {
 
     function sendToLQTYStaking(address _sender, uint256 _amount) external override {
         _requireCallerIsLQTYStaking();
-        if (_isFirstYear()) {_requireSenderIsNotDeployer(_sender);}
+        if (_isFirstYear()) { _requireSenderIsNotDeployer(_sender); }
         _transfer(_sender, lqtyStakingAddress, _amount);
     }
 
@@ -239,7 +239,7 @@ contract GrowthToken is IERC20, IGrowthToken {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
-
+    
     // --- Helper functions ---
 
     function _callerIsDeployer() internal view returns (bool) {

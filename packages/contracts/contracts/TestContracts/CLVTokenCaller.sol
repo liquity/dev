@@ -7,7 +7,7 @@ import "../Interfaces/ICLVToken.sol";
 contract CLVTokenCaller {
     ICLVToken CLV;
 
-    constructor (ICLVToken _CLV) public {
+    function setCLV(ICLVToken _CLV) external {
         CLV = _CLV;
     }
 

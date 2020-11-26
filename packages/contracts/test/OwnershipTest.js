@@ -5,6 +5,7 @@ const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.s
 contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   const [owner, alice, bob] = accounts;
+  let contracts
   let priceFeed
   let clvToken
   let sortedCDPs
@@ -18,8 +19,9 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   let communityIssuance
 
   before(async () => {
-    const contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
+    contracts = await deploymentHelper.deployCLVToken(contracts)
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
@@ -74,12 +76,6 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   describe('ActivePool', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
       await testSetAddresses(activePool, 4)
-    })
-  })
-
-  describe('CLVToken', async accounts => {
-    it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(clvToken, 3)
     })
   })
 

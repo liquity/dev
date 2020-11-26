@@ -58,7 +58,8 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       contracts = await deploymentHelper.deployLiquityCore()
       const LQTYContracts = await deploymentHelper.deployLQTYContracts()
       contracts.cdpManager = await CDPManagerTester.new()
-
+      contracts = await deploymentHelper.deployCLVToken(contracts)
+  
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
       sortedCDPs = contracts.sortedCDPs
@@ -1626,15 +1627,19 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Check compounded deposits
       const A_deposit = await stabilityPool.getCompoundedCLVDeposit(A)
       const B_deposit = await stabilityPool.getCompoundedCLVDeposit(B)
+      // console.log(`A_deposit: ${A_deposit}`)
+      // console.log(`B_deposit: ${B_deposit}`)
       assert.equal(A_deposit, '0')
       assert.equal(B_deposit, '0')
 
       // Check SP tracker is zero
       const CLVinSP_1 = await stabilityPool.getTotalCLVDeposits()
+      // console.log(`CLVinSP_1: ${CLVinSP_1}`)
       assert.equal(CLVinSP_1, '0')
 
       // Check SP CLV balance is zero
       const SPCLVBalance_1 = await clvToken.balanceOf(stabilityPool.address)
+      // console.log(`SPCLVBalance_1: ${SPCLVBalance_1}`)
       assert.equal(SPCLVBalance_1, '0')
 
       // Attempt withdrawals
@@ -1661,16 +1666,19 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Check compounded deposits
       const C_deposit = await stabilityPool.getCompoundedCLVDeposit(C)
       const D_deposit = await stabilityPool.getCompoundedCLVDeposit(D)
+      // console.log(`A_deposit: ${C_deposit}`)
+      // console.log(`B_deposit: ${D_deposit}`)
       assert.equal(C_deposit, '0')
       assert.equal(D_deposit, '0')
 
       // Check SP tracker is zero
       const CLVinSP_2 = await stabilityPool.getTotalCLVDeposits()
-     
+      // console.log(`CLVinSP_2: ${CLVinSP_2}`)
       assert.equal(CLVinSP_2, '0')
 
       // Check SP CLV balance is zero
       const SPCLVBalance_2 = await clvToken.balanceOf(stabilityPool.address)
+      // console.log(`SPCLVBalance_2: ${SPCLVBalance_2}`)
       assert.equal(SPCLVBalance_2, '0')
 
       // Attempt withdrawals
@@ -1697,6 +1705,8 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Check compounded deposits
       const E_deposit = await stabilityPool.getCompoundedCLVDeposit(E)
       const F_deposit = await stabilityPool.getCompoundedCLVDeposit(F)
+      // console.log(`E_deposit: ${E_deposit}`)
+      // console.log(`F_deposit: ${F_deposit}`)
       assert.equal(E_deposit, '0')
       assert.equal(F_deposit, '0')
 
@@ -1706,6 +1716,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Check SP CLV balance is zero
       const SPCLVBalance_3 = await clvToken.balanceOf(stabilityPool.address)
+      // console.log(`SPCLVBalance_3: ${SPCLVBalance_3}`)
       assert.equal(SPCLVBalance_3, '0')
 
       // Attempt withdrawals
