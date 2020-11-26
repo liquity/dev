@@ -68,8 +68,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         adjustLoan
     }
 
-    event CDPCreated(address indexed _user, uint arrayIndex);
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
+    event CDPCreated(address indexed _borrower, uint arrayIndex);
+    event CDPUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
     event LUSDBorrowingFeePaid(address indexed _borrower, uint _CLVFee);
 
     // --- Dependency setters ---
@@ -170,9 +170,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     // Send ETH as collateral to a trove. Called by only the Stability Pool.
-    function moveETHGainToTrove(address _user, address _hint) external payable override {
+    function moveETHGainToTrove(address _borrower, address _hint) external payable override {
         _requireCallerIsStabilityPool();
-        _adjustLoan(_user, 0, 0, false, _hint);
+        _adjustLoan(_borrower, 0, 0, false, _hint);
     }
 
     // Withdraw ETH collateral from a trove
@@ -198,21 +198,21 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _adjustLoan(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
     }
 
-    function _adjustLoan(address _user, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) internal {
+    function _adjustLoan(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) internal {
         require(msg.value == 0 || _collWithdrawal == 0, "BorrowerOperations: Cannot withdraw and add coll");
         // The operation "isWithdrawal" if it removes collateral or LUSD, i.e. it removes funds and lowers the ICR
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease;
-        require(msg.sender == _user || !isWithdrawal, "BorrowerOps: User must be sender for withdrawals");
+        require(msg.sender == _borrower || !isWithdrawal, "BorrowerOps: User must be sender for withdrawals");
         require(msg.value != 0 || _collWithdrawal != 0 || _debtChange != 0, "BorrowerOps: There must be either a collateral change or a debt change");
 
         LocalVariables_adjustLoan memory L;
 
-        _requireCDPisActive(_user);
+        _requireCDPisActive(_borrower);
         if (isWithdrawal) {_requireNotInRecoveryMode();}
 
         L.price = priceFeed.getPrice();
 
-        cdpManager.applyPendingRewards(_user);
+        cdpManager.applyPendingRewards(_borrower);
 
         (L.collChange, L.isCollIncrease) = _getCollChange(msg.value, _collWithdrawal);
 
@@ -230,8 +230,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             clvToken.mint(lqtyStakingAddress, L.CLVFee);
         }
 
-        L.debt = cdpManager.getCDPDebt(_user);
-        L.coll = cdpManager.getCDPColl(_user);
+        L.debt = cdpManager.getCDPDebt(_borrower);
+        L.coll = cdpManager.getCDPColl(_borrower);
 
         L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
 
@@ -242,20 +242,20 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         if (!L.isCollIncrease) {_requireCollAmountIsWithdrawable(L.coll, L.collChange);}
         if (!_isDebtIncrease && _debtChange > 0) {_requireCLVRepaymentAllowed(L.debt, L.rawDebtChange);}
 
-        (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_user, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
-        L.stake = cdpManager.updateStakeAndTotalStakes(_user);
+        (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
+        L.stake = cdpManager.updateStakeAndTotalStakes(_borrower);
 
         // Close a CDP if it is empty, otherwise, re-insert it in the sorted list
         if (L.newDebt == 0 && L.newColl == 0) {
-            cdpManager.closeCDP(_user);
+            cdpManager.closeCDP(_borrower);
         } else {
-            sortedCDPs.reInsert(_user, L.newICR, L.price, _hint, _hint);
+            sortedCDPs.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
         }
 
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
 
-        emit CDPUpdated(_user, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
+        emit CDPUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
         emit LUSDBorrowingFeePaid(msg.sender,  L.CLVFee);
     }
 
@@ -316,7 +316,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // Update trove's coll and debt based on whether they increase or decrease
     function _updateTroveFromAdjustment
     (
-        address _user,
+        address _borrower,
         uint _collChange,
         bool _isCollIncrease,
         uint _debtChange,
@@ -325,17 +325,17 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
         returns (uint, uint)
     {
-        uint newColl = (_isCollIncrease) ? cdpManager.increaseCDPColl(_user, _collChange)
-                                        : cdpManager.decreaseCDPColl(_user, _collChange);
-        uint newDebt = (_isDebtIncrease) ? cdpManager.increaseCDPDebt(_user, _debtChange)
-                                        : cdpManager.decreaseCDPDebt(_user, _debtChange);
+        uint newColl = (_isCollIncrease) ? cdpManager.increaseCDPColl(_borrower, _collChange)
+                                        : cdpManager.decreaseCDPColl(_borrower, _collChange);
+        uint newDebt = (_isDebtIncrease) ? cdpManager.increaseCDPDebt(_borrower, _debtChange)
+                                        : cdpManager.decreaseCDPDebt(_borrower, _debtChange);
 
         return (newColl, newDebt);
     }
 
     function _moveTokensAndETHfromAdjustment
     (
-        address _user,
+        address _borrower,
         uint _collChange,
         bool _isCollIncrease,
         uint _debtChange,
@@ -345,15 +345,15 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
     {
         if (_isDebtIncrease) {
-            _withdrawCLV(_user, _debtChange, _rawDebtChange);
+            _withdrawCLV(_borrower, _debtChange, _rawDebtChange);
         } else {
-            _repayCLV(_user, _debtChange);
+            _repayCLV(_borrower, _debtChange);
         }
 
         if (_isCollIncrease) {
             _activePoolAddColl(_collChange);
         } else {
-            activePool.sendETH(_user, _collChange);
+            activePool.sendETH(_borrower, _collChange);
         }
     }
 
@@ -377,13 +377,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- 'Require' wrapper functions ---
 
-    function _requireCDPisActive(address _user) internal view {
-        uint status = cdpManager.getCDPStatus(_user);
+    function _requireCDPisActive(address _borrower) internal view {
+        uint status = cdpManager.getCDPStatus(_borrower);
         require(status == 1, "BorrowerOps: CDP does not exist or is closed");
     }
 
-    function _requireCDPisNotActive(address _user) internal view {
-        uint status = cdpManager.getCDPStatus(_user);
+    function _requireCDPisNotActive(address _borrower) internal view {
+        uint status = cdpManager.getCDPStatus(_borrower);
         require(status != 1, "BorrowerOps: CDP is active");
     }
 

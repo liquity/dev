@@ -882,12 +882,12 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         require(_amount > 0, 'StabilityPool: Amount must be non-zero');
     }
 
-    function _requireUserHasTrove(address _user) internal view {
-        require(cdpManager.getCDPStatus(_user) == 1, "StabilityPool: caller must have an active trove to withdraw ETHGain to");
+    function _requireUserHasTrove(address _depositor) internal view {
+        require(cdpManager.getCDPStatus(_depositor) == 1, "StabilityPool: caller must have an active trove to withdraw ETHGain to");
     }
 
-    function _requireUserHasETHGain(address _user) internal view {
-        uint ETHGain = getDepositorETHGain(_user);
+    function _requireUserHasETHGain(address _depositor) internal view {
+        uint ETHGain = getDepositorETHGain(_depositor);
         require(ETHGain > 0, "StabilityPool: caller must have non-zero ETH Gain");
     }
 

@@ -1333,7 +1333,7 @@ contract('StabilityPool', async accounts => {
       await th.assertRevert(txPromise_D, 'StabilityPool: Amount must be non-zero')
     })
 
-    it.only("provideToSP(): reverts if user is a registered front end", async () => {
+    it("provideToSP(): reverts if user is a registered front end", async () => {
         // C, D, E, F open loans 
         await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(1, 'ether') })
         await borrowerOperations.openLoan(dec(30, 18), D, { from: D, value: dec(1, 'ether') })
@@ -1356,7 +1356,7 @@ contract('StabilityPool', async accounts => {
         assert.isTrue(txD.receipt.status)
       })
 
-      it.only("provideToSP(): reverts if provided tag is not a registered front end", async () => {
+      it("provideToSP(): reverts if provided tag is not a registered front end", async () => {
         await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(1, 'ether') })
         await borrowerOperations.openLoan(dec(30, 18), D, { from: D, value: dec(1, 'ether') })
         await borrowerOperations.openLoan(dec(30, 18), E, { from: E, value: dec(1, 'ether') })
@@ -3626,7 +3626,7 @@ contract('StabilityPool', async accounts => {
       await th.assertRevert(invalidKickbackTx_D, "StabilityPool: Kickback rate must be in range [0,1]")
     })
 
-    it.only("registerFrontEnd(): reverts if address has a non-zero deposit already", async () => {
+    it("registerFrontEnd(): reverts if address has a non-zero deposit already", async () => {
       // C, D, Eopen loans 
       await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(1, 'ether') })
       await borrowerOperations.openLoan(dec(30, 18), D, { from: D, value: dec(1, 'ether') })
