@@ -56,18 +56,27 @@ contract('All Liquity functions with intra-system access control restrictions', 
 
   describe('CDPManager', async accounts => {
     // applyPendingRewards
-    it.only("applyPendingRewards(): reverts when called by an account that is not BorrowerOperations", async () => {
+    it("applyPendingRewards(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
-      const txAlice = cdpManager.applyPendingRewards(bob, { from: alice })
-      await th.assertRevert(txAlice, "Caller is not the BorrowerOperations contract")
+      try {
+        const txAlice = await cdpManager.applyPendingRewards(bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
+      }
     })
 
     // updateRewardSnapshots
-    it.only("updateRewardSnapshots(): reverts when called by an account that is not BorrowerOperations", async () => {
+    it("updateRewardSnapshots(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
-      console.log(bob, { from: alice })
-      const txAlice = await cdpManager.updateCDPRewardSnapshots(bob, { from: alice })
-      await th.assertRevert(txAlice, "Caller is not the BorrowerOperations contract")
+      try {
+        const txAlice = await cdpManager.updateCDPRewardSnapshots(bob, { from: alice })
+        assert.isFalse(txAlice.receipt.status)
+      } catch (err) {
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
+      }
     })
 
     // removeStake
@@ -314,14 +323,14 @@ contract('All Liquity functions with intra-system access control restrictions', 
   describe('CLVToken', async accounts => {
 
     //    mint
-    it.only("mint(): reverts when called by an account that is not BorrowerOperations", async () => {
+    it("mint(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       const txAlice = clvToken.mint(bob, 100, { from: alice })
       await th.assertRevert(txAlice, "Caller is not BorrowerOperations")
     })
 
     // burn
-    it.only("burn(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
+    it("burn(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
       // Attempt call from alice
       try {
         const txAlice = await clvToken.burn(bob, 100, { from: alice })
@@ -333,7 +342,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // sendToPool
-    it.only("sendToPool(): reverts when called by an account that is not StabilityPool", async () => {
+    it("sendToPool(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
         const txAlice = await clvToken.sendToPool(bob, activePool.address, 100, { from: alice })
@@ -345,7 +354,7 @@ contract('All Liquity functions with intra-system access control restrictions', 
     })
 
     // returnFromPool
-    it.only("returnFromPool(): reverts when called by an account that is not CDPManager nor StabilityPool", async () => {
+    it("returnFromPool(): reverts when called by an account that is not CDPManager nor StabilityPool", async () => {
       // Attempt call from alice
       try {
         const txAlice = await clvToken.returnFromPool(activePool.address, bob, 100, { from: alice })
