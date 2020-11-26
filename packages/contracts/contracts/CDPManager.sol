@@ -1302,14 +1302,13 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     // Updates the baseRate state variable based on time elapsed since the last redemption or LUSD borrowing operation.
-    function decayBaseRateFromBorrowing() external override returns (uint) {
+    function decayBaseRateFromBorrowing() external override {
         _requireCallerIsBorrowerOperations();
 
         baseRate = _calcDecayedBaseRate();
-        assert(baseRate >= 0 && baseRate <= 1e18);  // The baseRate can decay to 0
+        assert(baseRate <= 1e18);  // The baseRate can decay to 0
 
         _updateLastFeeOpTime();
-        return baseRate;
     }
 
     // --- Internal fee functions ---
