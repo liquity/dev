@@ -307,7 +307,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         _updateDepositAndSnapshots(msg.sender, newDeposit);
         emit UserDepositChanged(msg.sender, newDeposit);
 
-        _sendETHGainToDepositor(msg.sender, depositorETHGain);
+        _sendETHGainToDepositor(depositorETHGain);
 
         emit ETHGainWithdrawn(msg.sender, depositorETHGain, CLVLoss); // CLV Loss required for event log
     }
@@ -352,7 +352,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         _updateDepositAndSnapshots(msg.sender, newDeposit);
         emit UserDepositChanged(msg.sender, newDeposit);
 
-        _sendETHGainToDepositor(msg.sender, depositorETHGain);
+        _sendETHGainToDepositor(depositorETHGain);
 
         emit ETHGainWithdrawn(msg.sender, depositorETHGain, CLVLoss);  // CLV Loss required for event log
     }
@@ -743,14 +743,14 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         emit CLVBalanceUpdated(newTotalCLVDeposits);
     }
 
-    function _sendETHGainToDepositor(address _account, uint _amount) internal {
+    function _sendETHGainToDepositor(uint _amount) internal {
         if (_amount == 0) {return;}
         uint newETH = ETH.sub(_amount);
         ETH = newETH;
         emit ETHBalanceUpdated(newETH);
-        emit EtherSent(_account, _amount);
+        emit EtherSent(msg.sender, _amount);
 
-        (bool success, ) = _account.call{ value: _amount }("");
+        (bool success, ) = msg.sender.call{ value: _amount }("");
         require(success, "StabilityPool: sending ETH failed");
     }
 
@@ -776,7 +776,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // --- Stability Pool Deposit Functionality ---
 
-    function getFrontEndTag(address _depositor) public view override returns (address) {
+    function getFrontEndTag(address _depositor) external view override returns (address) {
         return deposits[_depositor].frontEndTag;
     }
 
@@ -901,7 +901,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     }
 
     function  _requireValidKickbackRate(uint _kickbackRate) internal pure {
-        require (_kickbackRate >= 0 && _kickbackRate <= 1e18, "StabilityPool: Kickback rate must be in range [0,1]");
+        require (_kickbackRate <= 1e18, "StabilityPool: Kickback rate must be in range [0,1]");
     }
 
     function _requireETHSentSuccessfully(bool _success) internal pure {

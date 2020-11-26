@@ -100,7 +100,7 @@ interface ICDPManager {
 
     function getBorrowingFee(uint CLVDebt) external view returns (uint);
 
-    function decayBaseRateFromBorrowing() external returns (uint);
+    function decayBaseRateFromBorrowing() external;
 
     function getCDPStatus(address _borrower) external view returns (uint);
     
