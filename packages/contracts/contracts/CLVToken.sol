@@ -207,6 +207,8 @@ contract CLVToken is ICLVToken {
     }
 
     function _requireCallerIsBorrowerOperations() internal view {
+        // TODO: remove!
+        console.log('_requireCallerIsBorrowerOperations');
         require(msg.sender == borrowerOperationsAddress, "CLVToken: Caller is not BorrowerOperations");
     }
 

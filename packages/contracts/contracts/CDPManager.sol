@@ -961,6 +961,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     function applyPendingRewards(address _user) external override {
+        // TODO: remove!
+        console.log('apply rewards', _user);
         _requireCallerIsBorrowerOperations();
         return _applyPendingRewards(_user);
     }
@@ -995,6 +997,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // Update borrower's snapshots of L_ETH and L_CLVDebt to reflect the current values
     function updateCDPRewardSnapshots(address _borrower) external override {
+        // TODO: remove!
+        console.log('update rewards', _borrower);
         _requireCallerIsBorrowerOperations();
        return _updateCDPRewardSnapshots(_borrower);
     }
