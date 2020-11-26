@@ -103,7 +103,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   })
 
   describe('CommunityIssuance', async accounts => {
-    it.only("setAddresses(): reverts when called by non-owner", async () => {
+    it("setAddresses(): reverts when called by non-owner", async () => {
       const params = [growthToken.address,stabilityPool.address]
       await th.assertRevert(communityIssuance.setAddresses(...params, { from: alice }))
 
