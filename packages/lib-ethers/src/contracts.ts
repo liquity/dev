@@ -2,7 +2,13 @@ import { JsonFragment, LogDescription, Result } from "@ethersproject/abi";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 import { Provider, Log } from "@ethersproject/abstract-provider";
-import { Contract, ContractInterface } from "@ethersproject/contracts";
+import {
+  Contract,
+  ContractInterface,
+  ContractFunction,
+  Overrides,
+  PopulatedTransaction
+} from "@ethersproject/contracts";
 
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
@@ -66,9 +72,7 @@ export interface TypedLogDescription<T> extends LogDescription {
   args: Result & T;
 }
 
-type BucketOfFunctions = {
-  [name: string]: (...args: Array<any>) => any;
-};
+type BucketOfFunctions = Record<string, (...args: any[]) => any>;
 
 // Removes unsafe index signatures from an Ethers contract type
 type TypeSafeContract<T> = Pick<
@@ -82,16 +86,64 @@ type TypeSafeContract<T> = Pick<
     : never
 >;
 
+type EstimatedContractFunction<R = unknown, A extends unknown[] = unknown[], O = Overrides> = (
+  overrides: O,
+  adjustGas: (gas: BigNumber) => BigNumber,
+  ...args: A
+) => Promise<R>;
+
 export type TypedContract<T, U> = TypeSafeContract<T> &
   U & {
-    estimateGas: {
-      [P in keyof U]: (
-        ...args: U[P] extends (...args: infer A) => unknown ? A : never
-      ) => Promise<BigNumber>;
+    // readonly estimateAndCall: {
+    //   [P in keyof U]: U[P] extends (...args: [...infer A, infer O | undefined]) => Promise<infer R>
+    //     ? EstimatedContractFunction<R, A, O>
+    //     : never;
+    // };
+
+    readonly estimateAndPopulate: {
+      [P in keyof U]: U[P] extends (...args: [...infer A, infer O | undefined]) => unknown
+        ? EstimatedContractFunction<PopulatedTransaction, A, O>
+        : never;
     };
   };
 
+const buildEstimatedFunctions = <T>(
+  estimateFunctions: Record<string, ContractFunction<BigNumber>>,
+  functions: Record<string, ContractFunction<T>>
+): Record<string, EstimatedContractFunction<T>> =>
+  Object.fromEntries(
+    Object.keys(estimateFunctions).map(functionName => [
+      functionName,
+      async (overrides, adjustEstimate, ...args) => {
+        if (overrides.gasLimit === undefined) {
+          const estimatedGas = await estimateFunctions[functionName](...args, overrides);
+
+          overrides = {
+            ...overrides,
+            gasLimit: adjustEstimate(estimatedGas)
+          };
+        }
+
+        return functions[functionName](...args, overrides);
+      }
+    ])
+  );
+
 export class LiquityContract extends Contract {
+  // readonly estimateAndCall: Record<string, EstimatedContractFunction>;
+  readonly estimateAndPopulate: Record<string, EstimatedContractFunction<PopulatedTransaction>>;
+
+  constructor(
+    addressOrName: string,
+    contractInterface: ContractInterface,
+    signerOrProvider?: Signer | Provider
+  ) {
+    super(addressOrName, contractInterface, signerOrProvider);
+
+    // this.estimateAndCall = buildEstimatedFunctions(this.estimateGas, this);
+    this.estimateAndPopulate = buildEstimatedFunctions(this.estimateGas, this.populateTransaction);
+  }
+
   extractEvents(logs: Log[], name: string) {
     return logs
       .filter(log => log.address === this.address)

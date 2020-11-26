@@ -33,7 +33,9 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   dispatch
 }) => {
   const { numberOfTroves, price, quiBalance, total } = useLiquitySelector(select);
-  const { liquity } = useLiquity();
+  const {
+    liquity: { send: liquity }
+  } = useLiquity();
 
   const myTransactionId = "trove";
   const myTransactionState = useMyTransactionState(myTransactionId);
@@ -133,10 +135,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
                   `Can't borrow ${COIN} during recovery mode`
                 ],
                 [
-                  !total
-                    .subtract(original)
-                    .add(edited)
-                    .collateralRatioIsBelowCritical(price),
+                  !total.subtract(original).add(edited).collateralRatioIsBelowCritical(price),
                   `Total collateral ratio would fall below ${ccrPercent}`
                 ]
               ] as const)

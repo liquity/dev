@@ -32,7 +32,9 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   setChangePending
 }) => {
   const { price, quiBalance, numberOfTroves } = useLiquitySelector(selectForRedemptionAction);
-  const { liquity } = useLiquity();
+  const {
+    liquity: { send: liquity }
+  } = useLiquity();
 
   const myTransactionId = "redemption";
   const myTransactionState = useMyTransactionState(myTransactionId);
