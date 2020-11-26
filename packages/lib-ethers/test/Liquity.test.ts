@@ -652,30 +652,40 @@ describe("EthersLiquity", () => {
     });
   });
 
-  // describe.skip("Gas estimation", () => {
-  //   const increaseTime = (timeJump: number) => provider.send("evm_increaseTime", [timeJump]);
+  describe("Gas estimation", () => {
+    const increaseTime = (timeJump: number) => provider.send("evm_increaseTime", [timeJump]);
 
-  //   before(async function () {
-  //     if (network.name !== "buidlerevm") {
-  //       this.skip();
-  //     }
+    before(async function () {
+      if (network.name !== "buidlerevm") {
+        this.skip();
+      }
 
-  //     addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
-  //     [deployerLiquity, liquity] = await connectUsers([deployer, user]);
-  //   });
+      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      [deployerLiquity, liquity] = await connectUsers([deployer, user]);
+    });
 
-  //   it("should include enough gas for updating lastFeeOpTime", async () => {
-  //     let {
-  //       rawReceipt: { gasUsed }
-  //     } = await waitForSuccess(deployerLiquity.openTrove(new Trove({ collateral: 1, debt: 10 })));
-  //     console.log(`${gasUsed}`);
+    it("should include enough gas for updating lastFeeOperationTime", async () => {
+      await deployerLiquity.openTrove(new Trove({ collateral: 1, debt: 10 }));
 
-  //     //await increaseTime(120);
+      // Deployer just updated lastFeeOperationTime, so this won't anticipate having to update that
+      // during estimateGas
+      let tx = await liquity.populate.openTrove(new Trove({ collateral: 1, debt: 10 }));
+      const estimatedGas = await provider.estimateGas(tx.rawPopulatedTransaction);
 
-  //     ({
-  //       rawReceipt: { gasUsed }
-  //     } = await waitForSuccess(liquity.openTrove(new Trove({ collateral: 1, debt: 10 }))));
-  //     console.log(`${gasUsed}`);
-  //   });
-  // });
+      // Fast-forward 2 minutes.
+      await increaseTime(120);
+
+      // This will now have to update lastFeeOperationTime
+      const { rawReceipt } = await waitForSuccess(tx.send());
+
+      // Check that we did indeed use significantly more gas than initially anticipated
+      const gasIncrease = rawReceipt.gasUsed.sub(estimatedGas).toNumber();
+      expect(gasIncrease).to.be.at.least(5000);
+
+      // Check borrowing, too
+      tx = await liquity.populate.borrowQui(10);
+      await increaseTime(120);
+      await waitForSuccess(tx.send());
+    });
+  });
 });

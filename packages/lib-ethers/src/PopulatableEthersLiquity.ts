@@ -45,6 +45,13 @@ export const redeemMaxIterations = 68;
 
 const noDetails = () => {};
 
+const id = <T>(t: T) => t;
+
+// Takes ~6.3K to update lastFeeOperationTime. Let's be on the safe side.
+const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add(10000);
+
+// const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(???);
+
 // To get the best entropy available, we'd do something like:
 //
 // const bigRandomNumber = () =>
@@ -335,7 +342,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.borrowerOperations.estimateAndPopulate.openLoan(
         { value: trove.collateral.bigNumber, ...overrides },
-        gas => gas,
+        addGasForPotentialLastFeeOperationTimeUpdate,
         trove.netDebt.bigNumber,
         await this.findHint(trove, optionalParams)
       )
@@ -344,10 +351,7 @@ export class PopulatableEthersLiquity
 
   async closeTrove(overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.closeLoan(
-        { ...overrides },
-        gas => gas
-      )
+      await this.contracts.borrowerOperations.estimateAndPopulate.closeLoan({ ...overrides }, id)
     );
   }
 
@@ -356,18 +360,13 @@ export class PopulatableEthersLiquity
     { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const initialTrove = trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = initialTrove.addCollateral(depositedEther);
+    trove = trove ?? (await this.readableLiquity.getTrove());
+    const finalTrove = trove.addCollateral(depositedEther);
 
-    return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.addColl(
-        {
-          value: Decimal.from(depositedEther).bigNumber,
-          ...overrides
-        },
-        gas => gas,
-        await this.findHint(finalTrove, hintOptionalParams)
-      )
+    return this.changeTrove(
+      trove.whatChanged(finalTrove),
+      { trove, ...hintOptionalParams },
+      overrides
     );
   }
 
@@ -376,16 +375,13 @@ export class PopulatableEthersLiquity
     { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const initialTrove = trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = initialTrove.subtractCollateral(withdrawnEther);
+    trove = trove ?? (await this.readableLiquity.getTrove());
+    const finalTrove = trove.subtractCollateral(withdrawnEther);
 
-    return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.withdrawColl(
-        { ...overrides },
-        gas => gas,
-        Decimal.from(withdrawnEther).bigNumber,
-        await this.findHint(finalTrove, hintOptionalParams)
-      )
+    return this.changeTrove(
+      trove.whatChanged(finalTrove),
+      { trove, ...hintOptionalParams },
+      overrides
     );
   }
 
@@ -394,16 +390,13 @@ export class PopulatableEthersLiquity
     { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const initialTrove = trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = initialTrove.addDebt(borrowedQui);
+    trove = trove ?? (await this.readableLiquity.getTrove());
+    const finalTrove = trove.addDebt(borrowedQui);
 
-    return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.withdrawCLV(
-        { ...overrides },
-        gas => gas,
-        Decimal.from(borrowedQui).bigNumber,
-        await this.findHint(finalTrove, hintOptionalParams)
-      )
+    return this.changeTrove(
+      trove.whatChanged(finalTrove),
+      { trove, ...hintOptionalParams },
+      overrides
     );
   }
 
@@ -412,16 +405,13 @@ export class PopulatableEthersLiquity
     { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const initialTrove = trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = initialTrove.subtractDebt(repaidQui);
+    trove = trove ?? (await this.readableLiquity.getTrove());
+    const finalTrove = trove.subtractDebt(repaidQui);
 
-    return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.repayCLV(
-        { ...overrides },
-        gas => gas,
-        Decimal.from(repaidQui).bigNumber,
-        await this.findHint(finalTrove, hintOptionalParams)
-      )
+    return this.changeTrove(
+      trove.whatChanged(finalTrove),
+      { trove, ...hintOptionalParams },
+      overrides
     );
   }
 
@@ -432,6 +422,7 @@ export class PopulatableEthersLiquity
   ) {
     const initialTrove = trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = initialTrove.apply(change);
+    const isDebtIncrease = !!change.debtDifference?.positive;
 
     return this.wrapSimpleTransaction(
       await this.contracts.borrowerOperations.estimateAndPopulate.adjustLoan(
@@ -439,10 +430,10 @@ export class PopulatableEthersLiquity
           ...overrides,
           value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
         },
-        gas => gas,
+        isDebtIncrease ? addGasForPotentialLastFeeOperationTimeUpdate : id,
         change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
         change.debtDifference?.absoluteValue?.bigNumber || 0,
-        change.debtDifference?.positive ? true : false,
+        isDebtIncrease,
         await this.findHint(finalTrove, hintOptionalParams)
       )
     );
@@ -452,7 +443,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.priceFeed.estimateAndPopulate.setPrice(
         { ...overrides },
-        gas => gas,
+        id,
         Decimal.from(price).bigNumber
       )
     );
@@ -460,20 +451,13 @@ export class PopulatableEthersLiquity
 
   async updatePrice(overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.priceFeed.estimateAndPopulate.updatePrice_Testnet(
-        { ...overrides },
-        gas => gas
-      )
+      await this.contracts.priceFeed.estimateAndPopulate.updatePrice_Testnet({ ...overrides }, id)
     );
   }
 
   async liquidate(address: string, overrides?: EthersTransactionOverrides) {
     return this.wrapLiquidation(
-      await this.contracts.cdpManager.estimateAndPopulate.liquidate(
-        { ...overrides },
-        gas => gas,
-        address
-      )
+      await this.contracts.cdpManager.estimateAndPopulate.liquidate({ ...overrides }, id, address)
     );
   }
 
@@ -484,7 +468,7 @@ export class PopulatableEthersLiquity
     return this.wrapLiquidation(
       await this.contracts.cdpManager.estimateAndPopulate.liquidateCDPs(
         { ...overrides },
-        gas => gas,
+        id,
         maximumNumberOfTrovesToLiquidate
       )
     );
@@ -498,7 +482,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.provideToSP(
         { ...overrides },
-        gas => gas,
+        id,
         Decimal.from(depositedQui).bigNumber,
         frontEndTag
       )
@@ -512,7 +496,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
         { ...overrides },
-        gas => gas,
+        id,
         Decimal.from(withdrawnQui).bigNumber
       )
     );
@@ -530,7 +514,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(
         { ...overrides },
-        gas => gas,
+        id,
         await this.findHint(finalTrove, hintOptionalParams)
       )
     );
@@ -540,7 +524,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.clvToken.estimateAndPopulate.transfer(
         { ...overrides },
-        gas => gas,
+        id,
         toAddress,
         Decimal.from(amount).bigNumber
       )
@@ -563,7 +547,7 @@ export class PopulatableEthersLiquity
     return this.wrapRedemption(
       await this.contracts.cdpManager.estimateAndPopulate.redeemCollateral(
         { ...overrides },
-        gas => gas,
+        addGasForPotentialLastFeeOperationTimeUpdate,
         exchangedQui.bigNumber,
         firstRedemptionHint,
         partialRedemptionHint,
