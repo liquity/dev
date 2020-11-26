@@ -11,7 +11,7 @@ import { NetworkConfig } from "@nomiclabs/buidler/types";
 import { Decimal } from "@liquity/decimal";
 
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
-import { abi, addressesOf, LiquityDeployment } from ".";
+import { abi, addressesOf, LiquityDeployment } from "./src/contracts";
 
 import accounts from "./accounts.json";
 
@@ -106,10 +106,7 @@ task("deploy", "Deploys the contracts to the network")
 
     const deployment: LiquityDeployment = {
       addresses: addressesOf(contracts),
-      version: fs
-        .readFileSync(path.join(bre.config.paths.artifacts, "version"))
-        .toString()
-        .trim(),
+      version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim(),
       deploymentDate: new Date().getTime(),
       abiHash: sha1(abi)
     };

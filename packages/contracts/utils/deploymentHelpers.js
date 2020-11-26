@@ -330,21 +330,23 @@ class DeploymentHelper {
   }
 
   static async connectLQTYContracts(LQTYContracts) {
-    // Set GrowthToken address in LCF, lqtyStaking, and CI
-    await LQTYContracts.lqtyStaking.setGrowthTokenAddress(LQTYContracts.growthToken.address)
+    // Set GrowthToken address in LCF
     await LQTYContracts.lockupContractFactory.setGrowthTokenAddress(LQTYContracts.growthToken.address)
-    await LQTYContracts.communityIssuance.setGrowthTokenAddress(LQTYContracts.growthToken.address)
   }
 
   static async connectLQTYContractsToCore(LQTYContracts, coreContracts) {
-    await LQTYContracts.lqtyStaking.setCLVTokenAddress(coreContracts.clvToken.address)
-    await LQTYContracts.lqtyStaking.setCDPManagerAddress(coreContracts.cdpManager.address)
-    await LQTYContracts.lqtyStaking.setBorrowerOperationsAddress(coreContracts.borrowerOperations.address)
-    await LQTYContracts.lqtyStaking.setActivePoolAddress(coreContracts.activePool.address)
-
-    await LQTYContracts.communityIssuance.setStabilityPoolAddress(coreContracts.stabilityPool.address)
-    await LQTYContracts.communityIssuance.activateContract();
+    await LQTYContracts.lqtyStaking.setAddresses(
+      LQTYContracts.growthToken.address,
+      coreContracts.clvToken.address,
+      coreContracts.cdpManager.address, 
+      coreContracts.borrowerOperations.address,
+      coreContracts.activePool.address
+    )
+   
+    await LQTYContracts.communityIssuance.setAddresses(
+      LQTYContracts.growthToken.address,
+      coreContracts.stabilityPool.address
+    )
   }
-
 }
 module.exports = DeploymentHelper

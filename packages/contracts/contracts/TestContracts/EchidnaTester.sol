@@ -10,6 +10,7 @@ import "../StabilityPool.sol";
 import "../CollSurplusPool.sol";
 import "../CLVToken.sol";
 import "../PriceFeedTestnet.sol";
+import "../PriceFeed.sol";
 import "../SortedCDPs.sol";
 import "./EchidnaProxy.sol";
 //import "../Dependencies/console.sol";
@@ -35,7 +36,8 @@ contract EchidnaTester {
     StabilityPool public stabilityPool;
     CollSurplusPool public collSurplusPool;
     CLVToken public clvToken;
-    PriceFeedTestnet priceFeed;
+    PriceFeed priceFeed;
+    PriceFeedTestnet priceFeedTestnet;
     SortedCDPs sortedCDPs;
 
     EchidnaProxy[NUMBER_OF_ACTORS] public echidnaProxies;
@@ -43,30 +45,67 @@ contract EchidnaTester {
     uint private numberOfTroves;
 
     constructor() public payable {
+        
         cdpManager = new CDPManager();
         borrowerOperations = new BorrowerOperations();
         activePool = new ActivePool();
         defaultPool = new DefaultPool();
         stabilityPool = new StabilityPool();
+        
         clvToken = new CLVToken(
             address(cdpManager),
             address(stabilityPool),
             address(borrowerOperations)
         );
+
         collSurplusPool = new CollSurplusPool();
         priceFeed = new PriceFeed();
-        priceFeed = new PriceFeedTestnet();
+        priceFeedTestnet = new PriceFeedTestnet();
         sortedCDPs = new SortedCDPs();
 
-        cdpManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
-       
-        borrowerOperations.setAddresses(address(cdpManager), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
-        activePool.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool), address(defaultPool));
+        cdpManager.setAddresses(
+            address(borrowerOperations), 
+            address(activePool), 
+            address(defaultPool), 
+            address(stabilityPool), 
+            address(collSurplusPool), 
+            address(priceFeedTestnet), 
+            address(clvToken), 
+            address(sortedCDPs), address(0)
+        );
+        borrowerOperations.setAddresses(
+            address(cdpManager), 
+            address(activePool), 
+            address(defaultPool), 
+            address(stabilityPool), 
+            address(collSurplusPool), 
+            address(priceFeedTestnet), 
+            address(sortedCDPs), 
+            address(clvToken), address(0)
+        );
+        activePool.setAddresses(
+            address(borrowerOperations), 
+            address(cdpManager), 
+            address(stabilityPool), 
+            address(defaultPool)
+        );
         defaultPool.setAddresses(address(cdpManager), address(activePool));
         
-        stabilityPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool), address(clvToken), address(sortedCDPs), address(priceFeed), address(0));
-        collSurplusPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool));
-        priceFeed.setAddresses(address(cdpManager), address(0), address(0));
+        stabilityPool.setAddresses(
+            address(borrowerOperations), 
+            address(cdpManager), 
+            address(activePool), 
+            address(clvToken), 
+            address(sortedCDPs), 
+            address(priceFeedTestnet), address(0)
+        );
+        collSurplusPool.setAddresses(
+            address(borrowerOperations), 
+            address(cdpManager), 
+            address(activePool)
+        );
+        priceFeed.setAddresses(address(cdpManager), address(0));
+        priceFeedTestnet.setAddresses(address(cdpManager), address(0));
         sortedCDPs.setParams(1e18, address(cdpManager), address(borrowerOperations));
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
@@ -84,7 +123,7 @@ contract EchidnaTester {
         GAS_POOL_ADDRESS = cdpManager.GAS_POOL_ADDRESS();
 
         // TODO:
-        priceFeed.setPrice(1e22);
+        priceFeedTestnet.setPrice(1e22);
     }
 
     // CDPManager
@@ -118,7 +157,8 @@ contract EchidnaTester {
     // Borrower Operations
 
     function getAdjustedETH(uint actorBalance, uint _ETH, uint ratio) internal view returns (uint) {
-        uint price = priceFeed.getPrice();
+        // uint price = priceFeed.getPrice();
+        uint price = priceFeedTestnet.getPrice();
         require(price > 0);
         uint minETH = ratio.mul(CLV_GAS_COMPENSATION).div(price);
         require(actorBalance > minETH);
@@ -127,7 +167,8 @@ contract EchidnaTester {
     }
 
     function getAdjustedCLV(uint ETH, uint _CLVAmount, uint ratio) internal view returns (uint) {
-        uint price = priceFeed.getPrice();
+        // uint price = priceFeed.getPrice();
+        uint price = priceFeedTestnet.getPrice();
         uint CLVAmount = _CLVAmount;
         uint compositeDebt = CLVAmount.add(CLV_GAS_COMPENSATION);
         uint ICR = Math._computeCR(ETH, compositeDebt, price);
@@ -260,7 +301,7 @@ contract EchidnaTester {
     // PriceFeed
 
     function setPriceExt(uint256 _price) external {
-        bool result = priceFeed.setPrice(_price);
+        bool result = priceFeedTestnet.setPrice(_price);
         assert(result);
     }
 
@@ -284,7 +325,8 @@ contract EchidnaTester {
     }
 
     function echidna_troves_order() external view returns(bool) {
-        uint price = priceFeed.getPrice();
+        // uint price = priceFeed.getPrice();
+        uint price = priceFeedTestnet.getPrice();
 
         address currentTrove = sortedCDPs.getFirst();
         address nextTrove = sortedCDPs.getNext(currentTrove);
@@ -366,6 +408,10 @@ contract EchidnaTester {
             return false;
         }
 
+        if (address(priceFeedTestnet).balance > 0) {
+            return false;
+        }
+
         if (address(sortedCDPs).balance > 0) {
             return false;
         }
@@ -375,7 +421,9 @@ contract EchidnaTester {
 
     // TODO: What should we do with this? Should it be allowed? Should it be a canary?
     function echidna_price() public view returns(bool) {
-        uint price = priceFeed.getPrice();
+        // uint price = priceFeed.getPrice();
+        uint price = priceFeedTestnet.getPrice();
+        
         if (price == 0) {
             return false;
         }

@@ -12,11 +12,7 @@ interface ICommunityIssuance {
 
     // --- Functions ---
 
-    function setGrowthTokenAddress(address _growthTokenAddress) external;
-
-    function setStabilityPoolAddress(address _stabilityPoolAddress) external;
-
-    function activateContract() external;
+    function setAddresses(address _growthTokenAddress, address _stabilityPoolAddress) external;
 
     function issueLQTY() external returns (uint);
 

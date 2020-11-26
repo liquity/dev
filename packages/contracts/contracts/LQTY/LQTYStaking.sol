@@ -3,17 +3,17 @@
 pragma solidity 0.6.11;
 
 import "../Dependencies/SafeMath.sol";
+import "../Dependencies/Ownable.sol";
 import "../Dependencies/console.sol";
 import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ILQTYStaking.sol";
 import "../Dependencies/Math.sol";
 import "../Interfaces/ICLVToken.sol";
 
-contract LQTYStaking is ILQTYStaking {
+contract LQTYStaking is ILQTYStaking, Ownable {
     using SafeMath for uint;
 
     // --- Data ---
-    address public deployer;
 
     mapping( address => uint) stakes;
     uint public totalLQTYStaked;
@@ -46,38 +46,31 @@ contract LQTYStaking is ILQTYStaking {
 
     // --- Functions ---
 
-     constructor() public {
-        deployer = msg.sender;
-    }
-
-    function setGrowthTokenAddress(address _growthTokenAddress) external override {
-        _requireCallerIsStakingContractDeployer();
+    function setAddresses
+    (
+        address _growthTokenAddress,
+        address _clvTokenAddress,
+        address _cdpManagerAddress, 
+        address _borrowerOperationsAddress,
+        address _activePoolAddress
+    ) 
+        external 
+        onlyOwner 
+        override 
+    {
         growthToken = IGrowthToken(_growthTokenAddress);
-        emit GrowthTokenAddressSet(_growthTokenAddress);
-    }
-
-    function setCLVTokenAddress(address _clvTokenAddress) external override {
-        _requireCallerIsStakingContractDeployer();
         clvToken = ICLVToken(_clvTokenAddress);
-        emit GrowthTokenAddressSet(_clvTokenAddress);
-    }
-
-    function setCDPManagerAddress(address _cdpManagerAddress) external override {
-        _requireCallerIsStakingContractDeployer();
         cdpManagerAddress = _cdpManagerAddress;
-        emit CDPManagerAddressSet(_cdpManagerAddress);
-    }
-
-    function setBorrowerOperationsAddress(address _borrowerOperationsAddress) external override {
-        _requireCallerIsStakingContractDeployer();
         borrowerOperationsAddress = _borrowerOperationsAddress;
-        emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
-    }
-
-    function setActivePoolAddress(address _activePoolAddress) external override {
-        _requireCallerIsStakingContractDeployer();
         activePoolAddress = _activePoolAddress;
-        emit BorrowerOperationsAddressSet(_activePoolAddress);
+
+        emit GrowthTokenAddressSet(_growthTokenAddress);
+        emit GrowthTokenAddressSet(_clvTokenAddress);
+        emit CDPManagerAddressSet(_cdpManagerAddress);
+        emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
+        emit ActivePoolAddressSet(_activePoolAddress);
+
+        _renounceOwnership();
     }
 
     // If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. 
@@ -187,10 +180,6 @@ contract LQTYStaking is ILQTYStaking {
     }
 
     // --- 'require' functions ---
-
-    function  _requireCallerIsStakingContractDeployer() internal view {
-        require(msg.sender == deployer, "LQTYStaking: caller is not deployer");
-    }
 
     function _requireCallerIsCDPManager() internal view {
         require(msg.sender == cdpManagerAddress, "LQTYStaking: caller is not CDPM");

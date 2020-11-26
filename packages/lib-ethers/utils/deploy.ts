@@ -219,10 +219,14 @@ const connectContracts = async (
       }),
 
     nonce =>
-      lqtyStaking.setGrowthTokenAddress(growthToken.address, {
-        ...overrides,
-        nonce
-      }),
+      lqtyStaking.setAddresses(
+        growthToken.address,
+        clvToken.address,
+        cdpManager.address, 
+        borrowerOperations.address,
+        activePool.address,
+        { ...overrides, nonce }
+      ),
 
     nonce =>
       lockupContractFactory.setGrowthTokenAddress(growthToken.address, {
@@ -231,40 +235,11 @@ const connectContracts = async (
       }),
 
     nonce =>
-      communityIssuance.setGrowthTokenAddress(growthToken.address, {
-        ...overrides,
-        nonce
-      }),
-
-    nonce =>
-      lqtyStaking.setCLVTokenAddress(clvToken.address, {
-        ...overrides,
-        nonce
-      }),
-
-    nonce =>
-      lqtyStaking.setCDPManagerAddress(cdpManager.address, {
-        ...overrides,
-        nonce
-      }),
-
-    nonce =>
-      lqtyStaking.setBorrowerOperationsAddress(borrowerOperations.address, {
-        ...overrides,
-        nonce
-      }),
-
-    nonce =>
-      lqtyStaking.setActivePoolAddress(activePool.address, {
-        ...overrides,
-        nonce
-      }),
-
-    nonce =>
-      communityIssuance.setStabilityPoolAddress(stabilityPool.address, {
-        ...overrides,
-        nonce
-      })
+      communityIssuance.setAddresses(
+        growthToken.address,
+        stabilityPool.address,
+        { ...overrides, nonce }
+      )
   ];
 
   const txs = await Promise.all(connections.map((connect, i) => connect(txCount + i)));
@@ -289,8 +264,8 @@ export const deployAndSetupContracts = async (
   silent || console.log("Connecting contracts...");
   await connectContracts(contracts, deployer, overrides);
 
-  silent || console.log("Activating CommunityIssuance contract...");
-  await (await contracts.communityIssuance.activateContract({ ...overrides })).wait();
+  // silent || console.log("Activating CommunityIssuance contract...");
+  // await (await contracts.communityIssuance.activateContract({ ...overrides })).wait();
 
   return contracts;
 };

@@ -277,7 +277,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                               "Collateral ratio not low enough"
                             ]
                           ]}
-                          send={liquity.liquidate.bind(liquity, owner)}
+                          send={liquity.send.liquidate.bind(liquity.send, owner)}
                           numberOfConfirmationsToWait={1}
                         >
                           <Button variant="dangerIcon">

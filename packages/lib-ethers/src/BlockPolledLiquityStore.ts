@@ -4,7 +4,7 @@ import { Provider } from "@ethersproject/abstract-provider";
 import { Decimal } from "@liquity/decimal";
 import { LiquityStore, LiquityStoreState, LiquityStoreBaseState } from "@liquity/lib-base";
 
-import { EthersLiquity } from "./EthersLiquity";
+import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 
 export type BlockPolledLiquityStoreExtraState = {
   blockTag?: number;
@@ -28,10 +28,11 @@ const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
   private provider: Provider;
   private account: string;
-  private liquity: EthersLiquity;
+  private liquity: ReadableEthersLiquity;
 
-  constructor(provider: Provider, account: string, liquity: EthersLiquity) {
+  constructor(provider: Provider, account: string, liquity: ReadableEthersLiquity) {
     super();
+
     this.provider = provider;
     this.account = account;
     this.liquity = liquity;

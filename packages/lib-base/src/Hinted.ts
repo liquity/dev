@@ -2,7 +2,6 @@ import { Decimal } from "@liquity/decimal";
 
 import { Trove } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
-import { TransactableLiquity } from "./TransactableLiquity";
 
 export type HintedTransactionOptionalParams = {
   price?: Decimal;
@@ -13,7 +12,7 @@ export type TroveChangeOptionalParams = HintedTransactionOptionalParams & {
   trove?: Trove;
 };
 
-export type StabilityDepositTransferOptionalParams = TroveChangeOptionalParams & {
+export type CollateralGainTransferOptionalParams = TroveChangeOptionalParams & {
   deposit?: StabilityDeposit;
 };
 
@@ -23,14 +22,16 @@ type AddParams<T, K extends keyof T, U extends unknown[]> = {
 
 type SimpleHintedMethod = "openTrove" | "redeemCollateral";
 type TroveChangeMethod = "depositEther" | "withdrawEther" | "borrowQui" | "repayQui" | "changeTrove";
+type CollateralGainTransferMethod = "transferCollateralGainToTrove";
 
-type AddHintParams<T extends TransactableLiquity> = T &
+type HintedMethod = SimpleHintedMethod | TroveChangeMethod | CollateralGainTransferMethod;
+type Hintable = { [P in HintedMethod]: (...args: never[]) => unknown };
+
+export type Hinted<T extends Hintable> = T &
   AddParams<T, SimpleHintedMethod, [optionalParams?: HintedTransactionOptionalParams]> &
   AddParams<T, TroveChangeMethod, [optionalParams?: TroveChangeOptionalParams]> &
   AddParams<
     T,
-    "transferCollateralGainToTrove",
-    [optionalParams?: StabilityDepositTransferOptionalParams]
+    CollateralGainTransferMethod,
+    [optionalParams?: CollateralGainTransferOptionalParams]
   >;
-
-export type HintedLiquity<T, U> = AddHintParams<TransactableLiquity<T, U>>;

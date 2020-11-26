@@ -7,22 +7,40 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { ethers, network } from "@nomiclabs/buidler";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
-import { Trove, StabilityDeposit } from "@liquity/lib-base";
+import {
+  Trove,
+  StabilityDeposit,
+  LiquityReceipt,
+  SuccessfulReceipt,
+  SentLiquityTransaction,
+  ReadableLiquity
+} from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
 import { HintHelpers } from "../types";
 import { LiquityContracts, LiquityContractAddresses, addressesOf } from "../src/contracts";
-import { EthersLiquity, redeemMaxIterations } from "../src/EthersLiquity";
+import { PopulatableEthersLiquity, redeemMaxIterations } from "../src/PopulatableEthersLiquity";
+import { EthersLiquity } from "../src/EthersLiquity";
 
 const provider = ethers.provider;
 
 chai.use(chaiAsPromised);
 chai.use(chaiSpies);
 
-// Typed wrapper around Chai's
-function assertStrictEquals<T>(actual: unknown, expected: T, message?: string): asserts actual is T {
-  assert.strictEqual(actual, expected, message);
+function assertSucceeded<T extends LiquityReceipt>(
+  receipt: T
+): asserts receipt is Extract<T, SuccessfulReceipt> {
+  assert.strictEqual(receipt.status, "succeeded");
 }
+
+const waitForSuccess = async <T extends LiquityReceipt>(
+  tx: Promise<SentLiquityTransaction<unknown, T>>
+): Promise<Extract<T, SuccessfulReceipt>> => {
+  const receipt = await (await tx).waitForReceipt();
+  assertSucceeded(receipt);
+
+  return receipt;
+};
 
 // TODO make the testcases isolated
 
@@ -37,10 +55,6 @@ describe("EthersLiquity", () => {
   let deployerLiquity: EthersLiquity;
   let liquity: EthersLiquity;
   let otherLiquities: EthersLiquity[];
-
-  let price: Decimal;
-  let trove: Trove;
-  let deposit: StabilityDeposit;
 
   const connectUsers = (users: Signer[]) =>
     Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
@@ -65,6 +79,9 @@ describe("EthersLiquity", () => {
   before(async () => {
     [deployer, funder, user, ...otherUsers] = await ethers.getSigners();
     addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+
+    liquity = await EthersLiquity.connect(addresses, user);
+    expect(liquity).to.be.an.instanceOf(EthersLiquity);
   });
 
   // Always setup same initial balance for user
@@ -110,15 +127,12 @@ describe("EthersLiquity", () => {
     expect(`${await provider.getBalance(user.getAddress())}`).to.equal(`${targetBalance}`);
   });
 
-  it("should connect to contracts by their addresses", async () => {
-    liquity = await EthersLiquity.connect(addresses, user);
-  });
-
   it("should get the price", async () => {
-    price = await liquity.getPrice();
+    const price = await liquity.getPrice();
+    expect(price).to.be.an.instanceOf(Decimal);
   });
 
-  describe("_findHintForCollateralRatio", () => {
+  describe("findHintForCollateralRatio", () => {
     it("should pick the closest approx hint", async () => {
       type Resolved<T> = T extends Promise<infer U> ? U : never;
       type ApproxHint = Resolved<ReturnType<HintHelpers["getApproxHint"]>>;
@@ -131,7 +145,11 @@ describe("EthersLiquity", () => {
       ];
 
       const fakeContracts = {
-        cdpManager: {}, // avoid TypeError in EthersLiquity constructor
+        borrowerOperations: {
+          estimateAndPopulate: {
+            openLoan: () => ({})
+          }
+        },
 
         hintHelpers: chai.spy.interface({
           getApproxHint: (..._args: any) => Promise.resolve(fakeHints.shift())
@@ -142,12 +160,19 @@ describe("EthersLiquity", () => {
         })
       };
 
-      const fakeLiquity = new EthersLiquity(fakeContracts as LiquityContracts);
+      const fakeLiquity = new PopulatableEthersLiquity(
+        (fakeContracts as unknown) as LiquityContracts,
+        (undefined as unknown) as ReadableLiquity,
+        (undefined as unknown) as Signer
+      );
 
       const collateralRatio = Decimal.from("1.5");
       const price = Decimal.from(200);
 
-      await fakeLiquity._findHintForCollateralRatio(collateralRatio, {
+      const trove = new Trove({ collateral: 0.75, debt: 100 });
+      expect(`${trove.collateralRatio(price)}`).to.equal(`${collateralRatio}`);
+
+      await fakeLiquity.openTrove(trove, {
         numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
         price
       });
@@ -174,7 +199,7 @@ describe("EthersLiquity", () => {
 
   describe("Trove", () => {
     it("should have no Trove initially", async () => {
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
 
       expect(trove.isEmpty).to.be.true;
     });
@@ -207,7 +232,7 @@ describe("EthersLiquity", () => {
       const troveWithMinimumAmountOfDebt = new Trove({ collateral: 1, debt: 10 });
 
       await liquity.openTrove(troveWithMinimumAmountOfDebt);
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(troveWithMinimumAmountOfDebt);
     });
@@ -216,7 +241,7 @@ describe("EthersLiquity", () => {
       const troveWithHalfOfTheCollateral = new Trove({ collateral: 0.5, debt: 10 });
 
       await liquity.withdrawEther(0.5);
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(troveWithHalfOfTheCollateral);
     });
@@ -233,7 +258,7 @@ describe("EthersLiquity", () => {
       await funderLiquity.openTrove(new Trove({ collateral: 1, debt: 10 }));
 
       await liquity.closeTrove();
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
 
       expect(trove.isEmpty).to.be.true;
     });
@@ -242,37 +267,40 @@ describe("EthersLiquity", () => {
       const troveWithSomeDebt = new Trove({ collateral: 1, debt: 100 });
 
       await liquity.openTrove(troveWithSomeDebt);
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(troveWithSomeDebt);
     });
 
     it("should fail to withdraw all the collateral while the Trove has debt", async () => {
+      const trove = await liquity.getTrove();
+
       await expect(liquity.withdrawEther(trove.collateral)).to.eventually.be.rejected;
     });
 
     it("should repay some debt", async () => {
       await liquity.repayQui(10);
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(new Trove({ collateral: 1, debt: 90 }));
     });
 
     it("should borrow some more", async () => {
       await liquity.borrowQui(20);
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(new Trove({ collateral: 1, debt: 110 }));
     });
 
     it("should deposit more collateral", async () => {
       await liquity.depositEther(1);
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(new Trove({ collateral: 2, debt: 110 }));
     });
 
     it("should repay some debt and withdraw some collateral at the same time", async () => {
+      let trove = await liquity.getTrove();
       const finalTrove = new Trove({ collateral: 1.5, debt: 50 });
 
       await liquity.changeTrove(trove.whatChanged(finalTrove), undefined, { gasPrice: 0 });
@@ -284,6 +312,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should borrow more and deposit some collateral at the same time", async () => {
+      let trove = await liquity.getTrove();
       const finalTrove = new Trove({ collateral: 2, debt: 110 });
 
       await liquity.changeTrove(trove.whatChanged(finalTrove), undefined, { gasPrice: 0 });
@@ -295,13 +324,13 @@ describe("EthersLiquity", () => {
     });
   });
 
-  describe("ParsedEthersTransaction", () => {
+  describe("SendableEthersLiquity", () => {
     it("should parse failed transactions without throwing", async () => {
       const invalidTrove = new Trove({ debt: 10 });
       const ampleGas = BigNumber.from(10).pow(6);
 
       // By passing a gasLimit, we avoid automatic use of estimateGas which would throw
-      const tx = await liquity.openTrove(invalidTrove, undefined, { gasLimit: ampleGas });
+      const tx = await liquity.send.openTrove(invalidTrove, undefined, { gasLimit: ampleGas });
       const { status } = await tx.waitForReceipt();
 
       expect(status).to.equal("failed");
@@ -332,25 +361,23 @@ describe("EthersLiquity", () => {
     it("other user should make a Trove with very low ICR", async () => {
       await otherLiquities[0].openTrove(new Trove({ collateral: 0.2233, debt: 39 }));
       const otherTrove = await otherLiquities[0].getTrove();
+      const price = await liquity.getPrice();
 
       expect(`${otherTrove.collateralRatio(price)}`).to.equal("1.145128205128205128");
     });
 
     it("the price should take a dip", async () => {
       await deployerLiquity.setPrice(190);
-      price = await liquity.getPrice();
+      const price = await liquity.getPrice();
 
       expect(`${price}`).to.equal("190");
     });
 
     it("should liquidate other user's Trove", async () => {
-      const tx = await liquity.liquidateUpTo(1);
+      const details = await liquity.liquidateUpTo(1);
 
-      const receipt = await tx.waitForReceipt();
-      assertStrictEquals(receipt.status, "succeeded" as const);
-
-      expect(receipt.details).to.deep.equal({
-        fullyLiquidated: [otherLiquities[0].userAddress],
+      expect(details).to.deep.equal({
+        fullyLiquidated: [await otherUsers[0].getAddress()],
         partiallyLiquidated: undefined,
 
         collateralGasCompensation: Decimal.from(0.0011165), // 0.5%
@@ -367,7 +394,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should have a depleted stability deposit and some collateral gain", async () => {
-      deposit = await liquity.getStabilityDeposit();
+      const deposit = await liquity.getStabilityDeposit();
 
       expect(deposit).to.deep.equal(
         new StabilityDeposit({
@@ -379,7 +406,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should have some pending rewards in the Trove", async () => {
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(
         new Trove({
@@ -390,6 +417,8 @@ describe("EthersLiquity", () => {
     });
 
     it("total should equal the Trove", async () => {
+      const trove = await liquity.getTrove();
+
       const numberOfTroves = await liquity.getNumberOfTroves();
       expect(numberOfTroves).to.equal(1);
 
@@ -399,8 +428,8 @@ describe("EthersLiquity", () => {
 
     it("should transfer the gains to the Trove", async () => {
       await liquity.transferCollateralGainToTrove();
-      trove = await liquity.getTrove();
-      deposit = await liquity.getStabilityDeposit();
+      const trove = await liquity.getTrove();
+      const deposit = await liquity.getStabilityDeposit();
 
       expect(trove).to.deep.equal(
         new Trove({
@@ -425,7 +454,7 @@ describe("EthersLiquity", () => {
 
         await sendToEach(otherUsersSubset, 1.1);
 
-        price = Decimal.from(200);
+        let price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
 
         await otherLiquities[0].openTrove(new Trove({ collateral: 1, debt: 100 }));
@@ -444,7 +473,7 @@ describe("EthersLiquity", () => {
       it("should partially liquidate the bottom Trove", async () => {
         await liquity.liquidateUpTo(40);
 
-        trove = await liquity.getTrove();
+        const trove = await liquity.getTrove();
         // 10.075 * 1310 / 1410
         expect(trove).to.deep.equal(new Trove({ collateral: "9.360460992907801419", debt: 1310 }));
       });
@@ -458,7 +487,7 @@ describe("EthersLiquity", () => {
         it("should liquidate more of the bottom Trove", async () => {
           await liquity.liquidateUpTo(40);
 
-          trove = await liquity.getTrove();
+          const trove = await liquity.getTrove();
           expect(trove.isEmpty).to.be.true;
         });
       });
@@ -477,16 +506,16 @@ describe("EthersLiquity", () => {
 
         await sendToEach(otherUsersSubset, 2.1);
 
-        price = Decimal.from(200);
+        let price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
 
         // Use this account to print QUI
         await liquity.openTrove(new Trove({ collateral: 10, debt: 510 }));
 
         // otherLiquities[0-2] will be independent stability depositors
-        await liquity.sendQui(otherLiquities[0].userAddress!, 300);
-        await liquity.sendQui(otherLiquities[1].userAddress!, 100);
-        await liquity.sendQui(otherLiquities[2].userAddress!, 100);
+        await liquity.sendQui(await otherUsers[0].getAddress(), 300);
+        await liquity.sendQui(await otherUsers[1].getAddress(), 100);
+        await liquity.sendQui(await otherUsers[2].getAddress(), 100);
 
         // otherLiquities[3-4] will be Trove owners whose Troves get liquidated
         await otherLiquities[3].openTrove(new Trove({ collateral: 2, debt: 300 }));
@@ -501,14 +530,14 @@ describe("EthersLiquity", () => {
         await deployerLiquity.setPrice(price);
 
         // Liquidate first victim
-        await liquity.liquidate(otherLiquities[3].userAddress!);
+        await liquity.liquidate(await otherUsers[3].getAddress());
         expect((await otherLiquities[3].getTrove()).isEmpty).to.be.true;
 
         // Now otherLiquities[2] makes their deposit too
         await otherLiquities[2].depositQuiInStabilityPool(100);
 
         // Liquidate second victim
-        await liquity.liquidate(otherLiquities[4].userAddress!);
+        await liquity.liquidate(await otherUsers[4].getAddress());
         expect((await otherLiquities[4].getTrove()).isEmpty).to.be.true;
 
         // Stability Pool is now empty
@@ -543,28 +572,25 @@ describe("EthersLiquity", () => {
       await otherLiquities[2].openTrove(new Trove({ collateral: 1, debt: 40 }));
     });
 
-    it("should find hints for redemption", async () => {
-      const redemptionHints = await liquity._findRedemptionHints(Decimal.from(55));
+    // it("should find hints for redemption", async () => {
+    //   const redemptionHints = await liquity._findRedemptionHints(Decimal.from(55));
 
-      // 30 would be redeemed from otherLiquities[2],
-      // 20 from otherLiquities[1],
-      // 5 from otherLiquities[0] (as there are 10 for gas compensation in each)
-      expect(redemptionHints).to.deep.equal([
-        otherLiquities[2].userAddress!,
-        liquity.userAddress!,
-        Decimal.from("13")
-        // (1 ETH * 200 - 5) / (20 - 5) = 13
-        // (subtracting 5 for the redemption to otherLiquities[0])
-      ]);
-    });
+    //   // 30 would be redeemed from otherLiquities[2],
+    //   // 20 from otherLiquities[1],
+    //   // 5 from otherLiquities[0] (as there are 10 for gas compensation in each)
+    //   expect(redemptionHints).to.deep.equal([
+    //     await otherUsers[2].getAddress(),
+    //     await user.getAddress(),
+    //     Decimal.from("13")
+    //     // (1 ETH * 200 - 5) / (20 - 5) = 13
+    //     // (subtracting 5 for the redemption to otherLiquities[0])
+    //   ]);
+    // });
 
     it("should redeem some collateral", async () => {
-      const tx = await liquity.redeemCollateral(55, {}, { gasPrice: 0 });
+      const details = await liquity.redeemCollateral(55, {}, { gasPrice: 0 });
 
-      const receipt = await tx.waitForReceipt();
-      assertStrictEquals(receipt.status, "succeeded" as const);
-
-      expect(receipt.details).to.deep.equal({
+      expect(details).to.deep.equal({
         attemptedTokenAmount: Decimal.from(55),
         actualTokenAmount: Decimal.from(55),
         collateralReceived: Decimal.from(0.275),
@@ -615,15 +641,41 @@ describe("EthersLiquity", () => {
     });
 
     it("should redeem using the maximum iterations and almost all gas", async () => {
-      const tx = await liquity.redeemCollateral(redeemMaxIterations);
+      const { rawReceipt } = await waitForSuccess(
+        liquity.send.redeemCollateral(redeemMaxIterations)
+      );
 
-      const receipt = await tx.waitForReceipt();
-      assertStrictEquals(receipt.status, "succeeded" as const);
-
-      const gasUsed = receipt.rawReceipt.gasUsed.toNumber();
+      const gasUsed = rawReceipt.gasUsed.toNumber();
       // gasUsed is ~half the real used amount because of how refunds work, see:
       // https://ethereum.stackexchange.com/a/859/9205
       expect(gasUsed).to.be.at.least(4950000, "should use close to 10M gas");
     });
   });
+
+  // describe.skip("Gas estimation", () => {
+  //   const increaseTime = (timeJump: number) => provider.send("evm_increaseTime", [timeJump]);
+
+  //   before(async function () {
+  //     if (network.name !== "buidlerevm") {
+  //       this.skip();
+  //     }
+
+  //     addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+  //     [deployerLiquity, liquity] = await connectUsers([deployer, user]);
+  //   });
+
+  //   it("should include enough gas for updating lastFeeOpTime", async () => {
+  //     let {
+  //       rawReceipt: { gasUsed }
+  //     } = await waitForSuccess(deployerLiquity.openTrove(new Trove({ collateral: 1, debt: 10 })));
+  //     console.log(`${gasUsed}`);
+
+  //     //await increaseTime(120);
+
+  //     ({
+  //       rawReceipt: { gasUsed }
+  //     } = await waitForSuccess(liquity.openTrove(new Trove({ collateral: 1, debt: 10 }))));
+  //     console.log(`${gasUsed}`);
+  //   });
+  // });
 });
