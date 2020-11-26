@@ -18,7 +18,7 @@ import "./Dependencies/SafeMath128.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
-/** 
+/* 
  * The Stability Pool holds LUSD tokens deposited by Stability Pool depositors. 
  * 
  * When a trove is liquidated, then depending on system conditions, some of its LUSD debt gets offset with
@@ -107,11 +107,27 @@ import "./Dependencies/console.sol";
  * deposit spanned one scale change. We only care about gains across one scale change, since the compounded
  * deposit is defined as being 0 once it has spanned more than one scale change.
  * 
+ *
  * --- UPDATING P WHEN A LIQUIDATION OCCURS --- 
  *
  * Please see the implementation spec in the proof document, which closely follows on from the compounded deposit / ETH gain derivations:
  * https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf
  * 
+ *
+ * --- LQTY ISSUANCE TO STABILITY POOL DEPOSITORS --- 
+ *
+ *  An LQTY issuance event occurs at every deposit operation, and every liquidation. 
+ *
+ * Each deposit is tagged with the address of the front end through which it was made.
+ *
+ * All deposits earn a share of the issued LQTY in proportion to the deposit as a share of total deposits. The LQTY earned
+ * by a given deposit, is split between the depositor and the front end through which the deposit was made, based on the front end's kickbackRate.
+ * 
+ * Please see the system Readme for an overview:
+ * https://github.com/liquity/dev/blob/main/README.md#lqty-issuance-to-stability-depositors
+ *
+ * We use the same mathematical product-sum approach to track LQTY gains for depositors, where 'G' is the sum corresponding to LQTY gains. 
+ * The product P (and snapshot P_t) is re-used, as the ratio P/P_t tracks a deposit's depletion due to liquidations.
  *
  */
 contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
@@ -166,7 +182,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     mapping (address => uint) public frontEndStakes; // front end address -> last recorded total deposits, tagged with that front end
     mapping (address => Snapshots) public frontEndSnapshots; // front end address -> snapshots struct
 
-    /**  Product 'P': Running product by which to multiply an initial deposit, in order to find the current compounded deposit,
+    /*  Product 'P': Running product by which to multiply an initial deposit, in order to find the current compounded deposit,
     * after a series of liquidations have occurred, each of which cancel some CLV debt with the deposit.
     * 
     * During its lifetime, a deposit's value evolves from d_t to d_t * P / P_t , where P_t
@@ -180,7 +196,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     // With each offset that fully empties the Pool, the epoch is incremented by 1
     uint128 public currentEpoch;
 
-    /** ETH Gain sum 'S': During its lifetime, each deposit d_t earns an ETH gain of ( d_t * [S - S_t] )/P_t, where S_t
+    /* ETH Gain sum 'S': During its lifetime, each deposit d_t earns an ETH gain of ( d_t * [S - S_t] )/P_t, where S_t
     * is the depositor's snapshot of S taken at the time t when the deposit was made.
     * 
     * The 'S' sums are stored in a nested mapping (epoch => scale => sum):
@@ -190,7 +206,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     */
     mapping (uint => mapping(uint => uint)) public epochToScaleToSum;
 
-    /**
+    /*
     * Similarly, the sum 'G' is used to calculate LQTY gains. During it's lifetime, each deposit d_t earns a LQTY gain of
     *  ( d_t * [G - G_t] )/P_t, where G_t is the depositor's snapshot of G taken at time t when  the deposit was made.
     *
@@ -253,7 +269,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // --- External Depositor Functions ---
 
-    /**  provideToSP():
+    /*  provideToSP():
     *
     * - Triggers a LQTY issuance, based on time passed since the last. The LQTY issuance is shared between *all* depositors and front ends
     * - Tags the deposit with the provided front end tag param, if it's a new deposit
@@ -296,7 +312,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         emit ETHGainWithdrawn(msg.sender, depositorETHGain, CLVLoss); // CLV Loss required for event log
     }
 
-    /**  withdrawFromSP():
+    /*  withdrawFromSP():
     *
     * - Triggers a LQTY issuance, based on time passed since the last. The LQTY issuance is shared between *all* depositors and front ends
     * - Removes the deposit's front end tag if it is a full withdrawal
@@ -396,7 +412,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     function _updateG(uint _LQTYIssuance) internal {
         uint totalCLV = totalCLVDeposits; // cached to save an SLOAD
 
-        /** 
+        /* 
         * When total deposits is 0, G is not updated. In this case, the LQTY issued can not be obtained by later 
         * depositors - it is missed out on, and remains in the balanceof the CommunityIssuance contract. 
         */
@@ -420,7 +436,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // --- Liquidation functions ---
 
-    /** 
+    /* 
     * Cancel out the specified debt against the CLV contained in the Stability Pool (as far as possible)
     * and transfers the CDP's ETH collateral from ActivePool to StabilityPool.
     * Only called by liquidation functions in the CDPManager. 
@@ -453,7 +469,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         uint CLVLossNumerator = _debtToOffset.mul(1e18).sub(lastCLVLossError_Offset);
         uint ETHNumerator = _collToAdd.mul(1e18).add(lastETHError_Offset);
 
-        /**
+        /*
         * Compute the CLV and ETH rewards. Uses a "feedback" error correction, to keep
         * the cumulative error in the P and S state variables low.
         */
@@ -461,7 +477,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
             CLVLossPerUnitStaked = 1e18;
             lastCLVLossError_Offset = 0;
         } else {
-            /** 
+            /* 
             * Add 1 to make error in quotient positive. We want "slightly too much" CLV loss,
             * which ensures the error in any given compoundedCLVDeposit favors the Stability Pool. 
             */
@@ -481,7 +497,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         uint newP;
 
         assert(_CLVLossPerUnitStaked <= 1e18);
-        /**
+        /*
         * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool CLV in the liquidation. 
         * We make the product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
         */
@@ -491,7 +507,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         uint128 currentEpochCached = currentEpoch;
         uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
 
-        /**  
+        /*  
         * Calculate the new S first, before we update P.
         * The ETH gain for any given depositor from a liquidation depends on the value of their deposit 
         * (and the value of totalDeposits) prior to the Stability being depleted by the debt in the liquidation.
@@ -540,7 +556,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // --- Reward calculator functions for depositor and front end ---
 
-    /** Calculates the ETH gain earned by the deposit since its last snapshots were taken. 
+    /* Calculates the ETH gain earned by the deposit since its last snapshots were taken. 
     * Given by the formula:  E = d0 * (S - S(0))/P(0)
     * where S(0) and P(0) are the depositor's snapshots of the sum S and product P, respectively. 
     * d0 is the last recorded deposit value. 
@@ -557,7 +573,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     }
 
     function _getETHGainFromSnapshots(uint initialDeposit, Snapshots memory snapshots) internal view returns (uint) {
-        /**  
+        /*  
         * Grab the sum 'S' from the epoch at which the stake was made. The ETH gain may span up to one scale change.
         * If it does, the second portion of the ETH gain is scaled by 1e18.
         * If the gain spans no scale change, the second portion will be 0. 
@@ -575,7 +591,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         return ETHGain;
     }
 
-    /**
+    /*
     * Calculate the LQTY gain earned by a deposit since its last snapshots were taken. 
     * Given by the formula:  LQTY = d0 * (G - G(0))/P(0)
     * where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively.
@@ -587,7 +603,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
         address frontEndTag = deposits[_depositor].frontEndTag;
 
-        /** 
+        /* 
         * If not tagged with a front end, the depositor gets a 100% cut of what their deposit earned.
         * Otherwise, their cut of the deposit's earnings is equal to the kickbackRate, set by the front end through
         * which they made their deposit.
@@ -601,7 +617,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         return LQTYGain;
     }
 
-    /**
+    /*
     * Return the LQTY gain earned by the front end. Given by the formula:  E = D0 * (G - G(0))/P(0)
     * where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively.
     *
@@ -621,7 +637,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     }
 
     function _getLQTYGainFromSnapshots(uint initialStake, Snapshots memory snapshots) internal view returns (uint) {
-       /**  
+       /*  
         * Grab the sum 'G' from the epoch at which the stake was made. The LQTY gain may span up to one scale change.
         * If it does, the second portion of the LQTY gain is scaled by 1e18.
         * If the gain spans no scale change, the second portion will be 0. 
@@ -641,7 +657,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // --- Compounded deposit and compounded front end stake ---
 
-    /** 
+    /* 
     * Return the user's compounded deposit. Given by the formula:  d = d0 * P/P(0)
     * where P(0) is the depositor's snapshot of the product P, taken when they last updated their deposit.
     */
@@ -655,7 +671,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         return compoundedDeposit;
     }
 
-    /** 
+    /* 
     * Return the front end's compounded stake. Given by the formula:  D = D0 * P/P(0)
     * where P(0) is the depositor's snapshot of the product P, taken at the last time
     * when one of the front end's tagged deposits updated their deposit.
@@ -691,7 +707,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         uint compoundedStake;
         uint128 scaleDiff = currentScale.sub(scaleSnapshot);
 
-        /** Compute the compounded stake. If a scale change in P was made during the stake's lifetime,
+        /* Compute the compounded stake. If a scale change in P was made during the stake's lifetime,
         * account for it. If more than one scale change was made, then the stake has decreased by a factor of
         * at least 1e-18 -- so return 0.
         */
@@ -703,7 +719,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
             compoundedStake = 0;
         }
 
-        /**
+        /*
         * If compounded deposit is less than a billionth of the initial deposit, return 0.  
         *
         * NOTE: originally, this line was in place to stop rounding errors making the deposit too large. However, the error 

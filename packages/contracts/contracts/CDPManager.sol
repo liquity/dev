@@ -43,7 +43,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
     uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // 18 digit decimal. Corresponds to an hourly decay factor of 0.99
 
-    /** 
+    /* 
     * BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base rate from a redemption. 
     * Corresponds to (1 / ALPHA) in the white paper. 
     */
@@ -75,7 +75,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // Snapshot of the total collateral across the ActivePool and DefaultPool, immediately after the latest liquidation.
     uint public totalCollateralSnapshot;
 
-    /**
+    /*
     * L_ETH and L_CLVDebt track the sums of accumulated liquidation rewards per unit staked. During its lifetime, each stake earns:
     *
     * An ETH gain of ( stake * [L_ETH - L_ETH(0)] )
@@ -99,7 +99,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     uint public lastETHError_Redistribution;
     uint public lastCLVDebtError_Redistribution;
 
-    /** 
+    /* 
     * --- Variable container structs for liquidations ---
     *
     * These structs are used to hold, return and assign variables inside the liquidation functions,
@@ -327,7 +327,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _closeCDP(_user);
             emit CDPLiquidated(_user, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
-        /** 
+        /* 
         * If 110% <= ICR < current TCR (accounting for the preceding liquidations in the current sequence)
         * and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution) 
         */
@@ -362,7 +362,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         returns (uint debtToOffset, uint collToSendToSP, uint debtToRedistribute, uint collToRedistribute)
     {
         if (_CLVInStabPool > 0) {
-        /** 
+        /* 
         * Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder.
         *  If the trove's debt is larger than the deposited CLV in the Stability Pool:
         *
@@ -381,7 +381,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    /** 
+    /* 
     * In a partial liquidation, returns the values for a trove's offset coll and debt, along with it's new debt and coll,
     * and the ETH gas compensation.
     */
@@ -410,7 +410,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
             emit CDPLiquidated(_user, _entireCDPDebt, _entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
         }
-        /** 
+        /* 
         * When trove's debt is greater than the Pool, perform a partial liquidation: offset as much as possible,
         * and do not redistribute the remainder. The trove remains active, with a reduced collateral and debt.
         * ETH gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. 
@@ -436,7 +436,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    /** 
+    /* 
     * Liquidate a sequence of troves. Closes a maximum number of n under-collateralized CDPs,
     * starting from the one with the lowest collateral ratio in the system, and moving upwards
     */
@@ -472,7 +472,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _sendGasCompensation(msg.sender, T.totalCLVGasCompensation, T.totalCollGasCompensation);
     }
 
-    /**
+    /*
     * This function is used when the liquidateCDPs sequence starts during Recovery Mode. However, it
     * handle the case where the system *leaves* Recovery Mode, part way through the liquidation sequence
     */
@@ -571,7 +571,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    /** 
+    /* 
     * Attempt to liquidate a custom list of troves provided by the caller. The liquidation sequence stops if
     * a partial liquidation is performed, so it's up to the caller to order the troves in the _troveArray parameter.
     */
@@ -608,7 +608,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         _sendGasCompensation(msg.sender, T.totalCLVGasCompensation, T.totalCollGasCompensation);
     }
 
-    /** 
+    /* 
     * This function is used when the batch liquidation sequence starts during Recovery Mode. However, it
     * handle the case where the system *leaves* Recovery Mode, part way through the liquidation sequence
     */
@@ -809,7 +809,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return V;
     }
 
-    /** 
+    /* 
     * Called when a full redemption occurs, and closes the trove.
     * The redeemer swaps (debt - 10) CLV for (debt - 10) worth of ETH, so the 10 CLV gas compensation left corresponds to the remaining debt.
     * In order to close the trove, the 10 CLV gas compensation is burned, and 10 debt is removed from the active pool.
@@ -838,7 +838,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return nextCDP == address(0) || getCurrentICR(nextCDP, _price) < MCR;
     }
 
-    /** Send _CLVamount CLV to the system and redeem the corresponding amount of collateral from as many CDPs as are needed to fill the redemption
+    /* Send _CLVamount CLV to the system and redeem the corresponding amount of collateral from as many CDPs as are needed to fill the redemption
     * request.  Applies pending rewards to a CDP before reducing its debt and coll.
     *
     * Note that if _amount is very large, this function can run out of gas, specially if traversed troves are small. This can be easily avoided by 
@@ -1033,7 +1033,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     function hasPendingRewards(address _borrower) public view override returns (bool) {
-        /** 
+        /* 
         * A CDP has pending rewards if its snapshot is less than the current rewards per-unit-staked sum:
         * this indicates that rewards have occured since the snapshot was made, and the user therefore has
         * pending rewards 
@@ -1093,7 +1093,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (totalCollateralSnapshot == 0) {
             stake = _coll;
         } else {
-            /**  
+            /*  
             * The following assert() holds true because:
             * - The system always contains >= 1 trove 
             * - When we close or liquidate a trove, we redistribute the pending rewards, so if all troves were closed/liquidated, 
@@ -1109,7 +1109,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         if (_debt == 0) { return; }
 
         if (totalStakes > 0) {
-            /** 
+            /* 
             * Add distributed coll and debt rewards-per-unit-staked to the running totals.
             * Division uses a "feedback" error correction, to keep the cumulative error in
             * the  L_ETH and L_CLVDebt state variables low. 
@@ -1153,7 +1153,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         sortedCDPs.remove(_user);
     }
 
-    /** 
+    /* 
     * Updates snapshots of system stakes and system collateral, excluding a given collateral remainder from the calculation.
     *
     * This is used in a liquidation sequence, when we need to calculate the system stakes & collateral before making a new stake for
@@ -1187,7 +1187,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return index;
     }
 
-    /** 
+    /* 
     * Remove a CDP owner from the CDPOwners array, not preserving array order. Removing owner 'B' does the following:
     * [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. 
     */
@@ -1263,7 +1263,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     // --- Redemption fee functions ---
 
-    /** 
+    /* 
     * This function has two impacts on the baseRate state variable:
     * 1) decays the baseRate based on time passed since last redemption or LUSD borrowing operation.
     * then,

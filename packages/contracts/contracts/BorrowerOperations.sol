@@ -190,7 +190,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _adjustLoan(msg.sender, 0, _CLVAmount, false, _hint);
     }
 
-    /**
+    /*
     * If ETH is sent, the operation is considered as a collateral increase, and the first parameter
     * _collWithdrawal must be zero 
     */

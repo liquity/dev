@@ -8,7 +8,7 @@ import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
 
-/** 
+/* 
  * The Active Pool holds the ETH collateral and LUSD debt (but not LUSD tokens) for all active troves.
  * 
  * When a trove is liquidated, it's ETH and LUSD debt are transferred from the Active Pool, to either the
@@ -56,7 +56,7 @@ contract ActivePool is Ownable, IPool {
 
     // --- Getters for public variables. Required by IPool interface ---
 
-    /** 
+    /* 
     * Returns the ETH state variable.
     *
     *Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts. 

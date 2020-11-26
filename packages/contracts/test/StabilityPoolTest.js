@@ -1065,7 +1065,7 @@ contract('StabilityPool', async accounts => {
       assert.isTrue(G_After.gt(G_Before))
     })
 
-    it("provideToSP(), topup: doesn't change the front end tag", async () => {
+    it("provideToSP(), topup from different front end: doesn't change the front end tag", async () => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // whale transfer to troves D and E
@@ -1332,6 +1332,49 @@ contract('StabilityPool', async accounts => {
       await th.assertRevert(txPromise_C, 'StabilityPool: Amount must be non-zero')
       await th.assertRevert(txPromise_D, 'StabilityPool: Amount must be non-zero')
     })
+
+    it.only("provideToSP(): reverts if user is a registered front end", async () => {
+        // C, D, E, F open loans 
+        await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(1, 'ether') })
+        await borrowerOperations.openLoan(dec(30, 18), D, { from: D, value: dec(1, 'ether') })
+        await borrowerOperations.openLoan(dec(30, 18), E, { from: E, value: dec(1, 'ether') })
+        await borrowerOperations.openLoan(dec(30, 18), F, { from: F, value: dec(1, 'ether') })
+  
+        // C, E, F registers as front end 
+        await stabilityPool.registerFrontEnd(dec(1, 18), { from: C })
+        await stabilityPool.registerFrontEnd(dec(1, 18), { from: E })
+        await stabilityPool.registerFrontEnd(dec(1, 18), { from: F })
+
+        const txPromise_C = stabilityPool.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: C })
+        const txPromise_E = stabilityPool.provideToSP(dec(10, 18), frontEnd_1, { from: E })
+        const txPromise_F = stabilityPool.provideToSP(dec(10, 18), F, { from: F })
+        await th.assertRevert(txPromise_C, "StabilityPool: must not already be a registered front end")
+        await th.assertRevert(txPromise_E, "StabilityPool: must not already be a registered front end")
+        await th.assertRevert(txPromise_F, "StabilityPool: must not already be a registered front end")
+  
+        const txD =await stabilityPool.provideToSP(dec(10, 18), frontEnd_1, { from: D })
+        assert.isTrue(txD.receipt.status)
+      })
+
+      it.only("provideToSP(): reverts if provided tag is not a registered front end", async () => {
+        await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(1, 'ether') })
+        await borrowerOperations.openLoan(dec(30, 18), D, { from: D, value: dec(1, 'ether') })
+        await borrowerOperations.openLoan(dec(30, 18), E, { from: E, value: dec(1, 'ether') })
+      
+        const txPromise_C = stabilityPool.provideToSP(dec(10, 18), A, { from: C })  // passes another EOA
+        const txPromise_D = stabilityPool.provideToSP(dec(10, 18), cdpManager.address, { from: D })
+        const txPromise_E = stabilityPool.provideToSP(dec(10, 18), stabilityPool.address, { from: E })
+        const txPromise_F = stabilityPool.provideToSP(dec(10, 18), F, { from: F }) // passes itself
+
+        await th.assertRevert(txPromise_C, "StabilityPool: Tag must be a registered front end, or the zero address")
+        await th.assertRevert(txPromise_D, "StabilityPool: Tag must be a registered front end, or the zero address")
+        await th.assertRevert(txPromise_E, "StabilityPool: Tag must be a registered front end, or the zero address")
+        await th.assertRevert(txPromise_F, "StabilityPool: Tag must be a registered front end, or the zero address")
+      })
+
+
+    
+
 
     // --- withdrawFromSP ---
 
@@ -3581,6 +3624,25 @@ contract('StabilityPool', async accounts => {
       await th.assertRevert(invalidKickbackTx_B, "StabilityPool: Kickback rate must be in range [0,1]")
       await th.assertRevert(invalidKickbackTx_C, "StabilityPool: Kickback rate must be in range [0,1]")
       await th.assertRevert(invalidKickbackTx_D, "StabilityPool: Kickback rate must be in range [0,1]")
+    })
+
+    it.only("registerFrontEnd(): reverts if address has a non-zero deposit already", async () => {
+      // C, D, Eopen loans 
+      await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(dec(30, 18), D, { from: D, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(dec(30, 18), E, { from: E, value: dec(1, 'ether') })
+
+      // C, E provides to SP
+      await stabilityPool.provideToSP(dec(10, 18), frontEnd_1, { from: C })
+      await stabilityPool.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: E })
+
+      const txPromise_C = stabilityPool.registerFrontEnd(dec(1, 18), { from: C })
+      const txPromise_E = stabilityPool.registerFrontEnd(dec(1, 18), { from: E })
+      await th.assertRevert(txPromise_C, "StabilityPool: User must have no deposit")
+      await th.assertRevert(txPromise_E, "StabilityPool: User must have no deposit")
+
+      const txD = await stabilityPool.registerFrontEnd(dec(1, 18), { from: D })
+      assert.isTrue(txD.receipt.status)
     })
   })
 })

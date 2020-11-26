@@ -5,6 +5,13 @@ module.exports = {
     accounts
   },
 
+  // Improve performance by skipping statements and functions. Tool still checks lines of code and branches:
+  // https://github.com/sc-forks/solidity-coverage/blob/master/docs/advanced.md
+  measureStatementCoverage: false,
+  measureFunctionCoverage: false,
+
+  testfiles: "test/CLVTokenTest.js",
+
   skipFiles: [
     "TestContracts/",
     "MultiCDPGetter.sol",

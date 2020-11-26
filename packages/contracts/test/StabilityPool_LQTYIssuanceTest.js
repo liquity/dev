@@ -65,7 +65,8 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       /* Monthly LQTY issuance
   
-        Expected fraction of total supply issued per month, for a yearly halving schedule:
+        Expected fraction of total supply issued per month, for a yearly halving schedule
+        (issuance in each month, not cumulative):
     
         Month 1: 0.055378538087966600
         Month 2: 0.052311755607206100
@@ -514,6 +515,99 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const finalEpoch = (await stabilityPool.currentEpoch()).toString()
       assert.equal(finalEpoch, 4)
     })
+
+
+    it('LQTY issuance for a given period is not obtainable if the SP was empty during the period', async () => {
+      // Set the deployment time to now
+      await communityIssuanceTester.setDeploymentTime()
+      const CIBalanceBefore = await growthToken.balanceOf(communityIssuanceTester.address)
+
+      await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), B, { from: B, value: dec(1, 'ether') })
+      await borrowerOperations.openLoan(dec(100, 18), C, { from: C, value: dec(1, 'ether') })
+
+      const totalLQTYissuance_0 = await communityIssuanceTester.totalLQTYIssued()
+      const G_0 = await stabilityPool.epochToScaleToG(0, 0)  // epochs and scales will not change in this test: no liquidations
+      assert.equal(totalLQTYissuance_0, '0') 
+      assert.equal(G_0, '0') 
+
+      // 1 month passes (M1)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+      
+      // LQTY issuance event triggered: A deposits
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, {from: A})
+
+      // Check G is not updated, since SP was empty prior to A's deposit
+      const G_1 = await stabilityPool.epochToScaleToG(0, 0)
+      assert.isTrue(G_1.eq(G_0))
+
+      // Check total LQTY issued is updated
+      const totalLQTYissuance_1 = await communityIssuanceTester.totalLQTYIssued()
+      assert.isTrue(totalLQTYissuance_1.gt(totalLQTYissuance_0))
+
+      // 1 month passes (M2)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+
+      //LQTY issuance event triggered: A withdraws. 
+      await stabilityPool.withdrawFromSP(dec(100, 18), {from: A})
+
+      // Check G is updated, since SP was not empty prior to A's withdrawal
+      const G_2 = await stabilityPool.epochToScaleToG(0, 0)
+      assert.isTrue(G_2.gt(G_1))
+
+      // Check total LQTY issued is updated
+      const totalLQTYissuance_2 = await communityIssuanceTester.totalLQTYIssued()
+      assert.isTrue(totalLQTYissuance_2.gt(totalLQTYissuance_1))
+
+        // 1 month passes (M3)
+        await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+
+        // LQTY issuance event triggered: C deposits
+        await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, {from: C})
+
+        // Check G is not updated, since SP was empty prior to C's deposit
+        const G_3 = await stabilityPool.epochToScaleToG(0, 0)
+        assert.isTrue(G_3.eq(G_2))
+  
+        // Check total LQTY issued is updated
+        const totalLQTYissuance_3 = await communityIssuanceTester.totalLQTYIssued()
+        assert.isTrue(totalLQTYissuance_3.gt(totalLQTYissuance_2))
+
+        // 1 month passes (M4)
+        await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+
+        // C withdraws
+        await stabilityPool.withdrawFromSP(dec(100, 18), {from: C})
+
+        // Check G is increased, since SP was not empty prior to C's withdrawal
+        const G_4 = await stabilityPool.epochToScaleToG(0, 0)
+        assert.isTrue(G_4.gt(G_3))
+  
+        // Check total LQTY issued is increased
+        const totalLQTYissuance_4 = await communityIssuanceTester.totalLQTYIssued()
+        assert.isTrue(totalLQTYissuance_4.gt(totalLQTYissuance_3))
+      
+        // Get LQTY Gains
+        const A_LQTYGain = await growthToken.balanceOf(A)
+        const C_LQTYGain = await growthToken.balanceOf(C)
+
+        // Check A earns gains from M2 only
+        assert.isAtMost(getDifference(A_LQTYGain, issuance_M2), 1e15)
+
+        // Check C earns gains from M4 only
+        assert.isAtMost(getDifference(C_LQTYGain, issuance_M4), 1e15)
+
+        // Check totalLQTYIssued = M1 + M2 + M3 + M4.  1e-3 error tolerance.
+        const expectedIssuance4Months = issuance_M1.add(issuance_M2).add(issuance_M3).add(issuance_M4)
+        assert.isAtMost(getDifference(expectedIssuance4Months, totalLQTYissuance_4), 1e15)
+        
+        // Check CI has only transferred out tokens for M2 + M4.  1e-3 error tolerance.
+        const expectedLQTYSentOutFromCI = issuance_M2.add(issuance_M4)
+        const CIBalanceAfter = await growthToken.balanceOf(communityIssuanceTester.address)
+        const CIBalanceDifference = CIBalanceBefore.sub(CIBalanceAfter)
+        assert.isAtMost(getDifference(CIBalanceDifference, expectedLQTYSentOutFromCI), 1e15)
+    })
+
 
     // --- Scale factor changes ---
 
@@ -1192,6 +1286,159 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.isAtMost(getDifference(E_FinalLQTYBalance, E_expectedFinalLQTYBalance), 1e15)
       assert.isAtMost(getDifference(F1_FinalLQTYBalance, F1_expectedFinalLQTYBalance), 1e15)
       assert.isAtMost(getDifference(F2_FinalLQTYBalance, F2_expectedFinalLQTYBalance), 1e15)
+    })
+  
+    /* Serial scale changes, with one front end
+
+    F1 kickbackRate: 80%
+
+    A, B make deposit 50 CLV via F1
+    1 month passes. L1 brings P to (~1e-10)*P. L1:  99.999999999000000000 CLV, 1 ETH.  scale = 0
+    C makes deposit 100 via F1
+    1 month passes. L2 decreases P by(~1e-10)P. L2:  99.999999999000000000 CLV, 1 ETH  scale = 1
+    D makes deposit 100 via F1
+    1 month passes. L3 decreases P by(~1e-10)P. L3:  99.999999999000000000 CLV, 1 ETH scale = 1
+    E makes deposit 100 via F1
+    1 month passes. L3 decreases P by(~1e-10)P. L3:  99.999999999000000000 CLV, 1 ETH scale = 2
+    A, B, C, D, E withdraw
+
+    =========
+    Expect front end withdraws ~3 month's worth of LQTY */
+
+    it("withdrawFromSP(): Several deposits of 100 CLV span one scale factor change. Depositors withdraw correct LQTY gains", async () => {
+      const kickbackRate = toBN(dec(80, 16)) // F1 kicks 80% back to depositor
+      await stabilityPool.registerFrontEnd(kickbackRate, { from: frontEnd_1 })
+      
+      // Whale opens CDP with 100 ETH
+      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
+
+
+      const _4_Defaulters = [defaulter_1, defaulter_2, defaulter_3, defaulter_4]
+
+      for (const defaulter of _4_Defaulters) {
+        // Defaulters 1-3 each withdraw to 99.999999999 debt (including gas comp)
+        await borrowerOperations.openLoan(0, defaulter, { from: defaulter, value: dec(1, 'ether') })
+        await borrowerOperations.withdrawCLV('89999999999000000000', defaulter, { from: defaulter })
+      }
+
+      // Confirm all would-be depositors have 0 LQTY
+      for (const depositor of [A, B, C, D, E]) {
+        assert.equal(await growthToken.balanceOf(depositor), '0')
+      }
+      assert.equal(await growthToken.balanceOf(frontEnd_1), '0')
+
+      // price drops by 50%
+      await priceFeed.setPrice(dec(100, 18));
+
+      // Check scale is 0
+      assert.equal(await stabilityPool.currentScale(), '0')
+
+      // A, B provides 50 CLV to SP
+      await borrowerOperations.openLoan(dec(50, 18), A, { from: A, value: dec(100, 'ether') })
+      await stabilityPool.provideToSP(dec(50, 18), frontEnd_1, { from: A })
+      await borrowerOperations.openLoan(dec(50, 18), B, { from: B, value: dec(100, 'ether') })
+      await stabilityPool.provideToSP(dec(50, 18), frontEnd_1, { from: B })
+
+      // 1 month passes (M1)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+
+      // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
+      const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
+      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isTrue(txL1.receipt.status)
+
+      // Check scale is 0
+      assert.equal(await stabilityPool.currentScale(), '0')
+
+      // C provides to SP
+      await borrowerOperations.openLoan(dec(100, 18), C, { from: C, value: dec(100, 'ether') })
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: C })
+
+      // 1 month passes (M2)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+
+      // Defaulter 2 liquidated
+      const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
+      assert.isFalse(await sortedCDPs.contains(defaulter_2))
+      assert.isTrue(txL2.receipt.status)
+
+      // Check scale is 1
+      assert.equal(await stabilityPool.currentScale(), '1')
+
+      // D provides to SP
+      await borrowerOperations.openLoan(dec(100, 18), D, { from: D, value: dec(100, 'ether') })
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: D })
+
+      // 1 month passes (M3)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+
+      // Defaulter 3 liquidated
+      const txL3 = await cdpManager.liquidate(defaulter_3, { from: owner });
+      assert.isFalse(await sortedCDPs.contains(defaulter_3))
+      assert.isTrue(txL3.receipt.status)
+
+      // Check scale is 1
+      assert.equal(await stabilityPool.currentScale(), '1')
+
+      // E provides to SP
+      await borrowerOperations.openLoan(dec(100, 18), E, { from: E, value: dec(100, 'ether') })
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: E })
+
+      // 1 month passes (M4)
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+
+      // Defaulter 4 liquidated
+      const txL4 = await cdpManager.liquidate(defaulter_4, { from: owner });
+      assert.isFalse(await sortedCDPs.contains(defaulter_4))
+      assert.isTrue(txL4.receipt.status)
+
+      // Check scale is 2
+      assert.equal(await stabilityPool.currentScale(), '2')
+
+      /* All depositors withdraw fully from SP.  Withdraw in reverse order, so that the largest remaining
+      deposit (F) withdraws first, and does not get extra LQTY gains from the periods between withdrawals */
+      for (depositor of [E, D, C, B, A]) {
+        await stabilityPool.withdrawFromSP(dec(100, 18), { from: depositor })
+      }
+
+      const LQTYGain_A = await growthToken.balanceOf(A)
+      const LQTYGain_B = await growthToken.balanceOf(B)
+      const LQTYGain_C = await growthToken.balanceOf(C)
+      const LQTYGain_D = await growthToken.balanceOf(D)
+      const LQTYGain_E = await growthToken.balanceOf(E)
+    
+      const LQTYGain_F1 = await growthToken.balanceOf(frontEnd_1)
+
+      /* Expect each deposit to have earned LQTY issuance for the month in which it was active, prior
+     to the liquidation that mostly depleted it:
+     
+     expectedLQTYGain_A:  k * M1 / 2    (50% of SP)
+     expectedLQTYGain_B:  k * M1 / 2    (50% of SP)
+
+     expectedLQTYGain_C:  k * M2        (~100% of SP)
+
+     expectedLQTYGain_D:  k * M3        (~100% of SP)
+
+     expectedLQTYGain_F1:  (1 - k) * (M1 + M2 + M3)
+     */
+     const expectedLQTYGain_A = kickbackRate.mul(issuance_M1).div(toBN('2')).div(toBN(dec(1, 18)))
+     const expectedLQTYGain_B = kickbackRate.mul(issuance_M1).div(toBN('2')).div(toBN(dec(1, 18)))
+     const expectedLQTYGain_C = kickbackRate.mul(issuance_M2).div(toBN(dec(1, 18)))
+     const expectedLQTYGain_D = kickbackRate.mul(issuance_M3).div(toBN(dec(1, 18)))
+     const expectedLQTYGain_E = kickbackRate.mul(issuance_M4).div(toBN(dec(1, 18)))
+   
+     const issuance1st4Months = issuance_M1.add(issuance_M2).add(issuance_M3).add(issuance_M4)
+     const expectedLQTYGain_F1 = (toBN(dec(1, 18)).sub(kickbackRate)).mul(issuance1st4Months).div(toBN(dec(1, 18)))
+
+    //  console.log(`F1 gain: ${LQTYGain_F1}`)
+    //  console.log(`F1 expected gain: ${expectedLQTYGain_F1}`)
+
+      assert.isAtMost(getDifference(expectedLQTYGain_A, LQTYGain_A), 1e15)
+      assert.isAtMost(getDifference(expectedLQTYGain_B, LQTYGain_B), 1e15)
+      assert.isAtMost(getDifference(expectedLQTYGain_C, LQTYGain_C), 1e15)
+      assert.isAtMost(getDifference(expectedLQTYGain_D, LQTYGain_D), 1e15)
+      assert.isAtMost(getDifference(expectedLQTYGain_E, LQTYGain_E), 1e15)
+      assert.isAtMost(getDifference(expectedLQTYGain_F1, LQTYGain_F1), 1e15)
     })
   })
 })
