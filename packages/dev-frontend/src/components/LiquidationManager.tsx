@@ -6,7 +6,9 @@ import { useLiquity } from "../hooks/LiquityContext";
 import { Icon } from "./Icon";
 
 export const LiquidationManager: React.FC = () => {
-  const { liquity } = useLiquity();
+  const {
+    liquity: { send: liquity }
+  } = useLiquity();
   const [numberOfTrovesToLiquidate, setNumberOfTrovesToLiquidate] = useState("40");
 
   return (

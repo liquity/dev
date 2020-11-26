@@ -1,35 +1,36 @@
 import { Decimal, Decimalish } from "@liquity/decimal";
 
+import { proxify } from "./utils";
 import { Trove, TroveChange } from "./Trove";
 
 export type PopulatedLiquityTransaction<
-  T = unknown,
-  U extends SentLiquityTransaction = SentLiquityTransaction
+  P = unknown,
+  T extends SentLiquityTransaction = SentLiquityTransaction
 > = {
-  rawTransaction: T;
+  rawPopulatedTransaction: P;
 
-  send(): Promise<U>;
+  send(): Promise<T>;
 };
 
-export type SentLiquityTransaction<T = unknown, U extends LiquityReceipt = LiquityReceipt> = {
-  rawTransaction: T;
+export type SentLiquityTransaction<S = unknown, T extends LiquityReceipt = LiquityReceipt> = {
+  rawSentTransaction: S;
 
-  getReceipt(): Promise<U>;
-  waitForReceipt(): Promise<Extract<U, MinedReceipt>>;
+  getReceipt(): Promise<T>;
+  waitForReceipt(): Promise<Extract<T, MinedReceipt>>;
 };
 
 export type PendingReceipt = { status: "pending" };
 
-export type FailedReceipt<T = unknown> = { status: "failed"; rawReceipt: T };
+export type FailedReceipt<R = unknown> = { status: "failed"; rawReceipt: R };
 
-export type SuccessfulReceipt<T = unknown, U = unknown> = {
+export type SuccessfulReceipt<R = unknown, D = unknown> = {
   status: "succeeded";
-  rawReceipt: T;
-  details: U;
+  rawReceipt: R;
+  details: D;
 };
 
-export type MinedReceipt<T = unknown, U = unknown> = FailedReceipt<T> | SuccessfulReceipt<T, U>;
-export type LiquityReceipt<T = unknown, U = unknown> = PendingReceipt | MinedReceipt<T, U>;
+export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
+export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
 
 export type LiquidationDetails = {
   fullyLiquidated: string[];
@@ -72,20 +73,85 @@ export interface TransactableLiquity {
   redeemCollateral(exchangedQui: Decimalish): Promise<RedemptionDetails>;
 }
 
-export type SendableLiquity<T, U> = {
-  [P in keyof TransactableLiquity]: TransactableLiquity[P] extends (
-    ...args: infer A
-  ) => Promise<infer R>
-    ? (...args: A) => Promise<SentLiquityTransaction<T, LiquityReceipt<U, R>>>
+type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (
+  ...args: A
+) => Promise<SentLiquityTransaction<S, LiquityReceipt<R, D>>>;
+
+export type Sendable<T, R = unknown, S = unknown> = {
+  [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D>
+    ? SendMethod<A, D, R, S>
     : never;
 };
 
-export type PopulatableLiquity<T, U, V> = {
-  [P in keyof SendableLiquity<U, V>]: SendableLiquity<U, V>[P] extends (
-    ...args: infer A
-  ) => Promise<SentLiquityTransaction<U, LiquityReceipt<V, infer R>>>
-    ? (
-        ...args: A
-      ) => Promise<PopulatedLiquityTransaction<T, SentLiquityTransaction<U, LiquityReceipt<V, R>>>>
+type PopulateMethod<A extends unknown[], D, R = unknown, S = unknown, P = unknown> = (
+  ...args: A
+) => Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>>;
+
+export type Populatable<T, R = unknown, S = unknown, P = unknown> = {
+  [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D>
+    ? PopulateMethod<A, D, R, S, P>
     : never;
+};
+
+type SendableFrom<T> = new (populatable: T) => {
+  [M in keyof T]: T[M] extends PopulateMethod<infer A, infer D, infer R, infer S>
+    ? SendMethod<A, D, R, S>
+    : never;
+};
+
+export const sendableFrom = <T, U extends Populatable<T>>(
+  Populatable: new (...args: never[]) => U
+): SendableFrom<U> => {
+  const Sendable = class {
+    _populatable: U;
+
+    constructor(populatable: U) {
+      this._populatable = populatable;
+    }
+  };
+
+  proxify(
+    Sendable,
+    Populatable,
+    method =>
+      async function (...args) {
+        return (await this._populatable[method].call(this._populatable, ...args)).send();
+      }
+  );
+
+  return (Sendable as unknown) as SendableFrom<U>;
+};
+
+type TransactableFrom<T> = new (sendable: T) => {
+  [M in keyof T]: T[M] extends SendMethod<infer A, infer D> ? (...args: A) => Promise<D> : never;
+};
+
+export const transactableFrom = <T, U extends Sendable<T>>(
+  Sendable: new (...args: never[]) => U
+): TransactableFrom<U> => {
+  const Transactable = class {
+    _sendable: U;
+
+    constructor(sendable: U) {
+      this._sendable = sendable;
+    }
+  };
+
+  proxify(
+    Transactable,
+    Sendable,
+    method =>
+      async function (...args) {
+        const tx = await this._sendable[method].call(this._sendable, ...args);
+        const receipt = await tx.waitForReceipt();
+
+        if (receipt.status !== "succeeded") {
+          throw new Error("Transaction failed");
+        }
+
+        return receipt.details;
+      }
+  );
+
+  return (Transactable as unknown) as TransactableFrom<U>;
 };

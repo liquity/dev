@@ -75,8 +75,9 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   }
 
   const { addresses, version: contractsVersion, deploymentDate } = deployment;
-  const contracts = connectToContracts(addresses, provider.getSigner(account));
-  const liquity = new EthersLiquity(contracts, account);
+  const signer = provider.getSigner(account);
+  const contracts = connectToContracts(addresses, signer);
+  const liquity = EthersLiquity.from(contracts, signer, account);
   const devChain = chainId === DEV_CHAIN_ID;
   const oracleAvailable = chainId === 3;
 

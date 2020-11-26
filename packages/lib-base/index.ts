@@ -1,3 +1,5 @@
+export { glue } from "./src/utils";
+
 export * from "./src/Trove";
 export * from "./src/StabilityDeposit";
 export * from "./src/ReadableLiquity";

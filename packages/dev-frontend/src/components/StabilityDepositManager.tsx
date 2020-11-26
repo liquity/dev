@@ -30,7 +30,9 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   setChangePending
 }) => {
   const { trove, price, quiBalance, numberOfTroves } = useLiquitySelector(select);
-  const { liquity } = useLiquity();
+  const {
+    liquity: { send: liquity }
+  } = useLiquity();
 
   const myTransactionId = "stability-deposit";
   const myTransactionState = useMyTransactionState(/^stability-deposit-/);

@@ -12,7 +12,10 @@ import { Icon } from "./Icon";
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const PriceManager: React.FC = () => {
-  const { liquity, oracleAvailable } = useLiquity();
+  const {
+    oracleAvailable,
+    liquity: { send: liquity }
+  } = useLiquity();
   const price = useLiquitySelector(selectPrice);
   const [editedPrice, setEditedPrice] = useState(price.toString(2));
 
