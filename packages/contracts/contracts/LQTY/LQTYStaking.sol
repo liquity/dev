@@ -103,7 +103,7 @@ contract LQTYStaking is ILQTYStaking {
 
         // Send accumulated LUSD and ETH gains to the caller
         clvToken.transfer(msg.sender, LUSDGain);
-        _sendETHGainToUser(msg.sender, ETHGain);
+        _sendETHGainToUser(ETHGain);
     }
 
     // Unstake the LQTY and send the it back to the caller, along with their accumulated LUSD & ETH gains. 
@@ -129,7 +129,7 @@ contract LQTYStaking is ILQTYStaking {
 
         // Send accumulated LUSD and ETH gains to the caller
         clvToken.transfer(msg.sender, LUSDGain);
-        _sendETHGainToUser(msg.sender, ETHGain);
+        _sendETHGainToUser(ETHGain);
     }
 
     // --- Reward-per-unit-staked increase functions. Called by Liquity core contracts ---
@@ -181,8 +181,8 @@ contract LQTYStaking is ILQTYStaking {
         snapshots[_user].F_LUSD_Snapshot = F_LUSD;
     }
 
-    function _sendETHGainToUser(address _user, uint ETHGain) internal returns (bool) {
-        (bool success, ) = _user.call{value: ETHGain}("");
+    function _sendETHGainToUser(uint ETHGain) internal returns (bool) {
+        (bool success, ) = msg.sender.call{value: ETHGain}("");
         require(success, "LQTYStaking: Failed to send accumulated ETHGain");
     }
 

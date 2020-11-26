@@ -48,7 +48,7 @@ contract CustomDurationLockupContract {
         lockupDurationInSeconds = _lockupDurationInSeconds;
     }
 
-    function lockContract() public returns (bool) {
+    function lockContract() external returns (bool) {
         _requireCallerIsLockupDeployer();
         _requireContractIsNotActive();
         _requireLQTYBalanceAtLeastEqualsEntitlement();
@@ -59,7 +59,7 @@ contract CustomDurationLockupContract {
         return true;
     }
 
-    function withdrawLQTY() public {
+    function withdrawLQTY() external {
         _requireCallerIsBeneficiary();
         _requireContractIsActive();
         _requireLockupDurationHasPassed();

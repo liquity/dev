@@ -108,7 +108,7 @@ contract CommunityIssuance is ICommunityIssuance {
 
         //  (1 - f^t)
         uint cumulativeIssuanceFraction = (uint(1e18).sub(power));
-        assert(cumulativeIssuanceFraction >= 0 && cumulativeIssuanceFraction <= 1e18);
+        assert(cumulativeIssuanceFraction <= 1e18); // must be in range [0,1]
 
         return cumulativeIssuanceFraction;
     }
