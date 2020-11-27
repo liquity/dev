@@ -644,7 +644,7 @@ describe("EthersLiquity", () => {
     });
   });
 
-  describe.only("Gas estimation", () => {
+  describe("Gas estimation", () => {
     const increaseTime = (timeJump: number) => provider.send("evm_increaseTime", [timeJump]);
     const troveWithICRBetween = (a: Trove, b: Trove) => a.add(b).multiply(0.5);
 
