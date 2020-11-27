@@ -362,69 +362,54 @@ export class PopulatableEthersLiquity
 
   async depositEther(
     depositedEther: Decimalish,
-    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
+    optionalParams: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    trove = trove ?? (await this.readableLiquity.getTrove());
+    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = trove.addCollateral(depositedEther);
 
-    return this.changeTrove(
-      trove.whatChanged(finalTrove),
-      { trove, ...hintOptionalParams },
-      overrides
-    );
+    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
   }
 
   async withdrawEther(
     withdrawnEther: Decimalish,
-    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
+    optionalParams: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    trove = trove ?? (await this.readableLiquity.getTrove());
+    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = trove.subtractCollateral(withdrawnEther);
 
-    return this.changeTrove(
-      trove.whatChanged(finalTrove),
-      { trove, ...hintOptionalParams },
-      overrides
-    );
+    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
   }
 
   async borrowQui(
     borrowedQui: Decimalish,
-    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
+    optionalParams: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    trove = trove ?? (await this.readableLiquity.getTrove());
+    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = trove.addDebt(borrowedQui);
 
-    return this.changeTrove(
-      trove.whatChanged(finalTrove),
-      { trove, ...hintOptionalParams },
-      overrides
-    );
+    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
   }
 
   async repayQui(
     repaidQui: Decimalish,
-    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
+    optionalParams: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    trove = trove ?? (await this.readableLiquity.getTrove());
+    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = trove.subtractDebt(repaidQui);
 
-    return this.changeTrove(
-      trove.whatChanged(finalTrove),
-      { trove, ...hintOptionalParams },
-      overrides
-    );
+    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
   }
 
   async changeTrove(
     change: TroveChange,
-    { trove, ...hintOptionalParams }: TroveChangeOptionalParams = {},
+    optionalParams: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
+    const { trove, ...hintOptionalParams } = optionalParams;
     const initialTrove = trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = initialTrove.apply(change);
     const isDebtIncrease = !!change.debtDifference?.positive;
@@ -511,9 +496,10 @@ export class PopulatableEthersLiquity
   }
 
   async transferCollateralGainToTrove(
-    { deposit, trove, ...hintOptionalParams }: CollateralGainTransferOptionalParams = {},
+    optionalParams: CollateralGainTransferOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
+    const { deposit, trove, ...hintOptionalParams } = optionalParams;
     const initialTrove = trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = initialTrove.addCollateral(
       (deposit ?? (await this.readableLiquity.getStabilityDeposit())).pendingCollateralGain
