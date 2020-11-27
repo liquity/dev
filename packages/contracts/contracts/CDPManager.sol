@@ -338,9 +338,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             }
             _removeStake(_borrower);
 
-            V = _getPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
-
-            _closeCDP(_borrower);
+            V = _getPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);        
         }
         else if (_ICR >= _TCR) {
             LiquidationValues memory zeroVals;
@@ -398,8 +396,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         V.entireCDPDebt = _entireCDPDebt;
         V.entireCDPColl = _entireCDPColl;
 
-        // When Stability Pool can fully absorb the trove's debt, perform a full offset
-        if (_entireCDPDebt <= _CLVInStabPool) {
+        // When Stability Pool can fully absorb the trove's debt, perform a full offset and close trove
+         if (_entireCDPDebt <= _CLVInStabPool) {
             V.collGasCompensation = _getCollGasCompensation(_entireCDPColl);
             V.CLVGasCompensation = CLV_GAS_COMPENSATION;
 
@@ -408,6 +406,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V.debtToRedistribute = 0;
             V.collToRedistribute = 0;
 
+            _closeCDP(_borrower);
             emit CDPLiquidated(_borrower, _entireCDPDebt, _entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
         }
         /* 
@@ -726,19 +725,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         CDPs[_borrower].debt = _newDebt;
         CDPs[_borrower].coll = _newColl;
-        CDPs[_borrower].status = Status.active;
 
         _updateCDPRewardSnapshots(_borrower);
         _updateStakeAndTotalStakes(_borrower);
-
-        uint ICR = getCurrentICR(_borrower, _price);
-
-        /* 
-        * Insert to sorted list and add to CDPOwners array. The partially liquidated trove has the same
-        * ICR as it did before the liquidation, so insertion is O(1). 
-        */
-        sortedCDPs.insert(_borrower, ICR, _price, _borrower, _borrower);
-        _addCDPOwnerToArray(_borrower);
 
         emit CDPUpdated(_borrower, _newDebt, _newColl, CDPs[_borrower].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
     }
@@ -1159,11 +1148,20 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     /* 
-    * Updates snapshots of system stakes and system collateral, excluding a given collateral remainder from the calculation.
+    * Updates snapshots of system total stakes and total collateral, excluding a given collateral remainder from the calculation. 
+    * Used in a liquidation sequence.
     *
-    * This is used in a liquidation sequence, when we need to calculate the system stakes & collateral before making a new stake for
-    * the partially liquidated trove. Rather than moving the partially liquidated trove's remaining collateral out and back to
-    * to the Active Pool, we simply exclude it from the calculation.
+    * The calculation excludes two portions of collateral that are in the ActivePool: 
+    *
+    * 1) the total ETH gas compensation from the liquidation sequence
+    * 2) The remaining collateral in a partially liquidated trove (if one occurred)
+    *
+    * The ETH as compensation must be excluded as it is always sent out at the very end of the liquidation sequence.
+    *
+    * The partially liquidated trove's remaining collateral stays in the ActivePool, but it is excluded here so the system 
+    * can take snapshots before the partially liquidated trove's stake is updated (based on these snapshots). This ensures
+    * the partial's new stake doesn't double-count it's own remaining collateral.
+    *
     */
     function _updateSystemSnapshots_excludeCollRemainder(uint _collRemainder) internal {
         totalStakesSnapshot = totalStakes;
