@@ -142,6 +142,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         address partialAddr;
         uint partialNewDebt;
         uint partialNewColl;
+        address partialUpperHint;
+        address partialLowerHint;
     }
 
     struct LiquidationTotals {
@@ -156,7 +158,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         address partialAddr;
         uint partialNewDebt;
         uint partialNewColl;
-
+        address partialUpperHint;
+        address partialLowerHint;
     }
 
     // --- Variable container structs for redemptions ---
@@ -315,7 +318,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _closeCDP(_borrower);
             emit CDPLiquidated(_borrower, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
-        // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
+        // If 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > _100pct) && (_ICR < MCR)) {
             _removeStake(_borrower);
 
@@ -329,7 +332,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         /* 
         * If 110% <= ICR < current TCR (accounting for the preceding liquidations in the current sequence)
-        * and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution) 
+        * and there is CLV in the Stability Pool, only offset it as much as possible, with no redistribution.
         */
         } else if ((_ICR >= MCR) && (_ICR < _TCR)) {
             if (_CLVInStabPool == 0) {
@@ -338,9 +341,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             }
             _removeStake(_borrower);
 
-            V = _getPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
-
-            _closeCDP(_borrower);
+            V = _getFullOrPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
         }
         else if (_ICR >= _TCR) {
             LiquidationValues memory zeroVals;
@@ -381,11 +382,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    /* 
-    * In a partial liquidation, returns the values for a trove's offset coll and debt, along with it's new debt and coll,
-    * and the ETH gas compensation.
+    /*
+    *  If it's a full offset, get it's offset coll/debt and ETH gas comp, and close the trove.
+    *
+    * If it' a partial liquidation, get it's offset coll/debt and ETH gas comp, and its new coll/debt, and its re-insertion hints.
     */
-    function _getPartialOffsetVals
+    function _getFullOrPartialOffsetVals
     (
         address _borrower,
         uint _entireCDPDebt,
@@ -408,11 +410,13 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V.debtToRedistribute = 0;
             V.collToRedistribute = 0;
 
+            _closeCDP(_borrower);
             emit CDPLiquidated(_borrower, _entireCDPDebt, _entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
         }
         /* 
-        * When trove's debt is greater than the Pool, perform a partial liquidation: offset as much as possible,
+        * When trove's debt is greater than the Stability Pool, perform a partial liquidation: offset as much as possible,
         * and do not redistribute the remainder. The trove remains active, with a reduced collateral and debt.
+        *
         * ETH gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. 
         * CLV gas compensation is left untouched. 
         *
@@ -436,6 +440,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
             V.partialAddr = _borrower;
             V.partialNewColl = _entireCDPColl.sub(collFraction);
+
+            // Get the partial trove's neighbours, so we can re-insert it later to the same position
+            V.partialUpperHint = sortedCDPs.getPrev(_borrower);  
+            V.partialLowerHint = sortedCDPs.getNext(_borrower);
+
+             _closeCDP(_borrower);
         }
     }
 
@@ -465,7 +475,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         // Update system snapshots and the final partially liquidated trove, if there is one
         _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl.add(T.totalCollGasCompensation));
-        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, L.price);
+        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, T.partialUpperHint, T. partialLowerHint, L.price);
 
         L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
         L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
@@ -601,7 +611,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         // Update system snapshots and the final partially liquidated trove, if there is one
         _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl.add(T.totalCollGasCompensation));
-        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, L.price);
+        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, T.partialUpperHint, T. partialLowerHint, L.price);
 
         L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
         L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
@@ -716,12 +726,24 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         T2.partialAddr = V.partialAddr;
         T2.partialNewDebt = V.partialNewDebt;
         T2.partialNewColl = V.partialNewColl;
+        T2.partialUpperHint = V.partialUpperHint;
+        T2.partialLowerHint = V.partialLowerHint;
 
         return T2;
     }
 
     // Update the properties of the partially liquidated trove, and insert it back to the list
-    function _updatePartiallyLiquidatedTrove(address _borrower, uint _newDebt, uint _newColl, uint _price) internal {
+    function _updatePartiallyLiquidatedTrove
+    (
+        address _borrower, 
+        uint _newDebt, 
+        uint _newColl, 
+        address _upperHint,
+        address _lowerHint,
+        uint _price
+    ) 
+        internal 
+    {
         if ( _borrower == address(0)) { return; }
 
         CDPs[_borrower].debt = _newDebt;
@@ -735,11 +757,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         /* 
         * Insert to sorted list and add to CDPOwners array. The partially liquidated trove has the same
-        * ICR as it did before the liquidation, so insertion is O(1). 
+        * ICR as it did before the liquidation, so insertion is O(1): in principle, it's ICR does not change.
+        * In practice, due to rounding error, it's ICR can change slightly - so re-insert, with it's previous neighbours
+        * as hints.
         */
-        sortedCDPs.insert(_borrower, ICR, _price, _borrower, _borrower);
+        sortedCDPs.insert(_borrower, ICR, _price, _upperHint, _lowerHint);
         _addCDPOwnerToArray(_borrower);
-
         emit CDPUpdated(_borrower, _newDebt, _newColl, CDPs[_borrower].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
     }
 

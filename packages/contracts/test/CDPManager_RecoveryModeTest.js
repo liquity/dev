@@ -772,7 +772,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.isFalse(bob_CDP_isInSortedList_After)
   })
 
-  it("liquidate(), with 110% < ICR < TCR, and StabilityPool CLV > debt to liquidate: can liquidate troves out of order", async () => {
+  it.only("liquidate(), with 110% < ICR < TCR, and StabilityPool CLV > debt to liquidate: can liquidate troves out of order", async () => {
 
     // taking out 1000 LUSD against 10x200 = $2000 worth of ETH collateral, gives us an CR of 200%
     await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(10, 'ether') })
@@ -867,7 +867,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
-
+    
     /* Since the pool only contains 100 CLV, and Bob's pre-liquidation debt was 250 CLV, 
     expect Bob's loan to only be partially offset, and remain active after liquidation */
 
