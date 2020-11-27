@@ -59,18 +59,26 @@ describe("EthersLiquity", () => {
   const connectUsers = (users: Signer[]) =>
     Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
 
+  const openTroves = (users: Signer[], troves: Trove[]) =>
+    troves
+      .map((trove, i) => () =>
+        Promise.all([
+          EthersLiquity.connect(addresses, users[i]),
+          sendTo(users[i], trove.collateral).then(tx => tx.wait())
+        ]).then(([liquity]) => liquity.openTrove(trove, {}, { gasPrice: 0 }))
+      )
+      .reduce((a, b) => a.then(b), Promise.resolve());
+
+  const sendTo = (user: Signer, value: Decimalish, nonce?: number) =>
+    funder.sendTransaction({
+      to: user.getAddress(),
+      value: Decimal.from(value).bigNumber,
+      nonce
+    });
+
   const sendToEach = async (users: Signer[], value: Decimalish) => {
     const txCount = await provider.getTransactionCount(funder.getAddress());
-
-    const txs = await Promise.all(
-      users.map((user, i) =>
-        funder.sendTransaction({
-          to: user.getAddress(),
-          value: Decimal.from(value).bigNumber,
-          nonce: txCount + i
-        })
-      )
-    );
+    const txs = await Promise.all(users.map((user, i) => sendTo(user, value, txCount + i)));
 
     // Wait for the last tx to be mined.
     await txs[txs.length - 1].wait();
@@ -87,44 +95,28 @@ describe("EthersLiquity", () => {
   // Always setup same initial balance for user
   beforeEach(async () => {
     const targetBalance = Decimal.from(100).bigNumber;
-
-    const gasLimit = 21000;
-    const txCost = (await provider.getGasPrice()).mul(gasLimit);
-    let balance = await provider.getBalance(user.getAddress());
+    const balance = await user.getBalance();
+    const gasPrice = 0;
 
     if (balance.eq(targetBalance)) {
       return;
     }
 
-    if (balance.gt(targetBalance) && balance.lte(targetBalance.add(txCost))) {
-      await funder.sendTransaction({
-        to: user.getAddress(),
-        value: targetBalance.add(txCost).sub(balance).add(1),
-        gasLimit
-      });
-
+    if (balance.gt(targetBalance)) {
       await user.sendTransaction({
         to: funder.getAddress(),
-        value: 1,
-        gasLimit
+        value: balance.sub(targetBalance),
+        gasPrice
       });
     } else {
-      if (balance.lt(targetBalance)) {
-        await funder.sendTransaction({
-          to: user.getAddress(),
-          value: targetBalance.sub(balance),
-          gasLimit
-        });
-      } else {
-        await user.sendTransaction({
-          to: funder.getAddress(),
-          value: balance.sub(targetBalance).sub(txCost),
-          gasLimit
-        });
-      }
+      await funder.sendTransaction({
+        to: user.getAddress(),
+        value: targetBalance.sub(balance),
+        gasPrice
+      });
     }
 
-    expect(`${await provider.getBalance(user.getAddress())}`).to.equal(`${targetBalance}`);
+    expect(`${await user.getBalance()}`).to.equal(`${targetBalance}`);
   });
 
   it("should get the price", async () => {
@@ -652,30 +644,111 @@ describe("EthersLiquity", () => {
     });
   });
 
-  // describe.skip("Gas estimation", () => {
-  //   const increaseTime = (timeJump: number) => provider.send("evm_increaseTime", [timeJump]);
+  describe.only("Gas estimation", () => {
+    const increaseTime = (timeJump: number) => provider.send("evm_increaseTime", [timeJump]);
+    const troveWithICRBetween = (a: Trove, b: Trove) => a.add(b).multiply(0.5);
 
-  //   before(async function () {
-  //     if (network.name !== "buidlerevm") {
-  //       this.skip();
-  //     }
+    let rudeUser: Signer;
+    let fiveOtherUsers: Signer[];
+    let rudeLiquity: EthersLiquity;
 
-  //     addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
-  //     [deployerLiquity, liquity] = await connectUsers([deployer, user]);
-  //   });
+    before(async function () {
+      if (network.name !== "buidlerevm") {
+        this.skip();
+      }
 
-  //   it("should include enough gas for updating lastFeeOpTime", async () => {
-  //     let {
-  //       rawReceipt: { gasUsed }
-  //     } = await waitForSuccess(deployerLiquity.openTrove(new Trove({ collateral: 1, debt: 10 })));
-  //     console.log(`${gasUsed}`);
+      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
 
-  //     //await increaseTime(120);
+      [rudeUser, ...fiveOtherUsers] = otherUsers.slice(0, 6);
 
-  //     ({
-  //       rawReceipt: { gasUsed }
-  //     } = await waitForSuccess(liquity.openTrove(new Trove({ collateral: 1, debt: 10 }))));
-  //     console.log(`${gasUsed}`);
-  //   });
-  // });
+      [deployerLiquity, liquity, rudeLiquity, ...otherLiquities] = await connectUsers([
+        deployer,
+        user,
+        rudeUser,
+        ...fiveOtherUsers
+      ]);
+
+      await openTroves(fiveOtherUsers, [
+        new Trove({ collateral: 1, debt: 50 }),
+        new Trove({ collateral: 1, debt: 60 }),
+        new Trove({ collateral: 1, debt: 70 }),
+        new Trove({ collateral: 1, debt: 80 }),
+        new Trove({ collateral: 1, debt: 90 })
+      ]);
+    });
+
+    it("should include enough gas for updating lastFeeOperationTime", async () => {
+      await liquity.openTrove(new Trove({ collateral: 1, debt: 100 }));
+
+      // We just updated lastFeeOperationTime, so this won't anticipate having to update that
+      // during estimateGas
+      const tx = await liquity.populate.redeemCollateral(1);
+      const originalGasEstimate = await provider.estimateGas(tx.rawPopulatedTransaction);
+
+      // Fast-forward 2 minutes.
+      await increaseTime(120);
+
+      // Required gas has just went up.
+      const newGasEstimate = await provider.estimateGas(tx.rawPopulatedTransaction);
+      const gasIncrease = newGasEstimate.sub(originalGasEstimate).toNumber();
+      expect(gasIncrease).to.be.within(5000, 10000);
+
+      // This will now have to update lastFeeOperationTime
+      await waitForSuccess(tx.send());
+
+      // Decay base-rate back to 0
+      await increaseTime(100000000);
+    });
+
+    it("should include enough gas for one extra traversal", async () => {
+      const troves = (await liquity.getLastTroves(0, 10)).map(([, t]) => t);
+
+      const trove = await liquity.getTrove();
+      const newTrove = troveWithICRBetween(troves[3], troves[4]);
+
+      // First, we want to test a non-borrowing case, to make sure we're not passing due to any
+      // extra gas we add to cover a potential lastFeeOperationTime update
+      const troveChange = trove.whatChanged(newTrove);
+      expect(troveChange.debtDifference?.positive).to.be.undefined;
+
+      const tx = await liquity.populate.changeTrove(trove.whatChanged(newTrove));
+      const originalGasEstimate = await provider.estimateGas(tx.rawPopulatedTransaction);
+
+      // A terribly rude user interferes
+      await openTroves([rudeUser], [newTrove.addDebt(1)]);
+
+      const newGasEstimate = await provider.estimateGas(tx.rawPopulatedTransaction);
+      const gasIncrease = newGasEstimate.sub(originalGasEstimate).toNumber();
+
+      await waitForSuccess(tx.send());
+      expect(gasIncrease).to.be.within(10000, 15000);
+
+      await rudeLiquity.closeTrove({ gasPrice: 0 });
+    });
+
+    it("should include enough gas for both when borrowing", async () => {
+      const troves = (await liquity.getLastTroves(0, 10)).map(([, t]) => t);
+      const trove = await liquity.getTrove();
+      const newTrove = troveWithICRBetween(troves[1], troves[2]);
+
+      // Make sure we're borrowing
+      const troveChange = trove.whatChanged(newTrove);
+      expect(troveChange.debtDifference?.positive).to.not.be.undefined;
+
+      const tx = await liquity.populate.changeTrove(trove.whatChanged(newTrove));
+      const originalGasEstimate = await provider.estimateGas(tx.rawPopulatedTransaction);
+
+      // A terribly rude user interferes again
+      await openTroves([rudeUser], [newTrove.addDebt(1)]);
+
+      // On top of that, we'll need to update lastFeeOperationTime
+      await increaseTime(120);
+
+      const newGasEstimate = await provider.estimateGas(tx.rawPopulatedTransaction);
+      const gasIncrease = newGasEstimate.sub(originalGasEstimate).toNumber();
+
+      await waitForSuccess(tx.send());
+      expect(gasIncrease).to.be.within(15000, 25000);
+    });
+  });
 });
