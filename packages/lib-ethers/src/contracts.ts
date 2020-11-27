@@ -230,6 +230,12 @@ export const connectToContracts = (
 
   clvToken: create<CLVToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
 
+  collSurplusPool: create<CollSurplusPool>(
+    addresses.collSurplusPool,
+    collSurplusPoolAbi,
+    signerOrProvider
+  ),
+
   communityIssuance: create<CommunityIssuance>(
     addresses.communityIssuance,
     communityIssuanceAbi,
@@ -260,9 +266,7 @@ export const connectToContracts = (
 
   sortedCDPs: create<SortedCDPs>(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider),
 
-  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider),
-
-  collSurplusPool: create<CollSurplusPool>(addresses.collSurplusPool, collSurplusPoolAbi, signerOrProvider)
+  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider)
 });
 
 export type LiquityDeployment = {
