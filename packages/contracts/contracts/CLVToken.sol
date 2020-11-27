@@ -50,6 +50,8 @@ contract CLVToken is ICLVToken {
     // --- Functions for intra-Liquity calls ---
 
     function mint(address _account, uint256 _amount) external override {
+        // TODO: remove!
+        console.log('_mint', _account);
         _requireCallerIsBorrowerOperations();
         _mint(_account, _amount);
     }
@@ -207,8 +209,6 @@ contract CLVToken is ICLVToken {
     }
 
     function _requireCallerIsBorrowerOperations() internal view {
-        // TODO: remove!
-        console.log('_requireCallerIsBorrowerOperations');
         require(msg.sender == borrowerOperationsAddress, "CLVToken: Caller is not BorrowerOperations");
     }
 
