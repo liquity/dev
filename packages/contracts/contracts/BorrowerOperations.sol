@@ -245,13 +245,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
         L.stake = cdpManager.updateStakeAndTotalStakes(_borrower);
 
-        // Close a CDP if it is empty, otherwise, re-insert it in the sorted list
-        if (L.newDebt == 0 && L.newColl == 0) {
-            cdpManager.closeCDP(_borrower);
-        } else {
-            sortedCDPs.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
-        }
-
+        // Re-insert trove it in the sorted list
+        sortedCDPs.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
+  
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
 
