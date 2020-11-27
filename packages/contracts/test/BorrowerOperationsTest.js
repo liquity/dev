@@ -1367,6 +1367,29 @@ contract('BorrowerOperations', async accounts => {
 
   // --- adjustLoan() ---
 
+  // it.only("adjustLoan(): closes a loan if it reduces coll and debt to zero", async () => {
+  //   await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
+
+  //   await borrowerOperations.openLoan(dec(1345, 18), B, { from: B, value: dec(1000, 'ether') })
+  //   await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+  //   // Check B and C are in sorted list and active
+  //   assert.isTrue(await sortedCDPs.contains(B))
+  //   assert.isTrue(await sortedCDPs.contains(C))
+  //   assert.equal(await cdpManager.getCDPStatus(B), '1') // active
+  //   assert.equal(await cdpManager.getCDPStatus(C), '1')
+
+  //   // B and C repay their debt and request all their ETH back, via adjustLoan
+  //   await borrowerOperations.adjustLoan(dec(1000, 'ether'), dec(1345, 18), false, B, { from: C })
+  //   await borrowerOperations.adjustLoan(dec(1, 'ether'), dec(50, 18), false, C, { from: C })
+
+  //   // Check B and C are no longer sorted list, and are closed
+  //   assert.isFalse(await sortedCDPs.contains(B))
+  //   assert.isFalse(await sortedCDPs.contains(C))
+  //   assert.equal(await cdpManager.getCDPStatus(B), '2') // closed
+  //   assert.equal(await cdpManager.getCDPStatus(C), '2')
+  // })
+
   it("adjustLoan(): decays a non-zero base rate", async () => {
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
 

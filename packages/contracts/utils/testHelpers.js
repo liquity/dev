@@ -966,8 +966,6 @@ class TestHelper {
   static async assertRevert(txPromise, message = undefined) {
     try {
       const tx = await txPromise
-
-      assert.isFalse(tx.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
       // TODO !!!
