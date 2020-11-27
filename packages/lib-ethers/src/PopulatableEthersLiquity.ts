@@ -184,15 +184,15 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
       ({ logs }: TransactionReceipt): LiquidationDetails => {
         const fullyLiquidated = this.contracts.cdpManager
           .extractEvents(logs, "CDPLiquidated")
-          .map(({ args: { _user } }) => _user);
+          .map(({ args: { _borrower } }) => _borrower);
 
         const [partiallyLiquidated] = this.contracts.cdpManager
           .extractEvents(logs, "CDPUpdated")
           .filter(
-            ({ args: { operation } }) =>
-              operation === CDPManagerOperation.partiallyLiquidateInRecoveryMode
+            ({ args: { _operation } }) =>
+              _operation === CDPManagerOperation.partiallyLiquidateInRecoveryMode
           )
-          .map(({ args: { _user } }) => _user);
+          .map(({ args: { _borrower } }) => _borrower);
 
         const [totals] = this.contracts.cdpManager
           .extractEvents(logs, "Liquidation")
