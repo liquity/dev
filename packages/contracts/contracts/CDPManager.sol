@@ -1156,7 +1156,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     * 1) the total ETH gas compensation from the liquidation sequence
     * 2) The remaining collateral in a partially liquidated trove (if one occurred)
     *
-    * The ETH as compensation must be excluded as it is always sent out at the very end of the liquidation sequence.
+    * The ETH gas compensation must be excluded as it is always sent out at the very end of the liquidation sequence.
     *
     * The partially liquidated trove's remaining collateral stays in the ActivePool, but it is excluded here so the system 
     * can take snapshots before the partially liquidated trove's stake is updated (based on these snapshots). This ensures
