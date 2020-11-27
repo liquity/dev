@@ -351,7 +351,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return V;
     }
 
-    // In a full liquidation, returns the values for a trove's coll and debt to be offset, and coll and debt to be distributed.
+    /* In a full liquidation, returns the values for a trove's coll and debt to be offset, and coll and debt to be 
+    * redistributed to active troves. 
+    */
     function _getOffsetAndRedistributionVals
     (
         uint _debt,
@@ -364,11 +366,14 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     {
         if (_CLVInStabPool > 0) {
         /* 
-        * Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder.
+        * Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder
+        * between all active troves.
+        *
         *  If the trove's debt is larger than the deposited CLV in the Stability Pool:
         *
         *  - Offset an amount of the trove's debt equal to the CLV in the Stability Pool
         *  - Send a fraction of the trove's collateral to the Stability Pool, equal to the fraction of its offset debt
+        *
         */
             debtToOffset = Math._min(_debt, _CLVInStabPool);
             collToSendToSP = _coll.mul(debtToOffset).div(_debt);
