@@ -45,12 +45,15 @@ export const redeemMaxIterations = 68;
 
 const noDetails = () => {};
 
+const compose = <T, U, V>(f: (_: U) => V, g: (_: T) => U) => (_: T) => f(g(_));
+
 const id = <T>(t: T) => t;
 
-// Takes ~6.3K to update lastFeeOperationTime. Let's be on the safe side.
+// Takes ~6-7K to update lastFeeOperationTime. Let's be on the safe side.
 const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add(10000);
 
-// const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(???);
+// An extra traversal can take ~12K.
+const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(15000);
 
 // To get the best entropy available, we'd do something like:
 //
@@ -275,7 +278,9 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
     const { hintAddress } = results.reduce((a, b) => (a.diff.lt(b.diff) ? a : b));
 
-    const [hint] = await this.contracts.sortedCDPs.findInsertPosition(
+    // Picking the second address as hint results in better gas cost, especially when having to
+    // traverse the list due to interference
+    const [, hint] = await this.contracts.sortedCDPs.findInsertPosition(
       collateralRatio.bigNumber,
       price.bigNumber,
       hintAddress,
@@ -342,7 +347,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.borrowerOperations.estimateAndPopulate.openLoan(
         { value: trove.collateral.bigNumber, ...overrides },
-        addGasForPotentialLastFeeOperationTimeUpdate,
+        compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
         trove.netDebt.bigNumber,
         await this.findHint(trove, optionalParams)
       )
@@ -430,7 +435,10 @@ export class PopulatableEthersLiquity
           ...overrides,
           value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
         },
-        isDebtIncrease ? addGasForPotentialLastFeeOperationTimeUpdate : id,
+        compose(
+          isDebtIncrease ? addGasForPotentialLastFeeOperationTimeUpdate : id,
+          addGasForPotentialListTraversal
+        ),
         change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
         change.debtDifference?.absoluteValue?.bigNumber || 0,
         isDebtIncrease,
@@ -514,7 +522,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(
         { ...overrides },
-        id,
+        addGasForPotentialListTraversal,
         await this.findHint(finalTrove, hintOptionalParams)
       )
     );
