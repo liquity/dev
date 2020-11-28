@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import "./Math.sol";
+import "./LiquityMath.sol";
 
 /* Base contract for CDPManager and BorrowerOperations. Contains global system constants and
 common functions. */

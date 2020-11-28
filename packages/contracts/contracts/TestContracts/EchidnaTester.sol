@@ -129,7 +129,7 @@ contract EchidnaTester {
         uint price = priceFeed.getPrice();
         uint CLVAmount = _CLVAmount;
         uint compositeDebt = CLVAmount.add(CLV_GAS_COMPENSATION);
-        uint ICR = Math._computeCR(ETH, compositeDebt, price);
+        uint ICR = LiquityMath._computeCR(ETH, compositeDebt, price);
         if (ICR < ratio) {
             compositeDebt = ETH.mul(price).div(ratio);
             CLVAmount = compositeDebt.sub(CLV_GAS_COMPENSATION);

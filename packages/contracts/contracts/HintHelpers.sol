@@ -78,7 +78,7 @@ contract HintHelpers is LiquityBase, Ownable {
                 uint newDebt = CLVDebt.sub(remainingCLV);
                 
                 uint compositeDebt = _getCompositeDebt(newDebt);
-                partialRedemptionHintICR = Math._computeCR(newColl, compositeDebt, _price);
+                partialRedemptionHintICR = LiquityMath._computeCR(newColl, compositeDebt, _price);
 
                 break;
             } else {
@@ -109,7 +109,7 @@ contract HintHelpers is LiquityBase, Ownable {
         }
 
         hintAddress = sortedCDPs.getLast();
-        diff = Math._getAbsoluteDifference(_CR, cdpManager.getCurrentICR(hintAddress, _price));
+        diff = LiquityMath._getAbsoluteDifference(_CR, cdpManager.getCurrentICR(hintAddress, _price));
         latestRandomSeed = _inputRandomSeed;
 
         uint i = 1;
@@ -122,7 +122,7 @@ contract HintHelpers is LiquityBase, Ownable {
             uint currentICR = cdpManager.getCurrentICR(currentAddress, _price);
 
             // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
-            uint currentDiff = Math._getAbsoluteDifference(currentICR, _CR);
+            uint currentDiff = LiquityMath._getAbsoluteDifference(currentICR, _CR);
 
             if (currentDiff < diff) {
                 diff = currentDiff;
@@ -133,6 +133,6 @@ contract HintHelpers is LiquityBase, Ownable {
     }
 
     function computeCR(uint _coll, uint _debt, uint _price) external pure returns (uint) {
-        return Math._computeCR(_coll, _debt, _price);
+        return LiquityMath._computeCR(_coll, _debt, _price);
     }
 }

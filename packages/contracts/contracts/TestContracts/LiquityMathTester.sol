@@ -2,19 +2,19 @@
 
 pragma solidity 0.6.11;
 
-import "../Dependencies/Math.sol";
+import "../Dependencies/LiquityMath.sol";
 
 /* Tester contract for math functions in Math.sol library. */
 
-contract MathTester {
+contract LiquityMathTester {
     
     // Non-view wrapper for gas test
     function callDecPowTx(uint _base, uint _n) external returns (uint) {
-        return Math._decPow(_base, _n);
+        return LiquityMath._decPow(_base, _n);
     }
 
-    // External view wrapper
+    // External wrapper
     function callDecPow(uint _base, uint _n) external pure returns (uint) {
-        return Math._decPow(_base, _n);
+        return LiquityMath._decPow(_base, _n);
     }
 }

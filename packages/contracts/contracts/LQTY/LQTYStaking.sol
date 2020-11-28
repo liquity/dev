@@ -7,7 +7,7 @@ import "../Dependencies/Ownable.sol";
 import "../Dependencies/console.sol";
 import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ILQTYStaking.sol";
-import "../Dependencies/Math.sol";
+import "../Dependencies/LiquityMath.sol";
 import "../Interfaces/ICLVToken.sol";
 
 contract LQTYStaking is ILQTYStaking, Ownable {
@@ -111,7 +111,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         
         _updateUserSnapshots(msg.sender);
 
-        uint LQTYToWithdraw = Math._min(_LQTYamount, currentStake);
+        uint LQTYToWithdraw = LiquityMath._min(_LQTYamount, currentStake);
 
         // Decrease user's stake and total LQTY staked
         stakes[msg.sender] = currentStake.sub(LQTYToWithdraw);

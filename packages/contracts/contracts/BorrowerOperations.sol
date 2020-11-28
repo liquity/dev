@@ -129,7 +129,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
-        uint ICR = Math._computeCR(msg.value, compositeDebt, price);
+        uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
 
         if (_checkRecoveryMode()) {
             _requireICRisAboveR_MCR(ICR);
@@ -448,7 +448,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         newColl = _isCollIncrease ? _coll.add(_collChange) :  _coll.sub(_collChange);
         newDebt = _isDebtIncrease ? _debt.add(_debtChange) : _debt.sub(_debtChange);
 
-        uint newICR = Math._computeCR(newColl, newDebt, _price);
+        uint newICR = LiquityMath._computeCR(newColl, newDebt, _price);
         return newICR;
     }
 
@@ -470,7 +470,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         totalColl = _isCollIncrease ? totalColl.add(_collChange) : totalColl.sub(_collChange);
         totalDebt = _isDebtIncrease ? totalDebt.add(_debtChange) : totalDebt = totalDebt.sub(_debtChange);
 
-        uint newTCR = Math._computeCR(totalColl, totalDebt, _price);
+        uint newTCR = LiquityMath._computeCR(totalColl, totalDebt, _price);
         return newTCR;
     }
 
@@ -500,7 +500,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt);
 
-        TCR = Math._computeCR(totalCollateral, totalDebt, price);
+        TCR = LiquityMath._computeCR(totalCollateral, totalDebt, price);
 
         return TCR;
     }

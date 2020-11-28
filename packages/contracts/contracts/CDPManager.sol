@@ -372,7 +372,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         *  - Send a fraction of the trove's collateral to the Stability Pool, equal to the fraction of its offset debt
         *
         */
-            debtToOffset = Math._min(_debt, _CLVInStabPool);
+            debtToOffset = LiquityMath._min(_debt, _CLVInStabPool);
             collToSendToSP = _coll.mul(debtToOffset).div(_debt);
             debtToRedistribute = _debt.sub(debtToOffset);
             collToRedistribute = _coll.sub(collToSendToSP);
@@ -426,7 +426,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         */
         else if (_entireCDPDebt > _CLVInStabPool) {
             // Remaining debt in the trove is lower-bounded by the trove's gas compensation
-            V.partialNewDebt = Math._max(_entireCDPDebt.sub(_CLVInStabPool), CLV_GAS_COMPENSATION);
+            V.partialNewDebt = LiquityMath._max(_entireCDPDebt.sub(_CLVInStabPool), CLV_GAS_COMPENSATION);
           
             V.debtToOffset = _entireCDPDebt.sub(V.partialNewDebt);
 
@@ -514,7 +514,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Break the loop if ICR is greater than MCR and Stability Pool is empty
                 if (L.ICR >= MCR && L.remainingCLVInStabPool == 0) { break; }
 
-                uint TCR = Math._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
+                uint TCR = LiquityMath._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
         
                 V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInStabPool, TCR);
 
@@ -650,7 +650,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Skip this trove if ICR is greater than MCR and Stability Pool is empty
                 if (L.ICR >= MCR && L.remainingCLVInStabPool == 0) { continue; }
 
-                uint TCR = Math._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
+                uint TCR = LiquityMath._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
 
                 V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInStabPool, TCR);
 
@@ -795,7 +795,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         internal returns (SingleRedemptionValues memory V)
     {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP minus the gas compensation
-        V.CLVLot = Math._min(_maxCLVamount, CDPs[_borrower].debt.sub(CLV_GAS_COMPENSATION));
+        V.CLVLot = LiquityMath._min(_maxCLVamount, CDPs[_borrower].debt.sub(CLV_GAS_COMPENSATION));
 
         // Get the ETHLot of equivalent value in USD
         V.ETHLot = V.CLVLot.mul(1e18).div(_price);
@@ -811,7 +811,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _redeemCloseLoan(_borrower, CLV_GAS_COMPENSATION, newColl);
 
         } else {
-            uint newICR = Math._computeCR(newColl, newDebt, _price);
+            uint newICR = LiquityMath._computeCR(newColl, newDebt, _price);
 
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
             // certainly result in running out of gas.
@@ -983,7 +983,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint currentETH = CDPs[_borrower].coll.add(pendingETHReward);
         uint currentCLVDebt = CDPs[_borrower].debt.add(pendingCLVDebtReward);
 
-        uint ICR = Math._computeCR(currentETH, currentCLVDebt, _price);
+        uint ICR = LiquityMath._computeCR(currentETH, currentCLVDebt, _price);
         return ICR;
     }
 
@@ -1265,7 +1265,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         pure
     returns (bool)
     {
-        uint TCR = Math._computeCR(_entireSystemColl, _entireSystemDebt, _price);
+        uint TCR = LiquityMath._computeCR(_entireSystemColl, _entireSystemDebt, _price);
         if (TCR < CCR) {
             return true;
         } else {
@@ -1278,7 +1278,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint entireSystemColl = getEntireSystemColl();
         uint entireSystemDebt = getEntireSystemDebt();
 
-        TCR = Math._computeCR(entireSystemColl, entireSystemDebt, price);
+        TCR = LiquityMath._computeCR(entireSystemColl, entireSystemDebt, price);
 
         return TCR;
     }
@@ -1360,7 +1360,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     function _calcDecayedBaseRate() internal view returns (uint) {
         uint minutesPassed = _minutesPassedSinceLastFeeOp();
-        uint decayFactor = Math._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
+        uint decayFactor = LiquityMath._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
 
         return baseRate.mul(decayFactor).div(1e18);
     }

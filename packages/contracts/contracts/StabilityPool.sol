@@ -12,9 +12,8 @@ import './Interfaces/ISortedCDPs.sol';
 import './Interfaces/IPriceFeed.sol';
 import "./Interfaces/ICommunityIssuance.sol";
 import "./Dependencies/LiquityBase.sol";
-import "./Dependencies/Math.sol";
 import "./Dependencies/SafeMath.sol";
-import "./Dependencies/SafeMath128.sol";
+import "./Dependencies/LiquitySafeMath128.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
@@ -131,8 +130,7 @@ import "./Dependencies/console.sol";
  *
  */
 contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
-    using SafeMath for uint256;
-    using SafeMath128 for uint128;
+    using LiquitySafeMath128 for uint128;
 
     IBorrowerOperations public borrowerOperations;
 
@@ -332,7 +330,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         uint depositorETHGain = getDepositorETHGain(msg.sender);
 
         uint compoundedCLVDeposit = getCompoundedCLVDeposit(msg.sender);
-        uint CLVtoWithdraw = Math._min(_amount, compoundedCLVDeposit);
+        uint CLVtoWithdraw = LiquityMath._min(_amount, compoundedCLVDeposit);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
 
         // First pay out any LQTY gains

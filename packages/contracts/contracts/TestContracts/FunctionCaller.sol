@@ -5,7 +5,7 @@ pragma solidity 0.6.11;
 import '../Interfaces/ICDPManager.sol';
 import '../Interfaces/ISortedCDPs.sol';
 import '../Interfaces/IPriceFeed.sol';
-import '../Dependencies/Math.sol';
+import '../Dependencies/LiquityMath.sol';
 
 /* Wrapper contract - used for calculating gas of read-only and internal functions. 
 Not part of the Liquity application. */
