@@ -86,7 +86,7 @@ import "./Dependencies/console.sol";
  * then the deposit was present during a pool-emptying liquidation, and necessarily has been depleted to 0. 
  *
  * Otherwise, we then compare the current scale to the deposit's scale snapshot. If they're equal, the compounded deposit is given by d_t * P/P_t.
- * If it spans one scale change, is given by d_t * P/(P_t * 1e18). If it spans more than one scale change, we define the compounded deposit 
+ * If it spans one scale change, it is given by d_t * P/(P_t * 1e18). If it spans more than one scale change, we define the compounded deposit 
  * as 0, since it is now less than 1e-18'th of it's initial value (e.g. a deposit of 1 billion LUSD has depleted to 1 billionth of an LUSD).
  *
  *
