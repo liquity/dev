@@ -3433,6 +3433,19 @@ contract('BorrowerOperations', async accounts => {
     })
   })
 
+  // --- getCompositeDebt ---
+
+  it("getCompositeDebt(): returns debt + 10 gas comp", async () => { 
+    const res1 = await borrowerOperations.getCompositeDebt('0')
+    assert.equal(res1, dec(10, 18))
+
+    const res2 = await borrowerOperations.getCompositeDebt(dec(90, 18))
+    assert.equal(res2, dec(100, 18))
+
+    const res3 = await borrowerOperations.getCompositeDebt(dec(24423422357345049, 12))
+    assert.equal(res3, dec(24423422367345049, 12))
+  })
+
   //  --- getNewICRFromTroveChange ---
 
   describe("getNewTCRFromTroveChange() returns the correct TCR", async () => {

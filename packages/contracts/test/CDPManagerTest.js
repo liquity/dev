@@ -3648,6 +3648,57 @@ contract('CDPManager', async accounts => {
 
     assert.isTrue(await cdpManager.checkRecoveryMode())
   })
+
+  // --- Getters ---
+
+  it("getCDPStake(): Returns stake", async () => {
+    await borrowerOperations.openLoan(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+
+    const A_Stake = await cdpManager.getCDPStake(A)
+    const B_Stake = await cdpManager.getCDPStake(B)
+
+    assert.equal(A_Stake, dec(3, 'ether'))
+    assert.equal(B_Stake, dec(1, 'ether'))
+  })
+
+  it("getCDPColl(): Returns coll", async () => {
+    await borrowerOperations.openLoan(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+
+    const A_Coll = await cdpManager.getCDPColl(A)
+    const B_Coll = await cdpManager.getCDPColl(B)
+
+    assert.equal(A_Coll, dec(3, 'ether'))
+    assert.equal(B_Coll, dec(1, 'ether'))
+  })
+
+  it("getCDPDebt(): Returns debt", async () => {
+    await borrowerOperations.openLoan(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+
+    const A_Debt = await cdpManager.getCDPDebt(A)
+    const B_Debt = await cdpManager.getCDPDebt(B)
+
+    // Expect debt = requested + 10 (due to gas comp)
+
+    assert.equal(A_Debt, dec(200, 18))
+    assert.equal(B_Debt, dec(37, 18))
+  })
+
+  it("getCDPStatus(): Returns status", async () => {
+    await borrowerOperations.openLoan(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.closeLoan({from: B})
+
+    const A_Status = await cdpManager.getCDPStatus(A)
+    const B_Status = await cdpManager.getCDPStatus(B)
+    const C_Status = await cdpManager.getCDPStatus(C)
+
+    assert.equal(A_Status, '1')  // active
+    assert.equal(B_Status, '2')  // closed
+    assert.equal(C_Status, '0')  // non-existent
+  })
 })
 
 contract('Reset chain state', async accounts => { })
