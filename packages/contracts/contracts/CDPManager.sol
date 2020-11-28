@@ -342,6 +342,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _removeStake(_borrower);
 
             V = _getFullOrPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
+
+            _closeCDP(_borrower);
         }
         else if (_ICR >= _TCR) {
             LiquidationValues memory zeroVals;
@@ -388,9 +390,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     /*
-    *  If it's a full offset, get it's offset coll/debt and ETH gas comp, and close the trove.
+    *  If it is a full offset, get its offset coll/debt and ETH gas comp, and close the trove.
     *
-    * If it' a partial liquidation, get it's offset coll/debt and ETH gas comp, and its new coll/debt, and its re-insertion hints.
+    * If it is a partial liquidation, get its offset coll/debt and ETH gas comp, and its new coll/debt, and its re-insertion hints.
     */
     function _getFullOrPartialOffsetVals
     (
@@ -415,7 +417,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V.debtToRedistribute = 0;
             V.collToRedistribute = 0;
 
-            _closeCDP(_borrower);
             emit CDPLiquidated(_borrower, _entireCDPDebt, _entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
         }
         /* 
@@ -449,8 +450,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             // Get the partial trove's neighbours, so we can re-insert it later to the same position
             V.partialUpperHint = sortedCDPs.getPrev(_borrower);  
             V.partialLowerHint = sortedCDPs.getNext(_borrower);
-
-             _closeCDP(_borrower);
         }
     }
 
@@ -762,8 +761,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         /* 
         * Insert to sorted list and add to CDPOwners array. The partially liquidated trove has the same
-        * ICR as it did before the liquidation, so insertion is O(1): in principle, it's ICR does not change.
-        * In practice, due to rounding error, it's ICR can change slightly - so re-insert, with it's previous neighbours
+        * ICR as it did before the liquidation, so insertion is O(1): in principle, its ICR does not change.
+        * In practice, due to rounding error, its ICR can change slightly - so re-insert, with its previous neighbours
         * as hints.
         */
         sortedCDPs.insert(_borrower, ICR, _price, _upperHint, _lowerHint);
@@ -1187,7 +1186,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     /* 
-    * Updates snapshots of system stakes and system collateral, excluding a given collateral remainder from the calculation.
     * Updates snapshots of system total stakes and total collateral, excluding a given collateral remainder from the calculation. 
     * Used in a liquidation sequence.
     *
@@ -1200,7 +1198,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     *
     * The partially liquidated trove's remaining collateral stays in the ActivePool, but it is excluded here so the system 
     * can take snapshots before the partially liquidated trove's stake is updated (based on these snapshots). This ensures
-    * the partial's new stake doesn't double-count it's own remaining collateral.
+    * the partial's new stake doesn't double-count its own remaining collateral.
     *
     */
     function _updateSystemSnapshots_excludeCollRemainder(uint _collRemainder) internal {
