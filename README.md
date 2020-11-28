@@ -401,9 +401,7 @@ Several public and external functions have modifiers such as `onlyTroveManager`,
 
 ## Deployment to a Development Blockchain
 
-**TODO: Check if this is still up to date**
-
-The Buidler migrations script and deployment helpers deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
+The Buidler migrations script and deployment helpers in `utils/deploymentHelpers.js` deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
 
 The project is deployed on the Ropsten testnet.
 
