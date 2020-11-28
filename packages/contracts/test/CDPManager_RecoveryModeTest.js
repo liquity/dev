@@ -559,6 +559,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     assert.equal(alice_ICR, '1333333333333333333')
     assert.equal(dennis_ICR, '1333333333333333333')
 
+    console.log(`TCR: ${await cdpManager.getTCR()}`)
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
 
@@ -2773,6 +2774,114 @@ contract('CDPManager - in Recovery Mode', async accounts => {
   })
 
   // --- batchLiquidateTroves() ---
+
+  it("batchLiquidateTroves(): Liquidates all troves with ICR < 110%, transitioning Normal -> Recovery Mode", async () => {
+    // make 6 CDPs accordingly
+    // --- SETUP ---
+
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: _30_Ether })
+    await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.openLoan(0, carol, { from: carol, value: _3_Ether })
+    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: _3_Ether })
+    await borrowerOperations.openLoan(0, erin, { from: erin, value: _3_Ether })
+    await borrowerOperations.openLoan(0, freddy, { from: freddy, value: _3_Ether })
+
+    // Alice withdraws 1400 CLV, the others each withdraw 240 CLV 
+    await borrowerOperations.withdrawCLV('1400000000000000000000', alice, { from: alice })  // 1410 CLV -> ICR = 426%
+    await borrowerOperations.withdrawCLV('240000000000000000000', bob, { from: bob }) //  250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('240000000000000000000', carol, { from: carol }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('240000000000000000000', dennis, { from: dennis }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('240000000000000000000', erin, { from: erin }) // 250 CLV -> ICR = 240%
+    await borrowerOperations.withdrawCLV('240000000000000000000', freddy, { from: freddy }) // 250 CLV -> ICR = 240%
+
+    // Alice deposits 1400 CLV to Stability Pool
+    await stabilityPool.provideToSP('1400000000000000000000', ZERO_ADDRESS, { from: alice })
+
+    // price drops to 1ETH:85CLV, reducing TCR below 150%
+    await priceFeed.setPrice('85000000000000000000')
+    const price = await priceFeed.getPrice()
+
+    // check Recovery Mode kicks in
+
+    const recoveryMode_Before = await cdpManager.checkRecoveryMode()
+    assert.isTrue(recoveryMode_Before)
+
+    // check TCR < 150%
+    const _150percent = web3.utils.toBN('1500000000000000000')
+    const TCR_Before = await cdpManager.getTCR()
+    assert.isTrue(TCR_Before.lt(_150percent))
+
+    /* 
+   After the price drop and prior to any liquidations, ICR should be:
+
+    CDP         ICR
+    Alice       182%
+    Bob         102%
+    Carol       102%
+    Dennis      102%
+    Elisa       102%
+    Freddy      102%
+    */
+    alice_ICR = await cdpManager.getCurrentICR(alice, price)
+    bob_ICR = await cdpManager.getCurrentICR(bob, price)
+    carol_ICR = await cdpManager.getCurrentICR(carol, price)
+    dennis_ICR = await cdpManager.getCurrentICR(dennis, price)
+    erin_ICR = await cdpManager.getCurrentICR(erin, price)
+    freddy_ICR = await cdpManager.getCurrentICR(freddy, price)
+
+    // Alice should have ICR > 150%
+    assert.isTrue(alice_ICR.gt(_150percent))
+    // All other CDPs should have ICR < 150%
+    assert.isTrue(carol_ICR.lt(_150percent))
+    assert.isTrue(dennis_ICR.lt(_150percent))
+    assert.isTrue(erin_ICR.lt(_150percent))
+    assert.isTrue(freddy_ICR.lt(_150percent))
+
+    /* Liquidations should occur from the lowest ICR CDP upwards, i.e. 
+    1) Freddy, 2) Elisa, 3) Dennis.
+
+    After liquidating Freddy and Elisa, the the TCR of the system rises above the CCR, to 154%.  
+   (see calculations in Google Sheet)
+
+    Liquidations continue until all CDPs with ICR < MCR have been closed. 
+    Only Alice should remain active - all others should be closed. */
+
+    // call batchLiquidateTroves
+    await cdpManager.batchLiquidateTroves([alice, bob, carol, dennis, erin, freddy]);
+
+    // check system is no longer in Recovery Mode
+    const recoveryMode_After = await cdpManager.checkRecoveryMode()
+    assert.isFalse(recoveryMode_After)
+
+    // After liquidation, TCR should rise to above 150%. 
+    const TCR_After = await cdpManager.getTCR()
+    assert.isTrue(TCR_After.gt(_150percent))
+
+    // get all CDPs
+    const alice_CDP = await cdpManager.CDPs(alice)
+    const bob_CDP = await cdpManager.CDPs(bob)
+    const carol_CDP = await cdpManager.CDPs(carol)
+    const dennis_CDP = await cdpManager.CDPs(dennis)
+    const erin_CDP = await cdpManager.CDPs(erin)
+    const freddy_CDP = await cdpManager.CDPs(freddy)
+
+    // check that Alice's CDP remains active
+    assert.equal(alice_CDP[3], 1)
+    assert.isTrue(await sortedCDPs.contains(alice))
+
+    // check all other CDPs are closed
+    assert.equal(bob_CDP[3], 2)
+    assert.equal(carol_CDP[3], 2)
+    assert.equal(dennis_CDP[3], 2)
+    assert.equal(erin_CDP[3], 2)
+    assert.equal(freddy_CDP[3], 2)
+
+    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedCDPs.contains(dennis))
+    assert.isFalse(await sortedCDPs.contains(erin))
+    assert.isFalse(await sortedCDPs.contains(freddy))
+  })
 
   it("batchLiquidateTroves() with a partial liquidation: partially liquidated trove remains active", async () => {
     // Whale provides 253 CLV to the SP

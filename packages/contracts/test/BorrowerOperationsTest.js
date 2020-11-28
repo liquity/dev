@@ -12,6 +12,15 @@ const timeValues = testHelpers.TimeValues
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const assertRevert = th.assertRevert
 
+/* NOTE: Some of the borrowing tests do not test for specific LUSD fee values. They only test that the 
+ * fees are non-zero when they should occur, and that they decay over time.
+ *
+ * Specific LUSD fee values will depend on the final fee schedule used, and the final choice for
+ *  the parameter MINUTE_DECAY_FACTOR in the CDPManager, which is still TBD based on economic
+ * modelling.
+ * 
+ */ 
+
 contract('BorrowerOperations', async accounts => {
 
   const [
@@ -3431,6 +3440,19 @@ contract('BorrowerOperations', async accounts => {
       const newICR = (await borrowerOperations.getNewICRFromTroveChange(initialColl, initialDebt, collChange, false, debtChange, true, price)).toString()
       assert.equal(newICR, '500000000000000000')
     })
+  })
+
+  // --- getCompositeDebt ---
+
+  it("getCompositeDebt(): returns debt + 10 gas comp", async () => { 
+    const res1 = await borrowerOperations.getCompositeDebt('0')
+    assert.equal(res1, dec(10, 18))
+
+    const res2 = await borrowerOperations.getCompositeDebt(dec(90, 18))
+    assert.equal(res2, dec(100, 18))
+
+    const res3 = await borrowerOperations.getCompositeDebt(dec(24423422357345049, 12))
+    assert.equal(res3, dec(24423422367345049, 12))
   })
 
   //  --- getNewICRFromTroveChange ---

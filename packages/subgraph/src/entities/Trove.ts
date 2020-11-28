@@ -65,14 +65,14 @@ function finishTroveChange(troveChange: TroveChange): void {
 export function updateTrove(
   event: ethereum.Event,
   operation: string,
-  _user: Address,
+  _borrower: Address,
   _coll: BigInt,
   _debt: BigInt,
   stake: BigInt,
   snapshotETH: BigInt,
   snapshotCLVDebt: BigInt
 ): void {
-  let trove = getCurrentTroveOfOwner(_user);
+  let trove = getCurrentTroveOfOwner(_borrower);
   let newCollateral = decimalize(_coll);
   let newDebt = decimalize(_debt);
 
@@ -126,7 +126,7 @@ export function updateTrove(
   }
 
   if (_coll == BIGINT_ZERO) {
-    closeCurrentTroveOfOwner(_user);
+    closeCurrentTroveOfOwner(_borrower);
 
     if (isLiquidation(operation)) {
       trove.status = "closedByLiquidation";

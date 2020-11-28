@@ -259,11 +259,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // --- Inner single liquidation functions ---
 
     // Liquidate one trove, in Normal Mode.
-    function _liquidateNormalMode(address _borrower, uint _ICR, uint _CLVInStabPool) internal returns (LiquidationValues memory V) {
+    function _liquidateNormalMode(address _borrower, uint _CLVInStabPool) internal returns (LiquidationValues memory V) {
         LocalVariables_InnerSingleLiquidateFunction memory L;
-
-        // If ICR >= MCR, or is last trove, don't liquidate
-        if (_ICR >= MCR || CDPOwners.length <= 1) { return V; }
 
         (V.entireCDPDebt,
         V.entireCDPColl,
@@ -291,8 +288,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // Liquidate one trove, in Recovery Mode.
     function _liquidateRecoveryMode(address _borrower, uint _ICR, uint _CLVInStabPool, uint _TCR) internal returns (LiquidationValues memory V) {
         LocalVariables_InnerSingleLiquidateFunction memory L;
-        // If is last trove, don't liquidate
-        if (CDPOwners.length <= 1) { return V; }
+        
+        if (CDPOwners.length <= 1) { return V; } // don't liquidate if last trove
 
         (V.entireCDPDebt,
         V.entireCDPColl,
@@ -335,14 +332,15 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         * and there is CLV in the Stability Pool, only offset it as much as possible, with no redistribution.
         */
         } else if ((_ICR >= MCR) && (_ICR < _TCR)) {
-            if (_CLVInStabPool == 0) {
-                LiquidationValues memory zeroVals;
-                return zeroVals;
-            }
-            _removeStake(_borrower);
+            assert(_CLVInStabPool != 0);
 
+<<<<<<< HEAD
             V = _getFullOrPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
 
+=======
+            _removeStake(_borrower);
+            V = _getPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
+>>>>>>> main
             _closeCDP(_borrower);
         }
         else if (_ICR >= _TCR) {
@@ -537,7 +535,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
             else if (L.backToNormalMode == true && L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInStabPool);
+                V = _liquidateNormalMode(L.user, L.remainingCLVInStabPool);
 
                 L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
 
@@ -573,7 +571,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             L.ICR = getCurrentICR(L.user, _price);
 
             if (L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInStabPool);
+                V = _liquidateNormalMode(L.user, L.remainingCLVInStabPool);
 
                 L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
 
@@ -674,7 +672,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             }
 
             else if (L.backToNormalMode == true && L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInStabPool);
+                V = _liquidateNormalMode(L.user, L.remainingCLVInStabPool);
                 L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
 
                 // Add liquidation values to their respective running totals
@@ -702,7 +700,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             L.ICR = getCurrentICR(L.user, _price);
 
             if (L.ICR < MCR) {
-                V = _liquidateNormalMode(L.user, L.ICR, L.remainingCLVInStabPool);
+                V = _liquidateNormalMode(L.user, L.remainingCLVInStabPool);
                 L.remainingCLVInStabPool = L.remainingCLVInStabPool.sub(V.debtToOffset);
 
                 // Add liquidation values to their respective running totals
@@ -1386,10 +1384,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     function _requireCLVBalanceCoversRedemption(address _redeemer, uint _amount) internal view {
         require(clvToken.balanceOf(_redeemer) >= _amount, "CDPManager: Requested redemption amount must be <= user's CLV token balance");
-    }
-
-    function _requireETHSentSuccessfully(bool _success) internal pure {
-        require(_success, "CDPManager: Failed to send ETH to msg.sender");
     }
 
     function _requireMoreThanOneTroveInSystem(uint CDPOwnersArrayLength) internal view {

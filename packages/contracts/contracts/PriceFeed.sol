@@ -23,7 +23,6 @@ contract PriceFeed is Ownable, IPriceFeed {
     IDeployedAggregator public priceAggregator;
 
     // Testnet Chainlink aggregator
-    address public priceAggregatorAddress_Testnet;
     AggregatorInterface public priceAggregator_Testnet;
 
     event PriceUpdated(uint256 _newPrice);
@@ -105,7 +104,7 @@ contract PriceFeed is Ownable, IPriceFeed {
         int256 intPrice = priceAggregator_Testnet.latestAnswer();
         require( intPrice >= 0, "Price response from aggregator is negative int");
 
-        return uint256(intPrice).mul(10000000000);
+        return uint256(intPrice).mul(1e10);
     }
 
     // Get the block timestamp at which the reference data was last updated
@@ -123,7 +122,7 @@ contract PriceFeed is Ownable, IPriceFeed {
         int256 prevPrice = priceAggregator_Testnet.getAnswer(latestAnswerID - _n);
         require(prevPrice >= 0, "Price response from aggregator is negative int");
 
-        return uint256(prevPrice).mul(10000000000);
+        return uint256(prevPrice).mul(1e10);
     }
 
     // Get the block timestamp from the round that occurred 'n' rounds ago

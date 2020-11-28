@@ -113,16 +113,15 @@ Recovery Mode is designed to encourage collateral top-ups, and also itself acts 
 
 ### Directories
 
-**TODO: add full directory structure!**
-
 - `packages/dev-frontend/` - Liquity Developer UI: a fully functional React app used for interfacing with the smart contracts during development
 - `packages/frontend/` - The front-end React app for the user-facing web interface
-- `packages/lib-base/` - todo
-- `packages/lib-ethers/`- todo
-- `packages/lib-react/` - todo
-- `packages/lib-subgraph/` - todo
-- `packages/contracts/` The backend development folder, contains the Buidler project, contracts and tests
-- `packages/contracts/contracts/` -The core back end smart contracts written in Solidity
+- `packages/lib-base/` - Common interfaces and classes shared by the other `lib-` packages
+- `packages/lib-ethers/` - [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions
+- `packages/lib-react/` - Components and hooks that React-based apps can use to view Liquity contract state
+- `packages/lib-subgraph/` - [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Liquity subgraph that can read Liquity state
+- `packages/subgraph/` - [Subgraph](https://thegraph.com) for querying Liquity state as well as historical data like transaction history
+- `packages/contracts/` - The backend development folder, contains the Buidler project, contracts and tests
+- `packages/contracts/contracts/` - The core back end smart contracts written in Solidity
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
 - `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Liquity operations under various scenarios
 - `packages/contracts/migrations/` - contains Buidler script for deploying the smart contracts to the blockchain
@@ -195,8 +194,9 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 
 #### Deploy Liquity Core
 9. Liquity admin deploys the Liquity core system
-10. Liquity admin connects Liquity core system internally (with setters), and connects each of the `LQTYStaking` and `CommunityIssuance` contracts with Liquity core contracts
-11. Liquity admin activates the `CommunityIssuance` contract
+11. Liquity admin connects Liquity core system internally (with setters)
+12. Liquity admin connects `LQTYStaking` to Liquity core contracts and `GrowthToken`
+12. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `GrowthToken`
 
 #### During one year lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners’ `OneYearLockupContracts`, as per their vesting schedules
@@ -210,6 +210,10 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 
 #### Post-lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners, directly to their individual addresses, or to a fresh lockup contract if required.
+
+_NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `GrowthToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
+
+_The current code does not utilize a multi-sig. It implements the launch architecture outlined above._
 
 ## Core System Architecture
 

@@ -9,6 +9,16 @@ const dec = th.dec
 
 const toBN = th.toBN
 
+
+/* NOTE: These tests do not test for specific ETH and LUSD gain values. They only test that the 
+ * gains are non-zero, occur when they should, and are in correct proportion to the user's stake. 
+ *
+ * Specific ETH/LUSD gain values will depend on the final fee schedule used, and the final choices for
+ * parameters BETA and MINUTE_DECAY_FACTORin the CDPManager, which are still TBD based on economic
+ * modelling.
+ * 
+ */ 
+
 contract('Fee arithmetic tests', async accounts => {
   let contracts
   
@@ -260,7 +270,164 @@ contract('Fee arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedTotalLUSDGain, A_LUSDGain), 1000)
   })
 
-  // TODO
+  it("stake(): Top-up sends out all accumulated ETH and LUSD gains to the staker", async () => { 
+    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+
+    // FF time one year so owner can transfer LQTY
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+
+    // Owner transfers LQTY to staker A
+    await growthToken.transfer(A, dec(100, 18), {from: owner})
+
+    // A makes stake
+    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyStaking.stake(dec(50, 18), {from: A})
+
+    // B redeems
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
+    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+
+    // check ETH fee 1 emitted in event is non-zero
+    const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
+    assert.isTrue(emittedETHFee_1.gt(toBN('0')))
+
+     // C redeems
+     const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
+     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+ 
+     // check ETH fee 2 emitted in event is non-zero
+     const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
+     assert.isTrue(emittedETHFee_2.gt(toBN('0')))
+
+    // D draws debt
+    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), D, {from: D})
+    
+    // Check LUSD fee value in event is non-zero
+    const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
+    assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
+
+    // B draws debt
+    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), B, {from: B})
+    
+    // Check LUSD fee value in event is non-zero
+    const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
+    assert.isTrue(emittedLUSDFee_2.gt(toBN('0')))
+
+    const expectedTotalETHGain = emittedETHFee_1.add(emittedETHFee_2)
+    const expectedTotalLUSDGain = emittedLUSDFee_1.add(emittedLUSDFee_2)
+
+    const A_ETHBalance_Before = toBN(await web3.eth.getBalance(A))
+    const A_LUSDBalance_Before = toBN(await clvToken.balanceOf(A))
+
+    // A tops up
+    await lqtyStaking.stake(dec(50, 18), {from: A, gasPrice: 0})
+
+    const A_ETHBalance_After = toBN(await web3.eth.getBalance(A))
+    const A_LUSDBalance_After = toBN(await clvToken.balanceOf(A))
+
+    const A_ETHGain = A_ETHBalance_After.sub(A_ETHBalance_Before)
+    const A_LUSDGain = A_LUSDBalance_After.sub(A_LUSDBalance_Before)
+
+    assert.isAtMost(th.getDifference(expectedTotalETHGain, A_ETHGain), 1000)
+    assert.isAtMost(th.getDifference(expectedTotalLUSDGain, A_LUSDGain), 1000)
+  })
+
+  it("getPendingETHGain(): Returns the staker's correct pending ETH gain", async () => { 
+    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+
+    // FF time one year so owner can transfer LQTY
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+
+    // Owner transfers LQTY to staker A
+    await growthToken.transfer(A, dec(100, 18), {from: owner})
+
+    // A makes stake
+    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyStaking.stake(dec(50, 18), {from: A})
+
+    // B redeems
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
+    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+
+    // check ETH fee 1 emitted in event is non-zero
+    const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
+    assert.isTrue(emittedETHFee_1.gt(toBN('0')))
+
+     // C redeems
+     const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
+     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+ 
+     // check ETH fee 2 emitted in event is non-zero
+     const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
+     assert.isTrue(emittedETHFee_2.gt(toBN('0')))
+
+    const expectedTotalETHGain = emittedETHFee_1.add(emittedETHFee_2)
+
+    const A_ETHGain = await lqtyStaking.getPendingETHGain(A)
+
+    assert.isAtMost(th.getDifference(expectedTotalETHGain, A_ETHGain), 1000)
+  })
+
+  it("getPendingLUSDGain(): Returns the staker's correct pending LUSD gain", async () => { 
+    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+
+    // FF time one year so owner can transfer LQTY
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+
+    // Owner transfers LQTY to staker A
+    await growthToken.transfer(A, dec(100, 18), {from: owner})
+
+    // A makes stake
+    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyStaking.stake(dec(50, 18), {from: A})
+
+    // B redeems
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
+    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+
+    // check ETH fee 1 emitted in event is non-zero
+    const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
+    assert.isTrue(emittedETHFee_1.gt(toBN('0')))
+
+     // C redeems
+     const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
+     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+ 
+     // check ETH fee 2 emitted in event is non-zero
+     const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
+     assert.isTrue(emittedETHFee_2.gt(toBN('0')))
+
+    // D draws debt
+    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), D, {from: D})
+    
+    // Check LUSD fee value in event is non-zero
+    const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
+    assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
+
+    // B draws debt
+    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), B, {from: B})
+    
+    // Check LUSD fee value in event is non-zero
+    const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
+    assert.isTrue(emittedLUSDFee_2.gt(toBN('0')))
+
+    const expectedTotalLUSDGain = emittedLUSDFee_1.add(emittedLUSDFee_2)
+    const A_LUSDGain = await lqtyStaking.getPendingLUSDGain(A)
+
+    assert.isAtMost(th.getDifference(expectedTotalLUSDGain, A_LUSDGain), 1000)
+  })
 
   // - multi depositors, several rewards
   it("LQTY Staking: Multiple stakers earn the correct share of all ETH and LQTY fees, based on their stake size", async () => {

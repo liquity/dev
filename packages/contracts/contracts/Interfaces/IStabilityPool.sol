@@ -65,5 +65,4 @@ interface IStabilityPool {
 
     function getCompoundedCLVDeposit(address _depositor) external view returns (uint);
     function getCompoundedFrontEndStake(address _frontEnd) external view returns (uint);
-    function getFrontEndTag(address _depositor) external view returns (address);
 }

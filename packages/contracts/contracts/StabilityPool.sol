@@ -776,10 +776,6 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // --- Stability Pool Deposit Functionality ---
 
-    function getFrontEndTag(address _depositor) external view override returns (address) {
-        return deposits[_depositor].frontEndTag;
-    }
-
     function _setFrontEndTag(address _depositor, address _frontEndTag) internal {
         deposits[_depositor].frontEndTag = _frontEndTag;
     }
@@ -902,10 +898,6 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     function  _requireValidKickbackRate(uint _kickbackRate) internal pure {
         require (_kickbackRate <= 1e18, "StabilityPool: Kickback rate must be in range [0,1]");
-    }
-
-    function _requireETHSentSuccessfully(bool _success) internal pure {
-        require(_success, "StabilityPool: Failed to send ETH to msg.sender");
     }
 
     // --- Fallback function ---
