@@ -45,11 +45,17 @@ contract PriceFeed is Ownable, IPriceFeed {
         _renounceOwnership();
     }
 
+    function updatePrice() external override returns (uint256 price) {
+        _requireCallerIsCDPManager();
+        (uint price, uint8 decimal) = getLatestPrice();
+        emit PriceUpdated(price);
+    }
+
     /**
      * Returns the latest price
      * https://docs.chain.link/docs/get-the-latest-price
      */
-    function getLatestPrice() external view override
+    function getLatestPrice() public view override
     returns (uint price, uint8 decimals) {
         (uint80 roundID, int response,
         uint startedAt, uint timeStamp,
@@ -59,12 +65,6 @@ contract PriceFeed is Ownable, IPriceFeed {
         require(price >= 0, "Negative price");
         decimals = priceAggregator.decimals();
         price = uint256(response);
-    }
-
-    function updatePrice() external override returns (uint256 price) {
-        _requireCallerIsCDPManager();
-        (uint price, uint8 decimal) = getLatestPrice();
-        emit PriceUpdated(price);
     }
 
     function getLatestAnswerID() external view override returns (uint256) {

@@ -17,7 +17,7 @@ contract PriceFeedTestnet is Ownable, IPriceFeedTestnet {
 
     address public cdpManagerAddress;
     address public priceAggregatorAddress;
-    AggregatorInterfaceV2V3 public priceAggregator;
+    AggregatorV2V3Interface public priceAggregator;
 
     event PriceUpdated(uint256 _newPrice);
     event CDPManagerAddressChanged(address _cdpManagerAddress);
@@ -68,7 +68,7 @@ contract PriceFeedTestnet is Ownable, IPriceFeedTestnet {
      * Returns the latest price
      * https://docs.chain.link/docs/get-the-latest-price
      */
-    function getLatestPrice() external view override
+    function getLatestPrice() public view override
     returns (uint price, uint8 decimals) {
         (uint80 roundID, int answer,
         uint startedAt, uint timeStamp,

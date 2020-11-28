@@ -18,7 +18,7 @@ interface IPriceFeedBase {
 
     function getPrice() external view returns (uint);
     
-    function updatePrice() external returns (uint256);
-
     function getLatestPrice() external view returns (uint, uint8);
+
+    function updatePrice() external returns (uint256);
 }

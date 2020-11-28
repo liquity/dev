@@ -62,7 +62,7 @@ class DeploymentHelper {
 
   static async deployLiquityCoreBuidler() {
     const priceFeed = await PriceFeed.new()
-    const priceFeed = await PriceFeedTestnet.new()
+    const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
     const activePool = await ActivePool.new()
@@ -189,7 +189,7 @@ class DeploymentHelper {
 
   static async deployLiquityCoreTruffle() {
     const priceFeed = await PriceFeed.new()
-    const priceFeed = await PriceFeedTestnet.new()
+    const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
     const activePool = await ActivePool.new()
@@ -206,6 +206,7 @@ class DeploymentHelper {
     )
     const coreContracts = {
       priceFeed,
+      priceFeedTestnet,
       clvToken,
       sortedCDPs,
       cdpManager,
