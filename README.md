@@ -4,7 +4,7 @@
 
 - [Liquity Overview](#liquity-overview)
   - [Liquidation and the Stability Pool](#liquidation-and-the-stability-pool)
-  - [Rewards From Liquidations](#rewards-from-liquidations)
+  - [Rewards From Liquidations](#gains-from-liquidations)
   - [Recovery Mode](#recovery-mode)
   - [LUSD Token Redemption](#lusd-token-redemption)
   - [Project Structure](#project-structure)
@@ -150,15 +150,9 @@ Backend development is done in the Buidler framework, and allows Liquity to be d
 
 ### Branches
 
-**TODO: check and update before audit**
-
-As of 21/08/2020, the current working branch is `main`.  
+As of 28/11/2020, the current working branch is `main`.  
 
 `master` is somewhat out of date, as our CI pipeline automatically redeploys contracts to testnet from master branch, and we want users to have a chance to engage with the existing deployments.
-
-A code freeze for the simulation project will be located on a branch named `simulation`.
-
-Other branches contain functionality that has either been shelved (`size-range-lists`, `overstay`) or integrated into our core system (`security-tweaks`).
 
 ## LQTY Token Architecture
 
