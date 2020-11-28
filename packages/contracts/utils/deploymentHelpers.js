@@ -32,6 +32,7 @@ LQTY contracts consist of only those contracts related to the Growth Token:the t
 and lockup, staking and community issuance coreContracts. */
 
 const ZERO_ADDRESS = '0x' + '0'.repeat(40)
+const maxBytes32 = '0x' + 'f'.repeat(64)
 
 class DeploymentHelper {
 
@@ -250,7 +251,7 @@ class DeploymentHelper {
 
     // set CDPManager addr in SortedCDPs
     await contracts.sortedCDPs.setParams(
-      1e6,
+      maxBytes32,
       contracts.cdpManager.address,
       contracts.borrowerOperations.address
     )

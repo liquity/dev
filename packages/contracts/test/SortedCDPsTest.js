@@ -14,6 +14,7 @@ contract('CDPManager', async accounts => {
     let trove = await contracts.sortedCDPs.getLast()
     while (trove !== (await contracts.sortedCDPs.getFirst())) {
       
+      // Get the adjacent upper trove ("prev" moves up the list, from lower ICR -> higher ICR)
       const prevTrove = await contracts.sortedCDPs.getPrev(trove)
      
       const troveICR = await contracts.cdpManager.getCurrentICR(trove, price)
@@ -174,7 +175,41 @@ contract('CDPManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(bob))
   })
 
-  // Ordering
+  // --- getMaxSize ---
+
+  it("getMaxSize(): Returns the maximum list size", async () => {
+    const max = await sortedCDPs.getMaxSize()
+    assert.equal(web3.utils.toHex(max), th.maxBytes32)
+  })
+
+  // --- findInsertPosition ---
+
+  it("Finds the correct insert position given two addresses that loosely bound the correct position", async () => { 
+    await priceFeed.setPrice(dec(100, 18))
+    const price = await priceFeed.getPrice()
+
+    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(5000, 'ether') }) //  Highest ICR (infinite)
+    await borrowerOperations.openLoan(dec(90, 18), A, { from: A, value: dec(10, 'ether') }) //  |  
+    await borrowerOperations.openLoan(dec(190, 18), B, { from: B, value: dec(10, 'ether') }) //  | ICR = 500%
+    await borrowerOperations.openLoan(dec(390, 18), C, { from: C, value: dec(10, 'ether') }) //  | ICR = 250%
+    await borrowerOperations.openLoan(dec(590, 18), D, { from: D, value: dec(10, 'ether') }) //  | 
+    await borrowerOperations.openLoan(dec(790, 18), E, { from: E, value: dec(10, 'ether') }) //  Lowest ICR
+
+    console.log(`B ICR: ${await cdpManager.getCurrentICR(B, price)}`)
+    console.log(`C ICR: ${await cdpManager.getCurrentICR(C, price)}`)
+
+    // Expect a trove with ICR 300% to be inserted between B and C
+    const targetICR = dec(3, 18) 
+
+    // Pass addresses that loosely bound the right postiion
+    const hints = await sortedCDPs.findInsertPosition(targetICR, price, A, E)
+
+    // Expect the exact correct insert hints have been returned
+    assert.equal(hints[0], B )
+    assert.equal(hints[1], C )
+  })
+
+  //--- Ordering --- 
   it("stays ordered after troves with 'infinite' ICR receive a redistribution", async () => {
 
     // make several troves with 0 debt and collateral, in random order
@@ -185,7 +220,7 @@ contract('CDPManager', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(4, 'ether') })
     await borrowerOperations.openLoan(0, E, { from: E, value: dec(19, 'ether') })
 
-    // Make some troves with non-zero debt, in random orderd
+    // Make some troves with non-zero debt, in random order
     await borrowerOperations.openLoan(dec(5, 19), F, { from: F, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(3, 18), G, { from: G, value: dec(37, 'ether') })
     await borrowerOperations.openLoan(dec(2, 20), H, { from: H, value: dec(5, 'ether') })

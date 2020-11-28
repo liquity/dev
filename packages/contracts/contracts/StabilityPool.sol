@@ -776,10 +776,6 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // --- Stability Pool Deposit Functionality ---
 
-    function getFrontEndTag(address _depositor) external view override returns (address) {
-        return deposits[_depositor].frontEndTag;
-    }
-
     function _setFrontEndTag(address _depositor, address _frontEndTag) internal {
         deposits[_depositor].frontEndTag = _frontEndTag;
     }

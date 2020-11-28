@@ -12,6 +12,15 @@ const timeValues = testHelpers.TimeValues
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const assertRevert = th.assertRevert
 
+/* NOTE: Some of the borrowing tests do not test for specific LUSD fee values. They only test that the 
+ * fees are non-zero when they should occur, and that they decay over time.
+ *
+ * Specific LUSD fee values will depend on the final fee schedule used, and the final choice for
+ *  the parameter MINUTE_DECAY_FACTOR in the CDPManager, which is still TBD based on economic
+ * modelling.
+ * 
+ */ 
+
 contract('BorrowerOperations', async accounts => {
 
   const [

@@ -9,6 +9,14 @@ const toBN = th.toBN
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
+
+/* NOTE: Some tests involving ETH redemption fees do not test for specific fee values.
+ * Some only test that the fees are non-zero when they should occur.
+ *
+ * Specific ETH gain values will depend on the final fee schedule used, and the final choices for
+ * the parameter BETA in the CDPManager, which is still TBD based on economic modelling.
+ * 
+ */ 
 contract('CDPManager', async accounts => {
 
   const _18_zeros = '000000000000000000'
@@ -3699,7 +3707,7 @@ contract('CDPManager', async accounts => {
 
   // --- CollSurplusPool ---
 
-  it.only("CollSurplusPool::getETH(): Returns the ETH balance of the CollSurplusPool after redemption", async () => {
+  it("CollSurplusPool::getETH(): Returns the ETH balance of the CollSurplusPool after redemption", async () => {
     const ETH_1 = await collSurplusPool.getETH()
     assert.equal(ETH_1, '0')
 
