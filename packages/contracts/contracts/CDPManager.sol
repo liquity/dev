@@ -1345,10 +1345,6 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         require(clvToken.balanceOf(_redeemer) >= _amount, "CDPManager: Requested redemption amount must be <= user's CLV token balance");
     }
 
-    function _requireETHSentSuccessfully(bool _success) internal pure {
-        require(_success, "CDPManager: Failed to send ETH to msg.sender");
-    }
-
     function _requireMoreThanOneTroveInSystem(uint CDPOwnersArrayLength) internal view {
         require (CDPOwnersArrayLength > 1 && sortedCDPs.getSize() > 1, "CDPManager: Only one trove in the system");
     }

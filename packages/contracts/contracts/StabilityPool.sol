@@ -904,10 +904,6 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         require (_kickbackRate <= 1e18, "StabilityPool: Kickback rate must be in range [0,1]");
     }
 
-    function _requireETHSentSuccessfully(bool _success) internal pure {
-        require(_success, "StabilityPool: Failed to send ETH to msg.sender");
-    }
-
     // --- Fallback function ---
 
     receive() external payable {
