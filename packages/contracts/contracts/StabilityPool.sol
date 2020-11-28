@@ -83,7 +83,7 @@ import "./Dependencies/console.sol";
  * When a deposit is made, it gets snapshots of the currentEpoch and the currentScale.  
  *
  * When calculating a compounded deposit, we compare the current epoch to the deposit's epoch snapshot. If the current epoch is newer, 
- * then that the deposit was present during a pool-emptying liquidation, and necessarily has been depleted to 0. 
+ * then the deposit was present during a pool-emptying liquidation, and necessarily has been depleted to 0. 
  *
  * Otherwise, we then compare the current scale to the deposit's scale snapshot. If they're equal, the compounded deposit is given by d_t * P/P_t.
  * If it spans one scale change, is given by d_t * P/(P_t * 1e18). If it spans more than one scale change, we define the compounded deposit 
