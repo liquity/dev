@@ -868,7 +868,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
-
+    
     /* Since the pool only contains 100 CLV, and Bob's pre-liquidation debt was 250 CLV, 
     expect Bob's loan to only be partially offset, and remain active after liquidation */
 
