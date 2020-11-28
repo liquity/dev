@@ -87,7 +87,7 @@ import "./Dependencies/console.sol";
  *
  * Otherwise, we then compare the current scale to the deposit's scale snapshot. If they're equal, the compounded deposit is given by d_t * P/P_t.
  * If it spans one scale change, it is given by d_t * P/(P_t * 1e18). If it spans more than one scale change, we define the compounded deposit 
- * as 0, since it is now less than 1e-18'th of it's initial value (e.g. a deposit of 1 billion LUSD has depleted to 1 billionth of an LUSD).
+ * as 0, since it is now less than 1e-18'th of its initial value (e.g. a deposit of 1 billion LUSD has depleted to 1 billionth of an LUSD).
  *
  *
  *  --- TRACKING DEPOSITOR'S ETH GAIN OVER SCALE CHANGES AND EPOCHS ---
@@ -115,7 +115,7 @@ import "./Dependencies/console.sol";
  *
  * --- LQTY ISSUANCE TO STABILITY POOL DEPOSITORS --- 
  *
- *  An LQTY issuance event occurs at every deposit operation, and every liquidation. 
+ * An LQTY issuance event occurs at every deposit operation, and every liquidation. 
  *
  * Each deposit is tagged with the address of the front end through which it was made.
  *
