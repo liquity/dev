@@ -113,8 +113,6 @@ Recovery Mode is designed to encourage collateral top-ups, and also itself acts 
 
 ### Directories
 
-**TODO: add full directory structure!**
-
 - `packages/dev-frontend/` - Liquity Developer UI: a fully functional React app used for interfacing with the smart contracts during development
 - `packages/frontend/` - The front-end React app for the user-facing web interface
 - `packages/lib-base/` - Common interfaces and classes shared by the other `lib-` packages
@@ -196,9 +194,9 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 
 #### Deploy Liquity Core
 9. Liquity admin deploys the Liquity core system
-11. LiquidityAG connects Liquity core system internally (with setters)
-12. Liquidity AG connects `LQTYStaking` to Liquity core contracts and `GrowthToken`
-12. Liquidity AG connects `CommunityIssuance` to Liquity core contracts and `GrowthToken`
+11. Liquity admin connects Liquity core system internally (with setters)
+12. Liquity admin connects `LQTYStaking` to Liquity core contracts and `GrowthToken`
+12. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `GrowthToken`
 
 #### During one year lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners’ `OneYearLockupContracts`, as per their vesting schedules
