@@ -12,12 +12,12 @@ export function handleCDPUpdated(event: CDPUpdated): void {
   let borrowerOperations = BorrowerOperations.bind(event.address);
   let cdpManagerAddress = borrowerOperations.cdpManager();
   let cdpManager = CDPManager.bind(cdpManagerAddress);
-  let snapshots = cdpManager.rewardSnapshots(event.params._user);
+  let snapshots = cdpManager.rewardSnapshots(event.params._borrower);
 
   updateTrove(
     event,
     getTroveOperationFromBorrowerOperation(event.params.operation),
-    event.params._user,
+    event.params._borrower,
     event.params._coll,
     event.params._debt,
     event.params.stake,

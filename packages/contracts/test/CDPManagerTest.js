@@ -3408,6 +3408,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(B_balanceAfter.eq(B_balanceBefore))
     assert.isTrue(C_balanceAfter.eq(C_balanceBefore))
     assert.isTrue(D_balanceAfter.eq(D_balanceBefore))
+
+    // D is not closed, so cannot open trove
+    await th.assertRevert(borrowerOperations.openLoan(D, ZERO_ADDRESS, { from: D, value: dec(10, 18) }), 'BorrowerOps: CDP is active')
   }
 
   it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to claim", async () => {
@@ -3417,8 +3420,8 @@ contract('CDPManager', async accounts => {
     const B_balanceBefore = toBN(await web3.eth.getBalance(B))
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
 
-    // CDPManager endpoint cannot be called directly
-    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(D), 'CDPManager: Caller is not the BorrowerOperations contract')
+    // CollSurplusPool endpoint cannot be called directly
+    await th.assertRevert(collSurplusPool.claimColl(A), 'CollSurplusPool: Caller is not Borrower Operations')
 
     await borrowerOperations.claimRedeemedCollateral(A)
     await borrowerOperations.claimRedeemedCollateral(B)
@@ -3431,9 +3434,6 @@ contract('CDPManager', async accounts => {
     assert.isTrue(A_balanceAfter.eq(A_balanceBefore.add(toBN(dec(5, 17)))))
     assert.isTrue(B_balanceAfter.eq(B_balanceBefore.add(toBN(dec(4, 17)))))
     assert.isTrue(C_balanceAfter.eq(C_balanceBefore.add(toBN(dec(35, 16)))))
-
-    // D is not closed, so cannot claim
-    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(D), 'Trove must be closed to claim ETH')
   })
 
   it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to use re-opening loan", async () => {
@@ -3458,9 +3458,6 @@ contract('CDPManager', async accounts => {
     assert.isTrue((await collSurplusPool.getCollateral(A)).eq(toBN(dec(5, 17))))
     assert.isTrue((await collSurplusPool.getCollateral(B)).eq(toBN(dec(4, 17))))
     assert.isTrue((await collSurplusPool.getCollateral(C)).eq(toBN(dec(35, 16))))
-
-    // D is not closed, so cannot open trove
-    await th.assertRevert(borrowerOperations.openLoan(D, ZERO_ADDRESS), 'BorrowerOps: CDP is active')
   })
 
   it("getPendingCLVDebtReward(): Returns 0 if there is no pending CLVDebt reward", async () => {
