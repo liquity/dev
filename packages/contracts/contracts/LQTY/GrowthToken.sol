@@ -55,7 +55,7 @@ contract GrowthToken is IERC20, IGrowthToken {
     // --- GrowthToken specific data ---
 
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
-    uint public _100_MILLION = 1e26;  // non-constant, for use with SafeMath
+    uint internal _100_MILLION = 1e26;  // non-constant, for use with SafeMath
 
     uint public deploymentStartTime;
     address public deployer;
@@ -97,17 +97,17 @@ contract GrowthToken is IERC20, IGrowthToken {
         _mint(_communityIssuanceAddress, communityEntitlement);
     }
 
-    // --- Public functions ---
+    // --- External functions ---
 
-    function totalSupply() public view override returns (uint256) {
+    function totalSupply() external view override returns (uint256) {
         return _totalSupply;
     }
 
-    function balanceOf(address account) public view override returns (uint256) {
+    function balanceOf(address account) external view override returns (uint256) {
         return _balances[account];
     }
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
+    function transfer(address recipient, uint256 amount) external override returns (bool) {
         // Restrict the deployer's transfers in first year
         if (_callerIsDeployer() && _isFirstYear()) {
             _requireRecipientIsRegisteredOYLC(recipient);
@@ -120,18 +120,18 @@ contract GrowthToken is IERC20, IGrowthToken {
         return true;
     }
 
-    function allowance(address owner, address spender) public view override returns (uint256) {
+    function allowance(address owner, address spender) external view override returns (uint256) {
         return _allowances[owner][spender];
     }
 
-    function approve(address spender, uint256 amount) public override returns (bool) {
+    function approve(address spender, uint256 amount) external override returns (bool) {
         if (_isFirstYear()) { _requireCallerIsNotDeployer(); }
 
         _approve(msg.sender, spender, amount);
         return true;
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         if (_isFirstYear()) { _requireSenderIsNotDeployer(sender); }
         
         _requireValidRecipient(recipient);
@@ -141,14 +141,14 @@ contract GrowthToken is IERC20, IGrowthToken {
         return true;
     }
 
-    function increaseAllowance(address spender, uint256 addedValue) public override returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) external override returns (bool) {
         if (_isFirstYear()) { _requireCallerIsNotDeployer(); }
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
         return true;
     }
 
-    function decreaseAllowance(address spender, uint256 subtractedValue) public override returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) external override returns (bool) {
         if (_isFirstYear()) { _requireCallerIsNotDeployer(); }
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
@@ -195,7 +195,7 @@ contract GrowthToken is IERC20, IGrowthToken {
         _approve(owner, spender, amount);
     }
 
-    function nonces(address owner) public view override returns (uint256) { // FOR EIP 2612
+    function nonces(address owner) external view override returns (uint256) { // FOR EIP 2612
         return _nonces[owner];
     }
 
@@ -222,14 +222,6 @@ contract GrowthToken is IERC20, IGrowthToken {
         _totalSupply = _totalSupply.add(amount);
         _balances[account] = _balances[account].add(amount);
         emit Transfer(address(0), account, amount);
-    }
-
-    function _burn(address account, uint256 amount) internal {
-        require(account != address(0), "ERC20: burn from the zero address");
-
-        _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
-        _totalSupply = _totalSupply.sub(amount);
-        emit Transfer(account, address(0), amount);
     }
 
     function _approve(address owner, address spender, uint256 amount) internal {

@@ -3408,6 +3408,9 @@ contract('CDPManager', async accounts => {
     assert.isTrue(B_balanceAfter.eq(B_balanceBefore))
     assert.isTrue(C_balanceAfter.eq(C_balanceBefore))
     assert.isTrue(D_balanceAfter.eq(D_balanceBefore))
+
+    // D is not closed, so cannot open trove
+    await th.assertRevert(borrowerOperations.openLoan(D, ZERO_ADDRESS, { from: D, value: dec(10, 18) }), 'BorrowerOps: CDP is active')
   }
 
   it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to claim", async () => {
@@ -3417,8 +3420,8 @@ contract('CDPManager', async accounts => {
     const B_balanceBefore = toBN(await web3.eth.getBalance(B))
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
 
-    // CDPManager endpoint cannot be called directly
-    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(D), 'CDPManager: Caller is not the BorrowerOperations contract')
+    // CollSurplusPool endpoint cannot be called directly
+    await th.assertRevert(collSurplusPool.claimColl(A), 'CollSurplusPool: Caller is not Borrower Operations')
 
     await borrowerOperations.claimRedeemedCollateral(A)
     await borrowerOperations.claimRedeemedCollateral(B)
@@ -3431,9 +3434,6 @@ contract('CDPManager', async accounts => {
     assert.isTrue(A_balanceAfter.eq(A_balanceBefore.add(toBN(dec(5, 17)))))
     assert.isTrue(B_balanceAfter.eq(B_balanceBefore.add(toBN(dec(4, 17)))))
     assert.isTrue(C_balanceAfter.eq(C_balanceBefore.add(toBN(dec(35, 16)))))
-
-    // D is not closed, so cannot claim
-    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(D), 'Trove must be closed to claim ETH')
   })
 
   it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to use re-opening loan", async () => {
@@ -3458,9 +3458,6 @@ contract('CDPManager', async accounts => {
     assert.isTrue((await collSurplusPool.getCollateral(A)).eq(toBN(dec(5, 17))))
     assert.isTrue((await collSurplusPool.getCollateral(B)).eq(toBN(dec(4, 17))))
     assert.isTrue((await collSurplusPool.getCollateral(C)).eq(toBN(dec(35, 16))))
-
-    // D is not closed, so cannot open trove
-    await th.assertRevert(borrowerOperations.openLoan(D, ZERO_ADDRESS), 'BorrowerOps: CDP is active')
   })
 
   it("getPendingCLVDebtReward(): Returns 0 if there is no pending CLVDebt reward", async () => {
@@ -3647,6 +3644,75 @@ contract('CDPManager', async accounts => {
     assert.equal(TCR, 0)
 
     assert.isTrue(await cdpManager.checkRecoveryMode())
+  })
+
+  // --- Getters ---
+
+  it("getCDPStake(): Returns stake", async () => {
+    await borrowerOperations.openLoan(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+
+    const A_Stake = await cdpManager.getCDPStake(A)
+    const B_Stake = await cdpManager.getCDPStake(B)
+
+    assert.equal(A_Stake, dec(3, 'ether'))
+    assert.equal(B_Stake, dec(1, 'ether'))
+  })
+
+  it("getCDPColl(): Returns coll", async () => {
+    await borrowerOperations.openLoan(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+
+    const A_Coll = await cdpManager.getCDPColl(A)
+    const B_Coll = await cdpManager.getCDPColl(B)
+
+    assert.equal(A_Coll, dec(3, 'ether'))
+    assert.equal(B_Coll, dec(1, 'ether'))
+  })
+
+  it("getCDPDebt(): Returns debt", async () => {
+    await borrowerOperations.openLoan(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+
+    const A_Debt = await cdpManager.getCDPDebt(A)
+    const B_Debt = await cdpManager.getCDPDebt(B)
+
+    // Expect debt = requested + 10 (due to gas comp)
+
+    assert.equal(A_Debt, dec(200, 18))
+    assert.equal(B_Debt, dec(37, 18))
+  })
+
+  it("getCDPStatus(): Returns status", async () => {
+    await borrowerOperations.openLoan(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openLoan(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.closeLoan({from: B})
+
+    const A_Status = await cdpManager.getCDPStatus(A)
+    const B_Status = await cdpManager.getCDPStatus(B)
+    const C_Status = await cdpManager.getCDPStatus(C)
+
+    assert.equal(A_Status, '1')  // active
+    assert.equal(B_Status, '2')  // closed
+    assert.equal(C_Status, '0')  // non-existent
+  })
+
+  // --- CollSurplusPool ---
+
+  it.only("CollSurplusPool::getETH(): Returns the ETH balance of the CollSurplusPool after redemption", async () => {
+    const ETH_1 = await collSurplusPool.getETH()
+    assert.equal(ETH_1, '0')
+
+    await priceFeed.setPrice(dec(100, 18))
+
+    await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
+    await borrowerOperations.openLoan(dec(50, 18), B, { from: B, value: dec(1, 'ether') })
+
+    // At ETH:USD = 100, this redemption should leave 50% coll surplus for B, i.e. 0.5 ether
+    await th.redeemCollateralAndGetTxObject(A, contracts, dec(50, 18))
+
+    const ETH_2 = await collSurplusPool.getETH()
+    assert.equal(ETH_2, dec(5, 17))
   })
 })
 

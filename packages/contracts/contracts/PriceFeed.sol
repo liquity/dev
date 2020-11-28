@@ -80,6 +80,42 @@ contract PriceFeed is Ownable, IPriceFeed {
         return price;
     }
 
+<<<<<<< HEAD
+=======
+    function getLatestPrice_Testnet() public view override returns (uint256) {
+        int256 intPrice = priceAggregator_Testnet.latestAnswer();
+        require( intPrice >= 0, "Price response from aggregator is negative int");
+
+        return uint256(intPrice).mul(1e10);
+    }
+
+    // Get the block timestamp at which the reference data was last updated
+    function getLatestTimestamp_Testnet() external view override returns (uint256) {
+        uint256 latestTimestamp = priceAggregator_Testnet.latestTimestamp();
+
+        return latestTimestamp;
+    }
+
+    // Get the past price from 'n' rounds ago
+    function getPreviousPrice_Testnet(uint256 _n) external view override returns (uint256) {
+        uint256 latestAnswerID = priceAggregator_Testnet.latestRound();
+        require(_n <= latestAnswerID, "Not enough history");
+
+        int256 prevPrice = priceAggregator_Testnet.getAnswer(latestAnswerID - _n);
+        require(prevPrice >= 0, "Price response from aggregator is negative int");
+
+        return uint256(prevPrice).mul(1e10);
+    }
+
+    // Get the block timestamp from the round that occurred 'n' rounds ago
+    function getPreviousTimestamp_Testnet(uint256 _n) external view override returns (uint256) {
+        uint256 latestAnswerID = priceAggregator_Testnet.latestRound();
+        require(_n <= latestAnswerID, "Not enough history");
+
+        return priceAggregator_Testnet.getTimestamp(latestAnswerID - _n);
+    }
+
+>>>>>>> c9afec9ffb3b6d2c9f39d690dc6cf67fc6d67424
     // --- 'require' functions ---
 
     function _requireCallerIsCDPManager() internal view {

@@ -68,7 +68,7 @@ yargs
         const user = Wallet.createRandom().connect(provider);
         const userAddress = await user.getAddress();
         const collateral = 999 * Math.random() + 1;
-        const debt = (priceAsNumber * collateral) / (3 * Math.random() + 1.11);
+        const debt = (priceAsNumber * collateral) / (3 * Math.random() + 1.11) + 10;
 
         const liquity = await Liquity.connect(addresses, user);
 
@@ -86,7 +86,8 @@ yargs
         numberOfTroves++;
 
         if (i % 4 === 0) {
-          await liquity.depositQuiInStabilityPool(debt);
+          const quiBalance = await liquity.getQuiBalance();
+          await liquity.depositQuiInStabilityPool(quiBalance);
         }
 
         if (i % 10 === 0) {
@@ -145,20 +146,23 @@ yargs
         const price = await fixture.setRandomPrice();
         await fixture.liquidateRandomNumberOfTroves();
 
-        for (const liquity of randomLiquities) {
+        for (let i = 0; i < randomUsers.length; ++i) {
+          const user = randomUsers[i];
+          const liquity = randomLiquities[i];
+
           if (Math.random() < 0.5) {
             const trove = await liquity.getTrove();
 
             if (trove.isEmpty) {
-              await fixture.openRandomTrove(liquity);
+              await fixture.openRandomTrove(user.address, liquity);
             } else {
-              await fixture.closeTrove(liquity, trove);
+              await fixture.closeTrove(user.address, liquity, trove);
             }
           } else {
             if (Math.random() < 0.5) {
-              await fixture.redeemRandomAmount(liquity);
+              await fixture.redeemRandomAmount(user.address, liquity);
             } else {
-              await fixture.depositRandomAmountInStabilityPool(liquity);
+              await fixture.depositRandomAmountInStabilityPool(user.address, liquity);
             }
           }
 
@@ -203,7 +207,7 @@ yargs
 
       let [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
 
-      if (firstTroveOwner !== funderLiquity.userAddress) {
+      if (firstTroveOwner !== funder.address) {
         let trove = await funderLiquity.getTrove();
 
         if (trove.debt.isZero) {
@@ -253,7 +257,7 @@ yargs
 
       [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
 
-      if (firstTroveOwner !== funderLiquity.userAddress) {
+      if (firstTroveOwner !== funder.address) {
         throw new Error("didn't manage to hoist Funder's Trove to head of SortedCDPs");
       }
 

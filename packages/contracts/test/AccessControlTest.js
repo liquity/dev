@@ -60,9 +60,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.applyPendingRewards(bob, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+         assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -72,9 +72,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.updateCDPRewardSnapshots(bob, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+        assert.include(err.message, "revert" )
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -84,9 +84,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.removeStake(bob, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+        assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -96,9 +96,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.updateStakeAndTotalStakes(bob, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+        assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -108,9 +108,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.closeCDP(bob, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+        assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -121,9 +121,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.addCDPOwnerToArray(bob, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+         assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -134,9 +134,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.setCDPStatus(bob, 1, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+         assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -146,9 +146,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.increaseCDPColl(bob, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+         assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -158,9 +158,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.decreaseCDPColl(bob, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+         assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -170,9 +170,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.increaseCDPDebt(bob, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+         assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -182,9 +182,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await cdpManager.decreaseCDPDebt(bob, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
-        // assert.include(err.message, "revert")
+         assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
@@ -196,7 +196,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await activePool.sendETH(alice, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager nor StabilityPool")
@@ -208,7 +208,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await activePool.increaseCLVDebt(100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager")
@@ -220,7 +220,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await activePool.decreaseCLVDebt(100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager nor StabilityPool")
@@ -232,7 +232,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await web3.eth.sendTransaction({ from: alice, to: activePool.address, value: 100 })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "ActivePool: Caller is neither BO nor Default Pool")
@@ -246,7 +246,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await defaultPool.sendETH(alice, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the CDPManager")
@@ -258,7 +258,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await defaultPool.increaseCLVDebt(100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the CDPManager")
@@ -270,7 +270,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await defaultPool.decreaseCLVDebt(100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the CDPManager")
@@ -282,7 +282,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await web3.eth.sendTransaction({ from: alice, to: defaultPool.address, value: 100 })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "DefaultPool: Caller is not the ActivePool")
@@ -312,7 +312,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await web3.eth.sendTransaction({ from: alice, to: stabilityPool.address, value: 100 })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "StabilityPool: Caller is not ActivePool")
@@ -334,7 +334,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await clvToken.burn(bob, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager nor StabilityPool")
@@ -346,7 +346,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await clvToken.sendToPool(bob, activePool.address, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not the StabilityPool")
@@ -358,7 +358,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await clvToken.returnFromPool(activePool.address, bob, 100, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         // assert.include(err.message, "Caller is neither CDPManager nor StabilityPool")
@@ -373,7 +373,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await sortedCDPs.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, " Caller is neither BO nor CDPM")
@@ -386,7 +386,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await sortedCDPs.remove(bob, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, " Caller is not the CDPManager")
@@ -399,7 +399,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await sortedCDPs.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is neither BO nor CDPM")
@@ -412,7 +412,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Attempt call from alice
       try {
         const txAlice = await priceFeed.updatePrice({ from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
         assert.include(err.message, "Caller is not CDPManager")
@@ -424,7 +424,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
       try {
         const txAlice = await lockupContractFactory.setGrowthTokenAddress(growthToken.address, { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -450,7 +450,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
       try {
         const txAlice = await OYLC.lockContract({ from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -479,7 +479,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Bob attempts to withdraw LQTY
       try {
         const txBob = await OYLC.withdrawLQTY({ from: bob })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -514,7 +514,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
       try {
         const txAlice = await CDLC.lockContract({ from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -550,7 +550,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Bob attempts to withdraw LQTY
       try {
         const txBob = await CDLC.withdrawLQTY({ from: bob })
-        assert.isFalse(txAlice.receipt.status)
+     
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -565,7 +565,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("addETHFee(): reverts when caller is not CDPManager", async () => {
       try {
         const txAlice = await lqtyStaking.increaseF_ETH(dec(1, 'ether'), { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -574,7 +574,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("addLQTYFee(): reverts when caller is not CDPManager", async () => {
       try {
         const txAlice = await lqtyStaking.increaseF_LUSD(dec(1, 18), { from: alice })
-        assert.isFalse(txAlice.receipt.status)
+        
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -589,7 +589,6 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Owner tries to call it
       try {
         const tx = await growthToken.sendToLQTYStaking(owner, 1, { from: owner })
-        assert.isFalse(tx.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -604,7 +603,6 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       // Bob tries to call it
       try {
         const tx = await growthToken.sendToLQTYStaking(bob, dec(1, 18), { from: bob })
-        assert.isFalse(tx.receipt.status)
       } catch (err) {
         assert.include(err.message, "revert")
       }

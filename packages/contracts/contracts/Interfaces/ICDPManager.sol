@@ -25,11 +25,11 @@ interface ICDPManager {
 
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
-    event CDPCreated(address indexed _user, uint arrayIndex);
+    event CDPCreated(address indexed _borrower, uint arrayIndex);
 
-    event CDPUpdated(address indexed _user, uint _debt, uint _coll, uint stake, uint8 operation);
+    event CDPUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, uint8 operation);
 
-    event CDPLiquidated(address indexed _user, uint _debt, uint _coll, uint8 operation);
+    event CDPLiquidated(address indexed _borrower, uint _debt, uint _coll, uint8 operation);
 
     // --- Functions ---
 
@@ -49,9 +49,9 @@ interface ICDPManager {
 
     function getTroveFromCDPOwnersArray(uint _index) external view returns (address);
 
-    function getCurrentICR(address _user, uint _price) external view returns (uint);
+    function getCurrentICR(address _borrower, uint _price) external view returns (uint);
 
-    function liquidate(address _user) external;
+    function liquidate(address _borrower) external;
 
     function liquidateCDPs(uint _n) external;
 
@@ -67,21 +67,21 @@ interface ICDPManager {
         uint _maxIterations
     ) external; 
 
-    function updateStakeAndTotalStakes(address _user) external returns (uint);
+    function updateStakeAndTotalStakes(address _borrower) external returns (uint);
 
-    function updateCDPRewardSnapshots(address _user) external;
+    function updateCDPRewardSnapshots(address _borrower) external;
 
-    function addCDPOwnerToArray(address _user) external returns (uint index);
+    function addCDPOwnerToArray(address _borrower) external returns (uint index);
 
-    function applyPendingRewards(address _user) external;
+    function applyPendingRewards(address _borrower) external;
 
-    function getPendingETHReward(address _user) external view returns (uint);
+    function getPendingETHReward(address _borrower) external view returns (uint);
 
-    function getPendingCLVDebtReward(address _user) external view returns (uint);
+    function getPendingCLVDebtReward(address _borrower) external view returns (uint);
 
-     function hasPendingRewards(address _user) external view returns (bool);
+     function hasPendingRewards(address _borrower) external view returns (bool);
 
-    function getEntireDebtAndColl(address _user) external view returns (
+    function getEntireDebtAndColl(address _borrower) external view returns (
         uint debt, 
         uint coll, 
         uint pendingCLVDebtReward, 
@@ -94,29 +94,29 @@ interface ICDPManager {
 
     function getTCR() external view returns (uint TCR);
 
-    function closeCDP(address _user) external;
+    function closeCDP(address _borrower) external;
 
-    function removeStake(address _user) external;
+    function removeStake(address _borrower) external;
 
     function getBorrowingFee(uint CLVDebt) external view returns (uint);
 
-    function decayBaseRateFromBorrowing() external returns (uint);
+    function decayBaseRateFromBorrowing() external;
 
-    function getCDPStatus(address _user) external view returns (uint);
+    function getCDPStatus(address _borrower) external view returns (uint);
     
-    function getCDPStake(address _user) external view returns (uint);
+    function getCDPStake(address _borrower) external view returns (uint);
 
-    function getCDPDebt(address _user) external view returns (uint);
+    function getCDPDebt(address _borrower) external view returns (uint);
 
-    function getCDPColl(address _user) external view returns (uint);
+    function getCDPColl(address _borrower) external view returns (uint);
 
-    function setCDPStatus(address _user, uint num) external;
+    function setCDPStatus(address _borrower, uint num) external;
 
-    function increaseCDPColl(address _user, uint _collIncrease) external returns (uint);
+    function increaseCDPColl(address _borrower, uint _collIncrease) external returns (uint);
 
-    function decreaseCDPColl(address _user, uint _collDecrease) external returns (uint); 
+    function decreaseCDPColl(address _borrower, uint _collDecrease) external returns (uint); 
 
-    function increaseCDPDebt(address _user, uint _debtIncrease) external returns (uint); 
+    function increaseCDPDebt(address _borrower, uint _debtIncrease) external returns (uint); 
 
-    function decreaseCDPDebt(address _user, uint _collDecrease) external returns (uint); 
+    function decreaseCDPDebt(address _borrower, uint _collDecrease) external returns (uint); 
 }

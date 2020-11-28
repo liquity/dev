@@ -71,8 +71,8 @@ export const abi: { [name: string]: JsonFragment[] } = {
   collSurplusPool: collSurplusPoolAbi
 };
 
-export interface TypedLogDescription<T> extends LogDescription {
-  args: Result & T;
+export interface TypedLogDescription<T> extends Omit<LogDescription, "args"> {
+  args: T;
 }
 
 type BucketOfFunctions = Record<string, (...args: any[]) => any>;
@@ -147,7 +147,7 @@ export class LiquityContract extends Contract {
     this.estimateAndPopulate = buildEstimatedFunctions(this.estimateGas, this.populateTransaction);
   }
 
-  extractEvents(logs: Log[], name: string) {
+  extractEvents(logs: Log[], name: string): TypedLogDescription<unknown>[] {
     return logs
       .filter(log => log.address === this.address)
       .map(log => this.interface.parseLog(log))
@@ -236,6 +236,12 @@ export const connectToContracts = (
 
   clvToken: create<CLVToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
 
+  collSurplusPool: create<CollSurplusPool>(
+    addresses.collSurplusPool,
+    collSurplusPoolAbi,
+    signerOrProvider
+  ),
+
   communityIssuance: create<CommunityIssuance>(
     addresses.communityIssuance,
     communityIssuanceAbi,
@@ -268,9 +274,7 @@ export const connectToContracts = (
 
   sortedCDPs: create<SortedCDPs>(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider),
 
-  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider),
-
-  collSurplusPool: create<CollSurplusPool>(addresses.collSurplusPool, collSurplusPoolAbi, signerOrProvider)
+  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider)
 });
 
 export type LiquityDeployment = {

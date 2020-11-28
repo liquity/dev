@@ -32,4 +32,8 @@ contract GrowthTokenTester is GrowthToken {
         if (_isFirstYear()) {_requireSenderIsNotDeployer(_sender);}
         _transfer(_sender, lqtyStakingAddress, _amount);
     }
+
+     function callInternalApprove(address owner, address spender, uint256 amount) external returns (bool) {
+        _approve(owner, spender, amount);
+    }
 }
