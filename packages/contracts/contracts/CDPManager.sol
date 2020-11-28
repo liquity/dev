@@ -334,13 +334,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         } else if ((_ICR >= MCR) && (_ICR < _TCR)) {
             assert(_CLVInStabPool != 0);
 
-<<<<<<< HEAD
+            _removeStake(_borrower);
+            
             V = _getFullOrPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
 
-=======
-            _removeStake(_borrower);
-            V = _getPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
->>>>>>> main
             _closeCDP(_borrower);
         }
         else if (_ICR >= _TCR) {
