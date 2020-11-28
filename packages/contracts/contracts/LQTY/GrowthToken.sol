@@ -7,32 +7,42 @@ import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ILockupContractFactory.sol";
 import "../Dependencies/console.sol";
 
-/**
-Based upon OpenZeppelin's last ERC20 contract for Solidity 0.5.x:
-https://github.com/OpenZeppelin/openzeppelin-contracts/blob/54ee1c7ff59462bc300c0dc96cb71eb1e3cbdb45/contracts/token/ERC20/ERC20.sol
-
-and their EIP2612 (ERC20Permit) functionality:
-https://github.com/OpenZeppelin/openzeppelin-contracts/blob/53516bc555a454862470e7860a9b5254db4d00f5/contracts/token/ERC20/ERC20Permit.sol
-
-Functionality added specific to the GrowthToken:
-
--Supply hard-capped at 100 million
--CommunityIssuance and LockupContractFactory addresses set at deployment
--2/3 of supply is minted to deployer at deployment
--1/3 of supply minted to CommunityIssuance contract at deployment
-
--Until one year from deployment:
-    -Deployer may only transfer() tokens to OneYearLockupContracts that have been deployed via & registered in the 
-    LockupContractFactory 
-    -approve(), increaseAllowance(), decreaseAllowance() revert when called by the deployer
-    -transferFrom() reverts when deployer is the sender
-    -sendToLQTYStaking() reverts when deployer is sender, blocking the deployer from staking their LQTY.
-
-After one year has passed since deployment of the GrowthToken, the restrictions on deployer operations are lifted
-and the deployer has the same rights as any other address.
+/*
+* Based upon OpenZeppelin's ERC20 contract:
+* https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol
+*  
+* and their EIP2612 (ERC20Permit / ERC712) functionality:
+* https://github.com/OpenZeppelin/openzeppelin-contracts/blob/53516bc555a454862470e7860a9b5254db4d00f5/contracts/token/ERC20/ERC20Permit.sol
+* 
+*
+*  --- Functionality added specific to the GrowthToken ---
+* 
+* 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Liquity contracts) in external 
+* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending LUSD directly to a Liquity 
+* core contract, when they should rather call the right function.
+*
+* 2) sendToLQTYStaking(): callable only Liquity core contracts, which move LQTY tokens from user -> LQTYStaking contract.
+*
+* 3) Supply hard-capped at 100 million
+*
+* 4) CommunityIssuance and LockupContractFactory addresses set at deployment
+*
+* 5) 2/3 of supply is minted to deployer at deployment
+*
+* 6) 1/3 of supply minted to CommunityIssuance contract at deployment
+* 
+* 7) Until one year from deployment:
+* -Deployer may only transfer() tokens to OneYearLockupContracts that have been deployed via & registered in the 
+*  LockupContractFactory 
+* -approve(), increaseAllowance(), decreaseAllowance() revert when called by the deployer
+* -transferFrom() reverts when deployer is the sender
+* -sendToLQTYStaking() reverts when deployer is sender, blocking the deployer from staking their LQTY.
+* 
+* After one year has passed since deployment of the GrowthToken, the restrictions on deployer operations are lifted
+* and the deployer has the same rights as any other address.
  */
 
-contract GrowthToken is IERC20, IGrowthToken {
+contract GrowthToken is IGrowthToken {
     using SafeMath for uint256;
 
     // --- ERC20 Data ---

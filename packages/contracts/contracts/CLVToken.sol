@@ -5,6 +5,23 @@ pragma solidity 0.6.11;
 import "./Interfaces/ICLVToken.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/console.sol";
+/*
+*
+* Based upon OpenZeppelin's ERC20 contract:
+* https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol
+*  
+* and their EIP2612 (ERC20Permit / ERC712) functionality:
+* https://github.com/OpenZeppelin/openzeppelin-contracts/blob/53516bc555a454862470e7860a9b5254db4d00f5/contracts/token/ERC20/ERC20Permit.sol
+* 
+*
+* --- Functionality added specific to the CLVToken ---
+* 
+* 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Liquity contracts) in external 
+* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending LUSD directly to a Liquity 
+* core contract, when they should rather call the right function. 
+*
+* 2) sendToPool() and returnFromPool(): functions callable only Liquity core contracts, which move LUSD tokens between Liquity <-> user.
+*/
 
 contract CLVToken is ICLVToken {
     using SafeMath for uint256;
