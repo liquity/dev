@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 
+import "../Dependencies/AggregatorV2V3Interface.sol";
+
 pragma solidity 0.6.11;
 
 /**
@@ -7,7 +9,7 @@ pragma solidity 0.6.11;
  * Differs from the aggregator interface in the Chainlink npm package
  */ 
  
-interface IDeployedAggregator {
+interface IDeployedAggregator is AggregatorV2V3Interface {
 
   function latestCompletedAnswer() external view returns (uint256);
 

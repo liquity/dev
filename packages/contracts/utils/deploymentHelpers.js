@@ -2,6 +2,7 @@
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
+const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
@@ -61,6 +62,7 @@ class DeploymentHelper {
 
   static async deployLiquityCoreBuidler() {
     const priceFeed = await PriceFeed.new()
+    const priceFeed = await PriceFeedTestnet.new()
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
     const activePool = await ActivePool.new()
@@ -78,6 +80,7 @@ class DeploymentHelper {
     CLVToken.setAsDeployed(clvToken)
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
+    PriceFeedTestnet.setAsDeployed(priceFeedTestnet)
     SortedCDPs.setAsDeployed(sortedCDPs)
     CDPManager.setAsDeployed(cdpManager)
     ActivePool.setAsDeployed(activePool)
@@ -89,6 +92,7 @@ class DeploymentHelper {
 
     const coreContracts = {
       priceFeed,
+      priceFeedTestnet,
       clvToken,
       sortedCDPs,
       cdpManager,
@@ -108,6 +112,7 @@ class DeploymentHelper {
 
     // Contract without testers (yet)
     testerContracts.priceFeed = await PriceFeed.new()
+    testerContracts.priceFeedTestnet = await PriceFeedTestnet.new()
     testerContracts.sortedCDPs = await SortedCDPs.new()
 
     // Actual tester contracts
@@ -184,6 +189,7 @@ class DeploymentHelper {
 
   static async deployLiquityCoreTruffle() {
     const priceFeed = await PriceFeed.new()
+    const priceFeed = await PriceFeedTestnet.new()
     const sortedCDPs = await SortedCDPs.new()
     const cdpManager = await CDPManager.new()
     const activePool = await ActivePool.new()
@@ -263,7 +269,12 @@ class DeploymentHelper {
     await contracts.priceFeed.setAddresses(
       contracts.cdpManager.address,
       ZERO_ADDRESS,
-      ZERO_ADDRESS
+    )
+
+    // set contract addresses in PriceFeedTestnet
+    await contracts.priceFeedTestnet.setAddresses(
+      contracts.cdpManager.address,
+      ZERO_ADDRESS,
     )
 
     // set contracts in the CDP Manager

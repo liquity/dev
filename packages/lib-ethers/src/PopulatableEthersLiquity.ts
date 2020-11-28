@@ -450,7 +450,7 @@ export class PopulatableEthersLiquity
 
   async setPrice(price: Decimalish, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.priceFeed.estimateAndPopulate.setPrice(
+      await this.contracts.priceFeedTestnet.estimateAndPopulate.setPrice(
         { ...overrides },
         gas => gas,
         Decimal.from(price).bigNumber
@@ -460,7 +460,7 @@ export class PopulatableEthersLiquity
 
   async updatePrice(overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.priceFeed.estimateAndPopulate.updatePrice_Testnet(
+      await this.contracts.priceFeedTestnet.estimateAndPopulate.updatePrice(
         { ...overrides },
         gas => gas
       )

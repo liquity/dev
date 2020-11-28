@@ -45,19 +45,26 @@ contract PriceFeed is Ownable, IPriceFeed {
         _renounceOwnership();
     }
 
-    // TODO: convert received Chainlink price to precision-18 before setting state variable
-    function updatePrice() external override returns (uint256) {
-        _requireCallerIsCDPManager();
-        price = getLatestPrice();
-        emit PriceUpdated(price);
-        return price;
+    /**
+     * Returns the latest price
+     * https://docs.chain.link/docs/get-the-latest-price
+     */
+    function getLatestPrice() external view override
+    returns (uint price, uint8 decimals) {
+        (uint80 roundID, int response,
+        uint startedAt, uint timeStamp,
+        uint80 answeredInRound) = priceAggregator.latestRoundData();
+        // If the round is not complete yet, timestamp is 0
+        require(timeStamp > 0 && timeStamp <= block.timestamp, "Bad timestamp");
+        require(price >= 0, "Negative price");
+        decimals = priceAggregator.decimals();
+        price = uint256(response);
     }
 
-    function getLatestPrice() public view override returns (uint256) {
-        int256 intPrice = priceAggregator.currentAnswer();
-        require(intPrice >= 0, "Price response from aggregator is negative int");
-
-        return uint256(intPrice);
+    function updatePrice() external override returns (uint256 price) {
+        _requireCallerIsCDPManager();
+        (uint price, uint8 decimal) = getLatestPrice();
+        emit PriceUpdated(price);
     }
 
     function getLatestAnswerID() external view override returns (uint256) {
