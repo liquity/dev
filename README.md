@@ -383,7 +383,7 @@ Likewise, a StabilityPool depositor who has earned some ETH gain from their depo
 | withdrawFromSP         | depositor's accumulated ETH gain | StabilityPool -> msg.sender                     |
 | withdrawETHGainToTrove | depositor's accumulated ETH gain | StabilityPool ->BorrowerOperations ->ActivePool |
 
-### Flow of ERC20 tokens in Liquity
+### Flow of LUSD tokens in Liquity
 
 When a user issues debt from their trove, LUSD tokens are minted to their own address, and a debt is recorded on the trove. Conversely, when they repay their trove’s LUSD debt, LUSD is burned from their address, and the debt on their trove is reduced.
 
@@ -422,6 +422,30 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 |----------------|------------------|-------------------------------------------------------------|
 | provideToSP    | deposit / top-up | LUSD. _transfer(msg.sender, stabilityPoolAddress, _amount); |
 | withdrawFromSP | withdrawal       | LUSD. _transfer(stabilityPoolAddress, msg.sender, _amount); |
+
+
+### Flows of LQTY Tokens
+
+Stability Pool depositors and front end receive LQTY gains according to their share of the total LUSd deposits, and the LQTY community issuance schedule.  Once obtained, LQTY can be staked and unstaked with the `LQTYStaking` contract.
+
+**Stability Pool**
+
+| Function               | LQTY Quantity       | ERC20 Operation                                                       |
+|------------------------|---------------------|-----------------------------------------------------------------------|
+| provideToSP            | depositor LQTY gain | LQTY. _transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
+|                        | front end LQTY gain | LQTY. _transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
+| withdrawFromSP         | depositor LQTY gain | LQTY. _transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
+|                        | front end LQTY gain | LQTY. _transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
+| withdrawETHGainToTrove | depositor LQTY gain | LQTY. _transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
+|                        | front end LQTY gain | LQTY. _transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
+
+**LQTY Staking Contract**
+
+| Function | LQTY Quantity                  | ERC20 Operation                                           |
+|----------|--------------------------------|-----------------------------------------------------------|
+| stake    | staker's LQTY deposit / top-up | LQTY. _transfer(msg.sender, LQTYStakingAddress, _amount); |
+| unstake  | staker's LQTY withdrawal       | LQTY. _transfer(LQTYStakingAddress, msg.sender, _amount); |
+
 
 ## Expected User Behaviors
 
