@@ -4,8 +4,10 @@ pragma solidity 0.6.11;
 
 import "./LiquityMath.sol";
 
-/* Base contract for CDPManager and BorrowerOperations. Contains global system constants and
-common functions. */
+/* 
+* Base contract for CDPManager, BorrowerOperations and StabilityPool. Contains global system constants and
+* common functions. 
+*/
 contract LiquityBase {
     using SafeMath for uint;
 
@@ -16,20 +18,20 @@ contract LiquityBase {
     // Minimum collateral ratio for individual troves
     uint constant public MCR = 1100000000000000000; // 110%
 
-    // Minimum collateral ratio for individual troves
+    // Minimum collateral ratio for individual troves newly opened in Recovery Mode
     uint constant public R_MCR = 3000000000000000000; // 300%
 
-    // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
+    // Critical system collateral ratio. If the system's total collateral ratio (TCR) falls below the CCR, Recovery Mode is triggered.
     uint constant public  CCR = 1500000000000000000; // 150%
 
     // Amount of CLV to be locked in gas pool on opening loans
     uint constant public CLV_GAS_COMPENSATION = 10e18;
 
-    uint constant public PERCENT_DIVISOR = 200; // dividing by 200 equals to applying 0.5%
+    uint constant public PERCENT_DIVISOR = 200; // dividing by 200 yields 0.5%
 
     // --- Gas compensation functions ---
 
-    // Returns the composite debt (actual debt + gas compensation) of a trove, for the purpose of ICR calculation
+    // Returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
         return _debt.add(CLV_GAS_COMPENSATION);
     }
@@ -38,8 +40,7 @@ contract LiquityBase {
         return _debt.sub(CLV_GAS_COMPENSATION);
     }
 
-    /* Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation.
-    Given by the dollar value of 0.5% of collateral */
+    // Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation.
     function _getCollGasCompensation(uint _entireColl) internal pure returns (uint) {
         return _entireColl / PERCENT_DIVISOR;
     }
