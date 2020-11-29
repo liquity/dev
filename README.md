@@ -450,7 +450,7 @@ Below are all quantity state variables used in Liquity, along with their type, r
 | **ActivePool**    | uint256  | ETH                      | Total ETH in all active troves                                                    | integer                  | wei (E)                    |
 |                   | uint256  | TroveDebt                | Total outstanding LUSD Debt in active troves                                      | integer                  | attoLUSD (C)               |
 | **DefaultPool**   | uint256  | ETH                      | Total liquidated ETH, pending reward                                              | integer                  | wei (E)                    |
-|                   | uint256  | TroveDebt                | Total closed LSUD debt, pending reward                                            | integer                  | attoLUSD (C)               |
+|                   | uint256  | TroveDebt                | Total closed LUSD debt, pending reward                                            | integer                  | attoLUSD (C)               |
 | **StabilityPool** | uint256  | ETH                      | Total accumulated ETH Gains from StabilityPool                                    | integer                  | wei (E)                    |
 |                   | uint256  | totalLUSDDeposits        | Total current LUSD deposits                                                       | integer                  | attoLUSD (C)               |
 |                   |          |                          |                                                                                   |                          |                            |
