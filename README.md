@@ -21,7 +21,8 @@
     - [PriceFeed and Oracle](#pricefeed-and-oracle)
     - [Keeping a sorted list of troves ordered by ICR](#keeping-a-sorted-list-of-troves-ordered-by-icr)
     - [Flow of Ether in Liquity](#flow-of-ether-in-liquity)
-    - [Flow of ERC20 tokens in Liquity](#flow-of-erc20-tokens-in-liquity)
+    - [Flow of LUSD tokens in Liquity](#flow-of-lusd-tokens-in-liquity)
+    - [Flow of LQTY tokens in Liquity](#flow-of-lqty-tokens-in-liquity)
   - [Expected User Behaviors](#expected-user-behaviors)
   - [Contract Ownership and Function Permissions](#contract-ownership-and-function-permissions)
   - [Deployment to a Development Blockchain](#deployment-to-a-development-blockchain)
@@ -424,7 +425,7 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | withdrawFromSP | withdrawal       | LUSD. _transfer(stabilityPoolAddress, msg.sender, _amount); |
 
 
-### Flows of LQTY Tokens
+### Flows of LQTY Tokens in Liquity
 
 Stability Pool depositors and front end receive LQTY gains according to their share of the total LUSd deposits, and the LQTY community issuance schedule.  Once obtained, LQTY can be staked and unstaked with the `LQTYStaking` contract.
 
