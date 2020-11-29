@@ -537,7 +537,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `getEntireSystemColl()`:  Returns the systemic entire collateral allocated to troves, i.e. the sum of the ETH in the Active Pool and the Default Pool.
 
-`getEntireSystemDebt()` Returns the systemic entire debt assigned to troves, i.e. the sum of the CLVDebt in the Active Pool and the Default Pool.
+`getEntireSystemDebt()` Returns the systemic entire debt assigned to troves, i.e. the sum of the LUSDDebt in the Active Pool and the Default Pool.
 
 `getTCR()`: returns the total collateral ratio (TCR) of the system.  The TCR is based on the the entire system debt and collateral (including pending rewards).
 
@@ -735,7 +735,7 @@ Because the ETH collateral fraction matches the offset debt fraction, the effect
 
 ### Stability Pool deposit losses and ETH gains - implementation
 
-Deposit functionality is handled by `StabilityPool.sol` (`provideToSP`, `withdrawFromSP`, etc).  PoolManager also handles the liquidation calculation, and holds the LUSD and ETH balances.
+Deposit functionality is handled by `StabilityPool.sol` (`provideToSP`, `withdrawFromSP`, etc).  StabilityPool also handles the liquidation calculation, and holds the LUSD and ETH balances.
 
 When a liquidation is offset with the Stability Pool, debt from the liquidation is cancelled with an equal amount of LUSD in the pool, which is burned. 
 
