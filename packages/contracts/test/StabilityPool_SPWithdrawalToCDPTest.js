@@ -81,7 +81,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulter opens loan with 200% ICR
+      // Defaulter opens trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.withdrawCLV(dec(90, 18), defaulter_1, { from: defaulter_1 })
 
@@ -120,7 +120,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulters open loan with 200% ICR
+      // Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.withdrawCLV(dec(90, 18), defaulter_1, { from: defaulter_1 })
@@ -162,7 +162,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulters open loan with 200% ICR
+      // Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_3, { from: defaulter_3, value: dec(1, 18) })
@@ -208,7 +208,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulters open loan with 200% ICR
+      // Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: '100000000000000000' })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: '200000000000000000' })
       await borrowerOperations.withdrawCLV(dec(10, 18), defaulter_2, { from: defaulter_2 })
@@ -249,7 +249,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulters open loan with 200% ICR
+      // Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: '100000000000000000' })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: '200000000000000000' })
       await borrowerOperations.openLoan(0,  defaulter_3, { from: defaulter_3, value: '300000000000000000' })
@@ -298,7 +298,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: carol })
 
-      // 2 Defaulters open loan with 200% ICR
+      // 2 Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.withdrawCLV(dec(90, 18), defaulter_1, { from: defaulter_1 })
@@ -344,7 +344,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: carol })
 
-      // Defaulters open loan with 200% ICR
+      // Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_3, { from: defaulter_3, value: dec(1, 18) })
@@ -398,7 +398,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await stabilityPool.provideToSP('131000000000000000000', ZERO_ADDRESS, { from: carol })
 
 
-      /* Defaulters open loans
+      /* Defaulters open troves
      
       Defaulter 1: 2110 CLV & 22 ETH  
       Defaulter 2: 10 CLV & 0.1 ETH  
@@ -450,7 +450,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulters open loan with 200% ICR
+      // Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_3, { from: defaulter_3, value: dec(1, 18) })
@@ -465,7 +465,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await troveManager.liquidate(defaulter_1, { from: owner });
       await troveManager.liquidate(defaulter_2, { from: owner });
 
-      // Dennis opens a loan and provides to SP
+      // Dennis opens a trove and provides to SP
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: dennis })
 
@@ -506,7 +506,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulters open loan with 200% ICR
+      // Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_3, { from: defaulter_3, value: dec(1, 18) })
@@ -523,7 +523,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await troveManager.liquidate(defaulter_1, { from: owner });
       await troveManager.liquidate(defaulter_2, { from: owner });
 
-      // Dennis opens a loan and provides to SP
+      // Dennis opens a trove and provides to SP
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: dennis })
 
@@ -557,7 +557,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
-      /* Depositors open loans and make SP deposit:
+      /* Depositors open troves and make SP deposit:
       Alice: 600 CLV
       Bob: 200 CLV
       Carol: 150 CLV
@@ -571,7 +571,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await borrowerOperations.openLoan(dec(150, 18), carol, { from: carol, value: dec(100, 'ether') })
       await stabilityPool.provideToSP(dec(150, 18), ZERO_ADDRESS, { from: carol })
 
-      /* Defaulters open loans:
+      /* Defaulters open troves:
       Defaulter 1:  100 CLV, 1 ETH
       Defaulter 2:  250 CLV, 2.5 ETH
       Defaulter 3:  50 CLV, 0.5 ETH
@@ -593,7 +593,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await troveManager.liquidate(defaulter_1, { from: owner });
       await troveManager.liquidate(defaulter_2, { from: owner });
 
-      // Dennis opens a loan and provides 250 CLV
+      // Dennis opens a trove and provides 250 CLV
       await borrowerOperations.openLoan(dec(250, 18), dennis, { from: dennis, value: dec(100, 'ether') })
       await stabilityPool.provideToSP(dec(250, 18), ZERO_ADDRESS, { from: dennis })
 
@@ -637,7 +637,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulters open loan with 200% ICR
+      // Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_3, { from: defaulter_3, value: dec(1, 18) })
@@ -705,7 +705,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await borrowerOperations.openLoan(dec(400, 18), dennis, { from: dennis, value: dec(100, 'ether') })
       await stabilityPool.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: dennis })
 
-      /* Defaulters open loans:
+      /* Defaulters open troves:
       Defaulter 1: 100 CLV
       Defaulter 1: 200 CLV
       Defaulter 1: 300 CLV
@@ -771,7 +771,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulters open loans
+      // Defaulters open troves
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openLoan(0,  defaulter_3, { from: defaulter_3, value: dec(1, 18) })
@@ -844,7 +844,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // 2 Defaulters open loan with 200% ICR
+      // 2 Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
       await borrowerOperations.withdrawCLV(dec(190, 18), defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
@@ -914,7 +914,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: account })
       }
 
-      // 2 Defaulters open loan with 200% ICR
+      // 2 Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
       await borrowerOperations.withdrawCLV(dec(190, 18), defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(1, 18) })
@@ -1028,7 +1028,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openLoan(0,  whale, { from: whale, value: dec(100, 'ether') })
 
-      // 4 Defaulters open loan with 200% ICR
+      // 4 Defaulters open trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
       await borrowerOperations.withdrawCLV(dec(190, 18), defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openLoan(0,  defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
@@ -1467,7 +1467,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(1, 36), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulter opens loan with 200% ICR
+      // Defaulter opens trove with 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: dec(1, 27) })
       await borrowerOperations.withdrawCLV(await th.getActualDebtFromComposite(dec(1, 36), contracts), defaulter_1, { from: defaulter_1 })
       
@@ -1532,7 +1532,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
         await stabilityPool.provideToSP(dec(1, 36), ZERO_ADDRESS, { from: account })
       }
 
-      // Defaulter opens loan with 20e-9 ETH (with minimum value of $20) and 20 CLV. 200% ICR
+      // Defaulter opens trove with 20e-9 ETH (with minimum value of $20) and 20 CLV. 200% ICR
       await borrowerOperations.openLoan(0,  defaulter_1, { from: defaulter_1, value: '20000000000' })
       await borrowerOperations.withdrawCLV(dec(10, 18), defaulter_1, { from: defaulter_1 })
 

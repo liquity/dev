@@ -45,7 +45,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
       await stabilityPool.provideToSP(dec(100, 18), { from: account })
     }
 
-    // Defaulter opens loan with 200% ICR
+    // Defaulter opens trove with 200% ICR
     for (let defaulter of defaulters) {
       await borrowerOperations.openLoan(dec(39, 18),  defaulter, { from: defaulter, value: dec(49, 16) })
     }

@@ -63,7 +63,7 @@ contract('CollSUrplusPool', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
-    // open loan from NonPayable proxy contract
+    // open trove from NonPayable proxy contract
     const openLoanData = th.getTransactionData('openLoan(uint256,address)', [web3.utils.toHex(dec(50, 18)), B])
     await nonPayable.forward(borrowerOperations.address, openLoanData, { value: dec(1, 'ether') })
     // At ETH:USD = 100, this redemption should leave 50% coll surplus for B, i.e. 0.5 ether

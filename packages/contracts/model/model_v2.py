@@ -6,8 +6,8 @@ class ModelParams:
     def __init__(self):
         self.D = 0.5 # base fee decay factor
 
-        self.T = 1 # weighting for token price in loan issuance
-        self.F = 0.3 # weighting for momentum in loan issuance
+        self.T = 1 # weighting for token price in trove issuance
+        self.F = 0.3 # weighting for momentum in trove issuance
 
         self.lookback = 5 # Lookback parameter for ETH price momentum
 
@@ -21,7 +21,7 @@ class Data:
         self.base_fee = [0.0]
         self.redeemed_amount = [0.0]
         self.token_price = [1.0]
-        self.loan_issuance = [100.0]
+        self.trove_issuance = [100.0]
         self.token_supply = [100.0]
         self.token_demand = 100.0
   
@@ -77,14 +77,14 @@ def get_new_base_fee(data, redeemed_amount):
 def get_token_demand():
     return 100.0
 
-# compute price based on setting token supply = loan demand, and clearing the market
+# compute price based on setting token supply = trove demand, and clearing the market
 def get_new_token_price(data, params, redeemed_amount, momentum):
     T = params.T
     F = params.F
 
     factor =  1/T
     print(f'factor: {factor}')
-    price = (((data.token_demand  - redeemed_amount) / (data.loan_issuance[-1])) - (F * momentum)) * factor 
+    price = (((data.token_demand  - redeemed_amount) / (data.trove_issuance[-1])) - (F * momentum)) * factor 
 
     if price < 0:
         return 0
@@ -99,16 +99,16 @@ def get_new_token_demand(data, params, token_price, momentum):
     else: 
         return demand
 
-def get_new_loan_issuance(data, params, token_price, momentum ):
-    loan_issuance = data.loan_issuance[-1] * (params.T*(token_price) + params.F*(momentum))
+def get_new_trove_issuance(data, params, token_price, momentum ):
+    trove_issuance = data.trove_issuance[-1] * (params.T*(token_price) + params.F*(momentum))
 
-    if loan_issuance < 0:
+    if trove_issuance < 0:
         return 0
     else: 
-        return loan_issuance
+        return trove_issuance
 
-def get_new_token_supply(loan_issuance, redeemed):
-    new_supply =  loan_issuance - redeemed
+def get_new_token_supply(trove_issuance, redeemed):
+    new_supply =  trove_issuance - redeemed
 
     if new_supply < 0:
         return 0
@@ -116,7 +116,7 @@ def get_new_token_supply(loan_issuance, redeemed):
         return new_supply
 
 # Given Liquity's hard price ceiling of 1.10, 
-# compute the excess loan issuance needed to maintain the price at 1.1, according to QTM.
+# compute the excess trove issuance needed to maintain the price at 1.1, according to QTM.
 def get_excess_issuance(token_price, token_supply):
     if token_price > 1.1:
         excess_issuance = token_supply * (token_price - 1.1)/1.1
@@ -195,8 +195,8 @@ for i in range(1, 250):
     # clear the market
     token_price = get_new_token_price(data, params, redeemed_amount, momentum)
     token_demand = get_new_token_demand(data, params, token_price, momentum)
-    loan_issuance = get_new_loan_issuance(data, params, token_price, momentum)
-    token_supply = get_new_token_supply(loan_issuance, redeemed_amount)
+    trove_issuance = get_new_trove_issuance(data, params, token_price, momentum)
+    token_supply = get_new_token_supply(trove_issuance, redeemed_amount)
     
     # if price > 1.1, correct it via the price ceiling and QTM
     excess_issuance = get_excess_issuance(token_price, token_supply)
@@ -204,8 +204,8 @@ for i in range(1, 250):
     if token_price > 1.1:
         token_price = 1.1
 
-    loan_issuance = loan_issuance + excess_issuance
-    token_supply = get_new_token_supply(loan_issuance, 0)
+    trove_issuance = trove_issuance + excess_issuance
+    token_supply = get_new_token_supply(trove_issuance, 0)
     
     # Log all new values
     print(f'step: {i}')
@@ -215,7 +215,7 @@ for i in range(1, 250):
     print(f'base fee: {base_fee}')
     print(f'token price: {token_price}')
     print(f'token demand: {token_demand}')
-    print(f'loan_issuance: {loan_issuance}')
+    print(f'trove_issuance: {trove_issuance}')
     print(f'token_supply: {token_supply}')
 
     # update all timeseries arrays
@@ -225,7 +225,7 @@ for i in range(1, 250):
     data.base_fee.append(base_fee)
     data.token_price.append(token_price)
     data.token_demand = token_demand
-    data.loan_issuance.append(loan_issuance)
+    data.trove_issuance.append(trove_issuance)
     data.token_supply.append(token_supply)
 
 ### Graph the results

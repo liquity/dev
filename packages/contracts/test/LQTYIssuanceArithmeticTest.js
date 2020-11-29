@@ -839,7 +839,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
-    // Alice opens loan and deposits to SP
+    // Alice opens trove and deposits to SP
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
@@ -875,7 +875,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
-    // Alice opens loan and deposits to SP
+    // Alice opens trove and deposits to SP
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
@@ -910,7 +910,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
-    // Alice opens loan and deposits to SP
+    // Alice opens trove and deposits to SP
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
@@ -946,7 +946,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
-    // Alice opens loan and deposits to SP
+    // Alice opens trove and deposits to SP
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 

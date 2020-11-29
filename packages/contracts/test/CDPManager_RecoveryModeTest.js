@@ -529,9 +529,9 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isAtMost(th.getDifference(L_ETH, '2803412500000000000'), 100)
   })
 
-  // --- liquidate(), applied to loan with ICR > 110% that has the lowest ICR 
+  // --- liquidate(), applied to trove with ICR > 110% that has the lowest ICR 
 
-  it("liquidate(), with ICR > 110%, loan has lowest ICR, and StabilityPool is empty: does nothing", async () => {
+  it("liquidate(), with ICR > 110%, trove has lowest ICR, and StabilityPool is empty: does nothing", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _2_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -590,9 +590,9 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(bob_isInSortedCDPsList)
   })
 
-  // --- liquidate(), applied to loan with ICR > 110% that has the lowest ICR, and Stability Pool CLV is GREATER THAN liquidated debt ---
+  // --- liquidate(), applied to trove with ICR > 110% that has the lowest ICR, and Stability Pool CLV is GREATER THAN liquidated debt ---
 
-  it("liquidate(), with 110% < ICR < TCR, and StabilityPool CLV > debt to liquidate: offsets the loan entirely with the pool", async () => {
+  it("liquidate(), with 110% < ICR < TCR, and StabilityPool CLV > debt to liquidate: offsets the trove entirely with the pool", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -834,7 +834,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
   })
 
 
-  /* --- liquidate() applied to loan with ICR > 110% that has the lowest ICR, and Stability Pool 
+  /* --- liquidate() applied to trove with ICR > 110% that has the lowest ICR, and Stability Pool 
   CLV is LESS THAN the liquidated debt: a partial liquidation --- */
 
   it("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: CDP remains active", async () => {
@@ -870,7 +870,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await troveManager.liquidate(bob, { from: owner })
     
     /* Since the pool only contains 100 CLV, and Bob's pre-liquidation debt was 250 CLV, 
-    expect Bob's loan to only be partially offset, and remain active after liquidation */
+    expect Bob's trove to only be partially offset, and remain active after liquidation */
 
     const bob_CDPStatus_After = (await troveManager.CDPs(bob))[3]
     const bob_CDP_isInSortedList_After = await sortedCDPs.contains(bob)
@@ -912,7 +912,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await troveManager.liquidate(bob, { from: owner })
 
     /* Since the pool only contains 100 CLV, and Bob's pre-liquidation debt was 250 CLV, 
-    expect Bob's loan to only be partially offset, and remain active after liquidation */
+    expect Bob's trove to only be partially offset, and remain active after liquidation */
 
     // Check Bob is in CDP owners array
     const arrayLength = (await troveManager.getCDPOwnersCount()).toNumber()
@@ -934,7 +934,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal(addressIdx.toString(), idxOnStruct)
   })
 
-  it("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: updates loan coll, debt and stake, and system totalStakes", async () => {
+  it("liquidate(), with ICR > 110%, and StabilityPool CLV < liquidated debt: updates trove coll, debt and stake, and system totalStakes", async () => {
     // --- SETUP ---
     await borrowerOperations.openLoan(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: _3_Ether })
@@ -1138,7 +1138,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal(bob_ICR_After, bob_ICR_Before)
 
 
-    // Remove Bob from system to test Carol's trove: price rises, Bob closes loan, price drops to 100 again
+    // Remove Bob from system to test Carol's trove: price rises, Bob closes trove, price drops to 100 again
     await priceFeed.setPrice(dec(200, 18))
     await borrowerOperations.closeLoan({ from: bob })
     await priceFeed.setPrice(dec(100, 18))
@@ -2294,7 +2294,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
   it("liquidateCDPs(): does not affect the liquidated user's token balances", async () => {
     await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(15, 'ether') })
 
-    // D, E, F open loans that will fall below MCR when price drops to 100
+    // D, E, F open troves that will fall below MCR when price drops to 100
     await borrowerOperations.openLoan(dec(90, 18), dennis, { from: dennis, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(140, 18), erin, { from: erin, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(170, 18), freddy, { from: freddy, value: dec(1, 'ether') })

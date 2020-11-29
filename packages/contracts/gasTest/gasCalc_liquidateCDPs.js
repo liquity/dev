@@ -539,7 +539,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -577,7 +577,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -615,7 +615,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -653,7 +653,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -691,7 +691,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -729,7 +729,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -768,7 +768,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -806,7 +806,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -844,7 +844,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -882,7 +882,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -940,7 +940,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -989,7 +989,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1038,7 +1038,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1087,7 +1087,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1136,7 +1136,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1185,7 +1185,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1234,7 +1234,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1283,7 +1283,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1333,7 +1333,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1382,7 +1382,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1495,7 +1495,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -1532,7 +1532,7 @@ contract('Gas cost tests', async accounts => {
     // 10 accts each open CDP with 10 ether, withdraw 100 CLV
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(100, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -1589,7 +1589,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))
@@ -1637,7 +1637,7 @@ contract('Gas cost tests', async accounts => {
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
     assert.equal((await stabilityPool.getTotalCLVDeposits()), dec(1, 27))

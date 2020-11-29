@@ -406,7 +406,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const allDepositors = [A, B, C, D, E, F, G, H]
-      // 4 Defaulters open loan with 200CLV debt, and 200% ICR
+      // 4 Defaulters open trove with 200CLV debt, and 200% ICR
       await borrowerOperations.openLoan(0, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
       await borrowerOperations.withdrawCLV(dec(190, 18), defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openLoan(0, defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
@@ -939,7 +939,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       await borrowerOperations.openLoan(dec(300, 18), E, { from: E, value: dec(4, 'ether') })
 
-      // D1, D2, D3 open loans with total debt 500, 300, 100 respectively (inc. gas comp)
+      // D1, D2, D3 open troves with total debt 500, 300, 100 respectively (inc. gas comp)
       await borrowerOperations.openLoan(dec(490, 18), defaulter_1, { from: defaulter_1, value: dec(5, 'ether') })
       await borrowerOperations.openLoan(dec(190, 18), defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
       await borrowerOperations.openLoan(dec(90, 18), defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })

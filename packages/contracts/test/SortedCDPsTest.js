@@ -105,7 +105,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openLoan('98908089089', carol, { from: carol, value: '23082308092385098009809' })
 
-    // A, B, C close loans
+    // A, B, C close troves
     await borrowerOperations.closeLoan({ from: alice })
     await borrowerOperations.closeLoan({ from:bob })
     await borrowerOperations.closeLoan({ from:carol })
@@ -129,7 +129,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openLoan('98908089089', carol, { from: carol, value: '23082308092385098009809' })
 
-    // A, B, C close loans
+    // A, B, C close troves
     await borrowerOperations.closeLoan({ from: alice })
     await borrowerOperations.closeLoan({ from:bob })
     await borrowerOperations.closeLoan({ from:carol })

@@ -481,7 +481,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -544,7 +544,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -605,7 +605,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -665,7 +665,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -726,7 +726,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -786,7 +786,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -847,7 +847,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -907,7 +907,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -967,7 +967,7 @@ contract('Gas cost tests', async accounts => {
     await th.openLoan_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1049,7 +1049,7 @@ contract('Gas cost tests', async accounts => {
     // Check all defaulters have pending rewards 
     for (account of _1_Defaulter) { assert.isTrue(await troveManager.hasPendingRewards(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1122,7 +1122,7 @@ contract('Gas cost tests', async accounts => {
     // Check all defaulters have pending rewards 
     for (account of _2_Defaulters) { assert.isTrue(await troveManager.hasPendingRewards(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1196,7 +1196,7 @@ contract('Gas cost tests', async accounts => {
     // Check all defaulters have pending rewards 
     for (account of _3_Defaulters) { assert.isTrue(await troveManager.hasPendingRewards(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1269,7 +1269,7 @@ contract('Gas cost tests', async accounts => {
     // Check all defaulters have pending rewards 
     for (account of _5_Defaulters) { assert.isTrue(await troveManager.hasPendingRewards(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1342,7 +1342,7 @@ contract('Gas cost tests', async accounts => {
     // Check all defaulters have pending rewards 
     for (account of _10_Defaulters) { assert.isTrue(await troveManager.hasPendingRewards(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1415,7 +1415,7 @@ contract('Gas cost tests', async accounts => {
     // Check all defaulters have pending rewards 
     for (account of _20_Defaulters) { assert.isTrue(await troveManager.hasPendingRewards(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1488,7 +1488,7 @@ contract('Gas cost tests', async accounts => {
     // Check all defaulters have pending rewards 
     for (account of _30_Defaulters) { assert.isTrue(await troveManager.hasPendingRewards(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1561,7 +1561,7 @@ contract('Gas cost tests', async accounts => {
     // Check all defaulters have pending rewards 
     for (account of _40_Defaulters) { assert.isTrue(await troveManager.hasPendingRewards(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1634,7 +1634,7 @@ contract('Gas cost tests', async accounts => {
     // Check all defaulters have pending rewards 
     for (account of _45_Defaulters) { assert.isTrue(await troveManager.hasPendingRewards(account)) }
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     const whale = accounts[999]
     await borrowerOperations.openLoan(dec(9, 28), whale, { from: whale, value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(9, 28), ZERO_ADDRESS, { from: whale })
@@ -1855,7 +1855,7 @@ contract('Gas cost tests', async accounts => {
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -1899,7 +1899,7 @@ contract('Gas cost tests', async accounts => {
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -1942,7 +1942,7 @@ contract('Gas cost tests', async accounts => {
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 
@@ -1985,7 +1985,7 @@ contract('Gas cost tests', async accounts => {
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
     await priceFeed.setPrice(dec(200, 18))
 
-    // Whale opens loan and fills SP with 1 billion CLV
+    // Whale opens trove and fills SP with 1 billion CLV
     await borrowerOperations.openLoan(dec(1, 27), accounts[999], { from: accounts[999], value: dec(1, 27) })
     await stabilityPool.provideToSP(dec(1, 27), ZERO_ADDRESS, { from: accounts[999] })
 

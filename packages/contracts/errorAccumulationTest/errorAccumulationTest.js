@@ -462,7 +462,7 @@ contract('TroveManager', async accounts => {
   // --- Error accumulation from repeated Liquidations - SP Pool, partial offsets  ---
 
   it("11 accounts. 10 liquidations, partial offsets. Check (DefaultPool - totalRewards) differences", async () => {
-   // Acct 99 opens loan with 100 CLV
+   // Acct 99 opens trove with 100 CLV
     await borrowerOperations.openLoan(0,  accounts[99], { from: accounts[99], value: dec(100, 'ether') })
     await borrowerOperations.withdrawCLV(dec(100, 18), accounts[99], {from: accounts[99]})
     
@@ -510,7 +510,7 @@ contract('TroveManager', async accounts => {
   */
 
   it("101 accounts. 100 liquidations, partial offsets. Check (DefaultPool - totalRewards) differences", async () => {
-    // Acct 99 opens loan with 100 CLV
+    // Acct 99 opens trove with 100 CLV
      await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
      await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
@@ -560,14 +560,14 @@ contract('TroveManager', async accounts => {
   // --- Error accumulation from SP withdrawals ---
 
   it("11 accounts. 10 Borrowers add to SP. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
-    // Acct 99 opens loan with 100 CLV
+    // Acct 99 opens trove with 100 CLV
      await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
      await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
-     // Account 0 (to be liquidated) opens a loan
+     // Account 0 (to be liquidated) opens a trove
      await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
-     // 9 Accounts open loans and provide to SP
+     // 9 Accounts open troves and provide to SP
      await th.openLoan_allAccounts(accounts.slice(1, 11), contracts, dec(1, 'ether'), dec(100, 18))
      await th.provideToSP_allAccounts(accounts.slice(1,11), stabilityPool, dec(50, 18))
      
@@ -613,14 +613,14 @@ contract('TroveManager', async accounts => {
     */
 
    it("101 accounts. 100 Borrowers add to SP. 1 liquidation, 100 Borrowers withdraw all their SP funds", async () => {
-    // Acct 99 opens loan with 100 CLV
+    // Acct 99 opens trove with 100 CLV
      await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
      await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
-     // Account 0 (to be liquidated) opens a loan
+     // Account 0 (to be liquidated) opens a trove
      await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
-     // 10 Accounts open loans and provide to SP
+     // 10 Accounts open troves and provide to SP
      await th.openLoan_allAccounts(accounts.slice(1, 101), contracts, dec(1, 'ether'), dec(100, 18))
      await th.provideToSP_allAccounts(accounts.slice(1,101), stabilityPool, dec(50, 18))
      
@@ -662,14 +662,14 @@ contract('TroveManager', async accounts => {
    */
 
    it("11 accounts. 10 Borrowers add to SP, random CLV amounts. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
-    // Acct 99 opens loan with 100 CLV
+    // Acct 99 opens trove with 100 CLV
      await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
      await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
-     // Account 0 (to be liquidated) opens a loan
+     // Account 0 (to be liquidated) opens a trove
      await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
-     // 10 Accounts open loans and provide to SP
+     // 10 Accounts open troves and provide to SP
      await th.openLoan_allAccounts(accounts.slice(1, 11), contracts, dec(1, 'ether'), dec(100, 18))
      await th.th.provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,11), stabilityPool)
 
@@ -722,14 +722,14 @@ contract('TroveManager', async accounts => {
     */
 
    it("101 accounts. 100 Borrowers add to SP, random CLV amounts. 1 liquidation, 100 Borrowers withdraw all their SP funds", async () => {
-    // Acct 99 opens loan with 100 CLV
+    // Acct 99 opens trove with 100 CLV
      await borrowerOperations.openLoan(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
      await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
      
-     // Account 0 (to be liquidated) opens a loan
+     // Account 0 (to be liquidated) opens a trove
      await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
-     // 100 Accounts open loans and provide to SP
+     // 100 Accounts open troves and provide to SP
      await th.openLoan_allAccounts(accounts.slice(1, 101), contracts, dec(1, 'ether'), dec(100, 18))
      await th.th.provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,101), stabilityPool)
 
@@ -779,14 +779,14 @@ contract('TroveManager', async accounts => {
   */ 
 
  it("501 accounts. 500 Borrowers add to SP, random CLV amounts. 1 liquidation, 500 Borrowers withdraw all their SP funds", async () => {
-  // Acct 99 opens loan with 100 CLV
+  // Acct 99 opens trove with 100 CLV
    await borrowerOperations.openLoan(0, accounts[999], { from: accounts[999], value: dec(100, 'ether') })
    await borrowerOperations.withdrawCLV(dec(100, 18), accounts[999], {from: accounts[999]})
    
-   // Account 0 (to be liquidated) opens a loan
+   // Account 0 (to be liquidated) opens a trove
    await borrowerOperations.openLoan(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
 
-   // 500 Accounts open loans and provide to SP
+   // 500 Accounts open troves and provide to SP
    await th.openLoan_allAccounts(accounts.slice(1, 501), contracts, dec(1, 'ether'), dec(100, 18))
    await th.th.provideToSP_allAccounts_randomAmount(10, 90, accounts.slice(2,501), stabilityPool)
 
@@ -845,7 +845,7 @@ contract('TroveManager', async accounts => {
   let stakeDifference = web3.utils.toBN(0)
   let totalStakesDifference = web3.utils.toBN(0)
 
-  // Loop over account range, alternately liquidating a CDP and opening a new loan
+  // Loop over account range, alternately liquidating a CDP and opening a new trove
   for (i = 1; i < 10; i++) {
     const stakeOfCDPToLiquidate = (await troveManager.CDPs(accounts[i]))[2]
     
@@ -855,12 +855,12 @@ contract('TroveManager', async accounts => {
     Remove the old stake from total, calculate the new stake, add new stake to total. */
     offchainTotalStakes = offchainTotalStakes.sub(stakeOfCDPToLiquidate)
     offchainTotalColl = offchainTotalColl
-    // New loan opening creates a new stake, then adds 
+    // New trove opening creates a new stake, then adds 
     offchainStake = (newEntrantColl.mul(offchainTotalStakes)).div(offchainTotalColl)
     offchainTotalStakes = offchainTotalStakes.add(offchainStake)
     offchainTotalColl = offchainTotalColl.add(newEntrantColl)
    
-    // Liquidate CDP 'i', and open loan from account '999 - i'
+    // Liquidate CDP 'i', and open trove from account '999 - i'
     await troveManager.liquidate(accounts[i], {from: accounts[0]})
     await borrowerOperations.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
   
@@ -901,7 +901,7 @@ contract('TroveManager', async accounts => {
   let stakeDifference = web3.utils.toBN(0)
   let totalStakesDifference = web3.utils.toBN(0)
 
-  // Loop over account range, alternately liquidating a CDP and opening a new loan
+  // Loop over account range, alternately liquidating a CDP and opening a new trove
   for (i = 1; i < 10; i++) {
     const stakeOfCDPToLiquidate = (await troveManager.CDPs(accounts[i]))[2]
     
@@ -911,12 +911,12 @@ contract('TroveManager', async accounts => {
     Remove the old stake from total, calculate the new stake, add new stake to total. */
     offchainTotalStakes = offchainTotalStakes.sub(stakeOfCDPToLiquidate)
     offchainTotalColl = offchainTotalColl
-    // New loan opening creates a new stake, then adds 
+    // New trove opening creates a new stake, then adds 
     offchainStake = (newEntrantColl.mul(offchainTotalStakes)).div(offchainTotalColl)
     offchainTotalStakes = offchainTotalStakes.add(offchainStake)
     offchainTotalColl = offchainTotalColl.add(newEntrantColl)
    
-    // Liquidate CDP 'i', and open loan from account '999 - i'
+    // Liquidate CDP 'i', and open trove from account '999 - i'
     await troveManager.liquidate(accounts[i], {from: accounts[0]})
     await borrowerOperations.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
   
@@ -958,7 +958,7 @@ it("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and totalS
   let stakeDifference = web3.utils.toBN(0)
   let totalStakesDifference = web3.utils.toBN(0)
 
-  // Loop over account range, alternately liquidating a CDP and opening a new loan
+  // Loop over account range, alternately liquidating a CDP and opening a new trove
   for (i = 1; i < 100; i++) {
     const stakeOfCDPToLiquidate = (await troveManager.CDPs(accounts[i]))[2]
     
@@ -968,12 +968,12 @@ it("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and totalS
     Remove the old stake from total, calculate the new stake, add new stake to total. */
     offchainTotalStakes = offchainTotalStakes.sub(stakeOfCDPToLiquidate)
     offchainTotalColl = offchainTotalColl
-    // New loan opening creates a new stake, then adds 
+    // New trove opening creates a new stake, then adds 
     offchainStake = (newEntrantColl.mul(offchainTotalStakes)).div(offchainTotalColl)
     offchainTotalStakes = offchainTotalStakes.add(offchainStake)
     offchainTotalColl = offchainTotalColl.add(newEntrantColl)
    
-    // Liquidate CDP 'i', and open loan from account '999 - i'
+    // Liquidate CDP 'i', and open trove from account '999 - i'
     await troveManager.liquidate(accounts[i], {from: accounts[0]})
     await borrowerOperations.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
   

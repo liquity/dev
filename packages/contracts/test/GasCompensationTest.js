@@ -281,7 +281,7 @@ contract('Gas compensation tests', async accounts => {
   })
 
   // --- Test ICRs with virtual debt ---
-  it('getCurrentICR(): Incorporates virtual debt, and returns the correct ICR for new loans', async () => {
+  it('getCurrentICR(): Incorporates virtual debt, and returns the correct ICR for new troves', async () => {
     const price = await priceFeed.getPrice()
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
@@ -333,7 +333,7 @@ contract('Gas compensation tests', async accounts => {
   it('Gas compensation from pool-offset liquidations: collateral < $10 in value. All collateral paid as compensation', async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans
+    // A-E open troves
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
     await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
@@ -450,7 +450,7 @@ contract('Gas compensation tests', async accounts => {
     await priceFeed.setPrice(dec(400, 18))
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans
+    // A-E open troves
     await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(5000, 18), bob, { from: bob, value: dec(15, 'ether') })
     await borrowerOperations.openLoan(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
@@ -562,11 +562,11 @@ contract('Gas compensation tests', async accounts => {
   })
 
   it('gas compensation from pool-offset liquidations: 0.5% collateral > $10 in value. Compensates 0.5% of  collateral, liquidates the remainder', async () => {
-    // open loans
+    // open troves
     await priceFeed.setPrice(dec(400, 18))
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans
+    // A-E open troves
     await borrowerOperations.openLoan(dec(2000, 18), alice, { from: alice, value: '10001000000000000000' })
     await borrowerOperations.openLoan(dec(8000, 18), bob, { from: bob, value: '37500000000000000000' })
     await borrowerOperations.openLoan(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
@@ -675,7 +675,7 @@ contract('Gas compensation tests', async accounts => {
   it('Gas compensation from pool-offset liquidations: collateral < $10 in value. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans
+    // A-E open troves
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
     await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
@@ -758,7 +758,7 @@ contract('Gas compensation tests', async accounts => {
     await priceFeed.setPrice(dec(400, 18))
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans
+    // A-E open troves
     await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(5000, 18), bob, { from: bob, value: dec(15, 'ether') })
     await borrowerOperations.openLoan(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
@@ -861,11 +861,11 @@ contract('Gas compensation tests', async accounts => {
 
 
   it('gas compensation from pool-offset liquidations: 0.5% collateral > $10 in value. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
-    // open loans
+    // open troves
     await priceFeed.setPrice(dec(400, 18))
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans
+    // A-E open troves
     await borrowerOperations.openLoan(dec(2000, 18), alice, { from: alice, value: '10001000000000000000' })
     await borrowerOperations.openLoan(dec(8000, 18), bob, { from: bob, value: '37500000000000000000' })
     await borrowerOperations.openLoan(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
@@ -966,7 +966,7 @@ contract('Gas compensation tests', async accounts => {
 
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans. A: 0.04 ETH, 1+10 CLV.  B: 1ETH, 180+10 CLV.  C: 5 ETH, 925+10 CLV.  D: 73.632 ETH, 13500+10 CLV.
+    // A-E open troves. A: 0.04 ETH, 1+10 CLV.  B: 1ETH, 180+10 CLV.  C: 5 ETH, 925+10 CLV.  D: 73.632 ETH, 13500+10 CLV.
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
     await borrowerOperations.openLoan(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
@@ -1081,7 +1081,7 @@ contract('Gas compensation tests', async accounts => {
 
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans. A: 0.04 ETH, 1 CLV.  B: 1ETH, 180 CLV.  C: 5 ETH, 925 CLV.  D: 73.632 ETH, 13500 CLV.
+    // A-E open troves. A: 0.04 ETH, 1 CLV.  B: 1ETH, 180 CLV.  C: 5 ETH, 925 CLV.  D: 73.632 ETH, 13500 CLV.
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
     await borrowerOperations.openLoan(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
@@ -1184,7 +1184,7 @@ contract('Gas compensation tests', async accounts => {
 
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans. A: 0.04 ETH, 1+10 CLV.  B: 1ETH, 180+10 CLV.  C: 5 ETH, 925+10 CLV.  D: 73.632 ETH, 13500+10 CLV.
+    // A-E open troves. A: 0.04 ETH, 1+10 CLV.  B: 1ETH, 180+10 CLV.  C: 5 ETH, 925+10 CLV.  D: 73.632 ETH, 13500+10 CLV.
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
     await borrowerOperations.openLoan(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
@@ -1295,7 +1295,7 @@ contract('Gas compensation tests', async accounts => {
 
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
 
-    // A-E open loans. A: 0.04 ETH, 1+10 CLV.  B: 1ETH, 180+10 CLV.  C: 5 ETH, 925+10 CLV.  D: 73.632 ETH, 13500+10 CLV.
+    // A-E open troves. A: 0.04 ETH, 1+10 CLV.  B: 1ETH, 180+10 CLV.  C: 5 ETH, 925+10 CLV.  D: 73.632 ETH, 13500+10 CLV.
     await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
     await borrowerOperations.openLoan(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })

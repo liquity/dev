@@ -257,7 +257,7 @@ contract('Gas cost tests', async accounts => {
   // --- closeLoan() ---
 
   it("", async () => {
-    const message = 'closeLoan(), 10 accounts, 1 account closes its loan'
+    const message = 'closeLoan(), 10 accounts, 1 account closes its trove'
     await th.openLoan_allAccounts_decreasingCLVAmounts(_10_Accounts, contracts, dec(10, 'ether'), 200)
 
     const tx = await borrowerOperations.closeLoan({ from: accounts[1] })
@@ -268,7 +268,7 @@ contract('Gas cost tests', async accounts => {
   })
 
   it("", async () => {
-    const message = 'closeLoan(), 20 accounts, each account adds 10 ether and issues less CLV than the previous one. First 10 accounts close their loan. '
+    const message = 'closeLoan(), 20 accounts, each account adds 10 ether and issues less CLV than the previous one. First 10 accounts close their trove. '
 
     await th.openLoan_allAccounts_decreasingCLVAmounts(_20_Accounts, contracts, dec(10, 'ether'), 200)
 
@@ -1588,7 +1588,7 @@ contract('Gas cost tests', async accounts => {
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
 
-    // All loans are liquidated
+    // All troves are liquidated
     for (account of liquidationAcctRange) {
       const hasPendingRewards = await troveManager.hasPendingRewards(account)
       console.log("Liquidee has pending rewards: " + hasPendingRewards)
@@ -1624,7 +1624,7 @@ contract('Gas cost tests', async accounts => {
     const tx1 = await troveManager.liquidate(accounts[2], { from: accounts[0] })
     const tx2 = await troveManager.liquidate(accounts[3], { from: accounts[0] })
 
-    // Account 1 opens loan
+    // Account 1 opens trove
     await borrowerOperations.openLoan(dec(90, 18), accounts[1], { from: accounts[1], value: dec(1, 'ether') })
 
     // Price drops, account[1]'s ICR falls below MCR
@@ -1821,7 +1821,7 @@ contract('Gas cost tests', async accounts => {
     // Pool refilled with 50 CLV
     await stabilityPool.provideToSP(dec(50, 18), ZERO_ADDRESS, { from: accounts[102] })
 
-    // Account 1 opens loan
+    // Account 1 opens trove
     await borrowerOperations.openLoan(dec(70, 18), accounts[1], { from: accounts[1], value: dec(1, 'ether') })
 
     // Price drops, account[1]'s ICR falls below MCR
@@ -2036,7 +2036,7 @@ Parameters to vary for gas tests:
   --- State variables non-zero e.g. CDP already opened, stake already made, etc
   - Steps in the the operation:
   --- number of liquidations to perform
-  --- number of loans to redeem from
+  --- number of troves to redeem from
   --- number of trials to run
   Extremes/edges:
   - Lowest or highest ICR
