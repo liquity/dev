@@ -530,7 +530,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `getRedemptionHints(uint _LUSDamount, uint _price)`: helper function specifically for redemptions. Returns two hints - the first is positional, the second ensures transaction success (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)).
 
-### Stability Pool Functions - _PoolManager.sol_
+### Stability Pool Functions - StabilityPool.sol_
 
 `provideToSP(uint _amount, address _frontEndTag)`: allows stablecoin holders to deposit _amount of LUSD to the Stability Pool. It sends `_amount` of LUSD from their address to the Pool, and tops up their LUSD deposit by `_amount` and their tagged front end’s stake by `_amount`. If the depositor already a non-zero deposit, it sends their accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end.
 
