@@ -11,18 +11,18 @@ contract EchidnaProxy {
     TroveManager troveManager;
     BorrowerOperations borrowerOperations;
     StabilityPool stabilityPool;
-    LUSDToken clvToken;
+    LUSDToken lusdToken;
 
     constructor(
         TroveManager _troveManager,
         BorrowerOperations _borrowerOperations,
         StabilityPool _stabilityPool,
-        LUSDToken _clvToken
+        LUSDToken _lusdToken
     ) public {
         troveManager = _troveManager;
         borrowerOperations = _borrowerOperations;
         stabilityPool = _stabilityPool;
-        clvToken = _clvToken;
+        lusdToken = _lusdToken;
     }
 
     receive() external payable {
@@ -94,22 +94,22 @@ contract EchidnaProxy {
     // CLV Token
 
     function transferPrx(address recipient, uint256 amount) external returns (bool) {
-        return clvToken.transfer(recipient, amount);
+        return lusdToken.transfer(recipient, amount);
     }
 
     function approvePrx(address spender, uint256 amount) external returns (bool) {
-        return clvToken.approve(spender, amount);
+        return lusdToken.approve(spender, amount);
     }
 
     function transferFromPrx(address sender, address recipient, uint256 amount) external returns (bool) {
-        return clvToken.transferFrom(sender, recipient, amount);
+        return lusdToken.transferFrom(sender, recipient, amount);
     }
 
     function increaseAllowancePrx(address spender, uint256 addedValue) external returns (bool) {
-        return clvToken.increaseAllowance(spender, addedValue);
+        return lusdToken.increaseAllowance(spender, addedValue);
     }
 
     function decreaseAllowancePrx(address spender, uint256 subtractedValue) external returns (bool) {
-        return clvToken.decreaseAllowance(spender, subtractedValue);
+        return lusdToken.decreaseAllowance(spender, subtractedValue);
     }
 }

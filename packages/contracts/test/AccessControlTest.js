@@ -17,7 +17,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
   const [owner, alice, bob, carol] = accounts;
   let priceFeed
-  let clvToken
+  let lusdToken
   let sortedCDPs
   let troveManager
   let nameRegistry
@@ -32,7 +32,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = coreContracts.priceFeed
-    clvToken = coreContracts.clvToken
+    lusdToken = coreContracts.lusdToken
     sortedCDPs = coreContracts.sortedCDPs
     troveManager = coreContracts.troveManager
     nameRegistry = coreContracts.nameRegistry
@@ -325,7 +325,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     //    mint
     it("mint(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
-      const txAlice = clvToken.mint(bob, 100, { from: alice })
+      const txAlice = lusdToken.mint(bob, 100, { from: alice })
       await th.assertRevert(txAlice, "Caller is not BorrowerOperations")
     })
 
@@ -333,7 +333,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("burn(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await clvToken.burn(bob, 100, { from: alice })
+        const txAlice = await lusdToken.burn(bob, 100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -345,7 +345,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("sendToPool(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await clvToken.sendToPool(bob, activePool.address, 100, { from: alice })
+        const txAlice = await lusdToken.sendToPool(bob, activePool.address, 100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -357,7 +357,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("returnFromPool(): reverts when called by an account that is not TroveManager nor StabilityPool", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await clvToken.returnFromPool(activePool.address, bob, 100, { from: alice })
+        const txAlice = await lusdToken.returnFromPool(activePool.address, bob, 100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")

@@ -21,7 +21,7 @@ contract('TroveManager', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
     
-    clvToken = contracts.clvToken
+    lusdToken = contracts.lusdToken
     priceFeed = contracts.priceFeed
     sortedCDPs = contracts.sortedCDPs
     troveManager = contracts.troveManager

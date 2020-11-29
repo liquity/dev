@@ -33,7 +33,7 @@ contract('Fee arithmetic tests', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
+    lusdToken = contracts.lusdToken
     sortedCDPs = contracts.sortedCDPs
     troveManager = contracts.troveManager
     activePool = contracts.activePool
@@ -75,7 +75,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee emitted in event is non-zero
     const emittedETHFee = toBN((await th.getEmittedRedemptionValues(redemptionTx))[3])
@@ -109,7 +109,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee emitted in event is non-zero
     const emittedETHFee = toBN((await th.getEmittedRedemptionValues(redemptionTx))[3])
@@ -143,7 +143,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // Check base rate is now non-zero
     const baseRate = await troveManager.baseRate()
@@ -184,7 +184,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // Check base rate is now non-zero
     const baseRate = await troveManager.baseRate()
@@ -222,7 +222,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
@@ -230,7 +230,7 @@ contract('Fee arithmetic tests', async accounts => {
 
      // C redeems
      const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
@@ -254,13 +254,13 @@ contract('Fee arithmetic tests', async accounts => {
     const expectedTotalLUSDGain = emittedLUSDFee_1.add(emittedLUSDFee_2)
 
     const A_ETHBalance_Before = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_Before = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_Before = toBN(await lusdToken.balanceOf(A))
 
     // A un-stakes
     await lqtyStaking.unstake(dec(100, 18), {from: A, gasPrice: 0})
 
     const A_ETHBalance_After = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_After = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_After = toBN(await lusdToken.balanceOf(A))
 
 
     const A_ETHGain = A_ETHBalance_After.sub(A_ETHBalance_Before)
@@ -289,7 +289,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
@@ -297,7 +297,7 @@ contract('Fee arithmetic tests', async accounts => {
 
      // C redeems
      const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
@@ -321,13 +321,13 @@ contract('Fee arithmetic tests', async accounts => {
     const expectedTotalLUSDGain = emittedLUSDFee_1.add(emittedLUSDFee_2)
 
     const A_ETHBalance_Before = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_Before = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_Before = toBN(await lusdToken.balanceOf(A))
 
     // A tops up
     await lqtyStaking.stake(dec(50, 18), {from: A, gasPrice: 0})
 
     const A_ETHBalance_After = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_After = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_After = toBN(await lusdToken.balanceOf(A))
 
     const A_ETHGain = A_ETHBalance_After.sub(A_ETHBalance_Before)
     const A_LUSDGain = A_LUSDBalance_After.sub(A_LUSDBalance_Before)
@@ -355,7 +355,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
@@ -363,7 +363,7 @@ contract('Fee arithmetic tests', async accounts => {
 
      // C redeems
      const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
@@ -395,7 +395,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
@@ -403,7 +403,7 @@ contract('Fee arithmetic tests', async accounts => {
 
      // C redeems
      const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
@@ -547,13 +547,13 @@ contract('Fee arithmetic tests', async accounts => {
 
 
     const A_ETHBalance_Before = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_Before = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_Before = toBN(await lusdToken.balanceOf(A))
     const B_ETHBalance_Before = toBN(await web3.eth.getBalance(B))
-    const B_LUSDBalance_Before = toBN(await clvToken.balanceOf(B))
+    const B_LUSDBalance_Before = toBN(await lusdToken.balanceOf(B))
     const C_ETHBalance_Before = toBN(await web3.eth.getBalance(C))
-    const C_LUSDBalance_Before = toBN(await clvToken.balanceOf(C))
+    const C_LUSDBalance_Before = toBN(await lusdToken.balanceOf(C))
     const D_ETHBalance_Before = toBN(await web3.eth.getBalance(D))
-    const D_LUSDBalance_Before = toBN(await clvToken.balanceOf(D))
+    const D_LUSDBalance_Before = toBN(await lusdToken.balanceOf(D))
 
     // A-D un-stake
     const unstake_A = await lqtyStaking.unstake(dec(100, 18), {from: A, gasPrice: 0})
@@ -569,13 +569,13 @@ contract('Fee arithmetic tests', async accounts => {
 
     // Get A-D ETH and LUSD balances
     const A_ETHBalance_After = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_After = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_After = toBN(await lusdToken.balanceOf(A))
     const B_ETHBalance_After = toBN(await web3.eth.getBalance(B))
-    const B_LUSDBalance_After = toBN(await clvToken.balanceOf(B))
+    const B_LUSDBalance_After = toBN(await lusdToken.balanceOf(B))
     const C_ETHBalance_After = toBN(await web3.eth.getBalance(C))
-    const C_LUSDBalance_After = toBN(await clvToken.balanceOf(C))
+    const C_LUSDBalance_After = toBN(await lusdToken.balanceOf(C))
     const D_ETHBalance_After = toBN(await web3.eth.getBalance(D))
-    const D_LUSDBalance_After = toBN(await clvToken.balanceOf(D))
+    const D_LUSDBalance_After = toBN(await lusdToken.balanceOf(D))
 
     // Get ETH and LUSD gains
     const A_ETHGain = A_ETHBalance_After.sub(A_ETHBalance_Before)

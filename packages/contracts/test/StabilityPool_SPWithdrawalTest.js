@@ -36,7 +36,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
   let contracts
 
   let priceFeed
-  let clvToken
+  let lusdToken
   let sortedCDPs
   let troveManager
   let activePool
@@ -61,7 +61,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       contracts = await deploymentHelper.deployLUSDToken(contracts)
   
       priceFeed = contracts.priceFeed
-      clvToken = contracts.clvToken
+      lusdToken = contracts.lusdToken
       sortedCDPs = contracts.sortedCDPs
       troveManager = contracts.troveManager
       activePool = contracts.activePool
@@ -109,9 +109,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '66666666666666666666'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '66666666666666666666'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '66666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '66666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '66666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '66666666666666666666'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '331666666666666667'), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '331666666666666667'), 1000)
@@ -151,9 +151,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '33333333333333333333'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '33333333333333333333'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '33333333333333333333'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '33333333333333333333'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '33333333333333333333'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '33333333333333333333'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '663333333333333333'), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '663333333333333333'), 1000)
@@ -196,9 +196,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '0'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 15)), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 15)), 1000)
@@ -238,9 +238,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '90000000000000000000'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '90000000000000000000'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '90000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '90000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '90000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '90000000000000000000'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 14)), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 14)), 1000)
@@ -284,9 +284,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '80000000000000000000'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '80000000000000000000'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '80000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '80000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '80000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '80000000000000000000'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(199, 15)), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(199, 15)), 1000)
@@ -331,9 +331,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '66666666666666666666'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '133333333333333333333'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '200000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '66666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '133333333333333333333'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '200000000000000000000'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '331666666666666667'), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '663333333333333333'), 1000)
@@ -380,9 +380,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '50000000000000000000'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '100000000000000000000'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '150000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '50000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '100000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '150000000000000000000'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '497500000000000000'), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 15)), 1000)
@@ -438,9 +438,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '9017193801740610000'), 10000000000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '2055920186796860000000'), 1000000000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '59062619401401000000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '9017193801740610000'), 10000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '2055920186796860000000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '59062619401401000000'), 1000000000)
 
       // 27.1 * 0.995 * {20,4560,131}/4711
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '114474633835703665'), 1000000000)
@@ -493,11 +493,11 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '16666666666666666666'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '16666666666666666666'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '16666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '16666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '16666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '16666666666666666666'), 1000)
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '50000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '50000000000000000000'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '829166666666666667'), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '829166666666666667'), 1000)
@@ -552,10 +552,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '0'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 15)), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 15)), 1000)
@@ -623,10 +623,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '178328173374613000000'), 1000000000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '59442724458204300000'), 1000000000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '44582043343653200000'), 1000000000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '117647058823529000000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '178328173374613000000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '59442724458204300000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '44582043343653200000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '117647058823529000000'), 1000000000)
 
       // 3.5*0.995 * {600,200,150,0} / 950 + 4.5*0.995 * {600/950*{600,200,150},250} / (1200-350)
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '4195634674922600559'), 1000000000)
@@ -671,7 +671,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await priceFeed.setPrice(dec(100, 18))
 
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '50000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '50000000000000000000'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '497500000000000000'), 1000)
 
       // Two more defaulters are liquidated
@@ -687,9 +687,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '0'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 15)), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 15)), 1000)
@@ -747,7 +747,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await priceFeed.setPrice(dec(100, 18))
 
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
       // 3*0.995 * 400/975
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '1224615384615384661'), 1000000000)
 
@@ -764,9 +764,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '16722408026755900000'), 100000000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '20903010033444800000'), 1000000000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '10451505016722400000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '16722408026755900000'), 100000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '20903010033444800000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '10451505016722400000'), 1000000000)
 
       // 3*0.995 * {200,250,125}/975 + 3.5*0.995 * {200,250,125}/575
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '1823612040133779199'), 1000000000)
@@ -815,7 +815,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await priceFeed.setPrice(dec(100, 18))
 
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '829166666666666667'), 1000)
 
       await troveManager.liquidate(defaulter_4, { from: owner });
@@ -829,9 +829,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '6666666666666666666'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '6666666666666666666'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '20000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '6666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '6666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '20000000000000000000'), 1000)
 
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '928666666666666667'), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '928666666666666667'), 1000)
@@ -894,16 +894,16 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
       // Expect Alice And Bob's compounded deposit to be 0 CLV
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '0'), 1000)
 
       // Expect Alice and Bob's ETH Gain to be 1 ETH
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 15)), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 15)), 1000)
 
       // Expect Carol And Dennis' compounded deposit to be 50 CLV
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '50000000000000000000'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '50000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '50000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '50000000000000000000'), 1000)
 
       // Expect Carol and and Dennis ETH Gain to be 0.5 ETH
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, '497500000000000000'), 1000)
@@ -1067,12 +1067,12 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const erin_ETHWithdrawn = th.getEventArgByName(txE, 'ETHGainWithdrawn', '_ETH').toString()
 
       // Expect Alice And Bob's compounded deposit to be 0 CLV
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '0'), 1000)
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '83333333333333333333'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '166666666666666666666'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(erin)).toString(), '250000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '83333333333333333333'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '166666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(erin)).toString(), '250000000000000000000'), 1000)
 
       //Expect Alice and Bob's ETH Gain to be 1 ETH
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 15)), 1000)
@@ -1119,7 +1119,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
 
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), 0), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), 0), 1000)
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, dec(995, 15)), 1000)
     })
 
@@ -1215,14 +1215,14 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const harriet_ETHWithdrawn = th.getEventArgByName(txH, 'ETHGainWithdrawn', '_ETH').toString()
 
       // Expect all deposits to be 0 CLV
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(erin)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(flyn)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(graham)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(harriet)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(erin)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(flyn)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(graham)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(harriet)).toString(), '0'), 1000)
 
       /* Expect all ETH gains to be 1 ETH:  Since each liquidation of empties the pool, depositors
       should only earn ETH from the single liquidation that cancelled with their deposit */
@@ -1289,7 +1289,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
 
       // Expect Bob to withdraw 10% of initial deposit (10 CLV) and all the liquidated ETH (0.5 ether)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '10000000000000000000'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '10000000000000000000'), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, '497500000000000000'), 1000)
     })
 
@@ -1354,9 +1354,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
      
       Total: 60 CLV, 3 Ether
       */
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), dec(10, 18)), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), dec(20, 18)), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), dec(30, 18)), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), dec(10, 18)), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), dec(20, 18)), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), dec(30, 18)), 1000)
 
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
       const carol_ETHWithdrawn = await th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
@@ -1414,7 +1414,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
 
       // Bob should withdraw 0 deposit, and the full ETH gain of 1 ether
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), 0), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), 0), 1000)
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 15)), 1000000000)
     })
 
@@ -1477,9 +1477,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const dennis_ETHWithdrawn = await th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
       // B, C and D should have a compounded deposit of 1e-10 of initial deposit, which the system rounds down to 0
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '0'), 1000)
 
       assert.isAtMost(th.getDifference(bob_ETHWithdrawn, dec(995, 15)), 100000000)
       assert.isAtMost(th.getDifference(carol_ETHWithdrawn, dec(1990, 15)), 1000000000)
@@ -1585,10 +1585,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // B, C and D should withdraw 1e-10 of initial deposit, 
 
       // TODO:  check deposit magnitudes are correct
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(alice)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(bob)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(carol)).toString(), '0'), 1000)
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(alice)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(bob)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(carol)).toString(), '0'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '0'), 1000)
 
       // 0.995 ETH is offset at each L, 0.005 goes to gas comp
       assert.isAtMost(th.getDifference(alice_ETHWithdrawn, '995000000009950000'), 1000000000)
@@ -1638,7 +1638,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(CLVinSP_1, '0')
 
       // Check SP CLV balance is zero
-      const SPCLVBalance_1 = await clvToken.balanceOf(stabilityPool.address)
+      const SPCLVBalance_1 = await lusdToken.balanceOf(stabilityPool.address)
       // console.log(`SPCLVBalance_1: ${SPCLVBalance_1}`)
       assert.equal(SPCLVBalance_1, '0')
 
@@ -1677,7 +1677,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(CLVinSP_2, '0')
 
       // Check SP CLV balance is zero
-      const SPCLVBalance_2 = await clvToken.balanceOf(stabilityPool.address)
+      const SPCLVBalance_2 = await lusdToken.balanceOf(stabilityPool.address)
       // console.log(`SPCLVBalance_2: ${SPCLVBalance_2}`)
       assert.equal(SPCLVBalance_2, '0')
 
@@ -1715,7 +1715,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.equal(CLVinSP_3, '0')
 
       // Check SP CLV balance is zero
-      const SPCLVBalance_3 = await clvToken.balanceOf(stabilityPool.address)
+      const SPCLVBalance_3 = await lusdToken.balanceOf(stabilityPool.address)
       // console.log(`SPCLVBalance_3: ${SPCLVBalance_3}`)
       assert.equal(SPCLVBalance_3, '0')
 
@@ -1830,13 +1830,13 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH')
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH')
 
-      const aliceBalance = await clvToken.balanceOf(alice)
+      const aliceBalance = await lusdToken.balanceOf(alice)
       const aliceExpectedBalance = web3.utils.toBN(dec(5, 35))
       const aliceBalDiff = aliceBalance.sub(aliceExpectedBalance).abs()
 
       assert.isTrue(aliceBalDiff.lte(toBN('1000000000000000000')))
 
-      const bobBalance = await clvToken.balanceOf(bob)
+      const bobBalance = await lusdToken.balanceOf(bob)
       const bobExpectedBalance = toBN(dec(5, 35))
       const bobBalDiff = bobBalance.sub(bobExpectedBalance).abs()
 
@@ -1886,13 +1886,13 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH')
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH')
 
-      aliceBalance = await clvToken.balanceOf(alice)
+      aliceBalance = await lusdToken.balanceOf(alice)
       aliceExpectedBalance = toBN('999999999999999990000000000000000000')
       aliceBalDiff = aliceBalance.sub(aliceExpectedBalance).abs()
 
       assert.isTrue(aliceBalDiff.lte(toBN('1000000000000000000')))
 
-      bobBalance = await clvToken.balanceOf(bob)
+      bobBalance = await lusdToken.balanceOf(bob)
       bobExpectedBalance = toBN('999999999999999990000000000000000000')
       bobBalDiff = bobBalance.sub(bobExpectedBalance).abs()
 

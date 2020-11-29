@@ -29,7 +29,7 @@ contract('TroveManager', async accounts => {
     A, B, C, D, E] = accounts;
 
   let priceFeed
-  let clvToken
+  let lusdToken
   let sortedCDPs
   let troveManager
   let activePool
@@ -44,7 +44,7 @@ contract('TroveManager', async accounts => {
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
-    contracts.clvToken = await LUSDTokenTester.new(
+    contracts.lusdToken = await LUSDTokenTester.new(
       contracts.troveManager.address,
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
@@ -52,7 +52,7 @@ contract('TroveManager', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
+    lusdToken = contracts.lusdToken
     sortedCDPs = contracts.sortedCDPs
     troveManager = contracts.troveManager
     activePool = contracts.activePool
@@ -705,7 +705,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Bob sends tokens to Dennis, who has no trove
-    await clvToken.transfer(dennis, dec(200, 18), { from: bob })
+    await lusdToken.transfer(dennis, dec(200, 18), { from: bob })
 
     //Dennis provides 200 CLV to SP
     await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: dennis })
@@ -837,9 +837,9 @@ contract('TroveManager', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check token balances 
-    assert.equal((await clvToken.balanceOf(alice)).toString(), dec(300, 18))
-    assert.equal((await clvToken.balanceOf(bob)).toString(), dec(200, 18))
-    assert.equal((await clvToken.balanceOf(carol)).toString(), dec(100, 18))
+    assert.equal((await lusdToken.balanceOf(alice)).toString(), dec(300, 18))
+    assert.equal((await lusdToken.balanceOf(bob)).toString(), dec(200, 18))
+    assert.equal((await lusdToken.balanceOf(carol)).toString(), dec(100, 18))
 
     // Check sortedList size
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
@@ -870,9 +870,9 @@ contract('TroveManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '1')
 
     // Confirm token balances have not changed
-    assert.equal((await clvToken.balanceOf(alice)).toString(), dec(300, 18))
-    assert.equal((await clvToken.balanceOf(bob)).toString(), dec(200, 18))
-    assert.equal((await clvToken.balanceOf(carol)).toString(), dec(100, 18))
+    assert.equal((await lusdToken.balanceOf(alice)).toString(), dec(300, 18))
+    assert.equal((await lusdToken.balanceOf(bob)).toString(), dec(200, 18))
+    assert.equal((await lusdToken.balanceOf(carol)).toString(), dec(100, 18))
   })
 
   it("liquidate(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {
@@ -1397,9 +1397,9 @@ contract('TroveManager', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
 
     // Check token balances before
-    assert.equal((await clvToken.balanceOf(dennis)).toString(), A_CLVWithdrawal)
-    assert.equal((await clvToken.balanceOf(erin)).toString(), B_CLVWithdrawal)
-    assert.equal((await clvToken.balanceOf(flyn)).toString(), C_CLVWithdrawal)
+    assert.equal((await lusdToken.balanceOf(dennis)).toString(), A_CLVWithdrawal)
+    assert.equal((await lusdToken.balanceOf(erin)).toString(), B_CLVWithdrawal)
+    assert.equal((await lusdToken.balanceOf(flyn)).toString(), C_CLVWithdrawal)
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -1423,9 +1423,9 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await sortedCDPs.contains(flyn))
 
     // Check token balances of users whose troves were liquidated, have not changed
-    assert.equal((await clvToken.balanceOf(dennis)).toString(), A_CLVWithdrawal)
-    assert.equal((await clvToken.balanceOf(erin)).toString(), B_CLVWithdrawal)
-    assert.equal((await clvToken.balanceOf(flyn)).toString(), C_CLVWithdrawal)
+    assert.equal((await lusdToken.balanceOf(dennis)).toString(), A_CLVWithdrawal)
+    assert.equal((await lusdToken.balanceOf(erin)).toString(), B_CLVWithdrawal)
+    assert.equal((await lusdToken.balanceOf(flyn)).toString(), C_CLVWithdrawal)
   })
 
   it("liquidateCDPs(): A liquidation sequence containing Pool offsets increases the TCR", async () => {
@@ -2151,7 +2151,7 @@ contract('TroveManager', async accounts => {
 
     const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
 
-    const dennis_CLVBalance_Before = await clvToken.balanceOf(dennis)
+    const dennis_CLVBalance_Before = await lusdToken.balanceOf(dennis)
     assert.equal(dennis_CLVBalance_Before, dec(150, 18))
 
     const price = await priceFeed.getPrice()
@@ -2213,7 +2213,7 @@ contract('TroveManager', async accounts => {
 
     assert.isTrue(expectedReceivedETH.eq(receivedETH))
 
-    const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
+    const dennis_CLVBalance_After = (await lusdToken.balanceOf(dennis)).toString()
     assert.equal(dennis_CLVBalance_After, dec(130, 18))
   })
 
@@ -2238,7 +2238,7 @@ contract('TroveManager', async accounts => {
     await troveManager.redeemCollateral(dec(60, 18), alice, alice, 0, 0, { from: flyn })
 
     // Check Flyn's redemption has reduced his balance from 100 to (100-60) = 40 CLV
-    const flynBalance = (await clvToken.balanceOf(flyn)).toString()
+    const flynBalance = (await lusdToken.balanceOf(flyn)).toString()
     assert.equal(flynBalance, dec(40, 18))
 
     // Check debt of Alice, Bob, Carol
@@ -2291,7 +2291,7 @@ contract('TroveManager', async accounts => {
     await troveManager.redeemCollateral(dec(60, 18), alice, alice, 0, 2, { from: flyn })
 
     // Check Flyn's redemption has reduced his balance from 100 to (100-40) = 60 CLV
-    const flynBalance = (await clvToken.balanceOf(flyn)).toString()
+    const flynBalance = (await lusdToken.balanceOf(flyn)).toString()
     assert.equal(flynBalance, dec(60, 18))
 
     // Check debt of Alice, Bob, Carol
@@ -2322,7 +2322,7 @@ contract('TroveManager', async accounts => {
 
     const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
 
-    const dennis_CLVBalance_Before = await clvToken.balanceOf(dennis)
+    const dennis_CLVBalance_Before = await lusdToken.balanceOf(dennis)
     assert.equal(dennis_CLVBalance_Before, dec(150, 18))
 
     const price = await priceFeed.getPrice()
@@ -2400,7 +2400,7 @@ contract('TroveManager', async accounts => {
 
     assert.isTrue(expectedReceivedETH.eq(receivedETH))
 
-    const dennis_CLVBalance_After = (await clvToken.balanceOf(dennis)).toString()
+    const dennis_CLVBalance_After = (await lusdToken.balanceOf(dennis)).toString()
     assert.equal(dennis_CLVBalance_After, dec(133, 18))
   })
 
@@ -2410,7 +2410,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openLoan('0', alice, { from: alice, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
-    await clvToken.transfer(carol, dec(100, 18), { from: bob })
+    await lusdToken.transfer(carol, dec(100, 18), { from: bob })
 
     const price = dec(100, 18)
     await priceFeed.setPrice(price)
@@ -2444,7 +2444,7 @@ contract('TroveManager', async accounts => {
     const receivedETH = carol_ETHBalance_After.sub(carol_ETHBalance_Before)
     assert.isTrue(expectedReceivedETH.eq(receivedETH))
 
-    const carol_CLVBalance_After = (await clvToken.balanceOf(carol)).toString()
+    const carol_CLVBalance_After = (await lusdToken.balanceOf(carol)).toString()
     assert.equal(carol_CLVBalance_After, '0')
   })
 
@@ -2454,7 +2454,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
-    await clvToken.transfer(carol, dec(100, 18), { from: bob })
+    await lusdToken.transfer(carol, dec(100, 18), { from: bob })
 
     // Put Bob's CDP below 110% ICR
     const price = dec(100, 18)
@@ -2488,9 +2488,9 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openLoan('90' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
     await borrowerOperations.openLoan('91' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
 
-    await clvToken.transfer(dennis, '90' + _18_zeros, { from: alice })
-    await clvToken.transfer(dennis, '90' + _18_zeros, { from: bob })
-    await clvToken.transfer(dennis, '90' + _18_zeros, { from: carol })
+    await lusdToken.transfer(dennis, '90' + _18_zeros, { from: alice })
+    await lusdToken.transfer(dennis, '90' + _18_zeros, { from: bob })
+    await lusdToken.transfer(dennis, '90' + _18_zeros, { from: carol })
 
     // This will put Dennis slightly below 110%, and everyone else exactly at 110%
     const price = '110' + _18_zeros
@@ -2536,7 +2536,7 @@ contract('TroveManager', async accounts => {
 
     // Alice opens loan and transfers 500CLV to Erin, the would-be redeemer
     await borrowerOperations.openLoan(dec(500, 18), alice, { from: alice, value: dec(10, 'ether') })
-    await clvToken.transfer(erin, dec(500, 18), { from: alice })
+    await lusdToken.transfer(erin, dec(500, 18), { from: alice })
 
     // B, C and D open loans
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
@@ -2553,7 +2553,7 @@ contract('TroveManager', async accounts => {
 
     // Alice opens loan and transfers 400CLV to Erin, the would-be redeemer
     await borrowerOperations.openLoan(dec(500, 18), alice, { from: alice, value: dec(10, 'ether') })
-    await clvToken.transfer(erin, dec(400, 18), { from: alice })
+    await lusdToken.transfer(erin, dec(400, 18), { from: alice })
 
     // B, C, D, F open loan
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
@@ -2633,10 +2633,10 @@ contract('TroveManager', async accounts => {
 
     // Alice opens loan and transfers 400 CLV to Erin, the would-be redeemer
     await borrowerOperations.openLoan(dec(400, 18), alice, { from: alice, value: dec(10, 'ether') })
-    await clvToken.transfer(erin, dec(400, 18), { from: alice })
+    await lusdToken.transfer(erin, dec(400, 18), { from: alice })
 
     // Check Erin's balance before
-    const erin_balance_before = await clvToken.balanceOf(erin)
+    const erin_balance_before = await lusdToken.balanceOf(erin)
     assert.equal(erin_balance_before, dec(400, 18))
 
     // B, C, D open loan
@@ -2685,7 +2685,7 @@ contract('TroveManager', async accounts => {
     assert.equal(activePool_coll_after, '198000000000000000000')
 
     // Check Erin's balance after
-    const erin_balance_after = (await clvToken.balanceOf(erin)).toString()
+    const erin_balance_after = (await lusdToken.balanceOf(erin)).toString()
     assert.equal(erin_balance_after, '0')
   })
 
@@ -2694,10 +2694,10 @@ contract('TroveManager', async accounts => {
 
     // Alice opens loan and transfers 400 CLV to Erin, the would-be redeemer
     await borrowerOperations.openLoan(dec(400, 18), alice, { from: alice, value: dec(10, 'ether') })
-    await clvToken.transfer(erin, dec(400, 18), { from: alice })
+    await lusdToken.transfer(erin, dec(400, 18), { from: alice })
 
     // Check Erin's balance before
-    const erin_balance_before = await clvToken.balanceOf(erin)
+    const erin_balance_before = await lusdToken.balanceOf(erin)
     assert.equal(erin_balance_before, dec(400, 18))
 
     // B, C, D open loan
@@ -2831,9 +2831,9 @@ contract('TroveManager', async accounts => {
 
     // Alice opens loan and transfers 1000 CLV each to Erin, Flyn, Graham
     await borrowerOperations.openLoan(dec(4990, 18), alice, { from: alice, value: dec(100, 'ether') })
-    await clvToken.transfer(erin, dec(1000, 18), { from: alice })
-    await clvToken.transfer(flyn, dec(1000, 18), { from: alice })
-    await clvToken.transfer(graham, dec(1000, 18), { from: alice })
+    await lusdToken.transfer(erin, dec(1000, 18), { from: alice })
+    await lusdToken.transfer(flyn, dec(1000, 18), { from: alice })
+    await lusdToken.transfer(graham, dec(1000, 18), { from: alice })
 
     // B, C, D open loan
     await borrowerOperations.openLoan(dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
@@ -2945,9 +2945,9 @@ contract('TroveManager', async accounts => {
 
   it("redeemCollateral(): reverts if there is zero outstanding system debt", async () => {
     // --- SETUP --- illegally mint CLV to Bob
-    await clvToken.unprotectedMint(bob, dec(100, 18))
+    await lusdToken.unprotectedMint(bob, dec(100, 18))
 
-    assert.equal((await clvToken.balanceOf(bob)), dec(100, 18))
+    assert.equal((await lusdToken.balanceOf(bob)), dec(100, 18))
 
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(10, 'ether') })
     await borrowerOperations.openLoan(0, carol, { from: carol, value: dec(30, 'ether') })
@@ -2985,9 +2985,9 @@ contract('TroveManager', async accounts => {
 
   it("redeemCollateral(): reverts if caller's tries to redeem more than the outstanding system debt", async () => {
     // --- SETUP --- illegally mint CLV to Bob
-    await clvToken.unprotectedMint(bob, '101000000000000000000')
+    await lusdToken.unprotectedMint(bob, '101000000000000000000')
 
-    assert.equal((await clvToken.balanceOf(bob)), '101000000000000000000')
+    assert.equal((await lusdToken.balanceOf(bob)), '101000000000000000000')
 
     await borrowerOperations.openLoan(dec(40, 18), carol, { from: carol, value: dec(30, 'ether') })
     await borrowerOperations.openLoan(dec(40, 18), dennis, { from: dennis, value: dec(40, 'ether') })
@@ -3035,7 +3035,7 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     assert.isTrue((await troveManager.baseRate()).gt(toBN('0')))
@@ -3061,7 +3061,7 @@ contract('TroveManager', async accounts => {
     const timeStamp_A = await th.getTimestampFromTx(redemptionTx_A, web3)
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -3072,7 +3072,7 @@ contract('TroveManager', async accounts => {
     const timeStamp_B = await th.getTimestampFromTx(redemptionTx_B, web3)
 
     // Check B's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(B), dec(30, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(30, 18))
 
     // Check negligible time difference (< 1 minute) between txs
     assert.isTrue(Number(timeStamp_B) - Number(timeStamp_A) < 60)
@@ -3094,7 +3094,7 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -3154,7 +3154,7 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -3188,7 +3188,7 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -3218,7 +3218,7 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -3230,7 +3230,7 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(B, contracts, dec(10, 18))
 
     // Check B's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(B), dec(30, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(30, 18))
 
     const lqtyStakingBalance_After = toBN(await web3.eth.getBalance(lqtyStaking.address))
 
@@ -3257,7 +3257,7 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -3270,7 +3270,7 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(B, contracts, dec(10, 18))
 
     // Check B's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(B), dec(30, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(30, 18))
 
     const F_ETH_After = await lqtyStaking.F_ETH()
 

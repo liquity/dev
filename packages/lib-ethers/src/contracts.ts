@@ -13,7 +13,7 @@ import {
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import troveManagerAbi from "../abi/TroveManager.json";
-import clvTokenAbi from "../abi/LUSDToken.json";
+import lusdTokenAbi from "../abi/LUSDToken.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
 import lqtyTokenAbi from "../abi/LQTYToken.json";
@@ -54,7 +54,7 @@ export const abi: { [name: string]: JsonFragment[] } = {
   activePool: activePoolAbi,
   borrowerOperations: borrowerOperationsAbi,
   troveManager: troveManagerAbi,
-  clvToken: clvTokenAbi,
+  lusdToken: lusdTokenAbi,
   communityIssuance: communityIssuanceAbi,
   defaultPool: defaultPoolAbi,
   lqtyToken: lqtyTokenAbi,
@@ -156,7 +156,7 @@ export interface LiquityContractAddresses {
   activePool: string;
   borrowerOperations: string;
   troveManager: string;
-  clvToken: string;
+  lusdToken: string;
   communityIssuance: string;
   defaultPool: string;
   lqtyToken: string;
@@ -176,7 +176,7 @@ export interface LiquityContracts {
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
   troveManager: TroveManager;
-  clvToken: LUSDToken;
+  lusdToken: LUSDToken;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
   lqtyToken: LQTYToken;
@@ -194,7 +194,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   activePool: contracts.activePool.address,
   borrowerOperations: contracts.borrowerOperations.address,
   troveManager: contracts.troveManager.address,
-  clvToken: contracts.clvToken.address,
+  lusdToken: contracts.lusdToken.address,
   communityIssuance: contracts.communityIssuance.address,
   defaultPool: contracts.defaultPool.address,
   lqtyToken: contracts.lqtyToken.address,
@@ -228,7 +228,7 @@ export const connectToContracts = (
 
   troveManager: create<TroveManager>(addresses.troveManager, troveManagerAbi, signerOrProvider),
 
-  clvToken: create<LUSDToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
+  lusdToken: create<LUSDToken>(addresses.lusdToken, lusdTokenAbi, signerOrProvider),
 
   collSurplusPool: create<CollSurplusPool>(
     addresses.collSurplusPool,

@@ -7,7 +7,7 @@ interface ILQTYStaking {
     function setAddresses
     (
         address _lqtyTokenAddress,
-        address _clvTokenAddress,
+        address _lusdTokenAddress,
         address _troveManagerAddress, 
         address _borrowerOperationsAddress,
         address _activePoolAddress

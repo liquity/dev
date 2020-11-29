@@ -19,7 +19,7 @@ contract('Gas cost tests', async accounts => {
   const [owner] = accounts;
 
   let priceFeed
-  let clvToken
+  let lusdToken
 
   let sortedCDPs
   let troveManager
@@ -36,7 +36,7 @@ contract('Gas cost tests', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
+    lusdToken = contracts.lusdToken
     sortedCDPs = contracts.sortedCDPs
     troveManager = contracts.troveManager
     activePool = contracts.activePool

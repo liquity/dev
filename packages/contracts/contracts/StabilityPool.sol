@@ -136,7 +136,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     ITroveManager public troveManager;
 
-    ILUSDToken public clvToken;
+    ILUSDToken public lusdToken;
 
     IPool public activePool;
     address public activePoolAddress;
@@ -225,7 +225,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         address _borrowerOperationsAddress,
         address _troveManagerAddress,
         address _activePoolAddress,
-        address _clvTokenAddress,
+        address _lusdTokenAddress,
         address _sortedCDPsAddress,
         address _priceFeedAddress,
         address _communityIssuanceAddress
@@ -238,7 +238,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         troveManager = ITroveManager(_troveManagerAddress);
         activePool = IPool(_activePoolAddress);
         activePoolAddress = _activePoolAddress;
-        clvToken = ILUSDToken(_clvTokenAddress);
+        lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         communityIssuanceAddress = _communityIssuanceAddress;
@@ -247,7 +247,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit TroveManagerAddressChanged(_troveManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
-        emit LUSDTokenAddressChanged(_clvTokenAddress);
+        emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit CommunityIssuanceAddressChanged(_communityIssuanceAddress);
@@ -541,7 +541,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         _decreaseCLV(_debtToOffset);
 
         // Burn the debt that was successfully offset
-        clvToken.burn(address(this), _debtToOffset);
+        lusdToken.burn(address(this), _debtToOffset);
 
         activePool.sendETH(address(this), _collToAdd); 
     }
@@ -735,7 +735,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
     function _sendCLVtoStabilityPool(address _address, uint _amount) internal {
-        clvToken.sendToPool(_address, address(this), _amount);
+        lusdToken.sendToPool(_address, address(this), _amount);
         uint newTotalCLVDeposits = totalCLVDeposits.add(_amount);
         totalCLVDeposits = newTotalCLVDeposits;
         emit CLVBalanceUpdated(newTotalCLVDeposits);
@@ -754,7 +754,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // Send CLV to user and decrease CLV in Pool
     function _sendCLVToDepositor(address _depositor, uint CLVWithdrawal) internal {
-        clvToken.returnFromPool(address(this), _depositor, CLVWithdrawal);
+        lusdToken.returnFromPool(address(this), _depositor, CLVWithdrawal);
         _decreaseCLV(CLVWithdrawal);
     }
 

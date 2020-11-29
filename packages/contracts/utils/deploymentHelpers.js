@@ -76,12 +76,12 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-    const clvToken = await LUSDToken.new(
+    const lusdToken = await LUSDToken.new(
       troveManager.address,
       stabilityPool.address,
       borrowerOperations.address
     )
-    LUSDToken.setAsDeployed(clvToken)
+    LUSDToken.setAsDeployed(lusdToken)
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
     SortedCDPs.setAsDeployed(sortedCDPs)
@@ -95,7 +95,7 @@ class DeploymentHelper {
 
     const coreContracts = {
       priceFeed,
-      clvToken,
+      lusdToken,
       sortedCDPs,
       troveManager,
       activePool,
@@ -128,7 +128,7 @@ class DeploymentHelper {
     testerContracts.troveManager = await TroveManagerTester.new()
     testerContracts.functionCaller = await FunctionCaller.new()
     testerContracts.hintHelpers = await HintHelpers.new()
-    testerContracts.clvToken =  await LUSDTokenTester.new(
+    testerContracts.lusdToken =  await LUSDTokenTester.new(
       testerContracts.troveManager.address,
       testerContracts.stabilityPool.address,
       testerContracts.borrowerOperations.address
@@ -199,14 +199,14 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-    const clvToken = await LUSDToken.new(
+    const lusdToken = await LUSDToken.new(
       troveManager.address,
       stabilityPool.address,
       borrowerOperations.address
     )
     const coreContracts = {
       priceFeed,
-      clvToken,
+      lusdToken,
       sortedCDPs,
       troveManager,
       activePool,
@@ -243,7 +243,7 @@ class DeploymentHelper {
   }
 
   static async deployLUSDToken(contracts) {
-    contracts.clvToken = await LUSDToken.new(
+    contracts.lusdToken = await LUSDToken.new(
       contracts.troveManager.address,
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
@@ -280,7 +280,7 @@ class DeploymentHelper {
       contracts.stabilityPool.address,
       contracts.collSurplusPool.address,
       contracts.priceFeed.address,
-      contracts.clvToken.address,
+      contracts.lusdToken.address,
       contracts.sortedCDPs.address,
       LQTYContracts.lqtyStaking.address
     )
@@ -294,7 +294,7 @@ class DeploymentHelper {
       contracts.collSurplusPool.address,
       contracts.priceFeed.address,
       contracts.sortedCDPs.address,
-      contracts.clvToken.address,
+      contracts.lusdToken.address,
       LQTYContracts.lqtyStaking.address
     )
 
@@ -303,7 +303,7 @@ class DeploymentHelper {
       contracts.borrowerOperations.address,
       contracts.troveManager.address,
       contracts.activePool.address,
-      contracts.clvToken.address,
+      contracts.lusdToken.address,
       contracts.sortedCDPs.address,
       contracts.priceFeed.address,
       LQTYContracts.communityIssuance.address
@@ -343,7 +343,7 @@ class DeploymentHelper {
   static async connectLQTYContractsToCore(LQTYContracts, coreContracts) {
     await LQTYContracts.lqtyStaking.setAddresses(
       LQTYContracts.lqtyToken.address,
-      coreContracts.clvToken.address,
+      coreContracts.lusdToken.address,
       coreContracts.troveManager.address, 
       coreContracts.borrowerOperations.address,
       coreContracts.activePool.address

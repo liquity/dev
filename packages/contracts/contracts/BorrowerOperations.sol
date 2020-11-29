@@ -34,7 +34,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     ILQTYStaking public lqtyStaking;
     address public lqtyStakingAddress;
 
-    ILUSDToken public clvToken;
+    ILUSDToken public lusdToken;
 
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
@@ -82,7 +82,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _sortedCDPsAddress,
-        address _clvTokenAddress,
+        address _lusdTokenAddress,
         address _lqtyStakingAddress
     )
         external
@@ -96,7 +96,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        clvToken = ILUSDToken(_clvTokenAddress);
+        lusdToken = ILUSDToken(_lusdTokenAddress);
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
@@ -105,10 +105,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
-        emit LUSDTokenAddressChanged(_clvTokenAddress);
+        emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
-        emit LUSDTokenAddressChanged(_clvTokenAddress);
+        emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
         _renounceOwnership();
@@ -151,7 +151,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit CDPCreated(msg.sender, arrayIndex);
 
         // Send the LUSD borrowing fee to the staking contract
-        clvToken.mint(lqtyStakingAddress, CLVFee);
+        lusdToken.mint(lqtyStakingAddress, CLVFee);
         lqtyStaking.increaseF_LUSD(CLVFee);
 
         // Move the ether to the Active Pool, and mint the CLVAmount to the borrower
@@ -227,7 +227,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
             // Send fee to LQTY staking contract
             lqtyStaking.increaseF_LUSD(L.CLVFee);
-            clvToken.mint(lqtyStakingAddress, L.CLVFee);
+            lusdToken.mint(lqtyStakingAddress, L.CLVFee);
         }
 
         L.debt = troveManager.getCDPDebt(_borrower);
@@ -362,13 +362,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // Issue the specified amount of CLV to _account and increases the total active debt (_rawDebtIncrease potentially includes a CLVFee)
     function _withdrawCLV(address _account, uint _CLVAmount, uint _rawDebtIncrease) internal {
         activePool.increaseCLVDebt(_rawDebtIncrease);
-        clvToken.mint(_account, _CLVAmount);
+        lusdToken.mint(_account, _CLVAmount);
     }
 
     // Burn the specified amount of CLV from _account and decreases the total active debt
     function _repayCLV(address _account, uint _CLV) internal {
         activePool.decreaseCLVDebt(_CLV);
-        clvToken.burn(_account, _CLV);
+        lusdToken.burn(_account, _CLV);
     }
 
     // --- 'Require' wrapper functions ---

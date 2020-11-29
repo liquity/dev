@@ -27,7 +27,7 @@ contract('Gas costs for math functions', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
+    lusdToken = contracts.lusdToken
     sortedCDPs = contracts.sortedCDPs
     troveManager = contracts.troveManager
     activePool = contracts.activePool

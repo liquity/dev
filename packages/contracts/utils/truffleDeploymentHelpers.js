@@ -18,14 +18,14 @@ const deployLiquity = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
-  const clvToken = await LUSDToken.new(
+  const lusdToken = await LUSDToken.new(
     troveManager.address,
     stabilityPool.address,
     borrowerOperations.address
   )
   DefaultPool.setAsDeployed(defaultPool)
   PriceFeed.setAsDeployed(priceFeed)
-  LUSDToken.setAsDeployed(clvToken)
+  LUSDToken.setAsDeployed(lusdToken)
   SortedCDPs.setAsDeployed(sortedCDPs)
   TroveManager.setAsDeployed(troveManager)
   ActivePool.setAsDeployed(activePool)
@@ -35,7 +35,7 @@ const deployLiquity = async () => {
 
   const contracts = {
     priceFeed,
-    clvToken,
+    lusdToken,
     sortedCDPs,
     troveManager,
     activePool,
@@ -51,7 +51,7 @@ const getAddresses = (contracts) => {
   return {
     BorrowerOperations: contracts.borrowerOperations.address,
     PriceFeed: contracts.priceFeed.address,
-    LUSDToken: contracts.clvToken.address,
+    LUSDToken: contracts.lusdToken.address,
     SortedCDPs: contracts.sortedCDPs.address,
     TroveManager: contracts.troveManager.address,
     StabilityPool: contracts.stabilityPool.address,

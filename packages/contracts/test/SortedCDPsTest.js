@@ -34,7 +34,7 @@ contract('TroveManager', async accounts => {
     A, B, C, D, E, F, G, H, I, J, whale] = accounts;
 
   let priceFeed
-  let clvToken
+  let lusdToken
   let sortedCDPs
   let troveManager
   let nameRegistry
@@ -50,7 +50,7 @@ contract('TroveManager', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
+    lusdToken = contracts.lusdToken
     sortedCDPs = contracts.sortedCDPs
     troveManager = contracts.troveManager
     activePool = contracts.activePool

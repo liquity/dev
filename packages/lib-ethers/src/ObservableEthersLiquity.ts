@@ -169,7 +169,7 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   }
 
   watchQuiInStabilityPool(onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) {
-    const { Transfer } = this.contracts.clvToken.filters;
+    const { Transfer } = this.contracts.lusdToken.filters;
 
     const transferQuiFromStabilityPool = Transfer(this.contracts.stabilityPool.address);
     const transferQuiToStabilityPool = Transfer(null, this.contracts.stabilityPool.address);
@@ -181,17 +181,17 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     });
 
     stabilityPoolQuiFilters.forEach(filter =>
-      this.contracts.clvToken.on(filter, stabilityPoolQuiListener)
+      this.contracts.lusdToken.on(filter, stabilityPoolQuiListener)
     );
 
     return () =>
       stabilityPoolQuiFilters.forEach(filter =>
-        this.contracts.clvToken.removeListener(filter, stabilityPoolQuiListener)
+        this.contracts.lusdToken.removeListener(filter, stabilityPoolQuiListener)
       );
   }
 
   watchQuiBalance(onQuiBalanceChanged: (balance: Decimal) => void, address = this.requireAddress()) {
-    const { Transfer } = this.contracts.clvToken.filters;
+    const { Transfer } = this.contracts.lusdToken.filters;
     const transferQuiFromUser = Transfer(address);
     const transferQuiToUser = Transfer(null, address);
 
@@ -201,11 +201,11 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
       this.readableLiquity.getQuiBalance(address, { blockTag }).then(onQuiBalanceChanged);
     });
 
-    quiTransferFilters.forEach(filter => this.contracts.clvToken.on(filter, quiTransferListener));
+    quiTransferFilters.forEach(filter => this.contracts.lusdToken.on(filter, quiTransferListener));
 
     return () =>
       quiTransferFilters.forEach(filter =>
-        this.contracts.clvToken.removeListener(filter, quiTransferListener)
+        this.contracts.lusdToken.removeListener(filter, quiTransferListener)
       );
   }
 }

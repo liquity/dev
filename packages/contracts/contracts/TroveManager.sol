@@ -28,7 +28,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
     ICollSurplusPool collSurplusPool;
 
-    ILUSDToken public clvToken;
+    ILUSDToken public lusdToken;
 
     IPriceFeed public priceFeed;
 
@@ -203,7 +203,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         address _stabilityPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
-        address _clvTokenAddress,
+        address _lusdTokenAddress,
         address _sortedCDPsAddress,
         address _lqtyStakingAddress
     )
@@ -217,7 +217,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         stabilityPool = IStabilityPool(_stabilityPoolAddress);
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
-        clvToken = ILUSDToken(_clvTokenAddress);
+        lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
@@ -228,7 +228,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
-        emit LUSDTokenAddressChanged(_clvTokenAddress);
+        emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
@@ -767,7 +767,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
     function _sendGasCompensation(address _liquidator, uint _CLV, uint _ETH) internal {
         if (_CLV > 0) {
-            clvToken.returnFromPool(GAS_POOL_ADDRESS, _liquidator, _CLV);
+            lusdToken.returnFromPool(GAS_POOL_ADDRESS, _liquidator, _CLV);
         }
 
         if (_ETH > 0) {
@@ -844,7 +844,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     * Any surplus ETH left in the trove, is sent to the Coll surplus pool, and can be later claimed by the borrower.
     */ 
     function _redeemCloseLoan(address _borrower, uint _CLV, uint _ETH) internal {
-        clvToken.burn(GAS_POOL_ADDRESS, _CLV);
+        lusdToken.burn(GAS_POOL_ADDRESS, _CLV);
         // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLVDebt(_CLV);
 
@@ -905,7 +905,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         _requireCLVBalanceCoversRedemption(msg.sender, _CLVamount);
 
         // Confirm redeemer's balance is less than total systemic debt
-        assert(clvToken.balanceOf(msg.sender) <= (activeDebt.add(defaultedDebt)));
+        assert(lusdToken.balanceOf(msg.sender) <= (activeDebt.add(defaultedDebt)));
 
         uint remainingCLV = _CLVamount;
         uint price = priceFeed.getPrice();
@@ -966,7 +966,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     // Burn the received CLV, transfer the redeemed ETH to _redeemer and updates the Active Pool
     function _activePoolRedeemCollateral(address _redeemer, uint _CLV, uint _ETH) internal {
         // Update Active Pool CLV, and send ETH to account
-        clvToken.burn(_redeemer, _CLV);
+        lusdToken.burn(_redeemer, _CLV);
         activePool.decreaseCLVDebt(_CLV);
 
         activePool.sendETH(_redeemer, _ETH);
@@ -1380,7 +1380,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     }
 
     function _requireCLVBalanceCoversRedemption(address _redeemer, uint _amount) internal view {
-        require(clvToken.balanceOf(_redeemer) >= _amount, "TroveManager: Requested redemption amount must be <= user's CLV token balance");
+        require(lusdToken.balanceOf(_redeemer) >= _amount, "TroveManager: Requested redemption amount must be <= user's CLV token balance");
     }
 
     function _requireMoreThanOneTroveInSystem(uint CDPOwnersArrayLength) internal view {

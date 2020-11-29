@@ -42,7 +42,7 @@ interface IStabilityPool {
         address _borrowerOperationsAddress,
         address _troveManagerAddress,
         address _activePoolAddress,
-        address _clvTokenAddress,
+        address _lusdTokenAddress,
         address _sortedCDPsAddress,
         address _priceFeedAddress,
         address _communityIssuanceAddress

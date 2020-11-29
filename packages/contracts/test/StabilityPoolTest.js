@@ -27,7 +27,7 @@ contract('StabilityPool', async accounts => {
   const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
   let contracts
   let priceFeed
-  let clvToken
+  let lusdToken
   let sortedCDPs
   let troveManager
   let activePool
@@ -49,7 +49,7 @@ contract('StabilityPool', async accounts => {
       const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
       priceFeed = contracts.priceFeed
-      clvToken = contracts.clvToken
+      lusdToken = contracts.lusdToken
       sortedCDPs = contracts.sortedCDPs
       troveManager = contracts.troveManager
       activePool = contracts.activePool
@@ -78,7 +78,7 @@ contract('StabilityPool', async accounts => {
 
       // --- TEST ---
       // check CLV balances before
-      const alice_CLV_Before = await clvToken.balanceOf(alice)
+      const alice_CLV_Before = await lusdToken.balanceOf(alice)
       const stabilityPool_CLV_Before = await stabilityPool.getTotalCLVDeposits()
       assert.equal(alice_CLV_Before, 200)
       assert.equal(stabilityPool_CLV_Before, 0)
@@ -87,7 +87,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(200, ZERO_ADDRESS, { from: alice })
 
       // check CLV balances after
-      const alice_CLV_After = await clvToken.balanceOf(alice)
+      const alice_CLV_After = await lusdToken.balanceOf(alice)
       const stabilityPool_CLV_After = await stabilityPool.getTotalCLVDeposits()
       assert.equal(alice_CLV_After, 0)
       assert.equal(stabilityPool_CLV_After, 200)
@@ -118,14 +118,14 @@ contract('StabilityPool', async accounts => {
 
       // --- TEST ---
       // check user's deposit record before
-      const alice_CLVBalance_Before = await clvToken.balanceOf(alice)
+      const alice_CLVBalance_Before = await lusdToken.balanceOf(alice)
       assert.equal(alice_CLVBalance_Before, 200)
 
       // provideToSP()
       await stabilityPool.provideToSP(200, frontEnd_1, { from: alice })
 
       // check user's deposit record after
-      const alice_CLVBalance_After = await clvToken.balanceOf(alice)
+      const alice_CLVBalance_After = await lusdToken.balanceOf(alice)
       assert.equal(alice_CLVBalance_After, 0)
     })
 
@@ -938,8 +938,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // Whale transfers LUSD to A, B
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
+      await lusdToken.transfer(A, dec(100, 18), { from: whale })
+      await lusdToken.transfer(B, dec(200, 18), { from: whale })
 
       // C, D open loans
       await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(10, 'ether') })
@@ -976,8 +976,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // Whale transfers LUSD to A, B
-      await clvToken.transfer(A, dec(300, 18), { from: whale })
-      await clvToken.transfer(B, dec(300, 18), { from: whale })
+      await lusdToken.transfer(A, dec(300, 18), { from: whale })
+      await lusdToken.transfer(B, dec(300, 18), { from: whale })
 
       // C, D open loans
       await borrowerOperations.openLoan(dec(400, 18), C, { from: C, value: dec(10, 'ether') })
@@ -1069,8 +1069,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // whale transfer to troves D and E
-      await clvToken.transfer(D, dec(100, 18), { from: whale })
-      await clvToken.transfer(E, dec(200, 18), { from: whale })
+      await lusdToken.transfer(D, dec(100, 18), { from: whale })
+      await lusdToken.transfer(E, dec(200, 18), { from: whale })
 
       // A, B, C open loans 
       await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1319,8 +1319,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(100, 18), B, { from: B, value: dec(100, 'ether') })
 
       // Whale transfers CLV to C, D
-      await clvToken.transfer(C, dec(100, 18), { from: whale })
-      await clvToken.transfer(D, dec(100, 18), { from: whale })
+      await lusdToken.transfer(C, dec(100, 18), { from: whale })
+      await lusdToken.transfer(D, dec(100, 18), { from: whale })
 
       txPromise_A = stabilityPool.provideToSP(0, frontEnd_1, { from: A })
       txPromise_B = stabilityPool.provideToSP(0, ZERO_ADDRESS, { from: B })
@@ -1783,12 +1783,12 @@ contract('StabilityPool', async accounts => {
 
       // Expect Alice's CLV balance to be very close to 83.333333333333333333 CLV
       await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
-      const alice_Balance = (await clvToken.balanceOf(alice)).toString()
+      const alice_Balance = (await lusdToken.balanceOf(alice)).toString()
       assert.isAtMost(th.getDifference(alice_Balance, '83333333333333333333'), 1000)
 
       // expect Bob's CLV balance to be very close to  133.33333333333333333 CLV
       await stabilityPool.withdrawFromSP(dec(100, 18), { from: bob })
-      const bob_Balance = (await clvToken.balanceOf(bob)).toString()
+      const bob_Balance = (await lusdToken.balanceOf(bob)).toString()
       assert.isAtMost(th.getDifference(bob_Balance, '133333333333333333333'), 1000)
     })
 
@@ -2066,8 +2066,8 @@ contract('StabilityPool', async accounts => {
       // Liquidate defaulter 1
       await troveManager.liquidate(defaulter_1)
 
-      const alice_CLV_Balance_Before = await clvToken.balanceOf(alice)
-      const bob_CLV_Balance_Before = await clvToken.balanceOf(bob)
+      const alice_CLV_Balance_Before = await lusdToken.balanceOf(alice)
+      const bob_CLV_Balance_Before = await lusdToken.balanceOf(bob)
 
       assert.equal(alice_CLV_Balance_Before.toString(), '0')
       assert.equal(bob_CLV_Balance_Before.toString(), dec(150, 18))
@@ -2082,7 +2082,7 @@ contract('StabilityPool', async accounts => {
 
       // Check Bob's CLV balance has risen by only the value of his compounded deposit
       const bob_expectedCLVBalance = (bob_CLV_Balance_Before.add(bob_Deposit_Before)).toString()
-      const bob_CLV_Balance_After = (await clvToken.balanceOf(bob)).toString()
+      const bob_CLV_Balance_After = (await lusdToken.balanceOf(bob)).toString()
       assert.equal(bob_CLV_Balance_After, bob_expectedCLVBalance)
 
       // Alice attempts to withdraws 2309842309.000000000000000000 CLV from the Stability Pool 
@@ -2090,7 +2090,7 @@ contract('StabilityPool', async accounts => {
 
       // Check Alice's CLV balance has risen by only the value of her compounded deposit
       const alice_expectedCLVBalance = (alice_CLV_Balance_Before.add(alice_Deposit_Before)).toString()
-      const alice_CLV_Balance_After = (await clvToken.balanceOf(alice)).toString()
+      const alice_CLV_Balance_After = (await lusdToken.balanceOf(alice)).toString()
       assert.equal(alice_CLV_Balance_After, alice_expectedCLVBalance)
 
       // Check CLV in Stability Pool has been reduced by only Alice's compounded deposit and Bob's compounded deposit
@@ -2121,7 +2121,7 @@ contract('StabilityPool', async accounts => {
       // Liquidate defaulter 1
       await troveManager.liquidate(defaulter_1)
 
-      const bob_CLV_Balance_Before = await clvToken.balanceOf(bob)
+      const bob_CLV_Balance_Before = await lusdToken.balanceOf(bob)
       assert.equal(bob_CLV_Balance_Before.toString(), dec(150, 18))
 
       const bob_Deposit_Before = await stabilityPool.getCompoundedCLVDeposit(bob)
@@ -2135,7 +2135,7 @@ contract('StabilityPool', async accounts => {
 
       // Check Bob's CLV balance has risen by only the value of his compounded deposit
       const bob_expectedCLVBalance = (bob_CLV_Balance_Before.add(bob_Deposit_Before)).toString()
-      const bob_CLV_Balance_After = (await clvToken.balanceOf(bob)).toString()
+      const bob_CLV_Balance_After = (await lusdToken.balanceOf(bob)).toString()
       assert.equal(bob_CLV_Balance_After, bob_expectedCLVBalance)
 
       // Check CLV in Stability Pool has been reduced by only  Bob's compounded deposit
@@ -2171,9 +2171,9 @@ contract('StabilityPool', async accounts => {
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
-      const alice_CLV_Balance_Before = await clvToken.balanceOf(alice)
-      const bob_CLV_Balance_Before = await clvToken.balanceOf(bob)
-      const carol_CLV_Balance_Before = await clvToken.balanceOf(carol)
+      const alice_CLV_Balance_Before = await lusdToken.balanceOf(alice)
+      const bob_CLV_Balance_Before = await lusdToken.balanceOf(bob)
+      const carol_CLV_Balance_Before = await lusdToken.balanceOf(carol)
 
       const alice_ETH_Balance_Before = web3.utils.toBN(await web3.eth.getBalance(alice))
       const bob_ETH_Balance_Before = web3.utils.toBN(await web3.eth.getBalance(bob))
@@ -2199,9 +2199,9 @@ contract('StabilityPool', async accounts => {
       const bob_expectedCLVBalance = (bob_CLV_Balance_Before.add(bob_Deposit_Before)).toString()
       const carol_expectedCLVBalance = (carol_CLV_Balance_Before.add(carol_Deposit_Before)).toString()
 
-      const alice_CLV_Balance_After = (await clvToken.balanceOf(alice)).toString()
-      const bob_CLV_Balance_After = (await clvToken.balanceOf(bob)).toString()
-      const carol_CLV_Balance_After = (await clvToken.balanceOf(carol)).toString()
+      const alice_CLV_Balance_After = (await lusdToken.balanceOf(alice)).toString()
+      const bob_CLV_Balance_After = (await lusdToken.balanceOf(bob)).toString()
+      const carol_CLV_Balance_After = (await lusdToken.balanceOf(carol)).toString()
 
       assert.equal(alice_CLV_Balance_After, alice_expectedCLVBalance)
       assert.equal(bob_CLV_Balance_After, bob_expectedCLVBalance)
@@ -2338,8 +2338,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // whale transfer to troves D and E
-      await clvToken.transfer(D, dec(100, 18), { from: whale })
-      await clvToken.transfer(E, dec(200, 18), { from: whale })
+      await lusdToken.transfer(D, dec(100, 18), { from: whale })
+      await lusdToken.transfer(E, dec(200, 18), { from: whale })
 
       // A, B, C open loans 
       await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2585,8 +2585,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // Whale transfers to A, B 
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
+      await lusdToken.transfer(A, dec(100, 18), { from: whale })
+      await lusdToken.transfer(B, dec(200, 18), { from: whale })
 
       //C, D open loans
       await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(10, 'ether') })
@@ -2665,8 +2665,8 @@ contract('StabilityPool', async accounts => {
       // --- TEST ---
 
       // Whale transfers to A, B
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
+      await lusdToken.transfer(A, dec(100, 18), { from: whale })
+      await lusdToken.transfer(B, dec(200, 18), { from: whale })
 
       // C, D open loans
       await borrowerOperations.openLoan(dec(300, 18), C, { from: C, value: dec(10, 'ether') })
@@ -3171,7 +3171,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // A transfers CLV to D
-      await clvToken.transfer(dennis, dec(100, 18), { from: alice })
+      await lusdToken.transfer(dennis, dec(100, 18), { from: alice })
 
       // D deposits to Stability Pool
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: dennis })
@@ -3532,8 +3532,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(1000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
       // Whale transfers CLV to A, B
-      await clvToken.transfer(A, dec(100, 18), { from: whale })
-      await clvToken.transfer(B, dec(200, 18), { from: whale })
+      await lusdToken.transfer(A, dec(100, 18), { from: whale })
+      await lusdToken.transfer(B, dec(200, 18), { from: whale })
 
       // C, D open loans 
       await borrowerOperations.openLoan(dec(30, 18), C, { from: C, value: dec(1, 'ether') })

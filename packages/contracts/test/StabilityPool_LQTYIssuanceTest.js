@@ -20,7 +20,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
   let contracts
 
   let priceFeed
-  let clvToken
+  let lusdToken
   let stabilityPool
   let sortedCDPs
   let troveManager
@@ -45,7 +45,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
      
       priceFeed = contracts.priceFeed
-      clvToken = contracts.clvToken
+      lusdToken = contracts.lusdToken
       stabilityPool = contracts.stabilityPool
       sortedCDPs = contracts.sortedCDPs
       troveManager = contracts.troveManager

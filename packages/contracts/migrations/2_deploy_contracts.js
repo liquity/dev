@@ -34,13 +34,13 @@ module.exports = function(deployer) {
     const activePool = await ActivePool.deployed()
     const stabilityPool = await StabilityPool.deployed()
     const defaultPool = await DefaultPool.deployed()
-    const clvToken = await LUSDToken.deployed()
+    const lusdToken = await LUSDToken.deployed()
     const functionCaller = await FunctionCaller.deployed()
 
     const liquityContracts = {
       borrowerOperations,
       priceFeed,
-      clvToken,
+      lusdToken,
       sortedCDPs,
       troveManager,
       activePool,

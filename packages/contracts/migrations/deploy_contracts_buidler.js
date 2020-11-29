@@ -24,7 +24,7 @@ module.exports = async () => {
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
-  const clvToken = await LUSDToken.new(
+  const lusdToken = await LUSDToken.new(
     troveManager.address,
     stabilityPool.address,
     borrowerOperations.address
@@ -37,12 +37,12 @@ module.exports = async () => {
   StabilityPool.setAsDeployed(stabilityPool)
   DefaultPool.setAsDeployed(defaultPool)
   FunctionCaller.setAsDeployed(functionCaller)
-  LUSDToken.setAsDeployed(clvToken)
+  LUSDToken.setAsDeployed(lusdToken)
 
   const contracts = {
     borrowerOperations,
     priceFeed,
-    clvToken,
+    lusdToken,
     sortedCDPs,
     troveManager,
     activePool,

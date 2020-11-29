@@ -675,7 +675,7 @@
         },
         {
           "internalType": "address",
-          "name": "_clvTokenAddress",
+          "name": "_lusdTokenAddress",
           "type": "address"
         },
         {

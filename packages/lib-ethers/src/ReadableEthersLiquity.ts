@@ -104,7 +104,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getQuiBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.clvToken.balanceOf(address, { ...overrides }));
+    return new Decimal(await this.contracts.lusdToken.balanceOf(address, { ...overrides }));
   }
 
   async getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {

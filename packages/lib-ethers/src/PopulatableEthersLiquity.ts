@@ -516,7 +516,7 @@ export class PopulatableEthersLiquity
 
   async sendQui(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.clvToken.estimateAndPopulate.transfer(
+      await this.contracts.lusdToken.estimateAndPopulate.transfer(
         { ...overrides },
         id,
         toAddress,

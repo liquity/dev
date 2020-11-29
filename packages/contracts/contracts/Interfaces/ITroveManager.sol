@@ -40,7 +40,7 @@ interface ITroveManager {
         address _stabilityPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
-        address _clvTokenAddress,
+        address _lusdTokenAddress,
         address _sortedCDPsAddress,
         address _lqtyStakingAddress
     ) external;

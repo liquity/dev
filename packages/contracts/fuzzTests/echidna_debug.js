@@ -13,7 +13,7 @@ const StabilityPool = artifacts.require('StabilityPool')
 contract('Echidna debugger', async accounts => {
   let echidnaTester
   let troveManager
-  let clvToken
+  let lusdToken
   let activePool
   let defaultPool
   let stabilityPool
@@ -22,7 +22,7 @@ contract('Echidna debugger', async accounts => {
   before(async () => {
     echidnaTester = await EchidnaTester.new({ value: dec(11, 25) })
     troveManager = await TroveManager.at(await echidnaTester.troveManager())
-    clvToken = await LUSDToken.at(await echidnaTester.clvToken())
+    lusdToken = await LUSDToken.at(await echidnaTester.lusdToken())
     activePool = await ActivePool.at(await echidnaTester.activePool())
     defaultPool = await DefaultPool.at(await echidnaTester.defaultPool())
     stabilityPool = await StabilityPool.at(await echidnaTester.stabilityPool())
@@ -68,13 +68,13 @@ contract('Echidna debugger', async accounts => {
   it.only('CLV balance', async () => {
     await echidnaTester.openLoanExt('0', '0', '4210965169908805439447313562489173090')
 
-    const totalSupply = await clvToken.totalSupply();
-    const gasPoolBalance = await clvToken.balanceOf(GAS_POOL_ADDRESS);
+    const totalSupply = await lusdToken.totalSupply();
+    const gasPoolBalance = await lusdToken.balanceOf(GAS_POOL_ADDRESS);
     const activePoolBalance = await activePool.getCLVDebt();
     const defaultPoolBalance = await defaultPool.getCLVDebt();
     const stabilityPoolBalance = await stabilityPool.getTotalCLVDeposits();
     const currentTrove = await echidnaTester.echidnaProxies(0);
-    const troveBalance = clvToken.balanceOf(currentTrove);
+    const troveBalance = lusdToken.balanceOf(currentTrove);
 
     console.log('totalSupply', totalSupply.toString());
     console.log('gasPoolBalance', gasPoolBalance.toString());

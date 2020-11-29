@@ -34,7 +34,7 @@ contract EchidnaTester {
     DefaultPool public defaultPool;
     StabilityPool public stabilityPool;
     CollSurplusPool public collSurplusPool;
-    LUSDToken public clvToken;
+    LUSDToken public lusdToken;
     PriceFeed priceFeed;
     SortedCDPs sortedCDPs;
 
@@ -48,7 +48,7 @@ contract EchidnaTester {
         activePool = new ActivePool();
         defaultPool = new DefaultPool();
         stabilityPool = new StabilityPool();
-        clvToken = new LUSDToken(
+        lusdToken = new LUSDToken(
             address(troveManager),
             address(stabilityPool),
             address(borrowerOperations)
@@ -57,19 +57,19 @@ contract EchidnaTester {
         priceFeed = new PriceFeed();
         sortedCDPs = new SortedCDPs();
 
-        troveManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
+        troveManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(lusdToken), address(sortedCDPs), address(0));
        
-        borrowerOperations.setAddresses(address(troveManager), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
+        borrowerOperations.setAddresses(address(troveManager), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(sortedCDPs), address(lusdToken), address(0));
         activePool.setAddresses(address(borrowerOperations), address(troveManager), address(stabilityPool), address(defaultPool));
         defaultPool.setAddresses(address(troveManager), address(activePool));
         
-        stabilityPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool), address(clvToken), address(sortedCDPs), address(priceFeed), address(0));
+        stabilityPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool), address(lusdToken), address(sortedCDPs), address(priceFeed), address(0));
         collSurplusPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool));
         priceFeed.setAddresses(address(troveManager), address(0), address(0));
         sortedCDPs.setParams(1e18, address(troveManager), address(borrowerOperations));
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
-            echidnaProxies[i] = new EchidnaProxy(troveManager, borrowerOperations, stabilityPool, clvToken);
+            echidnaProxies[i] = new EchidnaProxy(troveManager, borrowerOperations, stabilityPool, lusdToken);
             (bool success, ) = address(echidnaProxies[i]).call{value: INITIAL_BALANCE}("");
             require(success);
         }
@@ -357,7 +357,7 @@ contract EchidnaTester {
             return false;
         }
 
-        if (address(clvToken).balance > 0) {
+        if (address(lusdToken).balance > 0) {
             return false;
         }
 
@@ -386,8 +386,8 @@ contract EchidnaTester {
 
     // total CLV matches
     function echidna_CLV_global_balances() public view returns(bool) {
-        uint totalSupply = clvToken.totalSupply();
-        uint gasPoolBalance = clvToken.balanceOf(GAS_POOL_ADDRESS);
+        uint totalSupply = lusdToken.totalSupply();
+        uint gasPoolBalance = lusdToken.balanceOf(GAS_POOL_ADDRESS);
 
         uint activePoolBalance = activePool.getCLVDebt();
         uint defaultPoolBalance = defaultPool.getCLVDebt();
@@ -399,7 +399,7 @@ contract EchidnaTester {
         address currentTrove = sortedCDPs.getFirst();
         uint trovesBalance;
         while (currentTrove != address(0)) {
-            trovesBalance += clvToken.balanceOf(address(currentTrove));
+            trovesBalance += lusdToken.balanceOf(address(currentTrove));
             currentTrove = sortedCDPs.getNext(currentTrove);
         }
         // we cannot state equality because tranfers are made to external addresses too

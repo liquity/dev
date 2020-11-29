@@ -72,7 +72,7 @@ const deployContracts = async (
 
   return {
     ...addresses,
-    clvToken: await deployContract(deployer, getContractFactory, "LUSDToken",
+    lusdToken: await deployContract(deployer, getContractFactory, "LUSDToken",
       addresses.troveManager,
       addresses.stabilityPool,
       addresses.borrowerOperations,
@@ -104,7 +104,7 @@ const connectContracts = async (
     activePool,
     borrowerOperations,
     troveManager,
-    clvToken,
+    lusdToken,
     communityIssuance,
     defaultPool,
     lqtyToken,
@@ -152,7 +152,7 @@ const connectContracts = async (
         stabilityPool.address,
         collSurplusPool.address,
         priceFeed.address,
-        clvToken.address,
+        lusdToken.address,
         sortedCDPs.address,
         lqtyStaking.address,
         { ...overrides, nonce }
@@ -167,7 +167,7 @@ const connectContracts = async (
         collSurplusPool.address,
         priceFeed.address,
         sortedCDPs.address,
-        clvToken.address,
+        lusdToken.address,
         lqtyStaking.address,
         { ...overrides, nonce }
       ),
@@ -177,7 +177,7 @@ const connectContracts = async (
         borrowerOperations.address,
         troveManager.address,
         activePool.address,
-        clvToken.address,
+        lusdToken.address,
         sortedCDPs.address,
         priceFeed.address,
         communityIssuance.address,
@@ -216,7 +216,7 @@ const connectContracts = async (
     nonce =>
       lqtyStaking.setAddresses(
         lqtyToken.address,
-        clvToken.address,
+        lusdToken.address,
         troveManager.address, 
         borrowerOperations.address,
         activePool.address,

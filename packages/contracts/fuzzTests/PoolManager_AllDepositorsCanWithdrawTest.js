@@ -21,7 +21,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
   const whale = accounts[accounts.length - 1]
 
   let priceFeed
-  let clvToken
+  let lusdToken
   let troveManager
   let stabilityPool
   let sortedCDPs
@@ -67,7 +67,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     const randomIndex = Math.floor(Math.random() * (depositorAccounts.length))
     const randomDepositor = depositorAccounts[randomIndex]
 
-    const userBalance = (await clvToken.balanceOf(randomDepositor))
+    const userBalance = (await lusdToken.balanceOf(randomDepositor))
     const maxCLVDeposit = userBalance.div(toBN(dec(1, 18)))
 
     const randomCLVAmount = th.randAmountInWei(1, maxCLVDeposit)
@@ -148,7 +148,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       const lowestTrove = await sortedCDPs.getLast()
       const lastTroveDebt = (await troveManager.getEntireDebtAndColl(trove))[0]
       await borrowerOperations.adjustLoan(0 , lastTroveDebt, true, whale, {from: whale})
-      await clvToken.transfer(lowestTrove, lowestTroveDebt, {from: whale})
+      await lusdToken.transfer(lowestTrove, lowestTroveDebt, {from: whale})
       await borrowerOperations.closeLoan({from: lowestTrove})
     }
 
@@ -184,7 +184,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
       const ETHinSPAfter = (await stabilityPool.getETH()).toString()
       const CLVinSPAfter = (await stabilityPool.getTotalCLVDeposits()).toString()
-      const CLVBalanceSPAfter = (await clvToken.balanceOf(stabilityPool.address))
+      const CLVBalanceSPAfter = (await lusdToken.balanceOf(stabilityPool.address))
       const depositAfter = await stabilityPool.getCompoundedCLVDeposit(depositor)
 
       console.log(`--Before withdrawal--
@@ -222,7 +222,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
       stabilityPool = contracts.stabilityPool
       priceFeed = contracts.priceFeed
-      clvToken = contracts.clvToken
+      lusdToken = contracts.lusdToken
       stabilityPool = contracts.stabilityPool
       troveManager = contracts.troveManager
       borrowerOperations = contracts.borrowerOperations

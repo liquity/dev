@@ -28,7 +28,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
   ] = accounts;
 
   let priceFeed
-  let clvToken
+  let lusdToken
   let sortedCDPs
   let troveManager
   let activePool
@@ -55,7 +55,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       contracts = await deploymentHelper.deployLUSDToken(contracts)
   
       priceFeed = contracts.priceFeed
-      clvToken = contracts.clvToken
+      lusdToken = contracts.lusdToken
       sortedCDPs = contracts.sortedCDPs
       troveManager = contracts.troveManager
       activePool = contracts.activePool
@@ -733,7 +733,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       const txD = await stabilityPool.withdrawFromSP(dec(5000, 18), { from: dennis })
       await priceFeed.setPrice(dec(100, 18))
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
       // 3*0.995 * 400/975
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '1224615384615384661'), 1000000000)
 
@@ -801,7 +801,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await priceFeed.setPrice(dec(100, 18))
 
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
-      assert.isAtMost(th.getDifference((await clvToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)
+      assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '16666666666666666666'), 1000)
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '829166666666666667'), 1000)
 
       await troveManager.liquidate(defaulter_4, { from: owner });

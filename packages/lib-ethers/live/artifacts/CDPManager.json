@@ -582,7 +582,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "clvToken",
+      "name": "lusdToken",
       "outputs": [
         {
           "internalType": "contract ILUSDToken",
@@ -1193,7 +1193,7 @@
         },
         {
           "internalType": "address",
-          "name": "_clvTokenAddress",
+          "name": "_lusdTokenAddress",
           "type": "address"
         },
         {

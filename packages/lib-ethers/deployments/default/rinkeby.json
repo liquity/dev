@@ -3,7 +3,7 @@
     "activePool": "0x13E5F25A476C83EEB4b530670ae2c3D2D11cFCD6",
     "borrowerOperations": "0x2803Fcf3A7B17CF861764a4fE8114C9bB2696fc4",
     "troveManager": "0xE9b540D44f9738855Adbcbc2c105070FE5579Ac8",
-    "clvToken": "0x518c9bC2d2cD754A30512b51a4dd265754240f9d",
+    "lusdToken": "0x518c9bC2d2cD754A30512b51a4dd265754240f9d",
     "communityIssuance": "",
     "defaultPool": "0xfBb4BCf7290C87457782ec3d108C40Aa2402c41a",
     "lqtyToken": "",

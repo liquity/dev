@@ -33,7 +33,7 @@ contract('BorrowerOperations', async accounts => {
   // const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
 
   let priceFeed
-  let clvToken
+  let lusdToken
   let sortedCDPs
   let troveManager
   let activePool
@@ -56,7 +56,7 @@ contract('BorrowerOperations', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
+    lusdToken = contracts.lusdToken
     sortedCDPs = contracts.sortedCDPs
     troveManager = contracts.troveManager
     activePool = contracts.activePool
@@ -679,7 +679,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -749,7 +749,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -798,7 +798,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -838,7 +838,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -848,7 +848,7 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
     // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // D withdraws CLV
@@ -856,7 +856,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
 
     // Check LQTY CLV balance after has increased
-    const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
   })
 
@@ -876,7 +876,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -923,7 +923,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -961,11 +961,11 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check LQTY Staking contract balance before == 0
-    const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -980,11 +980,11 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(CLVRequest_D, D, { from: D })
 
     // Check LQTY staking CLV balance has increased
-    const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
 
     // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await clvToken.balanceOf(D)
+    const CLVBalance_D = await lusdToken.balanceOf(D)
     assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
 
@@ -1003,7 +1003,7 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
     // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // D withdraws CLV
@@ -1011,7 +1011,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
 
     // Check LQTY CLV balance after == 0
-    const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_After, '0')
   })
 
@@ -1063,7 +1063,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(CLVRequest_D, D, { from: D })
 
     // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await clvToken.balanceOf(D)
+    const CLVBalance_D = await lusdToken.balanceOf(D)
 
     assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
@@ -1258,13 +1258,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
-    const alice_LUSDTokenBalance_Before = await clvToken.balanceOf(alice)
+    const alice_LUSDTokenBalance_Before = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_Before, 0)
 
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
 
     // check after
-    const alice_LUSDTokenBalance_After = await clvToken.balanceOf(alice)
+    const alice_LUSDTokenBalance_After = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_After, 100)
   })
 
@@ -1348,13 +1348,13 @@ contract('BorrowerOperations', async accounts => {
 
     // check before
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
-    const alice_LUSDTokenBalance_Before = await clvToken.balanceOf(alice)
+    const alice_LUSDTokenBalance_Before = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_Before, 100)
 
     await borrowerOperations.repayCLV(100, alice, { from: alice })
 
     // check after
-    const alice_LUSDTokenBalance_After = await clvToken.balanceOf(alice)
+    const alice_LUSDTokenBalance_After = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_After, 0)
   })
 
@@ -1388,7 +1388,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -1460,7 +1460,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -1509,7 +1509,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -1548,7 +1548,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -1558,7 +1558,7 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
     // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // D adjusts loan
@@ -1566,7 +1566,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check LQTY CLV balance after has increased
-    const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
   })
 
@@ -1586,7 +1586,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -1628,7 +1628,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -1666,11 +1666,11 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check LQTY Staking contract balance before == 0
-    const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -1685,11 +1685,11 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.adjustLoan(0, CLVRequest_D, true, D, { from: D })
 
     // Check LQTY staking CLV balance has increased
-    const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
 
     // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await clvToken.balanceOf(D)
+    const CLVBalance_D = await lusdToken.balanceOf(D)
     assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
 
@@ -1708,7 +1708,7 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
     // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // D adjusts loan
@@ -1716,7 +1716,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check LQTY CLV balance after == 0
-    const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_After, '0')
   })
 
@@ -1767,7 +1767,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.adjustLoan(0, CLVRequest_D, true, D, { from: D })
 
     // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await clvToken.balanceOf(D)
+    const CLVBalance_D = await lusdToken.balanceOf(D)
 
     assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
@@ -2066,14 +2066,14 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const alice_LUSDTokenBalance_Before = (await clvToken.balanceOf(alice)).toString()
+    const alice_LUSDTokenBalance_Before = (await lusdToken.balanceOf(alice)).toString()
     assert.equal(alice_LUSDTokenBalance_Before, dec(100, 18))
 
     // Alice adjusts loan - coll decrease and debt decrease
     await borrowerOperations.adjustLoan(dec(100, 'finney'), dec(10, 18), false, alice, { from: alice })
 
     // check after
-    const alice_LUSDTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
+    const alice_LUSDTokenBalance_After = (await lusdToken.balanceOf(alice)).toString()
     assert.equal(alice_LUSDTokenBalance_After, dec(90, 18))
   })
 
@@ -2082,14 +2082,14 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const alice_LUSDTokenBalance_Before = (await clvToken.balanceOf(alice)).toString()
+    const alice_LUSDTokenBalance_Before = (await lusdToken.balanceOf(alice)).toString()
     assert.equal(alice_LUSDTokenBalance_Before, dec(100, 18))
 
     // Alice adjusts loan - coll increase and debt increase
     await borrowerOperations.adjustLoan(0, dec(100, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     // check after
-    const alice_LUSDTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
+    const alice_LUSDTokenBalance_After = (await lusdToken.balanceOf(alice)).toString()
     assert.equal(alice_LUSDTokenBalance_After, dec(200, 18))
   })
 
@@ -2304,7 +2304,7 @@ contract('BorrowerOperations', async accounts => {
 
     // Dennis opens loan and transfers tokens to alice
     await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(10, 'ether') })
-    await clvToken.transfer(alice, dec(100, 18), { from: dennis })
+    await lusdToken.transfer(alice, dec(100, 18), { from: dennis })
 
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
@@ -2460,7 +2460,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
 
-    const alice_CLVBalance_Before = await clvToken.balanceOf(alice)
+    const alice_CLVBalance_Before = await lusdToken.balanceOf(alice)
     assert.equal(alice_CLVBalance_Before, dec(100, 18))
 
     // close loan
@@ -2468,7 +2468,7 @@ contract('BorrowerOperations', async accounts => {
 
     //   // check alive CLV balance after
 
-    const alice_CLVBalance_After = await clvToken.balanceOf(alice)
+    const alice_CLVBalance_After = await lusdToken.balanceOf(alice)
     assert.equal(alice_CLVBalance_After, 0)
   })
 
@@ -2501,8 +2501,8 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: dec(100, 'ether') })
     const CLVwithdrawal_D = await dec(200, 18)
     await borrowerOperations.withdrawCLV(CLVwithdrawal_D, dennis, { from: dennis })
-    await clvToken.transfer(alice, '135000000000000000000', { from: dennis })
-    await clvToken.transfer(bob, '45000000000000000000', { from: dennis })
+    await lusdToken.transfer(alice, '135000000000000000000', { from: dennis })
+    await lusdToken.transfer(bob, '45000000000000000000', { from: dennis })
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
     alice_rewardSnapshot_Before = await troveManager.rewardSnapshots(alice)
@@ -2564,7 +2564,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -2601,7 +2601,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -2660,7 +2660,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -2709,7 +2709,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -2749,7 +2749,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -2759,14 +2759,14 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
     // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // D opens loan 
     await borrowerOperations.openLoan(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
     // Check LQTY CLV balance after has increased
-    const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
   })
 
@@ -2786,7 +2786,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -2827,7 +2827,7 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -2864,11 +2864,11 @@ contract('BorrowerOperations', async accounts => {
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check LQTY Staking contract balance before == 0
-    const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // Check A's balance has decreased by 10 CLV
-    assert.equal(await clvToken.balanceOf(A), dec(20, 18))
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
@@ -2882,11 +2882,11 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(CLVRequest_D, D, { from: D, value: dec(5, 'ether') })
 
     // Check LQTY staking CLV balance has increased
-    const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
     assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
 
     // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await clvToken.balanceOf(D)
+    const CLVBalance_D = await lusdToken.balanceOf(D)
     assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
 
@@ -2905,14 +2905,14 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
     // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_Before, '0')
 
     // D opens loan 
     await borrowerOperations.openLoan(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
     // Check LQTY CLV balance after == 0
-    const lqtyStaking_CLVBalance_After = await clvToken.balanceOf(lqtyStaking.address)
+    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStaking_CLVBalance_After, '0')
   })
 
@@ -2961,7 +2961,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(CLVRequest_D, D, { from: D, value: dec(5, 'ether') })
 
     // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await clvToken.balanceOf(D)
+    const CLVBalance_D = await lusdToken.balanceOf(D)
 
     assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
   })
@@ -3319,13 +3319,13 @@ contract('BorrowerOperations', async accounts => {
 
   it("openLoan(): increases user LUSDToken balance by correct amount", async () => {
     // check before
-    const alice_LUSDTokenBalance_Before = await clvToken.balanceOf(alice)
+    const alice_LUSDTokenBalance_Before = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_Before, 0)
 
     await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
 
     // check after
-    const alice_LUSDTokenBalance_After = await clvToken.balanceOf(alice)
+    const alice_LUSDTokenBalance_After = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_After, '50000000000000000000')
   })
 

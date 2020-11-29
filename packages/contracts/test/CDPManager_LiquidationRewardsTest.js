@@ -16,7 +16,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     whale, defaulter_1, defaulter_2, defaulter_3, defaulter_4] = accounts;
 
   let priceFeed
-  let clvToken
+  let lusdToken
   let sortedCDPs
   let troveManager
   let nameRegistry
@@ -33,7 +33,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
+    lusdToken = contracts.lusdToken
     sortedCDPs = contracts.sortedCDPs
     troveManager = contracts.troveManager
     nameRegistry = contracts.nameRegistry
@@ -107,7 +107,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl, dec(399, 16))
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
   it("redistribution: A, B, C Open. C Liquidated. D, E, F Open. F Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {
@@ -182,7 +182,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl, dec(599, 16))
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
   ////
 
@@ -288,7 +288,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(entireSystemColl, '5925498128746874648'), 1000)
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(50, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(50, 18))
   })
 
   // ---Trove adds collateral --- 
@@ -594,7 +594,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(alice_CLVDebt, '106232790988735928295'), 10000)
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). C tops up. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -682,7 +682,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_3, '3982020000000000000000')
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). A, B, C top up. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -774,7 +774,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_3, '3986010000000000000000')
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
   // --- Trove withdraws collateral ---
@@ -824,7 +824,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(bob_CLVDebt, dec(330, 18)), 1000)
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
   it("redistribution: A,B,C Open. Liq(C). B withdraws coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
@@ -903,7 +903,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemDebt, '340000000000000000000')
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). C withdraws some coll. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -991,7 +991,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_3, '3978030000000000000000')
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). A, B, C withdraw. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -1098,7 +1098,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_3, '3977032500000000000000')
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
   // For calculations of correct values used in test, see scenario 1:
@@ -1189,7 +1189,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(totalCollateralSnapshot, '6977512500000000000'), 1000000)
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(30, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(30, 18))
   })
 
   // For calculations of correct values used in test, see scenario 2:
@@ -1299,6 +1299,6 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(totalCollateralSnapshot, '19323232338512800000000'), 2000000000000)
 
     // check CLV gas compensation
-    assert.equal((await clvToken.balanceOf(owner)).toString(), dec(30, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(30, 18))
   })
 })

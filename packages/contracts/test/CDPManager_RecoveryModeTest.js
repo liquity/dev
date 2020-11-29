@@ -27,7 +27,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     A, B, C, D, E, F, G, H, I] = accounts;
 
   let priceFeed
-  let clvToken
+  let lusdToken
   let sortedCDPs
   let troveManager
   let activePool
@@ -43,7 +43,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
+    lusdToken = contracts.lusdToken
     sortedCDPs = contracts.sortedCDPs
     troveManager = contracts.troveManager
     activePool = contracts.activePool
@@ -1462,7 +1462,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openLoan(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Bob sends tokens to Dennis, who has no trove
-    await clvToken.transfer(dennis, dec(200, 18), { from: bob })
+    await lusdToken.transfer(dennis, dec(200, 18), { from: bob })
 
     //Dennis provides 200 CLV to SP
     await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: dennis })
@@ -1511,9 +1511,9 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check token balances 
-    assert.equal((await clvToken.balanceOf(alice)).toString(), dec(300, 18))
-    assert.equal((await clvToken.balanceOf(bob)).toString(), dec(200, 18))
-    assert.equal((await clvToken.balanceOf(carol)).toString(), dec(100, 18))
+    assert.equal((await lusdToken.balanceOf(alice)).toString(), dec(300, 18))
+    assert.equal((await lusdToken.balanceOf(bob)).toString(), dec(200, 18))
+    assert.equal((await lusdToken.balanceOf(carol)).toString(), dec(100, 18))
 
     // Check sortedList size is 4
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
@@ -1532,9 +1532,9 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '1')
 
     // Confirm token balances have not changed
-    assert.equal((await clvToken.balanceOf(alice)).toString(), dec(300, 18))
-    assert.equal((await clvToken.balanceOf(bob)).toString(), dec(200, 18))
-    assert.equal((await clvToken.balanceOf(carol)).toString(), dec(100, 18))
+    assert.equal((await lusdToken.balanceOf(alice)).toString(), dec(300, 18))
+    assert.equal((await lusdToken.balanceOf(bob)).toString(), dec(200, 18))
+    assert.equal((await lusdToken.balanceOf(carol)).toString(), dec(100, 18))
   })
 
   // --- liquidateCDPs ---
@@ -2303,9 +2303,9 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal((await sortedCDPs.getSize()).toString(), '4')
 
     // Check token balances before
-    assert.equal((await clvToken.balanceOf(dennis)).toString(), dec(90, 18))
-    assert.equal((await clvToken.balanceOf(erin)).toString(), dec(140, 18))
-    assert.equal((await clvToken.balanceOf(freddy)).toString(), dec(170, 18))
+    assert.equal((await lusdToken.balanceOf(dennis)).toString(), dec(90, 18))
+    assert.equal((await lusdToken.balanceOf(erin)).toString(), dec(140, 18))
+    assert.equal((await lusdToken.balanceOf(freddy)).toString(), dec(170, 18))
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -2325,9 +2325,9 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isFalse(await sortedCDPs.contains(freddy))
 
     // Check token balances of users whose troves were liquidated, have not changed
-    assert.equal((await clvToken.balanceOf(dennis)).toString(), dec(90, 18))
-    assert.equal((await clvToken.balanceOf(erin)).toString(), dec(140, 18))
-    assert.equal((await clvToken.balanceOf(freddy)).toString(), dec(170, 18))
+    assert.equal((await lusdToken.balanceOf(dennis)).toString(), dec(90, 18))
+    assert.equal((await lusdToken.balanceOf(erin)).toString(), dec(140, 18))
+    assert.equal((await lusdToken.balanceOf(freddy)).toString(), dec(170, 18))
   })
 
   it("liquidateCDPs(): Liquidating troves at 100 < ICR < 110 with SP deposits correctly impacts their SP deposit and ETH gain", async () => {
