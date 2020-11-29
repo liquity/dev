@@ -478,7 +478,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ## Public User-Facing Functions
 
-### Borrower (Trove) Operations - _BorrowerOperations.sol_
+### Borrower (Trove) Operations - `BorrowerOperations.sol`
 
 `openTrove(uint _LUSDAmount)`: payable function that creates a trove for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional mainly on the resulting collateral ratio which must exceed the minimum (110% in Normal Mode). In addition to the requested debt, extra debt is issued to pay the issuance fee, and cover the gas compensation.
 
@@ -496,7 +496,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `claimRedeemedCollateral(address _user)`: when a borrower’s trove has been fully redeemed from and closed, this function allows the borrower to claim their ETH collateral surplus that remains in the system.
 
-### TroveManager Functions - _TroveManager.sol_
+### TroveManager Functions - `TroveManager.sol`
 
 `liquidate(address _user)`: callable by anyone, attempts to liquidate the trove of `_user`. Executes successfully if `_user`’s trove meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the trove's ICR < the system MCR).  
 
@@ -524,13 +524,13 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `checkRecoveryMode()`: reveals whether or not the system is in Recovery Mode (i.e. whether the Total Collateral Ratio (TCR) is below the Critical Collateral Ratio (CCR)).
 
-### Hint Helper Functions - _HintHelpers.sol_
+### Hint Helper Functions - `HintHelpers.sol`
 
 `getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a trove to the sorted list.
 
 `getRedemptionHints(uint _LUSDamount, uint _price)`: helper function specifically for redemptions. Returns two hints - the first is positional, the second ensures transaction success (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)).
 
-### Stability Pool Functions - StabilityPool.sol_
+### Stability Pool Functions - `StabilityPool.sol`
 
 `provideToSP(uint _amount, address _frontEndTag)`: allows stablecoin holders to deposit _amount of LUSD to the Stability Pool. It sends `_amount` of LUSD from their address to the Pool, and tops up their LUSD deposit by `_amount` and their tagged front end’s stake by `_amount`. If the depositor already a non-zero deposit, it sends their accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end.
 
@@ -550,6 +550,32 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `getCompoundedFrontEndStake(address _frontEnd)`: returns the remaining front end stake for a given front end
 
+### LQTY Staking Functions  `LQTYStaking.sol`
+
+ `stake(uint _LQTYamount)`: sends `_LQTYAmount` from the caller to the staking contract, and increases their stake. If the caller already has a non-zero stake, it pays out their accumulated ETH and LUSD gains from staking.
+
+ `unstake(uint _LQTYamount)`: reduces the caller’s stake by `_LQTYamount`, up to a maximum of their entire stake. It pays out their accumulated ETH and LUSD gains from staking.
+
+### Lockup Contract Factory `LockupContractFactory.sol`
+
+`deployOneYearLockupContract(address beneficiary, uint initialEntitlement)`; Deploys a `OneYearLockupContract`, and sets the beneficiary’s address, and their initial LQTY entitlement, i.e. the minimum LQTY balance the lockup contract must have before it can be locked.
+
+`deployCustomDurationLockupContract(address beneficiary, uint entitlement, uint lockupDuration)`: Deploys a `CustomDurationLockupContract`, and sets the beneficiary’s address, their initial LQTY entitlement, and the lockup duration.
+    
+`lockOneYearContracts(address[] calldata addresses)`: locks the lockup contracts deployed by the caller through the factory, at the given `addresses`. 
+
+`lockCustomDurationContracts(address[] calldata addresses)`: locks the lockup contracts deployed by the caller through the factory, at the given `addresses`.
+
+### Lockup contracts - `OneYearLockupContract.sol` and `CustomDurationLockupContract.sol`
+
+`lockContract()`: Locks the contract when called by the deployer. It’s LQTY tokens may not be withdrawn until the lockup duration has passed.
+
+`withdrawLQTY()`: When the lockup duration has passed and the caller is the beneficiary, it transfers their LQTY to them and deactivates the lockup contract.
+
+### LUSD token `LUSDToken.sol` and LQTY token `LQTYToken.sol`
+
+Standard ERC20 and EIP2612 (permit() ) functionality.
+
 ## Supplying Hints to trove operations
 
 Troves in Liquity are recorded in a sorted doubly linked list, sorted by their ICR, from high to low.
@@ -562,7 +588,7 @@ All trove operations take a ‘hint’ argument. The better the ‘hint’ is, t
 
 The `TroveManager::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
 
-`getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a collateral ratio of `CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs. **TODO: check if `_price` parameter is really needed. If yes, add a short explanation.**
+`getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a collateral ratio of `CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs.  The `_price` parameter is included for ICR calculation.
 
 **Trove operation without a hint**
 
@@ -576,7 +602,7 @@ Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` li
 1. User performs trove operation in their browser
 2. The front end computes a new collateral ratio locally, based on the change in collateral and/or debt.
 3. Call `TroveManager::getApproxHint(...)`, passing it the computed collateral ratio. Returns an address close to the correct insert position
-4. Call `SortedTroves::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`. **TODO: To be updated according to https://github.com/liquity/dev/issues/91**
+4. Call `SortedTroves::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`. 
 5. Pass the exact position as an argument to the trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
