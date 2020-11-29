@@ -83,11 +83,11 @@ import "./Dependencies/console.sol";
  * When a deposit is made, it gets snapshots of the currentEpoch and the currentScale.  
  *
  * When calculating a compounded deposit, we compare the current epoch to the deposit's epoch snapshot. If the current epoch is newer, 
- * then that the deposit was present during a pool-emptying liquidation, and necessarily has been depleted to 0. 
+ * then the deposit was present during a pool-emptying liquidation, and necessarily has been depleted to 0. 
  *
  * Otherwise, we then compare the current scale to the deposit's scale snapshot. If they're equal, the compounded deposit is given by d_t * P/P_t.
- * If it spans one scale change, is given by d_t * P/(P_t * 1e18). If it spans more than one scale change, we define the compounded deposit 
- * as 0, since it is now less than 1e-18'th of it's initial value (e.g. a deposit of 1 billion LUSD has depleted to 1 billionth of an LUSD).
+ * If it spans one scale change, it is given by d_t * P/(P_t * 1e18). If it spans more than one scale change, we define the compounded deposit 
+ * as 0, since it is now less than 1e-18'th of its initial value (e.g. a deposit of 1 billion LUSD has depleted to 1 billionth of an LUSD).
  *
  *
  *  --- TRACKING DEPOSITOR'S ETH GAIN OVER SCALE CHANGES AND EPOCHS ---
@@ -115,7 +115,7 @@ import "./Dependencies/console.sol";
  *
  * --- LQTY ISSUANCE TO STABILITY POOL DEPOSITORS --- 
  *
- *  An LQTY issuance event occurs at every deposit operation, and every liquidation. 
+ * An LQTY issuance event occurs at every deposit operation, and every liquidation. 
  *
  * Each deposit is tagged with the address of the front end through which it was made.
  *

@@ -4,7 +4,7 @@
 
 - [Liquity Overview](#liquity-overview)
   - [Liquidation and the Stability Pool](#liquidation-and-the-stability-pool)
-  - [Rewards From Liquidations](#rewards-from-liquidations)
+  - [Rewards From Liquidations](#gains-from-liquidations)
   - [Recovery Mode](#recovery-mode)
   - [LUSD Token Redemption](#lusd-token-redemption)
   - [Project Structure](#project-structure)
@@ -99,7 +99,25 @@ When LUSD is redeemed for ETH, the system cancels the LUSD with debt from troves
 
 In order to fulfill the redemption request, troves are redeemed from in ascending order of their collateral ratio.
 
-Economically, this redemption mechanism creates a hard price floor for LUSD, ensuring that the market price stays at or near to \$1 USD.
+A redemption sequence of `n` steps will **fully** redeem from up to `n-1` troves, and, and **partially** redeems from up to 1 trove, which is always the last trove in the redemption sequence.
+
+### Partial redemption
+
+Most redemption transactions will include a partial redemption, since the amount redeemed is unlikely to perfectly match the total debt of a series of troves.
+
+The partially redeemed trove is re-inserted into the sorted list of troves, and remains active, with reduced collateral and debt.
+
+### Full redemption
+
+A trove is defined as “fully redeemed from” when the redemption has caused (debt-10) of its debt to absorb (debt-10) LUSD.Then, its 10 LUSD gas compensation is cancelled with it’s remaining 10 debt: the gas compensation is burned from the gas address, and the 10 debt is zero’d.
+
+Before closing, we must handle the trove’s **collateral surplus**: that is, the excess ETH collateral remaining after redemption, due to its initial over-collateralization.
+
+This collateral surplus is send to the `CollSurplusPool` , and the borrower can reclaim it later. The trove is then fully closed.
+
+### Redemptions create a price floor
+
+Economically, the redemption mechanism creates a hard price floor for LUSD, ensuring that the market price stays at or near to $1 USD. 
 
 ## Recovery Mode
 
@@ -132,15 +150,9 @@ Backend development is done in the Buidler framework, and allows Liquity to be d
 
 ### Branches
 
-**TODO: check and update before audit**
-
-As of 21/08/2020, the current working branch is `main`.  
+As of 28/11/2020, the current working branch is `main`.  
 
 `master` is somewhat out of date, as our CI pipeline automatically redeploys contracts to testnet from master branch, and we want users to have a chance to engage with the existing deployments.
-
-A code freeze for the simulation project will be located on a branch named `simulation`.
-
-Other branches contain functionality that has either been shelved (`size-range-lists`, `overstay`) or integrated into our core system (`security-tweaks`).
 
 ## LQTY Token Architecture
 
@@ -389,9 +401,7 @@ Several public and external functions have modifiers such as `onlyTroveManager`,
 
 ## Deployment to a Development Blockchain
 
-**TODO: Check if this is still up to date**
-
-The Buidler migrations script and deployment helpers deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
+The Buidler migrations script and deployment helpers in `utils/deploymentHelpers.js` deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
 
 The project is deployed on the Ropsten testnet.
 
@@ -640,10 +650,7 @@ In a partial liquidation, the ETH gas compensation is 0.5% of the _collateral fr
 
 When a trove is redeemed from, the redemption is made only against (debt - 10), not the entire debt.
 
-**TODO: To be reviewed and updated once https://github.com/liquity/dev/issues/106 is fixed**
-
-But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed: the 10 LUSD gas compensation is cancelled with its corresponding 10 LUSD debt, and the ETH surplus in the trove is sent back to the owner.
-
+But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed: the 10 LUSD gas compensation is cancelled with its remaining 10 debt. That is, the gas compensation is burned from the gas address, and the 10 debt is zero’d. The ETH collateral surplus from the trove remains in the system, to be later claimed by its owner.
 
 ## Gas compensation Functionality
 
