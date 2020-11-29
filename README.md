@@ -588,7 +588,7 @@ All trove operations take a ‘hint’ argument. The better the ‘hint’ is, t
 
 The `TroveManager::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
 
-`getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a collateral ratio of `CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs. **TODO: check if `_price` parameter is really needed. If yes, add a short explanation.**
+`getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a collateral ratio of `CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs.  The `_price` parameter is included for ICR calculation.
 
 **Trove operation without a hint**
 
@@ -602,7 +602,7 @@ Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` li
 1. User performs trove operation in their browser
 2. The front end computes a new collateral ratio locally, based on the change in collateral and/or debt.
 3. Call `TroveManager::getApproxHint(...)`, passing it the computed collateral ratio. Returns an address close to the correct insert position
-4. Call `SortedTroves::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`. **TODO: To be updated according to https://github.com/liquity/dev/issues/91**
+4. Call `SortedTroves::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`. 
 5. Pass the exact position as an argument to the trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
