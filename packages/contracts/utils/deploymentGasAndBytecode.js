@@ -10,7 +10,7 @@ const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
 const LQTYStaking = artifacts.require("./LQTY/LQTYStaking.sol")
-const GrowthToken = artifacts.require("./LQTY/GrowthToken.sol")
+const LQTYToken = artifacts.require("./LQTY/LQTYToken.sol")
 const LockupContractFactory = artifacts.require("./LQTY/LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./LQTY/CommunityIssuance.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
@@ -40,7 +40,7 @@ const coreContractABIs = [
 
 const LQTYContractABIs = [
   LQTYStaking,
-  GrowthToken,
+  LQTYToken,
   LockupContractFactory,
   CommunityIssuance
 ]

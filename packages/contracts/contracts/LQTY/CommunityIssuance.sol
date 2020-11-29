@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import "../Interfaces/IGrowthToken.sol";
+import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ICommunityIssuance.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/Ownable.sol";
@@ -38,7 +38,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
     Set to 1/3 of total LQTY supply.*/
     uint constant public LQTYSupplyCap = 33333333333333333333333333; // (1/3) * 100 million
 
-    IGrowthToken public growthToken;
+    ILQTYToken public growthToken;
 
     address public stabilityPoolAddress;
 
@@ -47,7 +47,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
 
     // --- Events ---
 
-    event GrowthTokenAddressSet(address _growthTokenAddress);
+    event LQTYTokenAddressSet(address _growthTokenAddress);
     event StabilityPoolAddressSet(address _stabilityPoolAddress);
 
     // --- Functions ---
@@ -69,14 +69,14 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
         onlyOwner 
         override 
     {
-        growthToken = IGrowthToken(_growthTokenAddress);
+        growthToken = ILQTYToken(_growthTokenAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
 
-        // When GrowthToken deployed, it should have transferred CommunityIssuance's LQTY entitlement
+        // When LQTYToken deployed, it should have transferred CommunityIssuance's LQTY entitlement
         uint LQTYBalance = growthToken.balanceOf(address(this));
         assert(LQTYBalance >= LQTYSupplyCap);
 
-        emit GrowthTokenAddressSet(_growthTokenAddress);
+        emit LQTYTokenAddressSet(_growthTokenAddress);
         emit StabilityPoolAddressSet(_stabilityPoolAddress);
 
         _renounceOwnership();

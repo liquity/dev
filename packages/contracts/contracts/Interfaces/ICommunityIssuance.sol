@@ -6,7 +6,7 @@ interface ICommunityIssuance {
     
     // --- Events ---
     
-    event GrowthTokenAddressSet(address _growthTokenAddress);
+    event LQTYTokenAddressSet(address _growthTokenAddress);
     
     event StabilityPoolAddressSet(address _stabilityPoolAddress);
 

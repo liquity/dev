@@ -8,7 +8,7 @@ const timeValues = testHelpers.TimeValues
 const assertRevert = th.assertRevert
 const toBN = th.toBN
 
-contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ', async accounts => {
+contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', async accounts => {
   const [liquityAG, A, B] = accounts;
 
   let LQTYContracts
@@ -66,7 +66,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ',
     })
   })
 
-  describe('GrowthToken deployment', async accounts => {
+  describe('LQTYToken deployment', async accounts => {
     it("Stores the deployer's address", async () => {
       const storedDeployerAddress = await growthToken.deployer()
 
@@ -161,34 +161,34 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and GrowthToken ',
     })
   })
 
-  describe('Connecting GrowthToken to LCF, CI and LQTYStaking', async accounts => {
-    it('sets the correct GrowthToken address in LQTYStaking', async () => {
-      // Deploy core contracts and set the GrowthToken address in the CI and LQTYStaking
+  describe('Connecting LQTYToken to LCF, CI and LQTYStaking', async accounts => {
+    it('sets the correct LQTYToken address in LQTYStaking', async () => {
+      // Deploy core contracts and set the LQTYToken address in the CI and LQTYStaking
       const coreContracts = await deploymentHelper.deployLiquityCore()
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
       const growthTokenAddress = growthToken.address
 
-      const recordedGrowthTokenAddress = await lqtyStaking.growthToken()
-      assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+      const recordedLQTYTokenAddress = await lqtyStaking.growthToken()
+      assert.equal(growthTokenAddress, recordedLQTYTokenAddress)
     })
 
-    it('sets the correct GrowthToken address in LockupContractFactory', async () => {
+    it('sets the correct LQTYToken address in LockupContractFactory', async () => {
       const growthTokenAddress = growthToken.address
 
-      const recordedGrowthTokenAddress = await lockupContractFactory.growthToken()
-      assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+      const recordedLQTYTokenAddress = await lockupContractFactory.growthToken()
+      assert.equal(growthTokenAddress, recordedLQTYTokenAddress)
     })
 
-    it('sets the correct GrowthToken address in CommunityIssuance', async () => {
-      // Deploy core contracts and set the GrowthToken address in the CI and LQTYStaking
+    it('sets the correct LQTYToken address in CommunityIssuance', async () => {
+      // Deploy core contracts and set the LQTYToken address in the CI and LQTYStaking
       const coreContracts = await deploymentHelper.deployLiquityCore()
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
       const growthTokenAddress = growthToken.address
 
-      const recordedGrowthTokenAddress = await communityIssuance.growthToken()
-      assert.equal(growthTokenAddress, recordedGrowthTokenAddress)
+      const recordedLQTYTokenAddress = await communityIssuance.growthToken()
+      assert.equal(growthTokenAddress, recordedLQTYTokenAddress)
     })
   })
 })

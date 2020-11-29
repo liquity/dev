@@ -12,10 +12,10 @@ const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
 
 const LQTYStaking = artifacts.require("./LQTYStaking.sol")
-const GrowthToken = artifacts.require("./GrowthToken.sol")
+const LQTYToken = artifacts.require("./LQTYToken.sol")
 const LockupContractFactory = artifacts.require("./LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
-const GrowthTokenTester = artifacts.require("./GrowthTokenTester.sol")
+const LQTYTokenTester = artifacts.require("./LQTYTokenTester.sol")
 const CommunityIssuanceTester = artifacts.require("./CommunityIssuanceTester.sol")
 
 const StabilityPoolTester = artifacts.require("./StabilityPoolTester.sol")
@@ -146,12 +146,12 @@ class DeploymentHelper {
     CommunityIssuance.setAsDeployed(communityIssuance)
 
     // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
-    const growthToken = await GrowthToken.new(
+    const growthToken = await LQTYToken.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
     )
-    GrowthToken.setAsDeployed(growthToken)
+    LQTYToken.setAsDeployed(growthToken)
 
     const LQTYContracts = {
       lqtyStaking,
@@ -172,12 +172,12 @@ class DeploymentHelper {
     CommunityIssuanceTester.setAsDeployed(communityIssuance)
 
     // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
-    const growthToken = await GrowthTokenTester.new(
+    const growthToken = await LQTYTokenTester.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
     )
-    GrowthTokenTester.setAsDeployed(growthToken)
+    LQTYTokenTester.setAsDeployed(growthToken)
 
     const LQTYContracts = {
       lqtyStaking,
@@ -227,7 +227,7 @@ class DeploymentHelper {
 
     /* Deploy Growth Token, passing Community Issuance,  LQTYStaking, and Factory addresses 
     to the constructor  */
-    const growthToken = await GrowthToken.new(
+    const growthToken = await LQTYToken.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
@@ -336,8 +336,8 @@ class DeploymentHelper {
   }
 
   static async connectLQTYContracts(LQTYContracts) {
-    // Set GrowthToken address in LCF
-    await LQTYContracts.lockupContractFactory.setGrowthTokenAddress(LQTYContracts.growthToken.address)
+    // Set LQTYToken address in LCF
+    await LQTYContracts.lockupContractFactory.setLQTYTokenAddress(LQTYContracts.growthToken.address)
   }
 
   static async connectLQTYContractsToCore(LQTYContracts, coreContracts) {

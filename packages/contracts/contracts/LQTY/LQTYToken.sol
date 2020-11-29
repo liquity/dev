@@ -3,7 +3,7 @@
 pragma solidity 0.6.11;
 
 import "../Dependencies/SafeMath.sol";
-import "../Interfaces/IGrowthToken.sol";
+import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ILockupContractFactory.sol";
 import "../Dependencies/console.sol";
 
@@ -15,7 +15,7 @@ import "../Dependencies/console.sol";
 * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/53516bc555a454862470e7860a9b5254db4d00f5/contracts/token/ERC20/ERC20Permit.sol
 * 
 *
-*  --- Functionality added specific to the GrowthToken ---
+*  --- Functionality added specific to the LQTYToken ---
 * 
 * 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Liquity contracts) in external 
 * transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending LUSD directly to a Liquity 
@@ -38,11 +38,11 @@ import "../Dependencies/console.sol";
 * -transferFrom() reverts when deployer is the sender
 * -sendToLQTYStaking() reverts when deployer is sender, blocking the deployer from staking their LQTY.
 * 
-* After one year has passed since deployment of the GrowthToken, the restrictions on deployer operations are lifted
+* After one year has passed since deployment of the LQTYToken, the restrictions on deployer operations are lifted
 * and the deployer has the same rights as any other address.
  */
 
-contract GrowthToken is IGrowthToken {
+contract LQTYToken is ILQTYToken {
     using SafeMath for uint256;
 
     // --- ERC20 Data ---
@@ -62,7 +62,7 @@ contract GrowthToken is IGrowthToken {
     bytes32 constant internal _PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping (address => uint256) private _nonces;
 
-    // --- GrowthToken specific data ---
+    // --- LQTYToken specific data ---
 
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
     uint internal _100_MILLION = 1e26;  // non-constant, for use with SafeMath
@@ -269,19 +269,19 @@ contract GrowthToken is IGrowthToken {
 
     function _requireRecipientIsRegisteredOYLC(address _recipient) internal view {
         require(lockupContractFactory.isRegisteredOneYearLockup(_recipient), 
-        "GrowthToken: recipient must be a OYLC registered in the Factory");
+        "LQTYToken: recipient must be a OYLC registered in the Factory");
     }
 
     function _requireSenderIsNotDeployer(address _sender) internal view {
-        require(_sender != deployer, "GrowthToken: sender must not be the deployer");
+        require(_sender != deployer, "LQTYToken: sender must not be the deployer");
     }
 
     function _requireCallerIsNotDeployer() internal view {
-        require(!_callerIsDeployer(), "GrowthToken: caller must not be the deployer");
+        require(!_callerIsDeployer(), "LQTYToken: caller must not be the deployer");
     }
 
     function _requireCallerIsLQTYStaking() internal view {
-         require(msg.sender == lqtyStakingAddress, "GrowthToken: caller must be the LQTYStaking contract");
+         require(msg.sender == lqtyStakingAddress, "LQTYToken: caller must be the LQTYStaking contract");
     }
 
     // --- Optional functions ---

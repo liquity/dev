@@ -408,17 +408,17 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   })
 
   describe('LockupContractFactory', async accounts => {
-    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
+    it("setLQTYTokenAddress(): reverts when caller is not deployer", async () => {
       try {
-        const txAlice = await lockupContractFactory.setGrowthTokenAddress(growthToken.address, { from: alice })
+        const txAlice = await lockupContractFactory.setLQTYTokenAddress(growthToken.address, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
       }
 
       // Owner can successfully set any address
-      const txOwner1 = await lockupContractFactory.setGrowthTokenAddress(bob, { from: owner })
-      const txOwner2 = await lockupContractFactory.setGrowthTokenAddress(growthToken.address, { from: owner })
+      const txOwner1 = await lockupContractFactory.setLQTYTokenAddress(bob, { from: owner })
+      const txOwner2 = await lockupContractFactory.setLQTYTokenAddress(growthToken.address, { from: owner })
     })
   })
 
@@ -568,7 +568,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
   })
 
-  describe('GrowthToken', async accounts => {
+  describe('LQTYToken', async accounts => {
     it("sendToLQTYStaking(): reverts when caller is not the LQTYSstaking", async () => {
       // Check owner has some LQTY
       assert.isTrue((await growthToken.balanceOf(owner)).gt(toBN('0')))

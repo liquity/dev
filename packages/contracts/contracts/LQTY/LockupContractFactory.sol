@@ -17,14 +17,14 @@ contract LockupContractFactory is ILockupContractFactory {
     uint public deploymentTime;
     address public deployer;
 
-    IGrowthToken public growthToken;
+    ILQTYToken public growthToken;
     
     mapping (address => address) public oneYearLockupContractToDeployer;
     mapping (address => address) public customDurationLockupContractToDeployer;
 
     // --- Events ---
 
-    event GrowthTokenAddressSet(address _growthTokenAddress);
+    event LQTYTokenAddressSet(address _growthTokenAddress);
     event OYLCDeployed(address _OYLCAddress, address _beneficiary, uint _entitlement);
     event CDLCDeployed(address _CDLCAddress, address _beneficiary, uint _initialEntitlement);
     
@@ -35,10 +35,10 @@ contract LockupContractFactory is ILockupContractFactory {
         deployer = msg.sender;
     }
 
-    function setGrowthTokenAddress(address _growthTokenAddress) external override {
+    function setLQTYTokenAddress(address _growthTokenAddress) external override {
         _requireCallerIsFactoryDeployer();
-        growthToken = IGrowthToken(_growthTokenAddress);
-        emit GrowthTokenAddressSet(_growthTokenAddress);
+        growthToken = ILQTYToken(_growthTokenAddress);
+        emit LQTYTokenAddressSet(_growthTokenAddress);
     }
 
     function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external override {

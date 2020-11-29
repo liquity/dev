@@ -3,7 +3,7 @@
 pragma solidity 0.6.11;
 
 import "../Dependencies/SafeMath.sol";
-import "../Interfaces/IGrowthToken.sol";
+import "../Interfaces/ILQTYToken.sol";
 
 contract OneYearLockupContract {
     using SafeMath for uint;
@@ -15,7 +15,7 @@ contract OneYearLockupContract {
     address public deployer;
     address public beneficiary;
 
-    IGrowthToken public growthToken;
+    ILQTYToken public growthToken;
 
     uint public initialEntitlement;
 
@@ -42,7 +42,7 @@ contract OneYearLockupContract {
     {
         deployer = msg.sender;
 
-        growthToken = IGrowthToken(_growthTokenAddress);
+        growthToken = ILQTYToken(_growthTokenAddress);
 
         beneficiary =  _beneficiary;
         initialEntitlement = _initialEntitlement;

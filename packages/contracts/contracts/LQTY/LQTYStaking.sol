@@ -5,7 +5,7 @@ pragma solidity 0.6.11;
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/console.sol";
-import "../Interfaces/IGrowthToken.sol";
+import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ILQTYStaking.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Interfaces/ICLVToken.sol";
@@ -29,7 +29,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         uint F_LUSD_Snapshot;
     }
     
-    IGrowthToken public growthToken;
+    ILQTYToken public growthToken;
     ICLVToken public clvToken;
 
     address public cdpManagerAddress;
@@ -38,7 +38,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     // --- Events ---
 
-    event GrowthTokenAddressSet(address _growthTokenAddress);
+    event LQTYTokenAddressSet(address _growthTokenAddress);
     event CLVTokenAddressSet(address _clvTokenAddress);
     event CDPManagerAddressSet(address _cdpManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
@@ -58,14 +58,14 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         onlyOwner 
         override 
     {
-        growthToken = IGrowthToken(_growthTokenAddress);
+        growthToken = ILQTYToken(_growthTokenAddress);
         clvToken = ICLVToken(_clvTokenAddress);
         cdpManagerAddress = _cdpManagerAddress;
         borrowerOperationsAddress = _borrowerOperationsAddress;
         activePoolAddress = _activePoolAddress;
 
-        emit GrowthTokenAddressSet(_growthTokenAddress);
-        emit GrowthTokenAddressSet(_clvTokenAddress);
+        emit LQTYTokenAddressSet(_growthTokenAddress);
+        emit LQTYTokenAddressSet(_clvTokenAddress);
         emit CDPManagerAddressSet(_cdpManagerAddress);
         emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
         emit ActivePoolAddressSet(_activePoolAddress);
