@@ -25,6 +25,9 @@ module.exports = {
             gas: 10000000,  // tx gas limit
             blockGasLimit: 10000000, 
             gasPrice: 20000000000
+        },
+        coverage: {
+            url: 'http://localhost:8555'
         }
     },
     mocha: { timeout: 12000000 },
