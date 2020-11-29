@@ -16,7 +16,7 @@ contract LiquityBase {
     // Minimum collateral ratio for individual troves
     uint constant public MCR = 1100000000000000000; // 110%
 
-    // Minimum collateral ratio for individual troves
+    // "Minimum collateral ratio for individual troves newly opened in Recovery Mode"
     uint constant public R_MCR = 3000000000000000000; // 300%
 
     // Critical system collateral ratio. If the total system collateral (TCR) falls below the CCR, Recovery Mode is triggered.
