@@ -59,7 +59,7 @@ interface IStabilityPool {
     function getETH() external view returns (uint);
     function getTotalCLVDeposits() external view returns (uint);
 
-    function getDepositorETHGain(address _user) external view returns (uint);
+    function getDepositorETHGain(address _depositor) external view returns (uint);
     function getDepositorLQTYGain(address _depositor) external view returns (uint);
     function getFrontEndLQTYGain(address _frontEnd) external view returns (uint);
 

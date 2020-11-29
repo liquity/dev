@@ -2,7 +2,7 @@ const fs = require('fs')
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
-const MathTester = artifacts.require("./MathTester.sol")
+const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 
 const th = testHelpers.TestHelper
 
@@ -18,8 +18,8 @@ contract('Gas costs for math functions', async accounts => {
     cdpManagerTester = await CDPManagerTester.new()
     CDPManagerTester.setAsDeployed(cdpManagerTester)
 
-    mathTester = await MathTester.new()
-    MathTester.setAsDeployed(mathTester)
+    mathTester = await LiquityMathTester.new()
+    LiquityMathTester.setAsDeployed(mathTester)
   })
 
   beforeEach(async () => {
@@ -130,7 +130,7 @@ contract('Gas costs for math functions', async accounts => {
 
   it("", async () => {
     let dataOneMonth = []
-    dataOneMonth.push(`exponentiation: exponent in units of seconds, max exponent is 30 years \n`)
+    dataOneMonth.push(`exponentiation: exponent in units of seconds, max exponent is one month \n`)
 
     for (let n = 2; n <= timeValues.SECONDS_IN_ONE_MONTH; n += 100) {
       const runs = 1
@@ -158,7 +158,7 @@ contract('Gas costs for math functions', async accounts => {
     let data50Years = []
     const issuanceFactor = '999998681227695000'
 
-    data50Years.push(`exponentiation: exponent vs gas cost: exponent in units of minutes, max exponent is 30 years \n`)
+    data50Years.push(`exponentiation: exponent vs gas cost: exponent in units of minutes, max exponent is 50 years \n`)
 
     
     for (let n = 2; n <= timeValues.MINUTES_IN_ONE_YEAR * 50; n += timeValues.MINUTES_IN_ONE_WEEK) {
