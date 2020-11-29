@@ -72,7 +72,7 @@ const deployContracts = async (
 
   return {
     ...addresses,
-    clvToken: await deployContract(deployer, getContractFactory, "CLVToken",
+    clvToken: await deployContract(deployer, getContractFactory, "LUSDToken",
       addresses.troveManager,
       addresses.stabilityPool,
       addresses.borrowerOperations,

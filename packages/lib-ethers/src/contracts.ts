@@ -13,7 +13,7 @@ import {
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import troveManagerAbi from "../abi/TroveManager.json";
-import clvTokenAbi from "../abi/CLVToken.json";
+import clvTokenAbi from "../abi/LUSDToken.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
 import lqtyTokenAbi from "../abi/LQTYToken.json";
@@ -36,7 +36,7 @@ import {
   ActivePool,
   BorrowerOperations,
   TroveManager,
-  CLVToken,
+  LUSDToken,
   CommunityIssuance,
   DefaultPool,
   LQTYToken,
@@ -176,7 +176,7 @@ export interface LiquityContracts {
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
   troveManager: TroveManager;
-  clvToken: CLVToken;
+  clvToken: LUSDToken;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
   lqtyToken: LQTYToken;
@@ -228,7 +228,7 @@ export const connectToContracts = (
 
   troveManager: create<TroveManager>(addresses.troveManager, troveManagerAbi, signerOrProvider),
 
-  clvToken: create<CLVToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
+  clvToken: create<LUSDToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
 
   collSurplusPool: create<CollSurplusPool>(
     addresses.collSurplusPool,

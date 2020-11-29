@@ -2,7 +2,7 @@
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
-const CLVToken = artifacts.require("./CLVToken.sol")
+const LUSDToken = artifacts.require("./LUSDToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
@@ -21,14 +21,14 @@ const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const MathTester = artifacts.require("./MathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
-const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
+const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
 const dh = require("./deploymentHelpers.js")
 
 const coreContractABIs = [
   BorrowerOperations,
   PriceFeed,
-  CLVToken,
+  LUSDToken,
   SortedCDPs,
   TroveManager,
   ActivePool,
@@ -52,7 +52,7 @@ const TesterContractABIs  = [
   MathTester,
   BorrowerOperationsTester,
   TroveManagerTester,
-  CLVTokenTester,
+  LUSDTokenTester,
 ]
 
 const getGasFromContractDeployment = async (contractObject, name) => {

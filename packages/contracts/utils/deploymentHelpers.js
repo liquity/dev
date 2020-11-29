@@ -2,7 +2,7 @@
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
-const CLVToken = artifacts.require("./CLVToken.sol")
+const LUSDToken = artifacts.require("./LUSDToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
@@ -24,7 +24,7 @@ const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
-const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
+const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
 /* "Liquity core" consists of all contracts in the core Liquity system.
 
@@ -76,12 +76,12 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-    const clvToken = await CLVToken.new(
+    const clvToken = await LUSDToken.new(
       troveManager.address,
       stabilityPool.address,
       borrowerOperations.address
     )
-    CLVToken.setAsDeployed(clvToken)
+    LUSDToken.setAsDeployed(clvToken)
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
     SortedCDPs.setAsDeployed(sortedCDPs)
@@ -128,7 +128,7 @@ class DeploymentHelper {
     testerContracts.troveManager = await TroveManagerTester.new()
     testerContracts.functionCaller = await FunctionCaller.new()
     testerContracts.hintHelpers = await HintHelpers.new()
-    testerContracts.clvToken =  await CLVTokenTester.new(
+    testerContracts.clvToken =  await LUSDTokenTester.new(
       testerContracts.troveManager.address,
       testerContracts.stabilityPool.address,
       testerContracts.borrowerOperations.address
@@ -199,7 +199,7 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-    const clvToken = await CLVToken.new(
+    const clvToken = await LUSDToken.new(
       troveManager.address,
       stabilityPool.address,
       borrowerOperations.address
@@ -242,8 +242,8 @@ class DeploymentHelper {
     return LQTYContracts
   }
 
-  static async deployCLVToken(contracts) {
-    contracts.clvToken = await CLVToken.new(
+  static async deployLUSDToken(contracts) {
+    contracts.clvToken = await LUSDToken.new(
       contracts.troveManager.address,
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address

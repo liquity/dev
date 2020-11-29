@@ -13,7 +13,7 @@ interface IStabilityPool {
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    event CLVTokenAddressChanged(address _newCLVTokenAddress);
+    event LUSDTokenAddressChanged(address _newLUSDTokenAddress);
     event SortedCDPsAddressChanged(address _newSortedCDPsAddress);
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);

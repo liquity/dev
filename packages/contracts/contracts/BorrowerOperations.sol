@@ -4,10 +4,10 @@ pragma solidity 0.6.11;
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ITroveManager.sol";
-import "./Interfaces/ICLVToken.sol";
+import "./Interfaces/ILUSDToken.sol";
 import "./Interfaces/IPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
-import './Interfaces/ICLVToken.sol';
+import './Interfaces/ILUSDToken.sol';
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/ILQTYStaking.sol";
@@ -34,7 +34,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     ILQTYStaking public lqtyStaking;
     address public lqtyStakingAddress;
 
-    ICLVToken public clvToken;
+    ILUSDToken public clvToken;
 
     // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
     ISortedCDPs public sortedCDPs;
@@ -96,7 +96,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        clvToken = ICLVToken(_clvTokenAddress);
+        clvToken = ILUSDToken(_clvTokenAddress);
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
@@ -105,10 +105,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
-        emit CLVTokenAddressChanged(_clvTokenAddress);
+        emit LUSDTokenAddressChanged(_clvTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
-        emit CLVTokenAddressChanged(_clvTokenAddress);
+        emit LUSDTokenAddressChanged(_clvTokenAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
         _renounceOwnership();

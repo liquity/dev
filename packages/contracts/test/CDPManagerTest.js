@@ -1,7 +1,7 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
-const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
+const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -44,7 +44,7 @@ contract('TroveManager', async accounts => {
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
-    contracts.clvToken = await CLVTokenTester.new(
+    contracts.clvToken = await LUSDTokenTester.new(
       contracts.troveManager.address,
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
@@ -2628,7 +2628,7 @@ contract('TroveManager', async accounts => {
     assert.equal(dennis_ETHGain_before, dennis_ETHGain_after)
   })
 
-  it("redeemCollateral(): caller can redeem their entire CLVToken balance", async () => {
+  it("redeemCollateral(): caller can redeem their entire LUSDToken balance", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice opens loan and transfers 400 CLV to Erin, the would-be redeemer

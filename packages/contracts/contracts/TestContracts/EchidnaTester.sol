@@ -8,7 +8,7 @@ import "../ActivePool.sol";
 import "../DefaultPool.sol";
 import "../StabilityPool.sol";
 import "../CollSurplusPool.sol";
-import "../CLVToken.sol";
+import "../LUSDToken.sol";
 import "../PriceFeed.sol";
 import "../SortedCDPs.sol";
 import "./EchidnaProxy.sol";
@@ -34,7 +34,7 @@ contract EchidnaTester {
     DefaultPool public defaultPool;
     StabilityPool public stabilityPool;
     CollSurplusPool public collSurplusPool;
-    CLVToken public clvToken;
+    LUSDToken public clvToken;
     PriceFeed priceFeed;
     SortedCDPs sortedCDPs;
 
@@ -48,7 +48,7 @@ contract EchidnaTester {
         activePool = new ActivePool();
         defaultPool = new DefaultPool();
         stabilityPool = new StabilityPool();
-        clvToken = new CLVToken(
+        clvToken = new LUSDToken(
             address(troveManager),
             address(stabilityPool),
             address(borrowerOperations)

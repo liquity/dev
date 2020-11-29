@@ -11,7 +11,7 @@ interface ITroveManager {
 
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
 
-    event CLVTokenAddressChanged(address _newCLVTokenAddress);
+    event LUSDTokenAddressChanged(address _newLUSDTokenAddress);
 
     event ActivePoolAddressChanged(address _activePoolAddress);
     

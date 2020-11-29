@@ -47,7 +47,7 @@ const getPermitDigest = ( name, address, chainId, version,
     ]))
 }
 
-contract('CLVToken', async accounts => {
+contract('LUSDToken', async accounts => {
   const [owner, alice, bob, carol, dennis] = accounts;
 
   // the second account our buidlerenv creates (for Alice)

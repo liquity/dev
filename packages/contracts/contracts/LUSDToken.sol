@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import "./Interfaces/ICLVToken.sol";
+import "./Interfaces/ILUSDToken.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/console.sol";
 /*
@@ -14,7 +14,7 @@ import "./Dependencies/console.sol";
 * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/53516bc555a454862470e7860a9b5254db4d00f5/contracts/token/ERC20/ERC20Permit.sol
 * 
 *
-* --- Functionality added specific to the CLVToken ---
+* --- Functionality added specific to the LUSDToken ---
 * 
 * 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Liquity contracts) in external 
 * transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending LUSD directly to a Liquity 
@@ -23,7 +23,7 @@ import "./Dependencies/console.sol";
 * 2) sendToPool() and returnFromPool(): functions callable only Liquity core contracts, which move LUSD tokens between Liquity <-> user.
 */
 
-contract CLVToken is ICLVToken {
+contract LUSDToken is ILUSDToken {
     using SafeMath for uint256;
     
     uint256 private _totalSupply;
@@ -224,7 +224,7 @@ contract CLVToken is ICLVToken {
     }
 
     function _requireCallerIsBorrowerOperations() internal view {
-        require(msg.sender == borrowerOperationsAddress, "CLVToken: Caller is not BorrowerOperations");
+        require(msg.sender == borrowerOperationsAddress, "LUSDToken: Caller is not BorrowerOperations");
     }
 
     function _requireCallerIsBOorCDPMorSP() internal view {

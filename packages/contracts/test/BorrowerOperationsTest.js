@@ -52,7 +52,7 @@ contract('BorrowerOperations', async accounts => {
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
-    contracts = await deploymentHelper.deployCLVToken(contracts)
+    contracts = await deploymentHelper.deployLUSDToken(contracts)
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
@@ -1254,18 +1254,18 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debt_After.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
   })
 
-  it("withdrawCLV(): increases user CLVToken balance by correct amount", async () => {
+  it("withdrawCLV(): increases user LUSDToken balance by correct amount", async () => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
-    const alice_CLVTokenBalance_Before = await clvToken.balanceOf(alice)
-    assert.equal(alice_CLVTokenBalance_Before, 0)
+    const alice_LUSDTokenBalance_Before = await clvToken.balanceOf(alice)
+    assert.equal(alice_LUSDTokenBalance_Before, 0)
 
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
 
     // check after
-    const alice_CLVTokenBalance_After = await clvToken.balanceOf(alice)
-    assert.equal(alice_CLVTokenBalance_After, 100)
+    const alice_LUSDTokenBalance_After = await clvToken.balanceOf(alice)
+    assert.equal(alice_LUSDTokenBalance_After, 100)
   })
 
   // --- repayCLV() ---
@@ -1343,19 +1343,19 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_CLV_After, dec(10, 18))
   })
 
-  it("repayCLV(): decreases user CLVToken balance by correct amount", async () => {
+  it("repayCLV(): decreases user LUSDToken balance by correct amount", async () => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
-    const alice_CLVTokenBalance_Before = await clvToken.balanceOf(alice)
-    assert.equal(alice_CLVTokenBalance_Before, 100)
+    const alice_LUSDTokenBalance_Before = await clvToken.balanceOf(alice)
+    assert.equal(alice_LUSDTokenBalance_Before, 100)
 
     await borrowerOperations.repayCLV(100, alice, { from: alice })
 
     // check after
-    const alice_CLVTokenBalance_After = await clvToken.balanceOf(alice)
-    assert.equal(alice_CLVTokenBalance_After, 0)
+    const alice_LUSDTokenBalance_After = await clvToken.balanceOf(alice)
+    assert.equal(alice_LUSDTokenBalance_After, 0)
   })
 
   it('repayCLV(): can repay debt in Recovery Mode', async () => {
@@ -2061,36 +2061,36 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(totalStakesAfter, '100500000000000000000')
   })
 
-  it("adjustLoan(): changes CLVToken balance by the requested decrease", async () => {
+  it("adjustLoan(): changes LUSDToken balance by the requested decrease", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const alice_CLVTokenBalance_Before = (await clvToken.balanceOf(alice)).toString()
-    assert.equal(alice_CLVTokenBalance_Before, dec(100, 18))
+    const alice_LUSDTokenBalance_Before = (await clvToken.balanceOf(alice)).toString()
+    assert.equal(alice_LUSDTokenBalance_Before, dec(100, 18))
 
     // Alice adjusts loan - coll decrease and debt decrease
     await borrowerOperations.adjustLoan(dec(100, 'finney'), dec(10, 18), false, alice, { from: alice })
 
     // check after
-    const alice_CLVTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
-    assert.equal(alice_CLVTokenBalance_After, dec(90, 18))
+    const alice_LUSDTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
+    assert.equal(alice_LUSDTokenBalance_After, dec(90, 18))
   })
 
-  it("adjustLoan(): changes CLVToken balance by the requested increase", async () => {
+  it("adjustLoan(): changes LUSDToken balance by the requested increase", async () => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const alice_CLVTokenBalance_Before = (await clvToken.balanceOf(alice)).toString()
-    assert.equal(alice_CLVTokenBalance_Before, dec(100, 18))
+    const alice_LUSDTokenBalance_Before = (await clvToken.balanceOf(alice)).toString()
+    assert.equal(alice_LUSDTokenBalance_Before, dec(100, 18))
 
     // Alice adjusts loan - coll increase and debt increase
     await borrowerOperations.adjustLoan(0, dec(100, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     // check after
-    const alice_CLVTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
-    assert.equal(alice_CLVTokenBalance_After, dec(200, 18))
+    const alice_LUSDTokenBalance_After = (await clvToken.balanceOf(alice)).toString()
+    assert.equal(alice_LUSDTokenBalance_After, dec(200, 18))
   })
 
   it("adjustLoan(): Changes the activePool ETH and raw ether balance by the requested decrease", async () => {
@@ -2454,7 +2454,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(balanceDiff, dec(1, 'ether'))
   })
 
-  it("closeLoan(): subtracts the debt of the closed CDP from the Borrower's CLVToken balance", async () => {
+  it("closeLoan(): subtracts the debt of the closed CDP from the Borrower's LUSDToken balance", async () => {
     await borrowerOperations.openLoan(0, dennis, { from: dennis, value: dec(10, 'ether') })
 
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
@@ -3317,16 +3317,16 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_CLVDebt_After, dec(60, 18))
   })
 
-  it("openLoan(): increases user CLVToken balance by correct amount", async () => {
+  it("openLoan(): increases user LUSDToken balance by correct amount", async () => {
     // check before
-    const alice_CLVTokenBalance_Before = await clvToken.balanceOf(alice)
-    assert.equal(alice_CLVTokenBalance_Before, 0)
+    const alice_LUSDTokenBalance_Before = await clvToken.balanceOf(alice)
+    assert.equal(alice_LUSDTokenBalance_Before, 0)
 
     await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
 
     // check after
-    const alice_CLVTokenBalance_After = await clvToken.balanceOf(alice)
-    assert.equal(alice_CLVTokenBalance_After, '50000000000000000000')
+    const alice_LUSDTokenBalance_After = await clvToken.balanceOf(alice)
+    assert.equal(alice_LUSDTokenBalance_After, '50000000000000000000')
   })
 
   //  --- getNewICRFromTroveChange ---

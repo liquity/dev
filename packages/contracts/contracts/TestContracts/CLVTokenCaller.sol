@@ -2,12 +2,12 @@
 
 pragma solidity 0.6.11;
 
-import "../Interfaces/ICLVToken.sol";
+import "../Interfaces/ILUSDToken.sol";
 
-contract CLVTokenCaller {
-    ICLVToken CLV;
+contract LUSDTokenCaller {
+    ILUSDToken CLV;
 
-    function setCLV(ICLVToken _CLV) external {
+    function setCLV(ILUSDToken _CLV) external {
         CLV = _CLV;
     }
 

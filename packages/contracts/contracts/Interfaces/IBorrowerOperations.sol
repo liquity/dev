@@ -21,7 +21,7 @@ interface IBorrowerOperations {
 
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
 
-    event CLVTokenAddressChanged(address _clvTokenAddress);
+    event LUSDTokenAddressChanged(address _clvTokenAddress);
 
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 

@@ -6,7 +6,7 @@ import { Interface, ParamType } from "@ethersproject/abi";
 import ActivePool from "../../contracts/artifacts/ActivePool.json";
 import BorrowerOperations from "../../contracts/artifacts/BorrowerOperations.json";
 import TroveManager from "../../contracts/artifacts/TroveManager.json";
-import CLVToken from "../../contracts/artifacts/CLVToken.json";
+import LUSDToken from "../../contracts/artifacts/LUSDToken.json";
 import CommunityIssuance from "../../contracts/artifacts/CommunityIssuance.json";
 import DefaultPool from "../../contracts/artifacts/DefaultPool.json";
 import LQTYToken from "../../contracts/artifacts/LQTYToken.json";
@@ -121,7 +121,7 @@ const contractArtifacts = [
   ActivePool,
   BorrowerOperations,
   TroveManager,
-  CLVToken,
+  LUSDToken,
   CommunityIssuance,
   DefaultPool,
   LQTYToken,

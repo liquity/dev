@@ -46,11 +46,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newCLVTokenAddress",
+          "name": "_newLUSDTokenAddress",
           "type": "address"
         }
       ],
-      "name": "CLVTokenAddressChanged",
+      "name": "LUSDTokenAddressChanged",
       "type": "event"
     },
     {

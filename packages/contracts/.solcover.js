@@ -10,7 +10,7 @@ module.exports = {
   measureStatementCoverage: false,
   measureFunctionCoverage: false,
 
-  testfiles: "test/CLVTokenTest.js",
+  testfiles: "test/LUSDTokenTest.js",
 
   skipFiles: [
     "TestContracts/",

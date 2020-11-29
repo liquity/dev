@@ -2,7 +2,7 @@
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
-const CLVToken = artifacts.require("./CLVToken.sol")
+const LUSDToken = artifacts.require("./LUSDToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
@@ -18,14 +18,14 @@ const deployLiquity = async () => {
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
-  const clvToken = await CLVToken.new(
+  const clvToken = await LUSDToken.new(
     troveManager.address,
     stabilityPool.address,
     borrowerOperations.address
   )
   DefaultPool.setAsDeployed(defaultPool)
   PriceFeed.setAsDeployed(priceFeed)
-  CLVToken.setAsDeployed(clvToken)
+  LUSDToken.setAsDeployed(clvToken)
   SortedCDPs.setAsDeployed(sortedCDPs)
   TroveManager.setAsDeployed(troveManager)
   ActivePool.setAsDeployed(activePool)
@@ -51,7 +51,7 @@ const getAddresses = (contracts) => {
   return {
     BorrowerOperations: contracts.borrowerOperations.address,
     PriceFeed: contracts.priceFeed.address,
-    CLVToken: contracts.clvToken.address,
+    LUSDToken: contracts.clvToken.address,
     SortedCDPs: contracts.sortedCDPs.address,
     TroveManager: contracts.troveManager.address,
     StabilityPool: contracts.stabilityPool.address,
@@ -74,7 +74,7 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.priceFeed.setTroveManagerAddress(addresses.TroveManager)
 
   // set contracts in the CDP Manager
-  await contracts.troveManager.setCLVToken(addresses.CLVToken)
+  await contracts.troveManager.setLUSDToken(addresses.LUSDToken)
   await contracts.troveManager.setSortedCDPs(addresses.SortedCDPs)
   await contracts.troveManager.setPriceFeed(addresses.PriceFeed)
   await contracts.troveManager.setActivePool(addresses.ActivePool)

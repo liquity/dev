@@ -8,7 +8,7 @@ import "../Dependencies/console.sol";
 import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ILQTYStaking.sol";
 import "../Dependencies/LiquityMath.sol";
-import "../Interfaces/ICLVToken.sol";
+import "../Interfaces/ILUSDToken.sol";
 
 contract LQTYStaking is ILQTYStaking, Ownable {
     using SafeMath for uint;
@@ -30,7 +30,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     }
     
     ILQTYToken public lqtyToken;
-    ICLVToken public clvToken;
+    ILUSDToken public clvToken;
 
     address public troveManagerAddress;
     address public borrowerOperationsAddress;
@@ -39,7 +39,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     // --- Events ---
 
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
-    event CLVTokenAddressSet(address _clvTokenAddress);
+    event LUSDTokenAddressSet(address _clvTokenAddress);
     event TroveManagerAddressSet(address _troveManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
@@ -59,7 +59,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         override 
     {
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
-        clvToken = ICLVToken(_clvTokenAddress);
+        clvToken = ILUSDToken(_clvTokenAddress);
         troveManagerAddress = _troveManagerAddress;
         borrowerOperationsAddress = _borrowerOperationsAddress;
         activePoolAddress = _activePoolAddress;

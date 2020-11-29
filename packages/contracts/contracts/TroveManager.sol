@@ -6,7 +6,7 @@ import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IPool.sol";
 import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
-import "./Interfaces/ICLVToken.sol";
+import "./Interfaces/ILUSDToken.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ILQTYStaking.sol";
@@ -28,7 +28,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
     ICollSurplusPool collSurplusPool;
 
-    ICLVToken public clvToken;
+    ILUSDToken public clvToken;
 
     IPriceFeed public priceFeed;
 
@@ -217,7 +217,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         stabilityPool = IStabilityPool(_stabilityPoolAddress);
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
-        clvToken = ICLVToken(_clvTokenAddress);
+        clvToken = ILUSDToken(_clvTokenAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
@@ -228,7 +228,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
-        emit CLVTokenAddressChanged(_clvTokenAddress);
+        emit LUSDTokenAddressChanged(_clvTokenAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
