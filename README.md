@@ -85,6 +85,36 @@ If the liquidated debt is higher than the amount of LUSD in the Stability Pool, 
 
 Anyone may call the public `liquidateTroves()` function, which will check for under-collateralized troves, and liquidate them.
 
+### Liquidation Logic
+
+The precise behavior of liquidations depends on the ICR of the trove being liquidated and global system conditions:  the total collateral ratio (TCR) of the system, the size of the Stability Pool, etc.  
+
+Here is the liquidation logic for both Normal Mode and Recovery Mode.  `SP.LUSD` represents the LUSD in the Stability Pool.
+
+#### Liquidations in Normal Mode: TCR >= 150%
+
+| Condition                        | Liquidation behavior                                                                                                                                                                                                                                                                                                |
+|----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ICR < MCR & SP.LUSD > trove.debt | LUSD in the StabilityPool equal to the trove's debt is offset with the trove's debt. The trove's ETH collateral is shared between depositors.                                                                                                                                                                       |
+| ICR < MCR & SP.LUSD < trove.debt | The total StabilityPool LUSD is offset with an equal amount of debt from the trove.  A fraction of the trove's collateral (equal to the ratio of its offset debt to its entire debt) is shared between depositors. The remaining debt and collateral (minus ETH gas compensation) is redistributed to active troves |
+| ICR < MCR & SP.LUSD = 0          | Redistribute all debt and collateral (minus ETH gas compensation) to active troves.                                                                                                                                                                                                                                 |
+| ICR  >= MCR                      | Do nothing.                                                                                                                                                                                                                                                                                                         |
+
+#### Liquidations in Recovery Mode: TCR < 150%
+
+| Condition                                | Liquidation behavior                                                                                                                                                                                                                                                                                                                                                                                         |
+|------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ICR <=100%                               | Redistribute all debt and collateral (minus ETH gas compensation) to active troves.                                                                                                                                                                                                                                                                                                                          |
+| 100% < ICR < MCR & SP.LUSD > trove.debt  | LUSD in the StabilityPool equal to the trove's debt is offset with the trove's debt. The trove's ETH collateral (minus ETH gas compensation) is shared between depsitors.                                                                                                                                                                                                                                    |
+| 100% < ICR < MCR & SP.LUSD < trove.debt  | The total StabilityPool LUSD is offset with an equal amount of debt from the trove.  A fraction of the trove's collateral (equal to the ratio of its offset debt to its entire debt) is shared between depositors. The remaining debt and collateral (minus ETH gas compensation) is redistributed to active troves                                                                                          |
+| MCR% <= ICR < TCR & SP.LUSD > trove.debt | A trove liquidated at MCR <= ICR < TCR: With StabilityPoolCLV  >= trove CLV debt: the debt is completely offset against CLV in the Pool, and all its collateral (minus ETH gas compensation) is shared between depositors.                                                                                                                                                                                   |
+| MCR <= ICR < TCR & SP.LUSD < trove.debt  | A trove liquidated at MCR <= ICR < TCR, with StabilityPoolCLV  <  trove CLV debt: the trove is partially liquidated: the Pool LUSD is offset with an equal amount of debt from the trove. A corresponding fraction of ETH collateral (minus ETH gas compensation) is shared between depositors. Nothing is redistributed to other active troves. The trove remains active, with reduced collateral and debt. |
+| MCR <= ICR < TCR & SP.LUSD  = 0          | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ICR >= TCR                               | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
+
+
+
+
 ## Gains From Liquidations
 
 Stability Pool depositors gain Ether over time, as liquidated debt is cancelled with their deposit. When they withdraw all or part of their deposited tokens, or top up their deposit, they system sends them their accumulated ETH gains.
