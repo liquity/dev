@@ -117,7 +117,7 @@ Here is the liquidation logic for a single trove in Normal Mode and Recovery Mod
 
 ## Gains From Liquidations
 
-Stability Pool depositors gain Ether over time, as liquidated debt is cancelled with their deposit. When they withdraw all or part of their deposited tokens, or top up their deposit, they system sends them their accumulated ETH gains.
+Stability Pool depositors gain Ether over time, as liquidated debt is cancelled with their deposit. When they withdraw all or part of their deposited tokens, or top up their deposit, the system sends them their accumulated ETH gains.
 
 Similarly, a trove's accumulated gains from liquidations are automatically applied to the trove when the owner performs any operation - e.g. adding/withdrawing collateral, or issuing/repaying LUSD.
 
