@@ -166,7 +166,7 @@ The LQTY contracts consist of:
 
 `LQTYStaking.sol` - the staking contract, containing stake and unstake functionality for LQTY holders. This contract receives ETH fees from redemptions, and LUSD fees from new debt issuance.
 
-`CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability Pool depositors as a function of time. It is controlled by the `PoolManager`. Upon system launch, the Liquity admin will transfer an initial supply of LQTY to it - the “community issuance” supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
+`CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability depositors as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the CommunityIssuance automatically receives a supply of LQTY - the “community issuance” supply, provisionally set to one third of the total supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
 
 `GrowthToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
 
@@ -239,13 +239,13 @@ The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Poo
 
 ### Core Smart Contracts
 
-`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their trove: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment. BorrowerOperations functions call in to TroveManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to PoolManager, telling it to move Ether and/or tokens between Pools, where necessary.
+`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their trove: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment. It also sends borrowing fees to the `LQTYStaking` contract. BorrowerOperations functions call in to TroveManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to the various Pools, telling them to move Ether/Tokens between Pools or between Pool <> user, where necessary.
 
-`TroveManager.sol` - contains functionality for liquidations and redemptions. Also contains the state of each trove - i.e. a record of the trove’s collateral and debt. TroveManager does not hold value (i.e. Ether / other tokens). TroveManager functions call in to PooManager to tell it to move Ether/tokens between Pools, where necessary.
+`TroveManager.sol` - contains functionality for liquidations and redemptions. It sends redemption fees to the `LQTYStaking` contract. Also contains the state of each trove - i.e. a record of the trove’s collateral and debt. TroveManager does not hold value (i.e. Ether / other tokens). TroveManager functions call in to PooManager to tell it to move Ether/tokens between Pools, where necessary.
 
 `LiquityBase.sol` - Both TroveManager and BorrowerOperations inherit from the parent contract LiquityBase, which contains global constants and some common functions.
 
-`PoolManager.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated ETH rewards. It also directs the transfers of Ether and tokens between Pools.
+`StabilityPool.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated ETH and LQTY gains. Holds the LUSD Stability Pool deposits, and the ETH gains for depositors, from liquidations.
 
 `LUSDToken.sol` - the stablecoin token contract, which implements the ERC20 fungible token standard. The contract mints, burns and transfers LUSD tokens.
 
@@ -259,15 +259,13 @@ The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Poo
 
 ### Data and Value Silo Contracts
 
-These contracts hold Ether and/or tokens for their respective parts of the system, and contain minimal logic.
-
-`LUSDTokenData.sol` - contains the record of stablecoin balances for all addresses.
-
-`StabilityPool.sol` - holds an ERC20 balance of all stablecoin tokens deposits, and the total ether balance of all the ETH earned by depositors.
+Along with `StabilityPool.sol`, these contracts hold Ether and/or tokens for their respective parts of the system, and contain minimal logic:
 
 `ActivePool.sol` - holds the total Ether balance and records the total stablecoin debt of the active troves.
 
 `DefaultPool.sol` - holds the total Ether balance and records the total stablecoin debt of the liquidated loans that are pending redistribution to active troves. If a trove has pending ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
+
+`CollSurplusPool.sol` - holds the ETH surplus from troves that have been fully redeemed from. Sends the surplus back to the owning borrower, when told to do so by `BorrowerOperations.sol`.
 
 ### Contract Interfaces
 
@@ -280,7 +278,7 @@ Liquity functions that require the most current ETH:USD price data fetch the pri
 **TODO: To be updated**
 Currently, provisional plans are to use the Chainlink ETH:USD reference contract for the price data source, however, other options are under consideration.
 
-The current PriceFeed contract is a placeholder and contains a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price. In the final deployed version, no price will be stored or set, and `getPrice()` will fetch the latest ETH:USD price from the Chainlink reference contract.
+The current `PriceFeed.sol` contract is a placeholder and contains a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price. In the final deployed version, no price will be stored or set, and will only have a getter, `getLatestPrice()`, will fetch the latest ETH:USD price from the Chainlink reference contract.
 
 ### Keeping a sorted list of troves ordered by ICR
 
