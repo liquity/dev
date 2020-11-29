@@ -391,6 +391,8 @@ Anyone may call the public liquidation functions, and attempt to liquidate one o
 
 LUSD token holders may also redeem their tokens, and swap an amount of tokens 1-for-1 in value with Ether.
 
+LQTY token holders may stake their LQTY, to earn a share of the system fee revenue, in ETH and LUSD.
+
 ## Contract Ownership and Function Permissions
 
 All the core smart contracts inherit from the OpenZeppelin `Ownable.sol` contract template. As such all contracts have a single owning address, which is the deploying address.
@@ -502,7 +504,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `batchLiquidateTroves( address[] calldata troveList)`: callable by anyone, accepts a custom list of troves addresses as an argument. Steps through the provided list and attempts to liquidate every trove, until it reaches the end or it runs out of gas. A trove is liquidated only if it meets the conditions for liquidation. For a batch of 10 troves, the gas costs per liquidated trove are roughly between 75K-83K, for a batch of 50 troves between 54K-69K.
 
-`redeemCollateral(uint _LUSDamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintICR)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem.
+`redeemCollateral(uint _LUSDamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintICR,  uint _maxIterations)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem. The number of troves redeemed from is capped by `_maxIterations`.
 
 `getCurrentICR(address _user, uint _price)`: computes the user’s individual collateral ratio (ICR) based on their total collateral and total LUSD debt. Returns 2^256 -1 if they have 0 debt.
 
