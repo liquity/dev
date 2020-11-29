@@ -19,7 +19,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Connected contract declarations ---
 
-    ITroveManager public cdpManager;
+    ITroveManager public troveManager;
 
     IPool public activePool;
 
@@ -75,7 +75,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- Dependency setters ---
 
     function setAddresses(
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
@@ -89,7 +89,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         override
         onlyOwner
     {
-        cdpManager = ITroveManager(_cdpManagerAddress);
+        troveManager = ITroveManager(_troveManagerAddress);
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
@@ -100,7 +100,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
-        emit TroveManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
@@ -122,8 +122,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _requireCDPisNotActive(msg.sender);
 
         // Decay the base rate, and calculate the borrowing fee
-        cdpManager.decayBaseRateFromBorrowing();
-        uint CLVFee = cdpManager.getBorrowingFee(_CLVAmount);
+        troveManager.decayBaseRateFromBorrowing();
+        uint CLVFee = troveManager.getBorrowingFee(_CLVAmount);
         uint rawDebt = _CLVAmount.add(CLVFee);
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
@@ -139,15 +139,15 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
 
         // Set the trove struct's properties
-        cdpManager.setCDPStatus(msg.sender, 1);
-        cdpManager.increaseCDPColl(msg.sender, msg.value);
-        cdpManager.increaseCDPDebt(msg.sender, compositeDebt);
+        troveManager.setCDPStatus(msg.sender, 1);
+        troveManager.increaseCDPColl(msg.sender, msg.value);
+        troveManager.increaseCDPDebt(msg.sender, compositeDebt);
 
-        cdpManager.updateCDPRewardSnapshots(msg.sender);
-        uint stake = cdpManager.updateStakeAndTotalStakes(msg.sender);
+        troveManager.updateCDPRewardSnapshots(msg.sender);
+        uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
 
         sortedCDPs.insert(msg.sender, ICR, price, _hint, _hint);
-        uint arrayIndex = cdpManager.addCDPOwnerToArray(msg.sender);
+        uint arrayIndex = troveManager.addCDPOwnerToArray(msg.sender);
         emit CDPCreated(msg.sender, arrayIndex);
 
         // Send the LUSD borrowing fee to the staking contract
@@ -212,15 +212,15 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         L.price = priceFeed.getPrice();
 
-        cdpManager.applyPendingRewards(_borrower);
+        troveManager.applyPendingRewards(_borrower);
 
         (L.collChange, L.isCollIncrease) = _getCollChange(msg.value, _collWithdrawal);
 
         L.rawDebtChange = _debtChange;
         if (_isDebtIncrease && _debtChange > 0) {
             // Decay the baseRate and get the fee
-            cdpManager.decayBaseRateFromBorrowing();
-            L.CLVFee = cdpManager.getBorrowingFee(_debtChange);
+            troveManager.decayBaseRateFromBorrowing();
+            L.CLVFee = troveManager.getBorrowingFee(_debtChange);
 
             // The raw debt change includes the fee, if there was one
             L.rawDebtChange = L.rawDebtChange.add(L.CLVFee);
@@ -230,8 +230,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             clvToken.mint(lqtyStakingAddress, L.CLVFee);
         }
 
-        L.debt = cdpManager.getCDPDebt(_borrower);
-        L.coll = cdpManager.getCDPColl(_borrower);
+        L.debt = troveManager.getCDPDebt(_borrower);
+        L.coll = troveManager.getCDPColl(_borrower);
 
         L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
 
@@ -243,7 +243,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         if (!_isDebtIncrease && _debtChange > 0) {_requireCLVRepaymentAllowed(L.debt, L.rawDebtChange);}
 
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
-        L.stake = cdpManager.updateStakeAndTotalStakes(_borrower);
+        L.stake = troveManager.updateStakeAndTotalStakes(_borrower);
 
         // Re-insert trove it in the sorted list
         sortedCDPs.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
@@ -259,13 +259,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _requireCDPisActive(msg.sender);
         _requireNotInRecoveryMode();
 
-        cdpManager.applyPendingRewards(msg.sender);
+        troveManager.applyPendingRewards(msg.sender);
 
-        uint coll = cdpManager.getCDPColl(msg.sender);
-        uint debt = cdpManager.getCDPDebt(msg.sender);
+        uint coll = troveManager.getCDPColl(msg.sender);
+        uint debt = troveManager.getCDPDebt(msg.sender);
 
-        cdpManager.removeStake(msg.sender);
-        cdpManager.closeCDP(msg.sender);
+        troveManager.removeStake(msg.sender);
+        troveManager.closeCDP(msg.sender);
 
         // Burn the debt from the user's balance, and send the collateral back to the user
         _repayCLV(msg.sender, debt.sub(CLV_GAS_COMPENSATION));
@@ -321,10 +321,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
         returns (uint, uint)
     {
-        uint newColl = (_isCollIncrease) ? cdpManager.increaseCDPColl(_borrower, _collChange)
-                                        : cdpManager.decreaseCDPColl(_borrower, _collChange);
-        uint newDebt = (_isDebtIncrease) ? cdpManager.increaseCDPDebt(_borrower, _debtChange)
-                                        : cdpManager.decreaseCDPDebt(_borrower, _debtChange);
+        uint newColl = (_isCollIncrease) ? troveManager.increaseCDPColl(_borrower, _collChange)
+                                        : troveManager.decreaseCDPColl(_borrower, _collChange);
+        uint newDebt = (_isDebtIncrease) ? troveManager.increaseCDPDebt(_borrower, _debtChange)
+                                        : troveManager.decreaseCDPDebt(_borrower, _debtChange);
 
         return (newColl, newDebt);
     }
@@ -374,12 +374,12 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- 'Require' wrapper functions ---
 
     function _requireCDPisActive(address _borrower) internal view {
-        uint status = cdpManager.getCDPStatus(_borrower);
+        uint status = troveManager.getCDPStatus(_borrower);
         require(status == 1, "BorrowerOps: CDP does not exist or is closed");
     }
 
     function _requireCDPisNotActive(address _borrower) internal view {
-        uint status = cdpManager.getCDPStatus(_borrower);
+        uint status = troveManager.getCDPStatus(_borrower);
         require(status != 1, "BorrowerOps: CDP is active");
     }
 

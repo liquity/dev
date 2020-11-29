@@ -74,34 +74,34 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     onTroveChanged: (trove: TroveWithPendingRewards) => void,
     address = this.requireAddress()
   ) {
-    const { CDPCreated, CDPUpdated } = this.contracts.cdpManager.filters;
+    const { CDPCreated, CDPUpdated } = this.contracts.troveManager.filters;
     const cdpEventFilters = [CDPCreated(address), CDPUpdated(address)];
 
     const troveListener = debounce((blockTag: number) => {
       this.readableLiquity.getTroveWithoutRewards(address, { blockTag }).then(onTroveChanged);
     });
 
-    cdpEventFilters.forEach(filter => this.contracts.cdpManager.on(filter, troveListener));
+    cdpEventFilters.forEach(filter => this.contracts.troveManager.on(filter, troveListener));
 
     return () => {
       cdpEventFilters.forEach(filter =>
-        this.contracts.cdpManager.removeListener(filter, troveListener)
+        this.contracts.troveManager.removeListener(filter, troveListener)
       );
     };
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void) {
-    const { CDPUpdated } = this.contracts.cdpManager.filters;
+    const { CDPUpdated } = this.contracts.troveManager.filters;
     const cdpUpdated = CDPUpdated();
 
     const cdpUpdatedListener = debounce((blockTag: number) => {
       this.readableLiquity.getNumberOfTroves({ blockTag }).then(onNumberOfTrovesChanged);
     });
 
-    this.contracts.cdpManager.on(cdpUpdated, cdpUpdatedListener);
+    this.contracts.troveManager.on(cdpUpdated, cdpUpdatedListener);
 
     return () => {
-      this.contracts.cdpManager.removeListener(cdpUpdated, cdpUpdatedListener);
+      this.contracts.troveManager.removeListener(cdpUpdated, cdpUpdatedListener);
     };
   }
 
@@ -121,17 +121,17 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   }
 
   watchTotal(onTotalChanged: (total: Trove) => void) {
-    const { CDPUpdated } = this.contracts.cdpManager.filters;
+    const { CDPUpdated } = this.contracts.troveManager.filters;
     const cdpUpdated = CDPUpdated();
 
     const totalListener = debounce((blockTag: number) => {
       this.readableLiquity.getTotal({ blockTag }).then(onTotalChanged);
     });
 
-    this.contracts.cdpManager.on(cdpUpdated, totalListener);
+    this.contracts.troveManager.on(cdpUpdated, totalListener);
 
     return () => {
-      this.contracts.cdpManager.removeListener(cdpUpdated, totalListener);
+      this.contracts.troveManager.removeListener(cdpUpdated, totalListener);
     };
   }
 

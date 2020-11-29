@@ -17,7 +17,7 @@ import "./Dependencies/console.sol";
 contract DefaultPool is Ownable, IPool {
     using SafeMath for uint256;
 
-    address public cdpManagerAddress;
+    address public troveManagerAddress;
     address public activePoolAddress;
     uint256 internal ETH;  // deposited ETH tracker
     uint256 internal CLVDebt;  // debt 
@@ -27,16 +27,16 @@ contract DefaultPool is Ownable, IPool {
     // --- Dependency setters ---
 
     function setAddresses(
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress
     )
         external
         onlyOwner
     {
-        cdpManagerAddress = _cdpManagerAddress;
+        troveManagerAddress = _troveManagerAddress;
         activePoolAddress = _activePoolAddress;
 
-        emit TroveManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
 
         _renounceOwnership();
@@ -85,7 +85,7 @@ contract DefaultPool is Ownable, IPool {
     }
 
     function _requireCallerIsCDPMananger() internal view {
-        require(msg.sender == cdpManagerAddress, "DefaultPool: Caller is not the TroveManager");
+        require(msg.sender == troveManagerAddress, "DefaultPool: Caller is not the TroveManager");
     }
 
     // --- Fallback function ---

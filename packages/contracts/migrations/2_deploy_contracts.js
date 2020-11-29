@@ -30,7 +30,7 @@ module.exports = function(deployer) {
     const borrowerOperations = await BorrowerOperations.deployed()
     const priceFeed = await PriceFeed.deployed()
     const sortedCDPs = await SortedCDPs.deployed()
-    const cdpManager = await TroveManager.deployed()
+    const troveManager = await TroveManager.deployed()
     const activePool = await ActivePool.deployed()
     const stabilityPool = await StabilityPool.deployed()
     const defaultPool = await DefaultPool.deployed()
@@ -42,7 +42,7 @@ module.exports = function(deployer) {
       priceFeed,
       clvToken,
       sortedCDPs,
-      cdpManager,
+      troveManager,
       activePool,
       stabilityPool,
       defaultPool,

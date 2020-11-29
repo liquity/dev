@@ -23,7 +23,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
   let clvToken
   let stabilityPool
   let sortedCDPs
-  let cdpManager
+  let troveManager
   let borrowerOperations
   let lqtyToken
   let communityIssuanceTester
@@ -48,7 +48,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       clvToken = contracts.clvToken
       stabilityPool = contracts.stabilityPool
       sortedCDPs = contracts.sortedCDPs
-      cdpManager = contracts.cdpManager
+      troveManager = contracts.troveManager
       stabilityPool = contracts.stabilityPool
       borrowerOperations = contracts.borrowerOperations
 
@@ -296,8 +296,8 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Price Drops, defaulter1 liquidated. Stability Pool size drops by 50%
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
+      assert.isFalse(await troveManager.checkRecoveryMode())
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       // Confirm SP dropped from 600 to 300
@@ -435,7 +435,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 1 liquidated. 200 CLV fully offset with pool.
-      await cdpManager.liquidate(defaulter_1, { from: owner });
+      await troveManager.liquidate(defaulter_1, { from: owner });
 
       // C, D each deposit 100 CLV
       const depositors_2 = [C, D]
@@ -448,7 +448,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 2 liquidated. 100 CLV offset
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await troveManager.liquidate(defaulter_2, { from: owner });
 
       // Erin, Flyn each deposit 100 CLV
       const depositors_3 = [E, F]
@@ -461,7 +461,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 3 liquidated. 100 CLV offset
-      await cdpManager.liquidate(defaulter_3, { from: owner });
+      await troveManager.liquidate(defaulter_3, { from: owner });
 
       // Graham, Harriet each deposit 100 CLV
       const depositors_4 = [G, H]
@@ -474,7 +474,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 4 liquidated. 100 CLV offset
-      await cdpManager.liquidate(defaulter_4, { from: owner });
+      await troveManager.liquidate(defaulter_4, { from: owner });
 
       // All depositors withdraw from SP
       for (depositor of allDepositors) {
@@ -662,7 +662,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
-      const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
+      const txL1 = await troveManager.liquidate(defaulter_1, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isTrue(txL1.receipt.status)
 
@@ -677,7 +677,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 2 liquidated
-      const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
+      const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
       assert.isTrue(txL2.receipt.status)
 
@@ -692,7 +692,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 3 liquidated
-      const txL3 = await cdpManager.liquidate(defaulter_3, { from: owner });
+      const txL3 = await troveManager.liquidate(defaulter_3, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_3))
       assert.isTrue(txL3.receipt.status)
 
@@ -707,7 +707,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 4 liquidated
-      const txL4 = await cdpManager.liquidate(defaulter_4, { from: owner });
+      const txL4 = await troveManager.liquidate(defaulter_4, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_4))
       assert.isTrue(txL4.receipt.status)
 
@@ -722,7 +722,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 5 liquidated
-      const txL5 = await cdpManager.liquidate(defaulter_5, { from: owner });
+      const txL5 = await troveManager.liquidate(defaulter_5, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_5))
       assert.isTrue(txL5.receipt.status)
 
@@ -737,7 +737,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 6 liquidated
-      const txL6 = await cdpManager.liquidate(defaulter_6, { from: owner });
+      const txL6 = await troveManager.liquidate(defaulter_6, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_6))
       assert.isTrue(txL6.receipt.status)
 
@@ -960,7 +960,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Price Drops, defaulters become undercollateralized
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
       // Check initial frontEnd stakes are correct:
       F1_stake = await stabilityPool.frontEndStakes(frontEnd_1)
@@ -975,7 +975,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(1000, 18))
 
       // LIQUIDATION 1
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(500, 18))
@@ -1033,7 +1033,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // LIQUIDATION 2
-      await cdpManager.liquidate(defaulter_2)
+      await troveManager.liquidate(defaulter_2)
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
       assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(600, 18))
@@ -1109,7 +1109,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // LIQUIDATION 3
-      await cdpManager.liquidate(defaulter_3)
+      await troveManager.liquidate(defaulter_3)
       assert.isFalse(await sortedCDPs.contains(defaulter_3))
 
       assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(900, 18))
@@ -1343,7 +1343,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
-      const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
+      const txL1 = await troveManager.liquidate(defaulter_1, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isTrue(txL1.receipt.status)
 
@@ -1358,7 +1358,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 2 liquidated
-      const txL2 = await cdpManager.liquidate(defaulter_2, { from: owner });
+      const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
       assert.isTrue(txL2.receipt.status)
 
@@ -1373,7 +1373,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 3 liquidated
-      const txL3 = await cdpManager.liquidate(defaulter_3, { from: owner });
+      const txL3 = await troveManager.liquidate(defaulter_3, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_3))
       assert.isTrue(txL3.receipt.status)
 
@@ -1388,7 +1388,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Defaulter 4 liquidated
-      const txL4 = await cdpManager.liquidate(defaulter_4, { from: owner });
+      const txL4 = await troveManager.liquidate(defaulter_4, { from: owner });
       assert.isFalse(await sortedCDPs.contains(defaulter_4))
       assert.isTrue(txL4.receipt.status)
 

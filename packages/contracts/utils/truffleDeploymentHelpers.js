@@ -12,14 +12,14 @@ const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const deployLiquity = async () => {
   const priceFeed = await PriceFeed.new()
   const sortedCDPs = await SortedCDPs.new()
-  const cdpManager = await TroveManager.new()
+  const troveManager = await TroveManager.new()
   const activePool = await ActivePool.new()
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const borrowerOperations = await BorrowerOperations.new()
   const clvToken = await CLVToken.new(
-    cdpManager.address,
+    troveManager.address,
     stabilityPool.address,
     borrowerOperations.address
   )
@@ -27,7 +27,7 @@ const deployLiquity = async () => {
   PriceFeed.setAsDeployed(priceFeed)
   CLVToken.setAsDeployed(clvToken)
   SortedCDPs.setAsDeployed(sortedCDPs)
-  TroveManager.setAsDeployed(cdpManager)
+  TroveManager.setAsDeployed(troveManager)
   ActivePool.setAsDeployed(activePool)
   StabilityPool.setAsDeployed(stabilityPool)
   FunctionCaller.setAsDeployed(functionCaller)
@@ -37,7 +37,7 @@ const deployLiquity = async () => {
     priceFeed,
     clvToken,
     sortedCDPs,
-    cdpManager,
+    troveManager,
     activePool,
     stabilityPool,
     defaultPool,
@@ -53,7 +53,7 @@ const getAddresses = (contracts) => {
     PriceFeed: contracts.priceFeed.address,
     CLVToken: contracts.clvToken.address,
     SortedCDPs: contracts.sortedCDPs.address,
-    TroveManager: contracts.cdpManager.address,
+    TroveManager: contracts.troveManager.address,
     StabilityPool: contracts.stabilityPool.address,
     ActivePool: contracts.activePool.address,
     DefaultPool: contracts.defaultPool.address,
@@ -74,13 +74,13 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.priceFeed.setTroveManagerAddress(addresses.TroveManager)
 
   // set contracts in the CDP Manager
-  await contracts.cdpManager.setCLVToken(addresses.CLVToken)
-  await contracts.cdpManager.setSortedCDPs(addresses.SortedCDPs)
-  await contracts.cdpManager.setPriceFeed(addresses.PriceFeed)
-  await contracts.cdpManager.setActivePool(addresses.ActivePool)
-  await contracts.cdpManager.setDefaultPool(addresses.DefaultPool)
-  await contracts.cdpManager.setStabilityPool(addresses.StabilityPool)
-  await contracts.cdpManager.setBorrowerOperations(addresses.BorrowerOperations)
+  await contracts.troveManager.setCLVToken(addresses.CLVToken)
+  await contracts.troveManager.setSortedCDPs(addresses.SortedCDPs)
+  await contracts.troveManager.setPriceFeed(addresses.PriceFeed)
+  await contracts.troveManager.setActivePool(addresses.ActivePool)
+  await contracts.troveManager.setDefaultPool(addresses.DefaultPool)
+  await contracts.troveManager.setStabilityPool(addresses.StabilityPool)
+  await contracts.troveManager.setBorrowerOperations(addresses.BorrowerOperations)
 
   // set contracts in BorrowerOperations 
   await contracts.borrowerOperations.setSortedCDPs(addresses.SortedCDPs)

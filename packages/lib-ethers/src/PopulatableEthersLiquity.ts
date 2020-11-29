@@ -182,11 +182,11 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return new PopulatedEthersTransaction(
       rawPopulatedTransaction,
       ({ logs }: TransactionReceipt): LiquidationDetails => {
-        const fullyLiquidated = this.contracts.cdpManager
+        const fullyLiquidated = this.contracts.troveManager
           .extractEvents(logs, "CDPLiquidated")
           .map(({ args: { _borrower } }) => _borrower);
 
-        const [partiallyLiquidated] = this.contracts.cdpManager
+        const [partiallyLiquidated] = this.contracts.troveManager
           .extractEvents(logs, "CDPUpdated")
           .filter(
             ({ args: { _operation } }) =>
@@ -194,7 +194,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
           )
           .map(({ args: { _borrower } }) => _borrower);
 
-        const [totals] = this.contracts.cdpManager
+        const [totals] = this.contracts.troveManager
           .extractEvents(logs, "Liquidation")
           .map(
             ({
@@ -224,7 +224,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return new PopulatedEthersTransaction(
       rawPopulatedTransaction,
       ({ logs }) =>
-        this.contracts.cdpManager.extractEvents(logs, "Redemption").map(
+        this.contracts.troveManager.extractEvents(logs, "Redemption").map(
           ({
             args: { _ETHSent, _ETHFee, _actualCLVAmount, _attemptedCLVAmount }
           }): RedemptionDetails => ({
@@ -450,7 +450,7 @@ export class PopulatableEthersLiquity
 
   async liquidate(address: string, overrides?: EthersTransactionOverrides) {
     return this.wrapLiquidation(
-      await this.contracts.cdpManager.estimateAndPopulate.liquidate({ ...overrides }, id, address)
+      await this.contracts.troveManager.estimateAndPopulate.liquidate({ ...overrides }, id, address)
     );
   }
 
@@ -459,7 +459,7 @@ export class PopulatableEthersLiquity
     overrides?: EthersTransactionOverrides
   ) {
     return this.wrapLiquidation(
-      await this.contracts.cdpManager.estimateAndPopulate.liquidateCDPs(
+      await this.contracts.troveManager.estimateAndPopulate.liquidateCDPs(
         { ...overrides },
         id,
         maximumNumberOfTrovesToLiquidate
@@ -539,7 +539,7 @@ export class PopulatableEthersLiquity
     ] = await this.findRedemptionHints(exchangedQui, optionalParams);
 
     return this.wrapRedemption(
-      await this.contracts.cdpManager.estimateAndPopulate.redeemCollateral(
+      await this.contracts.troveManager.estimateAndPopulate.redeemCollateral(
         { ...overrides },
         addGasForPotentialLastFeeOperationTimeUpdate,
         exchangedQui.bigNumber,

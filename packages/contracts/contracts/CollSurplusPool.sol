@@ -12,7 +12,7 @@ contract CollSurplusPool is Ownable, ICollSurplusPool {
     using SafeMath for uint256;
 
     address public borrowerOperationsAddress;
-    address public cdpManagerAddress;
+    address public troveManagerAddress;
     address public activePoolAddress;
 
     // deposited ether tracker
@@ -24,7 +24,7 @@ contract CollSurplusPool is Ownable, ICollSurplusPool {
 
     function setAddresses(
         address _borrowerOperationsAddress,
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress
     )
         external
@@ -32,11 +32,11 @@ contract CollSurplusPool is Ownable, ICollSurplusPool {
         onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
-        cdpManagerAddress = _cdpManagerAddress;
+        troveManagerAddress = _troveManagerAddress;
         activePoolAddress = _activePoolAddress;
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-        emit TroveManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
 
         _renounceOwnership();
@@ -88,7 +88,7 @@ contract CollSurplusPool is Ownable, ICollSurplusPool {
 
     function _requireCallerIsTroveManager() internal view {
         require(
-            msg.sender == cdpManagerAddress,
+            msg.sender == troveManagerAddress,
             "CollSurplusPool: Caller is not TroveManager");
     }
 

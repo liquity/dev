@@ -9,7 +9,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   let priceFeed
   let clvToken
   let sortedCDPs
-  let cdpManager
+  let troveManager
   let activePool
   let stabilityPool
   let defaultPool
@@ -28,7 +28,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
@@ -53,7 +53,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('TroveManager', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(cdpManager, 9)
+      await testSetAddresses(troveManager, 9)
     })
   })
 

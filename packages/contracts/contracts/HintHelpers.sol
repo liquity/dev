@@ -12,31 +12,31 @@ contract HintHelpers is LiquityBase, Ownable {
 
     IPriceFeed public priceFeed;
     ISortedCDPs public sortedCDPs;
-    ITroveManager public cdpManager;
+    ITroveManager public troveManager;
 
     // --- Events ---
 
     event PriceFeedAddressChanged(address _priceFeedAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
-    event TroveManagerAddressChanged(address _cdpManagerAddress);
+    event TroveManagerAddressChanged(address _troveManagerAddress);
 
     // --- Dependency setters ---
 
     function setAddresses(
         address _priceFeedAddress,
         address _sortedCDPsAddress,
-        address _cdpManagerAddress
+        address _troveManagerAddress
     )
         external
         onlyOwner
     {
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        cdpManager = ITroveManager(_cdpManagerAddress);
+        troveManager = ITroveManager(_troveManagerAddress);
 
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
-        emit TroveManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
 
         _renounceOwnership();
     }
@@ -60,19 +60,19 @@ contract HintHelpers is LiquityBase, Ownable {
         uint remainingCLV = _CLVamount;
         address currentCDPuser = sortedCDPs.getLast();
 
-        while (currentCDPuser != address(0) && cdpManager.getCurrentICR(currentCDPuser, _price) < MCR) {
+        while (currentCDPuser != address(0) && troveManager.getCurrentICR(currentCDPuser, _price) < MCR) {
             currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
         }
 
         firstRedemptionHint = currentCDPuser;
 
         while (currentCDPuser != address(0) && remainingCLV > 0) {
-            uint CLVDebt = _getNetDebt(cdpManager.getCDPDebt(currentCDPuser))
-                                     .add(cdpManager.getPendingCLVDebtReward(currentCDPuser));
+            uint CLVDebt = _getNetDebt(troveManager.getCDPDebt(currentCDPuser))
+                                     .add(troveManager.getPendingCLVDebtReward(currentCDPuser));
 
             if (CLVDebt > remainingCLV) {
-                uint ETH = cdpManager.getCDPColl(currentCDPuser)
-                                     .add(cdpManager.getPendingETHReward(currentCDPuser));
+                uint ETH = troveManager.getCDPColl(currentCDPuser)
+                                     .add(troveManager.getPendingETHReward(currentCDPuser));
                 
                 uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
                 uint newDebt = CLVDebt.sub(remainingCLV);
@@ -102,14 +102,14 @@ contract HintHelpers is LiquityBase, Ownable {
         view
         returns (address hintAddress, uint diff, uint latestRandomSeed)
     {
-        uint arrayLength = cdpManager.getCDPOwnersCount();
+        uint arrayLength = troveManager.getCDPOwnersCount();
 
         if (arrayLength == 0) {
             return (address(0), 0, _inputRandomSeed);
         }
 
         hintAddress = sortedCDPs.getLast();
-        diff = LiquityMath._getAbsoluteDifference(_CR, cdpManager.getCurrentICR(hintAddress, _price));
+        diff = LiquityMath._getAbsoluteDifference(_CR, troveManager.getCurrentICR(hintAddress, _price));
         latestRandomSeed = _inputRandomSeed;
 
         uint i = 1;
@@ -118,8 +118,8 @@ contract HintHelpers is LiquityBase, Ownable {
             latestRandomSeed = uint(keccak256(abi.encodePacked(latestRandomSeed)));
 
             uint arrayIndex = latestRandomSeed % arrayLength;
-            address currentAddress = cdpManager.getTroveFromCDPOwnersArray(arrayIndex);
-            uint currentICR = cdpManager.getCurrentICR(currentAddress, _price);
+            address currentAddress = troveManager.getTroveFromCDPOwnersArray(arrayIndex);
+            uint currentICR = troveManager.getCurrentICR(currentAddress, _price);
 
             // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
             uint currentDiff = LiquityMath._getAbsoluteDifference(currentICR, _CR);

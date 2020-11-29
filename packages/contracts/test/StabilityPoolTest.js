@@ -29,7 +29,7 @@ contract('StabilityPool', async accounts => {
   let priceFeed
   let clvToken
   let sortedCDPs
-  let cdpManager
+  let troveManager
   let activePool
   let stabilityPool
   let defaultPool
@@ -51,7 +51,7 @@ contract('StabilityPool', async accounts => {
       priceFeed = contracts.priceFeed
       clvToken = contracts.clvToken
       sortedCDPs = contracts.sortedCDPs
-      cdpManager = contracts.cdpManager
+      troveManager = contracts.troveManager
       activePool = contracts.activePool
       stabilityPool = contracts.stabilityPool
       defaultPool = contracts.defaultPool
@@ -162,8 +162,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // CDPs are closed
-      await cdpManager.liquidate(defaulter_1, { from: owner })
-      await cdpManager.liquidate(defaulter_2, { from: owner });
+      await troveManager.liquidate(defaulter_1, { from: owner })
+      await troveManager.liquidate(defaulter_2, { from: owner });
 
       // --- TEST ---
       const P_Before = (await stabilityPool.P())  // expected: 0.18 CLV
@@ -225,8 +225,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.liquidate(defaulter_2, { from: owner }) // 180 CLV closed
+      await troveManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      await troveManager.liquidate(defaulter_2, { from: owner }) // 180 CLV closed
 
       const alice_compoundedDeposit_1 = await stabilityPool.getCompoundedCLVDeposit(alice)
 
@@ -255,7 +255,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP('427000000000000000000', frontEnd_1, { from: bob })
 
       // Defaulter 3 CDP is closed
-      await cdpManager.liquidate(defaulter_3, { from: owner })
+      await troveManager.liquidate(defaulter_3, { from: owner })
 
       const alice_compoundedDeposit_2 = await stabilityPool.getCompoundedCLVDeposit(alice)
 
@@ -345,8 +345,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Defaulters are liquidated
-      await cdpManager.liquidate(defaulter_1)
-      await cdpManager.liquidate(defaulter_2)
+      await troveManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_2)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
@@ -410,8 +410,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Defaulters are liquidated
-      await cdpManager.liquidate(defaulter_1)
-      await cdpManager.liquidate(defaulter_2)
+      await troveManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_2)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
@@ -419,7 +419,7 @@ contract('StabilityPool', async accounts => {
       const defaultedDebt_Before = (await defaultPool.getCLVDebt()).toString()
       const activeColl_Before = (await activePool.getETH()).toString()
       const defaultedColl_Before = (await defaultPool.getETH()).toString()
-      const TCR_Before = (await cdpManager.getTCR()).toString()
+      const TCR_Before = (await troveManager.getTCR()).toString()
 
       // D makes an SP deposit
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: dennis })
@@ -429,7 +429,7 @@ contract('StabilityPool', async accounts => {
       const defaultedDebt_After = (await defaultPool.getCLVDebt()).toString()
       const activeColl_After = (await activePool.getETH()).toString()
       const defaultedColl_After = (await defaultPool.getETH()).toString()
-      const TCR_After = (await cdpManager.getTCR()).toString()
+      const TCR_After = (await troveManager.getTCR()).toString()
 
       // Check total system debt, collateral and TCR have not changed after a Stability deposit is made
       assert.equal(activeDebt_Before, activeDebt_After)
@@ -459,45 +459,45 @@ contract('StabilityPool', async accounts => {
       const price = await priceFeed.getPrice()
 
       // Get debt, collateral and ICR of all existing troves
-      const whale_Debt_Before = (await cdpManager.CDPs(whale))[0].toString()
-      const alice_Debt_Before = (await cdpManager.CDPs(alice))[0].toString()
-      const bob_Debt_Before = (await cdpManager.CDPs(bob))[0].toString()
-      const carol_Debt_Before = (await cdpManager.CDPs(carol))[0].toString()
-      const dennis_Debt_Before = (await cdpManager.CDPs(dennis))[0].toString()
+      const whale_Debt_Before = (await troveManager.CDPs(whale))[0].toString()
+      const alice_Debt_Before = (await troveManager.CDPs(alice))[0].toString()
+      const bob_Debt_Before = (await troveManager.CDPs(bob))[0].toString()
+      const carol_Debt_Before = (await troveManager.CDPs(carol))[0].toString()
+      const dennis_Debt_Before = (await troveManager.CDPs(dennis))[0].toString()
 
-      const whale_Coll_Before = (await cdpManager.CDPs(whale))[1].toString()
-      const alice_Coll_Before = (await cdpManager.CDPs(alice))[1].toString()
-      const bob_Coll_Before = (await cdpManager.CDPs(bob))[1].toString()
-      const carol_Coll_Before = (await cdpManager.CDPs(carol))[1].toString()
-      const dennis_Coll_Before = (await cdpManager.CDPs(dennis))[1].toString()
+      const whale_Coll_Before = (await troveManager.CDPs(whale))[1].toString()
+      const alice_Coll_Before = (await troveManager.CDPs(alice))[1].toString()
+      const bob_Coll_Before = (await troveManager.CDPs(bob))[1].toString()
+      const carol_Coll_Before = (await troveManager.CDPs(carol))[1].toString()
+      const dennis_Coll_Before = (await troveManager.CDPs(dennis))[1].toString()
 
-      const whale_ICR_Before = (await cdpManager.getCurrentICR(whale, price)).toString()
-      const alice_ICR_Before = (await cdpManager.getCurrentICR(alice, price)).toString()
-      const bob_ICR_Before = (await cdpManager.getCurrentICR(bob, price)).toString()
-      const carol_ICR_Before = (await cdpManager.getCurrentICR(carol, price)).toString()
-      const dennis_ICR_Before = (await cdpManager.getCurrentICR(dennis, price)).toString()
+      const whale_ICR_Before = (await troveManager.getCurrentICR(whale, price)).toString()
+      const alice_ICR_Before = (await troveManager.getCurrentICR(alice, price)).toString()
+      const bob_ICR_Before = (await troveManager.getCurrentICR(bob, price)).toString()
+      const carol_ICR_Before = (await troveManager.getCurrentICR(carol, price)).toString()
+      const dennis_ICR_Before = (await troveManager.getCurrentICR(dennis, price)).toString()
 
       // D makes an SP deposit
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: dennis })
       assert.equal((await stabilityPool.getCompoundedCLVDeposit(dennis)).toString(), dec(100, 18))
 
-      const whale_Debt_After = (await cdpManager.CDPs(whale))[0].toString()
-      const alice_Debt_After = (await cdpManager.CDPs(alice))[0].toString()
-      const bob_Debt_After = (await cdpManager.CDPs(bob))[0].toString()
-      const carol_Debt_After = (await cdpManager.CDPs(carol))[0].toString()
-      const dennis_Debt_After = (await cdpManager.CDPs(dennis))[0].toString()
+      const whale_Debt_After = (await troveManager.CDPs(whale))[0].toString()
+      const alice_Debt_After = (await troveManager.CDPs(alice))[0].toString()
+      const bob_Debt_After = (await troveManager.CDPs(bob))[0].toString()
+      const carol_Debt_After = (await troveManager.CDPs(carol))[0].toString()
+      const dennis_Debt_After = (await troveManager.CDPs(dennis))[0].toString()
 
-      const whale_Coll_After = (await cdpManager.CDPs(whale))[1].toString()
-      const alice_Coll_After = (await cdpManager.CDPs(alice))[1].toString()
-      const bob_Coll_After = (await cdpManager.CDPs(bob))[1].toString()
-      const carol_Coll_After = (await cdpManager.CDPs(carol))[1].toString()
-      const dennis_Coll_After = (await cdpManager.CDPs(dennis))[1].toString()
+      const whale_Coll_After = (await troveManager.CDPs(whale))[1].toString()
+      const alice_Coll_After = (await troveManager.CDPs(alice))[1].toString()
+      const bob_Coll_After = (await troveManager.CDPs(bob))[1].toString()
+      const carol_Coll_After = (await troveManager.CDPs(carol))[1].toString()
+      const dennis_Coll_After = (await troveManager.CDPs(dennis))[1].toString()
 
-      const whale_ICR_After = (await cdpManager.getCurrentICR(whale, price)).toString()
-      const alice_ICR_After = (await cdpManager.getCurrentICR(alice, price)).toString()
-      const bob_ICR_After = (await cdpManager.getCurrentICR(bob, price)).toString()
-      const carol_ICR_After = (await cdpManager.getCurrentICR(carol, price)).toString()
-      const dennis_ICR_After = (await cdpManager.getCurrentICR(dennis, price)).toString()
+      const whale_ICR_After = (await troveManager.getCurrentICR(whale, price)).toString()
+      const alice_ICR_After = (await troveManager.getCurrentICR(alice, price)).toString()
+      const bob_ICR_After = (await troveManager.getCurrentICR(bob, price)).toString()
+      const carol_ICR_After = (await troveManager.getCurrentICR(carol, price)).toString()
+      const dennis_ICR_After = (await troveManager.getCurrentICR(dennis, price)).toString()
 
       assert.equal(whale_Debt_Before, whale_Debt_After)
       assert.equal(alice_Debt_Before, alice_Debt_After)
@@ -532,7 +532,7 @@ contract('StabilityPool', async accounts => {
 
       // Confirm Bob has an active trove in the system
       assert.isTrue(await sortedCDPs.contains(bob))
-      assert.equal((await cdpManager.getCDPStatus(bob)).toString(), '1')  // Confirm Bob's trove status is active
+      assert.equal((await troveManager.getCDPStatus(bob)).toString(), '1')  // Confirm Bob's trove status is active
 
       // Confirm Bob has a Stability deposit
       assert.equal((await stabilityPool.getCompoundedCLVDeposit(bob)).toString(), dec(100, 18))
@@ -542,11 +542,11 @@ contract('StabilityPool', async accounts => {
       const price = await priceFeed.getPrice()
 
       // Liquidate bob
-      await cdpManager.liquidate(bob)
+      await troveManager.liquidate(bob)
 
       // Check Bob's trove has been removed from the system
       assert.isFalse(await sortedCDPs.contains(bob))
-      assert.equal((await cdpManager.getCDPStatus(bob)).toString(), '2')  // check Bob's trove status is closed
+      assert.equal((await troveManager.getCDPStatus(bob)).toString(), '2')  // check Bob's trove status is closed
     })
 
     it("provideToSP(): providing 0 CLV reverts", async () => {
@@ -733,9 +733,9 @@ contract('StabilityPool', async accounts => {
 
       // Price drops, defaulter is liquidated, A, B and C earn ETH
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       // A and B fully withdraw from the pool
       await stabilityPool.withdrawFromSP(dec(105, 18), { from: A })
@@ -871,9 +871,9 @@ contract('StabilityPool', async accounts => {
 
       // Perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
@@ -1000,9 +1000,9 @@ contract('StabilityPool', async accounts => {
 
       // Price drops, defaulter is liquidated, A, B, C, D earn ETH
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       // A B,C, D fully withdraw from the pool
       await stabilityPool.withdrawFromSP(dec(105, 18), { from: A })
@@ -1252,9 +1252,9 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
@@ -1362,7 +1362,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(30, 18), E, { from: E, value: dec(1, 'ether') })
 
       const txPromise_C = stabilityPool.provideToSP(dec(10, 18), A, { from: C })  // passes another EOA
-      const txPromise_D = stabilityPool.provideToSP(dec(10, 18), cdpManager.address, { from: D })
+      const txPromise_D = stabilityPool.provideToSP(dec(10, 18), troveManager.address, { from: D })
       const txPromise_E = stabilityPool.provideToSP(dec(10, 18), stabilityPool.address, { from: E })
       const txPromise_F = stabilityPool.provideToSP(dec(10, 18), F, { from: F }) // passes itself
 
@@ -1445,8 +1445,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 170 CLV drawn are closed
-      const liquidationTX_1 = await cdpManager.liquidate(defaulter_1, { from: owner })  // 170 CLV closed
-      const liquidationTX_2 = await cdpManager.liquidate(defaulter_2, { from: owner }) // 170 CLV closed
+      const liquidationTX_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 170 CLV closed
+      const liquidationTX_2 = await troveManager.liquidate(defaulter_2, { from: owner }) // 170 CLV closed
 
       const [liquidatedDebt_1] = await th.getEmittedLiquidationValues(liquidationTX_1)
       const [liquidatedDebt_2] = await th.getEmittedLiquidationValues(liquidationTX_2)
@@ -1501,8 +1501,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 170 CLV drawn are closed
-      const liquidationTX_1 = await cdpManager.liquidate(defaulter_1, { from: owner })  // 170 CLV closed
-      const liquidationTX_2 = await cdpManager.liquidate(defaulter_2, { from: owner }) // 170 CLV closed
+      const liquidationTX_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 170 CLV closed
+      const liquidationTX_2 = await troveManager.liquidate(defaulter_2, { from: owner }) // 170 CLV closed
 
       const [liquidatedDebt_1] = await th.getEmittedLiquidationValues(liquidationTX_1)
       const [liquidatedDebt_2] = await th.getEmittedLiquidationValues(liquidationTX_2)
@@ -1544,8 +1544,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 170 CLV drawn are closed
-      const liquidationTX_1 = await cdpManager.liquidate(defaulter_1, { from: owner })  // 170 CLV closed
-      const liquidationTX_2 = await cdpManager.liquidate(defaulter_2, { from: owner }) // 170 CLV closed
+      const liquidationTX_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 170 CLV closed
+      const liquidationTX_2 = await troveManager.liquidate(defaulter_2, { from: owner }) // 170 CLV closed
 
       const [liquidatedDebt_1] = await th.getEmittedLiquidationValues(liquidationTX_1)
       const [liquidatedDebt_2] = await th.getEmittedLiquidationValues(liquidationTX_2)
@@ -1590,8 +1590,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.liquidate(defaulter_2, { from: owner }) // 180 CLV closed
+      await troveManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      await troveManager.liquidate(defaulter_2, { from: owner }) // 180 CLV closed
 
       // Alice retrieves all of her entitled CLV:
       await stabilityPool.withdrawFromSP(dec(150, 18), { from: alice })
@@ -1649,8 +1649,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 CLV drawn are closed
-      await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
-      await cdpManager.liquidate(defaulter_2, { from: owner }); // 180 CLV closed
+      await troveManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      await troveManager.liquidate(defaulter_2, { from: owner }); // 180 CLV closed
 
       // Alice retrieves part of her entitled CLV: 90 CLV
       await stabilityPool.withdrawFromSP('90000000000000000000', { from: alice })
@@ -1688,7 +1688,7 @@ contract('StabilityPool', async accounts => {
 
       // defaulter's CDP is closed.
 
-      const liquidationTx_1 = await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      const liquidationTx_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx_1)
 
       //Get ActivePool and StabilityPool Ether before retrieval:
@@ -1731,7 +1731,7 @@ contract('StabilityPool', async accounts => {
       }
 
       await priceFeed.setPrice(dec(100, 18))
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       // All depositors attempt to withdraw
       await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
@@ -1767,7 +1767,7 @@ contract('StabilityPool', async accounts => {
       }
 
       await priceFeed.setPrice(dec(100, 18))
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       /* From a distribution of 100 CLV, each depositor receives
       CLVLoss = 16.666666666666666666 CLV
@@ -1812,8 +1812,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Defaulters are liquidated
-      await cdpManager.liquidate(defaulter_1)
-      await cdpManager.liquidate(defaulter_2)
+      await troveManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_2)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
@@ -1868,8 +1868,8 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Defaulters are liquidated
-      await cdpManager.liquidate(defaulter_1)
-      await cdpManager.liquidate(defaulter_2)
+      await troveManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_2)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
@@ -1877,7 +1877,7 @@ contract('StabilityPool', async accounts => {
       const defaultedDebt_Before = (await defaultPool.getCLVDebt()).toString()
       const activeColl_Before = (await activePool.getETH()).toString()
       const defaultedColl_Before = (await defaultPool.getETH()).toString()
-      const TCR_Before = (await cdpManager.getTCR()).toString()
+      const TCR_Before = (await troveManager.getTCR()).toString()
 
       // Carol withdraws her Stability deposit 
       assert.equal(((await stabilityPool.deposits(carol))[0]).toString(), dec(300, 18))
@@ -1888,7 +1888,7 @@ contract('StabilityPool', async accounts => {
       const defaultedDebt_After = (await defaultPool.getCLVDebt()).toString()
       const activeColl_After = (await activePool.getETH()).toString()
       const defaultedColl_After = (await defaultPool.getETH()).toString()
-      const TCR_After = (await cdpManager.getTCR()).toString()
+      const TCR_After = (await troveManager.getTCR()).toString()
 
       // Check total system debt, collateral and TCR have not changed after a Stability deposit is made
       assert.equal(activeDebt_Before, activeDebt_After)
@@ -1916,40 +1916,40 @@ contract('StabilityPool', async accounts => {
       const price = await priceFeed.getPrice()
 
       // Get debt, collateral and ICR of all existing troves
-      const whale_Debt_Before = (await cdpManager.CDPs(whale))[0].toString()
-      const alice_Debt_Before = (await cdpManager.CDPs(alice))[0].toString()
-      const bob_Debt_Before = (await cdpManager.CDPs(bob))[0].toString()
-      const carol_Debt_Before = (await cdpManager.CDPs(carol))[0].toString()
+      const whale_Debt_Before = (await troveManager.CDPs(whale))[0].toString()
+      const alice_Debt_Before = (await troveManager.CDPs(alice))[0].toString()
+      const bob_Debt_Before = (await troveManager.CDPs(bob))[0].toString()
+      const carol_Debt_Before = (await troveManager.CDPs(carol))[0].toString()
 
-      const whale_Coll_Before = (await cdpManager.CDPs(whale))[1].toString()
-      const alice_Coll_Before = (await cdpManager.CDPs(alice))[1].toString()
-      const bob_Coll_Before = (await cdpManager.CDPs(bob))[1].toString()
-      const carol_Coll_Before = (await cdpManager.CDPs(carol))[1].toString()
+      const whale_Coll_Before = (await troveManager.CDPs(whale))[1].toString()
+      const alice_Coll_Before = (await troveManager.CDPs(alice))[1].toString()
+      const bob_Coll_Before = (await troveManager.CDPs(bob))[1].toString()
+      const carol_Coll_Before = (await troveManager.CDPs(carol))[1].toString()
 
-      const whale_ICR_Before = (await cdpManager.getCurrentICR(whale, price)).toString()
-      const alice_ICR_Before = (await cdpManager.getCurrentICR(alice, price)).toString()
-      const bob_ICR_Before = (await cdpManager.getCurrentICR(bob, price)).toString()
-      const carol_ICR_Before = (await cdpManager.getCurrentICR(carol, price)).toString()
+      const whale_ICR_Before = (await troveManager.getCurrentICR(whale, price)).toString()
+      const alice_ICR_Before = (await troveManager.getCurrentICR(alice, price)).toString()
+      const bob_ICR_Before = (await troveManager.getCurrentICR(bob, price)).toString()
+      const carol_ICR_Before = (await troveManager.getCurrentICR(carol, price)).toString()
 
       // Carol withdraws her Stability deposit 
       assert.equal(((await stabilityPool.deposits(carol))[0]).toString(), dec(300, 18))
       await stabilityPool.withdrawFromSP(dec(300, 18), { from: carol })
       assert.equal(((await stabilityPool.deposits(carol))[0]).toString(), '0')
 
-      const whale_Debt_After = (await cdpManager.CDPs(whale))[0].toString()
-      const alice_Debt_After = (await cdpManager.CDPs(alice))[0].toString()
-      const bob_Debt_After = (await cdpManager.CDPs(bob))[0].toString()
-      const carol_Debt_After = (await cdpManager.CDPs(carol))[0].toString()
+      const whale_Debt_After = (await troveManager.CDPs(whale))[0].toString()
+      const alice_Debt_After = (await troveManager.CDPs(alice))[0].toString()
+      const bob_Debt_After = (await troveManager.CDPs(bob))[0].toString()
+      const carol_Debt_After = (await troveManager.CDPs(carol))[0].toString()
 
-      const whale_Coll_After = (await cdpManager.CDPs(whale))[1].toString()
-      const alice_Coll_After = (await cdpManager.CDPs(alice))[1].toString()
-      const bob_Coll_After = (await cdpManager.CDPs(bob))[1].toString()
-      const carol_Coll_After = (await cdpManager.CDPs(carol))[1].toString()
+      const whale_Coll_After = (await troveManager.CDPs(whale))[1].toString()
+      const alice_Coll_After = (await troveManager.CDPs(alice))[1].toString()
+      const bob_Coll_After = (await troveManager.CDPs(bob))[1].toString()
+      const carol_Coll_After = (await troveManager.CDPs(carol))[1].toString()
 
-      const whale_ICR_After = (await cdpManager.getCurrentICR(whale, price)).toString()
-      const alice_ICR_After = (await cdpManager.getCurrentICR(alice, price)).toString()
-      const bob_ICR_After = (await cdpManager.getCurrentICR(bob, price)).toString()
-      const carol_ICR_After = (await cdpManager.getCurrentICR(carol, price)).toString()
+      const whale_ICR_After = (await troveManager.getCurrentICR(whale, price)).toString()
+      const alice_ICR_After = (await troveManager.getCurrentICR(alice, price)).toString()
+      const bob_ICR_After = (await troveManager.getCurrentICR(bob, price)).toString()
+      const carol_ICR_After = (await troveManager.getCurrentICR(carol, price)).toString()
 
       // Check all troves are unaffected by Carol's Stability deposit withdrawal
       assert.equal(whale_Debt_Before, whale_Debt_After)
@@ -2012,10 +2012,10 @@ contract('StabilityPool', async accounts => {
       // Price drops
       await priceFeed.setPrice(dec(100, 18))
 
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
       // Defaulter 1 liquidated, full offset
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       // Dennis opens loan and deposits to Stability Pool
       await borrowerOperations.openLoan(dec(100, 18), dennis, { from: dennis, value: dec(2, 'ether') })
@@ -2026,7 +2026,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(dennis_ETHGain, '0')
 
       const dennis_ETHBalance_Before = (web3.eth.getBalance(dennis)).toString()
-      const dennis_Collateral_Before = ((await cdpManager.CDPs(dennis))[1]).toString()
+      const dennis_Collateral_Before = ((await troveManager.CDPs(dennis))[1]).toString()
       const ETHinSP_Before = (await stabilityPool.getETH()).toString()
 
       // Dennis withdraws his full deposit and ETHGain to his account
@@ -2034,7 +2034,7 @@ contract('StabilityPool', async accounts => {
 
       // Check withdrawal does not alter Dennis' ETH balance or his trove's collateral
       const dennis_ETHBalance_After = (web3.eth.getBalance(dennis)).toString()
-      const dennis_Collateral_After = ((await cdpManager.CDPs(dennis))[1]).toString()
+      const dennis_Collateral_After = ((await troveManager.CDPs(dennis))[1]).toString()
       const ETHinSP_After = (await stabilityPool.getETH()).toString()
 
       assert.equal(dennis_ETHBalance_Before, dennis_ETHBalance_After)
@@ -2064,7 +2064,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Liquidate defaulter 1
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       const alice_CLV_Balance_Before = await clvToken.balanceOf(alice)
       const bob_CLV_Balance_Before = await clvToken.balanceOf(bob)
@@ -2119,7 +2119,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Liquidate defaulter 1
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       const bob_CLV_Balance_Before = await clvToken.balanceOf(bob)
       assert.equal(bob_CLV_Balance_Before.toString(), dec(150, 18))
@@ -2159,16 +2159,16 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(50, 18), frontEnd_1, { from: bob })
       await stabilityPool.provideToSP(dec(30, 18), frontEnd_1, { from: carol })
 
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
       // Price drops
       await priceFeed.setPrice(dec(105, 18))
       const price = await priceFeed.getPrice()
 
-      assert.isTrue(await cdpManager.checkRecoveryMode())
+      assert.isTrue(await troveManager.checkRecoveryMode())
 
       // Liquidate defaulter 1
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       const alice_CLV_Balance_Before = await clvToken.balanceOf(alice)
@@ -2255,7 +2255,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       // Liquidate defaulter 1. Empties the Pool
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       const CLVinSP = (await stabilityPool.getTotalCLVDeposits()).toString()
@@ -2276,7 +2276,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(1, 22), frontEnd_1, { from: whale })
 
       // Liquidation 2
-      await cdpManager.liquidate(defaulter_2)
+      await troveManager.liquidate(defaulter_2)
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
       // Check Alice and Bob have not received ETH gain from liquidation 2 while their deposit was 0
@@ -2287,7 +2287,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(bob_ETHGain_1, bob_ETHGain_2)
 
       // Liquidation 3
-      await cdpManager.liquidate(defaulter_3)
+      await troveManager.liquidate(defaulter_3)
       assert.isFalse(await sortedCDPs.contains(defaulter_3))
 
       // Check Alice and Bob have not received ETH gain from liquidation 3 while their deposit was 0
@@ -2521,9 +2521,9 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
@@ -2645,9 +2645,9 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
@@ -2730,9 +2730,9 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
@@ -2805,9 +2805,9 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       // A successfully withraws deposit and all gains
@@ -2846,8 +2846,8 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a loan, price drops, defaulter gets liquidated
       await borrowerOperations.openLoan(dec(0, 18), defaulter_1, { from: defaulter_1, value: dec(1, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
+      assert.isFalse(await troveManager.checkRecoveryMode())
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       const txAlice = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
@@ -2876,7 +2876,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
       // check Alice's CDP recorded ETH Before:
-      const aliceCDP_Before = await cdpManager.CDPs(alice)
+      const aliceCDP_Before = await troveManager.CDPs(alice)
       const aliceCDP_ETH_Before = aliceCDP_Before[1]
       assert.equal(aliceCDP_ETH_Before, dec(10, 'ether'))
 
@@ -2884,7 +2884,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // Defaulter's CDP is closed
-      const liquidationTx_1 = await cdpManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
+      const liquidationTx_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 180 CLV closed
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx_1)
 
       const ETHGain_A = await stabilityPool.getDepositorETHGain(alice)
@@ -2905,7 +2905,7 @@ contract('StabilityPool', async accounts => {
       assert.isAtMost(th.getDifference(alice_deposit_afterDefault, expectedCompoundedDeposit_A), 1000)
 
       // check alice's CDP recorded ETH has increased by the expected reward amount
-      const aliceCDP_After = await cdpManager.CDPs(alice)
+      const aliceCDP_After = await troveManager.CDPs(alice)
       const aliceCDP_ETH_After = aliceCDP_After[1]
 
       const CDP_ETH_Increase = (aliceCDP_ETH_After.sub(aliceCDP_ETH_Before)).toString()
@@ -2930,7 +2930,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
       // check alice's CDP recorded ETH Before:
-      const aliceCDP_Before = await cdpManager.CDPs(alice)
+      const aliceCDP_Before = await troveManager.CDPs(alice)
       const aliceCDP_ETH_Before = aliceCDP_Before[1]
       assert.equal(aliceCDP_ETH_Before, dec(10, 'ether'))
 
@@ -2938,7 +2938,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice('100000000000000000000');
 
       // defaulter's CDP is closed.
-      await cdpManager.liquidate(defaulter_1, { from: owner })
+      await troveManager.liquidate(defaulter_1, { from: owner })
 
       // Alice sends her ETH Gains to her CDP
       await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
@@ -2987,7 +2987,7 @@ contract('StabilityPool', async accounts => {
 
       // defaulter's CDP is closed.
 
-      const liquidationTx = await cdpManager.liquidate(defaulter_1)
+      const liquidationTx = await troveManager.liquidate(defaulter_1)
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
       // Expect alice to be entitled to 150/2000 of the liquidated coll
@@ -3028,7 +3028,7 @@ contract('StabilityPool', async accounts => {
       }
 
       await priceFeed.setPrice(dec(100, 18))
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       // All depositors attempt to withdraw
       const tx1 = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
@@ -3060,7 +3060,7 @@ contract('StabilityPool', async accounts => {
       }
 
       await priceFeed.setPrice(dec(100, 18))
-      const liquidationTx = await cdpManager.liquidate(defaulter_1)
+      const liquidationTx = await troveManager.liquidate(defaulter_1)
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
 
@@ -3074,27 +3074,27 @@ contract('StabilityPool', async accounts => {
       const expectedNewCollateral = (toBN(dec(1, 18))).add(liquidatedColl.div(toBN('6')))
 
       await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      aliceColl = (await cdpManager.CDPs(alice))[1]
+      aliceColl = (await troveManager.CDPs(alice))[1]
       assert.isAtMost(th.getDifference(aliceColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      bobColl = (await cdpManager.CDPs(bob))[1]
+      bobColl = (await troveManager.CDPs(bob))[1]
       assert.isAtMost(th.getDifference(bobColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(carol, { from: carol })
-      carolColl = (await cdpManager.CDPs(carol))[1]
+      carolColl = (await troveManager.CDPs(carol))[1]
       assert.isAtMost(th.getDifference(carolColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
-      dennisColl = (await cdpManager.CDPs(dennis))[1]
+      dennisColl = (await troveManager.CDPs(dennis))[1]
       assert.isAtMost(th.getDifference(dennisColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(erin, { from: erin })
-      erinColl = (await cdpManager.CDPs(erin))[1]
+      erinColl = (await troveManager.CDPs(erin))[1]
       assert.isAtMost(th.getDifference(erinColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(flyn, { from: flyn })
-      flynColl = (await cdpManager.CDPs(flyn))[1]
+      flynColl = (await troveManager.CDPs(flyn))[1]
       assert.isAtMost(th.getDifference(flynColl, expectedNewCollateral), 100)
 
     })
@@ -3114,24 +3114,24 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(50, 18), frontEnd_1, { from: bob })
       await stabilityPool.provideToSP(dec(30, 18), frontEnd_1, { from: carol })
 
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
       // Price drops to 105, 
       await priceFeed.setPrice(dec(105, 18))
       const price = await priceFeed.getPrice()
 
-      assert.isTrue(await cdpManager.checkRecoveryMode())
+      assert.isTrue(await troveManager.checkRecoveryMode())
 
       // Check defaulter 1 has ICR: 100% < ICR < 110%.
-      assert.isTrue(await th.ICRbetween100and110(defaulter_1, cdpManager, price))
+      assert.isTrue(await th.ICRbetween100and110(defaulter_1, troveManager, price))
 
-      const alice_Collateral_Before = (await cdpManager.CDPs(alice))[1]
-      const bob_Collateral_Before = (await cdpManager.CDPs(bob))[1]
-      const carol_Collateral_Before = (await cdpManager.CDPs(carol))[1]
+      const alice_Collateral_Before = (await troveManager.CDPs(alice))[1]
+      const bob_Collateral_Before = (await troveManager.CDPs(bob))[1]
+      const carol_Collateral_Before = (await troveManager.CDPs(carol))[1]
 
       // Liquidate defaulter 1
       assert.isTrue(await sortedCDPs.contains(defaulter_1))
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       const alice_ETHGain_Before = await stabilityPool.getDepositorETHGain(alice)
@@ -3148,9 +3148,9 @@ contract('StabilityPool', async accounts => {
       const bob_expectedColalteral = (bob_Collateral_Before.add(bob_ETHGain_Before)).toString()
       const carol_expectedCollateral = (carol_Collateral_Before.add(carol_ETHGain_Before)).toString()
 
-      const alice_Collateral_After = (await cdpManager.CDPs(alice))[1]
-      const bob_Collateral_After = (await cdpManager.CDPs(bob))[1]
-      const carol_Collateral_After = (await cdpManager.CDPs(carol))[1]
+      const alice_Collateral_After = (await troveManager.CDPs(alice))[1]
+      const bob_Collateral_After = (await troveManager.CDPs(bob))[1]
+      const carol_Collateral_After = (await troveManager.CDPs(carol))[1]
 
       assert.equal(alice_expectedCollateral, alice_Collateral_After)
       assert.equal(bob_expectedColalteral, bob_Collateral_After)
@@ -3180,7 +3180,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
 
       //Liquidate defaulter 1
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       // D attempts to withdraw his ETH gain to CDP
@@ -3208,8 +3208,8 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a loan, price drops, defaulter gets liquidated
       await borrowerOperations.openLoan(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
+      assert.isFalse(await troveManager.checkRecoveryMode())
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       const G_Before = await stabilityPool.epochToScaleToG(0, 0)
@@ -3254,8 +3254,8 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a loan, price drops, defaulter gets liquidated
       await borrowerOperations.openLoan(dec(0, 18), defaulter_1, { from: defaulter_1, value: dec(1, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
+      assert.isFalse(await troveManager.checkRecoveryMode())
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
@@ -3300,8 +3300,8 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a loan, price drops, defaulter gets liquidated
       await borrowerOperations.openLoan(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
+      assert.isFalse(await troveManager.checkRecoveryMode())
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       // Get A, B, C LQTY balance before
@@ -3348,8 +3348,8 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a loan, price drops, defaulter gets liquidated
       await borrowerOperations.openLoan(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
+      assert.isFalse(await troveManager.checkRecoveryMode())
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       // Get front ends' LQTY balance before
@@ -3400,8 +3400,8 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a loan, price drops, defaulter gets liquidated
       await borrowerOperations.openLoan(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
-      await cdpManager.liquidate(defaulter_1)
+      assert.isFalse(await troveManager.checkRecoveryMode())
+      await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
@@ -3463,9 +3463,9 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await cdpManager.checkRecoveryMode())
+      assert.isFalse(await troveManager.checkRecoveryMode())
 
-      await cdpManager.liquidate(defaulter_1)
+      await troveManager.liquidate(defaulter_1)
 
       const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()

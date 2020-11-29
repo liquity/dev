@@ -2,7 +2,7 @@
   "addresses": {
     "activePool": "0x9133E42B15816c4D59a9425D194cbd9747CC4962",
     "borrowerOperations": "0xdeF8D55D20558803C1e85Ea493a2f97838F5928f",
-    "cdpManager": "0x461710C38Ee442F38045e4723b3e98dc6776dF02",
+    "troveManager": "0x461710C38Ee442F38045e4723b3e98dc6776dF02",
     "clvToken": "0x4e638797dd9eB40609F5bD2619aF1AB0FB307D69",
     "communityIssuance": "",
     "defaultPool": "0x865E55B22fa946CC9c1A61816E0266eCa6d6aed1",

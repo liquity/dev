@@ -32,7 +32,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     ILQTYToken public lqtyToken;
     ICLVToken public clvToken;
 
-    address public cdpManagerAddress;
+    address public troveManagerAddress;
     address public borrowerOperationsAddress;
     address public activePoolAddress;
 
@@ -40,7 +40,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
     event CLVTokenAddressSet(address _clvTokenAddress);
-    event TroveManagerAddressSet(address _cdpManager);
+    event TroveManagerAddressSet(address _troveManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
 
@@ -50,7 +50,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     (
         address _lqtyTokenAddress,
         address _clvTokenAddress,
-        address _cdpManagerAddress, 
+        address _troveManagerAddress, 
         address _borrowerOperationsAddress,
         address _activePoolAddress
     ) 
@@ -60,13 +60,13 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     {
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
         clvToken = ICLVToken(_clvTokenAddress);
-        cdpManagerAddress = _cdpManagerAddress;
+        troveManagerAddress = _troveManagerAddress;
         borrowerOperationsAddress = _borrowerOperationsAddress;
         activePoolAddress = _activePoolAddress;
 
         emit LQTYTokenAddressSet(_lqtyTokenAddress);
         emit LQTYTokenAddressSet(_clvTokenAddress);
-        emit TroveManagerAddressSet(_cdpManagerAddress);
+        emit TroveManagerAddressSet(_troveManagerAddress);
         emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
         emit ActivePoolAddressSet(_activePoolAddress);
 
@@ -182,7 +182,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     // --- 'require' functions ---
 
     function _requireCallerIsTroveManager() internal view {
-        require(msg.sender == cdpManagerAddress, "LQTYStaking: caller is not CDPM");
+        require(msg.sender == troveManagerAddress, "LQTYStaking: caller is not CDPM");
     }
 
     function _requireCallerIsBorrowerOperations() internal view {

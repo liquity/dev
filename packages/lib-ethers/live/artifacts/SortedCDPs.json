@@ -92,7 +92,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "cdpManager",
+      "name": "troveManager",
       "outputs": [
         {
           "internalType": "contract ITroveManager",

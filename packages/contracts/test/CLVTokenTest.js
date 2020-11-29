@@ -57,7 +57,7 @@ contract('CLVToken', async accounts => {
   let chainId
   let clvTokenTester
   let stabilityPool
-  let cdpManager
+  let troveManager
   let borrowerOperations
 
   let tokenName
@@ -71,7 +71,7 @@ contract('CLVToken', async accounts => {
  
       clvTokenTester = contracts.clvToken
       stabilityPool = contracts.stabilityPool
-      cdpManager = contracts.stabilityPool
+      troveManager = contracts.stabilityPool
       borrowerOperations = contracts.borrowerOperations
 
       tokenVersion = await clvTokenTester.version()
@@ -205,7 +205,7 @@ contract('CLVToken', async accounts => {
     it('transfer(): transferring to a blacklisted address reverts', async () => {
       await assertRevert(clvTokenTester.transfer(clvTokenTester.address, 1, { from: alice }))
       await assertRevert(clvTokenTester.transfer(ZERO_ADDRESS, 1, { from: alice }))
-      await assertRevert(clvTokenTester.transfer(cdpManager.address, 1, { from: alice }))
+      await assertRevert(clvTokenTester.transfer(troveManager.address, 1, { from: alice }))
       await assertRevert(clvTokenTester.transfer(stabilityPool.address, 1, { from: alice }))
       await assertRevert(clvTokenTester.transfer(borrowerOperations.address, 1, { from: alice }))
     })
@@ -276,7 +276,7 @@ contract('CLVToken', async accounts => {
     it('transfer(): transferring to a blacklisted address reverts', async () => {
       await assertRevert(clvTokenTester.transfer(clvTokenTester.address, 1, { from: alice }))
       await assertRevert(clvTokenTester.transfer(ZERO_ADDRESS, 1, { from: alice }))
-      await assertRevert(clvTokenTester.transfer(cdpManager.address, 1, { from: alice }))
+      await assertRevert(clvTokenTester.transfer(troveManager.address, 1, { from: alice }))
       await assertRevert(clvTokenTester.transfer(stabilityPool.address, 1, { from: alice }))
       await assertRevert(clvTokenTester.transfer(borrowerOperations.address, 1, { from: alice }))
     })

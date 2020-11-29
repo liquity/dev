@@ -30,7 +30,7 @@ interface IBorrowerOperations {
     // --- Functions ---
 
     function setAddresses(
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,

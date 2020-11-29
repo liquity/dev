@@ -48,7 +48,7 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
    // Set the CDP Manager address in the testnet PriceFeed
     // const res = await testnetPriceFeed.setTroveManagerAddress('0x405143dAe9a8a703a1fE82ad4B65BBFE5505AF63')
     // res.wait()
-    const recordedTroveManagerAddressTestnet = await testnetPriceFeed.cdpManagerAddress()
+    const recordedTroveManagerAddressTestnet = await testnetPriceFeed.troveManagerAddress()
     console.log(`recorded TroveManager Address is ${recordedTroveManagerAddressTestnet}`)
    
 

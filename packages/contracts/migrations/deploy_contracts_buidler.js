@@ -19,20 +19,20 @@ module.exports = async () => {
   const borrowerOperations = await BorrowerOperations.new()
   const priceFeed = await PriceFeed.new()
   const sortedCDPs = await SortedCDPs.new()
-  const cdpManager = await TroveManager.new()
+  const troveManager = await TroveManager.new()
   const activePool = await ActivePool.new()
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
   const clvToken = await CLVToken.new(
-    cdpManager.address,
+    troveManager.address,
     stabilityPool.address,
     borrowerOperations.address
   )
   BorrowerOperations.setAsDeployed(borrowerOperations)
   PriceFeed.setAsDeployed(priceFeed)
   SortedCDPs.setAsDeployed(sortedCDPs)
-  TroveManager.setAsDeployed(cdpManager)
+  TroveManager.setAsDeployed(troveManager)
   ActivePool.setAsDeployed(activePool)
   StabilityPool.setAsDeployed(stabilityPool)
   DefaultPool.setAsDeployed(defaultPool)
@@ -44,7 +44,7 @@ module.exports = async () => {
     priceFeed,
     clvToken,
     sortedCDPs,
-    cdpManager,
+    troveManager,
     activePool,
     stabilityPool,
     defaultPool,

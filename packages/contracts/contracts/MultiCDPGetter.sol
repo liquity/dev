@@ -19,11 +19,11 @@ contract MultiCDPGetter {
         uint snapshotCLVDebt;
     }
 
-    TroveManager public cdpManager; // XXX CDPs missing from ITroveManager?
+    TroveManager public troveManager; // XXX CDPs missing from ITroveManager?
     ISortedCDPs public sortedCDPs;
 
-    constructor(TroveManager _cdpManager, ISortedCDPs _sortedCDPs) public {
-        cdpManager = _cdpManager;
+    constructor(TroveManager _troveManager, ISortedCDPs _sortedCDPs) public {
+        troveManager = _troveManager;
         sortedCDPs = _sortedCDPs;
     }
 
@@ -79,11 +79,11 @@ contract MultiCDPGetter {
                 _cdps[idx].stake,
                 /* status */,
                 /* arrayIndex */
-            ) = cdpManager.CDPs(currentCDPowner);
+            ) = troveManager.CDPs(currentCDPowner);
             (
                 _cdps[idx].snapshotETH,
                 _cdps[idx].snapshotCLVDebt
-            ) = cdpManager.rewardSnapshots(currentCDPowner);
+            ) = troveManager.rewardSnapshots(currentCDPowner);
 
             currentCDPowner = sortedCDPs.getNext(currentCDPowner);
         }
@@ -108,11 +108,11 @@ contract MultiCDPGetter {
                 _cdps[idx].stake,
                 /* status */,
                 /* arrayIndex */
-            ) = cdpManager.CDPs(currentCDPowner);
+            ) = troveManager.CDPs(currentCDPowner);
             (
                 _cdps[idx].snapshotETH,
                 _cdps[idx].snapshotCLVDebt
-            ) = cdpManager.rewardSnapshots(currentCDPowner);
+            ) = troveManager.rewardSnapshots(currentCDPowner);
 
             currentCDPowner = sortedCDPs.getPrev(currentCDPowner);
         }

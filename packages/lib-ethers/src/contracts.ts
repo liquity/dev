@@ -12,7 +12,7 @@ import {
 
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
-import cdpManagerAbi from "../abi/TroveManager.json";
+import troveManagerAbi from "../abi/TroveManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
@@ -53,7 +53,7 @@ import {
 export const abi: { [name: string]: JsonFragment[] } = {
   activePool: activePoolAbi,
   borrowerOperations: borrowerOperationsAbi,
-  cdpManager: cdpManagerAbi,
+  troveManager: troveManagerAbi,
   clvToken: clvTokenAbi,
   communityIssuance: communityIssuanceAbi,
   defaultPool: defaultPoolAbi,
@@ -155,7 +155,7 @@ export class LiquityContract extends Contract {
 export interface LiquityContractAddresses {
   activePool: string;
   borrowerOperations: string;
-  cdpManager: string;
+  troveManager: string;
   clvToken: string;
   communityIssuance: string;
   defaultPool: string;
@@ -175,7 +175,7 @@ export interface LiquityContracts {
 
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
-  cdpManager: TroveManager;
+  troveManager: TroveManager;
   clvToken: CLVToken;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
@@ -193,7 +193,7 @@ export interface LiquityContracts {
 export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses => ({
   activePool: contracts.activePool.address,
   borrowerOperations: contracts.borrowerOperations.address,
-  cdpManager: contracts.cdpManager.address,
+  troveManager: contracts.troveManager.address,
   clvToken: contracts.clvToken.address,
   communityIssuance: contracts.communityIssuance.address,
   defaultPool: contracts.defaultPool.address,
@@ -226,7 +226,7 @@ export const connectToContracts = (
     signerOrProvider
   ),
 
-  cdpManager: create<TroveManager>(addresses.cdpManager, cdpManagerAbi, signerOrProvider),
+  troveManager: create<TroveManager>(addresses.troveManager, troveManagerAbi, signerOrProvider),
 
   clvToken: create<CLVToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
 

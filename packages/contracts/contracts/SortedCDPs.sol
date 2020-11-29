@@ -49,7 +49,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
     address public borrowerOperationsAddress;
 
-    ITroveManager public cdpManager;
+    ITroveManager public troveManager;
     address public TroveManagerAddress;
 
     // Information for a node in the list
@@ -78,7 +78,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         data.maxSize = _size;
 
         TroveManagerAddress = _TroveManagerAddress;
-        cdpManager = ITroveManager(_TroveManagerAddress);
+        troveManager = ITroveManager(_TroveManagerAddress);
         borrowerOperationsAddress = _borrowerOperationsAddress;
 
         emit TroveManagerAddressChanged(_TroveManagerAddress);
@@ -289,15 +289,15 @@ contract SortedCDPs is Ownable, ISortedCDPs {
             return isEmpty();
         } else if (_prevId == address(0)) {
             // `(null, _nextId)` is a valid insert position if `_nextId` is the head of the list
-            return data.head == _nextId && _ICR >= cdpManager.getCurrentICR(_nextId, _price);
+            return data.head == _nextId && _ICR >= troveManager.getCurrentICR(_nextId, _price);
         } else if (_nextId == address(0)) {
             // `(_prevId, null)` is a valid insert position if `_prevId` is the tail of the list
-            return data.tail == _prevId && _ICR <= cdpManager.getCurrentICR(_prevId, _price);
+            return data.tail == _prevId && _ICR <= troveManager.getCurrentICR(_prevId, _price);
         } else {
             // `(_prevId, _nextId)` is a valid insert position if they are adjacent nodes and `_ICR` falls between the two nodes' ICRs
             return data.nodes[_prevId].nextId == _nextId && 
-                   cdpManager.getCurrentICR(_prevId, _price) >= _ICR && 
-                   _ICR >= cdpManager.getCurrentICR(_nextId, _price);
+                   troveManager.getCurrentICR(_prevId, _price) >= _ICR && 
+                   _ICR >= troveManager.getCurrentICR(_nextId, _price);
         }
     }
 
@@ -308,7 +308,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      */
     function _descendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {
         // If `_startId` is the head, check if the insert position is before the head
-        if (data.head == _startId && _ICR >= cdpManager.getCurrentICR(_startId, _price)) {
+        if (data.head == _startId && _ICR >= troveManager.getCurrentICR(_startId, _price)) {
             return (address(0), _startId);
         }
 
@@ -331,7 +331,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
      */
     function _ascendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {       
         // If `_startId` is the tail, check if the insert position is after the tail
-        if (data.tail == _startId && _ICR <= cdpManager.getCurrentICR(_startId, _price)) {
+        if (data.tail == _startId && _ICR <= troveManager.getCurrentICR(_startId, _price)) {
             return (_startId, address(0));
         }
 
@@ -358,14 +358,14 @@ contract SortedCDPs is Ownable, ISortedCDPs {
         address nextId = _nextId;
 
         if (prevId != address(0)) {
-            if (!contains(prevId) || _ICR > cdpManager.getCurrentICR(prevId, _price)) {
+            if (!contains(prevId) || _ICR > troveManager.getCurrentICR(prevId, _price)) {
                 // `prevId` does not exist anymore or now has a smaller ICR than the given ICR
                 prevId = address(0);
             }
         }
 
         if (nextId != address(0)) {
-            if (!contains(nextId) || _ICR < cdpManager.getCurrentICR(nextId, _price)) {
+            if (!contains(nextId) || _ICR < troveManager.getCurrentICR(nextId, _price)) {
                 // `nextId` does not exist anymore or now has a larger ICR than the given ICR
                 nextId = address(0);
             }

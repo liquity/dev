@@ -23,8 +23,8 @@ const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 export class ReadableEthersLiquity extends EthersLiquityBase implements ReadableLiquity {
   async getTotalRedistributed(overrides?: EthersCallOverrides) {
     const [collateral, debt] = await Promise.all([
-      this.contracts.cdpManager.L_ETH({ ...overrides }).then(decimalify),
-      this.contracts.cdpManager.L_CLVDebt({ ...overrides }).then(decimalify)
+      this.contracts.troveManager.L_ETH({ ...overrides }).then(decimalify),
+      this.contracts.troveManager.L_CLVDebt({ ...overrides }).then(decimalify)
     ]);
 
     return new Trove({ collateral, debt });
@@ -32,8 +32,8 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 
   async getTroveWithoutRewards(address = this.requireAddress(), overrides?: EthersCallOverrides) {
     const [cdp, snapshot] = await Promise.all([
-      this.contracts.cdpManager.CDPs(address, { ...overrides }),
-      this.contracts.cdpManager.rewardSnapshots(address, { ...overrides })
+      this.contracts.troveManager.CDPs(address, { ...overrides }),
+      this.contracts.troveManager.rewardSnapshots(address, { ...overrides })
     ]);
 
     if (cdp.status === CDPStatus.active) {
@@ -62,7 +62,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getNumberOfTroves(overrides?: EthersCallOverrides) {
-    return (await this.contracts.cdpManager.getCDPOwnersCount({ ...overrides })).toNumber();
+    return (await this.contracts.troveManager.getCDPOwnersCount({ ...overrides })).toNumber();
   }
 
   async getPrice(overrides?: EthersCallOverrides) {

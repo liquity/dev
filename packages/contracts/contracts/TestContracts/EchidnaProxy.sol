@@ -8,18 +8,18 @@ import "../StabilityPool.sol";
 import "../CLVToken.sol";
 
 contract EchidnaProxy {
-    TroveManager cdpManager;
+    TroveManager troveManager;
     BorrowerOperations borrowerOperations;
     StabilityPool stabilityPool;
     CLVToken clvToken;
 
     constructor(
-        TroveManager _cdpManager,
+        TroveManager _troveManager,
         BorrowerOperations _borrowerOperations,
         StabilityPool _stabilityPool,
         CLVToken _clvToken
     ) public {
-        cdpManager = _cdpManager;
+        troveManager = _troveManager;
         borrowerOperations = _borrowerOperations;
         stabilityPool = _stabilityPool;
         clvToken = _clvToken;
@@ -32,15 +32,15 @@ contract EchidnaProxy {
     // TroveManager
 
     function liquidatePrx(address _user) external {
-        cdpManager.liquidate(_user);
+        troveManager.liquidate(_user);
     }
 
     function liquidateCDPsPrx(uint _n) external {
-        cdpManager.liquidateCDPs(_n);
+        troveManager.liquidateCDPs(_n);
     }
 
     function batchLiquidateTrovesPrx(address[] calldata _troveArray) external {
-        cdpManager.batchLiquidateTroves(_troveArray);
+        troveManager.batchLiquidateTroves(_troveArray);
     }
 
     function redeemCollateralPrx(
@@ -50,7 +50,7 @@ contract EchidnaProxy {
         uint _partialRedemptionHintICR,
         uint _maxIterations
     ) external {
-        cdpManager.redeemCollateral(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, _maxIterations);
+        troveManager.redeemCollateral(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, _maxIterations);
     }
 
     // Borrower Operations

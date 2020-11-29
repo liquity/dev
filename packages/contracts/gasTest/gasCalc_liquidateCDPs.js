@@ -21,7 +21,7 @@ contract('Gas cost tests', async accounts => {
   let priceFeed
   let clvToken
   let sortedCDPs
-  let cdpManager
+  let troveManager
   let activePool
   let stabilityPool
   let defaultPool
@@ -37,7 +37,7 @@ contract('Gas cost tests', async accounts => {
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
@@ -80,16 +80,16 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidateCDPs(1, { from: accounts[0] })
+    await troveManager.liquidateCDPs(1, { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(1, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -122,13 +122,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidateCDPs(1, { from: accounts[0] })
+    await troveManager.liquidateCDPs(1, { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(2, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -161,13 +161,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(3, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -200,13 +200,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(5, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -239,13 +239,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(10, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -278,13 +278,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(20, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -317,13 +317,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -356,13 +356,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(40, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -395,13 +395,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(45, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(45, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -434,13 +434,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(50, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -472,13 +472,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(60, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(60, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -511,13 +511,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.liquidateCDPs(65, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(65, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -554,12 +554,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(1, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -592,12 +592,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(2, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -630,12 +630,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(3, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -668,12 +668,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(5, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -706,12 +706,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(10, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -744,12 +744,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(20, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -783,12 +783,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -821,12 +821,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(40, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -859,12 +859,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(50, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -897,12 +897,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(55, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(55, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -936,7 +936,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -949,12 +949,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(1, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(1, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -985,7 +985,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -998,12 +998,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(2, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(2, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1034,7 +1034,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1047,12 +1047,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(3, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(3, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1083,7 +1083,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1096,12 +1096,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(5, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(5, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1132,7 +1132,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1145,12 +1145,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(10, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(10, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1181,7 +1181,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1194,12 +1194,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(20, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(20, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1230,7 +1230,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1243,12 +1243,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(30, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1279,7 +1279,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1292,12 +1292,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(40, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(40, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1329,7 +1329,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1342,12 +1342,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(45, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(45, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1378,7 +1378,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1391,12 +1391,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.liquidateCDPs(50, { from: accounts[0] })
+    const tx = await troveManager.liquidateCDPs(50, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1431,13 +1431,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
+    const tx = await troveManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -1469,13 +1469,13 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const tx = await cdpManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
+    const tx = await troveManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
@@ -1510,12 +1510,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
+    const tx = await troveManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -1547,12 +1547,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
+    const tx = await troveManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check CDPs are closed
@@ -1585,7 +1585,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1598,12 +1598,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await cdpManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
+    const tx = await troveManager.batchLiquidateTroves(_10_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated
@@ -1633,7 +1633,7 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[500], { from: accounts[0] })
+    await troveManager.liquidate(accounts[500], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
@@ -1646,12 +1646,12 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Check Recovery Mode is false
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
     
     // Liquidate troves
-    const tx = await cdpManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
+    const tx = await troveManager.batchLiquidateTroves(_50_Defaulters, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check all defaulters liquidated

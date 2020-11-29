@@ -42,20 +42,20 @@ contract CLVToken is ICLVToken {
      mapping (address => mapping (address => uint256)) private _allowances;  
     
     // --- Addresses ---
-    address public immutable cdpManagerAddress;
+    address public immutable troveManagerAddress;
     address public immutable stabilityPoolAddress;
     address public immutable borrowerOperationsAddress;
     
     constructor
     ( 
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _stabilityPoolAddress,
         address _borrowerOperationsAddress
     ) 
         public 
     {  
-        cdpManagerAddress = _cdpManagerAddress;
-        emit TroveManagerAddressChanged(_cdpManagerAddress);
+        troveManagerAddress = _troveManagerAddress;
+        emit TroveManagerAddressChanged(_troveManagerAddress);
 
         stabilityPoolAddress = _stabilityPoolAddress;
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
@@ -217,7 +217,7 @@ contract CLVToken is ICLVToken {
         );
         require(
             _recipient != stabilityPoolAddress && 
-            _recipient != cdpManagerAddress && 
+            _recipient != troveManagerAddress && 
             _recipient != borrowerOperationsAddress, 
             "LUSD: Cannot transfer tokens directly to the StabilityPool, TroveManager or BorrowerOps"
         );
@@ -230,7 +230,7 @@ contract CLVToken is ICLVToken {
     function _requireCallerIsBOorCDPMorSP() internal view {
         require(
             msg.sender == borrowerOperationsAddress ||
-            msg.sender == cdpManagerAddress ||
+            msg.sender == troveManagerAddress ||
             msg.sender == stabilityPoolAddress,
             "LUSD: Caller is neither BorrowerOperations nor TroveManager nor StabilityPool"
         );
@@ -242,7 +242,7 @@ contract CLVToken is ICLVToken {
 
     function _requireCallerIsCDPMorSP() internal view {
         require(
-            msg.sender == cdpManagerAddress || msg.sender == stabilityPoolAddress,
+            msg.sender == troveManagerAddress || msg.sender == stabilityPoolAddress,
             "LUSD: Caller is neither TroveManager nor StabilityPool");
     }
 

@@ -7,7 +7,7 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         }
       ],
@@ -177,7 +177,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         },
         {

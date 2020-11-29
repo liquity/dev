@@ -5,7 +5,7 @@
       "inputs": [
         {
           "internalType": "contract TroveManager",
-          "name": "_cdpManager",
+          "name": "_troveManager",
           "type": "address"
         },
         {
@@ -21,7 +21,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "cdpManager",
+      "name": "troveManager",
       "outputs": [
         {
           "internalType": "contract TroveManager",

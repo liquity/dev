@@ -28,7 +28,7 @@ contract EchidnaTester {
     uint private CLV_GAS_COMPENSATION;
     address public GAS_POOL_ADDRESS;
 
-    TroveManager public cdpManager;
+    TroveManager public troveManager;
     BorrowerOperations public borrowerOperations;
     ActivePool public activePool;
     DefaultPool public defaultPool;
@@ -43,13 +43,13 @@ contract EchidnaTester {
     uint private numberOfTroves;
 
     constructor() public payable {
-        cdpManager = new TroveManager();
+        troveManager = new TroveManager();
         borrowerOperations = new BorrowerOperations();
         activePool = new ActivePool();
         defaultPool = new DefaultPool();
         stabilityPool = new StabilityPool();
         clvToken = new CLVToken(
-            address(cdpManager),
+            address(troveManager),
             address(stabilityPool),
             address(borrowerOperations)
         );
@@ -57,19 +57,19 @@ contract EchidnaTester {
         priceFeed = new PriceFeed();
         sortedCDPs = new SortedCDPs();
 
-        cdpManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
+        troveManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(clvToken), address(sortedCDPs), address(0));
        
-        borrowerOperations.setAddresses(address(cdpManager), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
-        activePool.setAddresses(address(borrowerOperations), address(cdpManager), address(stabilityPool), address(defaultPool));
-        defaultPool.setAddresses(address(cdpManager), address(activePool));
+        borrowerOperations.setAddresses(address(troveManager), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(sortedCDPs), address(clvToken), address(0));
+        activePool.setAddresses(address(borrowerOperations), address(troveManager), address(stabilityPool), address(defaultPool));
+        defaultPool.setAddresses(address(troveManager), address(activePool));
         
-        stabilityPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool), address(clvToken), address(sortedCDPs), address(priceFeed), address(0));
-        collSurplusPool.setAddresses(address(borrowerOperations), address(cdpManager), address(activePool));
-        priceFeed.setAddresses(address(cdpManager), address(0), address(0));
-        sortedCDPs.setParams(1e18, address(cdpManager), address(borrowerOperations));
+        stabilityPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool), address(clvToken), address(sortedCDPs), address(priceFeed), address(0));
+        collSurplusPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool));
+        priceFeed.setAddresses(address(troveManager), address(0), address(0));
+        sortedCDPs.setParams(1e18, address(troveManager), address(borrowerOperations));
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
-            echidnaProxies[i] = new EchidnaProxy(cdpManager, borrowerOperations, stabilityPool, clvToken);
+            echidnaProxies[i] = new EchidnaProxy(troveManager, borrowerOperations, stabilityPool, clvToken);
             (bool success, ) = address(echidnaProxies[i]).call{value: INITIAL_BALANCE}("");
             require(success);
         }
@@ -80,7 +80,7 @@ contract EchidnaTester {
         require(MCR > 0);
         require(CCR > 0);
 
-        GAS_POOL_ADDRESS = cdpManager.GAS_POOL_ADDRESS();
+        GAS_POOL_ADDRESS = troveManager.GAS_POOL_ADDRESS();
 
         // TODO:
         priceFeed.setPrice(1e22);
@@ -151,7 +151,7 @@ contract EchidnaTester {
 
         echidnaProxy.openLoanPrx(ETH, CLVAmount, address(0));
 
-        numberOfTroves = cdpManager.getCDPOwnersCount();
+        numberOfTroves = troveManager.getCDPOwnersCount();
         assert(numberOfTroves > 0);
         // canary
         //assert(numberOfTroves == 0);
@@ -289,7 +289,7 @@ contract EchidnaTester {
         address nextTrove = sortedCDPs.getNext(currentTrove);
 
         while (currentTrove != address(0) && nextTrove != address(0)) {
-            if (cdpManager.getCurrentICR(nextTrove, price) > cdpManager.getCurrentICR(currentTrove, price)) {
+            if (troveManager.getCurrentICR(nextTrove, price) > troveManager.getCurrentICR(currentTrove, price)) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful
@@ -311,21 +311,21 @@ contract EchidnaTester {
         address currentTrove = sortedCDPs.getFirst();
         while (currentTrove != address(0)) {
             // Status
-            if (TroveManager.Status(cdpManager.getCDPStatus(currentTrove)) != TroveManager.Status.active) {
+            if (TroveManager.Status(troveManager.getCDPStatus(currentTrove)) != TroveManager.Status.active) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful
             //else return false;
 
             // Minimum debt (gas compensation)
-            if (cdpManager.getCDPDebt(currentTrove) < CLV_GAS_COMPENSATION) {
+            if (troveManager.getCDPDebt(currentTrove) < CLV_GAS_COMPENSATION) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful
             //else return false;
 
             // Stake > 0
-            if (cdpManager.getCDPStake(currentTrove) == 0) {
+            if (troveManager.getCDPStake(currentTrove) == 0) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful
@@ -337,7 +337,7 @@ contract EchidnaTester {
     }
 
     function echidna_ETH_balances() public view returns(bool) {
-        if (address(cdpManager).balance > 0) {
+        if (address(troveManager).balance > 0) {
             return false;
         }
 

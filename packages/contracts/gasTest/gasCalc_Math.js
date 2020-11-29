@@ -11,12 +11,12 @@ const timeValues = testHelpers.TimeValues
 /* Script that logs gas costs for Liquity math functions. */
 contract('Gas costs for math functions', async accounts => {
   let contracts
-  let cdpManagerTester
+  let troveManagerTester
   let mathTester
 
   before(async () => {
-    cdpManagerTester = await TroveManagerTester.new()
-    TroveManagerTester.setAsDeployed(cdpManagerTester)
+    troveManagerTester = await TroveManagerTester.new()
+    TroveManagerTester.setAsDeployed(troveManagerTester)
 
     mathTester = await LiquityMathTester.new()
     LiquityMathTester.setAsDeployed(mathTester)
@@ -29,7 +29,7 @@ contract('Gas costs for math functions', async accounts => {
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool

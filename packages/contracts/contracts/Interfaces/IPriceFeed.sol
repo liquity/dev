@@ -7,12 +7,12 @@ interface IPriceFeed {
     // --- Events ---
     
     event PriceUpdated(uint _newPrice);
-    event TroveManagerAddressChanged(address _cdpManagerAddress);
+    event TroveManagerAddressChanged(address _troveManagerAddress);
 
     // --- Functions ---
     
      function setAddresses(
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _priceAggregatorAddress,
         address _priceAggregatorAddressTestnet
     ) external;

@@ -7,10 +7,10 @@ import "../CLVToken.sol";
 contract CLVTokenTester is CLVToken {
     
     constructor( 
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _stabilityPoolAddress,
         address _borrowerOperationsAddress
-    ) public CLVToken(_cdpManagerAddress,
+    ) public CLVToken(_troveManagerAddress,
                       _stabilityPoolAddress,
                       _borrowerOperationsAddress) {}
     

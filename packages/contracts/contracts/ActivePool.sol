@@ -19,7 +19,7 @@ contract ActivePool is Ownable, IPool {
     using SafeMath for uint256;
 
     address public borrowerOperationsAddress;
-    address public cdpManagerAddress;
+    address public troveManagerAddress;
     address public stabilityPoolAddress;
     address public defaultPoolAddress;
     uint256 internal ETH;  // deposited ether tracker
@@ -34,7 +34,7 @@ contract ActivePool is Ownable, IPool {
 
     function setAddresses(
         address _borrowerOperationsAddress,
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _stabilityPoolAddress,
         address _defaultPoolAddress
     )
@@ -42,12 +42,12 @@ contract ActivePool is Ownable, IPool {
         onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
-        cdpManagerAddress = _cdpManagerAddress;
+        troveManagerAddress = _troveManagerAddress;
         stabilityPoolAddress = _stabilityPoolAddress;
         defaultPoolAddress = _defaultPoolAddress;
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-        emit TroveManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
 
@@ -102,7 +102,7 @@ contract ActivePool is Ownable, IPool {
     function _requireCallerIsBOorCDPMorSP() internal view {
         require(
             msg.sender == borrowerOperationsAddress ||
-            msg.sender == cdpManagerAddress ||
+            msg.sender == troveManagerAddress ||
             msg.sender == stabilityPoolAddress,
             "ActivePool: Caller is neither BorrowerOperations nor TroveManager nor StabilityPool");
     }
@@ -110,7 +110,7 @@ contract ActivePool is Ownable, IPool {
     function _requireCallerIsBOorCDPM() internal view {
         require(
             msg.sender == borrowerOperationsAddress ||
-            msg.sender == cdpManagerAddress,
+            msg.sender == troveManagerAddress,
             "ActivePool: Caller is neither BorrowerOperations nor TroveManager");
     }
 

@@ -47,7 +47,7 @@ const deployContracts = async (
     borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations", {
       ...overrides
     }),
-    cdpManager: await deployContract(deployer, getContractFactory, "TroveManager", { ...overrides }),
+    troveManager: await deployContract(deployer, getContractFactory, "TroveManager", { ...overrides }),
     communityIssuance: await deployContract(deployer, getContractFactory, "CommunityIssuance", {
       ...overrides
     }),
@@ -73,7 +73,7 @@ const deployContracts = async (
   return {
     ...addresses,
     clvToken: await deployContract(deployer, getContractFactory, "CLVToken",
-      addresses.cdpManager,
+      addresses.troveManager,
       addresses.stabilityPool,
       addresses.borrowerOperations,
     { ...overrides }),
@@ -92,7 +92,7 @@ const deployContracts = async (
       deployer,
       getContractFactory,
       "MultiCDPGetter",
-      addresses.cdpManager,
+      addresses.troveManager,
       addresses.sortedCDPs,
       { ...overrides }
     )
@@ -103,7 +103,7 @@ const connectContracts = async (
   {
     activePool,
     borrowerOperations,
-    cdpManager,
+    troveManager,
     clvToken,
     communityIssuance,
     defaultPool,
@@ -128,14 +128,14 @@ const connectContracts = async (
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce =>
-      sortedCDPs.setParams(1e6, cdpManager.address, borrowerOperations.address, {
+      sortedCDPs.setParams(1e6, troveManager.address, borrowerOperations.address, {
         ...overrides,
         nonce
       }),
 
     nonce =>
       priceFeed.setAddresses(
-        cdpManager.address,
+        troveManager.address,
         AddressZero,
         network.name === "ropsten" ? ropstenAggregator : AddressZero,
         {
@@ -145,7 +145,7 @@ const connectContracts = async (
       ),
 
     nonce =>
-      cdpManager.setAddresses(
+      troveManager.setAddresses(
         borrowerOperations.address,
         activePool.address,
         defaultPool.address,
@@ -160,7 +160,7 @@ const connectContracts = async (
 
     nonce =>
       borrowerOperations.setAddresses(
-        cdpManager.address,
+        troveManager.address,
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
@@ -175,7 +175,7 @@ const connectContracts = async (
     nonce =>
       stabilityPool.setAddresses(
         borrowerOperations.address,
-        cdpManager.address,
+        troveManager.address,
         activePool.address,
         clvToken.address,
         sortedCDPs.address,
@@ -187,14 +187,14 @@ const connectContracts = async (
     nonce =>
       activePool.setAddresses(
         borrowerOperations.address,
-        cdpManager.address,
+        troveManager.address,
         stabilityPool.address,
         defaultPool.address,
         { ...overrides, nonce }
       ),
 
     nonce =>
-      defaultPool.setAddresses(cdpManager.address, activePool.address, {
+      defaultPool.setAddresses(troveManager.address, activePool.address, {
         ...overrides,
         nonce
       }),
@@ -202,13 +202,13 @@ const connectContracts = async (
     nonce =>
       collSurplusPool.setAddresses(
         borrowerOperations.address,
-        cdpManager.address,
+        troveManager.address,
         activePool.address,
         { ...overrides, nonce }
       ),
 
     nonce =>
-      hintHelpers.setAddresses(priceFeed.address, sortedCDPs.address, cdpManager.address, {
+      hintHelpers.setAddresses(priceFeed.address, sortedCDPs.address, troveManager.address, {
         ...overrides,
         nonce
       }),
@@ -217,7 +217,7 @@ const connectContracts = async (
       lqtyStaking.setAddresses(
         lqtyToken.address,
         clvToken.address,
-        cdpManager.address, 
+        troveManager.address, 
         borrowerOperations.address,
         activePool.address,
         { ...overrides, nonce }

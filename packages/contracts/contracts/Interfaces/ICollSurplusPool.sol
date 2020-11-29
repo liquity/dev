@@ -14,7 +14,7 @@ interface ICollSurplusPool {
 
     function setAddresses(
         address _borrowerOperationsAddress,
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress
     ) external;
 

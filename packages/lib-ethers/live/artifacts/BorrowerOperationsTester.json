@@ -307,7 +307,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "cdpManager",
+      "name": "troveManager",
       "outputs": [
         {
           "internalType": "contract ITroveManager",
@@ -567,7 +567,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         },
         {

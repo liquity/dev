@@ -165,8 +165,8 @@ class TestHelper {
     return ICR
   }
 
-  static async ICRbetween100and110(account, cdpManager, price) {
-    const ICR = await cdpManager.getCurrentICR(account, price)
+  static async ICRbetween100and110(account, troveManager, price) {
+    const ICR = await troveManager.getCurrentICR(account, price)
     return (ICR.gt(MoneyValues._ICR100)) && (ICR.lt(MoneyValues._MCR))
   }
 
@@ -219,9 +219,9 @@ class TestHelper {
     let i = 0
     while (i < n) {
       const squeezedAddr = this.squeezeAddr(account)
-      const coll = (await contracts.cdpManager.CDPs(account))[1]
-      const debt = (await contracts.cdpManager.CDPs(account))[0]
-      const ICR = await contracts.cdpManager.getCurrentICR(account, price)
+      const coll = (await contracts.troveManager.CDPs(account))[1]
+      const debt = (await contracts.troveManager.CDPs(account))[0]
+      const ICR = await contracts.troveManager.getCurrentICR(account, price)
 
       console.log(`Acct: ${squeezedAddr}  coll:${coll}  debt: ${debt}  ICR: ${ICR}`)
 
@@ -233,7 +233,7 @@ class TestHelper {
     }
   }
 
-  static async logAccountsArray(accounts, cdpManager, price, n) {
+  static async logAccountsArray(accounts, troveManager, price, n) {
     const length = accounts.length
 
     n = (typeof n == 'undefined') ? length : n
@@ -245,9 +245,9 @@ class TestHelper {
       const account = accounts[i]
 
       const squeezedAddr = this.squeezeAddr(account)
-      const coll = (await cdpManager.CDPs(account))[1]
-      const debt = (await cdpManager.CDPs(account))[0]
-      const ICR = await cdpManager.getCurrentICR(account, price)
+      const coll = (await troveManager.CDPs(account))[1]
+      const debt = (await troveManager.CDPs(account))[0]
+      const ICR = await troveManager.getCurrentICR(account, price)
 
       console.log(`Acct: ${squeezedAddr}  coll:${coll}  debt: ${debt}  ICR: ${ICR}`)
     }
@@ -258,7 +258,7 @@ class TestHelper {
   // Given a composite debt, returns the actual debt  - i.e. subtracts the virtual debt.
   // Virtual debt = 10 CLV.
   static async getActualDebtFromComposite(compositeDebt, contracts) {
-    const issuedDebt = await contracts.cdpManager.getActualDebtFromComposite(compositeDebt)
+    const issuedDebt = await contracts.troveManager.getActualDebtFromComposite(compositeDebt)
     return issuedDebt
   }
 
@@ -377,10 +377,10 @@ class TestHelper {
 
   static async getEntireCollAndDebt(contracts, account) {
     // console.log(`account: ${account}`)
-    const rawColl = (await contracts.cdpManager.CDPs(account))[1]
-    const rawDebt = (await contracts.cdpManager.CDPs(account))[0]
-    const pendingETHReward = await contracts.cdpManager.getPendingETHReward(account)
-    const pendingCLVDebtReward = await contracts.cdpManager.getPendingCLVDebtReward(account)
+    const rawColl = (await contracts.troveManager.CDPs(account))[1]
+    const rawDebt = (await contracts.troveManager.CDPs(account))[0]
+    const pendingETHReward = await contracts.troveManager.getPendingETHReward(account)
+    const pendingCLVDebtReward = await contracts.troveManager.getPendingCLVDebtReward(account)
     const entireColl = rawColl.add(pendingETHReward)
     const entireDebt = rawDebt.add(pendingCLVDebtReward)
 
@@ -426,8 +426,8 @@ class TestHelper {
   static async getCollAndDebtFromAdjustment(contracts, account, ETHChange, CLVChange) {
     const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
 
-    // const coll = (await contracts.cdpManager.CDPs(account))[1]
-    // const debt = (await contracts.cdpManager.CDPs(account))[0]
+    // const coll = (await contracts.troveManager.CDPs(account))[1]
+    // const debt = (await contracts.troveManager.CDPs(account))[0]
 
     const newColl = entireColl.add(ETHChange)
     const newDebt = entireDebt.add(CLVChange)
@@ -502,7 +502,7 @@ class TestHelper {
 
       if (logging && tx.receipt.status) {
         i++
-        const ICR = await contracts.cdpManager.getCurrentICR(account, price)
+        const ICR = await contracts.troveManager.getCurrentICR(account, price)
         // console.log(`${i}. Loan opened. addr: ${this.squeezeAddr(account)} coll: ${randCollAmount} debt: ${proportionalCLV} ICR: ${ICR}`)
       }
       const gas = this.gasUsed(tx)
@@ -761,7 +761,7 @@ class TestHelper {
     const price = await contracts.priceFeed.getPrice()
 
     for (const account of accounts) {
-      const tx = await functionCaller.cdpManager_getCurrentICR(account, price)
+      const tx = await functionCaller.troveManager_getCurrentICR(account, price)
       const gas = this.gasUsed(tx) - 21000
       gasCostList.push(gas)
     }
@@ -814,7 +814,7 @@ class TestHelper {
       approxPartialRedemptionHint,
       approxPartialRedemptionHint))[0]
 
-    const tx = await contracts.cdpManager.redeemCollateral(CLVAmount,
+    const tx = await contracts.troveManager.redeemCollateral(CLVAmount,
       firstRedemptionHint,
       exactPartialRedemptionHint,
       partialRedemptionNewICR,

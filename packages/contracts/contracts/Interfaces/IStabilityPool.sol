@@ -40,7 +40,7 @@ interface IStabilityPool {
     
     function setAddresses(
         address _borrowerOperationsAddress,
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress,
         address _clvTokenAddress,
         address _sortedCDPsAddress,

@@ -34,8 +34,8 @@ export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): v
 }
 
 export function handleCDPUpdated(event: CDPUpdated): void {
-  let cdpManager = TroveManager.bind(event.address);
-  let snapshots = cdpManager.rewardSnapshots(event.params._borrower);
+  let troveManager = TroveManager.bind(event.address);
+  let snapshots = troveManager.rewardSnapshots(event.params._borrower);
 
   updateTrove(
     event,
@@ -74,7 +74,7 @@ export function handleCDPLiquidated(event: CDPLiquidated): void {
 }
 
 export function handleLiquidation(event: Liquidation): void {
-  let cdpManager = TroveManager.bind(event.address);
+  let troveManager = TroveManager.bind(event.address);
 
   finishCurrentLiquidation(
     event,
@@ -84,7 +84,7 @@ export function handleLiquidation(event: Liquidation): void {
     event.params._CLVGasCompensation
   );
 
-  updateTotalRedistributed(cdpManager.L_ETH(), cdpManager.L_CLVDebt());
+  updateTotalRedistributed(troveManager.L_ETH(), troveManager.L_CLVDebt());
 }
 
 export function handleRedemption(event: Redemption): void {

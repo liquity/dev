@@ -18,7 +18,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
   let priceFeed
   let clvToken
   let stabilityPool
-  let cdpManager
+  let troveManager
   let borrowerOperations
 
   beforeEach(async () => {
@@ -27,7 +27,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     stabilityPool = contracts.stabilityPool
-    cdpManager = contracts.cdpManager
+    troveManager = contracts.troveManager
     borrowerOperations = contracts.borrowerOperations
 
     const contractAddresses = getAddresses(contracts)
@@ -56,7 +56,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
 
     // Defaulters liquidated
     for (let defaulter of defaulters) {
-      await cdpManager.liquidate(defaulter, { from: owner });
+      await troveManager.liquidate(defaulter, { from: owner });
     }
 
     const SP_TotalDeposits = await stabilityPool.getTotalCLVDeposits()

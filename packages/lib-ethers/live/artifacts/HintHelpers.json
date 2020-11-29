@@ -7,7 +7,7 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         }
       ],
@@ -152,7 +152,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "cdpManager",
+      "name": "troveManager",
       "outputs": [
         {
           "internalType": "contract ITroveManager",
@@ -312,7 +312,7 @@
         },
         {
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         }
       ],

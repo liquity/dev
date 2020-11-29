@@ -134,7 +134,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     IBorrowerOperations public borrowerOperations;
 
-    ITroveManager public cdpManager;
+    ITroveManager public troveManager;
 
     ICLVToken public clvToken;
 
@@ -223,7 +223,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     function setAddresses(
         address _borrowerOperationsAddress,
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress,
         address _clvTokenAddress,
         address _sortedCDPsAddress,
@@ -235,7 +235,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         onlyOwner
     {
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
-        cdpManager = ITroveManager(_cdpManagerAddress);
+        troveManager = ITroveManager(_troveManagerAddress);
         activePool = IPool(_activePoolAddress);
         activePoolAddress = _activePoolAddress;
         clvToken = ICLVToken(_clvTokenAddress);
@@ -245,7 +245,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         communityIssuance = ICommunityIssuance(_communityIssuanceAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-        emit TroveManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
@@ -853,13 +853,13 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     }
 
     function _requireCallerIsTroveManager() internal view {
-        require(msg.sender == address(cdpManager), "StabilityPool: Caller is not TroveManager");
+        require(msg.sender == address(troveManager), "StabilityPool: Caller is not TroveManager");
     }
 
     function _requireNoUnderCollateralizedTroves() internal view {
         uint price = priceFeed.getPrice();
         address lowestTrove = sortedCDPs.getLast();
-        uint ICR = cdpManager.getCurrentICR(lowestTrove, price);
+        uint ICR = troveManager.getCurrentICR(lowestTrove, price);
         require(ICR >= MCR, "StabilityPool: Cannot withdraw while there are troves with ICR < MCR");
     }
 
@@ -877,7 +877,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     }
 
     function _requireUserHasTrove(address _depositor) internal view {
-        require(cdpManager.getCDPStatus(_depositor) == 1, "StabilityPool: caller must have an active trove to withdraw ETHGain to");
+        require(troveManager.getCDPStatus(_depositor) == 1, "StabilityPool: caller must have an active trove to withdraw ETHGain to");
     }
 
     function _requireUserHasETHGain(address _depositor) internal view {

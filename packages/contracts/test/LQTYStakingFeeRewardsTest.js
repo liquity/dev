@@ -35,7 +35,7 @@ contract('Fee arithmetic tests', async accounts => {
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
@@ -146,7 +146,7 @@ contract('Fee arithmetic tests', async accounts => {
     assert.equal(await clvToken.balanceOf(B), dec(100, 18))
 
     // Check base rate is now non-zero
-    const baseRate = await cdpManager.baseRate()
+    const baseRate = await troveManager.baseRate()
     assert.isTrue(baseRate.gt(toBN('0')))
 
     // D draws debt
@@ -187,7 +187,7 @@ contract('Fee arithmetic tests', async accounts => {
     assert.equal(await clvToken.balanceOf(B), dec(100, 18))
 
     // Check base rate is now non-zero
-    const baseRate = await cdpManager.baseRate()
+    const baseRate = await troveManager.baseRate()
     assert.isTrue(baseRate.gt(toBN('0')))
 
     // D draws debt

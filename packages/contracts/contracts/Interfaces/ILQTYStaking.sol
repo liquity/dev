@@ -8,7 +8,7 @@ interface ILQTYStaking {
     (
         address _lqtyTokenAddress,
         address _clvTokenAddress,
-        address _cdpManagerAddress, 
+        address _troveManagerAddress, 
         address _borrowerOperationsAddress,
         address _activePoolAddress
     )  external;

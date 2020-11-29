@@ -18,7 +18,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   let priceFeed
   let clvToken
   let sortedCDPs
-  let cdpManager
+  let troveManager
   let nameRegistry
   let activePool
   let stabilityPool
@@ -35,7 +35,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    troveManager = contracts.troveManager
     nameRegistry = contracts.nameRegistry
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
@@ -57,10 +57,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // L1: B liquidated
-    const txB = await cdpManager.liquidate(bob)
+    const txB = await troveManager.liquidate(bob)
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -75,19 +75,19 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // L2: D Liquidated
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await troveManager.liquidate(dennis)
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
     // Get entire coll of A and C
-    const alice_Coll = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
-    const carol_Coll = ((await cdpManager.CDPs(carol))[1]
-      .add(await cdpManager.getPendingETHReward(carol)))
+    const carol_Coll = ((await troveManager.CDPs(carol))[1]
+      .add(await troveManager.getPendingETHReward(carol)))
       .toString()
 
     /* Expected collateral:
@@ -120,10 +120,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // L1: C liquidated
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await troveManager.liquidate(carol)
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -139,25 +139,25 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // L2: F Liquidated
-    const txF = await cdpManager.liquidate(freddy)
+    const txF = await troveManager.liquidate(freddy)
     assert.isTrue(txF.receipt.status)
     assert.isFalse(await sortedCDPs.contains(freddy))
 
     // Get entire coll of A, B, D and E
-    const alice_Coll = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
-    const bob_Coll = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
-    const dennis_Coll = ((await cdpManager.CDPs(dennis))[1]
-      .add(await cdpManager.getPendingETHReward(dennis)))
+    const dennis_Coll = ((await troveManager.CDPs(dennis))[1]
+      .add(await troveManager.getPendingETHReward(dennis)))
       .toString()
-    const erin_Coll = ((await cdpManager.CDPs(erin))[1]
-      .add(await cdpManager.getPendingETHReward(erin)))
+    const erin_Coll = ((await troveManager.CDPs(erin))[1]
+      .add(await troveManager.getPendingETHReward(erin)))
       .toString()
 
     /* Expected collateral:
@@ -195,7 +195,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1, 18))
 
     // L1: A liquidated
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await troveManager.liquidate(alice)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
@@ -208,7 +208,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1, 18))
 
     // L2: B Liquidated
-    const txB = await cdpManager.liquidate(bob)
+    const txB = await troveManager.liquidate(bob)
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -221,7 +221,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1, 18))
 
     // L3: C Liquidated
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await troveManager.liquidate(carol)
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -234,7 +234,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1, 18))
 
     // L4: D Liquidated
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await troveManager.liquidate(dennis)
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -247,29 +247,29 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1, 18))
 
     // L5: E Liquidated
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await troveManager.liquidate(erin)
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
     // Get entire coll of A, B, D, E and F
-    const alice_Coll = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
-    const bob_Coll = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
-    const carol_Coll = ((await cdpManager.CDPs(carol))[1]
-      .add(await cdpManager.getPendingETHReward(carol)))
+    const carol_Coll = ((await troveManager.CDPs(carol))[1]
+      .add(await troveManager.getPendingETHReward(carol)))
       .toString()
-    const dennis_Coll = ((await cdpManager.CDPs(dennis))[1]
-      .add(await cdpManager.getPendingETHReward(dennis)))
+    const dennis_Coll = ((await troveManager.CDPs(dennis))[1]
+      .add(await troveManager.getPendingETHReward(dennis)))
       .toString()
-    const erin_Coll = ((await cdpManager.CDPs(erin))[1]
-      .add(await cdpManager.getPendingETHReward(erin)))
+    const erin_Coll = ((await troveManager.CDPs(erin))[1]
+      .add(await troveManager.getPendingETHReward(erin)))
       .toString()
 
-    const freddy_rawColl = (await cdpManager.CDPs(freddy))[1].toString()
-    const freddy_ETHReward = (await cdpManager.getPendingETHReward(freddy)).toString()
+    const freddy_rawColl = (await troveManager.CDPs(freddy))[1].toString()
+    const freddy_ETHReward = (await troveManager.getPendingETHReward(freddy)).toString()
 
     /* Expected collateral:
      A-E should have been liquidated
@@ -307,8 +307,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const price = await priceFeed.getPrice()
 
     // Liquidate A
-    // console.log(`ICR A: ${await cdpManager.getCurrentICR(A, price)}`)
-    const txA = await cdpManager.liquidate(A)
+    // console.log(`ICR A: ${await troveManager.getCurrentICR(A, price)}`)
+    const txA = await troveManager.liquidate(A)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(A))
 
@@ -327,7 +327,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.addColl(B, { from: B, value: dec(1, 'ether') })
 
     // Liquidate C
-    const txC = await cdpManager.liquidate(C)
+    const txC = await troveManager.liquidate(C)
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(C))
 
@@ -345,7 +345,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.addColl(B, { from: B, value: dec(1, 'ether') })
 
     // Liquidate E
-    const txE = await cdpManager.liquidate(E)
+    const txE = await troveManager.liquidate(E)
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(E))
 
@@ -380,11 +380,11 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const E_entireColl_0 = (await th.getEntireCollAndDebt(contracts, E)).entireColl
 
     // entireSystemColl, excluding A 
-    const denominatorColl_1 = (await cdpManager.getEntireSystemColl()).sub(A_entireColl_0)
+    const denominatorColl_1 = (await troveManager.getEntireSystemColl()).sub(A_entireColl_0)
 
     // Liquidate A
-    // console.log(`ICR A: ${await cdpManager.getCurrentICR(A, price)}`)
-    const txA = await cdpManager.liquidate(A)
+    // console.log(`ICR A: ${await troveManager.getCurrentICR(A, price)}`)
+    const txA = await troveManager.liquidate(A)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(A))
 
@@ -392,10 +392,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
     // console.log(`A_collRedistribution: ${A_collRedistribution}`)
     // Check accumulated ETH gain for each trove
-    const B_ETHGain_1 = await cdpManager.getPendingETHReward(B)
-    const C_ETHGain_1 = await cdpManager.getPendingETHReward(C)
-    const D_ETHGain_1 = await cdpManager.getPendingETHReward(D)
-    const E_ETHGain_1 = await cdpManager.getPendingETHReward(E)
+    const B_ETHGain_1 = await troveManager.getPendingETHReward(B)
+    const C_ETHGain_1 = await troveManager.getPendingETHReward(C)
+    const D_ETHGain_1 = await troveManager.getPendingETHReward(D)
+    const E_ETHGain_1 = await troveManager.getPendingETHReward(E)
 
     // Check gains are what we'd expect from a distribution proportional to each trove's entire coll
     const B_expectedPendingETH_1 = A_collRedistribution.mul(B_entireColl_0).div(denominatorColl_1)
@@ -418,19 +418,19 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const E_entireColl_1 = (await th.getEntireCollAndDebt(contracts, E)).entireColl
 
     // entireSystemColl, excluding C
-    const denominatorColl_2 = (await cdpManager.getEntireSystemColl()).sub(C_entireColl_1)
+    const denominatorColl_2 = (await troveManager.getEntireSystemColl()).sub(C_entireColl_1)
 
     // Liquidate C
-    const txC = await cdpManager.liquidate(C)
+    const txC = await troveManager.liquidate(C)
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(C))
 
     const C_collRedistribution = C_entireColl_1.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
     // console.log(`C_collRedistribution: ${C_collRedistribution}`)
 
-    const B_ETHGain_2 = await cdpManager.getPendingETHReward(B)
-    const D_ETHGain_2 = await cdpManager.getPendingETHReward(D)
-    const E_ETHGain_2 = await cdpManager.getPendingETHReward(E)
+    const B_ETHGain_2 = await troveManager.getPendingETHReward(B)
+    const D_ETHGain_2 = await troveManager.getPendingETHReward(D)
+    const E_ETHGain_2 = await troveManager.getPendingETHReward(E)
 
     // Since B topped up, he has no previous pending ETH gain
     const B_expectedPendingETH_2 = C_collRedistribution.mul(B_entireColl_1).div(denominatorColl_2)
@@ -455,18 +455,18 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const E_entireColl_2 = (await th.getEntireCollAndDebt(contracts, E)).entireColl
 
     // entireSystemColl, excluding E
-    const denominatorColl_3 = (await cdpManager.getEntireSystemColl()).sub(E_entireColl_2)
+    const denominatorColl_3 = (await troveManager.getEntireSystemColl()).sub(E_entireColl_2)
 
     // Liquidate E
-    const txE = await cdpManager.liquidate(E)
+    const txE = await troveManager.liquidate(E)
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(E))
 
     const E_collRedistribution = E_entireColl_2.mul(toBN(995)).div(toBN(1000)) // remove the gas comp
     // console.log(`E_collRedistribution: ${E_collRedistribution}`)
 
-    const B_ETHGain_3 = await cdpManager.getPendingETHReward(B)
-    const D_ETHGain_3 = await cdpManager.getPendingETHReward(D)
+    const B_ETHGain_3 = await troveManager.getPendingETHReward(B)
+    const D_ETHGain_3 = await troveManager.getPendingETHReward(D)
 
     // Since B topped up, he has no previous pending ETH gain
     const B_expectedPendingETH_3 = E_collRedistribution.mul(B_entireColl_2).div(denominatorColl_3)
@@ -489,7 +489,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await troveManager.liquidate(carol)
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -506,17 +506,17 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Alice
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await troveManager.liquidate(alice)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
     // Expect Bob now holds all Ether and CLVDebt in the system: 2 + 0.4975+0.4975*0.995+0.995 Ether and 110*3 CLV (10 each for gas compensation)
-    const bob_Coll = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const bob_CLVDebt = ((await cdpManager.CDPs(bob))[0]
-      .add(await cdpManager.getPendingCLVDebtReward(bob)))
+    const bob_CLVDebt = ((await troveManager.CDPs(bob))[0]
+      .add(await troveManager.getPendingCLVDebtReward(bob)))
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, dec(39875125, 11)), 1000)
@@ -533,7 +533,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await troveManager.liquidate(carol)
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -550,7 +550,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate D
-    const txA = await cdpManager.liquidate(dennis)
+    const txA = await troveManager.liquidate(dennis)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -571,20 +571,20 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     totalColl: 4.99 ETH
     totalDebt 330 CLV (includes 10 each for gas compensation)
     */
-    const bob_Coll = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const bob_CLVDebt = ((await cdpManager.CDPs(bob))[0]
-      .add(await cdpManager.getPendingCLVDebtReward(bob)))
+    const bob_CLVDebt = ((await troveManager.CDPs(bob))[0]
+      .add(await troveManager.getPendingCLVDebtReward(bob)))
       .toString()
 
-    const alice_Coll = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
 
-    const alice_CLVDebt = ((await cdpManager.CDPs(alice))[0]
-      .add(await cdpManager.getPendingCLVDebtReward(alice)))
+    const alice_CLVDebt = ((await troveManager.CDPs(alice))[0]
+      .add(await troveManager.getPendingCLVDebtReward(alice)))
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, '3119530663329161512'), 1000)
@@ -609,7 +609,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await troveManager.liquidate(dennis)
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -617,9 +617,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(200, 18))
 
     // Expected rewards:  alice: 1 ETH, bob: 1 ETH, carol: 998 ETH
-    const alice_ETHReward_1 = await cdpManager.getPendingETHReward(alice)
-    const bob_ETHReward_1 = await cdpManager.getPendingETHReward(bob)
-    const carol_ETHReward_1 = await cdpManager.getPendingETHReward(carol)
+    const alice_ETHReward_1 = await troveManager.getPendingETHReward(alice)
+    const bob_ETHReward_1 = await troveManager.getPendingETHReward(bob)
+    const carol_ETHReward_1 = await troveManager.getPendingETHReward(carol)
 
     //Expect 1000 + 1000*0.995 ETH in system now
     const entireSystemColl_1 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
@@ -643,7 +643,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await troveManager.liquidate(erin)
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
@@ -661,16 +661,16 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     total = 3982.02 ETH
     */
 
-    const alice_Coll = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
 
-    const bob_Coll = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const carol_Coll = ((await cdpManager.CDPs(carol))[1]
-      .add(await cdpManager.getPendingETHReward(carol)))
+    const carol_Coll = ((await troveManager.CDPs(carol))[1]
+      .add(await troveManager.getPendingETHReward(carol)))
       .toString()
 
     assert.isAtMost(th.getDifference(alice_Coll, dec(3980025, 12)), 1000)
@@ -697,7 +697,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await troveManager.liquidate(dennis)
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -705,9 +705,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(200, 18))
 
     // Expected rewards:  alice: 1 ETH, bob: 1 ETH, carol: 998 ETH (*0.995)
-    const alice_ETHReward_1 = await cdpManager.getPendingETHReward(alice)
-    const bob_ETHReward_1 = await cdpManager.getPendingETHReward(bob)
-    const carol_ETHReward_1 = await cdpManager.getPendingETHReward(carol)
+    const alice_ETHReward_1 = await troveManager.getPendingETHReward(alice)
+    const bob_ETHReward_1 = await troveManager.getPendingETHReward(bob)
+    const carol_ETHReward_1 = await troveManager.getPendingETHReward(carol)
 
     //Expect 1995 ETH in system now
     const entireSystemColl_1 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
@@ -735,7 +735,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await troveManager.liquidate(erin)
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
@@ -753,16 +753,16 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     total = 3986.01 ETH
     */
 
-    const alice_Coll = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
 
-    const bob_Coll = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const carol_Coll = ((await cdpManager.CDPs(carol))[1]
-      .add(await cdpManager.getPendingETHReward(carol)))
+    const carol_Coll = ((await troveManager.CDPs(carol))[1]
+      .add(await troveManager.getPendingETHReward(carol)))
       .toString()
 
     assert.isAtMost(th.getDifference(alice_Coll, dec(5975025, 12)), 1000)
@@ -789,7 +789,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await troveManager.liquidate(carol)
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -806,18 +806,18 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Alice
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await troveManager.liquidate(alice)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
     // Expect Bob now holds all Ether and CLVDebt in the system: 2.5 Ether and 330 CLV
     // 1 + 0.995/2 - 0.5 + 1.4975*0.995
-    const bob_Coll = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const bob_CLVDebt = ((await cdpManager.CDPs(bob))[0]
-      .add(await cdpManager.getPendingCLVDebtReward(bob)))
+    const bob_CLVDebt = ((await troveManager.CDPs(bob))[0]
+      .add(await troveManager.getPendingCLVDebtReward(bob)))
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, '2487512500000000000'), 1000)
@@ -837,7 +837,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Carol
-    const txC = await cdpManager.liquidate(carol)
+    const txC = await troveManager.liquidate(carol)
     assert.isTrue(txC.receipt.status)
     assert.isFalse(await sortedCDPs.contains(carol))
 
@@ -854,7 +854,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate D
-    const txA = await cdpManager.liquidate(dennis)
+    const txA = await troveManager.liquidate(dennis)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -875,20 +875,20 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     totalColl: 3.49 ETH
     totalDebt 340 CLV (Includes 10 in each trove for gas compensation)
     */
-    const bob_Coll = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const bob_CLVDebt = ((await cdpManager.CDPs(bob))[0]
-      .add(await cdpManager.getPendingCLVDebtReward(bob)))
+    const bob_CLVDebt = ((await troveManager.CDPs(bob))[0]
+      .add(await troveManager.getPendingCLVDebtReward(bob)))
       .toString()
 
-    const alice_Coll = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
 
-    const alice_CLVDebt = ((await cdpManager.CDPs(alice))[0]
-      .add(await cdpManager.getPendingCLVDebtReward(alice)))
+    const alice_CLVDebt = ((await troveManager.CDPs(alice))[0]
+      .add(await troveManager.getPendingCLVDebtReward(alice)))
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, '1395300601202404955'), 1000)
@@ -918,7 +918,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await troveManager.liquidate(dennis)
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -926,9 +926,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(200, 18))
 
     // Expected rewards:  alice: 1 ETH, bob: 1 ETH, carol: 998 ETH (*0.995)
-    const alice_ETHReward_1 = await cdpManager.getPendingETHReward(alice)
-    const bob_ETHReward_1 = await cdpManager.getPendingETHReward(bob)
-    const carol_ETHReward_1 = await cdpManager.getPendingETHReward(carol)
+    const alice_ETHReward_1 = await troveManager.getPendingETHReward(alice)
+    const bob_ETHReward_1 = await troveManager.getPendingETHReward(bob)
+    const carol_ETHReward_1 = await troveManager.getPendingETHReward(carol)
 
     //Expect 1995 ETH in system now
     const entireSystemColl_1 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
@@ -952,7 +952,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await troveManager.liquidate(erin)
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
@@ -970,16 +970,16 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     total = 3978.03 ETH
     */
 
-    const alice_Coll = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
 
-    const bob_Coll = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const carol_Coll = ((await cdpManager.CDPs(carol))[1]
-      .add(await cdpManager.getPendingETHReward(carol)))
+    const carol_Coll = ((await troveManager.CDPs(carol))[1]
+      .add(await troveManager.getPendingETHReward(carol)))
       .toString()
 
     assert.isAtMost(th.getDifference(alice_Coll, dec(3980025, 12)), 1000)
@@ -1006,7 +1006,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Dennis
-    const txD = await cdpManager.liquidate(dennis)
+    const txD = await troveManager.liquidate(dennis)
     assert.isTrue(txD.receipt.status)
     assert.isFalse(await sortedCDPs.contains(dennis))
 
@@ -1014,9 +1014,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(200, 18))
 
     // Expected rewards:  alice: 1 ETH, bob: 1 ETH, carol: 998 ETH (*0.995)
-    const alice_ETHReward_1 = await cdpManager.getPendingETHReward(alice)
-    const bob_ETHReward_1 = await cdpManager.getPendingETHReward(bob)
-    const carol_ETHReward_1 = await cdpManager.getPendingETHReward(carol)
+    const alice_ETHReward_1 = await troveManager.getPendingETHReward(alice)
+    const bob_ETHReward_1 = await troveManager.getPendingETHReward(bob)
+    const carol_ETHReward_1 = await troveManager.getPendingETHReward(carol)
 
     //Expect 1995 ETH in system now
     const entireSystemColl_1 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
@@ -1032,16 +1032,16 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, { from: bob })
     await borrowerOperations.withdrawColl(dec(500, 'finney'), carol, { from: carol })
 
-    const alice_Coll_1 = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll_1 = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
 
-    const bob_Coll_1 = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll_1 = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const carol_Coll_1 = ((await cdpManager.CDPs(carol))[1]
-      .add(await cdpManager.getPendingETHReward(carol)))
+    const carol_Coll_1 = ((await troveManager.CDPs(carol))[1]
+      .add(await troveManager.getPendingETHReward(carol)))
       .toString()
 
     assert.isAtMost(th.getDifference(alice_Coll_1, '1495000000000000000'), 1000)
@@ -1059,7 +1059,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Erin
-    const txE = await cdpManager.liquidate(erin)
+    const txE = await troveManager.liquidate(erin)
     assert.isTrue(txE.receipt.status)
     assert.isFalse(await sortedCDPs.contains(erin))
 
@@ -1077,16 +1077,16 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     total = 3977.0325 ETH
     */
 
-    const alice_Coll_2 = ((await cdpManager.CDPs(alice))[1]
-      .add(await cdpManager.getPendingETHReward(alice)))
+    const alice_Coll_2 = ((await troveManager.CDPs(alice))[1]
+      .add(await troveManager.getPendingETHReward(alice)))
       .toString()
 
-    const bob_Coll_2 = ((await cdpManager.CDPs(bob))[1]
-      .add(await cdpManager.getPendingETHReward(bob)))
+    const bob_Coll_2 = ((await troveManager.CDPs(bob))[1]
+      .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const carol_Coll_2 = ((await cdpManager.CDPs(carol))[1]
-      .add(await cdpManager.getPendingETHReward(carol)))
+    const carol_Coll_2 = ((await troveManager.CDPs(carol))[1]
+      .add(await troveManager.getPendingETHReward(carol)))
       .toString()
 
     assert.isAtMost(th.getDifference(alice_Coll_2, dec(2982525, 12)), 1000)
@@ -1113,7 +1113,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1, 18))
 
     // Liquidate A
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await troveManager.liquidate(alice)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
@@ -1133,7 +1133,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1, 18))
 
     // Liquidate B
-    const txB = await cdpManager.liquidate(bob)
+    const txB = await troveManager.liquidate(bob)
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -1151,19 +1151,19 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1, 18))
 
     // Liquidate F
-    const txF = await cdpManager.liquidate(freddy)
+    const txF = await troveManager.liquidate(freddy)
     assert.isTrue(txF.receipt.status)
     assert.isFalse(await sortedCDPs.contains(freddy))
 
     // Grab remaining troves' collateral
-    const carol_rawColl = (await cdpManager.CDPs(carol))[1].toString()
-    const carol_pendingETHReward = (await cdpManager.getPendingETHReward(carol)).toString()
+    const carol_rawColl = (await troveManager.CDPs(carol))[1].toString()
+    const carol_pendingETHReward = (await troveManager.getPendingETHReward(carol)).toString()
 
-    const dennis_rawColl = (await cdpManager.CDPs(dennis))[1].toString()
-    const dennis_pendingETHReward = (await cdpManager.getPendingETHReward(dennis)).toString()
+    const dennis_rawColl = (await troveManager.CDPs(dennis))[1].toString()
+    const dennis_pendingETHReward = (await troveManager.getPendingETHReward(dennis)).toString()
 
-    const erin_rawColl = (await cdpManager.CDPs(erin))[1].toString()
-    const erin_pendingETHReward = (await cdpManager.getPendingETHReward(erin)).toString()
+    const erin_rawColl = (await troveManager.CDPs(erin))[1].toString()
+    const erin_pendingETHReward = (await troveManager.getPendingETHReward(erin)).toString()
 
     // Check raw collateral of C, D, E
     assert.isAtMost(th.getDifference(carol_rawColl, dec(4975, 14)), 1000)
@@ -1183,8 +1183,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(defaultColl, '1820571765442400000'), 1000000)
 
     // Check system snapshots
-    const totalStakesSnapshot = (await cdpManager.totalStakesSnapshot()).toString()
-    const totalCollateralSnapshot = (await cdpManager.totalCollateralSnapshot()).toString()
+    const totalStakesSnapshot = (await troveManager.totalStakesSnapshot()).toString()
+    const totalCollateralSnapshot = (await troveManager.totalCollateralSnapshot()).toString()
     assert.isAtMost(th.getDifference(totalStakesSnapshot, '1502195536109430000'), 1000000)
     assert.isAtMost(th.getDifference(totalCollateralSnapshot, '6977512500000000000'), 1000000)
 
@@ -1208,13 +1208,13 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice('1')
 
     // Liquidate A
-    const txA = await cdpManager.liquidate(alice)
+    const txA = await troveManager.liquidate(alice)
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
     // Check rewards for B and C
-    assert.isAtMost(th.getDifference(await cdpManager.getPendingETHReward(bob), '446550869690221816199'), 1000000)
-    assert.isAtMost(th.getDifference(await cdpManager.getPendingETHReward(carol), '1199130309778191572'), 1000000)
+    assert.isAtMost(th.getDifference(await troveManager.getPendingETHReward(bob), '446550869690221816199'), 1000000)
+    assert.isAtMost(th.getDifference(await troveManager.getPendingETHReward(carol), '1199130309778191572'), 1000000)
 
     // Price rises 
     await priceFeed.setPrice(dec(1, 27))
@@ -1232,13 +1232,13 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice('1')
 
     // Liquidate B
-    const txB = await cdpManager.liquidate(bob)
+    const txB = await troveManager.liquidate(bob)
     assert.isTrue(txB.receipt.status)
     assert.isFalse(await sortedCDPs.contains(bob))
 
     // Check rewards for C and D
-    assert.isAtMost(th.getDifference(await cdpManager.getPendingETHReward(carol), '9279940897343843971610'), 10000000)
-    assert.isAtMost(th.getDifference(await cdpManager.getPendingETHReward(dennis), '32154612547926497256'), 10000000)
+    assert.isAtMost(th.getDifference(await troveManager.getPendingETHReward(carol), '9279940897343843971610'), 10000000)
+    assert.isAtMost(th.getDifference(await troveManager.getPendingETHReward(dennis), '32154612547926497256'), 10000000)
 
     // Price rises 
     await priceFeed.setPrice(dec(1, 27))
@@ -1257,22 +1257,22 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice('1')
 
     // Liquidate F
-    const txF = await cdpManager.liquidate(freddy)
+    const txF = await troveManager.liquidate(freddy)
     assert.isTrue(txF.receipt.status)
     assert.isFalse(await sortedCDPs.contains(freddy))
 
     // Grab remaining troves' collateral
-    const carol_rawColl = (await cdpManager.CDPs(carol))[1].toString()
-    const carol_pendingETHReward = (await cdpManager.getPendingETHReward(carol)).toString()
-    const carol_Stake = (await cdpManager.CDPs(carol))[2].toString()
+    const carol_rawColl = (await troveManager.CDPs(carol))[1].toString()
+    const carol_pendingETHReward = (await troveManager.getPendingETHReward(carol)).toString()
+    const carol_Stake = (await troveManager.CDPs(carol))[2].toString()
 
-    const dennis_rawColl = (await cdpManager.CDPs(dennis))[1].toString()
-    const dennis_pendingETHReward = (await cdpManager.getPendingETHReward(dennis)).toString()
-    const dennis_Stake = (await cdpManager.CDPs(dennis))[2].toString()
+    const dennis_rawColl = (await troveManager.CDPs(dennis))[1].toString()
+    const dennis_pendingETHReward = (await troveManager.getPendingETHReward(dennis)).toString()
+    const dennis_Stake = (await troveManager.CDPs(dennis))[2].toString()
 
-    const erin_rawColl = (await cdpManager.CDPs(erin))[1].toString()
-    const erin_pendingETHReward = (await cdpManager.getPendingETHReward(erin)).toString()
-    const erin_Stake = (await cdpManager.CDPs(erin))[2].toString()
+    const erin_rawColl = (await troveManager.CDPs(erin))[1].toString()
+    const erin_pendingETHReward = (await troveManager.getPendingETHReward(erin)).toString()
+    const erin_Stake = (await troveManager.CDPs(erin))[2].toString()
 
     // Check raw collateral of C, D, E
     assert.isAtMost(th.getDifference(carol_rawColl, '10101130309778191929'), 1000000)
@@ -1292,8 +1292,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(defaultColl, '9279941593843843293140'), 20000000)
 
     // Check system snapshots
-    const totalStakesSnapshot = (await cdpManager.totalStakesSnapshot()).toString()
-    const totalCollateralSnapshot = (await cdpManager.totalCollateralSnapshot()).toString()
+    const totalStakesSnapshot = (await troveManager.totalStakesSnapshot()).toString()
+    const totalCollateralSnapshot = (await troveManager.totalCollateralSnapshot()).toString()
     assert.isAtMost(th.getDifference(totalStakesSnapshot, '20006587547157500000'), 20000000)
     // TODO: is this acceptable rounding error
     assert.isAtMost(th.getDifference(totalCollateralSnapshot, '19323232338512800000000'), 2000000000000)

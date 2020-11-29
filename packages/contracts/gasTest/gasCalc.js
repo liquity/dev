@@ -31,7 +31,7 @@ contract('Gas cost tests', async accounts => {
   let priceFeed
   let clvToken
   let sortedCDPs
-  let cdpManager
+  let troveManager
   let activePool
   let stabilityPool
   let defaultPool
@@ -49,7 +49,7 @@ contract('Gas cost tests', async accounts => {
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
@@ -532,7 +532,7 @@ contract('Gas cost tests', async accounts => {
     await borrowerOperations.withdrawCLV(randCLVAmount, accounts[1], { from: accounts[1] })
 
     const price = await priceFeed.getPrice()
-    const tx = await functionCaller.cdpManager_getCurrentICR(accounts[1], price)
+    const tx = await functionCaller.troveManager_getCurrentICR(accounts[1], price)
 
     const gas = th.gasUsed(tx) - 21000
     th.logGas(gas, message)
@@ -585,10 +585,10 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[999], { from: accounts[0] })
+    await troveManager.liquidate(accounts[999], { from: accounts[0] })
 
     const price = await priceFeed.getPrice()
-    const tx = await functionCaller.cdpManager_getCurrentICR(accounts[1], price)
+    const tx = await functionCaller.troveManager_getCurrentICR(accounts[1], price)
 
     const gas = th.gasUsed(tx) - 21000
     th.logGas(gas, message)
@@ -605,7 +605,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[999], { from: accounts[0] })
+    await troveManager.liquidate(accounts[999], { from: accounts[0] })
 
     const gasResults = await th.getCurrentICR_allAccounts(_10_Accounts, contracts, functionCaller)
     th.logGasMetrics(gasResults, message)
@@ -624,7 +624,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[999], { from: accounts[0] })
+    await troveManager.liquidate(accounts[999], { from: accounts[0] })
 
     const gasResults = await th.getCurrentICR_allAccounts(_10_Accounts, contracts, functionCaller)
     th.logGasMetrics(gasResults, message)
@@ -642,7 +642,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[999], { from: accounts[0] })
+    await troveManager.liquidate(accounts[999], { from: accounts[0] })
 
     const gasResults = await th.getCurrentICR_allAccounts(_10_Accounts, contracts, functionCaller)
     th.logGasMetrics(gasResults, message)
@@ -775,10 +775,10 @@ contract('Gas cost tests', async accounts => {
 
   // it("", async () => { 
   //   const message = 'redeemCollateral(),  CLV, each redemption only hits the first CDP, never closes it'
-  //   await th.addColl_allAccounts(_20_Accounts, cdpManager, dec(10, 'ether'))
-  //   await th.withdrawCLV_allAccounts(_20_Accounts, cdpManager, dec(100, 18))
+  //   await th.addColl_allAccounts(_20_Accounts, troveManager, dec(10, 'ether'))
+  //   await th.withdrawCLV_allAccounts(_20_Accounts, troveManager, dec(100, 18))
 
-  //   const gasResults = await th.redeemCollateral_allAccounts_randomAmount( 1, 10, _10_Accounts, cdpManager)
+  //   const gasResults = await th.redeemCollateral_allAccounts_randomAmount( 1, 10, _10_Accounts, troveManager)
   //   th.logGasMetrics(gasResults, message)
   //   th.logAllGasCosts(gasResults)
 
@@ -798,7 +798,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[998]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[998], { from: accounts[0] })
+    await troveManager.liquidate(accounts[998], { from: accounts[0] })
 
     const gas = await th.redeemCollateral(accounts[1], contracts, dec(50, 18))
 
@@ -822,7 +822,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[998]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[998], { from: accounts[0] })
+    await troveManager.liquidate(accounts[998], { from: accounts[0] })
 
     /* Account 2 redeems 50 CLV. It is redeemed from account 0's CDP, 
     leaving the CDP active with 30 CLV and ((200 *10 - 50 ) / 200 ) = 9.75 ETH. 
@@ -851,7 +851,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[998]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[998], { from: accounts[0] })
+    await troveManager.liquidate(accounts[998], { from: accounts[0] })
 
     const gas = await th.redeemCollateral(whale, contracts, dec(500, 18))
     th.logGas(gas, message)
@@ -874,7 +874,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[998]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[998], { from: accounts[0] })
+    await troveManager.liquidate(accounts[998], { from: accounts[0] })
 
     const gas = await th.redeemCollateral(whale, contracts, dec(1000, 18))
     th.logGas(gas, message)
@@ -897,7 +897,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[998]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[998], { from: accounts[0] })
+    await troveManager.liquidate(accounts[998], { from: accounts[0] })
 
     const gas = await th.redeemCollateral(whale, contracts, dec(1500, 18))
     th.logGas(gas, message)
@@ -920,7 +920,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[998]'s ICR falls below MCR, and gets liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[998], { from: accounts[0] })
+    await troveManager.liquidate(accounts[998], { from: accounts[0] })
 
     const gas = await th.redeemCollateral(whale, contracts, dec(2000, 18))
     th.logGas(gas, message)
@@ -932,8 +932,8 @@ contract('Gas cost tests', async accounts => {
 
   // it("", async () => { 
   //   const message = 'redeemCollateral(),  CLV, each redemption only hits the first CDP, never closes it, WITH pending rewards'
-  //   await th.addColl_allAccounts(_20_Accounts, cdpManager, dec(10, 'ether'))
-  //   await th.withdrawCLV_allAccounts(_20_Accounts, cdpManager, dec(100, 18))
+  //   await th.addColl_allAccounts(_20_Accounts, troveManager, dec(10, 'ether'))
+  //   await th.withdrawCLV_allAccounts(_20_Accounts, troveManager, dec(100, 18))
 
   //    // acct 999 adds coll, withdraws CLV, sits at 111% ICR
   //    await borrowerOperations.addColl(accounts[999], {from: accounts[999], value:dec(1, 'ether')})
@@ -941,9 +941,9 @@ contract('Gas cost tests', async accounts => {
 
   //     // Price drops, account[999]'s ICR falls below MCR, and gets liquidated
   //    await priceFeed.setPrice(dec(100, 18))
-  //    await cdpManager.liquidate(accounts[999], { from: accounts[0]})
+  //    await troveManager.liquidate(accounts[999], { from: accounts[0]})
 
-  //   const gasResults = await th.redeemCollateral_allAccounts_randomAmount( 1, 10, _10_Accounts, cdpManager)
+  //   const gasResults = await th.redeemCollateral_allAccounts_randomAmount( 1, 10, _10_Accounts, troveManager)
   //   th.logGasMetrics(gasResults, message)
   //   th.logAllGasCosts(gasResults)
 
@@ -962,7 +962,7 @@ contract('Gas cost tests', async accounts => {
 
   //   for (i = 0; i < 10; i++) {
   //     randomCR = th.randAmountInWei(1, 5)
-  //     const tx = await functionCaller.cdpManager_getApproxHint(randomCR, 10)
+  //     const tx = await functionCaller.troveManager_getApproxHint(randomCR, 10)
   //     const gas = th.gasUsed(tx) - 21000
   //     gasCostList.push(gas)
   //   }
@@ -980,7 +980,7 @@ contract('Gas cost tests', async accounts => {
   //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, borrowerOperations)
 
   //   const CR = '200000000000000000000'
-  //   tx = await functionCaller.cdpManager_getApproxHint(CR, 10)
+  //   tx = await functionCaller.troveManager_getApproxHint(CR, 10)
   //   const gas = th.gasUsed(tx) - 21000
   //   th.logGas(gas, message)
 
@@ -994,7 +994,7 @@ contract('Gas cost tests', async accounts => {
 
 
   //   const CR = '200000000000000000000'
-  //   tx = await functionCaller.cdpManager_getApproxHint(CR, 32)
+  //   tx = await functionCaller.troveManager_getApproxHint(CR, 32)
   //   const gas = th.gasUsed(tx) - 21000
   //   th.logGas(gas, message)
 
@@ -1007,7 +1007,7 @@ contract('Gas cost tests', async accounts => {
   //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, borrowerOperations)
 
   //   const CR = '200000000000000000000'
-  //   tx = await functionCaller.cdpManager_getApproxHint(CR, 100)
+  //   tx = await functionCaller.troveManager_getApproxHint(CR, 100)
   //   const gas = th.gasUsed(tx) - 21000
   //   th.logGas(gas, message)
 
@@ -1018,11 +1018,11 @@ contract('Gas cost tests', async accounts => {
 
   // it("", async () => { //8mil. gas
   //   const message = 'getApproxHint(), numTrials = 320: i.e. k = 10, list size = 1000'
-  //   await th.addColl_allAccounts(_10_Accounts, cdpManager, dec(10, 'ether'))
-  //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, cdpManager)
+  //   await th.addColl_allAccounts(_10_Accounts, troveManager, dec(10, 'ether'))
+  //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, troveManager)
 
   //   const CR = '200000000000000000000'
-  //   tx = await functionCaller.cdpManager_getApproxHint(CR, 320)
+  //   tx = await functionCaller.troveManager_getApproxHint(CR, 320)
   //   const gas = th.gasUsed(tx) - 21000
   //   th.logGas(gas, message)
 
@@ -1031,11 +1031,11 @@ contract('Gas cost tests', async accounts => {
 
   // it("", async () => { // 25mil. gas
   //   const message = 'getApproxHint(), numTrials = 1000:  i.e. k = 10, list size = 10000'
-  //   await th.addColl_allAccounts(_10_Accounts, cdpManager, dec(10, 'ether'))
-  //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, cdpManager)
+  //   await th.addColl_allAccounts(_10_Accounts, troveManager, dec(10, 'ether'))
+  //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, troveManager)
 
   //   const CR = '200000000000000000000'
-  //   tx = await functionCaller.cdpManager_getApproxHint(CR, 1000)
+  //   tx = await functionCaller.troveManager_getApproxHint(CR, 1000)
   //   const gas = th.gasUsed(tx) - 21000
   //   th.logGas(gas, message)
 
@@ -1044,11 +1044,11 @@ contract('Gas cost tests', async accounts => {
 
   // it("", async () => { // 81mil. gas
   //   const message = 'getApproxHint(), numTrials = 3200:  i.e. k = 10, list size = 100000'
-  //   await th.addColl_allAccounts(_10_Accounts, cdpManager, dec(10, 'ether'))
-  //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, cdpManager)
+  //   await th.addColl_allAccounts(_10_Accounts, troveManager, dec(10, 'ether'))
+  //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, troveManager)
 
   //   const CR = '200000000000000000000'
-  //   tx = await functionCaller.cdpManager_getApproxHint(CR, 3200)
+  //   tx = await functionCaller.troveManager_getApproxHint(CR, 3200)
   //   const gas = th.gasUsed(tx) - 21000
   //   th.logGas(gas, message)
 
@@ -1060,11 +1060,11 @@ contract('Gas cost tests', async accounts => {
 
   // it("", async () => { 
   //   const message = 'getApproxHint(), numTrials = 10000:  i.e. k = 10, list size = 1000000'
-  //   await th.addColl_allAccounts(_10_Accounts, cdpManager, dec(10, 'ether'))
-  //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, cdpManager)
+  //   await th.addColl_allAccounts(_10_Accounts, troveManager, dec(10, 'ether'))
+  //   await th.withdrawCLV_allAccounts_randomAmount(1, 180, _10_Accounts, troveManager)
 
   //   const CR = '200000000000000000000'
-  //   tx = await functionCaller.cdpManager_getApproxHint(CR, 10000)
+  //   tx = await functionCaller.troveManager_getApproxHint(CR, 10000)
   //   const gas = th.gasUsed(tx) - 21000
   //   th.logGas(gas, message)
 
@@ -1213,7 +1213,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account 1 liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    await troveManager.liquidate(accounts[1], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
 
     // Check accounts have LQTY gains from liquidations
@@ -1247,7 +1247,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[1] is liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    await troveManager.liquidate(accounts[1], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
 
     // Check accounts have LQTY gains from liquidations
@@ -1280,7 +1280,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[1] is liquidated
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    await troveManager.liquidate(accounts[1], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
 
     // Check accounts have LQTY gains from liquidations
@@ -1383,7 +1383,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[0]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    await troveManager.liquidate(accounts[1], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
 
     // Check accounts have LQTY gains from liquidations
@@ -1417,7 +1417,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[0]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    await troveManager.liquidate(accounts[1], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
 
     // Check accounts have LQTY gains from liquidations
@@ -1450,7 +1450,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[0]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    await troveManager.liquidate(accounts[1], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
 
     // Check accounts have LQTY gains from liquidations
@@ -1486,7 +1486,7 @@ contract('Gas cost tests', async accounts => {
 
     // Price drops, account[0]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    await troveManager.liquidate(accounts[1], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
 
      // Check accounts have LQTY gains from liquidations
@@ -1519,7 +1519,7 @@ contract('Gas cost tests', async accounts => {
   
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
-    await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    await troveManager.liquidate(accounts[1], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
 
        // Check accounts have LQTY gains from liquidations
@@ -1553,10 +1553,10 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Initial distribution liquidations make system reward terms and Default Pool non-zero
-    const tx1 = await cdpManager.liquidate(accounts[2], { from: accounts[0] })
+    const tx1 = await troveManager.liquidate(accounts[2], { from: accounts[0] })
     // const gas1 = th.gasUsed(tx1)
     // th.logGas(gas1, message)
-    const tx2 = await cdpManager.liquidate(accounts[3], { from: accounts[0] })
+    const tx2 = await troveManager.liquidate(accounts[3], { from: accounts[0] })
     // const gas2 = th.gasUsed(tx2)
     // th.logGas(gas2, message)
 
@@ -1564,7 +1564,7 @@ contract('Gas cost tests', async accounts => {
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    const tx5 = await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    const tx5 = await troveManager.liquidate(accounts[1], { from: accounts[0] })
 
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
     const gas5 = th.gasUsed(tx5)
@@ -1590,12 +1590,12 @@ contract('Gas cost tests', async accounts => {
 
     // All loans are liquidated
     for (account of liquidationAcctRange) {
-      const hasPendingRewards = await cdpManager.hasPendingRewards(account)
+      const hasPendingRewards = await troveManager.hasPendingRewards(account)
       console.log("Liquidee has pending rewards: " + hasPendingRewards)
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-      const tx = await cdpManager.liquidate(account, { from: accounts[0] })
+      const tx = await troveManager.liquidate(account, { from: accounts[0] })
       assert.isFalse(await sortedCDPs.contains(account))
 
       const gas = th.gasUsed(tx)
@@ -1621,8 +1621,8 @@ contract('Gas cost tests', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Initial distribution liquidations make system reward terms and DefaultPool non-zero
-    const tx1 = await cdpManager.liquidate(accounts[2], { from: accounts[0] })
-    const tx2 = await cdpManager.liquidate(accounts[3], { from: accounts[0] })
+    const tx1 = await troveManager.liquidate(accounts[2], { from: accounts[0] })
+    const tx2 = await troveManager.liquidate(accounts[3], { from: accounts[0] })
 
     // Account 1 opens loan
     await borrowerOperations.openLoan(dec(90, 18), accounts[1], { from: accounts[1], value: dec(1, 'ether') })
@@ -1634,7 +1634,7 @@ contract('Gas cost tests', async accounts => {
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    const tx3 = await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    const tx3 = await troveManager.liquidate(accounts[1], { from: accounts[0] })
 
     assert.isFalse(await sortedCDPs.contains(accounts[1]))
     const gas = th.gasUsed(tx3)
@@ -1657,14 +1657,14 @@ contract('Gas cost tests', async accounts => {
       await priceFeed.setPrice(dec(200, 18))
       await borrowerOperations.openLoan(dec(180, 18), account, { from: account, value: dec(1, 'ether') })
 
-      const hasPendingRewards = await cdpManager.hasPendingRewards(account)
+      const hasPendingRewards = await troveManager.hasPendingRewards(account)
       console.log("Liquidee has pending rewards: " + hasPendingRewards)
 
       await priceFeed.setPrice(dec(100, 18))
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-      const tx = await cdpManager.liquidate(account, { from: accounts[0] })
+      const tx = await troveManager.liquidate(account, { from: accounts[0] })
 
       assert.isFalse(await sortedCDPs.contains(account))
 
@@ -1696,16 +1696,16 @@ contract('Gas cost tests', async accounts => {
     await stabilityPool.provideToSP(dec(600, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     // Initial liquidations - full offset - makes SP reward terms and SP non-zero
-    await cdpManager.liquidate(accounts[2], { from: accounts[0] })
-    await cdpManager.liquidate(accounts[3], { from: accounts[0] })
+    await troveManager.liquidate(accounts[2], { from: accounts[0] })
+    await troveManager.liquidate(accounts[3], { from: accounts[0] })
 
-    const hasPendingRewards = await cdpManager.hasPendingRewards(accounts[1])
+    const hasPendingRewards = await troveManager.hasPendingRewards(accounts[1])
     console.log("Liquidee has pending rewards: " + hasPendingRewards)
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Account 1 liquidated - full offset
-    const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    const tx = await troveManager.liquidate(accounts[1], { from: accounts[0] })
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -1734,22 +1734,22 @@ contract('Gas cost tests', async accounts => {
     await stabilityPool.provideToSP(dec(360, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     // Initial liquidations - full offset - makes SP reward terms and SP non-zero
-    await cdpManager.liquidate(accounts[2], { from: accounts[0] })
-    await cdpManager.liquidate(accounts[3], { from: accounts[0] })
+    await troveManager.liquidate(accounts[2], { from: accounts[0] })
+    await troveManager.liquidate(accounts[3], { from: accounts[0] })
 
     // Pure redistribution - creates pending dist. rewards for account 1
-    await cdpManager.liquidate(accounts[4], { from: accounts[0] })
+    await troveManager.liquidate(accounts[4], { from: accounts[0] })
 
     // Account 5 provides another 200 to the SP
     await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: accounts[100] })
 
-    const hasPendingRewards = await cdpManager.hasPendingRewards(accounts[1])
+    const hasPendingRewards = await troveManager.hasPendingRewards(accounts[1])
     console.log("Liquidee has pending rewards: " + hasPendingRewards)
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Account 1 liquidated - full offset
-    const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    const tx = await troveManager.liquidate(accounts[1], { from: accounts[0] })
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -1774,21 +1774,21 @@ contract('Gas cost tests', async accounts => {
 
     // Set up some "previous" liquidations triggering partial offsets, and pending rewards for all troves
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[100] })
-    await cdpManager.liquidate(accounts[2], { from: accounts[0] })
+    await troveManager.liquidate(accounts[2], { from: accounts[0] })
 
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[101] })
-    await cdpManager.liquidate(accounts[3], { from: accounts[0] })
+    await troveManager.liquidate(accounts[3], { from: accounts[0] })
 
     // pool refilled with 100 CLV
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[102] })
 
-    const hasPendingRewards = await cdpManager.hasPendingRewards(accounts[1])
+    const hasPendingRewards = await troveManager.hasPendingRewards(accounts[1])
     console.log("Liquidee has pending rewards: " + hasPendingRewards)
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // account 1 180 CLV liquidated  - partial offset
-    const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    const tx = await troveManager.liquidate(accounts[1], { from: accounts[0] })
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -1813,10 +1813,10 @@ contract('Gas cost tests', async accounts => {
     // Set up some "previous" liquidations that trigger partial offsets, 
     //and create pending rewards for all troves
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[100] })
-    await cdpManager.liquidate(accounts[2], { from: accounts[0] })
+    await troveManager.liquidate(accounts[2], { from: accounts[0] })
 
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: accounts[101] })
-    await cdpManager.liquidate(accounts[3], { from: accounts[0] })
+    await troveManager.liquidate(accounts[3], { from: accounts[0] })
 
     // Pool refilled with 50 CLV
     await stabilityPool.provideToSP(dec(50, 18), ZERO_ADDRESS, { from: accounts[102] })
@@ -1827,13 +1827,13 @@ contract('Gas cost tests', async accounts => {
     // Price drops, account[1]'s ICR falls below MCR
     await priceFeed.setPrice(dec(50, 18))
 
-    const hasPendingRewards = await cdpManager.hasPendingRewards(accounts[1])
+    const hasPendingRewards = await troveManager.hasPendingRewards(accounts[1])
     console.log("Liquidee has pending rewards: " + hasPendingRewards)
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // account 1 70 CLV liquidated  - partial offset against 50 CLV in SP
-    const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    const tx = await troveManager.liquidate(accounts[1], { from: accounts[0] })
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 
@@ -1869,21 +1869,21 @@ contract('Gas cost tests', async accounts => {
 
     /* Liquidate account 97. Account 97 is completely offset against SP and removed from system.
     This creates SP gains for accounts 99 and 7. */
-    await cdpManager.liquidate(accounts[97], { from: accounts[0] })
+    await troveManager.liquidate(accounts[97], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[97]))
 
     // Acct 100 withdraws deposit and gains from SP
     await stabilityPool.withdrawFromSP(dec(1800, 18), { from: accounts[100] })
 
     // Account 98 is liquidated, with nothing in SP pool.  This creates pending rewards from distribution.
-    await cdpManager.liquidate(accounts[98], { from: accounts[0] })
+    await troveManager.liquidate(accounts[98], { from: accounts[0] })
 
     // Account 7 deposits 1 CLV in the Stability Pool
     await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: accounts[100] })
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    const tx = await cdpManager.liquidate(accounts[99], { from: accounts[0] })
+    const tx = await troveManager.liquidate(accounts[99], { from: accounts[0] })
     assert.isFalse(await sortedCDPs.contains(accounts[99]))
 
     const gas = th.gasUsed(tx)
@@ -1910,7 +1910,7 @@ contract('Gas cost tests', async accounts => {
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
     
-    const tx = await cdpManager.liquidate(accounts[1], { from: accounts[0] })
+    const tx = await troveManager.liquidate(accounts[1], { from: accounts[0] })
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
 

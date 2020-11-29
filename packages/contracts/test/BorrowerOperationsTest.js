@@ -35,7 +35,7 @@ contract('BorrowerOperations', async accounts => {
   let priceFeed
   let clvToken
   let sortedCDPs
-  let cdpManager
+  let troveManager
   let activePool
   let stabilityPool
   let defaultPool
@@ -58,7 +58,7 @@ contract('BorrowerOperations', async accounts => {
     priceFeed = contracts.priceFeed
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
@@ -98,7 +98,7 @@ contract('BorrowerOperations', async accounts => {
     // alice creates a CDP and adds first collateral
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     coll_Before = alice_CDP_Before[1]
     const status_Before = alice_CDP_Before[3]
 
@@ -109,7 +109,7 @@ contract('BorrowerOperations', async accounts => {
     // Alice adds second collateral
     await borrowerOperations.addColl(alice, { from: alice, value: dec(1, 'ether') })
 
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const coll_After = alice_CDP_After[1]
     const status_After = alice_CDP_After[3]
 
@@ -141,9 +141,9 @@ contract('BorrowerOperations', async accounts => {
     //  Alice creates initial CDP with 1 ether
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const alice_Stake_Before = alice_CDP_Before[2].toString()
-    const totalStakes_Before = (await cdpManager.totalStakes()).toString()
+    const totalStakes_Before = (await troveManager.totalStakes()).toString()
 
     assert.equal(alice_Stake_Before, '1000000000000000000')
     assert.equal(totalStakes_Before, '1000000000000000000')
@@ -152,9 +152,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.addColl(alice, { from: alice, value: dec(2, 'ether') })
 
     // Check stake and total stakes get updated
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const alice_Stake_After = alice_CDP_After[2].toString()
-    const totalStakes_After = (await cdpManager.totalStakes()).toString()
+    const totalStakes_After = (await troveManager.totalStakes()).toString()
 
     assert.equal(alice_Stake_After, '3000000000000000000')
     assert.equal(totalStakes_After, '3000000000000000000')
@@ -177,21 +177,21 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // Close Carol's CDP, liquidating her 1 ether and 180CLV.
-    const tx = await cdpManager.liquidate(carol, { from: owner });
+    const tx = await troveManager.liquidate(carol, { from: owner });
     const liquidatedDebt_C = th.getEmittedLiquidatedDebt(tx)
     const liquidatedColl_C = th.getEmittedLiquidatedColl(tx)
 
     assert.isFalse(await sortedCDPs.contains(carol))
 
-    const L_ETH = await cdpManager.L_ETH()
-    const L_CLVDebt = await cdpManager.L_CLVDebt()
+    const L_ETH = await troveManager.L_ETH()
+    const L_CLVDebt = await troveManager.L_CLVDebt()
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
-    const alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
+    const alice_rewardSnapshot_Before = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_Before = alice_rewardSnapshot_Before[0]
     const alice_CLVDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
 
-    const bob_rewardSnapshot_Before = await cdpManager.rewardSnapshots(bob)
+    const bob_rewardSnapshot_Before = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_Before = bob_rewardSnapshot_Before[0]
     const bob_CLVDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
 
@@ -214,11 +214,11 @@ contract('BorrowerOperations', async accounts => {
     const expectedCollReward_B = liquidatedColl_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
     const expectedDebtReward_B = liquidatedDebt_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
 
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const alice_CLVDebt_After = alice_CDP_After[0]
     const alice_Coll_After = alice_CDP_After[1]
 
-    const bob_CDP_After = await cdpManager.CDPs(bob)
+    const bob_CDP_After = await troveManager.CDPs(bob)
     const bob_CLVDebt_After = bob_CDP_After[0]
     const bob_Coll_After = bob_CDP_After[1]
 
@@ -232,11 +232,11 @@ contract('BorrowerOperations', async accounts => {
 
     /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be updated
     to the latest values of L_ETH and L_CLVDebt */
-    const alice_rewardSnapshot_After = await cdpManager.rewardSnapshots(alice)
+    const alice_rewardSnapshot_After = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0]
     const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
 
-    const bob_rewardSnapshot_After = await cdpManager.rewardSnapshots(bob)
+    const bob_rewardSnapshot_After = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0]
     const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
 
@@ -262,7 +262,7 @@ contract('BorrowerOperations', async accounts => {
   //   await priceFeed.setPrice('100000000000000000000');
 
   //   // close Carol's CDP, liquidating her 5 ether and 900CLV.
-  //   await cdpManager.liquidate(carol, { from: owner });
+  //   await troveManager.liquidate(carol, { from: owner });
 
   //   // dennis tops up his loan by 1 ETH
   //   await borrowerOperations.addColl(dennis, { from: dennis, value: dec(1, 'ether') })
@@ -279,7 +279,7 @@ contract('BorrowerOperations', async accounts => {
   //   totalCollateral = (alice_Collateral + bob_Collateral + dennis_orig_coll + totalPendingETHReward) = (15 + 4 + 1 + 5)  = 25 ETH.
 
   //   Therefore, as Dennis adds 1 ether collateral, his corrected stake should be:  s = 2 * (20 / 25 ) = 1.6 ETH */
-  //   const dennis_CDP = await cdpManager.CDPs(dennis)
+  //   const dennis_CDP = await troveManager.CDPs(dennis)
 
   //   const dennis_Stake = dennis_CDP[2]
   //   console.log(dennis_Stake.toString())
@@ -305,7 +305,7 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Bob gets liquidated
-    await cdpManager.liquidate(bob)
+    await troveManager.liquidate(bob)
 
     assert.isFalse(await sortedCDPs.contains(bob))
 
@@ -323,16 +323,16 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
 
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await priceFeed.setPrice('105000000000000000000')
 
-    assert.isTrue(await cdpManager.checkRecoveryMode())
+    assert.isTrue(await troveManager.checkRecoveryMode())
 
     await borrowerOperations.addColl(alice, { from: alice, value: dec(1, 'ether') })
 
     // Check Alice's collateral
-    const alice_collateral = (await cdpManager.CDPs(alice))[1].toString()
+    const alice_collateral = (await troveManager.CDPs(alice))[1].toString()
     assert.equal(alice_collateral, dec(2, 'ether'))
   })
 
@@ -363,7 +363,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
     await borrowerOperations.withdrawCLV(dec(100, 18), bob, { from: bob })
 
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Withdrawal possible when recoveryMode == false
     const txAlice = await borrowerOperations.withdrawColl(1000, alice, { from: alice })
@@ -371,7 +371,7 @@ contract('BorrowerOperations', async accounts => {
 
     await priceFeed.setPrice('105000000000000000000')
 
-    assert.isTrue(await cdpManager.checkRecoveryMode())
+    assert.isTrue(await troveManager.checkRecoveryMode())
 
     //Check withdrawal impossible when recoveryMode == true
     try {
@@ -439,7 +439,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
-    const TCR = (await cdpManager.getTCR()).toString()
+    const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -473,7 +473,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // Check CDP is active
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const status_Before = alice_CDP_Before[3]
     assert.equal(status_Before, 1)
     assert.isTrue(await sortedCDPs.contains(alice))
@@ -490,7 +490,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // Check CDP is active
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const status_Before = alice_CDP_Before[3]
     assert.equal(status_Before, 1)
     assert.isTrue(await sortedCDPs.contains(alice))
@@ -499,7 +499,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawColl(dec(100, 'finney'), alice, { from: alice })
 
     // Check CDP is still active
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const status_After = alice_CDP_After[3]
     assert.equal(status_After, 1)
     assert.isTrue(await sortedCDPs.contains(alice))
@@ -509,7 +509,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(2, 'ether') })
 
     // check before -  Alice has 2 ether in CDP 
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const coll_Before = alice_CDP_Before[1]
     assert.equal(coll_Before, dec(2, 'ether'))
 
@@ -517,7 +517,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawColl(dec(1, 'ether'), alice, { from: alice })
 
     // Check 1 ether remaining
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const coll_After = alice_CDP_After[1]
     assert.equal(coll_After, dec(1, 'ether'))
   })
@@ -544,9 +544,9 @@ contract('BorrowerOperations', async accounts => {
     //  Alice creates initial CDP with 2 ether
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(2, 'ether') })
 
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const alice_Stake_Before = alice_CDP_Before[2].toString()
-    const totalStakes_Before = (await cdpManager.totalStakes()).toString()
+    const totalStakes_Before = (await troveManager.totalStakes()).toString()
 
     assert.equal(alice_Stake_Before, '2000000000000000000')
     assert.equal(totalStakes_Before, '2000000000000000000')
@@ -555,9 +555,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawColl(dec(1, 'ether'), alice, { from: alice })
 
     // Check stake and total stakes get updated
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const alice_Stake_After = alice_CDP_After[2].toString()
-    const totalStakes_After = (await cdpManager.totalStakes()).toString()
+    const totalStakes_After = (await troveManager.totalStakes()).toString()
 
     assert.equal(alice_Stake_After, '1000000000000000000')
     assert.equal(totalStakes_After, '1000000000000000000')
@@ -597,18 +597,18 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice('100000000000000000000');
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    const liquidationTx_C = await cdpManager.liquidate(carol, { from: owner });
+    const liquidationTx_C = await troveManager.liquidate(carol, { from: owner });
     const [liquidatedDebt_C, liquidatedColl_C, gasComp_C] = th.getEmittedLiquidationValues(liquidationTx_C)
 
-    const L_ETH = await cdpManager.L_ETH()
-    const L_CLVDebt = await cdpManager.L_CLVDebt()
+    const L_ETH = await troveManager.L_ETH()
+    const L_CLVDebt = await troveManager.L_CLVDebt()
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
-    const alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
+    const alice_rewardSnapshot_Before = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_Before = alice_rewardSnapshot_Before[0]
     const alice_CLVDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
 
-    const bob_rewardSnapshot_Before = await cdpManager.rewardSnapshots(bob)
+    const bob_rewardSnapshot_Before = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_Before = bob_rewardSnapshot_Before[0]
     const bob_CLVDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
 
@@ -630,11 +630,11 @@ contract('BorrowerOperations', async accounts => {
     const expectedCollReward_B = liquidatedColl_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
     const expectedDebtReward_B = liquidatedDebt_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
 
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const alice_CLVDebt_After = alice_CDP_After[0]
     const alice_Coll_After = alice_CDP_After[1]
 
-    const bob_CDP_After = await cdpManager.CDPs(bob)
+    const bob_CDP_After = await troveManager.CDPs(bob)
     const bob_CLVDebt_After = bob_CDP_After[0]
     const bob_Coll_After = bob_CDP_After[1]
 
@@ -648,11 +648,11 @@ contract('BorrowerOperations', async accounts => {
 
     /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be updated
     to the latest values of L_ETH and L_CLVDebt */
-    const alice_rewardSnapshot_After = await cdpManager.rewardSnapshots(alice)
+    const alice_rewardSnapshot_After = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0]
     const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
 
-    const bob_rewardSnapshot_After = await cdpManager.rewardSnapshots(bob)
+    const bob_rewardSnapshot_After = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0]
     const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
 
@@ -673,7 +673,7 @@ contract('BorrowerOperations', async accounts => {
 
     // console.log(`activePool raw ETH bal: ${await web3.eth.getBalance(activePool.address)}`)
     // console.log(`activePool ETH tracker: ${await activePool.getETH()}`)
-    // console.log(`activePool in TroveManager: ${await cdpManager.activePool()}`)
+    // console.log(`activePool in TroveManager: ${await troveManager.activePool()}`)
 
     // A redeems 10 CLV
     await th.redeemCollateral(A, contracts, dec(10, 18))
@@ -682,7 +682,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -693,7 +693,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
 
     // Check baseRate has decreased
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.isTrue(baseRate_2.lt(baseRate_1))
 
     // 1 hour passes
@@ -702,7 +702,7 @@ contract('BorrowerOperations', async accounts => {
     // E opens loan 
     await borrowerOperations.openLoan(dec(12, 18), E, { from: E, value: dec(3, 'ether') })
 
-    const baseRate_3 = await cdpManager.baseRate()
+    const baseRate_3 = await troveManager.baseRate()
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
@@ -714,7 +714,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -725,7 +725,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
 
     // Check baseRate is still 0
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.equal(baseRate_2, '0')
 
     // 1 hour passes
@@ -734,7 +734,7 @@ contract('BorrowerOperations', async accounts => {
     // E opens loan 
     await borrowerOperations.openLoan(dec(12, 18), E, { from: E, value: dec(3, 'ether') })
 
-    const baseRate_3 = await cdpManager.baseRate()
+    const baseRate_3 = await troveManager.baseRate()
     assert.equal(baseRate_3, '0')
   })
 
@@ -752,10 +752,10 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_1 = await troveManager.lastFeeOperationTime()
 
     // 50 seconds pass
     th.fastForwardTime(50, web3.currentProvider)
@@ -763,7 +763,7 @@ contract('BorrowerOperations', async accounts => {
     // Borrower C triggers a fee
     await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
 
-    const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_2 = await troveManager.lastFeeOperationTime()
 
     // Check that the last fee operation time did not update, as borrower D's debt issuance occured
     // since before minimum interval had passed 
@@ -779,7 +779,7 @@ contract('BorrowerOperations', async accounts => {
     // Borrower C triggers a fee
     await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
 
-    const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_3 = await troveManager.lastFeeOperationTime()
 
     // Check that the last fee operation time DID update, as borrower's debt issuance occured
     // after minimum interval had passed 
@@ -801,7 +801,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 59 minutes pass
@@ -817,7 +817,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
 
     // Check base rate has decreased even though Borrower tried to stop it decaying
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
@@ -841,7 +841,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -879,7 +879,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -896,7 +896,7 @@ contract('BorrowerOperations', async accounts => {
 
     const gasComp = toBN(dec(10, 18))
 
-    const newDebt = (await cdpManager.CDPs(D))[0]
+    const newDebt = (await troveManager.CDPs(D))[0]
 
     // console.log(`newDebt ${newDebt}`)
     // console.log(`withdrawal_D ${withdrawal_D}`)
@@ -926,7 +926,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -968,7 +968,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -996,7 +996,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -1023,7 +1023,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -1050,7 +1050,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -1106,7 +1106,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
 
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Withdrawal possible when recoveryMode == false
     const txAlice = await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
@@ -1114,7 +1114,7 @@ contract('BorrowerOperations', async accounts => {
 
     await priceFeed.setPrice('50000000000000000000')
 
-    assert.isTrue(await cdpManager.checkRecoveryMode())
+    assert.isTrue(await troveManager.checkRecoveryMode())
 
     //Check CLV withdrawal impossible when recoveryMode == true
     try {
@@ -1136,7 +1136,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(txAlice.receipt.status)
 
     const price = await priceFeed.getPrice()
-    const aliceICR = await cdpManager.getCurrentICR(alice, price)
+    const aliceICR = await troveManager.getCurrentICR(alice, price)
 
     // Check Alice ICR > MCR
     assert.isTrue(aliceICR.gte(web3.utils.toBN("1100000000000000000")))
@@ -1156,12 +1156,12 @@ contract('BorrowerOperations', async accounts => {
 
     // Alice and Bob creates troves with 3 ETH / 200 CLV, and 150% ICR.  System TCR = 150%.
     const txAlice = await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
-    const aliceICR = await cdpManager.getCurrentICR(alice, price)
+    const aliceICR = await troveManager.getCurrentICR(alice, price)
 
     const txBob = await borrowerOperations.openLoan(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
-    const bobICR = await cdpManager.getCurrentICR(bob, price)
+    const bobICR = await troveManager.getCurrentICR(bob, price)
 
-    const TCR = (await cdpManager.getTCR()).toString()
+    const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // Bob attempts to withdraw 1 CLV.
@@ -1204,7 +1204,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
-    // const TCR = (await cdpManager.getTCR()).toString()
+    // const TCR = (await troveManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -1226,14 +1226,14 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const debt_Before = alice_CDP_Before[0]
     assert.equal(debt_Before, dec(10, 18))
 
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
 
     // check after
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const debt_After = alice_CDP_After[0]
     assert.equal(debt_After.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
   })
@@ -1242,14 +1242,14 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const debt_Before = alice_CDP_Before[0]
     assert.equal(debt_Before, dec(10, 18))
 
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
 
     // check after
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const debt_After = alice_CDP_After[0]
     assert.equal(debt_After.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
   })
@@ -1316,14 +1316,14 @@ contract('BorrowerOperations', async accounts => {
 
     // check before
     await borrowerOperations.withdrawCLV(100, alice, { from: alice })
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const debt_Before = alice_CDP_Before[0]
     assert.equal(debt_Before.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
 
     await borrowerOperations.repayCLV(100, alice, { from: alice })
 
     // check after
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const debt_After = alice_CDP_After[0]
     assert.equal(debt_After, dec(10, 18))
   })
@@ -1362,16 +1362,16 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.withdrawCLV(dec(90, 18), alice, { from: alice })
 
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     await priceFeed.setPrice('105000000000000000000')
 
-    assert.isTrue(await cdpManager.checkRecoveryMode())
+    assert.isTrue(await troveManager.checkRecoveryMode())
 
     await borrowerOperations.repayCLV(dec(50, 18), alice, { from: alice })
 
     // Check Alice's debt: 90 (withdrawn) + 10 (gas comp) - 50 (repaid)
-    const alice_debt = (await cdpManager.CDPs(alice))[0].toString()
+    const alice_debt = (await troveManager.CDPs(alice))[0].toString()
     assert.equal(alice_debt, dec(50, 18))
   })
 
@@ -1391,7 +1391,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -1402,7 +1402,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check baseRate has decreased
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.isTrue(baseRate_2.lt(baseRate_1))
 
     // 1 hour passes
@@ -1412,7 +1412,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, E, { from: E, value: dec(2, 'ether') })
     await borrowerOperations.adjustLoan(0, dec(37, 15), true, E, { from: D })
 
-    const baseRate_3 = await cdpManager.baseRate()
+    const baseRate_3 = await troveManager.baseRate()
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
@@ -1424,7 +1424,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -1435,7 +1435,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.adjustLoan(0, dec(37, 18), true, D, { from: D })
 
     // Check baseRate is still 0
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.equal(baseRate_2, '0')
 
     // 1 hour passes
@@ -1445,7 +1445,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, E, { from: E, value: dec(2, 'ether') })
     await borrowerOperations.adjustLoan(0, dec(37, 15), true, E, { from: D })
 
-    const baseRate_3 = await cdpManager.baseRate()
+    const baseRate_3 = await troveManager.baseRate()
     assert.equal(baseRate_3, '0')
   })
 
@@ -1463,10 +1463,10 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_1 = await troveManager.lastFeeOperationTime()
 
     // 50 seconds pass
     th.fastForwardTime(50, web3.currentProvider)
@@ -1474,7 +1474,7 @@ contract('BorrowerOperations', async accounts => {
     // Borrower C triggers a fee
     await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
 
-    const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_2 = await troveManager.lastFeeOperationTime()
 
     // Check that the last fee operation time did not update, as borrower D's debt issuance occured
     // since before minimum interval had passed 
@@ -1490,7 +1490,7 @@ contract('BorrowerOperations', async accounts => {
     // Borrower C triggers a fee
     await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
 
-    const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_3 = await troveManager.lastFeeOperationTime()
 
     // Check that the last fee operation time DID update, as borrower's debt issuance occured
     // after minimum interval had passed 
@@ -1512,7 +1512,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 59 minutes pass
@@ -1528,7 +1528,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.adjustLoan(0, dec(1, 18), true, C, { from: C })
 
     // Check base rate has decreased even though Borrower tried to stop it decaying
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
@@ -1551,7 +1551,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -1589,7 +1589,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -1606,7 +1606,7 @@ contract('BorrowerOperations', async accounts => {
 
     const gasComp = toBN(dec(10, 18))
 
-    const newDebt = (await cdpManager.CDPs(D))[0]
+    const newDebt = (await troveManager.CDPs(D))[0]
 
     // Check debt on CDP struct equals drawn debt plus emitted fee
     assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
@@ -1631,7 +1631,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -1673,7 +1673,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -1701,7 +1701,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -1728,7 +1728,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -1755,7 +1755,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -1791,14 +1791,14 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     const txAlice = await borrowerOperations.adjustLoan(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
     assert.isTrue(txAlice.receipt.status)
 
     await priceFeed.setPrice(dec(100, 18))
 
-    assert.isTrue(await cdpManager.checkRecoveryMode())
+    assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check operation impossible when system is in Recovery Mode
     try {
@@ -1816,9 +1816,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
 
     // Check TCR and Recovery Mode
-    const TCR = (await cdpManager.getTCR()).toString()
+    const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Bob attempts an operation that would bring the TCR below the CCR
     try {
@@ -1895,7 +1895,7 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
 
-    const collBefore = ((await cdpManager.CDPs(alice))[1]).toString()
+    const collBefore = ((await troveManager.CDPs(alice))[1]).toString()
     const activePoolCollBefore = (await activePool.getETH()).toString()
 
     assert.equal(collBefore, dec(10, 'ether'))
@@ -1904,7 +1904,7 @@ contract('BorrowerOperations', async accounts => {
     // Alice adjusts loan. No coll change, and a debt increase (+50CLV)
     await borrowerOperations.adjustLoan(0, dec(50, 18), true, alice, { from: alice, value: 0 })
 
-    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    const collAfter = ((await troveManager.CDPs(alice))[1]).toString()
     const activePoolCollAfter = (await activePool.getETH()).toString()
 
     assert.equal(collAfter, collBefore)
@@ -1916,7 +1916,7 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
 
-    const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
+    const debtBefore = ((await troveManager.CDPs(alice))[0]).toString()
     const activePoolDebtBefore = (await activePool.getCLVDebt()).toString()
 
     assert.equal(debtBefore, dec(110, 18))
@@ -1925,8 +1925,8 @@ contract('BorrowerOperations', async accounts => {
     // Alice adjusts loan. No coll change, no debt change
     await borrowerOperations.adjustLoan(0, 0, true, alice, { from: alice, value: dec(1, 'ether') })
 
-    const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
-    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
+    const collAfter = ((await troveManager.CDPs(alice))[1]).toString()
     const activePoolDebtAfter = (await activePool.getCLVDebt()).toString()
 
     assert.equal(debtAfter, debtBefore)
@@ -1938,8 +1938,8 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
-    const collBefore = ((await cdpManager.CDPs(alice))[1]).toString()
+    const debtBefore = ((await troveManager.CDPs(alice))[0]).toString()
+    const collBefore = ((await troveManager.CDPs(alice))[1]).toString()
 
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(collBefore, dec(1, 'ether'))
@@ -1947,8 +1947,8 @@ contract('BorrowerOperations', async accounts => {
     // Alice adjusts loan. Coll and debt increase(+1 ETH, +50CLV)
     await borrowerOperations.adjustLoan(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
-    const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
-    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
+    const collAfter = ((await troveManager.CDPs(alice))[1]).toString()
 
     assert.equal(debtAfter, dec(160, 18))
     assert.equal(collAfter, dec(2, 'ether'))
@@ -1960,8 +1960,8 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
-    const collBefore = ((await cdpManager.CDPs(alice))[1]).toString()
+    const debtBefore = ((await troveManager.CDPs(alice))[0]).toString()
+    const collBefore = ((await troveManager.CDPs(alice))[1]).toString()
 
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(collBefore, dec(1, 'ether'))
@@ -1969,8 +1969,8 @@ contract('BorrowerOperations', async accounts => {
     // Alice adjusts loan coll and debt decrease (-0.5 ETH, -50CLV)
     await borrowerOperations.adjustLoan(dec(500, 'finney'), dec(50, 18), false, alice, { from: alice })
 
-    const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
-    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
+    const collAfter = ((await troveManager.CDPs(alice))[1]).toString()
 
     assert.equal(debtAfter, dec(60, 18))
     assert.equal(collAfter, dec(500, 'finney'))
@@ -1981,8 +1981,8 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
-    const collBefore = ((await cdpManager.CDPs(alice))[1]).toString()
+    const debtBefore = ((await troveManager.CDPs(alice))[0]).toString()
+    const collBefore = ((await troveManager.CDPs(alice))[1]).toString()
 
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(collBefore, dec(1, 'ether'))
@@ -1990,8 +1990,8 @@ contract('BorrowerOperations', async accounts => {
     // Alice adjusts loan - coll increase and debt decrease (+0.5 ETH, -50CLV)
     await borrowerOperations.adjustLoan(0, dec(50, 18), false, alice, { from: alice, value: dec(500, 'finney') })
 
-    const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
-    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
+    const collAfter = ((await troveManager.CDPs(alice))[1]).toString()
 
     assert.equal(debtAfter, dec(60, 18))
     assert.equal(collAfter, dec(1500, 'finney'))
@@ -2003,8 +2003,8 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
-    const collBefore = ((await cdpManager.CDPs(alice))[1]).toString()
+    const debtBefore = ((await troveManager.CDPs(alice))[0]).toString()
+    const collBefore = ((await troveManager.CDPs(alice))[1]).toString()
 
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(collBefore, dec(1, 'ether'))
@@ -2012,8 +2012,8 @@ contract('BorrowerOperations', async accounts => {
     // Alice adjusts loan - coll decrease and debt increase (0.1 ETH, 10CLV)
     await borrowerOperations.adjustLoan('100000000000000000', dec(10, 18), true, alice, { from: alice })
 
-    const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
-    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
+    const collAfter = ((await troveManager.CDPs(alice))[1]).toString()
 
     assert.equal(debtAfter, dec(120, 18))
     assert.equal(collAfter, '900000000000000000')
@@ -2024,8 +2024,8 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const stakeBefore = ((await cdpManager.CDPs(alice))[2]).toString()
-    const totalStakesBefore = await cdpManager.totalStakes();
+    const stakeBefore = ((await troveManager.CDPs(alice))[2]).toString()
+    const totalStakesBefore = await troveManager.totalStakes();
 
     assert.equal(stakeBefore, dec(1, 'ether'))
     assert.equal(totalStakesBefore, '101000000000000000000')
@@ -2033,8 +2033,8 @@ contract('BorrowerOperations', async accounts => {
     // Alice adjusts loan - coll and debt increase (+1 ETH, +50 CLV)
     await borrowerOperations.adjustLoan(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
-    const stakeAfter = ((await cdpManager.CDPs(alice))[2]).toString()
-    const totalStakesAfter = await cdpManager.totalStakes();
+    const stakeAfter = ((await troveManager.CDPs(alice))[2]).toString()
+    const totalStakesAfter = await troveManager.totalStakes();
 
     assert.equal(stakeAfter, dec(2, 'ether'))
     assert.equal(totalStakesAfter, '102000000000000000000')
@@ -2045,8 +2045,8 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const stakeBefore = ((await cdpManager.CDPs(alice))[2]).toString()
-    const totalStakesBefore = await cdpManager.totalStakes();
+    const stakeBefore = ((await troveManager.CDPs(alice))[2]).toString()
+    const totalStakesBefore = await troveManager.totalStakes();
 
     assert.equal(stakeBefore, dec(1, 'ether'))
     assert.equal(totalStakesBefore, '101000000000000000000')
@@ -2054,8 +2054,8 @@ contract('BorrowerOperations', async accounts => {
     // Alice adjusts loan - coll decrease and debt decrease
     await borrowerOperations.adjustLoan(dec(500, 'finney'), dec(50, 18), false, alice, { from: alice })
 
-    const stakeAfter = ((await cdpManager.CDPs(alice))[2]).toString()
-    const totalStakesAfter = await cdpManager.totalStakes();
+    const stakeAfter = ((await troveManager.CDPs(alice))[2]).toString()
+    const totalStakesAfter = await troveManager.totalStakes();
 
     assert.equal(stakeAfter, '500000000000000000')
     assert.equal(totalStakesAfter, '100500000000000000000')
@@ -2165,7 +2165,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
     await borrowerOperations.openLoan(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const status_Before = (await cdpManager.CDPs(alice))[3]
+    const status_Before = (await troveManager.CDPs(alice))[3]
     const isInSortedList_Before = await sortedCDPs.contains(alice)
 
     assert.equal(status_Before, 1)  // 1: Active
@@ -2182,7 +2182,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const aliceColl_Before = (await cdpManager.CDPs(alice))[1].toString()
+    const aliceColl_Before = (await troveManager.CDPs(alice))[1].toString()
     assert.equal(aliceColl_Before, dec(1, 'ether'))
 
     await assertRevert(borrowerOperations.adjustLoan(dec(1, 'ether'), dec(100, 18), true, alice, { from: alice, value: dec(3, 'ether') }), 'BorrowerOperations: Cannot withdraw and add coll')
@@ -2213,7 +2213,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // check recovery mode 
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Bob successfully closes his loan
     const txBob = await borrowerOperations.closeLoan({ from: bob })
@@ -2221,7 +2221,7 @@ contract('BorrowerOperations', async accounts => {
 
     await priceFeed.setPrice(dec(100, 18))
 
-    assert.isTrue(await cdpManager.checkRecoveryMode())
+    assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Carol attempts to close her loan during Recovery Mode
     try {
@@ -2236,7 +2236,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
     // check recovery mode 
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Alice attempts to close her loan
     try {
@@ -2255,13 +2255,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
 
-    const collBefore = ((await cdpManager.CDPs(alice))[1]).toString()
+    const collBefore = ((await troveManager.CDPs(alice))[1]).toString()
     assert.equal(collBefore, dec(1, 'ether'))
 
     // Alice attempts to close loan
     await borrowerOperations.closeLoan({ from: alice })
 
-    const collAfter = ((await cdpManager.CDPs(alice))[1]).toString()
+    const collAfter = ((await troveManager.CDPs(alice))[1]).toString()
     assert.equal(collAfter, '0')
     // check withdrawal was successful
   })
@@ -2272,13 +2272,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
 
-    const debtBefore = ((await cdpManager.CDPs(alice))[0]).toString()
+    const debtBefore = ((await troveManager.CDPs(alice))[0]).toString()
     assert.equal(debtBefore, dec(110, 18))
 
     // Alice attempts to close loan
     await borrowerOperations.closeLoan({ from: alice })
 
-    const debtAfter = ((await cdpManager.CDPs(alice))[0]).toString()
+    const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
     assert.equal(debtAfter, '0')
     // check withdrawal was successful
   })
@@ -2289,13 +2289,13 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
 
-    const stakeBefore = ((await cdpManager.CDPs(alice))[2]).toString()
+    const stakeBefore = ((await troveManager.CDPs(alice))[2]).toString()
     assert.equal(stakeBefore, dec(1, 'ether'))
 
     // Alice attempts to close loan
     await borrowerOperations.closeLoan({ from: alice })
 
-    const stakeAfter = ((await cdpManager.CDPs(alice))[2]).toString()
+    const stakeAfter = ((await troveManager.CDPs(alice))[2]).toString()
     assert.equal(stakeAfter, '0')
     // check withdrawal was successful
   })
@@ -2312,7 +2312,7 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Liquidate Bob
-    await cdpManager.liquidate(bob)
+    await troveManager.liquidate(bob)
     assert.isFalse(await sortedCDPs.contains(bob))
 
     // Price bounces back
@@ -2325,19 +2325,19 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     // Get Alice's pending reward snapshots 
-    const L_ETH_A_Snapshot = (await cdpManager.rewardSnapshots(alice))[0]
-    const L_CLVDebt_A_Snapshot = (await cdpManager.rewardSnapshots(alice))[1]
+    const L_ETH_A_Snapshot = (await troveManager.rewardSnapshots(alice))[0]
+    const L_CLVDebt_A_Snapshot = (await troveManager.rewardSnapshots(alice))[1]
 
     assert.isTrue(L_ETH_A_Snapshot.gt(toBN('0')))
     assert.isTrue(L_CLVDebt_A_Snapshot.gt(toBN('0')))
 
     // Liquidate Carol
-    await cdpManager.liquidate(carol)
+    await troveManager.liquidate(carol)
     assert.isFalse(await sortedCDPs.contains(carol))
 
     // Get Alice's pending reward snapshots after Carol's liquidation. Check above 0
-    const L_ETH_Snapshot_A_AfterLiquidation = (await cdpManager.rewardSnapshots(alice))[0]
-    const L_CLVDebt_Snapshot_A_AfterLiquidation = (await cdpManager.rewardSnapshots(alice))[1]
+    const L_ETH_Snapshot_A_AfterLiquidation = (await troveManager.rewardSnapshots(alice))[0]
+    const L_CLVDebt_Snapshot_A_AfterLiquidation = (await troveManager.rewardSnapshots(alice))[1]
 
     assert.isTrue(L_ETH_Snapshot_A_AfterLiquidation.gt(toBN('0')))
     assert.isTrue(L_CLVDebt_Snapshot_A_AfterLiquidation.gt(toBN('0')))
@@ -2346,8 +2346,8 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.closeLoan({ from: alice })
 
     // Check Alice's pending reward snapshots are zero
-    const L_ETH_Snapshot_A_afterAliceCloses = (await cdpManager.rewardSnapshots(alice))[0]
-    const L_CLVDebt_Snapshot_A_afterAliceCloses = (await cdpManager.rewardSnapshots(alice))[1]
+    const L_ETH_Snapshot_A_afterAliceCloses = (await troveManager.rewardSnapshots(alice))[0]
+    const L_CLVDebt_Snapshot_A_afterAliceCloses = (await troveManager.rewardSnapshots(alice))[1]
 
     assert.equal(L_ETH_Snapshot_A_afterAliceCloses, '0')
     assert.equal(L_CLVDebt_Snapshot_A_afterAliceCloses, '0')
@@ -2360,7 +2360,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
 
     // Check CDP is active
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const status_Before = alice_CDP_Before[3]
 
     assert.equal(status_Before, 1)
@@ -2369,7 +2369,7 @@ contract('BorrowerOperations', async accounts => {
     // Close the loan
     await borrowerOperations.closeLoan({ from: alice })
 
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const status_After = alice_CDP_After[3]
 
     assert.equal(status_After, 2)
@@ -2422,9 +2422,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openLoan(0, bob, { from: bob, value: dec(1, 'ether') })
 
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const alice_Stake_Before = alice_CDP_Before[2].toString()
-    const totalStakes_Before = (await cdpManager.totalStakes()).toString()
+    const totalStakes_Before = (await troveManager.totalStakes()).toString()
 
     assert.equal(alice_Stake_Before, '1000000000000000000')
     assert.equal(totalStakes_Before, '12000000000000000000')
@@ -2433,9 +2433,9 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.closeLoan({ from: alice })
 
     // Check stake and total stakes get updated
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const alice_Stake_After = alice_CDP_After[2].toString()
-    const totalStakes_After = (await cdpManager.totalStakes()).toString()
+    const totalStakes_After = (await troveManager.totalStakes()).toString()
 
     assert.equal(alice_Stake_After, 0)
     assert.equal(totalStakes_After, dec(11, 'ether'))
@@ -2494,7 +2494,7 @@ contract('BorrowerOperations', async accounts => {
     const price = await priceFeed.getPrice()
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV. Alice and Bob earn rewards.
-    const liquidationTx = await cdpManager.liquidate(carol, { from: owner });
+    const liquidationTx = await troveManager.liquidate(carol, { from: owner });
     const [liquidatedDebt_C, liquidatedColl_C, gasComp_C] = th.getEmittedLiquidationValues(liquidationTx)
     // Dennis opens a new CDP with 10 Ether, withdraws CLV and sends 135 CLV to Alice, and 45 CLV to Bob.
 
@@ -2505,11 +2505,11 @@ contract('BorrowerOperations', async accounts => {
     await clvToken.transfer(bob, '45000000000000000000', { from: dennis })
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
-    alice_rewardSnapshot_Before = await cdpManager.rewardSnapshots(alice)
+    alice_rewardSnapshot_Before = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_Before = alice_rewardSnapshot_Before[0]
     const alice_CLVDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
 
-    const bob_rewardSnapshot_Before = await cdpManager.rewardSnapshots(bob)
+    const bob_rewardSnapshot_Before = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_Before = bob_rewardSnapshot_Before[0]
     const bob_CLVDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
 
@@ -2518,8 +2518,8 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(bob_ETHrewardSnapshot_Before, 0)
     assert.equal(bob_CLVDebtRewardSnapshot_Before, 0)
 
-    const L_ETH = await cdpManager.L_ETH()
-    const L_CLVDebt = await cdpManager.L_CLVDebt()
+    const L_ETH = await troveManager.L_ETH()
+    const L_CLVDebt = await troveManager.L_CLVDebt()
 
     const defaultPool_ETH = await defaultPool.getETH()
     const defaultPool_CLVDebt = await defaultPool.getCLVDebt()
@@ -2567,7 +2567,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -2577,7 +2577,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
     // Check baseRate has decreased
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.isTrue(baseRate_2.lt(baseRate_1))
 
     // 1 hour passes
@@ -2586,7 +2586,7 @@ contract('BorrowerOperations', async accounts => {
     // E opens loan 
     await borrowerOperations.openLoan(dec(12, 18), E, { from: E, value: dec(3, 'ether') })
 
-    const baseRate_3 = await cdpManager.baseRate()
+    const baseRate_3 = await troveManager.baseRate()
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
@@ -2604,7 +2604,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -2614,7 +2614,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(0, D, { from: D, value: dec(5, 'ether') })
 
     // Check baseRate has decayed
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
@@ -2626,7 +2626,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -2636,7 +2636,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
     // Check baseRate is still 0
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.equal(baseRate_2, '0')
 
     // 1 hour passes
@@ -2645,7 +2645,7 @@ contract('BorrowerOperations', async accounts => {
     // E opens loan 
     await borrowerOperations.openLoan(dec(12, 18), E, { from: E, value: dec(3, 'ether') })
 
-    const baseRate_3 = await cdpManager.baseRate()
+    const baseRate_3 = await troveManager.baseRate()
     assert.equal(baseRate_3, '0')
   })
 
@@ -2663,10 +2663,10 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    const lastFeeOpTime_1 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_1 = await troveManager.lastFeeOperationTime()
 
     // 50 seconds pass
     th.fastForwardTime(50, web3.currentProvider)
@@ -2674,7 +2674,7 @@ contract('BorrowerOperations', async accounts => {
     // Borrower D triggers a fee
     await borrowerOperations.openLoan(dec(1, 18), D, { from: D, value: dec(1, 'ether') })
 
-    const lastFeeOpTime_2 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_2 = await troveManager.lastFeeOperationTime()
 
     // Check that the last fee operation time did not update, as borrower D's debt issuance occured
     // since before minimum interval had passed 
@@ -2690,7 +2690,7 @@ contract('BorrowerOperations', async accounts => {
     // Borrower E triggers a fee
     await borrowerOperations.openLoan(dec(1, 18), E, { from: E, value: dec(1, 'ether') })
 
-    const lastFeeOpTime_3 = await cdpManager.lastFeeOperationTime()
+    const lastFeeOpTime_3 = await troveManager.lastFeeOperationTime()
 
     // Check that the last fee operation time DID update, as borrower's debt issuance occured
     // after minimum interval had passed 
@@ -2712,7 +2712,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 59 minutes pass
@@ -2729,7 +2729,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(1, 18), E, { from: E, value: dec(1, 'ether') })
 
     // Check base rate has decreased even though Borrower tried to stop it decaying
-    const baseRate_2 = await cdpManager.baseRate()
+    const baseRate_2 = await troveManager.baseRate()
     assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
@@ -2752,7 +2752,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -2789,7 +2789,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -2805,7 +2805,7 @@ contract('BorrowerOperations', async accounts => {
     const emittedFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(openLoanTx))
     assert.isTrue(toBN(emittedFee).gt(toBN('0')))
 
-    const newDebt = (await cdpManager.CDPs(D))[0]
+    const newDebt = (await troveManager.CDPs(D))[0]
 
     // Check debt on CDP struct equals drawn debt plus emitted fee
     assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
@@ -2830,7 +2830,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -2871,7 +2871,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(await clvToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // 2 hours pass
@@ -2898,7 +2898,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -2924,7 +2924,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -2950,7 +2950,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate is zero
-    const baseRate_1 = await cdpManager.baseRate()
+    const baseRate_1 = await troveManager.baseRate()
     assert.equal(baseRate_1, '0')
 
     // 2 hours pass
@@ -2971,12 +2971,12 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    assert.isFalse(await cdpManager.checkRecoveryMode())
+    assert.isFalse(await troveManager.checkRecoveryMode())
 
     // price drops, and recovery mode kicks in
     await priceFeed.setPrice(dec(100, 18))
 
-    assert.isTrue(await cdpManager.checkRecoveryMode())
+    assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Bob tries to open a loan with same coll and debt, during Recovery Mode
     try {
@@ -2990,7 +2990,7 @@ contract('BorrowerOperations', async accounts => {
   it("openLoan(): reverts when loan ICR < MCR", async () => {
     const txAlice = await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     const price = await priceFeed.getPrice()
-    const aliceICR = await cdpManager.getCurrentICR(alice, price)
+    const aliceICR = await troveManager.getCurrentICR(alice, price)
 
     assert.isTrue(txAlice.receipt.status)
     assert.isTrue(aliceICR.gte(web3.utils.toBN('110000000000000000')))
@@ -3011,7 +3011,7 @@ contract('BorrowerOperations', async accounts => {
     const txAlice = await borrowerOperations.openLoan(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
     const price = await priceFeed.getPrice()
 
-    const TCR = await cdpManager.getTCR()
+    const TCR = await troveManager.getTCR()
     assert.equal(TCR, '1500000000000000000')
 
     // Bob attempts to open a loan with coll = 1 ETH, actual debt = 201 CLV. At ETH:USD price = 1, his ICR = 300 / 201 =   149.25%`
@@ -3034,7 +3034,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
-    const TCR = (await cdpManager.getTCR()).toString()
+    const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -3057,7 +3057,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
-    const TCR = (await cdpManager.getTCR()).toString()
+    const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
@@ -3104,14 +3104,14 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
 
-    const TCR = (await cdpManager.getTCR()).toString()
+    const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // price drops to 1ETH:100CLV, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000');
     
 
-    assert.isTrue(await cdpManager.checkRecoveryMode())
+    assert.isTrue(await troveManager.checkRecoveryMode())
 
     await assertRevert(
       borrowerOperations.openLoan(dec(80, 18), carol, { from: carol, value: dec(1, 'ether') }),
@@ -3120,16 +3120,16 @@ contract('BorrowerOperations', async accounts => {
     const txCarol = await borrowerOperations.openLoan('0', carol, { from: carol, value: dec(1, 'ether') })
     assert.isTrue(txCarol.receipt.status)
 
-    assert.isTrue(await cdpManager.checkRecoveryMode())
+    assert.isTrue(await troveManager.checkRecoveryMode())
 
     assert.isTrue(await sortedCDPs.contains(carol))
 
-    const carol_CDPStatus = await cdpManager.getCDPStatus(carol)
+    const carol_CDPStatus = await troveManager.getCDPStatus(carol)
     assert.equal(carol_CDPStatus, 1)
   })
 
   it("openLoan(): creates a new CDP and assigns the correct collateral and debt amount", async () => {
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
 
     const debt_Before = alice_CDP_Before[0]
     const coll_Before = alice_CDP_Before[1]
@@ -3144,7 +3144,7 @@ contract('BorrowerOperations', async accounts => {
 
     await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
 
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
 
     const debt_After = alice_CDP_After[0].toString()
     const coll_After = alice_CDP_After[1]
@@ -3159,28 +3159,28 @@ contract('BorrowerOperations', async accounts => {
   })
 
   it("openLoan(): adds CDP owner to CDPOwners array", async () => {
-    const CDPOwnersCount_Before = (await cdpManager.getCDPOwnersCount()).toString();
+    const CDPOwnersCount_Before = (await troveManager.getCDPOwnersCount()).toString();
     assert.equal(CDPOwnersCount_Before, '0')
 
     await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
 
-    const CDPOwnersCount_After = (await cdpManager.getCDPOwnersCount()).toString();
+    const CDPOwnersCount_After = (await troveManager.getCDPOwnersCount()).toString();
     assert.equal(CDPOwnersCount_After, '1')
   })
 
   it("openLoan(): creates a stake and adds it to total stakes", async () => {
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const alice_Stake_Before = alice_CDP_Before[2].toString()
-    const totalStakes_Before = (await cdpManager.totalStakes()).toString()
+    const totalStakes_Before = (await troveManager.totalStakes()).toString()
 
     assert.equal(alice_Stake_Before, '0')
     assert.equal(totalStakes_Before, '0')
 
     await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
 
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const alice_Stake_After = alice_CDP_After[2].toString()
-    const totalStakes_After = (await cdpManager.totalStakes()).toString()
+    const totalStakes_After = (await troveManager.totalStakes()).toString()
 
     assert.equal(alice_Stake_After, '1000000000000000000')
     assert.equal(totalStakes_After, '1000000000000000000')
@@ -3235,14 +3235,14 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice(dec(100, 18));
 
     // close Carol's CDP, liquidating her 1 ether and 180CLV.
-    const liquidationTx = await cdpManager.liquidate(carol, { from: owner });
+    const liquidationTx = await troveManager.liquidate(carol, { from: owner });
     const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
     /* with total stakes = 10 ether, after liquidation, L_ETH should equal 1/10 ether per-ether-staked,
      and L_CLV should equal 18 CLV per-ether-staked. */
 
-    const L_ETH = await cdpManager.L_ETH()
-    const L_CLV = await cdpManager.L_CLVDebt()
+    const L_ETH = await troveManager.L_ETH()
+    const L_CLV = await troveManager.L_CLVDebt()
 
     assert.isAtMost(th.getDifference(L_ETH, liquidatedColl.div(toBN('10'))), 100)
     assert.isAtMost(th.getDifference(L_CLV, liquidatedDebt.div(toBN('10'))), 100)
@@ -3251,7 +3251,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan('50000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
 
     // check Bob's snapshots of L_ETH and L_CLV equal the respective current values
-    const bob_rewardSnapshot = await cdpManager.rewardSnapshots(bob)
+    const bob_rewardSnapshot = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot = bob_rewardSnapshot[0]
     const bob_CLVDebtRewardSnapshot = bob_rewardSnapshot[1]
 
@@ -3265,7 +3265,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
 
     // Check CDP is active
-    const alice_CDP_1 = await cdpManager.CDPs(alice)
+    const alice_CDP_1 = await troveManager.CDPs(alice)
     const status_1 = alice_CDP_1[3]
     assert.equal(status_1, 1)
     assert.isTrue(await sortedCDPs.contains(alice))
@@ -3278,7 +3278,7 @@ contract('BorrowerOperations', async accounts => {
     */
 
     // Check CDP is closed
-    const alice_CDP_2 = await cdpManager.CDPs(alice)
+    const alice_CDP_2 = await troveManager.CDPs(alice)
     const status_2 = alice_CDP_2[3]
     assert.equal(status_2, 2)
     assert.isFalse(await sortedCDPs.contains(alice))
@@ -3287,7 +3287,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openLoan('25000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
 
     // Check CDP is re-opened
-    const alice_CDP_3 = await cdpManager.CDPs(alice)
+    const alice_CDP_3 = await troveManager.CDPs(alice)
     const status_3 = alice_CDP_3[3]
     assert.equal(status_3, 1)
     assert.isTrue(await sortedCDPs.contains(alice))
@@ -3295,14 +3295,14 @@ contract('BorrowerOperations', async accounts => {
 
   it("openLoan(): increases the CDP's CLV debt by the correct amount", async () => {
     // check before
-    const alice_CDP_Before = await cdpManager.CDPs(alice)
+    const alice_CDP_Before = await troveManager.CDPs(alice)
     const debt_Before = alice_CDP_Before[0]
     assert.equal(debt_Before, 0)
 
     await borrowerOperations.openLoan('50000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
 
     // check after
-    const alice_CDP_After = await cdpManager.CDPs(alice)
+    const alice_CDP_After = await troveManager.CDPs(alice)
     const debt_After = alice_CDP_After[0]
     assert.equal(debt_After, '60000000000000000000')
   })
@@ -3470,7 +3470,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await troveManager.liquidate(bob)
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -3500,7 +3500,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await troveManager.liquidate(bob)
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -3529,7 +3529,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await troveManager.liquidate(bob)
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -3557,7 +3557,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await troveManager.liquidate(bob)
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -3585,7 +3585,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await troveManager.liquidate(bob)
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -3614,7 +3614,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await troveManager.liquidate(bob)
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -3643,7 +3643,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await troveManager.liquidate(bob)
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -3672,7 +3672,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await troveManager.liquidate(bob)
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -3701,7 +3701,7 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(100, 18))
 
-      const liquidationTx = await cdpManager.liquidate(bob)
+      const liquidationTx = await troveManager.liquidate(bob)
       assert.isFalse(await sortedCDPs.contains(bob))
 
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -3729,8 +3729,8 @@ contract('BorrowerOperations', async accounts => {
     // open loan from NonPayable proxy contract
     const openLoanData = th.getTransactionData('openLoan(uint256,address)', ['0x0', '0x0'])
     await nonPayable.forward(borrowerOperations.address, openLoanData, { value: dec(1, 'ether') })
-    assert.equal((await cdpManager.getCDPStatus(nonPayable.address)).toString(), '1', 'NonPayable proxy should have a trove')
-    assert.isFalse(await cdpManager.checkRecoveryMode(), 'System should not be in Recovery Mode')
+    assert.equal((await troveManager.getCDPStatus(nonPayable.address)).toString(), '1', 'NonPayable proxy should have a trove')
+    assert.isFalse(await troveManager.checkRecoveryMode(), 'System should not be in Recovery Mode')
     // open loan from NonPayable proxy contract
     const closeLoanData = th.getTransactionData('closeLoan()', [])
     await th.assertRevert(nonPayable.forward(borrowerOperations.address, closeLoanData), 'ActivePool: sending ETH failed')
