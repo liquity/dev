@@ -360,7 +360,7 @@ Likewise, a StabilityPool depositor who has earned some ETH gain from their depo
 | withdrawColl                | \_amount parameter | ActivePool -> msg.sender                |
 | adjustTrove: adding ETH     | msg.value          | msg.sender -> PoolManager -> ActivePool |
 | adjustTrove: withdrawing ETH| \_amount parameter | ActivePool -> msg.sender                |
-| closeLoan                   | \_amount parameter | ActivePool -> msg.sender                |
+| closeTrove                  | \_amount parameter | ActivePool -> msg.sender                |
 
 **Trove Manager**
 
@@ -390,14 +390,14 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 
 **Borrower Operations**
 
-| Function                    | ERC20 Operation                        |
-| --------------------------- | -------------------------------------- |
-| openLoan                    | ERC20.\_mint(msg.sender, \_LUSDAmount) |
-| withdrawLUSD                | ERC20.\_mint(msg.sender, \_LUSDAmount) |
-| repayLUSD                   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
-| adjustLoan: withdrawing LUSD| ERC20.\_mint(msg.sender, \_LUSDAmount) |
-| adjustLoan: repaying LUSD   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
-| closeLoan                   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
+| Function                     | ERC20 Operation                        |
+| ---------------------------- | -------------------------------------- |
+| openTrove                    | ERC20.\_mint(msg.sender, \_LUSDAmount) |
+| withdrawLUSD                 | ERC20.\_mint(msg.sender, \_LUSDAmount) |
+| repayLUSD                    | ERC20.\_burn(msg.sender, \_LUSDAmount) |
+| adjustTrove: withdrawing LUSD| ERC20.\_mint(msg.sender, \_LUSDAmount) |
+| adjustTrove: repaying LUSD   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
+| closeTrove                   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
 
 **Trove Manager**
 
@@ -914,7 +914,7 @@ In the `TroveManager`, `redeemCollateral` calculates the ETH fee and transfers i
 
 The issuance fee is charged on the LUSD drawn by the user and is added to the trove's LUSD debt.
 
-When new LUSD are drawn via one of the `BorrowerOperations` functions `openLoan`, `withdrawLUSD` or `adjustLoan`, an extra amount `LUSDFee` is minted, and an equal amount of debt is added to the user’s trove. The `LUSDFee` is transferred to the staking contract, `LQTYStaking.sol`.
+When new LUSD are drawn via one of the `BorrowerOperations` functions `openTrove`, `withdrawLUSD` or `adjustTrove`, an extra amount `LUSDFee` is minted, and an equal amount of debt is added to the user’s trove. The `LUSDFee` is transferred to the staking contract, `LQTYStaking.sol`.
 
 ### Fee Schedule
 
