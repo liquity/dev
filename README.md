@@ -395,28 +395,33 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 
 **Borrower Operations**
 
-| Function                     | ERC20 Operation                        |
-| ---------------------------- | -------------------------------------- |
-| openTrove                    | ERC20.\_mint(msg.sender, \_LUSDAmount) |
-| withdrawLUSD                 | ERC20.\_mint(msg.sender, \_LUSDAmount) |
-| repayLUSD                    | ERC20.\_burn(msg.sender, \_LUSDAmount) |
-| adjustTrove: withdrawing LUSD| ERC20.\_mint(msg.sender, \_LUSDAmount) |
-| adjustTrove: repaying LUSD   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
-| closeTrove                   | ERC20.\_burn(msg.sender, \_LUSDAmount) |
+| Function                     | LUSD Quantity | ERC20 Operation                      |
+|------------------------------|---------------|--------------------------------------|
+| openLoan                     | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
+|                              | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
+| withdrawLUSD                 | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
+|                              | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
+| repayLUSD                    | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount)  |
+| adjustLoan: withdrawing LUSD | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
+|                              | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
+| adjustLoan: repaying LUSD    | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount)  |
+| closeLoan                    | Repaid LUSD   | ERC20._burn(msg.sender, _LUSDAmount) |
 
 **Trove Manager**
 
-| Function           | ERC20 Operation                                     |
-| ------------------ | --------------------------------------------------- |
-| liquidate (offset) | ERC20.\_burn(stabilityPoolAddress, \_debtToOffset)  |
-| redeemCollateral   | ERC20.\_burn(msg.sender, \_LUSD)                    |
+| Function                 | LUSD Quantity            | ERC20 Operation                                  |
+|--------------------------|--------------------------|--------------------------------------------------|
+| liquidate (offset)       | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
+| liquidateCDPs (offset)   | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
+| liquidateTroves (offset) | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
+| redeemCollateral         | LUSD to redeem           | LUSD._burn(msg.sender, _LUSD)                    |
 
 **Pool Manager**
 
-| Function       | ERC20 Operation                                              |
-| -------------- | ------------------------------------------------------------ |
-| provideToSP    | ERC20.\_transfer(msg.sender, stabilityPoolAddress, \_amount) |
-| withdrawFromSP | ERC20.\_transfer(stabilityPoolAddress, msg.sender, \_amount) |
+| Function       | LUSD Quantity    | ERC20 Operation                                             |
+|----------------|------------------|-------------------------------------------------------------|
+| provideToSP    | deposit / top-up | LUSD. _transfer(msg.sender, stabilityPoolAddress, _amount); |
+| withdrawFromSP | withdrawal       | LUSD. _transfer(stabilityPoolAddress, msg.sender, _amount); |
 
 ## Expected User Behaviors
 
