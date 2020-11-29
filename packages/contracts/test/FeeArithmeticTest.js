@@ -3,7 +3,7 @@ const deploymentHelper = require("../utils/deploymentHelpers.js")
 const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
-const MathTester = artifacts.require("./MathTester.sol")
+const MathTester = artifacts.require("./LiquityMathTester.sol")
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
