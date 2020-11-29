@@ -7,7 +7,7 @@ const moneyVals = testHelpers.MoneyValues
 
 let latestRandomSeed = 31337
 
-contract('CDPManager', async accounts => {
+contract('TroveManager', async accounts => {
  
   const [owner] = accounts;
     let priceFeed

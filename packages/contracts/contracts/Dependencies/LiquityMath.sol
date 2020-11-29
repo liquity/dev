@@ -32,7 +32,7 @@ library LiquityMath {
     * Uses the efficient "exponentiation by squaring" algorithm. O(log(n)) complexity. 
     * 
     * Called by two functions that represent time in units of minutes:
-    * 1) CDPManager._calcDecayedBaseRate
+    * 1) TroveManager._calcDecayedBaseRate
     * 2) CommunityIssuance._getCumulativeIssuanceFraction 
     * 
     * The exponent is capped to avoid reverting due to overflow. The cap 525600000 equals

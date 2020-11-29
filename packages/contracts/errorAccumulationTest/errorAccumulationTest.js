@@ -8,7 +8,7 @@ const randAmountInWei = th.randAmountInWei
 
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 
-contract('CDPManager', async accounts => {
+contract('TroveManager', async accounts => {
   let priceFeed
   let cdpManager
   let activePool

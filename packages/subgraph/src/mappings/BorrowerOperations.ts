@@ -1,4 +1,4 @@
-import { CDPManager } from "../../generated/CDPManager/CDPManager";
+import { TroveManager } from "../../generated/TroveManager/TroveManager";
 import {
   BorrowerOperations,
   CDPUpdated
@@ -11,7 +11,7 @@ import { updateTrove } from "../entities/Trove";
 export function handleCDPUpdated(event: CDPUpdated): void {
   let borrowerOperations = BorrowerOperations.bind(event.address);
   let cdpManagerAddress = borrowerOperations.cdpManager();
-  let cdpManager = CDPManager.bind(cdpManagerAddress);
+  let cdpManager = TroveManager.bind(cdpManagerAddress);
   let snapshots = cdpManager.rewardSnapshots(event.params._borrower);
 
   updateTrove(

@@ -3,7 +3,7 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/IBorrowerOperations.sol";
-import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/ICLVToken.sol";
 import "./Interfaces/IPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
@@ -19,7 +19,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Connected contract declarations ---
 
-    ICDPManager public cdpManager;
+    ITroveManager public cdpManager;
 
     IPool public activePool;
 
@@ -89,7 +89,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         override
         onlyOwner
     {
-        cdpManager = ICDPManager(_cdpManagerAddress);
+        cdpManager = ITroveManager(_cdpManagerAddress);
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
@@ -100,7 +100,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_cdpManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);

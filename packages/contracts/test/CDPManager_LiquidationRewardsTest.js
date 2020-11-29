@@ -7,7 +7,7 @@ const toBN = th.toBN
 const getDifference = th.getDifference
 const mv = testHelpers.MoneyValues
 
-contract('CDPManager - Redistribution reward calculations', async accounts => {
+contract('TroveManager - Redistribution reward calculations', async accounts => {
 
   const [
     owner,

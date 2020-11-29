@@ -28,7 +28,7 @@ contract ActivePool is Ownable, IPool {
     // --- Events ---
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event TroveManagerAddressChanged(address _newTroveManagerAddress);
 
     // --- Contract setters ---
 
@@ -47,7 +47,7 @@ contract ActivePool is Ownable, IPool {
         defaultPoolAddress = _defaultPoolAddress;
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_cdpManagerAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
 
@@ -104,14 +104,14 @@ contract ActivePool is Ownable, IPool {
             msg.sender == borrowerOperationsAddress ||
             msg.sender == cdpManagerAddress ||
             msg.sender == stabilityPoolAddress,
-            "ActivePool: Caller is neither BorrowerOperations nor CDPManager nor StabilityPool");
+            "ActivePool: Caller is neither BorrowerOperations nor TroveManager nor StabilityPool");
     }
 
     function _requireCallerIsBOorCDPM() internal view {
         require(
             msg.sender == borrowerOperationsAddress ||
             msg.sender == cdpManagerAddress,
-            "ActivePool: Caller is neither BorrowerOperations nor CDPManager");
+            "ActivePool: Caller is neither BorrowerOperations nor TroveManager");
     }
 
     // --- Fallback function ---

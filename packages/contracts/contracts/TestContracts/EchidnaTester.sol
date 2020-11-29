@@ -2,7 +2,7 @@
 
 pragma solidity ^0.6.11;
 
-import "../CDPManager.sol";
+import "../TroveManager.sol";
 import "../BorrowerOperations.sol";
 import "../ActivePool.sol";
 import "../DefaultPool.sol";
@@ -28,7 +28,7 @@ contract EchidnaTester {
     uint private CLV_GAS_COMPENSATION;
     address public GAS_POOL_ADDRESS;
 
-    CDPManager public cdpManager;
+    TroveManager public cdpManager;
     BorrowerOperations public borrowerOperations;
     ActivePool public activePool;
     DefaultPool public defaultPool;
@@ -43,7 +43,7 @@ contract EchidnaTester {
     uint private numberOfTroves;
 
     constructor() public payable {
-        cdpManager = new CDPManager();
+        cdpManager = new TroveManager();
         borrowerOperations = new BorrowerOperations();
         activePool = new ActivePool();
         defaultPool = new DefaultPool();
@@ -86,7 +86,7 @@ contract EchidnaTester {
         priceFeed.setPrice(1e22);
     }
 
-    // CDPManager
+    // TroveManager
 
     function liquidateExt(uint _i, address _user) external {
         uint actor = _i % NUMBER_OF_ACTORS;
@@ -311,7 +311,7 @@ contract EchidnaTester {
         address currentTrove = sortedCDPs.getFirst();
         while (currentTrove != address(0)) {
             // Status
-            if (CDPManager.Status(cdpManager.getCDPStatus(currentTrove)) != CDPManager.Status.active) {
+            if (TroveManager.Status(cdpManager.getCDPStatus(currentTrove)) != TroveManager.Status.active) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful

@@ -3,7 +3,7 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/ISortedCDPs.sol";
-import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
@@ -44,13 +44,13 @@ import "./Dependencies/console.sol";
 contract SortedCDPs is Ownable, ISortedCDPs {
     using SafeMath for uint256;
 
-    event CDPManagerAddressChanged(address _newCDPlManagerAddress);
+    event TroveManagerAddressChanged(address _newCDPlManagerAddress);
     event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
 
     address public borrowerOperationsAddress;
 
-    ICDPManager public cdpManager;
-    address public CDPManagerAddress;
+    ITroveManager public cdpManager;
+    address public TroveManagerAddress;
 
     // Information for a node in the list
     struct Node {
@@ -72,16 +72,16 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
     // --- Dependency setters --- 
 
-    function setParams(uint256 _size, address _CDPManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
+    function setParams(uint256 _size, address _TroveManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
         require(_size > 0, "SortedCDPs: Size can’t be zero");
 
         data.maxSize = _size;
 
-        CDPManagerAddress = _CDPManagerAddress;
-        cdpManager = ICDPManager(_CDPManagerAddress);
+        TroveManagerAddress = _TroveManagerAddress;
+        cdpManager = ITroveManager(_TroveManagerAddress);
         borrowerOperationsAddress = _borrowerOperationsAddress;
 
-        emit CDPManagerAddressChanged(_CDPManagerAddress);
+        emit TroveManagerAddressChanged(_TroveManagerAddress);
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
 
         _renounceOwnership();
@@ -147,7 +147,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     }
 
     function remove(address _id) external override {
-        _requireCallerIsCDPManager();
+        _requireCallerIsTroveManager();
         _remove(_id);
     }
 
@@ -388,12 +388,12 @@ contract SortedCDPs is Ownable, ISortedCDPs {
 
     // --- 'require' functions ---
 
-    function _requireCallerIsCDPManager() internal view {
-        require(msg.sender == CDPManagerAddress, "SortedCDPs: Caller is not the CDPManager");
+    function _requireCallerIsTroveManager() internal view {
+        require(msg.sender == TroveManagerAddress, "SortedCDPs: Caller is not the TroveManager");
     }
 
     function _requireCallerIsBOorCDPM() internal view {
-        require(msg.sender == borrowerOperationsAddress || msg.sender == CDPManagerAddress,
+        require(msg.sender == borrowerOperationsAddress || msg.sender == TroveManagerAddress,
                 "SortedCDPs: Caller is neither BO nor CDPM");
     }
 }

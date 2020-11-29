@@ -51,7 +51,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     await th.assertRevert(contract.setAddresses(...params, { from: owner }))
   }
 
-  describe('CDPManager', async accounts => {
+  describe('TroveManager', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
       await testSetAddresses(cdpManager, 9)
     })

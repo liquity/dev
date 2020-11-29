@@ -40,7 +40,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
     event CLVTokenAddressSet(address _clvTokenAddress);
-    event CDPManagerAddressSet(address _cdpManager);
+    event TroveManagerAddressSet(address _cdpManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
 
@@ -66,7 +66,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
         emit LQTYTokenAddressSet(_lqtyTokenAddress);
         emit LQTYTokenAddressSet(_clvTokenAddress);
-        emit CDPManagerAddressSet(_cdpManagerAddress);
+        emit TroveManagerAddressSet(_cdpManagerAddress);
         emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
         emit ActivePoolAddressSet(_activePoolAddress);
 
@@ -128,7 +128,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     // --- Reward-per-unit-staked increase functions. Called by Liquity core contracts ---
 
     function increaseF_ETH(uint _ETHFee) external override {
-        _requireCallerIsCDPManager();
+        _requireCallerIsTroveManager();
         uint ETHFeePerLQTYStaked;
      
         if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = _ETHFee.mul(1e18).div(totalLQTYStaked);}
@@ -181,7 +181,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     // --- 'require' functions ---
 
-    function _requireCallerIsCDPManager() internal view {
+    function _requireCallerIsTroveManager() internal view {
         require(msg.sender == cdpManagerAddress, "LQTYStaking: caller is not CDPM");
     }
 

@@ -103,10 +103,10 @@ contract('DefaultPool', async accounts => {
  
   let defaultPool
 
-  const [owner, mockCDPManagerAddress, mockActivePoolAddress, alice] = accounts;
+  const [owner, mockTroveManagerAddress, mockActivePoolAddress, alice] = accounts;
   beforeEach(async () => {
     defaultPool = await DefaultPool.new()
-    await defaultPool.setAddresses(mockCDPManagerAddress, mockActivePoolAddress)
+    await defaultPool.setAddresses(mockTroveManagerAddress, mockActivePoolAddress)
   })
 
   it('getETH(): gets the recorded CLV balance', async () => {
@@ -123,19 +123,19 @@ contract('DefaultPool', async accounts => {
     const recordedCLV_balanceBefore = await defaultPool.getCLVDebt()
     assert.equal(recordedCLV_balanceBefore, 0)
 
-    await defaultPool.increaseCLVDebt(100, { from: mockCDPManagerAddress })
+    await defaultPool.increaseCLVDebt(100, { from: mockTroveManagerAddress })
     const recordedCLV_balanceAfter = await defaultPool.getCLVDebt()
     assert.equal(recordedCLV_balanceAfter, 100)
   })
   
   it('decreaseCLV(): decreases the recorded CLV balance by the correct amount', async () => {
     // start the pool on 100 wei
-    await defaultPool.increaseCLVDebt(100, { from: mockCDPManagerAddress })
+    await defaultPool.increaseCLVDebt(100, { from: mockTroveManagerAddress })
 
     const recordedCLV_balanceBefore = await defaultPool.getCLVDebt()
     assert.equal(recordedCLV_balanceBefore, 100)
 
-    await defaultPool.decreaseCLVDebt(100, { from: mockCDPManagerAddress })
+    await defaultPool.decreaseCLVDebt(100, { from: mockTroveManagerAddress })
     const recordedCLV_balanceAfter = await defaultPool.getCLVDebt()
     assert.equal(recordedCLV_balanceAfter, 0)
   })
@@ -153,7 +153,7 @@ contract('DefaultPool', async accounts => {
     assert.equal(defaultPool_BalanceBeforeTx, dec(2, 'ether'))
     
     //send ether from pool to alice
-    await defaultPool.sendETH(alice, dec(1, 'ether'), { from: mockCDPManagerAddress })
+    await defaultPool.sendETH(alice, dec(1, 'ether'), { from: mockTroveManagerAddress })
     const defaultPool_BalanceAfterTx = web3.utils.toBN(await web3.eth.getBalance(defaultPool.address))
     const alice_Balance_AfterTx = web3.utils.toBN(await web3.eth.getBalance(alice))
 

@@ -1,5 +1,5 @@
 {
-  "contractName": "CDPManagerTester",
+  "contractName": "TroveManagerTester",
   "abi": [
     {
       "anonymous": false,
@@ -69,7 +69,7 @@
         },
         {
           "indexed": false,
-          "internalType": "enum CDPManager.CDPManagerOperation",
+          "internalType": "enum TroveManager.TroveManagerOperation",
           "name": "operation",
           "type": "uint8"
         }
@@ -106,7 +106,7 @@
         },
         {
           "indexed": false,
-          "internalType": "enum CDPManager.CDPManagerOperation",
+          "internalType": "enum TroveManager.TroveManagerOperation",
           "name": "operation",
           "type": "uint8"
         }
@@ -349,7 +349,7 @@
           "type": "uint256"
         },
         {
-          "internalType": "enum CDPManager.Status",
+          "internalType": "enum TroveManager.Status",
           "name": "status",
           "type": "uint8"
         },

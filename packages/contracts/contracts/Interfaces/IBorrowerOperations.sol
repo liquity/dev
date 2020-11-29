@@ -7,7 +7,7 @@ interface IBorrowerOperations {
 
     // --- Events ---
 
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event TroveManagerAddressChanged(address _newTroveManagerAddress);
 
     event ActivePoolAddressChanged(address _activePoolAddress);
 

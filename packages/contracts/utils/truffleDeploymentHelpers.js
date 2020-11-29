@@ -1,6 +1,6 @@
 
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
-const CDPManager = artifacts.require("./CDPManager.sol")
+const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
@@ -12,7 +12,7 @@ const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const deployLiquity = async () => {
   const priceFeed = await PriceFeed.new()
   const sortedCDPs = await SortedCDPs.new()
-  const cdpManager = await CDPManager.new()
+  const cdpManager = await TroveManager.new()
   const activePool = await ActivePool.new()
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
@@ -27,7 +27,7 @@ const deployLiquity = async () => {
   PriceFeed.setAsDeployed(priceFeed)
   CLVToken.setAsDeployed(clvToken)
   SortedCDPs.setAsDeployed(sortedCDPs)
-  CDPManager.setAsDeployed(cdpManager)
+  TroveManager.setAsDeployed(cdpManager)
   ActivePool.setAsDeployed(activePool)
   StabilityPool.setAsDeployed(stabilityPool)
   FunctionCaller.setAsDeployed(functionCaller)
@@ -53,7 +53,7 @@ const getAddresses = (contracts) => {
     PriceFeed: contracts.priceFeed.address,
     CLVToken: contracts.clvToken.address,
     SortedCDPs: contracts.sortedCDPs.address,
-    CDPManager: contracts.cdpManager.address,
+    TroveManager: contracts.cdpManager.address,
     StabilityPool: contracts.stabilityPool.address,
     ActivePool: contracts.activePool.address,
     DefaultPool: contracts.defaultPool.address,
@@ -63,15 +63,15 @@ const getAddresses = (contracts) => {
 
 // Connect contracts to their dependencies
 const connectContracts = async (contracts, addresses) => {
-  // set CDPManager addr in SortedCDPs
-  await contracts.sortedCDPs.setCDPManager(addresses.CDPManager)
+  // set TroveManager addr in SortedCDPs
+  await contracts.sortedCDPs.setTroveManager(addresses.TroveManager)
 
   // set contract addresses in the FunctionCaller 
-  await contracts.functionCaller.setCDPManagerAddress(addresses.CDPManager)
+  await contracts.functionCaller.setTroveManagerAddress(addresses.TroveManager)
   await contracts.functionCaller.setSortedCDPsAddress(addresses.SortedCDPs)
 
-  // set CDPManager addr in PriceFeed
-  await contracts.priceFeed.setCDPManagerAddress(addresses.CDPManager)
+  // set TroveManager addr in PriceFeed
+  await contracts.priceFeed.setTroveManagerAddress(addresses.TroveManager)
 
   // set contracts in the CDP Manager
   await contracts.cdpManager.setCLVToken(addresses.CLVToken)
@@ -87,7 +87,7 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.borrowerOperations.setPriceFeed(addresses.PriceFeed)
   await contracts.borrowerOperations.setActivePool(addresses.ActivePool)
   await contracts.borrowerOperations.setDefaultPool(addresses.DefaultPool)
-  await contracts.borrowerOperations.setCDPManager(addresses.CDPManager)
+  await contracts.borrowerOperations.setTroveManager(addresses.TroveManager)
 
   // set contracts in the Pools
   await contracts.stabilityPool.setActivePoolAddress(addresses.ActivePool)
@@ -101,7 +101,7 @@ const connectContracts = async (contracts, addresses) => {
 }
 
 const connectEchidnaProxy = async (echidnaProxy, addresses) => {
-  echidnaProxy.setCDPManager(addresses.CDPManager)
+  echidnaProxy.setTroveManager(addresses.TroveManager)
   echidnaProxy.setBorrowerOperations(addresses.BorrowerOperations)
 }
 

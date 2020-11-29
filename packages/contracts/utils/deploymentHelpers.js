@@ -1,6 +1,6 @@
 
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
-const CDPManager = artifacts.require("./CDPManager.sol")
+const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
@@ -23,7 +23,7 @@ const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 
 /* "Liquity core" consists of all contracts in the core Liquity system.
@@ -68,7 +68,7 @@ class DeploymentHelper {
   static async deployLiquityCoreBuidler() {
     const priceFeed = await PriceFeed.new()
     const sortedCDPs = await SortedCDPs.new()
-    const cdpManager = await CDPManager.new()
+    const cdpManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
     const defaultPool = await DefaultPool.new()
@@ -85,7 +85,7 @@ class DeploymentHelper {
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
     SortedCDPs.setAsDeployed(sortedCDPs)
-    CDPManager.setAsDeployed(cdpManager)
+    TroveManager.setAsDeployed(cdpManager)
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
     CollSurplusPool.setAsDeployed(collSurplusPool)
@@ -125,7 +125,7 @@ class DeploymentHelper {
     testerContracts.collSurplusPool = await CollSurplusPool.new()
     testerContracts.math = await LiquityMathTester.new()
     testerContracts.borrowerOperations = await BorrowerOperationsTester.new()
-    testerContracts.cdpManager = await CDPManagerTester.new()
+    testerContracts.cdpManager = await TroveManagerTester.new()
     testerContracts.functionCaller = await FunctionCaller.new()
     testerContracts.hintHelpers = await HintHelpers.new()
     testerContracts.clvToken =  await CLVTokenTester.new(
@@ -191,7 +191,7 @@ class DeploymentHelper {
   static async deployLiquityCoreTruffle() {
     const priceFeed = await PriceFeed.new()
     const sortedCDPs = await SortedCDPs.new()
-    const cdpManager = await CDPManager.new()
+    const cdpManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
     const defaultPool = await DefaultPool.new()
@@ -254,7 +254,7 @@ class DeploymentHelper {
   // Connect contracts to their dependencies
   static async connectCoreContracts(contracts, LQTYContracts) {
 
-    // set CDPManager addr in SortedCDPs
+    // set TroveManager addr in SortedCDPs
     await contracts.sortedCDPs.setParams(
       maxBytes32,
       contracts.cdpManager.address,
@@ -262,7 +262,7 @@ class DeploymentHelper {
     )
 
     // set contract addresses in the FunctionCaller 
-    await contracts.functionCaller.setCDPManagerAddress(contracts.cdpManager.address)
+    await contracts.functionCaller.setTroveManagerAddress(contracts.cdpManager.address)
     await contracts.functionCaller.setSortedCDPsAddress(contracts.sortedCDPs.address)
 
     // set contract addresses in PriceFeed

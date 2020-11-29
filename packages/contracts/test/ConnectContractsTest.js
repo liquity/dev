@@ -40,7 +40,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
   })
 
-  it('Sets the correct PriceFeed address in CDPManager', async () => {
+  it('Sets the correct PriceFeed address in TroveManager', async () => {
     const priceFeedAddress = priceFeed.address
 
     const recordedPriceFeedAddress = await cdpManager.priceFeed()
@@ -48,7 +48,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(priceFeedAddress, recordedPriceFeedAddress)
   })
 
-  it('Sets the correct CLVToken address in CDPManager', async () => {
+  it('Sets the correct CLVToken address in TroveManager', async () => {
     const clvTokenAddress = clvToken.address
 
     const recordedClvTokenAddress = await cdpManager.clvToken()
@@ -56,7 +56,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(clvTokenAddress, recordedClvTokenAddress)
   })
 
-  it('Sets the correct SortedCDPs address in CDPManager', async () => {
+  it('Sets the correct SortedCDPs address in TroveManager', async () => {
     const sortedCDPsAddress = sortedCDPs.address
 
     const recordedSortedCDPsAddress = await cdpManager.sortedCDPs()
@@ -64,7 +64,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(sortedCDPsAddress, recordedSortedCDPsAddress)
   })
 
-  it('Sets the correct BorrowerOperations address in CDPManager', async () => {
+  it('Sets the correct BorrowerOperations address in TroveManager', async () => {
     const borrowerOperationsAddress = borrowerOperations.address
 
     const recordedBorrowerOperationsAddress = await cdpManager.borrowerOperationsAddress()
@@ -73,7 +73,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // ActivePool in CDPM
-  it('Sets the correct ActivePool address in CDPManager', async () => {
+  it('Sets the correct ActivePool address in TroveManager', async () => {
     const activePoolAddress = activePool.address
 
     const recordedActivePoolAddresss = await cdpManager.activePool()
@@ -82,7 +82,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // DefaultPool in CDPM
-  it('Sets the correct DefaultPool address in CDPManager', async () => {
+  it('Sets the correct DefaultPool address in TroveManager', async () => {
     const defaultPoolAddress = defaultPool.address
 
     const recordedDefaultPoolAddresss = await cdpManager.defaultPool()
@@ -91,7 +91,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // StabilityPool in CDPM
-  it('Sets the correct StabilityPool address in CDPManager', async () => {
+  it('Sets the correct StabilityPool address in TroveManager', async () => {
     const stabilityPoolAddress = stabilityPool.address
 
     const recordedStabilityPoolAddresss = await cdpManager.stabilityPool()
@@ -100,7 +100,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   })
 
   // LQTY Staking in CDPM
-  it('Sets the correct LQTYStaking address in CDPManager', async () => {
+  it('Sets the correct LQTYStaking address in TroveManager', async () => {
     const lqtyStakingAddress = lqtyStaking.address
 
     const recordedLQTYStakingAddress = await cdpManager.lqtyStakingAddress()
@@ -133,11 +133,11 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  it('Sets the correct CDPManager address in ActivePool', async () => {
+  it('Sets the correct TroveManager address in ActivePool', async () => {
     const cdpManagerAddress = cdpManager.address
 
-    const recordedCDPManagerAddress = await activePool.cdpManagerAddress()
-    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+    const recordedTroveManagerAddress = await activePool.cdpManagerAddress()
+    assert.equal(cdpManagerAddress, recordedTroveManagerAddress)
   })
 
   // Stability Pool
@@ -165,20 +165,20 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(clvTokenAddress, recordedClvTokenAddress)
   })
 
-  it('Sets the correct CDPManager address in StabilityPool', async () => {
+  it('Sets the correct TroveManager address in StabilityPool', async () => {
     const cdpManagerAddress = cdpManager.address
 
-    const recordedCDPManagerAddress = await stabilityPool.cdpManager()
-    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+    const recordedTroveManagerAddress = await stabilityPool.cdpManager()
+    assert.equal(cdpManagerAddress, recordedTroveManagerAddress)
   })
 
   // Default Pool
 
-  it('Sets the correct CDPManager address in DefaultPool', async () => {
+  it('Sets the correct TroveManager address in DefaultPool', async () => {
     const cdpManagerAddress = cdpManager.address
 
-    const recordedCDPManagerAddress = await defaultPool.cdpManagerAddress()
-    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+    const recordedTroveManagerAddress = await defaultPool.cdpManagerAddress()
+    assert.equal(cdpManagerAddress, recordedTroveManagerAddress)
   })
 
   it('Sets the correct ActivePool address in DefaultPool', async () => {
@@ -188,7 +188,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(activePoolAddress, recordedActivePoolAddress)
   })
 
-  it('Sets the correct CDPManager address in SortedCDPs', async () => {
+  it('Sets the correct TroveManager address in SortedCDPs', async () => {
     const borrowerOperationsAddress = borrowerOperations.address
 
     const recordedBorrowerOperationsAddress = await sortedCDPs.borrowerOperationsAddress()
@@ -198,18 +198,18 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct BorrowerOperations address in SortedCDPs', async () => {
     const cdpManagerAddress = cdpManager.address
 
-    const recordedCDPManagerAddress = await sortedCDPs.CDPManagerAddress()
-    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+    const recordedTroveManagerAddress = await sortedCDPs.TroveManagerAddress()
+    assert.equal(cdpManagerAddress, recordedTroveManagerAddress)
   })
 
   //--- BorrowerOperations ---
 
-  // CDPManager in BO
-  it('Sets the correct CDPManager address in BorrowerOperations', async () => {
+  // TroveManager in BO
+  it('Sets the correct TroveManager address in BorrowerOperations', async () => {
     const cdpManagerAddress = cdpManager.address
 
-    const recordedCDPManagerAddress = await borrowerOperations.cdpManager()
-    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+    const recordedTroveManagerAddress = await borrowerOperations.cdpManager()
+    assert.equal(cdpManagerAddress, recordedTroveManagerAddress)
   })
 
   // setPriceFeed in BO
@@ -279,12 +279,12 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(clvTokenAddress, recordedCLVTokenAddress)
   })
 
-  // Sets CDPManager in LQTYStaking
+  // Sets TroveManager in LQTYStaking
   it('Sets the correct ActivePool address in LQTYStaking', async () => {
     const cdpManagerAddress = cdpManager.address
 
-    const recordedCDPManagerAddress = await lqtyStaking.cdpManagerAddress()
-    assert.equal(cdpManagerAddress, recordedCDPManagerAddress)
+    const recordedTroveManagerAddress = await lqtyStaking.cdpManagerAddress()
+    assert.equal(cdpManagerAddress, recordedTroveManagerAddress)
   })
 
   // Sets BorrowerOperations in LQTYStaking

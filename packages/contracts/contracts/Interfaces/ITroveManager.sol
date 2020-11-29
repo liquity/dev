@@ -3,7 +3,7 @@
 pragma solidity 0.6.11;
 
 // Common interface for the CDP Manager.
-interface ICDPManager {
+interface ITroveManager {
     
     // --- Events ---
 

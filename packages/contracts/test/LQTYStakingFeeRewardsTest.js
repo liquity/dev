@@ -14,7 +14,7 @@ const toBN = th.toBN
  * gains are non-zero, occur when they should, and are in correct proportion to the user's stake. 
  *
  * Specific ETH/LUSD gain values will depend on the final fee schedule used, and the final choices for
- * parameters BETA and MINUTE_DECAY_FACTORin the CDPManager, which are still TBD based on economic
+ * parameters BETA and MINUTE_DECAY_FACTORin the TroveManager, which are still TBD based on economic
  * modelling.
  * 
  */ 

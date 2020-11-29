@@ -22,7 +22,7 @@ contract DefaultPool is Ownable, IPool {
     uint256 internal ETH;  // deposited ETH tracker
     uint256 internal CLVDebt;  // debt 
 
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event TroveManagerAddressChanged(address _newTroveManagerAddress);
 
     // --- Dependency setters ---
 
@@ -36,7 +36,7 @@ contract DefaultPool is Ownable, IPool {
         cdpManagerAddress = _cdpManagerAddress;
         activePoolAddress = _activePoolAddress;
 
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_cdpManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
 
         _renounceOwnership();
@@ -85,7 +85,7 @@ contract DefaultPool is Ownable, IPool {
     }
 
     function _requireCallerIsCDPMananger() internal view {
-        require(msg.sender == cdpManagerAddress, "DefaultPool: Caller is not the CDPManager");
+        require(msg.sender == cdpManagerAddress, "DefaultPool: Caller is not the TroveManager");
     }
 
     // --- Fallback function ---

@@ -47,7 +47,7 @@ const deployContracts = async (
     borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations", {
       ...overrides
     }),
-    cdpManager: await deployContract(deployer, getContractFactory, "CDPManager", { ...overrides }),
+    cdpManager: await deployContract(deployer, getContractFactory, "TroveManager", { ...overrides }),
     communityIssuance: await deployContract(deployer, getContractFactory, "CommunityIssuance", {
       ...overrides
     }),

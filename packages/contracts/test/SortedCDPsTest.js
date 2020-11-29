@@ -6,7 +6,7 @@ const th = testHelpers.TestHelper
 const dec = th.dec
 const mv = testHelpers.MoneyValues
 
-contract('CDPManager', async accounts => {
+contract('TroveManager', async accounts => {
   
   const assertSortedListIsOrdered = async (contracts) => {
     const price = await contracts.priceFeed.getPrice()

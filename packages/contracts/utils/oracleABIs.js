@@ -379,7 +379,7 @@ const TestnetPriceFeedABI =  [
         "type": "address"
       }
     ],
-    "name": "CDPManagerAddressChanged",
+    "name": "TroveManagerAddressChanged",
     "type": "event"
   },
   {
@@ -537,7 +537,7 @@ const TestnetPriceFeedABI =  [
         "type": "address"
       }
     ],
-    "name": "setCDPManagerAddress",
+    "name": "setTroveManagerAddress",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",

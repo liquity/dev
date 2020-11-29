@@ -46,10 +46,10 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
     // --- Ropsten Testnet ---
 
    // Set the CDP Manager address in the testnet PriceFeed
-    // const res = await testnetPriceFeed.setCDPManagerAddress('0x405143dAe9a8a703a1fE82ad4B65BBFE5505AF63')
+    // const res = await testnetPriceFeed.setTroveManagerAddress('0x405143dAe9a8a703a1fE82ad4B65BBFE5505AF63')
     // res.wait()
-    const recordedCDPManagerAddressTestnet = await testnetPriceFeed.cdpManagerAddress()
-    console.log(`recorded CDPManager Address is ${recordedCDPManagerAddressTestnet}`)
+    const recordedTroveManagerAddressTestnet = await testnetPriceFeed.cdpManagerAddress()
+    console.log(`recorded TroveManager Address is ${recordedTroveManagerAddressTestnet}`)
    
 
     // Call the testnet Chainlink aggregator directly

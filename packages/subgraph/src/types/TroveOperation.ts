@@ -42,7 +42,7 @@ export function isBorrowerOperation(troveOperation: string): boolean {
   );
 }
 
-enum CDPManagerOperation {
+enum TroveManagerOperation {
   applyPendingRewards,
   liquidateInNormalMode,
   liquidateInRecoveryMode,
@@ -50,17 +50,17 @@ enum CDPManagerOperation {
   redeemCollateral
 }
 
-export function getTroveOperationFromCDPManagerOperation(operation: CDPManagerOperation): string {
+export function getTroveOperationFromTroveManagerOperation(operation: TroveManagerOperation): string {
   switch (operation) {
-    case CDPManagerOperation.applyPendingRewards:
+    case TroveManagerOperation.applyPendingRewards:
       return "accrueRewards";
-    case CDPManagerOperation.liquidateInNormalMode:
+    case TroveManagerOperation.liquidateInNormalMode:
       return "liquidateInNormalMode";
-    case CDPManagerOperation.liquidateInRecoveryMode:
+    case TroveManagerOperation.liquidateInRecoveryMode:
       return "liquidateInRecoveryMode";
-    case CDPManagerOperation.partiallyLiquidateInRecoveryMode:
+    case TroveManagerOperation.partiallyLiquidateInRecoveryMode:
       return "partiallyLiquidateInRecoveryMode";
-    case CDPManagerOperation.redeemCollateral:
+    case TroveManagerOperation.redeemCollateral:
       return "redeemCollateral";
   }
 

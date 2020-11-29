@@ -32,7 +32,7 @@ import { LiquityContracts } from "./contracts";
 import { EthersTransactionOverrides } from "./types";
 import { EthersLiquityBase } from "./EthersLiquityBase";
 
-enum CDPManagerOperation {
+enum TroveManagerOperation {
   applyPendingRewards,
   liquidateInNormalMode,
   liquidateInRecoveryMode,
@@ -190,7 +190,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
           .extractEvents(logs, "CDPUpdated")
           .filter(
             ({ args: { _operation } }) =>
-              _operation === CDPManagerOperation.partiallyLiquidateInRecoveryMode
+              _operation === TroveManagerOperation.partiallyLiquidateInRecoveryMode
           )
           .map(({ args: { _borrower } }) => _borrower);
 

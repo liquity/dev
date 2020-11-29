@@ -1,7 +1,7 @@
 const { TestHelper: { dec } } = require("../utils/testHelpers.js")
 
 const EchidnaTester = artifacts.require('EchidnaTester')
-const CDPManager = artifacts.require('CDPManager')
+const TroveManager = artifacts.require('TroveManager')
 const CLVToken = artifacts.require('CLVToken')
 const ActivePool = artifacts.require('ActivePool')
 const DefaultPool = artifacts.require('DefaultPool')
@@ -21,7 +21,7 @@ contract('Echidna debugger', async accounts => {
 
   before(async () => {
     echidnaTester = await EchidnaTester.new({ value: dec(11, 25) })
-    cdpManager = await CDPManager.at(await echidnaTester.cdpManager())
+    cdpManager = await TroveManager.at(await echidnaTester.cdpManager())
     clvToken = await CLVToken.at(await echidnaTester.clvToken())
     activePool = await ActivePool.at(await echidnaTester.activePool())
     defaultPool = await DefaultPool.at(await echidnaTester.defaultPool())

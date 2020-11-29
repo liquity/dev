@@ -316,7 +316,7 @@
         },
         {
           "internalType": "address",
-          "name": "_CDPManagerAddress",
+          "name": "_TroveManagerAddress",
           "type": "address"
         },
         {

@@ -80,7 +80,7 @@ contract('CollSUrplusPool', async accounts => {
   })
 
   it('CollSurplusPool: accountSurplus: reverts if caller is not CDP Manager', async () => {
-    await th.assertRevert(collSurplusPool.accountSurplus(A, 1), 'CollSurplusPool: Caller is not CDPManager')
+    await th.assertRevert(collSurplusPool.accountSurplus(A, 1), 'CollSurplusPool: Caller is not TroveManager')
   })
 })
 

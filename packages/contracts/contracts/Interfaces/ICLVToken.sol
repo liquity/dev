@@ -9,7 +9,7 @@ interface ICLVToken is IERC20, IERC2612 {
     
     // --- Events ---
     event CLVTokenBalanceUpdated(address _user, uint _amount);
-    event CDPManagerAddressChanged(address _cdpManagerAddress);
+    event TroveManagerAddressChanged(address _cdpManagerAddress);
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
 

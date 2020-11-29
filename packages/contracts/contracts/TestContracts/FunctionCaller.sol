@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import '../Interfaces/ICDPManager.sol';
+import '../Interfaces/ITroveManager.sol';
 import '../Interfaces/ISortedCDPs.sol';
 import '../Interfaces/IPriceFeed.sol';
 import '../Dependencies/LiquityMath.sol';
@@ -11,7 +11,7 @@ import '../Dependencies/LiquityMath.sol';
 Not part of the Liquity application. */
 contract FunctionCaller {
 
-    ICDPManager cdpManager;
+    ITroveManager cdpManager;
     address public cdpManagerAddress;
 
     ISortedCDPs sortedCDPs;
@@ -22,9 +22,9 @@ contract FunctionCaller {
 
     // --- Dependency setters ---
 
-    function setCDPManagerAddress(address _cdpManagerAddress) external {
+    function setTroveManagerAddress(address _cdpManagerAddress) external {
         cdpManagerAddress = _cdpManagerAddress;
-        cdpManager = ICDPManager(_cdpManagerAddress);
+        cdpManager = ITroveManager(_cdpManagerAddress);
     }
     
     function setSortedCDPsAddress(address _sortedCDPsAddress) external {

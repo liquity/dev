@@ -1,6 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 
 
@@ -35,10 +35,10 @@ contract('Gas compensation tests', async accounts => {
   }
 
   before(async () => {
-    cdpManagerTester = await CDPManagerTester.new()
+    cdpManagerTester = await TroveManagerTester.new()
     borrowerOperationsTester = await BorrowerOperationsTester.new()
 
-    CDPManagerTester.setAsDeployed(cdpManagerTester)
+    TroveManagerTester.setAsDeployed(cdpManagerTester)
     BorrowerOperationsTester.setAsDeployed(borrowerOperationsTester)
   })
 

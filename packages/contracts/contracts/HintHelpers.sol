@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedCDPs.sol";
 import "./Dependencies/LiquityBase.sol";
@@ -12,13 +12,13 @@ contract HintHelpers is LiquityBase, Ownable {
 
     IPriceFeed public priceFeed;
     ISortedCDPs public sortedCDPs;
-    ICDPManager public cdpManager;
+    ITroveManager public cdpManager;
 
     // --- Events ---
 
     event PriceFeedAddressChanged(address _priceFeedAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
-    event CDPManagerAddressChanged(address _cdpManagerAddress);
+    event TroveManagerAddressChanged(address _cdpManagerAddress);
 
     // --- Dependency setters ---
 
@@ -32,11 +32,11 @@ contract HintHelpers is LiquityBase, Ownable {
     {
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        cdpManager = ICDPManager(_cdpManagerAddress);
+        cdpManager = ITroveManager(_cdpManagerAddress);
 
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_cdpManagerAddress);
 
         _renounceOwnership();
     }

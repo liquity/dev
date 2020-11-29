@@ -12,7 +12,7 @@ interface ISortedCDPs {
 
     // --- Functions ---
     
-    function setParams(uint256 _size, address _CDPManagerAddress, address _borrowerOperationsAddress) external;
+    function setParams(uint256 _size, address _TroveManagerAddress, address _borrowerOperationsAddress) external;
 
     function insert(address _id, uint256 _ICR, uint price, address _prevId, address _nextId) external;
 

@@ -24,7 +24,7 @@
           "type": "address"
         }
       ],
-      "name": "CDPManagerAddressChanged",
+      "name": "TroveManagerAddressChanged",
       "type": "event"
     },
     {
@@ -62,7 +62,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "CDPManagerAddress",
+      "name": "TroveManagerAddress",
       "outputs": [
         {
           "internalType": "address",
@@ -95,7 +95,7 @@
       "name": "cdpManager",
       "outputs": [
         {
-          "internalType": "contract ICDPManager",
+          "internalType": "contract ITroveManager",
           "name": "",
           "type": "address"
         }
@@ -453,7 +453,7 @@
         },
         {
           "internalType": "address",
-          "name": "_CDPManagerAddress",
+          "name": "_TroveManagerAddress",
           "type": "address"
         },
         {

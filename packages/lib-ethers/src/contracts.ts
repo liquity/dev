@@ -12,7 +12,7 @@ import {
 
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
-import cdpManagerAbi from "../abi/CDPManager.json";
+import cdpManagerAbi from "../abi/TroveManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
@@ -35,7 +35,7 @@ import ropsten from "../deployments/ropsten.json";
 import {
   ActivePool,
   BorrowerOperations,
-  CDPManager,
+  TroveManager,
   CLVToken,
   CommunityIssuance,
   DefaultPool,
@@ -175,7 +175,7 @@ export interface LiquityContracts {
 
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
-  cdpManager: CDPManager;
+  cdpManager: TroveManager;
   clvToken: CLVToken;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
@@ -226,7 +226,7 @@ export const connectToContracts = (
     signerOrProvider
   ),
 
-  cdpManager: create<CDPManager>(addresses.cdpManager, cdpManagerAbi, signerOrProvider),
+  cdpManager: create<TroveManager>(addresses.cdpManager, cdpManagerAbi, signerOrProvider),
 
   clvToken: create<CLVToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
 

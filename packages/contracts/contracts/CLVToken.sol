@@ -55,7 +55,7 @@ contract CLVToken is ICLVToken {
         public 
     {  
         cdpManagerAddress = _cdpManagerAddress;
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_cdpManagerAddress);
 
         stabilityPoolAddress = _stabilityPoolAddress;
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
@@ -219,7 +219,7 @@ contract CLVToken is ICLVToken {
             _recipient != stabilityPoolAddress && 
             _recipient != cdpManagerAddress && 
             _recipient != borrowerOperationsAddress, 
-            "LUSD: Cannot transfer tokens directly to the StabilityPool, CDPManager or BorrowerOps"
+            "LUSD: Cannot transfer tokens directly to the StabilityPool, TroveManager or BorrowerOps"
         );
     }
 
@@ -232,7 +232,7 @@ contract CLVToken is ICLVToken {
             msg.sender == borrowerOperationsAddress ||
             msg.sender == cdpManagerAddress ||
             msg.sender == stabilityPoolAddress,
-            "LUSD: Caller is neither BorrowerOperations nor CDPManager nor StabilityPool"
+            "LUSD: Caller is neither BorrowerOperations nor TroveManager nor StabilityPool"
         );
     }
 
@@ -243,7 +243,7 @@ contract CLVToken is ICLVToken {
     function _requireCallerIsCDPMorSP() internal view {
         require(
             msg.sender == cdpManagerAddress || msg.sender == stabilityPoolAddress,
-            "LUSD: Caller is neither CDPManager nor StabilityPool");
+            "LUSD: Caller is neither TroveManager nor StabilityPool");
     }
 
     // --- Optional functions ---

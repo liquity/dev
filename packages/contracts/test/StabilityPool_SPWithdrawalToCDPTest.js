@@ -1,7 +1,7 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -51,7 +51,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
       const LQTYContracts = await deploymentHelper.deployLQTYContracts()
-      contracts.cdpManager = await CDPManagerTester.new()
+      contracts.cdpManager = await TroveManagerTester.new()
       contracts = await deploymentHelper.deployCLVToken(contracts)
   
       priceFeed = contracts.priceFeed

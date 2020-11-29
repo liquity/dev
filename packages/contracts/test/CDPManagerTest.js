@@ -1,6 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 
 const th = testHelpers.TestHelper
@@ -14,10 +14,10 @@ const timeValues = testHelpers.TimeValues
  * Some only test that the fees are non-zero when they should occur.
  *
  * Specific ETH gain values will depend on the final fee schedule used, and the final choices for
- * the parameter BETA in the CDPManager, which is still TBD based on economic modelling.
+ * the parameter BETA in the TroveManager, which is still TBD based on economic modelling.
  * 
  */ 
-contract('CDPManager', async accounts => {
+contract('TroveManager', async accounts => {
 
   const _18_zeros = '000000000000000000'
   const ZERO_ADDRESS = th.ZERO_ADDRESS
@@ -43,7 +43,7 @@ contract('CDPManager', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    contracts.cdpManager = await CDPManagerTester.new()
+    contracts.cdpManager = await TroveManagerTester.new()
     contracts.clvToken = await CLVTokenTester.new(
       contracts.cdpManager.address,
       contracts.stabilityPool.address,
@@ -1899,7 +1899,7 @@ contract('CDPManager', async accounts => {
       const tx = await cdpManager.batchLiquidateTroves(liquidationArray);
       assert.isFalse(tx.receipt.status)
     } catch (error) {
-      assert.include(error.message, "CDPManager: Calldata address array must not be empty")
+      assert.include(error.message, "TroveManager: Calldata address array must not be empty")
     }
   })
 
@@ -2545,7 +2545,7 @@ contract('CDPManager', async accounts => {
 
     // Erin attempts to redeem with _amount = 0
     const redemptionTxPromise = cdpManager.redeemCollateral(0, erin, erin, 0, 0, { from: erin })
-    await th.assertRevert(redemptionTxPromise, "CDPManager: Amount must be greater than zero")
+    await th.assertRevert(redemptionTxPromise, "TroveManager: Amount must be greater than zero")
   })
 
   it("redeemCollateral(): doesn't affect the Stability Pool deposits or ETH gain of redeemed-from troves", async () => {

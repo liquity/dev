@@ -33,11 +33,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newCDPManagerAddress",
+          "name": "_newTroveManagerAddress",
           "type": "address"
         }
       ],
-      "name": "CDPManagerAddressChanged",
+      "name": "TroveManagerAddressChanged",
       "type": "event"
     },
     {

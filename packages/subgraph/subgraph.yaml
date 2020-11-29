@@ -4,16 +4,16 @@ repository: https://github.com/liquity/subgraph
 schema:
   file: ./schema.graphql
 dataSources:
-  - name: CDPManager
+  - name: TroveManager
     kind: ethereum/contract
     network: ropsten
     source:
       #address: "0x56fcdA0436E5C7a33ee5bfe292f11AC66429Eb5c"
       address: "0x6645E03DA2a711f780af7cCE1019Cb9a9135C898"
-      abi: CDPManager
+      abi: TroveManager
       # startBlock: 8110721
     mapping:
-      file: ./src/mappings/CDPManager.ts
+      file: ./src/mappings/TroveManager.ts
       language: wasm/assemblyscript
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -27,8 +27,8 @@ dataSources:
         - Liquidation
         - SystemState
       abis:
-        - name: CDPManager
-          file: ../lib-ethers/abi/CDPManager.json
+        - name: TroveManager
+          file: ../lib-ethers/abi/TroveManager.json
       eventHandlers:
         - event: BorrowerOperationsAddressChanged(address)
           handler: handleBorrowerOperationsAddressChanged
@@ -65,8 +65,8 @@ templates:
       abis:
         - name: BorrowerOperations
           file: ../lib-ethers/abi/BorrowerOperations.json
-        - name: CDPManager
-          file: ../lib-ethers/abi/CDPManager.json
+        - name: TroveManager
+          file: ../lib-ethers/abi/TroveManager.json
       eventHandlers:
         - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleCDPUpdated

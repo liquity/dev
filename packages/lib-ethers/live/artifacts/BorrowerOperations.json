@@ -39,11 +39,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newCDPManagerAddress",
+          "name": "_newTroveManagerAddress",
           "type": "address"
         }
       ],
-      "name": "CDPManagerAddressChanged",
+      "name": "TroveManagerAddressChanged",
       "type": "event"
     },
     {
@@ -310,7 +310,7 @@
       "name": "cdpManager",
       "outputs": [
         {
-          "internalType": "contract ICDPManager",
+          "internalType": "contract ITroveManager",
           "name": "",
           "type": "address"
         }

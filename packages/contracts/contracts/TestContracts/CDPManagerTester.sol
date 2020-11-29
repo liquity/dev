@@ -2,12 +2,12 @@
 
 pragma solidity 0.6.11;
 
-import "../CDPManager.sol";
+import "../TroveManager.sol";
 
-/* Tester contract inherits from CDPManager, and provides external functions 
+/* Tester contract inherits from TroveManager, and provides external functions 
 for testing the parent's internal functions. */
 
-contract CDPManagerTester is CDPManager {
+contract TroveManagerTester is TroveManager {
 
     function computeICR(uint _coll, uint _debt, uint _price) external pure returns (uint) {
         return LiquityMath._computeCR(_coll, _debt, _price);

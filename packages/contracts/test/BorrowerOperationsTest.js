@@ -17,7 +17,7 @@ const assertRevert = th.assertRevert
  * fees are non-zero when they should occur, and that they decay over time.
  *
  * Specific LUSD fee values will depend on the final fee schedule used, and the final choice for
- *  the parameter MINUTE_DECAY_FACTOR in the CDPManager, which is still TBD based on economic
+ *  the parameter MINUTE_DECAY_FACTOR in the TroveManager, which is still TBD based on economic
  * modelling.
  * 
  */ 
@@ -673,7 +673,7 @@ contract('BorrowerOperations', async accounts => {
 
     // console.log(`activePool raw ETH bal: ${await web3.eth.getBalance(activePool.address)}`)
     // console.log(`activePool ETH tracker: ${await activePool.getETH()}`)
-    // console.log(`activePool in CDPManager: ${await cdpManager.activePool()}`)
+    // console.log(`activePool in TroveManager: ${await cdpManager.activePool()}`)
 
     // A redeems 10 CLV
     await th.redeemCollateral(A, contracts, dec(10, 18))
@@ -2244,7 +2244,7 @@ contract('BorrowerOperations', async accounts => {
       assert.isFalse(txAlice.receipt.status)
     } catch (err) {
       // assert.include(err.message, "revert")
-      // assert.include(err.message, "CDPManager: Only one trove in the system")
+      // assert.include(err.message, "TroveManager: Only one trove in the system")
     }
   })
 

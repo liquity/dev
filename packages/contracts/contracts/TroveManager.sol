@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IPool.sol";
 import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
@@ -14,7 +14,7 @@ import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
-contract CDPManager is LiquityBase, Ownable, ICDPManager {
+contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
     // --- Connected contract declarations ---
 
@@ -182,7 +182,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _collGasCompensation, uint _CLVGasCompensation);
     event Redemption(uint _attemptedCLVAmount, uint _actualCLVAmount, uint _ETHSent, uint _ETHFee);
 
-    enum CDPManagerOperation {
+    enum TroveManagerOperation {
         applyPendingRewards,
         liquidateInNormalMode,
         liquidateInRecoveryMode,
@@ -191,8 +191,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     event CDPCreated(address indexed _borrower, uint _arrayIndex);
-    event CDPUpdated(address indexed _borrower, uint _debt, uint _coll, uint _stake, CDPManagerOperation _operation);
-    event CDPLiquidated(address indexed _borrower, uint _debt, uint _coll, CDPManagerOperation _operation);
+    event CDPUpdated(address indexed _borrower, uint _debt, uint _coll, uint _stake, TroveManagerOperation _operation);
+    event CDPLiquidated(address indexed _borrower, uint _debt, uint _coll, TroveManagerOperation _operation);
 
     // --- Dependency setter ---
 
@@ -280,7 +280,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, collToLiquidate, _CLVInStabPool);
 
         _closeCDP(_borrower);
-        emit CDPLiquidated(_borrower, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInNormalMode);
+        emit CDPLiquidated(_borrower, V.entireCDPDebt, V.entireCDPColl, TroveManagerOperation.liquidateInNormalMode);
 
         return V;
     }
@@ -313,7 +313,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V.collToRedistribute = L.collToLiquidate;
 
             _closeCDP(_borrower);
-            emit CDPLiquidated(_borrower, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
+            emit CDPLiquidated(_borrower, V.entireCDPDebt, V.entireCDPColl, TroveManagerOperation.liquidateInRecoveryMode);
 
         // If 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > _100pct) && (_ICR < MCR)) {
@@ -325,7 +325,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V.collToRedistribute) = _getOffsetAndRedistributionVals(V.entireCDPDebt, L.collToLiquidate, _CLVInStabPool);
 
             _closeCDP(_borrower);
-            emit CDPLiquidated(_borrower, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
+            emit CDPLiquidated(_borrower, V.entireCDPDebt, V.entireCDPColl, TroveManagerOperation.liquidateInRecoveryMode);
 
         /* 
         * If 110% <= ICR < current TCR (accounting for the preceding liquidations in the current sequence)
@@ -412,7 +412,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             V.debtToRedistribute = 0;
             V.collToRedistribute = 0;
 
-            emit CDPLiquidated(_borrower, _entireCDPDebt, _entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
+            emit CDPLiquidated(_borrower, _entireCDPDebt, _entireCDPColl, TroveManagerOperation.liquidateInRecoveryMode);
         }
         /* 
         * When trove's debt is greater than the Stability Pool, perform a partial liquidation: offset as much as possible,
@@ -588,7 +588,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     * a partial liquidation is performed, so it's up to the caller to order the troves in the _troveArray parameter.
     */
     function batchLiquidateTroves(address[] memory _troveArray) public override {
-        require(_troveArray.length != 0, "CDPManager: Calldata address array must not be empty");
+        require(_troveArray.length != 0, "TroveManager: Calldata address array must not be empty");
 
         LocalVariables_OuterLiquidationFunction memory L;
         LiquidationTotals memory T;
@@ -762,7 +762,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         */
         sortedCDPs.insert(_borrower, ICR, _price, _upperHint, _lowerHint);
         _addCDPOwnerToArray(_borrower);
-        emit CDPUpdated(_borrower, _newDebt, _newColl, CDPs[_borrower].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
+        emit CDPUpdated(_borrower, _newDebt, _newColl, CDPs[_borrower].stake, TroveManagerOperation.partiallyLiquidateInRecoveryMode);
     }
 
     function _sendGasCompensation(address _liquidator, uint _CLV, uint _ETH) internal {
@@ -831,7 +831,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _borrower,
             newDebt, newColl,
             CDPs[_borrower].stake,
-            CDPManagerOperation.redeemCollateral
+            TroveManagerOperation.redeemCollateral
         );
         return V;
     }
@@ -1015,7 +1015,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 CDPs[_borrower].debt, 
                 CDPs[_borrower].coll, 
                 CDPs[_borrower].stake, 
-                CDPManagerOperation.applyPendingRewards
+                TroveManagerOperation.applyPendingRewards
             );
         }
     }
@@ -1211,7 +1211,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     function _addCDPOwnerToArray(address _borrower) internal returns (uint128 index) {
-        require(CDPOwners.length < 2**128 - 1, "CDPManager: CDPOwners array has maximum size of 2^128 - 1");
+        require(CDPOwners.length < 2**128 - 1, "TroveManager: CDPOwners array has maximum size of 2^128 - 1");
 
         // Push the CDPowner to the array
         CDPOwners.push(_borrower);
@@ -1228,7 +1228,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     * [A B C D E] => [A E C D], and updates E's CDP struct to point to its new array index. 
     */
     function _removeCDPOwner(address _borrower, uint CDPOwnersArrayLength) internal {
-        require(CDPs[_borrower].status == Status.closed, "CDPManager: CDP is still active");
+        require(CDPs[_borrower].status == Status.closed, "TroveManager: CDP is still active");
 
         uint128 index = CDPs[_borrower].arrayIndex;
         uint length = CDPOwnersArrayLength;
@@ -1372,23 +1372,23 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     // --- 'require' wrapper functions ---
 
     function _requireCallerIsBorrowerOperations() internal view {
-        require(msg.sender == borrowerOperationsAddress, "CDPManager: Caller is not the BorrowerOperations contract");
+        require(msg.sender == borrowerOperationsAddress, "TroveManager: Caller is not the BorrowerOperations contract");
     }
 
     function _requireCDPisActive(address _borrower) internal view {
-        require(CDPs[_borrower].status == Status.active, "CDPManager: Trove does not exist or is closed");
+        require(CDPs[_borrower].status == Status.active, "TroveManager: Trove does not exist or is closed");
     }
 
     function _requireCLVBalanceCoversRedemption(address _redeemer, uint _amount) internal view {
-        require(clvToken.balanceOf(_redeemer) >= _amount, "CDPManager: Requested redemption amount must be <= user's CLV token balance");
+        require(clvToken.balanceOf(_redeemer) >= _amount, "TroveManager: Requested redemption amount must be <= user's CLV token balance");
     }
 
     function _requireMoreThanOneTroveInSystem(uint CDPOwnersArrayLength) internal view {
-        require (CDPOwnersArrayLength > 1 && sortedCDPs.getSize() > 1, "CDPManager: Only one trove in the system");
+        require (CDPOwnersArrayLength > 1 && sortedCDPs.getSize() > 1, "TroveManager: Only one trove in the system");
     }
 
     function _requireAmountGreaterThanZero(uint _amount) internal pure {
-        require(_amount > 0, "CDPManager: Amount must be greater than zero");
+        require(_amount > 0, "TroveManager: Amount must be greater than zero");
     }
 
     // --- Trove property getters ---

@@ -7,7 +7,7 @@ interface IPriceFeed {
     // --- Events ---
     
     event PriceUpdated(uint _newPrice);
-    event CDPManagerAddressChanged(address _cdpManagerAddress);
+    event TroveManagerAddressChanged(address _cdpManagerAddress);
 
     // --- Functions ---
     

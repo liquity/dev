@@ -2,19 +2,19 @@
 
 pragma solidity 0.6.11;
 
-import "../CDPManager.sol";
+import "../TroveManager.sol";
 import "../BorrowerOperations.sol";
 import "../StabilityPool.sol";
 import "../CLVToken.sol";
 
 contract EchidnaProxy {
-    CDPManager cdpManager;
+    TroveManager cdpManager;
     BorrowerOperations borrowerOperations;
     StabilityPool stabilityPool;
     CLVToken clvToken;
 
     constructor(
-        CDPManager _cdpManager,
+        TroveManager _cdpManager,
         BorrowerOperations _borrowerOperations,
         StabilityPool _stabilityPool,
         CLVToken _clvToken
@@ -29,7 +29,7 @@ contract EchidnaProxy {
         // do nothing
     }
 
-    // CDPManager
+    // TroveManager
 
     function liquidatePrx(address _user) external {
         cdpManager.liquidate(_user);

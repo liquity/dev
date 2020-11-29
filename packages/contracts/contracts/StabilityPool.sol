@@ -6,7 +6,7 @@ import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/IStabilityPool.sol';
 import './Interfaces/IPool.sol';
 import './Interfaces/IBorrowerOperations.sol';
-import './Interfaces/ICDPManager.sol';
+import './Interfaces/ITroveManager.sol';
 import './Interfaces/ICLVToken.sol';
 import './Interfaces/ISortedCDPs.sol';
 import './Interfaces/IPriceFeed.sol';
@@ -134,7 +134,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     IBorrowerOperations public borrowerOperations;
 
-    ICDPManager public cdpManager;
+    ITroveManager public cdpManager;
 
     ICLVToken public clvToken;
 
@@ -235,7 +235,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         onlyOwner
     {
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
-        cdpManager = ICDPManager(_cdpManagerAddress);
+        cdpManager = ITroveManager(_cdpManagerAddress);
         activePool = IPool(_activePoolAddress);
         activePoolAddress = _activePoolAddress;
         clvToken = ICLVToken(_clvTokenAddress);
@@ -245,7 +245,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         communityIssuance = ICommunityIssuance(_communityIssuanceAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_cdpManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit CLVTokenAddressChanged(_clvTokenAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
@@ -437,10 +437,10 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     /* 
     * Cancel out the specified debt against the CLV contained in the Stability Pool (as far as possible)
     * and transfers the CDP's ETH collateral from ActivePool to StabilityPool.
-    * Only called by liquidation functions in the CDPManager. 
+    * Only called by liquidation functions in the TroveManager. 
     */
     function offset(uint _debtToOffset, uint _collToAdd) external payable override {
-        _requireCallerIsCDPManager();
+        _requireCallerIsTroveManager();
         uint totalCLV = totalCLVDeposits; // cached to save an SLOAD
         if (totalCLV == 0 || _debtToOffset == 0) { return; }
 
@@ -852,8 +852,8 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         require( msg.sender == activePoolAddress, "StabilityPool: Caller is not ActivePool");
     }
 
-    function _requireCallerIsCDPManager() internal view {
-        require(msg.sender == address(cdpManager), "StabilityPool: Caller is not CDPManager");
+    function _requireCallerIsTroveManager() internal view {
+        require(msg.sender == address(cdpManager), "StabilityPool: Caller is not TroveManager");
     }
 
     function _requireNoUnderCollateralizedTroves() internal view {

@@ -5,7 +5,7 @@ pragma solidity 0.6.11;
 import "./LiquityMath.sol";
 
 /* 
-* Base contract for CDPManager, BorrowerOperations and StabilityPool. Contains global system constants and
+* Base contract for TroveManager, BorrowerOperations and StabilityPool. Contains global system constants and
 * common functions. 
 */
 contract LiquityBase {
