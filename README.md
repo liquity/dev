@@ -265,7 +265,7 @@ All application logic and data is contained in these contracts - there is no nee
 
 The system has no admin key or human governance. Once deployed, it is fully automated, decentralized and no user holds any special privileges in or control over the system.
 
-The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `PoolManager.sol` - hold the user-facing public functions, and contain most of the internal system logic. Together they control trove state updates and movements of Ether and tokens around the system.
+The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Stability.sol` - hold the user-facing public functions, and contain most of the internal system logic. Together they control trove state updates and movements of Ether and LUSD tokens around the system.
 
 ### Core Smart Contracts
 
@@ -339,15 +339,13 @@ Thus, nodes need only be re-inserted to the sorted list upon a trove operation -
 
 Ether in the system lives in three Pools: the ActivePool, the DefaultPool and the StabilityPool. When an operation is made, Ether is transferred in one of three ways:
 
-**TODO:Check against https://github.com/liquity/dev/pull/72/commits and maybe add a flow chart?**
-
 - From a user to a Pool
 - From a Pool to a user
 - From one Pool to another Pool
 
 Ether is recorded on an _individual_ level, but stored in _aggregate_ in a Pool. An active trove with collateral and debt has a struct in the TroveManager that stores its ether collateral value in a uint, but its actual Ether is in the balance of the ActivePool contract.
 
-Likewise, a StabilityPool depositor who has earned some ETH gain from their deposit will have a computed ETH gain based on a variable in the PoolManager. But their actual withdrawable Ether is in the balance of the StabilityPool contract.
+Likewise, the StabilityPool holds the total accumulated ETH gains from liquidations for all depositors.
 
 **Borrower Operations**
 
@@ -459,9 +457,9 @@ LQTY token holders may stake their LQTY, to earn a share of the system fee reven
 
 ## Contract Ownership and Function Permissions
 
-All the core smart contracts inherit from the OpenZeppelin `Ownable.sol` contract template. As such all contracts have a single owning address, which is the deploying address.
+All the core smart contracts inherit from the OpenZeppelin `Ownable.sol` contract template. As such all contracts have a single owning address, which is the deploying address. The contract's ownership is renounced either upon deployment, or immediately after its address setter has been called, connecting it to the rest of the core Liquity system. 
 
-Several public and external functions have modifiers such as `onlyTroveManager`, `onlyPoolManager`, etc - ensuring they can only be called by the respective permitted contract.
+Several public and external functions have modifiers such as `requireCallerIsTroveManager`, `requireCallerIsActivePool`, etc - ensuring they can only be called by the respective permitted contract.
 
 ## Deployment to a Development Blockchain
 
@@ -630,7 +628,7 @@ Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
 
 Hints allow cheaper trove operations for the user, at the expense of a slightly longer time to completion, due to the need to await the result of the two read calls in steps 1 and 2 - which may be sent as JSON-RPC requests to Infura, unless the front end operator is running a full Ethereum node.
 
-Each BorrowerOperations function that reinserts a troves takes a single hint, as does `PoolManager::withdrawFromSPtoTrove(...)`.
+Each BorrowerOperations function that reinserts a troves takes a single hint, as does `StabilityPool::withdrawFromSPtoTrove(...)`.
 
 ### Hints for `redeemCollateral`
 
@@ -737,7 +735,7 @@ Because the ETH collateral fraction matches the offset debt fraction, the effect
 
 ### Stability Pool deposit losses and ETH gains - implementation
 
-Deposit functionality is handled by `PoolManager.sol` (`provideToSP`, `withdrawFromSP`, etc).  PoolManager also handles the liquidation calculation. `StabilityPool.sol` actually holds the LUSD and ETH balances.
+Deposit functionality is handled by `StabilityPool.sol` (`provideToSP`, `withdrawFromSP`, etc).  PoolManager also handles the liquidation calculation, and holds the LUSD and ETH balances.
 
 When a liquidation is offset with the Stability Pool, debt from the liquidation is cancelled with an equal amount of LUSD in the pool, which is burned. 
 
