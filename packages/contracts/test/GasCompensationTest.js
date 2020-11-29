@@ -283,46 +283,46 @@ contract('Gas compensation tests', async accounts => {
   // --- Test ICRs with virtual debt ---
   it('getCurrentICR(): Incorporates virtual debt, and returns the correct ICR for new troves', async () => {
     const price = await priceFeed.getPrice()
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A opens with 1 ETH, 100 CLV
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     const alice_ICR = (await troveManager.getCurrentICR(alice, price)).toString()
     // Expect aliceICR = (1 * 200) / (100+10) = 181.81%
     assert.isAtMost(th.getDifference(alice_ICR, '1818181818181818181'), 1000)
 
     // B opens with 0.5 ETH, 40 CLV
-    await borrowerOperations.openLoan(dec(40, 18), bob, { from: bob, value: '500000000000000000' })
+    await borrowerOperations.openTrove(dec(40, 18), bob, { from: bob, value: '500000000000000000' })
     const bob_ICR = (await troveManager.getCurrentICR(bob, price)).toString()
     // Expect Bob's ICR = (0.55 * 200) / (100+10) = 200%
     assert.isAtMost(th.getDifference(bob_ICR, dec(2, 18)), 1000)
 
     // F opens with 1 ETH, 90 CLV
-    await borrowerOperations.openLoan(dec(90, 18), flyn, { from: flyn, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(90, 18), flyn, { from: flyn, value: dec(1, 'ether') })
     const flyn_ICR = (await troveManager.getCurrentICR(flyn, price)).toString()
     // Expect Flyn's ICR = (1 * 200) / (90+10) = 200%
     assert.isAtMost(th.getDifference(flyn_ICR, dec(2, 18)), 1000)
 
     // C opens with 2.5 ETH, 150 CLV
-    await borrowerOperations.openLoan(dec(150, 18), carol, { from: carol, value: '2500000000000000000' })
+    await borrowerOperations.openTrove(dec(150, 18), carol, { from: carol, value: '2500000000000000000' })
     const carol_ICR = (await troveManager.getCurrentICR(carol, price)).toString()
     // Expect Carol's ICR = (2.5 * 200) / (150+10) = 312.50%
     assert.isAtMost(th.getDifference(carol_ICR, '3125000000000000000'), 1000)
 
     // D opens with 1 ETH, 0 CLV
-    await borrowerOperations.openLoan(0, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(1, 'ether') })
     const dennis_ICR = (await troveManager.getCurrentICR(dennis, price)).toString()
     // Expect Dennis's ICR = (1 * 200) / (10) = 2000.00%
     assert.isAtMost(th.getDifference(dennis_ICR, dec(20, 18)), 1000)
 
     // E opens with 4405.45 ETH, 32588.35 CLV
-    await borrowerOperations.openLoan('32588350000000000000000', erin, { from: erin, value: '4405450000000000000000' })
+    await borrowerOperations.openTrove('32588350000000000000000', erin, { from: erin, value: '4405450000000000000000' })
     const erin_ICR = (await troveManager.getCurrentICR(erin, price)).toString()
     // Expect Erin's ICR = (4405.45 * 200) / (32598.35) = 2702.87%
     assert.isAtMost(th.getDifference(erin_ICR, '27028668628933700000'), 100000)
 
     // H opens with 1 ETH, 170 CLV
-    await borrowerOperations.openLoan('170000000000000000000', harriet, { from: harriet, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('170000000000000000000', harriet, { from: harriet, value: dec(1, 'ether') })
     const harriet_ICR = (await troveManager.getCurrentICR(harriet, price)).toString()
     // Expect Harriet's ICR = (1 * 200) / (170 + 10) = 111.11%
     assert.isAtMost(th.getDifference(harriet_ICR, '1111111111111111111'), 1000)
@@ -331,14 +331,14 @@ contract('Gas compensation tests', async accounts => {
   // Test compensation amounts and liquidation amounts
 
   it('Gas compensation from pool-offset liquidations: collateral < $10 in value. All collateral paid as compensation', async () => {
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(1000, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-    await borrowerOperations.openLoan(dec(1000, 18), erin, { from: erin, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(1000, 18), dennis, { from: dennis, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(dec(1000, 18), erin, { from: erin, value: dec(100, 'ether') })
 
     // D, E each provide 1000 CLV to SP
     await stabilityPool.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: dennis })
@@ -448,14 +448,14 @@ contract('Gas compensation tests', async accounts => {
   it('gas compensation from pool-offset liquidations: 0.5% collateral < $10 in value. Compensates $10 worth of collateral, liquidates the remainder', async () => {
 
     await priceFeed.setPrice(dec(400, 18))
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves
-    await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(5000, 18), bob, { from: bob, value: dec(15, 'ether') })
-    await borrowerOperations.openLoan(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(200, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(5000, 18), bob, { from: bob, value: dec(15, 'ether') })
+    await borrowerOperations.openTrove(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
     await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
@@ -564,14 +564,14 @@ contract('Gas compensation tests', async accounts => {
   it('gas compensation from pool-offset liquidations: 0.5% collateral > $10 in value. Compensates 0.5% of  collateral, liquidates the remainder', async () => {
     // open troves
     await priceFeed.setPrice(dec(400, 18))
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves
-    await borrowerOperations.openLoan(dec(2000, 18), alice, { from: alice, value: '10001000000000000000' })
-    await borrowerOperations.openLoan(dec(8000, 18), bob, { from: bob, value: '37500000000000000000' })
-    await borrowerOperations.openLoan(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(2000, 18), alice, { from: alice, value: '10001000000000000000' })
+    await borrowerOperations.openTrove(dec(8000, 18), bob, { from: bob, value: '37500000000000000000' })
+    await borrowerOperations.openTrove(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
     await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
@@ -673,14 +673,14 @@ contract('Gas compensation tests', async accounts => {
   // --- Event emission in single liquidation ---
 
   it('Gas compensation from pool-offset liquidations: collateral < $10 in value. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves
-    await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openLoan(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(1000, 18), dennis, { from: dennis, value: dec(100, 'ether') })
-    await borrowerOperations.openLoan(dec(1000, 18), erin, { from: erin, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(1000, 18), dennis, { from: dennis, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(dec(1000, 18), erin, { from: erin, value: dec(100, 'ether') })
 
     // D, E each provide 1000 CLV to SP
     await stabilityPool.provideToSP(dec(1000, 18), ZERO_ADDRESS, { from: dennis })
@@ -756,14 +756,14 @@ contract('Gas compensation tests', async accounts => {
   it('gas compensation from pool-offset liquidations: 0.5% collateral < $10 in value. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
 
     await priceFeed.setPrice(dec(400, 18))
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves
-    await borrowerOperations.openLoan(dec(200, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan(dec(5000, 18), bob, { from: bob, value: dec(15, 'ether') })
-    await borrowerOperations.openLoan(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(200, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(5000, 18), bob, { from: bob, value: dec(15, 'ether') })
+    await borrowerOperations.openTrove(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
     await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
@@ -863,14 +863,14 @@ contract('Gas compensation tests', async accounts => {
   it('gas compensation from pool-offset liquidations: 0.5% collateral > $10 in value. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
     // open troves
     await priceFeed.setPrice(dec(400, 18))
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves
-    await borrowerOperations.openLoan(dec(2000, 18), alice, { from: alice, value: '10001000000000000000' })
-    await borrowerOperations.openLoan(dec(8000, 18), bob, { from: bob, value: '37500000000000000000' })
-    await borrowerOperations.openLoan(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(2000, 18), alice, { from: alice, value: '10001000000000000000' })
+    await borrowerOperations.openTrove(dec(8000, 18), bob, { from: bob, value: '37500000000000000000' })
+    await borrowerOperations.openTrove(dec(600, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), dennis, { from: dennis, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
     await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
@@ -964,16 +964,16 @@ contract('Gas compensation tests', async accounts => {
   it('liquidateCDPs(): full offset.  Compensates the correct amount, and liquidates the remainder', async () => {
     await priceFeed.setPrice(dec(1000, 18))
 
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves. A: 0.04 ETH, 1+10 CLV.  B: 1ETH, 180+10 CLV.  C: 5 ETH, 925+10 CLV.  D: 73.632 ETH, 13500+10 CLV.
-    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
-    await borrowerOperations.openLoan(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
-    await borrowerOperations.openLoan('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000' })
+    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
+    await borrowerOperations.openTrove(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000' })
 
-    await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), flyn, { from: flyn, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), flyn, { from: flyn, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
     await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
@@ -1079,13 +1079,13 @@ contract('Gas compensation tests', async accounts => {
   it('liquidateCDPs(): full redistribution. Compensates the correct amount, and liquidates the remainder', async () => {
     await priceFeed.setPrice(dec(1000, 18))
 
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves. A: 0.04 ETH, 1 CLV.  B: 1ETH, 180 CLV.  C: 5 ETH, 925 CLV.  D: 73.632 ETH, 13500 CLV.
-    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
-    await borrowerOperations.openLoan(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
-    await borrowerOperations.openLoan('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000' })
+    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
+    await borrowerOperations.openTrove(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000' })
 
     const CLVinDefaultPool_0 = await defaultPool.getCLVDebt()
 
@@ -1182,16 +1182,16 @@ contract('Gas compensation tests', async accounts => {
   it('liquidateCDPs(): full offset. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
     await priceFeed.setPrice(dec(1000, 18))
 
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves. A: 0.04 ETH, 1+10 CLV.  B: 1ETH, 180+10 CLV.  C: 5 ETH, 925+10 CLV.  D: 73.632 ETH, 13500+10 CLV.
-    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
-    await borrowerOperations.openLoan(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
-    await borrowerOperations.openLoan('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000' })
+    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
+    await borrowerOperations.openTrove(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000' })
 
-    await borrowerOperations.openLoan(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
-    await borrowerOperations.openLoan(dec(1, 23), flyn, { from: flyn, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), erin, { from: erin, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 23), flyn, { from: flyn, value: dec(1000, 'ether') })
 
     // D, E each provide 10000 CLV to SP
     await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
@@ -1293,13 +1293,13 @@ contract('Gas compensation tests', async accounts => {
   it('liquidateCDPs(): full redistribution. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
     await priceFeed.setPrice(dec(1000, 18))
 
-    await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(1, 24) })
+    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
 
     // A-E open troves. A: 0.04 ETH, 1+10 CLV.  B: 1ETH, 180+10 CLV.  C: 5 ETH, 925+10 CLV.  D: 73.632 ETH, 13500+10 CLV.
-    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
-    await borrowerOperations.openLoan(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openLoan('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
-    await borrowerOperations.openLoan('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000' })
+    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: '40000000000000000' })
+    await borrowerOperations.openTrove(dec(180, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('925000000000000000000', carol, { from: carol, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove('13500000000000000000000', dennis, { from: dennis, value: '73632000000000000000' })
 
     const CLVinDefaultPool_0 = await defaultPool.getCLVDebt()
 
@@ -1396,7 +1396,7 @@ contract('Gas compensation tests', async accounts => {
     for (account of _10_accounts) {
 
       const debtString = debt.toString().concat('000000000000000000')
-      await borrowerOperations.openLoan(debtString, account, { from: account, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(debtString, account, { from: account, value: dec(1, 'ether') })
 
       const squeezedTroveAddr = th.squeezeAddr(account)
 
@@ -1453,7 +1453,7 @@ contract('Gas compensation tests', async accounts => {
     for (account of _20_accounts) {
 
       const collString = coll.toString().concat('000000000000000000')
-      await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: collString })
+      await borrowerOperations.openTrove(dec(100, 18), account, { from: account, value: collString })
 
       coll += 5
     }
@@ -1501,7 +1501,7 @@ contract('Gas compensation tests', async accounts => {
 
       const account = accountsList[accountIdx]
       const collString = coll.toString().concat('000000000000000000')
-      await borrowerOperations.openLoan(dec(100, 18), account, { from: account, value: collString })
+      await borrowerOperations.openTrove(dec(100, 18), account, { from: account, value: collString })
 
       accountIdx += 1
     }

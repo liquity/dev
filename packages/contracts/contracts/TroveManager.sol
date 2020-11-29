@@ -808,7 +808,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
             // No debt left in the CDP (except for the gas compensation), therefore the trove gets closed
             _removeStake(_borrower);
             _closeCDP(_borrower);
-            _redeemCloseLoan(_borrower, CLV_GAS_COMPENSATION, newColl);
+            _redeemCloseTrove(_borrower, CLV_GAS_COMPENSATION, newColl);
 
         } else {
             uint newICR = LiquityMath._computeCR(newColl, newDebt, _price);
@@ -843,7 +843,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     * The debt recorded on the trove's struct is zero'd elswhere, in _closeCDP.
     * Any surplus ETH left in the trove, is sent to the Coll surplus pool, and can be later claimed by the borrower.
     */ 
-    function _redeemCloseLoan(address _borrower, uint _CLV, uint _ETH) internal {
+    function _redeemCloseTrove(address _borrower, uint _CLV, uint _ETH) internal {
         lusdToken.burn(GAS_POOL_ADDRESS, _CLV);
         // Update Active Pool CLV, and send ETH to account
         activePool.decreaseCLVDebt(_CLV);

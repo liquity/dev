@@ -134,13 +134,13 @@ interface Change {
 }
 
 enum TroveOperation {
-  openLoan
-  closeLoan
+  openTrove
+  closeTrove
   depositCollateral
   withdrawCollateral
   mint
   repay
-  adjustLoan
+  adjustTrove
   accrueRewards
   liquidateInNormalMode
   liquidateInRecoveryMode

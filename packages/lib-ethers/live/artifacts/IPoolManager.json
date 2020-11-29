@@ -401,7 +401,7 @@
           "type": "uint256"
         }
       ],
-      "name": "redeemCloseLoan",
+      "name": "redeemCloseTrove",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

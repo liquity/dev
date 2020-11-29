@@ -345,7 +345,7 @@ export class PopulatableEthersLiquity
     }
 
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.openLoan(
+      await this.contracts.borrowerOperations.estimateAndPopulate.openTrove(
         { value: trove.collateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
         trove.netDebt.bigNumber,
@@ -356,7 +356,7 @@ export class PopulatableEthersLiquity
 
   async closeTrove(overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.closeLoan({ ...overrides }, id)
+      await this.contracts.borrowerOperations.estimateAndPopulate.closeTrove({ ...overrides }, id)
     );
   }
 
@@ -415,7 +415,7 @@ export class PopulatableEthersLiquity
     const isDebtIncrease = !!change.debtDifference?.positive;
 
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.adjustLoan(
+      await this.contracts.borrowerOperations.estimateAndPopulate.adjustTrove(
         {
           ...overrides,
           value: change.collateralDifference?.positive?.absoluteValue?.bigNumber

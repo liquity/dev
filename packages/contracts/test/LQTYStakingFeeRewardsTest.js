@@ -51,11 +51,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("ETH fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -91,11 +91,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("ETH fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -121,11 +121,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("LUSD fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -166,11 +166,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("LUSD fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -204,11 +204,11 @@ contract('Fee arithmetic tests', async accounts => {
 
 
   it("LQTY Staking: A single staker earns all ETH and LQTY fees that occur", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -271,11 +271,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("stake(): Top-up sends out all accumulated ETH and LUSD gains to the staker", async () => { 
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -337,11 +337,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("getPendingETHGain(): Returns the staker's correct pending ETH gain", async () => { 
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -377,11 +377,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("getPendingLUSDGain(): Returns the staker's correct pending LUSD gain", async () => { 
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -431,15 +431,15 @@ contract('Fee arithmetic tests', async accounts => {
 
   // - multi depositors, several rewards
   it("LQTY Staking: Multiple stakers earn the correct share of all ETH and LQTY fees, based on their stake size", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), E, {from: E, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), E, {from: E, value: dec(10, 'ether')})  
 
-    await borrowerOperations.openLoan(dec(1000, 18), F, {from: F, value: dec(10, 'ether')})  
-    await borrowerOperations.openLoan(dec(1000, 18), G, {from: G, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), F, {from: F, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), G, {from: G, value: dec(10, 'ether')})  
   
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)

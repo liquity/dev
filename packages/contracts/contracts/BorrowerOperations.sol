@@ -44,7 +44,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     Used to hold, return and assign variables inside a function, in order to avoid the error:
     "CompilerError: Stack too deep". */
 
-     struct LocalVariables_adjustLoan {
+     struct LocalVariables_adjustTrove {
         uint price;
         uint collChange;
         uint rawDebtChange;
@@ -59,13 +59,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     enum BorrowerOperation {
-        openLoan,
-        closeLoan,
+        openTrove,
+        closeTrove,
         addColl,
         withdrawColl,
         withdrawCLV,
         repayCLV,
-        adjustLoan
+        adjustTrove
     }
 
     event CDPCreated(address indexed _borrower, uint arrayIndex);
@@ -116,7 +116,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Borrower Trove Operations ---
 
-    function openLoan(uint _CLVAmount, address _hint) external payable override {
+    function openTrove(uint _CLVAmount, address _hint) external payable override {
         uint price = priceFeed.getPrice();
 
         _requireCDPisNotActive(msg.sender);
@@ -160,52 +160,52 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // Move the CLV gas compensation to the Gas Pool
         _withdrawCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION, CLV_GAS_COMPENSATION);
 
-        emit CDPUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openLoan);
+        emit CDPUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openTrove);
         emit LUSDBorrowingFeePaid(msg.sender, CLVFee);
     }
 
     // Send ETH as collateral to a trove
     function addColl(address _hint) external payable override {
-        _adjustLoan(msg.sender, 0, 0, false, _hint);
+        _adjustTrove(msg.sender, 0, 0, false, _hint);
     }
 
     // Send ETH as collateral to a trove. Called by only the Stability Pool.
     function moveETHGainToTrove(address _borrower, address _hint) external payable override {
         _requireCallerIsStabilityPool();
-        _adjustLoan(_borrower, 0, 0, false, _hint);
+        _adjustTrove(_borrower, 0, 0, false, _hint);
     }
 
     // Withdraw ETH collateral from a trove
     function withdrawColl(uint _collWithdrawal, address _hint) external override {
-        _adjustLoan(msg.sender, _collWithdrawal, 0, false, _hint);
+        _adjustTrove(msg.sender, _collWithdrawal, 0, false, _hint);
     }
 
     // Withdraw CLV tokens from a trove: mint new CLV tokens to the owner, and increase the trove's debt accordingly
     function withdrawCLV(uint _CLVAmount, address _hint) external override {
-        _adjustLoan(msg.sender, 0, _CLVAmount, true, _hint);
+        _adjustTrove(msg.sender, 0, _CLVAmount, true, _hint);
     }
 
     // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the trove's debt accordingly
     function repayCLV(uint _CLVAmount, address _hint) external override {
-        _adjustLoan(msg.sender, 0, _CLVAmount, false, _hint);
+        _adjustTrove(msg.sender, 0, _CLVAmount, false, _hint);
     }
 
     /*
     * If ETH is sent, the operation is considered as a collateral increase, and the first parameter
     * _collWithdrawal must be zero 
     */
-    function adjustLoan(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable override {
-        _adjustLoan(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+    function adjustTrove(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable override {
+        _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
     }
 
-    function _adjustLoan(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) internal {
+    function _adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) internal {
         require(msg.value == 0 || _collWithdrawal == 0, "BorrowerOperations: Cannot withdraw and add coll");
         // The operation "isWithdrawal" if it removes collateral or LUSD, i.e. it removes funds and lowers the ICR
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease;
         require(msg.sender == _borrower || !isWithdrawal, "BorrowerOps: User must be sender for withdrawals");
         require(msg.value != 0 || _collWithdrawal != 0 || _debtChange != 0, "BorrowerOps: There must be either a collateral change or a debt change");
 
-        LocalVariables_adjustLoan memory L;
+        LocalVariables_adjustTrove memory L;
 
         _requireCDPisActive(_borrower);
         if (isWithdrawal) {_requireNotInRecoveryMode();}
@@ -251,11 +251,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
 
-        emit CDPUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
+        emit CDPUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustTrove);
         emit LUSDBorrowingFeePaid(msg.sender,  L.CLVFee);
     }
 
-    function closeLoan() external override {
+    function closeTrove() external override {
         _requireCDPisActive(msg.sender);
         _requireNotInRecoveryMode();
 
@@ -273,7 +273,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // Refund gas compensation
         _repayCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION);
 
-        emit CDPUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeLoan);
+        emit CDPUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
     }
 
     function claimRedeemedCollateral(address _user) external override {

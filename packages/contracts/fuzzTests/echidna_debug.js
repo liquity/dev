@@ -29,16 +29,16 @@ contract('Echidna debugger', async accounts => {
     GAS_POOL_ADDRESS = await troveManager.GAS_POOL_ADDRESS();
   })
 
-  it('openLoan', async () => {
-    await echidnaTester.openLoanExt(
+  it('openTrove', async () => {
+    await echidnaTester.openTroveExt(
       '28533397325200555203581702704626658822751905051193839801320459908900876958892',
       '52469987802830075086048985199642144541375565475567220729814021622139768827880',
       '9388634783070735775888100571650283386615011854365252563480851823632223689886'
     )
   })
 
-  it('openLoan', async () => {
-    await echidnaTester.openLoanExt('0', '0', '0')
+  it('openTrove', async () => {
+    await echidnaTester.openTroveExt('0', '0', '0')
   })
 
   it.skip('trove order', async () => {
@@ -51,8 +51,8 @@ contract('Echidna debugger', async accounts => {
     console.log('Trove 1', icr1_before, icr1_before.toString())
     console.log('Trove 2', icr2_before, icr2_before.toString())
 
-    await echidnaTester.openLoanExt('0', '0', '30540440604590048251848424')
-    await echidnaTester.openLoanExt('1', '0', '0')
+    await echidnaTester.openTroveExt('0', '0', '30540440604590048251848424')
+    await echidnaTester.openTroveExt('1', '0', '0')
     await echidnaTester.setPriceExt('78051143795343077331468494330613608802436946862454908477491916')
     const icr1_after = await troveManager.getCurrentICR(trove1, '1000000000000000000')
     const icr2_after = await troveManager.getCurrentICR(trove2, '1000000000000000000')
@@ -66,7 +66,7 @@ contract('Echidna debugger', async accounts => {
   })
 
   it.only('CLV balance', async () => {
-    await echidnaTester.openLoanExt('0', '0', '4210965169908805439447313562489173090')
+    await echidnaTester.openTroveExt('0', '0', '4210965169908805439447313562489173090')
 
     const totalSupply = await lusdToken.totalSupply();
     const gasPoolBalance = await lusdToken.balanceOf(GAS_POOL_ADDRESS);

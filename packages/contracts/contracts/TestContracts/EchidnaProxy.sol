@@ -54,8 +54,8 @@ contract EchidnaProxy {
     }
 
     // Borrower Operations
-    function openLoanPrx(uint _ETH, uint _CLVAmount, address _hint) external payable {
-        borrowerOperations.openLoan{value: _ETH}(_CLVAmount, _hint);
+    function openTrovePrx(uint _ETH, uint _CLVAmount, address _hint) external payable {
+        borrowerOperations.openTrove{value: _ETH}(_CLVAmount, _hint);
     }
 
     function addCollPrx(uint _ETH, address _hint) external payable {
@@ -74,12 +74,12 @@ contract EchidnaProxy {
         borrowerOperations.repayCLV(_amount, _hint);
     }
 
-    function closeLoanPrx() external {
-        borrowerOperations.closeLoan();
+    function closeTrovePrx() external {
+        borrowerOperations.closeTrove();
     }
 
-    function adjustLoanPrx(uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable {
-        borrowerOperations.adjustLoan{value: _ETH}(_collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+    function adjustTrovePrx(uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable {
+        borrowerOperations.adjustTrove{value: _ETH}(_collWithdrawal, _debtChange, _isDebtIncrease, _hint);
     }
 
     // Pool Manager

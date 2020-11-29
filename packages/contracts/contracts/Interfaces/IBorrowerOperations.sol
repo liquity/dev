@@ -41,7 +41,7 @@ interface IBorrowerOperations {
         address _lqtyStakingAddress
     ) external;
 
-    function openLoan(uint _CLVAmount, address _hint) external payable;
+    function openTrove(uint _CLVAmount, address _hint) external payable;
 
     function addColl(address _hint) external payable;
 
@@ -53,9 +53,9 @@ interface IBorrowerOperations {
 
     function repayCLV(uint _amount, address _hint) external;
 
-    function closeLoan() external;
+    function closeTrove() external;
 
-    function adjustLoan(uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _hint) external payable;
+    function adjustTrove(uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _hint) external payable;
 
     function claimRedeemedCollateral(address _user) external;
 

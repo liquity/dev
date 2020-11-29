@@ -40,7 +40,7 @@ contract('TroveManager', async accounts => {
  const openCDP = async (account, index) => {
    const amountFinney = 2000 + index * 10
    const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-   await borrowerOperations.openLoan(0, account, { from: account, value: coll })
+   await borrowerOperations.openTrove(0, account, { from: account, value: coll })
  }
 
  const withdrawCLVfromCDP = async (account) => {
@@ -57,7 +57,7 @@ contract('TroveManager', async accounts => {
     // console.time('makeCDPsInSequence')
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-      await borrowerOperations.openLoan(0, account, { from: account, value: coll })
+      await borrowerOperations.openTrove(0, account, { from: account, value: coll })
       await borrowerOperations.withdrawCLV('190000000000000000000', account, { from: account })
   
       amountFinney += 10

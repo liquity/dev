@@ -137,7 +137,7 @@ contract EchidnaTester {
         return CLVAmount;
     }
 
-    function openLoanExt(uint _i, uint _ETH, uint _CLVAmount) public payable {
+    function openTroveExt(uint _i, uint _ETH, uint _CLVAmount) public payable {
         uint actor = _i % NUMBER_OF_ACTORS;
         EchidnaProxy echidnaProxy = echidnaProxies[actor];
         uint actorBalance = address(echidnaProxy).balance;
@@ -149,7 +149,7 @@ contract EchidnaTester {
         //console.log('ETH', ETH);
         //console.log('CLVAmount', CLVAmount);
 
-        echidnaProxy.openLoanPrx(ETH, CLVAmount, address(0));
+        echidnaProxy.openTrovePrx(ETH, CLVAmount, address(0));
 
         numberOfTroves = troveManager.getCDPOwnersCount();
         assert(numberOfTroves > 0);
@@ -157,9 +157,9 @@ contract EchidnaTester {
         //assert(numberOfTroves == 0);
     }
 
-    function openLoanRawExt(uint _i, uint _ETH, uint _CLVAmount, address _hint) public payable {
+    function openTroveRawExt(uint _i, uint _ETH, uint _CLVAmount, address _hint) public payable {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].openLoanPrx(_ETH, _CLVAmount, _hint);
+        echidnaProxies[actor].openTrovePrx(_ETH, _CLVAmount, _hint);
     }
 
     function addCollExt(uint _i, uint _ETH) external payable {
@@ -192,12 +192,12 @@ contract EchidnaTester {
         echidnaProxies[actor].repayCLVPrx(_amount, _hint);
     }
 
-    function closeLoanExt(uint _i) external {
+    function closeTroveExt(uint _i) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].closeLoanPrx();
+        echidnaProxies[actor].closeTrovePrx();
     }
 
-    function adjustLoanExt(uint _i, uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease) external payable {
+    function adjustTroveExt(uint _i, uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease) external payable {
         uint actor = _i % NUMBER_OF_ACTORS;
         EchidnaProxy echidnaProxy = echidnaProxies[actor];
         uint actorBalance = address(echidnaProxy).balance;
@@ -209,12 +209,12 @@ contract EchidnaTester {
             debtChange = getAdjustedCLV(ETH, uint(_debtChange), MCR);
         }
         // TODO: collWithdrawal, debtChange
-        echidnaProxy.adjustLoanPrx(ETH, _collWithdrawal, debtChange, _isDebtIncrease, address(0));
+        echidnaProxy.adjustTrovePrx(ETH, _collWithdrawal, debtChange, _isDebtIncrease, address(0));
     }
 
-    function adjustLoanRawExt(uint _i, uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable {
+    function adjustTroveRawExt(uint _i, uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].adjustLoanPrx(_ETH, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+        echidnaProxies[actor].adjustTrovePrx(_ETH, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
     }
 
     // Pool Manager

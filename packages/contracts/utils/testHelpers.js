@@ -437,21 +437,21 @@ class TestHelper {
 
   // --- BorrowerOperations gas functions ---
 
-  static async openLoan_allAccounts(accounts, contracts, ETHAmount, CLVAmount) {
+  static async openTrove_allAccounts(accounts, contracts, ETHAmount, CLVAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
 
     for (const account of accounts) {
       const hint = await this.getBorrowerOpsListHint(contracts, ETHAmount, CLVAmount, price)
 
-      const tx = await contracts.borrowerOperations.openLoan(CLVAmount, hint, { from: account, value: ETHAmount })
+      const tx = await contracts.borrowerOperations.openTrove(CLVAmount, hint, { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async openLoan_allAccounts_randomETH(minETH, maxETH, accounts, contracts, CLVAmount) {
+  static async openTrove_allAccounts_randomETH(minETH, maxETH, accounts, contracts, CLVAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
 
@@ -459,14 +459,14 @@ class TestHelper {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
       const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, CLVAmount, price)
 
-      const tx = await contracts.borrowerOperations.openLoan(CLVAmount, hint, { from: account, value: randCollAmount })
+      const tx = await contracts.borrowerOperations.openTrove(CLVAmount, hint, { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async openLoan_allAccounts_randomETH_ProportionalCLV(minETH, maxETH, accounts, contracts, proportion) {
+  static async openTrove_allAccounts_randomETH_ProportionalCLV(minETH, maxETH, accounts, contracts, proportion) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
 
@@ -475,14 +475,14 @@ class TestHelper {
       const proportionalCLV = (web3.utils.toBN(proportion)).mul(web3.utils.toBN(randCollAmount))
       const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, proportionalCLV, price)
 
-      const tx = await contracts.borrowerOperations.openLoan(proportionalCLV, hint, { from: account, value: randCollAmount })
+      const tx = await contracts.borrowerOperations.openTrove(proportionalCLV, hint, { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async openLoan_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, contracts, minCLVProportion, maxCLVProportion, logging = false) {
+  static async openTrove_allAccounts_randomETH_randomCLV(minETH, maxETH, accounts, contracts, minCLVProportion, maxCLVProportion, logging = false) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
     const _1e18 = web3.utils.toBN('1000000000000000000')
@@ -498,12 +498,12 @@ class TestHelper {
       const compositeDebt = await this.getCompositeDebt(contracts, proportionalCLV)
       const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, compositeDebt, price)
 
-      const tx = await contracts.borrowerOperations.openLoan(proportionalCLV, hint, { from: account, value: randCollAmount })
+      const tx = await contracts.borrowerOperations.openTrove(proportionalCLV, hint, { from: account, value: randCollAmount })
 
       if (logging && tx.receipt.status) {
         i++
         const ICR = await contracts.troveManager.getCurrentICR(account, price)
-        // console.log(`${i}. Loan opened. addr: ${this.squeezeAddr(account)} coll: ${randCollAmount} debt: ${proportionalCLV} ICR: ${ICR}`)
+        // console.log(`${i}. Trove opened. addr: ${this.squeezeAddr(account)} coll: ${randCollAmount} debt: ${proportionalCLV} ICR: ${ICR}`)
       }
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
@@ -511,7 +511,7 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async openLoan_allAccounts_randomCLV(minCLV, maxCLV, accounts, contracts, ETHAmount) {
+  static async openTrove_allAccounts_randomCLV(minCLV, maxCLV, accounts, contracts, ETHAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
 
@@ -519,26 +519,26 @@ class TestHelper {
       const randCLVAmount = this.randAmountInWei(minCLV, maxCLV)
       const hint = await this.getBorrowerOpsListHint(contracts, ETHAmount, randCLVAmount, price)
 
-      const tx = await contracts.borrowerOperations.openLoan(randCLVAmount, hint, { from: account, value: ETHAmount })
+      const tx = await contracts.borrowerOperations.openTrove(randCLVAmount, hint, { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async closeLoan_allAccounts(accounts, contracts) {
+  static async closeTrove_allAccounts(accounts, contracts) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
 
     for (const account of accounts) {
-      const tx = await contracts.borrowerOperations.closeLoan({ from: account })
+      const tx = await contracts.borrowerOperations.closeTrove({ from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
     return this.getGasMetrics(gasCostList)
   }
 
-  static async openLoan_allAccounts_decreasingCLVAmounts(accounts, contracts, ETHAmount, maxCLVAmount) {
+  static async openTrove_allAccounts_decreasingCLVAmounts(accounts, contracts, ETHAmount, maxCLVAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
 
@@ -548,7 +548,7 @@ class TestHelper {
       const CLVAmountWei = web3.utils.toWei(CLVAmount, 'ether')
       const hint = await this.getBorrowerOpsListHint(contracts, ETHAmount, CLVAmountWei, price)
 
-      const tx = await contracts.borrowerOperations.openLoan(CLVAmountWei, hint, { from: account, value: ETHAmount })
+      const tx = await contracts.borrowerOperations.openTrove(CLVAmountWei, hint, { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
       i += 1
@@ -556,7 +556,7 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async adjustLoan_allAccounts(accounts, contracts, ETHAmount, CLVAmount) {
+  static async adjustTrove_allAccounts(accounts, contracts, ETHAmount, CLVAmount) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
 
@@ -576,11 +576,11 @@ class TestHelper {
 
       // Add ETH to trove
       if (ETHChangeBN.gt(zero)) {
-        tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
+        tx = await contracts.borrowerOperations.adjustTrove(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
       // Withdraw ETH from trove
       } else if (ETHChangeBN.lt(zero)) {
         ETHChangeBN = ETHChangeBN.neg()
-        tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
+        tx = await contracts.borrowerOperations.adjustTrove(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
       }
 
       const gas = this.gasUsed(tx)
@@ -589,7 +589,7 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async adjustLoan_allAccounts_randomAmount(accounts, contracts, ETHMin, ETHMax, CLVMin, CLVMax) {
+  static async adjustTrove_allAccounts_randomAmount(accounts, contracts, ETHMin, ETHMax, CLVMin, CLVMax) {
     const gasCostList = []
     const price = await contracts.priceFeed.getPrice()
 
@@ -609,11 +609,11 @@ class TestHelper {
 
       // Add ETH to trove
       if (ETHChangeBN.gt(zero)) {
-        tx = await contracts.borrowerOperations.adjustLoan(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
+        tx = await contracts.borrowerOperations.adjustTrove(0, CLVChangeBN, isDebtIncrease, hint, { from: account, value: ETHChangeBN })
       // Withdraw ETH from trove
       } else if (ETHChangeBN.lt(zero)) {
         ETHChangeBN = ETHChangeBN.neg()
-        tx = await contracts.borrowerOperations.adjustLoan(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
+        tx = await contracts.borrowerOperations.adjustTrove(ETHChangeBN, CLVChangeBN, isDebtIncrease, hint, { from: account })
       }
 
       const gas = this.gasUsed(tx)
@@ -835,7 +835,7 @@ class TestHelper {
     for (const account of accounts) {
       const coll = web3.utils.toWei(amountFinney.toString(), 'finney')
 
-      await contracts.borrowerOperations.openLoan('200000000000000000000', account, { from: account, value: coll })
+      await contracts.borrowerOperations.openTrove('200000000000000000000', account, { from: account, value: coll })
 
       amountFinney += 10
     }

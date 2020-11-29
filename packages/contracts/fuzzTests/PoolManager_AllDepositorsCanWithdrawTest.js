@@ -147,16 +147,16 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     while(await systemContainsTroveUnder100(price) && await troveManager.checkRecoveryMode()) {
       const lowestTrove = await sortedCDPs.getLast()
       const lastTroveDebt = (await troveManager.getEntireDebtAndColl(trove))[0]
-      await borrowerOperations.adjustLoan(0 , lastTroveDebt, true, whale, {from: whale})
+      await borrowerOperations.adjustTrove(0 , lastTroveDebt, true, whale, {from: whale})
       await lusdToken.transfer(lowestTrove, lowestTroveDebt, {from: whale})
-      await borrowerOperations.closeLoan({from: lowestTrove})
+      await borrowerOperations.closeTrove({from: lowestTrove})
     }
 
     while (await systemContainsTroveUnder110(price)) {
       const debtLowest50Troves = await getTotalDebtFromUndercollateralizedTroves(50, price)
       
       if (debtLowest50Troves.gt(ZERO)) {
-        await borrowerOperations.adjustLoan(0 , debtLowest50Troves, true, whale, {from: whale})
+        await borrowerOperations.adjustTrove(0 , debtLowest50Troves, true, whale, {from: whale})
         await stabilityPool.provideToSP(debtLowest50Troves, {from: whale})
       }
       
@@ -243,7 +243,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     it("Defaulters' Collateral in range [1, 1e8]. SP Deposits in range [100, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(5, 29) })
+      await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(5, 29) })
 
       const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
@@ -266,7 +266,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
       // setup:
       // account set L all add coll and withdraw CLV
-      await th.openLoan_allAccounts_randomETH_randomCLV(defaulterCollMin,
+      await th.openTrove_allAccounts_randomETH_randomCLV(defaulterCollMin,
         defaulterCollMax,
         defaulterAccounts,
         contracts,
@@ -275,7 +275,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
         true)
 
       // account set S all add coll and withdraw CLV
-      await th.openLoan_allAccounts_randomETH_randomCLV(depositorCollMin,
+      await th.openTrove_allAccounts_randomETH_randomCLV(depositorCollMin,
         depositorCollMax,
         depositorAccounts,
         contracts,
@@ -317,7 +317,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     it("Defaulters' Collateral in range [1, 10]. SP Deposits in range [1e8, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(5, 29) })
+      await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(5, 29) })
 
       const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
@@ -340,7 +340,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
       // setup:
       // account set L all add coll and withdraw CLV
-      await th.openLoan_allAccounts_randomETH_randomCLV(defaulterCollMin,
+      await th.openTrove_allAccounts_randomETH_randomCLV(defaulterCollMin,
         defaulterCollMax,
         defaulterAccounts,
         contracts,
@@ -348,7 +348,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
         defaulterCLVProportionMax)
 
       // account set S all add coll and withdraw CLV
-      await th.openLoan_allAccounts_randomETH_randomCLV(depositorCollMin,
+      await th.openTrove_allAccounts_randomETH_randomCLV(depositorCollMin,
         depositorCollMax,
         depositorAccounts,
         contracts,
@@ -389,7 +389,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [100, 1000]. Every liquidation empties the Pool. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(5, 29) })
+      await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(5, 29) })
 
       const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
@@ -412,7 +412,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
       // setup:
       // account set L all add coll and withdraw CLV
-      await th.openLoan_allAccounts_randomETH_randomCLV(defaulterCollMin,
+      await th.openTrove_allAccounts_randomETH_randomCLV(defaulterCollMin,
         defaulterCollMax,
         defaulterAccounts,
         contracts,
@@ -420,7 +420,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
         defaulterCLVProportionMax)
 
       // account set S all add coll and withdraw CLV
-      await th.openLoan_allAccounts_randomETH_randomCLV(depositorCollMin,
+      await th.openTrove_allAccounts_randomETH_randomCLV(depositorCollMin,
         depositorCollMax,
         depositorAccounts,
         contracts,
@@ -461,7 +461,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [1e8 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(5, 29) })
+      await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(5, 29) })
 
       // price drops, all L liquidateable
       const numberOfOps = 100
@@ -485,7 +485,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
       // setup:
       // account set L all add coll and withdraw CLV
-      await th.openLoan_allAccounts_randomETH_randomCLV(defaulterCollMin,
+      await th.openTrove_allAccounts_randomETH_randomCLV(defaulterCollMin,
         defaulterCollMax,
         defaulterAccounts,
         contracts,
@@ -493,7 +493,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
         defaulterCLVProportionMax)
 
       // account set S all add coll and withdraw CLV
-      await th.openLoan_allAccounts_randomETH_randomCLV(depositorCollMin,
+      await th.openTrove_allAccounts_randomETH_randomCLV(depositorCollMin,
         depositorCollMax,
         depositorAccounts,
         contracts,

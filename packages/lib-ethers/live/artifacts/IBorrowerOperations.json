@@ -118,7 +118,7 @@
           "type": "address"
         }
       ],
-      "name": "adjustLoan",
+      "name": "adjustTrove",
       "outputs": [],
       "payable": true,
       "stateMutability": "payable",
@@ -127,7 +127,7 @@
     {
       "constant": false,
       "inputs": [],
-      "name": "closeLoan",
+      "name": "closeTrove",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -168,7 +168,7 @@
           "type": "address"
         }
       ],
-      "name": "openLoan",
+      "name": "openTrove",
       "outputs": [],
       "payable": true,
       "stateMutability": "payable",

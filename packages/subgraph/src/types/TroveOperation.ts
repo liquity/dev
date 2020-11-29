@@ -1,19 +1,19 @@
 enum BorrowerOperation {
-  openLoan,
-  closeLoan,
+  openTrove,
+  closeTrove,
   addColl,
   withdrawColl,
   withdrawCLV,
   repayCLV,
-  adjustLoan
+  adjustTrove
 }
 
 export function getTroveOperationFromBorrowerOperation(operation: BorrowerOperation): string {
   switch (operation) {
-    case BorrowerOperation.openLoan:
-      return "openLoan";
-    case BorrowerOperation.closeLoan:
-      return "closeLoan";
+    case BorrowerOperation.openTrove:
+      return "openTrove";
+    case BorrowerOperation.closeTrove:
+      return "closeTrove";
     case BorrowerOperation.addColl:
       return "depositCollateral";
     case BorrowerOperation.withdrawColl:
@@ -22,8 +22,8 @@ export function getTroveOperationFromBorrowerOperation(operation: BorrowerOperat
       return "mint";
     case BorrowerOperation.repayCLV:
       return "repay";
-    case BorrowerOperation.adjustLoan:
-      return "adjustLoan";
+    case BorrowerOperation.adjustTrove:
+      return "adjustTrove";
   }
 
   // AssemblyScript can't tell we will never reach this, so it insists on a return statement
@@ -32,13 +32,13 @@ export function getTroveOperationFromBorrowerOperation(operation: BorrowerOperat
 
 export function isBorrowerOperation(troveOperation: string): boolean {
   return (
-    troveOperation == "openLoan" ||
-    troveOperation == "closeLoan" ||
+    troveOperation == "openTrove" ||
+    troveOperation == "closeTrove" ||
     troveOperation == "depositCollateral" ||
     troveOperation == "withdrawCollateral" ||
     troveOperation == "mint" ||
     troveOperation == "repay" ||
-    troveOperation == "adjustLoan"
+    troveOperation == "adjustTrove"
   );
 }
 

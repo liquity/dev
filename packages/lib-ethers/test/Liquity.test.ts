@@ -139,7 +139,7 @@ describe("EthersLiquity", () => {
       const fakeContracts = {
         borrowerOperations: {
           estimateAndPopulate: {
-            openLoan: () => ({})
+            openTrove: () => ({})
           }
         },
 
