@@ -37,7 +37,7 @@ contract('Gas costs for math functions', async accounts => {
     hintHelpers = contracts.hintHelpers
 
     gtStaking = LQTYContracts.gtStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 

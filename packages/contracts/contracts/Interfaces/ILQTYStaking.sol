@@ -6,7 +6,7 @@ interface ILQTYStaking {
 
     function setAddresses
     (
-        address _growthTokenAddress,
+        address _lqtyTokenAddress,
         address _clvTokenAddress,
         address _cdpManagerAddress, 
         address _borrowerOperationsAddress,

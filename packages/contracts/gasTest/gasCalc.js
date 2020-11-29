@@ -59,7 +59,7 @@ contract('Gas cost tests', async accounts => {
     functionCaller = contracts.functionCaller
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 

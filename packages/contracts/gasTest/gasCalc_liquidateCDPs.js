@@ -45,7 +45,7 @@ contract('Gas cost tests', async accounts => {
     hintHelpers = contracts.hintHelpers
 
     lqtyStaking = GTContracts.lqtyStaking
-    growthToken = GTContracts.growthToken
+    lqtyToken = GTContracts.lqtyToken
     communityIssuance = GTContracts.communityIssuance
     lockupContractFactory = GTContracts.lockupContractFactory
 

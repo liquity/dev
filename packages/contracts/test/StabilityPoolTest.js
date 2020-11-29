@@ -34,7 +34,7 @@ contract('StabilityPool', async accounts => {
   let stabilityPool
   let defaultPool
   let borrowerOperations
-  let growthToken
+  let lqtyToken
 
   let gasPriceInWei
 
@@ -58,7 +58,7 @@ contract('StabilityPool', async accounts => {
       borrowerOperations = contracts.borrowerOperations
       hintHelpers = contracts.hintHelpers
 
-      growthToken = LQTYContracts.growthToken
+      lqtyToken = LQTYContracts.lqtyToken
       //communityIssuance = LQTYContracts.communityIssuance
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
@@ -688,8 +688,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openLoan(dec(200, 18), B, { from: B, value: dec(2, 'ether') })
 
       // Get A, B, C LQTY balances before and confirm they're zero
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
+      const A_LQTYBalance_Before = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_Before = await lqtyToken.balanceOf(B)
 
       assert.equal(A_LQTYBalance_Before, '0')
       assert.equal(B_LQTYBalance_Before, '0')
@@ -701,8 +701,8 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
 
       // Get A, B, C LQTY balances after, and confirm they're still zero
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
+      const A_LQTYBalance_After = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_After = await lqtyToken.balanceOf(B)
 
       assert.equal(A_LQTYBalance_After, '0')
       assert.equal(B_LQTYBalance_After, '0')
@@ -744,8 +744,8 @@ contract('StabilityPool', async accounts => {
       // --- TEST --- 
 
       // Get A, B, C LQTY balances before and confirm they're zero
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
+      const A_LQTYBalance_Before = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_Before = await lqtyToken.balanceOf(B)
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
@@ -754,8 +754,8 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B })
 
       // Get A, B, C LQTY balances after, and confirm they have not changed
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
+      const A_LQTYBalance_After = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_After = await lqtyToken.balanceOf(B)
 
       assert.isTrue(A_LQTYBalance_After.eq(A_LQTYBalance_Before))
       assert.isTrue(B_LQTYBalance_After.eq(B_LQTYBalance_Before))
@@ -778,9 +778,9 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(300, 18), frontEnd_3, { from: F })
 
       // Get F1, F2, F3 LQTY balances before, and confirm they're zero
-      const frontEnd_1_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_1)
-      const frontEnd_2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
-      const frontEnd_3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
+      const frontEnd_1_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_1)
+      const frontEnd_2_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_2)
+      const frontEnd_3_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_3)
 
       assert.equal(frontEnd_1_LQTYBalance_Before, '0')
       assert.equal(frontEnd_2_LQTYBalance_Before, '0')
@@ -790,7 +790,7 @@ contract('StabilityPool', async accounts => {
 
       // console.log(`LQTYSupplyCap before: ${await communityIssuance.LQTYSupplyCap()}`)
       // console.log(`totalLQTYIssued before: ${await communityIssuance.totalLQTYIssued()}`)
-      // console.log(`LQTY balance of CI before: ${await growthToken.balanceOf(communityIssuance.address)}`)
+      // console.log(`LQTY balance of CI before: ${await lqtyToken.balanceOf(communityIssuance.address)}`)
 
       // A, B, C provide to SP
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A })
@@ -799,12 +799,12 @@ contract('StabilityPool', async accounts => {
 
       // console.log(`LQTYSupplyCap after: ${await communityIssuance.LQTYSupplyCap()}`)
       // console.log(`totalLQTYIssued after: ${await communityIssuance.totalLQTYIssued()}`)
-      // console.log(`LQTY balance of CI after: ${await growthToken.balanceOf(communityIssuance.address)}`)
+      // console.log(`LQTY balance of CI after: ${await lqtyToken.balanceOf(communityIssuance.address)}`)
 
       // Get F1, F2, F3 LQTY balances after, and confirm they have increased
-      const frontEnd_1_LQTYBalance_After = await growthToken.balanceOf(frontEnd_1)
-      const frontEnd_2_LQTYBalance_After = await growthToken.balanceOf(frontEnd_2)
-      const frontEnd_3_LQTYBalance_After = await growthToken.balanceOf(frontEnd_3)
+      const frontEnd_1_LQTYBalance_After = await lqtyToken.balanceOf(frontEnd_1)
+      const frontEnd_2_LQTYBalance_After = await lqtyToken.balanceOf(frontEnd_2)
+      const frontEnd_3_LQTYBalance_After = await lqtyToken.balanceOf(frontEnd_3)
 
       assert.isTrue(frontEnd_1_LQTYBalance_After.gt(frontEnd_1_LQTYBalance_Before))
       assert.isTrue(frontEnd_2_LQTYBalance_After.gt(frontEnd_2_LQTYBalance_Before))
@@ -1123,9 +1123,9 @@ contract('StabilityPool', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // Get A, B, C LQTY balance before
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
-      const C_LQTYBalance_Before = await growthToken.balanceOf(C)
+      const A_LQTYBalance_Before = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_Before = await lqtyToken.balanceOf(B)
+      const C_LQTYBalance_Before = await lqtyToken.balanceOf(C)
 
       // A, B, C top up
       await stabilityPool.provideToSP(dec(10, 18), frontEnd_1, { from: A })
@@ -1133,9 +1133,9 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(30, 18), ZERO_ADDRESS, { from: C })
 
       // Get LQTY balance after
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
-      const C_LQTYBalance_After = await growthToken.balanceOf(C)
+      const A_LQTYBalance_After = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_After = await lqtyToken.balanceOf(B)
+      const C_LQTYBalance_After = await lqtyToken.balanceOf(C)
 
       // Check LQTY Balance of A, B, C has increased
       assert.isTrue(A_LQTYBalance_After.gt(A_LQTYBalance_Before))
@@ -1159,9 +1159,9 @@ contract('StabilityPool', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // Get front ends' LQTY balance before
-      const F1_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_1)
-      const F2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
-      const F3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
+      const F1_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_1)
+      const F2_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_2)
+      const F3_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_3)
 
       // A, B, C top up  (front end param passed here is irrelevant)
       await stabilityPool.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: A })  // provides no front end param
@@ -1169,9 +1169,9 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(30, 18), frontEnd_3, { from: C }) // provides front end that matches his tag
 
       // Get front ends' LQTY balance after
-      const F1_LQTYBalance_After = await growthToken.balanceOf(A)
-      const F2_LQTYBalance_After = await growthToken.balanceOf(B)
-      const F3_LQTYBalance_After = await growthToken.balanceOf(C)
+      const F1_LQTYBalance_After = await lqtyToken.balanceOf(A)
+      const F2_LQTYBalance_After = await lqtyToken.balanceOf(B)
+      const F3_LQTYBalance_After = await lqtyToken.balanceOf(C)
 
       // Check LQTY Balance of front ends has increased
       assert.isTrue(F1_LQTYBalance_After.gt(F1_LQTYBalance_Before))
@@ -2392,9 +2392,9 @@ contract('StabilityPool', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // Get A, B, C LQTY balance before
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
-      const C_LQTYBalance_Before = await growthToken.balanceOf(C)
+      const A_LQTYBalance_Before = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_Before = await lqtyToken.balanceOf(B)
+      const C_LQTYBalance_Before = await lqtyToken.balanceOf(C)
 
       // A, B, C withdraw
       await stabilityPool.withdrawFromSP(dec(1, 18), { from: A })
@@ -2402,9 +2402,9 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.withdrawFromSP(dec(3, 18), { from: C })
 
       // Get LQTY balance after
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
-      const C_LQTYBalance_After = await growthToken.balanceOf(C)
+      const A_LQTYBalance_After = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_After = await lqtyToken.balanceOf(B)
+      const C_LQTYBalance_After = await lqtyToken.balanceOf(C)
 
       // Check LQTY Balance of A, B, C has increased
       assert.isTrue(A_LQTYBalance_After.gt(A_LQTYBalance_Before))
@@ -2428,9 +2428,9 @@ contract('StabilityPool', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // Get front ends' LQTY balance before
-      const F1_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_1)
-      const F2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
-      const F3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
+      const F1_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_1)
+      const F2_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_2)
+      const F3_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_3)
 
       // A, B, C withdraw
       await stabilityPool.withdrawFromSP(dec(1, 18), { from: A })
@@ -2438,9 +2438,9 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.withdrawFromSP(dec(3, 18), { from: C })
 
       // Get front ends' LQTY balance after
-      const F1_LQTYBalance_After = await growthToken.balanceOf(A)
-      const F2_LQTYBalance_After = await growthToken.balanceOf(B)
-      const F3_LQTYBalance_After = await growthToken.balanceOf(C)
+      const F1_LQTYBalance_After = await lqtyToken.balanceOf(A)
+      const F2_LQTYBalance_After = await lqtyToken.balanceOf(B)
+      const F3_LQTYBalance_After = await lqtyToken.balanceOf(C)
 
       // Check LQTY Balance of front ends has increased
       assert.isTrue(F1_LQTYBalance_After.gt(F1_LQTYBalance_Before))
@@ -3305,9 +3305,9 @@ contract('StabilityPool', async accounts => {
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       // Get A, B, C LQTY balance before
-      const A_LQTYBalance_Before = await growthToken.balanceOf(A)
-      const B_LQTYBalance_Before = await growthToken.balanceOf(B)
-      const C_LQTYBalance_Before = await growthToken.balanceOf(C)
+      const A_LQTYBalance_Before = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_Before = await lqtyToken.balanceOf(B)
+      const C_LQTYBalance_Before = await lqtyToken.balanceOf(C)
 
       // Check A, B, C have non-zero ETH gain
       assert.isTrue((await stabilityPool.getDepositorETHGain(A)).gt(ZERO))
@@ -3320,9 +3320,9 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.withdrawETHGainToTrove(C, { from: C })
 
       // Get LQTY balance after
-      const A_LQTYBalance_After = await growthToken.balanceOf(A)
-      const B_LQTYBalance_After = await growthToken.balanceOf(B)
-      const C_LQTYBalance_After = await growthToken.balanceOf(C)
+      const A_LQTYBalance_After = await lqtyToken.balanceOf(A)
+      const B_LQTYBalance_After = await lqtyToken.balanceOf(B)
+      const C_LQTYBalance_After = await lqtyToken.balanceOf(C)
 
       // Check LQTY Balance of A, B, C has increased
       assert.isTrue(A_LQTYBalance_After.gt(A_LQTYBalance_Before))
@@ -3353,9 +3353,9 @@ contract('StabilityPool', async accounts => {
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       // Get front ends' LQTY balance before
-      const F1_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_1)
-      const F2_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_2)
-      const F3_LQTYBalance_Before = await growthToken.balanceOf(frontEnd_3)
+      const F1_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_1)
+      const F2_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_2)
+      const F3_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_3)
 
       // Check A, B, C have non-zero ETH gain
       assert.isTrue((await stabilityPool.getDepositorETHGain(A)).gt(ZERO))
@@ -3368,9 +3368,9 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.withdrawETHGainToTrove(C, { from: C })
 
       // Get front ends' LQTY balance after
-      const F1_LQTYBalance_After = await growthToken.balanceOf(frontEnd_1)
-      const F2_LQTYBalance_After = await growthToken.balanceOf(frontEnd_2)
-      const F3_LQTYBalance_After = await growthToken.balanceOf(frontEnd_3)
+      const F1_LQTYBalance_After = await lqtyToken.balanceOf(frontEnd_1)
+      const F2_LQTYBalance_After = await lqtyToken.balanceOf(frontEnd_2)
+      const F3_LQTYBalance_After = await lqtyToken.balanceOf(frontEnd_3)
 
       // Check LQTY Balance of front ends has increased
       assert.isTrue(F1_LQTYBalance_After.gt(F1_LQTYBalance_Before))

@@ -17,14 +17,14 @@ contract LockupContractFactory is ILockupContractFactory {
     uint public deploymentTime;
     address public deployer;
 
-    ILQTYToken public growthToken;
+    ILQTYToken public lqtyToken;
     
     mapping (address => address) public oneYearLockupContractToDeployer;
     mapping (address => address) public customDurationLockupContractToDeployer;
 
     // --- Events ---
 
-    event LQTYTokenAddressSet(address _growthTokenAddress);
+    event LQTYTokenAddressSet(address _lqtyTokenAddress);
     event OYLCDeployed(address _OYLCAddress, address _beneficiary, uint _entitlement);
     event CDLCDeployed(address _CDLCAddress, address _beneficiary, uint _initialEntitlement);
     
@@ -35,16 +35,16 @@ contract LockupContractFactory is ILockupContractFactory {
         deployer = msg.sender;
     }
 
-    function setLQTYTokenAddress(address _growthTokenAddress) external override {
+    function setLQTYTokenAddress(address _lqtyTokenAddress) external override {
         _requireCallerIsFactoryDeployer();
-        growthToken = ILQTYToken(_growthTokenAddress);
-        emit LQTYTokenAddressSet(_growthTokenAddress);
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
+        emit LQTYTokenAddressSet(_lqtyTokenAddress);
     }
 
     function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external override {
         _requireLQTYAddressIsSet();
         OneYearLockupContract oneYearLockupContract = new OneYearLockupContract(
-                                                        address(growthToken), 
+                                                        address(lqtyToken), 
                                                         beneficiary, 
                                                         initialEntitlement);
 
@@ -57,7 +57,7 @@ contract LockupContractFactory is ILockupContractFactory {
         _requireFactoryIsAtLeastOneYearOld();
     
         CustomDurationLockupContract customDurationLockupContract = new CustomDurationLockupContract( 
-                                                                        address(growthToken), 
+                                                                        address(lqtyToken), 
                                                                         beneficiary, 
                                                                         initialEntitlement, 
                                                                         lockupDuration);
@@ -119,7 +119,7 @@ contract LockupContractFactory is ILockupContractFactory {
     }
 
     function _requireLQTYAddressIsSet() internal view {
-        require(address(growthToken) != address(0), "LCF: LQTY Address is not set");
+        require(address(lqtyToken) != address(0), "LCF: LQTY Address is not set");
     }
 
     function _requireFactoryIsAtLeastOneYearOld() internal view {

@@ -146,18 +146,18 @@ class DeploymentHelper {
     CommunityIssuance.setAsDeployed(communityIssuance)
 
     // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
-    const growthToken = await LQTYToken.new(
+    const lqtyToken = await LQTYToken.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
     )
-    LQTYToken.setAsDeployed(growthToken)
+    LQTYToken.setAsDeployed(lqtyToken)
 
     const LQTYContracts = {
       lqtyStaking,
       lockupContractFactory,
       communityIssuance,
-      growthToken
+      lqtyToken
     }
     return LQTYContracts
   }
@@ -172,18 +172,18 @@ class DeploymentHelper {
     CommunityIssuanceTester.setAsDeployed(communityIssuance)
 
     // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
-    const growthToken = await LQTYTokenTester.new(
+    const lqtyToken = await LQTYTokenTester.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
     )
-    LQTYTokenTester.setAsDeployed(growthToken)
+    LQTYTokenTester.setAsDeployed(lqtyToken)
 
     const LQTYContracts = {
       lqtyStaking,
       lockupContractFactory,
       communityIssuance,
-      growthToken
+      lqtyToken
     }
     return LQTYContracts
   }
@@ -227,7 +227,7 @@ class DeploymentHelper {
 
     /* Deploy Growth Token, passing Community Issuance,  LQTYStaking, and Factory addresses 
     to the constructor  */
-    const growthToken = await LQTYToken.new(
+    const lqtyToken = await LQTYToken.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
@@ -237,7 +237,7 @@ class DeploymentHelper {
       lqtyStaking,
       lockupContractFactory,
       communityIssuance,
-      growthToken
+      lqtyToken
     }
     return LQTYContracts
   }
@@ -337,12 +337,12 @@ class DeploymentHelper {
 
   static async connectLQTYContracts(LQTYContracts) {
     // Set LQTYToken address in LCF
-    await LQTYContracts.lockupContractFactory.setLQTYTokenAddress(LQTYContracts.growthToken.address)
+    await LQTYContracts.lockupContractFactory.setLQTYTokenAddress(LQTYContracts.lqtyToken.address)
   }
 
   static async connectLQTYContractsToCore(LQTYContracts, coreContracts) {
     await LQTYContracts.lqtyStaking.setAddresses(
-      LQTYContracts.growthToken.address,
+      LQTYContracts.lqtyToken.address,
       coreContracts.clvToken.address,
       coreContracts.cdpManager.address, 
       coreContracts.borrowerOperations.address,
@@ -350,7 +350,7 @@ class DeploymentHelper {
     )
    
     await LQTYContracts.communityIssuance.setAddresses(
-      LQTYContracts.growthToken.address,
+      LQTYContracts.lqtyToken.address,
       coreContracts.stabilityPool.address
     )
   }

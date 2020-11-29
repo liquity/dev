@@ -25,7 +25,7 @@ contract('Fee arithmetic tests', async accounts => {
   const [owner, A, B, C, D, E, F, G, whale] = accounts;
 
   let borrowerOperations
-  let growthToken
+  let lqtyToken
   let lqtyStaking
   
   beforeEach(async () => {
@@ -42,7 +42,7 @@ contract('Fee arithmetic tests', async accounts => {
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
 
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     lqtyStaking = LQTYContracts.lqtyStaking
     
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
@@ -61,12 +61,12 @@ contract('Fee arithmetic tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
-    // console.log(`A lqty bal: ${await growthToken.balanceOf(A)}`)
+    // console.log(`A lqty bal: ${await lqtyToken.balanceOf(A)}`)
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(100, 18), {from: A})
 
     // Check ETH fee per unit staked is zero
@@ -101,7 +101,7 @@ contract('Fee arithmetic tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // Check ETH fee per unit staked is zero
     const F_ETH_Before = await lqtyStaking.F_ETH()
@@ -131,10 +131,10 @@ contract('Fee arithmetic tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(100, 18), {from: A})
 
     // Check LUSD fee per unit staked is zero
@@ -176,7 +176,7 @@ contract('Fee arithmetic tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // Check LUSD fee per unit staked is zero
     const F_LUSD_Before = await lqtyStaking.F_ETH()
@@ -214,10 +214,10 @@ contract('Fee arithmetic tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(100, 18), {from: A})
 
     // B redeems
@@ -281,10 +281,10 @@ contract('Fee arithmetic tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(50, 18), {from: A})
 
     // B redeems
@@ -347,10 +347,10 @@ contract('Fee arithmetic tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(50, 18), {from: A})
 
     // B redeems
@@ -387,10 +387,10 @@ contract('Fee arithmetic tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(50, 18), {from: A})
 
     // B redeems
@@ -445,21 +445,21 @@ contract('Fee arithmetic tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A, B, C
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
-    await growthToken.transfer(B, dec(200, 18), {from: owner})
-    await growthToken.transfer(C, dec(300, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(B, dec(200, 18), {from: owner})
+    await lqtyToken.transfer(C, dec(300, 18), {from: owner})
 
     // A, B, C make stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
-    await growthToken.approve(lqtyStaking.address, dec(200, 18), {from: B})
-    await growthToken.approve(lqtyStaking.address, dec(300, 18), {from: C})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(200, 18), {from: B})
+    await lqtyToken.approve(lqtyStaking.address, dec(300, 18), {from: C})
     await lqtyStaking.stake(dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(200, 18), {from: B})
     await lqtyStaking.stake(dec(300, 18), {from: C})
 
     // Confirm staking contract holds 600 LQTY
-    // console.log(`lqty staking LQTY bal: ${await growthToken.balanceOf(lqtyStaking.address)}`)
-    assert.equal(await growthToken.balanceOf(lqtyStaking.address), dec(600, 18))
+    // console.log(`lqty staking LQTY bal: ${await lqtyToken.balanceOf(lqtyStaking.address)}`)
+    assert.equal(await lqtyToken.balanceOf(lqtyStaking.address), dec(600, 18))
     assert.equal(await lqtyStaking.totalLQTYStaked(), dec(600, 18))
 
     // F redeems
@@ -483,12 +483,12 @@ contract('Fee arithmetic tests', async accounts => {
     assert.isTrue(emittedLUSDFee_2.gt(toBN('0')))
 
     // D obtains LQTY from owner and makes a stake
-    await growthToken.transfer(D, dec(50, 18), {from: owner})
-    await growthToken.approve(lqtyStaking.address, dec(50, 18), {from: D})
+    await lqtyToken.transfer(D, dec(50, 18), {from: owner})
+    await lqtyToken.approve(lqtyStaking.address, dec(50, 18), {from: D})
     await lqtyStaking.stake(dec(50, 18), {from: D})
 
     // Confirm staking contract holds 650 LQTY
-    assert.equal(await growthToken.balanceOf(lqtyStaking.address), dec(650, 18))
+    assert.equal(await lqtyToken.balanceOf(lqtyStaking.address), dec(650, 18))
     assert.equal(await lqtyStaking.totalLQTYStaked(), dec(650, 18))
 
      // G redeems
@@ -564,7 +564,7 @@ contract('Fee arithmetic tests', async accounts => {
     // Confirm all depositors could withdraw
 
     //Confirm pool Size is now 0
-    assert.equal((await growthToken.balanceOf(lqtyStaking.address)), '0')
+    assert.equal((await lqtyToken.balanceOf(lqtyStaking.address)), '0')
     assert.equal((await lqtyStaking.totalLQTYStaked()), '0')
 
     // Get A-D ETH and LUSD balances

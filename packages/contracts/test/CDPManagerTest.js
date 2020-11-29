@@ -63,7 +63,7 @@ contract('CDPManager', async accounts => {
     hintHelpers = contracts.hintHelpers
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 
@@ -3044,7 +3044,7 @@ contract('CDPManager', async accounts => {
   it("redeemCollateral(): a redemption made when base rate is non-zero increases the base rate, for negligible time passed", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -3134,7 +3134,7 @@ contract('CDPManager', async accounts => {
   it("redeemCollateral(): a redemption made at zero base rate send a non-zero ETHFee to LQTY staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -3168,7 +3168,7 @@ contract('CDPManager', async accounts => {
   it("redeemCollateral(): a redemption made at zero base increases the ETH-fees-per-LQTY-staked in LQTY Staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -3202,7 +3202,7 @@ contract('CDPManager', async accounts => {
   it("redeemCollateral(): a redemption made at a non-zero base rate send a non-zero ETHFee to LQTY staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -3241,7 +3241,7 @@ contract('CDPManager', async accounts => {
   it("redeemCollateral(): a redemption made at a non-zero base rate increases ETH-per-LQTY-staked in the staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -3281,7 +3281,7 @@ contract('CDPManager', async accounts => {
   it("redeemCollateral(): a redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -3322,7 +3322,7 @@ contract('CDPManager', async accounts => {
   it("redeemCollateral(): a full redemption (leaving trove with 0 debt), closes the trove", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
@@ -3351,7 +3351,7 @@ contract('CDPManager', async accounts => {
   const redeemCollateral3Full1Partial = async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })

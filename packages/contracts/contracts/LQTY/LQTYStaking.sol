@@ -29,7 +29,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         uint F_LUSD_Snapshot;
     }
     
-    ILQTYToken public growthToken;
+    ILQTYToken public lqtyToken;
     ICLVToken public clvToken;
 
     address public cdpManagerAddress;
@@ -38,7 +38,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     // --- Events ---
 
-    event LQTYTokenAddressSet(address _growthTokenAddress);
+    event LQTYTokenAddressSet(address _lqtyTokenAddress);
     event CLVTokenAddressSet(address _clvTokenAddress);
     event CDPManagerAddressSet(address _cdpManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
@@ -48,7 +48,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     function setAddresses
     (
-        address _growthTokenAddress,
+        address _lqtyTokenAddress,
         address _clvTokenAddress,
         address _cdpManagerAddress, 
         address _borrowerOperationsAddress,
@@ -58,13 +58,13 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         onlyOwner 
         override 
     {
-        growthToken = ILQTYToken(_growthTokenAddress);
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
         clvToken = ICLVToken(_clvTokenAddress);
         cdpManagerAddress = _cdpManagerAddress;
         borrowerOperationsAddress = _borrowerOperationsAddress;
         activePoolAddress = _activePoolAddress;
 
-        emit LQTYTokenAddressSet(_growthTokenAddress);
+        emit LQTYTokenAddressSet(_lqtyTokenAddress);
         emit LQTYTokenAddressSet(_clvTokenAddress);
         emit CDPManagerAddressSet(_cdpManagerAddress);
         emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
@@ -92,7 +92,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         totalLQTYStaked = totalLQTYStaked.add(_LQTYamount);
 
         // Transfer LQTY from caller to this contract
-        growthToken.sendToLQTYStaking(msg.sender, _LQTYamount);
+        lqtyToken.sendToLQTYStaking(msg.sender, _LQTYamount);
 
         // Send accumulated LUSD and ETH gains to the caller
         clvToken.transfer(msg.sender, LUSDGain);
@@ -118,7 +118,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);  
 
         // Transfer unstaked LQTY to user
-        growthToken.transfer(msg.sender, LQTYToWithdraw);
+        lqtyToken.transfer(msg.sender, LQTYToWithdraw);
 
         // Send accumulated LUSD and ETH gains to the caller
         clvToken.transfer(msg.sender, LUSDGain);

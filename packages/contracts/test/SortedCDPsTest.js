@@ -59,7 +59,7 @@ contract('CDPManager', async accounts => {
     borrowerOperations = contracts.borrowerOperations
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 

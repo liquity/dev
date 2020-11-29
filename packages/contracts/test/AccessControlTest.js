@@ -43,7 +43,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     borrowerOperations = coreContracts.borrowerOperations
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 
@@ -410,7 +410,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   describe('LockupContractFactory', async accounts => {
     it("setLQTYTokenAddress(): reverts when caller is not deployer", async () => {
       try {
-        const txAlice = await lockupContractFactory.setLQTYTokenAddress(growthToken.address, { from: alice })
+        const txAlice = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -418,7 +418,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
       // Owner can successfully set any address
       const txOwner1 = await lockupContractFactory.setLQTYTokenAddress(bob, { from: owner })
-      const txOwner2 = await lockupContractFactory.setLQTYTokenAddress(growthToken.address, { from: owner })
+      const txOwner2 = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: owner })
     })
   })
 
@@ -433,7 +433,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       assert.equal(await OYLC.deployer(), lockupContractFactory.address)
 
       // Deployer funds the OYLC
-      await growthToken.transfer(OYLC.address, dec(100, 18), { from: owner })
+      await lqtyToken.transfer(OYLC.address, dec(100, 18), { from: owner })
 
       try {
         const txAlice = await OYLC.lockContract({ from: alice })
@@ -454,7 +454,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
 
       // Deployer funds the OYLC
-      await growthToken.transfer(OYLC.address, dec(100, 18), { from: owner })
+      await lqtyToken.transfer(OYLC.address, dec(100, 18), { from: owner })
 
       // Deployer locks contract via the factory
       await lockupContractFactory.lockOneYearContracts([OYLC.address], { from: owner })
@@ -497,7 +497,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       assert.equal(await CDLC.deployer(), lockupContractFactory.address)
 
       // Deployer funds the CDLC
-      await growthToken.transfer(CDLC.address, dec(100, 18), { from: owner })
+      await lqtyToken.transfer(CDLC.address, dec(100, 18), { from: owner })
 
       try {
         const txAlice = await CDLC.lockContract({ from: alice })
@@ -525,7 +525,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
 
       // Deployer funds the CDLC
-      await growthToken.transfer(CDLC.address, dec(100, 18), { from: owner })
+      await lqtyToken.transfer(CDLC.address, dec(100, 18), { from: owner })
 
       // Deployer locks contract via the factory
       await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
@@ -571,11 +571,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   describe('LQTYToken', async accounts => {
     it("sendToLQTYStaking(): reverts when caller is not the LQTYSstaking", async () => {
       // Check owner has some LQTY
-      assert.isTrue((await growthToken.balanceOf(owner)).gt(toBN('0')))
+      assert.isTrue((await lqtyToken.balanceOf(owner)).gt(toBN('0')))
 
       // Owner tries to call it
       try {
-        const tx = await growthToken.sendToLQTYStaking(owner, 1, { from: owner })
+        const tx = await lqtyToken.sendToLQTYStaking(owner, 1, { from: owner })
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -584,12 +584,12 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // Owner transfers 1 LQTY to bob
-      await growthToken.transfer(bob, dec(1, 18), { from: owner })
-      assert.equal((await growthToken.balanceOf(bob)), dec(1, 18))
+      await lqtyToken.transfer(bob, dec(1, 18), { from: owner })
+      assert.equal((await lqtyToken.balanceOf(bob)), dec(1, 18))
 
       // Bob tries to call it
       try {
-        const tx = await growthToken.sendToLQTYStaking(bob, dec(1, 18), { from: bob })
+        const tx = await lqtyToken.sendToLQTYStaking(bob, dec(1, 18), { from: bob })
       } catch (err) {
         assert.include(err.message, "revert")
       }

@@ -12,7 +12,7 @@ contract CustomDurationLockupContract {
     address public deployer;
     address public beneficiary;
 
-    ILQTYToken public growthToken;
+    ILQTYToken public lqtyToken;
 
     uint public initialEntitlement;
 
@@ -32,7 +32,7 @@ contract CustomDurationLockupContract {
 
     constructor 
     (
-    address _growthTokenAddress, 
+    address _lqtyTokenAddress, 
     address _beneficiary, 
     uint _initialEntitlement,
     uint _lockupDurationInSeconds
@@ -41,7 +41,7 @@ contract CustomDurationLockupContract {
     {
         deployer = msg.sender;
 
-        growthToken = ILQTYToken(_growthTokenAddress);
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
 
         beneficiary =  _beneficiary;
         initialEntitlement = _initialEntitlement;
@@ -64,8 +64,8 @@ contract CustomDurationLockupContract {
         _requireContractIsActive();
         _requireLockupDurationHasPassed();
         
-        uint LQTYBalance = growthToken.balanceOf(address(this));
-        growthToken.transfer(msg.sender, LQTYBalance);
+        uint LQTYBalance = lqtyToken.balanceOf(address(this));
+        lqtyToken.transfer(msg.sender, LQTYBalance);
         
         active = false;
         emit CDLCUnlockedAndEmptied(block.timestamp);
@@ -94,7 +94,7 @@ contract CustomDurationLockupContract {
     }
 
     function _requireLQTYBalanceAtLeastEqualsEntitlement() internal view {
-        uint LQTYBalance = growthToken.balanceOf(address(this));
+        uint LQTYBalance = lqtyToken.balanceOf(address(this));
         require(LQTYBalance >= initialEntitlement, "CDLC: LQTY balance of this CDLC must cover the initial entitlement");
     }
 }

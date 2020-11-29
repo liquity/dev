@@ -12,7 +12,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   let functionCaller
   let borrowerOperations
   let lqtyStaking
-  let growthToken
+  let lqtyToken
   let communityIssuance
   let lockupContractFactory
 
@@ -31,7 +31,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     borrowerOperations = coreContracts.borrowerOperations
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 
@@ -257,10 +257,10 @@ contract('Deployment script - Sets correct contract addresses dependencies after
 
   // Sets LQTYToken in LQTYStaking
   it('Sets the correct LQTYToken address in LQTYStaking', async () => {
-    const growthTokenAddress = growthToken.address
+    const lqtyTokenAddress = lqtyToken.address
 
-    const recordedLQTYTokenAddress = await lqtyStaking.growthToken()
-    assert.equal(growthTokenAddress, recordedLQTYTokenAddress)
+    const recordedLQTYTokenAddress = await lqtyStaking.lqtyToken()
+    assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
   })
 
   // Sets ActivePool in LQTYStaking
@@ -301,7 +301,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct CommunityIssuance address in LQTYToken', async () => {
     const communityIssuanceAddress = communityIssuance.address
 
-    const recordedcommunityIssuanceAddress = await growthToken.communityIssuanceAddress()
+    const recordedcommunityIssuanceAddress = await lqtyToken.communityIssuanceAddress()
     assert.equal(communityIssuanceAddress, recordedcommunityIssuanceAddress)
   })
 
@@ -309,7 +309,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct LQTYStaking address in LQTYToken', async () => {
     const lqtyStakingAddress = lqtyStaking.address
 
-    const recordedLQTYStakingAddress =  await growthToken.lqtyStakingAddress()
+    const recordedLQTYStakingAddress =  await lqtyToken.lqtyStakingAddress()
     assert.equal(lqtyStakingAddress, recordedLQTYStakingAddress)
   })
 
@@ -317,7 +317,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct LockupContractFactory address in LQTYToken', async () => {
     const LCFAddress = lockupContractFactory.address
 
-    const recordedLCFAddress =  await growthToken.lockupContractFactory()
+    const recordedLCFAddress =  await lqtyToken.lockupContractFactory()
     assert.equal(LCFAddress, recordedLCFAddress)
   })
 
@@ -325,20 +325,20 @@ contract('Deployment script - Sets correct contract addresses dependencies after
 
   // Sets LQTYToken in LockupContractFactory
   it('Sets the correct LQTYToken address in LockupContractFactory', async () => {
-    const growthTokenAddress = growthToken.address
+    const lqtyTokenAddress = lqtyToken.address
 
-    const recordedLQTYTokenAddress = await lockupContractFactory.growthToken()
-    assert.equal(growthTokenAddress, recordedLQTYTokenAddress)
+    const recordedLQTYTokenAddress = await lockupContractFactory.lqtyToken()
+    assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
   })
 
   // --- CI ---
 
   // Sets LQTYToken in CommunityIssuance
   it('Sets the correct LQTYToken address in CommunityIssuance', async () => {
-    const growthTokenAddress = growthToken.address
+    const lqtyTokenAddress = lqtyToken.address
 
-    const recordedLQTYTokenAddress = await communityIssuance.growthToken()
-    assert.equal(growthTokenAddress, recordedLQTYTokenAddress)
+    const recordedLQTYTokenAddress = await communityIssuance.lqtyToken()
+    assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
   })
 
   it('Sets the correct StabilityPool address in CommunityIssuance', async () => {

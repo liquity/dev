@@ -15,7 +15,7 @@ contract OneYearLockupContract {
     address public deployer;
     address public beneficiary;
 
-    ILQTYToken public growthToken;
+    ILQTYToken public lqtyToken;
 
     uint public initialEntitlement;
 
@@ -34,7 +34,7 @@ contract OneYearLockupContract {
 
     constructor 
     (
-        address _growthTokenAddress, 
+        address _lqtyTokenAddress, 
         address _beneficiary, 
         uint _initialEntitlement
     )
@@ -42,7 +42,7 @@ contract OneYearLockupContract {
     {
         deployer = msg.sender;
 
-        growthToken = ILQTYToken(_growthTokenAddress);
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
 
         beneficiary =  _beneficiary;
         initialEntitlement = _initialEntitlement;
@@ -66,8 +66,8 @@ contract OneYearLockupContract {
         
         active = false;
 
-        uint LQTYBalance = growthToken.balanceOf(address(this));
-        growthToken.transfer(beneficiary, LQTYBalance);
+        uint LQTYBalance = lqtyToken.balanceOf(address(this));
+        lqtyToken.transfer(beneficiary, LQTYBalance);
         emit OYLCUnlockedAndEmptied(block.timestamp);
     }
 
@@ -94,7 +94,7 @@ contract OneYearLockupContract {
     }
 
     function _requireLQTYBalanceAtLeastEqualsEntitlement() internal view {
-        uint LQTYBalance = growthToken.balanceOf(address(this));
+        uint LQTYBalance = lqtyToken.balanceOf(address(this));
         require(LQTYBalance >= initialEntitlement, "OYLC: LQTY balance of this OYLC must cover the initial entitlement");
     }
 }

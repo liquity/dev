@@ -66,7 +66,7 @@ contract('BorrowerOperations', async accounts => {
     hintHelpers = contracts.hintHelpers
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 
@@ -825,7 +825,7 @@ contract('BorrowerOperations', async accounts => {
   it("withdrawCLV(): borrowing at non-zero base rate sends CLV fee to LQTY staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -863,7 +863,7 @@ contract('BorrowerOperations', async accounts => {
   it("withdrawCLV(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -910,7 +910,7 @@ contract('BorrowerOperations', async accounts => {
   it("withdrawCLV(): Borrowing at non-zero base rate increases the LQTY staking contract CLV fees-per-unit-staked", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -948,7 +948,7 @@ contract('BorrowerOperations', async accounts => {
   it("withdrawCLV(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -1535,7 +1535,7 @@ contract('BorrowerOperations', async accounts => {
   it("adjustLoan(): borrowing at non-zero base rate sends CLV fee to LQTY staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -1573,7 +1573,7 @@ contract('BorrowerOperations', async accounts => {
   it("adjustLoan(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -1615,7 +1615,7 @@ contract('BorrowerOperations', async accounts => {
   it("adjustLoan(): Borrowing at non-zero base rate increases the LQTY staking contract CLV fees-per-unit-staked", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -1653,7 +1653,7 @@ contract('BorrowerOperations', async accounts => {
   it("adjustLoan(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -2736,7 +2736,7 @@ contract('BorrowerOperations', async accounts => {
   it("openLoan(): borrowing at non-zero base rate sends CLV fee to LQTY staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -2773,7 +2773,7 @@ contract('BorrowerOperations', async accounts => {
   it("openLoan(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -2814,7 +2814,7 @@ contract('BorrowerOperations', async accounts => {
   it("openLoan(): Borrowing at non-zero base rate increases the LQTY staking contract CLV fees-per-unit-staked", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })
@@ -2851,7 +2851,7 @@ contract('BorrowerOperations', async accounts => {
   it("openLoan(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await growthToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
     await borrowerOperations.openLoan('0', A, { from: whale, value: dec(100, 'ether') })

@@ -38,7 +38,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
     Set to 1/3 of total LQTY supply.*/
     uint constant public LQTYSupplyCap = 33333333333333333333333333; // (1/3) * 100 million
 
-    ILQTYToken public growthToken;
+    ILQTYToken public lqtyToken;
 
     address public stabilityPoolAddress;
 
@@ -47,7 +47,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
 
     // --- Events ---
 
-    event LQTYTokenAddressSet(address _growthTokenAddress);
+    event LQTYTokenAddressSet(address _lqtyTokenAddress);
     event StabilityPoolAddressSet(address _stabilityPoolAddress);
 
     // --- Functions ---
@@ -62,21 +62,21 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
 
     function setAddresses
     (
-        address _growthTokenAddress, 
+        address _lqtyTokenAddress, 
         address _stabilityPoolAddress
     ) 
         external 
         onlyOwner 
         override 
     {
-        growthToken = ILQTYToken(_growthTokenAddress);
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
 
         // When LQTYToken deployed, it should have transferred CommunityIssuance's LQTY entitlement
-        uint LQTYBalance = growthToken.balanceOf(address(this));
+        uint LQTYBalance = lqtyToken.balanceOf(address(this));
         assert(LQTYBalance >= LQTYSupplyCap);
 
-        emit LQTYTokenAddressSet(_growthTokenAddress);
+        emit LQTYTokenAddressSet(_lqtyTokenAddress);
         emit StabilityPoolAddressSet(_stabilityPoolAddress);
 
         _renounceOwnership();
@@ -113,7 +113,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
     function sendLQTY(address _account, uint _LQTYamount) external override {
         _requireCallerIsStabilityPool();
 
-        growthToken.transfer(_account, _LQTYamount);
+        lqtyToken.transfer(_account, _LQTYamount);
     }
 
     // --- 'require' functions ---

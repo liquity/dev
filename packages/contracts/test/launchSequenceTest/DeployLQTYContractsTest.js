@@ -25,7 +25,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 
@@ -68,26 +68,26 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
 
   describe('LQTYToken deployment', async accounts => {
     it("Stores the deployer's address", async () => {
-      const storedDeployerAddress = await growthToken.deployer()
+      const storedDeployerAddress = await lqtyToken.deployer()
 
       assert.equal(liquityAG, storedDeployerAddress)
     })
 
     it("Stores the CommunityIssuance address", async () => {
-      const storedCIAddress = await growthToken.communityIssuanceAddress()
+      const storedCIAddress = await lqtyToken.communityIssuanceAddress()
 
       assert.equal(communityIssuance.address, storedCIAddress)
 
     })
 
     it("Stores the LockupContractFactory address", async () => {
-      const storedLCFAddress = await growthToken.lockupContractFactory()
+      const storedLCFAddress = await lqtyToken.lockupContractFactory()
 
       assert.equal(lockupContractFactory.address, storedLCFAddress)
     })
 
     it("Mints the correct LQTY amount to the deployer's address: (2/3 * 100million)", async () => {
-      const deployerLQTYEntitlement = await growthToken.balanceOf(liquityAG)
+      const deployerLQTYEntitlement = await lqtyToken.balanceOf(liquityAG)
 
       // (2/3 * 100million ), as a uint representation of 18-digit decimal
       const _twentySix_Sixes = "6".repeat(26)
@@ -96,7 +96,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
     })
 
     it("Mints the correct LQTY amount to the CommunityIssuance contract address: (1/3 * 100million)", async () => {
-      const communityLQTYEntitlement = await growthToken.balanceOf(communityIssuance.address)
+      const communityLQTYEntitlement = await lqtyToken.balanceOf(communityIssuance.address)
 
       // (1/3 * 100million ), as a uint representation of 18-digit decimal
       const _twentySix_Threes = "3".repeat(26)
@@ -120,14 +120,14 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
     })
 
     it("Liquity AG can set addresses if CI's LQTY balance is equal or greater than (1/3) * 100 million ", async () => {
-      const LQTYBalance = await growthToken.balanceOf(communityIssuance.address)
+      const LQTYBalance = await lqtyToken.balanceOf(communityIssuance.address)
       assert.isTrue(LQTYBalance.eq(expectedCISupplyCap))
 
       // Deploy core contracts, just to get the Stability Pool address
       const coreContracts = await deploymentHelper.deployLiquityCore()
 
       const tx = await communityIssuance.setAddresses(
-        growthToken.address,
+        lqtyToken.address,
         coreContracts.stabilityPool.address,
         { from: liquityAG }
       );
@@ -137,18 +137,18 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
     it("Liquity AG can't set addresses if CI's LQTY balance is < (1/3) * 100 million ", async () => {
       const newCI = await CommunityIssuance.new()
 
-      const LQTYBalance = await growthToken.balanceOf(newCI.address)
+      const LQTYBalance = await lqtyToken.balanceOf(newCI.address)
       assert.equal(LQTYBalance, '0')
 
       // Deploy core contracts, just to get the Stability Pool address
       const coreContracts = await deploymentHelper.deployLiquityCore()
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await growthToken.transfer(newCI.address, '33333333333333333333333332') // 1e-18 less than the CI expects
+      await lqtyToken.transfer(newCI.address, '33333333333333333333333332') // 1e-18 less than the CI expects
 
       try {
         const tx = await newCI.setAddresses(
-          growthToken.address,
+          lqtyToken.address,
           coreContracts.stabilityPool.address,
           { from: liquityAG }
         );
@@ -167,17 +167,17 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
       const coreContracts = await deploymentHelper.deployLiquityCore()
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
-      const growthTokenAddress = growthToken.address
+      const lqtyTokenAddress = lqtyToken.address
 
-      const recordedLQTYTokenAddress = await lqtyStaking.growthToken()
-      assert.equal(growthTokenAddress, recordedLQTYTokenAddress)
+      const recordedLQTYTokenAddress = await lqtyStaking.lqtyToken()
+      assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
     })
 
     it('sets the correct LQTYToken address in LockupContractFactory', async () => {
-      const growthTokenAddress = growthToken.address
+      const lqtyTokenAddress = lqtyToken.address
 
-      const recordedLQTYTokenAddress = await lockupContractFactory.growthToken()
-      assert.equal(growthTokenAddress, recordedLQTYTokenAddress)
+      const recordedLQTYTokenAddress = await lockupContractFactory.lqtyToken()
+      assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
     })
 
     it('sets the correct LQTYToken address in CommunityIssuance', async () => {
@@ -185,10 +185,10 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
       const coreContracts = await deploymentHelper.deployLiquityCore()
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
-      const growthTokenAddress = growthToken.address
+      const lqtyTokenAddress = lqtyToken.address
 
-      const recordedLQTYTokenAddress = await communityIssuance.growthToken()
-      assert.equal(growthTokenAddress, recordedLQTYTokenAddress)
+      const recordedLQTYTokenAddress = await communityIssuance.lqtyToken()
+      assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
     })
   })
 })
