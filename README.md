@@ -351,32 +351,37 @@ Likewise, a StabilityPool depositor who has earned some ETH gain from their depo
 
 **Borrower Operations**
 
-**TODO: To be reviewed and updated according to https://github.com/liquity/dev/issues/60**
-
-| Function                    | ETH quantity       | Path                                    |
-| --------------------------- | ------------------ | --------------------------------------- |
-| openTrove                   | msg.value          | msg.sender -> PoolManager -> ActivePool |
-| addColl                     | msg.value          | msg.sender -> PoolManager -> ActivePool |
-| withdrawColl                | \_amount parameter | ActivePool -> msg.sender                |
-| adjustTrove: adding ETH     | msg.value          | msg.sender -> PoolManager -> ActivePool |
-| adjustTrove: withdrawing ETH| \_amount parameter | ActivePool -> msg.sender                |
-| closeTrove                  | \_amount parameter | ActivePool -> msg.sender                |
+| Function                    | ETH quantity                        | Path                                       |
+|-----------------------------|-------------------------------------|--------------------------------------------|
+| openLoan                    | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
+| addColl                     | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
+| withdrawColl                | _collWithdrawal parameter           | ActivePool->msg.sender                     |
+| adjustLoan: adding ETH      | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
+| adjustLoan: withdrawing ETH | _collWithdrawal parameter           | ActivePool->msg.sender                     |
+| closeLoan                   | _amount parameter                   | ActivePool->msg.sender                     |
+| claimRedeemedCollateral     | CollSurplusPool.balance[msg.sender] | CollSurplusPool->msg.sender                |
 
 **Trove Manager**
 
-| Function                   | ETH quantity                   | Path                        |
-| -------------------------- | ------------------------------ | --------------------------- |
-| liquidate (offset)         | collateral to be offset        | ActivePool -> StabilityPool |
-| liquidate (redistribution) | collateral to be redistributed | ActivePool -> DefaultPool   |
-| redeemCollateral           | collateral to be swapped       | ActivePool -> msg.sender    |
+| Function                              | ETH quantity                           | Path                          |
+|---------------------------------------|----------------------------------------|-------------------------------|
+| liquidate (offset)                    | collateral to be offset                | ActivePool->StabilityPool     |
+| liquidate (redistribution)            | collateral to be redistributed         | ActivePool->DefaultPool       |
+| liquidateCDPs (offset)                | collateral to be offset                | ActivePool->StabilityPool     |
+| liquidateCDPs (redistribution)        | collateral to be redistributed         | ActivePool->DefaultPool       |
+| batchLiquidateTroves (offset)         | collateral to be offset                | ActivePool->StabilityPool     |
+| batchLiquidateTroves (redistribution) | collateral to be redistributed         | ActivePool->DefaultPool       |
+| redeemCollateral                      | collateral to be swapped with redeemer | ActivePool->msg.sender        |
+| redeemCollateral                      | redemption fee                         | ActivePool->msg.sender        |
+| redeemCollateral                      | trove's collateral surplus             | ActivePool -> CollSurplusPool |
 
 **Pool Manager**
 
-| Function              | ETH quantity                 | Path                                                                         |
-| --------------------- | ---------------------------- | ---------------------------------------------------------------------------- |
-| provideToSP           | depositor's current ETH gain | StabilityPool -> msg.sender                                                  |
-| withdrawFromSP        | depositor's current ETH gain | StabilityPool -> msg.sender                                                  |
-| withdrawFromSPtoTrove | depositor's current ETH gain | StabilityPool -> PoolManager -> BorrowerOperations -> PoolManager -> ActivePool |
+| Function               | ETH quantity                     | Path                                            |
+|------------------------|----------------------------------|-------------------------------------------------|
+| provideToSP            | depositor's accumulated ETH gain | StabilityPool -> msg.sender                     |
+| withdrawFromSP         | depositor's accumulated ETH gain | StabilityPool -> msg.sender                     |
+| withdrawETHGainToTrove | depositor's accumulated ETH gain | StabilityPool ->BorrowerOperations ->ActivePool |
 
 ### Flow of ERC20 tokens in Liquity
 
