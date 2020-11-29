@@ -1,6 +1,7 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
+const NonPayable = artifacts.require('NonPayable.sol')
 
 const th = testHelpers.TestHelper
 
@@ -3718,6 +3719,21 @@ contract('BorrowerOperations', async accounts => {
   
       assert.isTrue(newTCR.eq(expectedTCR))
     })
+  })
+
+  it('closeLoan(): fails if owner cannot receive ETH', async () => {
+    const nonPayable = await NonPayable.new()
+
+    // we need 2 troves to be able to close 1 and have 1 remaining in the system
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(10, 18) })
+    // open loan from NonPayable proxy contract
+    const openLoanData = th.getTransactionData('openLoan(uint256,address)', ['0x0', '0x0'])
+    await nonPayable.forward(borrowerOperations.address, openLoanData, { value: dec(1, 'ether') })
+    assert.equal((await cdpManager.getCDPStatus(nonPayable.address)).toString(), '1', 'NonPayable proxy should have a trove')
+    assert.isFalse(await cdpManager.checkRecoveryMode(), 'System should not be in Recovery Mode')
+    // open loan from NonPayable proxy contract
+    const closeLoanData = th.getTransactionData('closeLoan()', [])
+    await th.assertRevert(nonPayable.forward(borrowerOperations.address, closeLoanData), 'ActivePool: sending ETH failed')
   })
 })
 
