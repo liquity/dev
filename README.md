@@ -89,7 +89,7 @@ Anyone may call the public `liquidateTroves()` function, which will check for un
 
 The precise behavior of liquidations depends on the ICR of the trove being liquidated and global system conditions:  the total collateral ratio (TCR) of the system, the size of the Stability Pool, etc.  
 
-Here is the liquidation logic for both Normal Mode and Recovery Mode.  `SP.LUSD` represents the LUSD in the Stability Pool.
+Here is the liquidation logic for a single trove in Normal Mode and Recovery Mode.  `SP.LUSD` represents the LUSD in the Stability Pool.
 
 #### Liquidations in Normal Mode: TCR >= 150%
 
