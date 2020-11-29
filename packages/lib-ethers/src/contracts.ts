@@ -16,7 +16,7 @@ import cdpManagerAbi from "../abi/CDPManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
-import growthTokenAbi from "../abi/LQTYToken.json";
+import lqtyTokenAbi from "../abi/LQTYToken.json";
 import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
@@ -57,7 +57,7 @@ export const abi: { [name: string]: JsonFragment[] } = {
   clvToken: clvTokenAbi,
   communityIssuance: communityIssuanceAbi,
   defaultPool: defaultPoolAbi,
-  growthToken: growthTokenAbi,
+  lqtyToken: lqtyTokenAbi,
   hintHelpers: hintHelpersAbi,
   lockupContractFactory: lockupContractFactoryAbi,
   lqtyStaking: lqtyStakingAbi,
@@ -159,7 +159,7 @@ export interface LiquityContractAddresses {
   clvToken: string;
   communityIssuance: string;
   defaultPool: string;
-  growthToken: string;
+  lqtyToken: string;
   hintHelpers: string;
   lockupContractFactory: string;
   lqtyStaking: string;
@@ -179,7 +179,7 @@ export interface LiquityContracts {
   clvToken: CLVToken;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
-  growthToken: LQTYToken;
+  lqtyToken: LQTYToken;
   hintHelpers: HintHelpers;
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
@@ -197,7 +197,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   clvToken: contracts.clvToken.address,
   communityIssuance: contracts.communityIssuance.address,
   defaultPool: contracts.defaultPool.address,
-  growthToken: contracts.growthToken.address,
+  lqtyToken: contracts.lqtyToken.address,
   hintHelpers: contracts.hintHelpers.address,
   lockupContractFactory: contracts.lockupContractFactory.address,
   lqtyStaking: contracts.lqtyStaking.address,
@@ -244,7 +244,7 @@ export const connectToContracts = (
 
   defaultPool: create<DefaultPool>(addresses.defaultPool, defaultPoolAbi, signerOrProvider),
 
-  growthToken: create<LQTYToken>(addresses.growthToken, growthTokenAbi, signerOrProvider),
+  lqtyToken: create<LQTYToken>(addresses.lqtyToken, lqtyTokenAbi, signerOrProvider),
 
   hintHelpers: create<HintHelpers>(addresses.hintHelpers, hintHelpersAbi, signerOrProvider),
 

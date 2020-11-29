@@ -78,7 +78,7 @@ const deployContracts = async (
       addresses.borrowerOperations,
     { ...overrides }),
     
-    growthToken: await deployContract(
+    lqtyToken: await deployContract(
       deployer,
       getContractFactory,
       "LQTYToken",
@@ -107,7 +107,7 @@ const connectContracts = async (
     clvToken,
     communityIssuance,
     defaultPool,
-    growthToken,
+    lqtyToken,
     hintHelpers,
     lockupContractFactory,
     lqtyStaking,
@@ -215,7 +215,7 @@ const connectContracts = async (
 
     nonce =>
       lqtyStaking.setAddresses(
-        growthToken.address,
+        lqtyToken.address,
         clvToken.address,
         cdpManager.address, 
         borrowerOperations.address,
@@ -224,14 +224,14 @@ const connectContracts = async (
       ),
 
     nonce =>
-      lockupContractFactory.setLQTYTokenAddress(growthToken.address, {
+      lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, {
         ...overrides,
         nonce
       }),
 
     nonce =>
       communityIssuance.setAddresses(
-        growthToken.address,
+        lqtyToken.address,
         stabilityPool.address,
         { ...overrides, nonce }
       )
