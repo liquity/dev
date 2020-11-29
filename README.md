@@ -153,9 +153,9 @@ Economically, the redemption mechanism creates a hard price floor for LUSD, ensu
 
 Recovery Mode kicks in when the total collateral ratio (TCR) of the system falls below 150%.
 
-During Recovery Mode, liquidation conditions are relaxed, and the system blocks issuance of new LUSD, and withdrawal of collateral. Recovery Mode is structured to incentivize borrowers to behave in ways that promptly raise the TCR back above 150%.
+During Recovery Mode, liquidation conditions are relaxed, and the system blocks and withdrawal of collateral. New LUSD may only be issued by opening a new trove with an ICR of >=300%. Recovery Mode is structured to incentivize borrowers to behave in ways that promptly raise the TCR back above 150%.
 
-Recovery Mode is designed to encourage collateral top-ups, and also itself acts as a self-negating deterrent: the possibility of it occurring actually guides the system away from ever reaching it.
+Economically, Recovery Mode is designed to encourage collateral top-ups and debt repayments, and also itself acts as a self-negating deterrent: the possibility of it occurring actually guides the system away from ever reaching it.
 
 ## Project Structure
 
