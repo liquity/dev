@@ -3,16 +3,36 @@ const testHelpers = require("../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
+const toBN = th.toBN
 
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 
+const ZERO = toBN('0')
+
+/*
+* Naive fuzz test that checks whether all SP depositors can successfully withdraw from the SP, after a random sequence
+* of deposits and liquidations.
+*
+* The test cases tackle different size ranges for liquidated collateral and SP deposits.
+*/
+
 contract("PoolManager - random liquidations/deposits, then check all depositors can withdraw", async accounts => {
+
+  const whale = accounts[accounts.length - 1]
 
   let priceFeed
   let clvToken
   let cdpManager
   let stabilityPool
+  let sortedCDPs
   let borrowerOperations
+
+  const skyrocketPriceAndCheckAllTrovesSafe = async () => {
+        // price skyrockets, therefore no undercollateralized troes
+        await priceFeed.setPrice(dec(1000, 18));
+        const lowestICR = await cdpManager.getCurrentICR(await sortedCDPs.getLast(), dec(1000, 18))
+        assert.isTrue(lowestICR.gt(toBN(dec(110, 16))))
+  }
 
   const performLiquidation = async (remainingDefaulters, liquidatedAccountsDict) => {
     if (remainingDefaulters.length === 0) { return }
@@ -25,8 +45,8 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     const price = await priceFeed.getPrice()
     const ICR = (await cdpManager.getCurrentICR(randomDefaulter, price)).toString()
-    const ICRPercent = ICR.slice(0, ICR.length-16)
-  
+    const ICRPercent = ICR.slice(0, ICR.length - 16)
+
     console.log(`SP address: ${stabilityPool.address}`)
     const CLVinPoolBefore = await stabilityPool.getTotalCLVDeposits()
     const liquidatedTx = await cdpManager.liquidate(randomDefaulter, { from: accounts[0] })
@@ -39,7 +59,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       remainingDefaulters.splice(randomDefaulterIndex, 1)
     }
     if (await cdpManager.checkRecoveryMode()) { console.log("recovery mode: TRUE") }
-  
+
     console.log(`Liquidation. addr: ${th.squeezeAddr(randomDefaulter)} ICR: ${ICRPercent}% coll: ${liquidatedETH} debt: ${liquidatedCLV} SP CLV before: ${CLVinPoolBefore} SP CLV after: ${CLVinPoolAfter} tx success: ${liquidatedTx.receipt.status}`)
   }
 
@@ -48,7 +68,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     const randomDepositor = depositorAccounts[randomIndex]
 
     const userBalance = (await clvToken.balanceOf(randomDepositor))
-    const maxCLVDeposit = userBalance.div(web3.utils.toBN('1000000000000000000'))
+    const maxCLVDeposit = userBalance.div(toBN(dec(1, 18)))
 
     const randomCLVAmount = th.randAmountInWei(1, maxCLVDeposit)
 
@@ -57,20 +77,21 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     assert.isTrue(depositTx.receipt.status)
 
     if (depositTx.receipt.status && !currentDepositorsDict[randomDepositor]) {
-        currentDepositorsDict[randomDepositor] = true
-        currentDepositors.push(randomDepositor)
-      }
-  
+      currentDepositorsDict[randomDepositor] = true
+      currentDepositors.push(randomDepositor)
+    }
+
     console.log(`SP deposit. addr: ${th.squeezeAddr(randomDepositor)} amount: ${randomCLVAmount} tx success: ${depositTx.receipt.status} `)
   }
 
-  const randomOperation = async ( depositorAccounts,
-                                  remainingDefaulters,
-                                  currentDepositors,
-                                  liquidatedAccountsDict,
-                                  currentDepositorsDict,
-                                ) => {
-                            
+  const randomOperation = async (depositorAccounts,
+    remainingDefaulters,
+    currentDepositors,
+    liquidatedAccountsDict,
+    currentDepositorsDict,
+  ) => {
+
+
     const randomSelection = Math.floor(Math.random() * 2)
 
     if (randomSelection === 0) {
@@ -81,7 +102,72 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     }
   }
 
+  const systemContainsTroveUnder110 = async (price) => {
+    const lowestICR = await cdpManager.getCurrentICR(await sortedCDPs.getLast(), price)
+    console.log(`lowestICR: ${lowestICR}, lowestICR.lt(dec(110, 16)): ${lowestICR.lt(toBN(dec(110, 16)))}`)
+    return lowestICR.lt(dec(110, 16))
+  }
+
+  const systemContainsTroveUnder100 = async (price) => {
+    const lowestICR = await cdpManager.getCurrentICR(await sortedCDPs.getLast(), price)
+    console.log(`lowestICR: ${lowestICR}, lowestICR.lt(dec(100, 16)): ${lowestICR.lt(toBN(dec(100, 16)))}`)
+    return lowestICR.lt(dec(100, 16))
+  }
+
+  const getTotalDebtFromUndercollateralizedTroves = async (n, price) => {
+    let totalDebt = ZERO
+    let trove = await sortedCDPs.getLast()
+
+    for (let i = 0; i < n; i++) {
+      const ICR = await cdpManager.getCurrentICR(trove, price)
+      const debt = ICR.lt(toBN(dec(110, 16))) ? (await cdpManager.getEntireDebtAndColl(trove))[0] : ZERO
+
+      totalDebt = totalDebt.add(debt)
+      trove = await sortedCDPs.getPrev(trove)
+    }
+
+    return totalDebt
+  }
+
+  const clearAllUndercollateralizedTroves = async (price) => {
+    /* Somewhat arbitrary way to clear under-collateralized troves: 
+    *
+    * - If system is in Recovery Mode and contains troves with ICR < 100, whale draws the lowest trove's debt amount 
+    * and sends to lowest trove owner, who then closes their trove.
+    *
+    * - If system contains troves with ICR < 110, whale simply draws and makes an SP deposit 
+    * equal to the debt of the last 50 troves, before a liquidateCDPs tx hits the last 50 troves.
+    *
+    * The intent is to avoid the system entering an endless loop where the SP is empty and debt is being forever liquidated/recycled 
+    * between active troves, and the existence of some under-collateralized troves blocks all SP depositors from withdrawing.
+    * 
+    * Since the purpose of the fuzz test is to see if SP depositors can indeed withdraw *when they should be able to*,
+    * we first need to put the system in a state with no under-collateralized troves (which are supposed to block SP withdrawals).
+    */
+    while(await systemContainsTroveUnder100(price) && await cdpManager.checkRecoveryMode()) {
+      const lowestTrove = await sortedCDPs.getLast()
+      const lastTroveDebt = (await cdpManager.getEntireDebtAndColl(trove))[0]
+      await borrowerOperations.adjustLoan(0 , lastTroveDebt, true, whale, {from: whale})
+      await clvToken.transfer(lowestTrove, lowestTroveDebt, {from: whale})
+      await borrowerOperations.closeLoan({from: lowestTrove})
+    }
+
+    while (await systemContainsTroveUnder110(price)) {
+      const debtLowest50Troves = await getTotalDebtFromUndercollateralizedTroves(50, price)
+      
+      if (debtLowest50Troves.gt(ZERO)) {
+        await borrowerOperations.adjustLoan(0 , debtLowest50Troves, true, whale, {from: whale})
+        await stabilityPool.provideToSP(debtLowest50Troves, {from: whale})
+      }
+      
+      await cdpManager.liquidateCDPs(50)
+    }
+  }
+
   const attemptWithdrawAllDeposits = async (currentDepositors) => {
+    // First, liquidate all remaining undercollateralized troves, so that SP depositors may withdraw
+    const price = await priceFeed.getPrice()
+
     console.log("\n")
     console.log("--- Attempt to withdraw all deposits ---")
     console.log(`Depositors count: ${currentDepositors.length}`)
@@ -95,7 +181,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
       // Attempt to withdraw
       const withdrawalTx = await stabilityPool.withdrawFromSP(dec(1, 36), { from: depositor })
-      
+
       const ETHinSPAfter = (await stabilityPool.getETH()).toString()
       const CLVinSPAfter = (await stabilityPool.getTotalCLVDeposits()).toString()
       const CLVBalanceSPAfter = (await clvToken.balanceOf(stabilityPool.address))
@@ -116,11 +202,11 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
                      SP CLV deposits tracker after: ${CLVinSPAfter}
                      SP CLV balance after: ${CLVBalanceSPAfter}
                      `)
-                     
 
-       // Check each deposit can be withdrawn
-       assert.isTrue(withdrawalTx.receipt.status)
-       assert.equal(depositAfter, '0')
+
+      // Check each deposit can be withdrawn
+      assert.isTrue(withdrawalTx.receipt.status)
+      assert.equal(depositAfter, '0')
     }
   }
 
@@ -140,6 +226,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       stabilityPool = contracts.stabilityPool
       cdpManager = contracts.cdpManager
       borrowerOperations = contracts.borrowerOperations
+      sortedCDPs = contracts.sortedCDPs
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -153,15 +240,14 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     // full offsets, partial offsets
     // ensure full offset with whale2 in S
     // ensure partial offset with whale 3 in L
-   
-    it.only("Defaulters' Collateral in range [1, 1e8]. SP Deposits in range [100, 1e10]. ETH:USD = 100", async () => {
+
+    it("Defaulters' Collateral in range [1, 1e8]. SP Deposits in range [100, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.openLoan(0, lastAccount, { from: lastAccount, value: dec(5, 29) })
+      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(5, 29) })
 
       const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
-      const depositorAccounts = accounts.slice(numberOfOps + 1 , numberOfOps*2)
+      const depositorAccounts = accounts.slice(numberOfOps + 1, numberOfOps * 2)
 
       const defaulterCollMin = 1
       const defaulterCollMax = 100000000
@@ -203,11 +289,13 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       // Random sequence of operations: liquidations and SP deposits
       for (i = 0; i < numberOfOps; i++) {
         await randomOperation(depositorAccounts,
-                              remainingDefaulters,
-                              currentDepositors,
-                              liquidatedAccountsDict,
-                              currentDepositorsDict)
+          remainingDefaulters,
+          currentDepositors,
+          liquidatedAccountsDict,
+          currentDepositorsDict)
       }
+
+      await skyrocketPriceAndCheckAllTrovesSafe()
 
       const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsBeforeWithdrawals = await stabilityPool.getETH()
@@ -227,14 +315,13 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       console.log(`remaining defaulters length: ${remainingDefaulters.length}`)
     })
 
-    it.only("Defaulters' Collateral in range [1, 10]. SP Deposits in range [1e8, 1e10]. ETH:USD = 100", async () => {
+    it("Defaulters' Collateral in range [1, 10]. SP Deposits in range [1e8, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.openLoan(0, lastAccount, { from: lastAccount, value: dec(5, 29) })
+      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(5, 29) })
 
       const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
-      const depositorAccounts = accounts.slice(numberOfOps + 1 , numberOfOps*2)
+      const depositorAccounts = accounts.slice(numberOfOps + 1, numberOfOps * 2)
 
       const defaulterCollMin = 1
       const defaulterCollMax = 10
@@ -274,11 +361,13 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       // Random sequence of operations: liquidations and SP deposits
       for (i = 0; i < numberOfOps; i++) {
         await randomOperation(depositorAccounts,
-                              remainingDefaulters,
-                              currentDepositors,
-                              liquidatedAccountsDict,
-                              currentDepositorsDict) 
+          remainingDefaulters,
+          currentDepositors,
+          liquidatedAccountsDict,
+          currentDepositorsDict)
       }
+
+      await skyrocketPriceAndCheckAllTrovesSafe()
 
       const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsBeforeWithdrawals = await stabilityPool.getETH()
@@ -298,14 +387,13 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       console.log(`remaining defaulters length: ${remainingDefaulters.length}`)
     })
 
-    it.only("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [100, 1000]. Every liquidation empties the Pool. ETH:USD = 100", async () => {
+    it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [100, 1000]. Every liquidation empties the Pool. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.openLoan(0, lastAccount, { from: lastAccount, value: dec(5, 29) })
+      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(5, 29) })
 
       const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
-      const depositorAccounts = accounts.slice(numberOfOps + 1 , numberOfOps*2)
+      const depositorAccounts = accounts.slice(numberOfOps + 1, numberOfOps * 2)
 
       const defaulterCollMin = 1000000
       const defaulterCollMax = 100000000
@@ -345,11 +433,13 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       // Random sequence of operations: liquidations and SP deposits
       for (i = 0; i < numberOfOps; i++) {
         await randomOperation(depositorAccounts,
-                              remainingDefaulters,
-                              currentDepositors,
-                              liquidatedAccountsDict,
-                              currentDepositorsDict)
+          remainingDefaulters,
+          currentDepositors,
+          liquidatedAccountsDict,
+          currentDepositorsDict)
       }
+
+      await skyrocketPriceAndCheckAllTrovesSafe()
 
       const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsBeforeWithdrawals = await stabilityPool.getETH()
@@ -369,15 +459,14 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       console.log(`remaining defaulters length: ${remainingDefaulters.length}`)
     })
 
-    it.only("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [1e8 1e10]. ETH:USD = 100", async () => {
+    it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [1e8 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      const lastAccount = accounts[accounts.length - 1]
-      await borrowerOperations.openLoan(0, lastAccount, { from: lastAccount, value: dec(5, 29) })
+      await borrowerOperations.openLoan(0, whale, { from: whale, value: dec(5, 29) })
 
       // price drops, all L liquidateable
       const numberOfOps = 100
       const defaulterAccounts = accounts.slice(1, numberOfOps)
-      const depositorAccounts = accounts.slice(numberOfOps + 1 , numberOfOps*2)
+      const depositorAccounts = accounts.slice(numberOfOps + 1, numberOfOps * 2)
 
       const defaulterCollMin = 1000000
       const defaulterCollMax = 100000000
@@ -417,11 +506,13 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       // Random sequence of operations: liquidations and SP deposits
       for (i = 0; i < numberOfOps; i++) {
         await randomOperation(depositorAccounts,
-                              remainingDefaulters,
-                              currentDepositors,
-                              liquidatedAccountsDict,
-                              currentDepositorsDict)
+          remainingDefaulters,
+          currentDepositors,
+          liquidatedAccountsDict,
+          currentDepositorsDict)
       }
+
+      await skyrocketPriceAndCheckAllTrovesSafe()
 
       const totalCLVDepositsBeforeWithdrawals = await stabilityPool.getTotalCLVDeposits()
       const totalETHRewardsBeforeWithdrawals = await stabilityPool.getETH()

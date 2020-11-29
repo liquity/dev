@@ -31,7 +31,7 @@ import "./Dependencies/console.sol";
  * of the total LUSD in the Stability Pool, depletes 40% of each deposit.
  *
  * A deposit that has experienced a series of liquidations is termed a "compounded deposit": each liquidation depletes the deposit,
- * multiplying it by some factor in range [0,1[
+ * multiplying it by some factor in range ]0,1[
  *
  *
  * --- IMPLEMENTATION ---
@@ -49,7 +49,7 @@ import "./Dependencies/console.sol";
  * https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf
  *
  * For a given deposit d_t, the ratio P/P_t tells us the factor by which a deposit has decreased since it joined the Stability Pool, 
- * and the term (S - S_t)/P_t gives us the deposit's total accumulated ETH gain.
+ * and the term d_t * (S - S_t)/P_t gives us the deposit's total accumulated ETH gain.
  *
  * Each liquidation updates the product P and sum S. After a series of liquidations, a compounded deposit and corresponding ETH gain 
  * can be calculated using the initial deposit, the depositor’s snapshots of P and S, and the latest values of P and S.
@@ -61,7 +61,7 @@ import "./Dependencies/console.sol";
  *
  * --- SCALE FACTOR ---
  *
- * Since P is a product in range [0,1] that is always-decreasing, it should never reach 0 when multiplied by a number in range ]0,1[. 
+ * Since P is a running product in range ]0,1] that is always-decreasing, it should never reach 0 when multiplied by a number in range ]0,1[. 
  * Unfortunately, Solidity floor division always reaches 0, sooner or later.
  *
  * A series of liquidations that nearly empty the Pool (and thus each multiply P by a very small number in range ]0,1[ ) may push P 
@@ -860,7 +860,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         uint price = priceFeed.getPrice();
         address lowestTrove = sortedCDPs.getLast();
         uint ICR = cdpManager.getCurrentICR(lowestTrove, price);
-        require(ICR >= MCR, "StabilityPool: Cannot withdraw while pending liquidations");
+        require(ICR >= MCR, "StabilityPool: Cannot withdraw while there are troves with ICR < MCR");
     }
 
     function _requireUserHasDeposit(uint _initialDeposit) internal pure {
