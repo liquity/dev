@@ -982,6 +982,15 @@ class TestHelper {
     await web3.eth.sendTransaction({ to: destructible.address, from, value })
     await destructible.destruct(receiver)
   }
+
+  static hexToParam(hexValue) {
+    return ('0'.repeat(64) + hexValue.slice(2)).slice(-64)
+  }
+
+  static getTransactionData(signatureString, params) {
+    return web3.utils.sha3(signatureString).slice(0,10) +
+      params.reduce((acc, p) => acc + this.hexToParam(p), '')
+  }
 }
 
 TestHelper.ZERO_ADDRESS = '0x' + '0'.repeat(40)
