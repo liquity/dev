@@ -480,8 +480,6 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Borrower (Trove) Operations - _BorrowerOperations.sol_
 
-**TODO: To be reviewed and updated according to https://github.com/liquity/dev/issues/60**
-
 `openTrove(uint _LUSDAmount)`: payable function that creates a trove for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional mainly on the resulting collateral ratio which must exceed the minimum (110% in Normal Mode). In addition to the requested debt, extra debt is issued to pay the issuance fee, and cover the gas compensation.
 
 `addColl(address _hint)`: payable function that adds the received Ether to the caller's active trove.
@@ -526,33 +524,31 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `checkRecoveryMode()`: reveals whether or not the system is in Recovery Mode (i.e. whether the Total Collateral Ratio (TCR) is below the Critical Collateral Ratio (CCR)).
 
-### Price Feed Functions - _PriceFeed.sol_
-
-**TODO: add function descriptions here once finalized**
-
 ### Hint Helper Functions - _HintHelpers.sol_
 
-`getApproxHint(uint _CR, uint _numTrials)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a trove to the sorted list.
+`getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a trove to the sorted list.
 
 `getRedemptionHints(uint _LUSDamount, uint _price)`: helper function specifically for redemptions. Returns two hints - the first is positional, the second ensures transaction success (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)).
 
 ### Stability Pool Functions - _PoolManager.sol_
 
-`provideToSP(uint _amount)`: allows stablecoin holders to deposit `_amount` of LUSD to the Stability Pool. If they already have tokens in the pool, it sends all accumulated ETH gains to their address. It tops up their LUSD deposit by `_amount`, and reduces their LUSD balance by `_amount`. This function automatically withdraws the user's entire accumulated ETH gain from the Stability Pool to their address.
+`provideToSP(uint _amount, address _frontEndTag)`: allows stablecoin holders to deposit _amount of LUSD to the Stability Pool. It sends `_amount` of LUSD from their address to the Pool, and tops up their LUSD deposit by `_amount` and their tagged front end’s stake by `_amount`. If the depositor already a non-zero deposit, it sends their accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end.
 
-`withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of LUSD from the Stability Pool, up to the value of their remaining Stability deposit. Sends all their accumulated ETH gains to their address, and increases their LUSD balance by `_amount`. If the user makes a partial withdrawal, their deposit remainder will earn further rewards.
+`withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of LUSD from the Stability Pool, up to the value of their remaining Stability deposit. It decreases their LUSD balance by _amount and decreases their front end’s stake by `_amount`. It sends the depositor’s accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end. If the user makes a partial withdrawal, their deposit remainder will earn further gains.
 
-`withdrawFromSPtoTrove(address _user, address _hint)`: sends the user's entire accumulated ETH gain to the user's active trove, and updates their Stability deposit with its accumulated loss from debt absorptions. If called by an externally owned account, the argument \_user must be the calling account.
+`withdrawETHGainToTrove(address _hint)`: sends the user's entire accumulated ETH gain to the user's active trove, and updates their Stability deposit with its accumulated loss from debt absorptions. Sends the depositor's LQTY gain to the depositor, and sends the tagged front end's LQTY gain to the front end.
 
-`getTCR()`: returns the Total Collateral Ratio (TCR) of the system, based on the entire (active and defaulted) debt, and the entire (active and defaulted) collateral
+`registerFrontEnd(uint _kickbackRate)`: Registers an address as a front end and sets their chosen kickback rate in range `[0,1]`.
 
-`getCurrentETHGain(address _user)`: returns the accumulated ETH gain for a given Stability Pool depositor
+`getDepositorETHGain(address _depositor)`: returns the accumulated ETH gain for a given Stability Pool depositor
 
-`getCompoundedLUSDDeposit(address _user)`: returns the remaining deposit amount for a given Stability Pool depositor
+`getDepositorLQTYGain(address _depositor)`: returns the accumulated LQTY gain for a given Stability Pool depositor
 
-### Individual Pool Functions - _StabilityPool.sol_, _ActivePool.sol_, _DefaultPool.sol_
+`getFrontEndLQTYGain(address _frontEnd)`: returns the accumulated LQTY gain for a given front end
 
-`getRawEtherBalance()`: returns the actual raw Ether balance of the contract. Distinct from the ETH ([public variable](#public-data)), which returns the total recorded ETH deposits.
+`getCompoundedLUSDDeposit(address _depositor)`: returns the remaining deposit amount for a given Stability Pool depositor
+
+`getCompoundedFrontEndStake(address _frontEnd)`: returns the remaining front end stake for a given front end
 
 ## Supplying Hints to trove operations
 
