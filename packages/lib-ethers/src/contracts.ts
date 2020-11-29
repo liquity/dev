@@ -16,7 +16,7 @@ import cdpManagerAbi from "../abi/CDPManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
-import growthTokenAbi from "../abi/GrowthToken.json";
+import growthTokenAbi from "../abi/LQTYToken.json";
 import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
@@ -39,7 +39,7 @@ import {
   CLVToken,
   CommunityIssuance,
   DefaultPool,
-  GrowthToken,
+  LQTYToken,
   HintHelpers,
   LockupContractFactory,
   LQTYStaking,
@@ -179,7 +179,7 @@ export interface LiquityContracts {
   clvToken: CLVToken;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
-  growthToken: GrowthToken;
+  growthToken: LQTYToken;
   hintHelpers: HintHelpers;
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
@@ -244,7 +244,7 @@ export const connectToContracts = (
 
   defaultPool: create<DefaultPool>(addresses.defaultPool, defaultPoolAbi, signerOrProvider),
 
-  growthToken: create<GrowthToken>(addresses.growthToken, growthTokenAbi, signerOrProvider),
+  growthToken: create<LQTYToken>(addresses.growthToken, growthTokenAbi, signerOrProvider),
 
   hintHelpers: create<HintHelpers>(addresses.hintHelpers, hintHelpersAbi, signerOrProvider),
 

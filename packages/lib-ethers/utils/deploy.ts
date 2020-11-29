@@ -81,7 +81,7 @@ const deployContracts = async (
     growthToken: await deployContract(
       deployer,
       getContractFactory,
-      "GrowthToken",
+      "LQTYToken",
       addresses.communityIssuance,
       addresses.lqtyStaking,
       addresses.lockupContractFactory,
@@ -224,7 +224,7 @@ const connectContracts = async (
       ),
 
     nonce =>
-      lockupContractFactory.setGrowthTokenAddress(growthToken.address, {
+      lockupContractFactory.setLQTYTokenAddress(growthToken.address, {
         ...overrides,
         nonce
       }),
