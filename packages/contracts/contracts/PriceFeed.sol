@@ -15,7 +15,7 @@ import "./Dependencies/console.sol";
 * Placeholder PriceFeed for development and testing.
 *
 * Will eventually be replaced by a contract that fetches the current price from the Chainlink ETH:USD aggregator
-* reference contract.
+* reference contract, and does not save price in a state variable.
 *
 */
 contract PriceFeed is Ownable, IPriceFeed {
@@ -61,13 +61,5 @@ contract PriceFeed is Ownable, IPriceFeed {
         price = _price;
         emit PriceUpdated(price);
         return true;
-    }
-
-    // --- 'require' functions ---
-
-    function _requireCallerIsCDPManager() internal view {
-        require(msg.sender == cdpManagerAddress,
-            "PriceFeed: Caller is not CDPManager"
-        );
     }
 }
