@@ -20,7 +20,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     const coreContracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = coreContracts.priceFeed
+    priceFeed = coreContracts.priceFeedTestnet
     lusdToken = coreContracts.lusdToken
     sortedTroves = coreContracts.sortedTroves
     troveManager = coreContracts.troveManager

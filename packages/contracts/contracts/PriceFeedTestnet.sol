@@ -42,8 +42,7 @@ contract PriceFeedTestnet is Ownable, IPriceFeedTestnet {
     function getPrice() external view override returns (uint256) {
         if (priceAggregatorAddress != address(0)) {
             (uint scaled, uint8 dec) = getLatestPrice();
-            scaled = scaled.mul(10000000000);
-            require(scaled % 10 == DIGITS, "Bad price precision");
+            scaled = scaled.mul(1e10);
             return scaled;
         }
         return _price;

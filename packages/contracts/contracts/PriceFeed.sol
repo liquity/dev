@@ -61,8 +61,7 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     function getPrice() external view override returns (uint256) {
         (uint scaled, uint8 dec) = getLatestPrice();
-        scaled = scaled.mul(10000000000);
-        require(scaled % 10 == DIGITS, "Bad price precision");
+        scaled = scaled.mul(1e10);
         return scaled;
     }
 }
