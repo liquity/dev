@@ -292,7 +292,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // Year 1 passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-      assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(600, 18))
+      assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(600, 18))
 
       // Price Drops, defaulter1 liquidated. Stability Pool size drops by 50%
       await priceFeed.setPrice(dec(100, 18))
@@ -301,7 +301,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
       // Confirm SP dropped from 600 to 300
-      assert.isAtMost(getDifference(await stabilityPool.getTotalCLVDeposits(), dec(300, 18)), 1000)
+      assert.isAtMost(getDifference(await stabilityPool.getTotalLUSDDeposits(), dec(300, 18)), 1000)
 
       // Expected gains for each depositor after 1 year (50% total issued)
       const A_expectedLQTYGain_Y1 = communityLQTYSupply
@@ -406,15 +406,15 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const allDepositors = [A, B, C, D, E, F, G, H]
-      // 4 Defaulters open trove with 200CLV debt, and 200% ICR
+      // 4 Defaulters open trove with 200LUSD debt, and 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(190, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openTrove(0, defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(190, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_2, { from: defaulter_2 })
       await borrowerOperations.openTrove(0, defaulter_3, { from: defaulter_3, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(190, 18), defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_3, { from: defaulter_3 })
       await borrowerOperations.openTrove(0, defaulter_4, { from: defaulter_4, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(190, 18), defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -424,7 +424,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
         assert.equal(await lqtyToken.balanceOf(depositor), '0')
       }
 
-      // A, B each deposit 100 CLV
+      // A, B each deposit 100 LUSD
       const depositors_1 = [A, B]
       for (account of depositors_1) {
         await borrowerOperations.openTrove(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
@@ -434,10 +434,10 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // Defaulter 1 liquidated. 200 CLV fully offset with pool.
+      // Defaulter 1 liquidated. 200 LUSD fully offset with pool.
       await troveManager.liquidate(defaulter_1, { from: owner });
 
-      // C, D each deposit 100 CLV
+      // C, D each deposit 100 LUSD
       const depositors_2 = [C, D]
       for (account of depositors_2) {
         await borrowerOperations.openTrove(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
@@ -447,10 +447,10 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // Defaulter 2 liquidated. 100 CLV offset
+      // Defaulter 2 liquidated. 100 LUSD offset
       await troveManager.liquidate(defaulter_2, { from: owner });
 
-      // Erin, Flyn each deposit 100 CLV
+      // Erin, Flyn each deposit 100 LUSD
       const depositors_3 = [E, F]
       for (account of depositors_3) {
         await borrowerOperations.openTrove(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
@@ -460,10 +460,10 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // Defaulter 3 liquidated. 100 CLV offset
+      // Defaulter 3 liquidated. 100 LUSD offset
       await troveManager.liquidate(defaulter_3, { from: owner });
 
-      // Graham, Harriet each deposit 100 CLV
+      // Graham, Harriet each deposit 100 LUSD
       const depositors_4 = [G, H]
       for (account of depositors_4) {
         await borrowerOperations.openTrove(dec(100, 18), account, { from: account, value: dec(100, 'ether') })
@@ -473,7 +473,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // Defaulter 4 liquidated. 100 CLV offset
+      // Defaulter 4 liquidated. 100 LUSD offset
       await troveManager.liquidate(defaulter_4, { from: owner });
 
       // All depositors withdraw from SP
@@ -613,22 +613,22 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
     /* Serial scale changes
 
-    A make deposit 100 CLV
-    1 month passes. L1 brings P to (~1e-10)*P. L1:  99.999999999000000000 CLV, 1 ETH
+    A make deposit 100 LUSD
+    1 month passes. L1 brings P to (~1e-10)*P. L1:  99.999999999000000000 LUSD, 1 ETH
     B makes deposit 100
-    1 month passes. L2 decreases P by(~1e-10)P. L2:  99.999999999000000000 CLV, 1 ETH
+    1 month passes. L2 decreases P by(~1e-10)P. L2:  99.999999999000000000 LUSD, 1 ETH
     C makes deposit 100
-    1 month passes. L3 decreases P by(~1e-10)P. L3:  99.999999999000000000 CLV, 1 ETH
+    1 month passes. L3 decreases P by(~1e-10)P. L3:  99.999999999000000000 LUSD, 1 ETH
     D makes deposit 100
-    1 month passes. L4 decreases P by(~1e-10)P. L4:  99.999999999000000000 CLV, 1 ETH
+    1 month passes. L4 decreases P by(~1e-10)P. L4:  99.999999999000000000 LUSD, 1 ETH
     E makes deposit 100
-    1 month passes. L5 decreases P by(~1e-10)P. L5:  99.999999999000000000 CLV, 1 ETH
+    1 month passes. L5 decreases P by(~1e-10)P. L5:  99.999999999000000000 LUSD, 1 ETH
     =========
     F makes deposit 100
-    1 month passes. L6 empties the Pool. L6:  100 CLV, 1 ETH
+    1 month passes. L6 empties the Pool. L6:  100 LUSD, 1 ETH
 
     expect A, B, C, D each withdraw ~1 month's worth of LQTY */
-    it("withdrawFromSP(): Several deposits of 100 CLV span one scale factor change. Depositors withdraw correct LQTY gains", async () => {
+    it("withdrawFromSP(): Several deposits of 100 LUSD span one scale factor change. Depositors withdraw correct LQTY gains", async () => {
       // Whale opens CDP with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
@@ -637,12 +637,12 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       for (const defaulter of fiveDefaulters) {
         // Defaulters 1-6 each withdraw to 99.999999999 debt (including gas comp)
         await borrowerOperations.openTrove(0, defaulter, { from: defaulter, value: dec(1, 'ether') })
-        await borrowerOperations.withdrawCLV('89999999999000000000', defaulter, { from: defaulter })
+        await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter, { from: defaulter })
       }
 
       // Defaulter 6 withdraws to 100 debt (inc. gas comp)
       await borrowerOperations.openTrove(0, defaulter_6, { from: defaulter_6, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawCLV(dec(90, 18), defaulter_6, { from: defaulter_6 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_6, { from: defaulter_6 })
 
       // Confirm all depositors have 0 LQTY
       for (const depositor of [A, B, C, D, E, F]) {
@@ -972,13 +972,13 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // Month 1 passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(1000, 18))
+      assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(1000, 18))
 
       // LIQUIDATION 1
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedCDPs.contains(defaulter_1))
 
-      assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(500, 18))
+      assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(500, 18))
 
       // --- CHECK GAINS AFTER L1 ---
 
@@ -1027,7 +1027,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // E deposits 300 via F1
       await stabilityPool.provideToSP(dec(300, 18), frontEnd_1, { from: E })
 
-      assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(800, 18))
+      assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(800, 18))
 
       // Month 2 passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
@@ -1036,7 +1036,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await troveManager.liquidate(defaulter_2)
       assert.isFalse(await sortedCDPs.contains(defaulter_2))
 
-      assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(600, 18))
+      assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(600, 18))
 
       const startTime = await communityIssuanceTester.deploymentTime()
       const currentTime = await th.getLatestBlockTimestamp(web3)
@@ -1103,7 +1103,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // B tops up 400 via F2
       await stabilityPool.provideToSP(dec(400, 18), frontEnd_2, { from: B })
 
-      assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(1000, 18))
+      assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(1000, 18))
 
       // Month 3 passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
@@ -1112,7 +1112,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await troveManager.liquidate(defaulter_3)
       assert.isFalse(await sortedCDPs.contains(defaulter_3))
 
-      assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(900, 18))
+      assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(900, 18))
 
       // --- CHECK GAINS AFTER L3 ---
 
@@ -1184,17 +1184,17 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const F2_LQTYBalance_After_M3 = await lqtyToken.balanceOf(frontEnd_2)
       assert.isAtMost(getDifference(F2_LQTYBalance_After_M3, F2_expectedLQTYGain_M2.add(F2_expectedLQTYGain_M1)), 1e15)
 
-      // Expect deposit C now to be 101.25 CLV
-      const C_compoundedCLVDeposit = await stabilityPool.getCompoundedCLVDeposit(C)
-      assert.isAtMost(getDifference(C_compoundedCLVDeposit, dec(10125, 16)), 1000)
+      // Expect deposit C now to be 101.25 LUSD
+      const C_compoundedLUSDDeposit = await stabilityPool.getCompoundedLUSDDeposit(C)
+      assert.isAtMost(getDifference(C_compoundedLUSDDeposit, dec(10125, 16)), 1000)
 
       // --- C withdraws ---
 
-      assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(900, 18))
+      assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(900, 18))
 
       await stabilityPool.withdrawFromSP(dec(100, 18), { from: C })
 
-      assert.equal(await stabilityPool.getTotalCLVDeposits(), dec(800, 18))
+      assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(800, 18))
 
       // Month 4 passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
@@ -1202,8 +1202,8 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // All depositors fully withdraw
       for (depositor of [A, B, C, D, E]) {
         await stabilityPool.withdrawFromSP(dec(1000, 18), { from: depositor })
-        const compoundedCLVDeposit = await stabilityPool.getCompoundedCLVDeposit(depositor)
-        assert.equal(compoundedCLVDeposit, '0')
+        const compoundedLUSDDeposit = await stabilityPool.getCompoundedLUSDDeposit(depositor)
+        assert.equal(compoundedLUSDDeposit, '0')
       }
 
       // During month 4, deposit sizes: A:33.75, B:427.5, C:1.25, D:135, E:202.5, Total: 800
@@ -1292,20 +1292,20 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
     F1 kickbackRate: 80%
 
-    A, B make deposit 50 CLV via F1
-    1 month passes. L1 brings P to (~1e-10)*P. L1:  99.999999999000000000 CLV, 1 ETH.  scale = 0
+    A, B make deposit 50 LUSD via F1
+    1 month passes. L1 brings P to (~1e-10)*P. L1:  99.999999999000000000 LUSD, 1 ETH.  scale = 0
     C makes deposit 100 via F1
-    1 month passes. L2 decreases P by(~1e-10)P. L2:  99.999999999000000000 CLV, 1 ETH  scale = 1
+    1 month passes. L2 decreases P by(~1e-10)P. L2:  99.999999999000000000 LUSD, 1 ETH  scale = 1
     D makes deposit 100 via F1
-    1 month passes. L3 decreases P by(~1e-10)P. L3:  99.999999999000000000 CLV, 1 ETH scale = 1
+    1 month passes. L3 decreases P by(~1e-10)P. L3:  99.999999999000000000 LUSD, 1 ETH scale = 1
     E makes deposit 100 via F1
-    1 month passes. L3 decreases P by(~1e-10)P. L3:  99.999999999000000000 CLV, 1 ETH scale = 2
+    1 month passes. L3 decreases P by(~1e-10)P. L3:  99.999999999000000000 LUSD, 1 ETH scale = 2
     A, B, C, D, E withdraw
 
     =========
     Expect front end withdraws ~3 month's worth of LQTY */
 
-    it("withdrawFromSP(): Several deposits of 100 CLV span one scale factor change. Depositors withdraw correct LQTY gains", async () => {
+    it("withdrawFromSP(): Several deposits of 100 LUSD span one scale factor change. Depositors withdraw correct LQTY gains", async () => {
       const kickbackRate = toBN(dec(80, 16)) // F1 kicks 80% back to depositor
       await stabilityPool.registerFrontEnd(kickbackRate, { from: frontEnd_1 })
       
@@ -1318,7 +1318,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       for (const defaulter of _4_Defaulters) {
         // Defaulters 1-3 each withdraw to 99.999999999 debt (including gas comp)
         await borrowerOperations.openTrove(0, defaulter, { from: defaulter, value: dec(1, 'ether') })
-        await borrowerOperations.withdrawCLV('89999999999000000000', defaulter, { from: defaulter })
+        await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter, { from: defaulter })
       }
 
       // Confirm all would-be depositors have 0 LQTY
@@ -1333,7 +1333,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // Check scale is 0
       assert.equal(await stabilityPool.currentScale(), '0')
 
-      // A, B provides 50 CLV to SP
+      // A, B provides 50 LUSD to SP
       await borrowerOperations.openTrove(dec(50, 18), A, { from: A, value: dec(100, 'ether') })
       await stabilityPool.provideToSP(dec(50, 18), frontEnd_1, { from: A })
       await borrowerOperations.openTrove(dec(50, 18), B, { from: B, value: dec(100, 'ether') })

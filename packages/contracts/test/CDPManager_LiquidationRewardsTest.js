@@ -106,7 +106,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl, dec(399, 16))
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
@@ -181,7 +181,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl, dec(599, 16))
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
   ////
@@ -287,7 +287,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.isAtMost(th.getDifference(entireSystemColl, '5925498128746874648'), 1000)
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(50, 18))
   })
 
@@ -499,8 +499,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     //Bob adds 1 ETH to his trove
     await borrowerOperations.addColl(bob, { from: bob, value: dec(1, 'ether') })
 
-    // Alice withdraws 100 CLV
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    // Alice withdraws 100 LUSD
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -510,17 +510,17 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
-    // Expect Bob now holds all Ether and CLVDebt in the system: 2 + 0.4975+0.4975*0.995+0.995 Ether and 110*3 CLV (10 each for gas compensation)
+    // Expect Bob now holds all Ether and LUSDDebt in the system: 2 + 0.4975+0.4975*0.995+0.995 Ether and 110*3 LUSD (10 each for gas compensation)
     const bob_Coll = ((await troveManager.CDPs(bob))[1]
       .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const bob_CLVDebt = ((await troveManager.CDPs(bob))[0]
-      .add(await troveManager.getPendingCLVDebtReward(bob)))
+    const bob_LUSDDebt = ((await troveManager.CDPs(bob))[0]
+      .add(await troveManager.getPendingLUSDDebtReward(bob)))
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, dec(39875125, 11)), 1000)
-    assert.isAtMost(th.getDifference(bob_CLVDebt, dec(330, 18)), 1000)
+    assert.isAtMost(th.getDifference(bob_LUSDDebt, dec(330, 18)), 1000)
   })
 
   it("redistribution: A,B,C Open. Liq(C). B tops up coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
@@ -555,45 +555,45 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isFalse(await sortedCDPs.contains(dennis))
 
     /* Bob rewards:
-     L1: 1/2*0.995 ETH, 55 CLV
-     L2: (2.4975/3.995)*0.995 = 0.622 ETH , 110*(2.4975/3.995)= 68.77 CLVDebt
+     L1: 1/2*0.995 ETH, 55 LUSD
+     L2: (2.4975/3.995)*0.995 = 0.622 ETH , 110*(2.4975/3.995)= 68.77 LUSDDebt
 
     coll: 3.1195 ETH
-    debt: 233.77 CLVDebt
+    debt: 233.77 LUSDDebt
 
      Alice rewards:
-    L1 1/2*0.995 ETH, 55 CLV
-    L2 (1.4975/3.995)*0.995 = 0.3730 ETH, 110*(1.4975/3.995) = 41.23 CLVDebt
+    L1 1/2*0.995 ETH, 55 LUSD
+    L2 (1.4975/3.995)*0.995 = 0.3730 ETH, 110*(1.4975/3.995) = 41.23 LUSDDebt
 
     coll: 1.8705 ETH
-    debt: 106.23 CLVDebt
+    debt: 106.23 LUSDDebt
 
     totalColl: 4.99 ETH
-    totalDebt 330 CLV (includes 10 each for gas compensation)
+    totalDebt 330 LUSD (includes 10 each for gas compensation)
     */
     const bob_Coll = ((await troveManager.CDPs(bob))[1]
       .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const bob_CLVDebt = ((await troveManager.CDPs(bob))[0]
-      .add(await troveManager.getPendingCLVDebtReward(bob)))
+    const bob_LUSDDebt = ((await troveManager.CDPs(bob))[0]
+      .add(await troveManager.getPendingLUSDDebtReward(bob)))
       .toString()
 
     const alice_Coll = ((await troveManager.CDPs(alice))[1]
       .add(await troveManager.getPendingETHReward(alice)))
       .toString()
 
-    const alice_CLVDebt = ((await troveManager.CDPs(alice))[0]
-      .add(await troveManager.getPendingCLVDebtReward(alice)))
+    const alice_LUSDDebt = ((await troveManager.CDPs(alice))[0]
+      .add(await troveManager.getPendingLUSDDebtReward(alice)))
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, '3119530663329161512'), 1000)
-    assert.isAtMost(th.getDifference(bob_CLVDebt, '233767209011264071710'), 10000)
+    assert.isAtMost(th.getDifference(bob_LUSDDebt, '233767209011264071710'), 10000)
 
     assert.isAtMost(th.getDifference(alice_Coll, '1870469336670838700'), 1000)
-    assert.isAtMost(th.getDifference(alice_CLVDebt, '106232790988735928295'), 10000)
+    assert.isAtMost(th.getDifference(alice_LUSDDebt, '106232790988735928295'), 10000)
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
@@ -681,7 +681,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const entireSystemColl_3 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_3, '3982020000000000000000')
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
@@ -773,7 +773,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const entireSystemColl_3 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_3, '3986010000000000000000')
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
@@ -799,8 +799,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     //Bob withdraws 0.5 ETH from his trove
     await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, { from: bob })
 
-    // Alice withdraws 100 CLV
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    // Alice withdraws 100 LUSD
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -810,20 +810,20 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedCDPs.contains(alice))
 
-    // Expect Bob now holds all Ether and CLVDebt in the system: 2.5 Ether and 330 CLV
+    // Expect Bob now holds all Ether and LUSDDebt in the system: 2.5 Ether and 330 LUSD
     // 1 + 0.995/2 - 0.5 + 1.4975*0.995
     const bob_Coll = ((await troveManager.CDPs(bob))[1]
       .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const bob_CLVDebt = ((await troveManager.CDPs(bob))[0]
-      .add(await troveManager.getPendingCLVDebtReward(bob)))
+    const bob_LUSDDebt = ((await troveManager.CDPs(bob))[0]
+      .add(await troveManager.getPendingLUSDDebtReward(bob)))
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, '2487512500000000000'), 1000)
-    assert.isAtMost(th.getDifference(bob_CLVDebt, dec(330, 18)), 1000)
+    assert.isAtMost(th.getDifference(bob_LUSDDebt, dec(330, 18)), 1000)
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
@@ -859,50 +859,50 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isFalse(await sortedCDPs.contains(dennis))
 
     /* Bob rewards:
-     L1: 0.4975 ETH, 55 CLV
-     L2: (0.9975/2.495)*0.995 = 0.3978 ETH , 110*(0.9975/2.495)= 43.98 CLVDebt
+     L1: 0.4975 ETH, 55 LUSD
+     L2: (0.9975/2.495)*0.995 = 0.3978 ETH , 110*(0.9975/2.495)= 43.98 LUSDDebt
 
     coll: (1 + 0.4975 - 0.5 + 0.3968) = 1.3953 ETH
-    debt: (110 + 55 + 43.98 = 208.98 CLVDebt 
+    debt: (110 + 55 + 43.98 = 208.98 LUSDDebt 
 
      Alice rewards:
-    L1 0.4975, 55 CLV
-    L2 (1.4975/2.495)*0.995 = 0.5972 ETH, 110*(1.4975/2.495) = 66.022 CLVDebt
+    L1 0.4975, 55 LUSD
+    L2 (1.4975/2.495)*0.995 = 0.5972 ETH, 110*(1.4975/2.495) = 66.022 LUSDDebt
 
     coll: (1 + 0.4975 + 0.5972) = 2.0947 ETH
-    debt: (10 + 55 + 66.022) = 121.022 CLV Debt
+    debt: (10 + 55 + 66.022) = 121.022 LUSD Debt
 
     totalColl: 3.49 ETH
-    totalDebt 340 CLV (Includes 10 in each trove for gas compensation)
+    totalDebt 340 LUSD (Includes 10 in each trove for gas compensation)
     */
     const bob_Coll = ((await troveManager.CDPs(bob))[1]
       .add(await troveManager.getPendingETHReward(bob)))
       .toString()
 
-    const bob_CLVDebt = ((await troveManager.CDPs(bob))[0]
-      .add(await troveManager.getPendingCLVDebtReward(bob)))
+    const bob_LUSDDebt = ((await troveManager.CDPs(bob))[0]
+      .add(await troveManager.getPendingLUSDDebtReward(bob)))
       .toString()
 
     const alice_Coll = ((await troveManager.CDPs(alice))[1]
       .add(await troveManager.getPendingETHReward(alice)))
       .toString()
 
-    const alice_CLVDebt = ((await troveManager.CDPs(alice))[0]
-      .add(await troveManager.getPendingCLVDebtReward(alice)))
+    const alice_LUSDDebt = ((await troveManager.CDPs(alice))[0]
+      .add(await troveManager.getPendingLUSDDebtReward(alice)))
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, '1395300601202404955'), 1000)
-    assert.isAtMost(th.getDifference(bob_CLVDebt, '208977955911823642050'), 10000)
+    assert.isAtMost(th.getDifference(bob_LUSDDebt, '208977955911823642050'), 10000)
 
     assert.isAtMost(th.getDifference(alice_Coll, '2094699398797595257'), 1000)
-    assert.isAtMost(th.getDifference(alice_CLVDebt, '131022044088176343730'), 10000)
+    assert.isAtMost(th.getDifference(alice_LUSDDebt, '131022044088176343730'), 10000)
 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl, '3490000000000000000')
-    const entireSystemDebt = (await activePool.getCLVDebt()).add(await defaultPool.getCLVDebt()).toString()
+    const entireSystemDebt = (await activePool.getLUSDDebt()).add(await defaultPool.getLUSDDebt()).toString()
     assert.equal(entireSystemDebt, '340000000000000000000')
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
@@ -990,7 +990,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const entireSystemColl_3 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_3, '3978030000000000000000')
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
@@ -1097,7 +1097,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     const entireSystemColl_3 = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl_3, '3977032500000000000000')
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
   })
 
@@ -1188,7 +1188,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(totalStakesSnapshot, '1502195536109430000'), 1000000)
     assert.isAtMost(th.getDifference(totalCollateralSnapshot, '6977512500000000000'), 1000000)
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(30, 18))
   })
 
@@ -1298,7 +1298,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     // TODO: is this acceptable rounding error
     assert.isAtMost(th.getDifference(totalCollateralSnapshot, '19323232338512800000000'), 2000000000000)
 
-    // check CLV gas compensation
+    // check LUSD gas compensation
     assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(30, 18))
   })
 })

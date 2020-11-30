@@ -60,7 +60,7 @@ interface ITroveManager {
     function checkRecoveryMode() external view returns (bool);
 
     function redeemCollateral(
-        uint _CLVAmount,
+        uint _LUSDAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
         uint _partialRedemptionHintICR,
@@ -77,14 +77,14 @@ interface ITroveManager {
 
     function getPendingETHReward(address _borrower) external view returns (uint);
 
-    function getPendingCLVDebtReward(address _borrower) external view returns (uint);
+    function getPendingLUSDDebtReward(address _borrower) external view returns (uint);
 
      function hasPendingRewards(address _borrower) external view returns (bool);
 
     function getEntireDebtAndColl(address _borrower) external view returns (
         uint debt, 
         uint coll, 
-        uint pendingCLVDebtReward, 
+        uint pendingLUSDDebtReward, 
         uint pendingETHReward
     );
 
@@ -98,7 +98,7 @@ interface ITroveManager {
 
     function removeStake(address _borrower) external;
 
-    function getBorrowingFee(uint CLVDebt) external view returns (uint);
+    function getBorrowingFee(uint LUSDDebt) external view returns (uint);
 
     function decayBaseRateFromBorrowing() external;
 

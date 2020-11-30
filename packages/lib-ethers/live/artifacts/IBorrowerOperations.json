@@ -159,7 +159,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLVAmount",
+          "name": "_LUSDAmount",
           "type": "uint256"
         },
         {
@@ -188,7 +188,7 @@
           "type": "address"
         }
       ],
-      "name": "repayCLV",
+      "name": "repayLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -248,7 +248,7 @@
           "type": "address"
         }
       ],
-      "name": "withdrawCLV",
+      "name": "withdrawLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

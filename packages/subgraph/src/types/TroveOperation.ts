@@ -3,8 +3,8 @@ enum BorrowerOperation {
   closeTrove,
   addColl,
   withdrawColl,
-  withdrawCLV,
-  repayCLV,
+  withdrawLUSD,
+  repayLUSD,
   adjustTrove
 }
 
@@ -18,9 +18,9 @@ export function getTroveOperationFromBorrowerOperation(operation: BorrowerOperat
       return "depositCollateral";
     case BorrowerOperation.withdrawColl:
       return "withdrawCollateral";
-    case BorrowerOperation.withdrawCLV:
+    case BorrowerOperation.withdrawLUSD:
       return "mint";
-    case BorrowerOperation.repayCLV:
+    case BorrowerOperation.repayLUSD:
       return "repay";
     case BorrowerOperation.adjustTrove:
       return "adjustTrove";

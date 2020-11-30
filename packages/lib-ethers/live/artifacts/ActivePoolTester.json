@@ -37,7 +37,7 @@
           "type": "uint256"
         }
       ],
-      "name": "CLVBalanceUpdated",
+      "name": "LUSDBalanceUpdated",
       "type": "event"
     },
     {
@@ -159,7 +159,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseCLVDebt",
+      "name": "decreaseLUSDDebt",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -183,7 +183,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getCLVDebt",
+      "name": "getLUSDDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -234,7 +234,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseCLVDebt",
+      "name": "increaseLUSDDebt",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -339,7 +339,7 @@
           "type": "uint256"
         }
       ],
-      "name": "unprotectedIncreaseCLVDebt",
+      "name": "unprotectedIncreaseLUSDDebt",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

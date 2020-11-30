@@ -37,7 +37,7 @@ contract LUSDToken is ILUSDToken {
     bytes32 constant internal _PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping (address => uint256) private _nonces;
     
-    // User data for CLV token
+    // User data for LUSD token
     mapping (address => uint256) private _balances;
      mapping (address => mapping (address => uint256)) private _allowances;  
     

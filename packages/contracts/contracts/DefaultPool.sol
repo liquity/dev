@@ -20,7 +20,7 @@ contract DefaultPool is Ownable, IPool {
     address public troveManagerAddress;
     address public activePoolAddress;
     uint256 internal ETH;  // deposited ETH tracker
-    uint256 internal CLVDebt;  // debt 
+    uint256 internal LUSDDebt;  // debt 
 
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
 
@@ -53,8 +53,8 @@ contract DefaultPool is Ownable, IPool {
         return ETH;
     }
 
-    function getCLVDebt() external view override returns (uint) {
-        return CLVDebt;
+    function getLUSDDebt() external view override returns (uint) {
+        return LUSDDebt;
     }
 
     // --- Pool functionality ---
@@ -68,14 +68,14 @@ contract DefaultPool is Ownable, IPool {
         require(success, "DefaultPool: sending ETH failed");
     }
 
-    function increaseCLVDebt(uint _amount) external override {
+    function increaseLUSDDebt(uint _amount) external override {
         _requireCallerIsCDPMananger();
-        CLVDebt = CLVDebt.add(_amount);
+        LUSDDebt = LUSDDebt.add(_amount);
     }
 
-    function decreaseCLVDebt(uint _amount) external override {
+    function decreaseLUSDDebt(uint _amount) external override {
         _requireCallerIsCDPMananger();
-        CLVDebt = CLVDebt.sub(_amount);
+        LUSDDebt = LUSDDebt.sub(_amount);
     }
 
     // --- 'require' functions ---

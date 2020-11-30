@@ -65,14 +65,14 @@ contract('Echidna debugger', async accounts => {
     console.log('Trove 2', icr2_after_price, icr2_after_price.toString())
   })
 
-  it.only('CLV balance', async () => {
+  it.only('LUSD balance', async () => {
     await echidnaTester.openTroveExt('0', '0', '4210965169908805439447313562489173090')
 
     const totalSupply = await lusdToken.totalSupply();
     const gasPoolBalance = await lusdToken.balanceOf(GAS_POOL_ADDRESS);
-    const activePoolBalance = await activePool.getCLVDebt();
-    const defaultPoolBalance = await defaultPool.getCLVDebt();
-    const stabilityPoolBalance = await stabilityPool.getTotalCLVDeposits();
+    const activePoolBalance = await activePool.getLUSDDebt();
+    const defaultPoolBalance = await defaultPool.getLUSDDebt();
+    const stabilityPoolBalance = await stabilityPool.getTotalLUSDDeposits();
     const currentTrove = await echidnaTester.echidnaProxies(0);
     const troveBalance = lusdToken.balanceOf(currentTrove);
 

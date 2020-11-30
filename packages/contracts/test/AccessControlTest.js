@@ -203,11 +203,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    // increaseCLV	
-    it("increaseCLVDebt(): reverts when called by an account that is not BO nor CDPM", async () => {
+    // increaseLUSD	
+    it("increaseLUSDDebt(): reverts when called by an account that is not BO nor CDPM", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await activePool.increaseCLVDebt(100, { from: alice })
+        const txAlice = await activePool.increaseLUSDDebt(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -215,11 +215,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    // decreaseCLV
-    it("decreaseCLVDebt(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
+    // decreaseLUSD
+    it("decreaseLUSDDebt(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await activePool.decreaseCLVDebt(100, { from: alice })
+        const txAlice = await activePool.decreaseLUSDDebt(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -253,11 +253,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    // increaseCLV	
-    it("increaseCLVDebt(): reverts when called by an account that is not TroveManager", async () => {
+    // increaseLUSD	
+    it("increaseLUSDDebt(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await defaultPool.increaseCLVDebt(100, { from: alice })
+        const txAlice = await defaultPool.increaseLUSDDebt(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -265,11 +265,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    // decreaseCLV	
-    it("decreaseCLV(): reverts when called by an account that is not TroveManager", async () => {
+    // decreaseLUSD	
+    it("decreaseLUSD(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await defaultPool.decreaseCLVDebt(100, { from: alice })
+        const txAlice = await defaultPool.decreaseLUSDDebt(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")

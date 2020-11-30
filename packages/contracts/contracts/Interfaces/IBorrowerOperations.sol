@@ -41,7 +41,7 @@ interface IBorrowerOperations {
         address _lqtyStakingAddress
     ) external;
 
-    function openTrove(uint _CLVAmount, address _hint) external payable;
+    function openTrove(uint _LUSDAmount, address _hint) external payable;
 
     function addColl(address _hint) external payable;
 
@@ -49,9 +49,9 @@ interface IBorrowerOperations {
 
     function withdrawColl(uint _amount, address _hint) external;
 
-    function withdrawCLV(uint _amount, address _hint) external;
+    function withdrawLUSD(uint _amount, address _hint) external;
 
-    function repayCLV(uint _amount, address _hint) external;
+    function repayLUSD(uint _amount, address _hint) external;
 
     function closeTrove() external;
 

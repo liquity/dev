@@ -7,7 +7,7 @@ interface IStabilityPool {
     // --- Events ---
     
     event ETHBalanceUpdated(uint _newBalance);
-    event CLVBalanceUpdated(uint _newBalance);
+    event LUSDBalanceUpdated(uint _newBalance);
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
@@ -30,7 +30,7 @@ interface IStabilityPool {
     event UserDepositChanged(address indexed _depositor, uint _newDeposit);
     event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
 
-    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _CLVLoss);
+    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _LUSDLoss);
     event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
     event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
 
@@ -57,12 +57,12 @@ interface IStabilityPool {
     function offset(uint _debt, uint _coll) external payable;
 
     function getETH() external view returns (uint);
-    function getTotalCLVDeposits() external view returns (uint);
+    function getTotalLUSDDeposits() external view returns (uint);
 
     function getDepositorETHGain(address _depositor) external view returns (uint);
     function getDepositorLQTYGain(address _depositor) external view returns (uint);
     function getFrontEndLQTYGain(address _frontEnd) external view returns (uint);
 
-    function getCompoundedCLVDeposit(address _depositor) external view returns (uint);
+    function getCompoundedLUSDDeposit(address _depositor) external view returns (uint);
     function getCompoundedFrontEndStake(address _frontEnd) external view returns (uint);
 }

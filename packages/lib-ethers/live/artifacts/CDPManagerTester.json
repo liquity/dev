@@ -164,7 +164,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_CLVGasCompensation",
+          "name": "_LUSDGasCompensation",
           "type": "uint256"
         }
       ],
@@ -222,13 +222,13 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_attemptedCLVAmount",
+          "name": "_attemptedLUSDAmount",
           "type": "uint256"
         },
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_actualCLVAmount",
+          "name": "_actualLUSDAmount",
           "type": "uint256"
         },
         {
@@ -366,7 +366,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "CLV_GAS_COMPENSATION",
+      "name": "LUSD_GAS_COMPENSATION",
       "outputs": [
         {
           "internalType": "uint256",
@@ -381,7 +381,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "L_CLVDebt",
+      "name": "L_LUSDDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -815,7 +815,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getCLVGasCompensation",
+      "name": "getLUSDGasCompensation",
       "outputs": [
         {
           "internalType": "uint256",
@@ -934,7 +934,7 @@
           "type": "address"
         }
       ],
-      "name": "getPendingCLVDebtReward",
+      "name": "getPendingLUSDDebtReward",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1094,7 +1094,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "lastCLVDebtError_Redistribution",
+      "name": "lastLUSDDebtError_Redistribution",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1201,7 +1201,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLVamount",
+          "name": "_LUSDamount",
           "type": "uint256"
         },
         {
@@ -1259,7 +1259,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "CLVDebt",
+          "name": "LUSDDebt",
           "type": "uint256"
         }
       ],

@@ -44,18 +44,18 @@ contract EchidnaProxy {
     }
 
     function redeemCollateralPrx(
-        uint _CLVAmount,
+        uint _LUSDAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
         uint _partialRedemptionHintICR,
         uint _maxIterations
     ) external {
-        troveManager.redeemCollateral(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, _maxIterations);
+        troveManager.redeemCollateral(_LUSDAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, _maxIterations);
     }
 
     // Borrower Operations
-    function openTrovePrx(uint _ETH, uint _CLVAmount, address _hint) external payable {
-        borrowerOperations.openTrove{value: _ETH}(_CLVAmount, _hint);
+    function openTrovePrx(uint _ETH, uint _LUSDAmount, address _hint) external payable {
+        borrowerOperations.openTrove{value: _ETH}(_LUSDAmount, _hint);
     }
 
     function addCollPrx(uint _ETH, address _hint) external payable {
@@ -66,12 +66,12 @@ contract EchidnaProxy {
         borrowerOperations.withdrawColl(_amount, _hint);
     }
 
-    function withdrawCLVPrx(uint _amount, address _hint) external {
-        borrowerOperations.withdrawCLV(_amount, _hint);
+    function withdrawLUSDPrx(uint _amount, address _hint) external {
+        borrowerOperations.withdrawLUSD(_amount, _hint);
     }
 
-    function repayCLVPrx(uint _amount, address _hint) external {
-        borrowerOperations.repayCLV(_amount, _hint);
+    function repayLUSDPrx(uint _amount, address _hint) external {
+        borrowerOperations.repayLUSD(_amount, _hint);
     }
 
     function closeTrovePrx() external {
@@ -91,7 +91,7 @@ contract EchidnaProxy {
         stabilityPool.withdrawFromSP(_amount);
     }
 
-    // CLV Token
+    // LUSD Token
 
     function transferPrx(address recipient, uint256 amount) external returns (bool) {
         return lusdToken.transfer(recipient, amount);

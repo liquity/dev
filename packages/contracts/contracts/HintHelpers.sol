@@ -45,19 +45,19 @@ contract HintHelpers is LiquityBase, Ownable {
 
     /* getRedemptionHints() - Helper function for redeemCollateral().
      *
-     * Find the first and last CDPs that will modified by calling redeemCollateral() with the same _CLVamount and _price,
+     * Find the first and last CDPs that will modified by calling redeemCollateral() with the same _LUSDamount and _price,
      * and return the address of the first one and the final ICR of the last one.
      */
 
     function getRedemptionHints(
-        uint _CLVamount, 
+        uint _LUSDamount, 
         uint _price
     )
         external
         view
         returns (address firstRedemptionHint, uint partialRedemptionHintICR)
     {
-        uint remainingCLV = _CLVamount;
+        uint remainingLUSD = _LUSDamount;
         address currentCDPuser = sortedCDPs.getLast();
 
         while (currentCDPuser != address(0) && troveManager.getCurrentICR(currentCDPuser, _price) < MCR) {
@@ -66,23 +66,23 @@ contract HintHelpers is LiquityBase, Ownable {
 
         firstRedemptionHint = currentCDPuser;
 
-        while (currentCDPuser != address(0) && remainingCLV > 0) {
-            uint CLVDebt = _getNetDebt(troveManager.getCDPDebt(currentCDPuser))
-                                     .add(troveManager.getPendingCLVDebtReward(currentCDPuser));
+        while (currentCDPuser != address(0) && remainingLUSD > 0) {
+            uint LUSDDebt = _getNetDebt(troveManager.getCDPDebt(currentCDPuser))
+                                     .add(troveManager.getPendingLUSDDebtReward(currentCDPuser));
 
-            if (CLVDebt > remainingCLV) {
+            if (LUSDDebt > remainingLUSD) {
                 uint ETH = troveManager.getCDPColl(currentCDPuser)
                                      .add(troveManager.getPendingETHReward(currentCDPuser));
                 
-                uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
-                uint newDebt = CLVDebt.sub(remainingCLV);
+                uint newColl = ETH.sub(remainingLUSD.mul(1e18).div(_price));
+                uint newDebt = LUSDDebt.sub(remainingLUSD);
                 
                 uint compositeDebt = _getCompositeDebt(newDebt);
                 partialRedemptionHintICR = LiquityMath._computeCR(newColl, compositeDebt, _price);
 
                 break;
             } else {
-                remainingCLV = remainingCLV.sub(CLVDebt);
+                remainingLUSD = remainingLUSD.sub(LUSDDebt);
             }
             currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
         }

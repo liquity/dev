@@ -84,7 +84,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_CLVLoss",
+          "name": "_LUSDLoss",
           "type": "uint256"
         }
       ],
@@ -239,7 +239,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "CLV",
+      "name": "LUSD",
       "outputs": [
         {
           "internalType": "contract ILUSDToken",
@@ -520,7 +520,7 @@
           "type": "address"
         }
       ],
-      "name": "getCompoundedCLVDeposit",
+      "name": "getCompoundedLUSDDeposit",
       "outputs": [
         {
           "internalType": "uint256",
@@ -571,7 +571,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getStabilityPoolCLV",
+      "name": "getStabilityPoolLUSD",
       "outputs": [
         {
           "internalType": "uint256",
@@ -622,7 +622,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "lastCLVLossError_Offset",
+      "name": "lastLUSDLossError_Offset",
       "outputs": [
         {
           "internalType": "uint256",
@@ -654,7 +654,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLV",
+          "name": "_LUSD",
           "type": "uint256"
         },
         {
@@ -674,11 +674,11 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLV",
+          "name": "_LUSD",
           "type": "uint256"
         }
       ],
-      "name": "lockCLVGasCompensation",
+      "name": "lockLUSDGasCompensation",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -689,7 +689,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLV",
+          "name": "_LUSD",
           "type": "uint256"
         },
         {
@@ -779,7 +779,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "_CLV",
+          "name": "_LUSD",
           "type": "uint256"
         },
         {
@@ -804,7 +804,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "_CLV",
+          "name": "_LUSD",
           "type": "uint256"
         },
         {
@@ -824,11 +824,11 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLV",
+          "name": "_LUSD",
           "type": "uint256"
         }
       ],
-      "name": "refundCLVGasCompensation",
+      "name": "refundLUSDGasCompensation",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -844,11 +844,11 @@
         },
         {
           "internalType": "uint256",
-          "name": "_CLV",
+          "name": "_LUSD",
           "type": "uint256"
         }
       ],
-      "name": "repayCLV",
+      "name": "repayLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -864,11 +864,11 @@
         },
         {
           "internalType": "uint256",
-          "name": "_CLV",
+          "name": "_LUSD",
           "type": "uint256"
         }
       ],
-      "name": "sendCLVGasCompensation",
+      "name": "sendLUSDGasCompensation",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -894,7 +894,7 @@
         },
         {
           "internalType": "address",
-          "name": "_CLVAddress",
+          "name": "_LUSDAddress",
           "type": "address"
         },
         {
@@ -995,11 +995,11 @@
         },
         {
           "internalType": "uint256",
-          "name": "_CLV",
+          "name": "_LUSD",
           "type": "uint256"
         }
       ],
-      "name": "withdrawCLV",
+      "name": "withdrawLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

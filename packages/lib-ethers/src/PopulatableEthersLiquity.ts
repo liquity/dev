@@ -198,10 +198,10 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
           .extractEvents(logs, "Liquidation")
           .map(
             ({
-              args: { _CLVGasCompensation, _collGasCompensation, _liquidatedColl, _liquidatedDebt }
+              args: { _LUSDGasCompensation, _collGasCompensation, _liquidatedColl, _liquidatedDebt }
             }) => ({
               collateralGasCompensation: new Decimal(_collGasCompensation),
-              tokenGasCompensation: new Decimal(_CLVGasCompensation),
+              tokenGasCompensation: new Decimal(_LUSDGasCompensation),
 
               totalLiquidated: new Trove({
                 collateral: new Decimal(_liquidatedColl),
@@ -226,10 +226,10 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
       ({ logs }) =>
         this.contracts.troveManager.extractEvents(logs, "Redemption").map(
           ({
-            args: { _ETHSent, _ETHFee, _actualCLVAmount, _attemptedCLVAmount }
+            args: { _ETHSent, _ETHFee, _actualLUSDAmount, _attemptedLUSDAmount }
           }): RedemptionDetails => ({
-            attemptedTokenAmount: new Decimal(_attemptedCLVAmount),
-            actualTokenAmount: new Decimal(_actualCLVAmount),
+            attemptedTokenAmount: new Decimal(_attemptedLUSDAmount),
+            actualTokenAmount: new Decimal(_actualLUSDAmount),
             collateralReceived: new Decimal(_ETHSent),
             fee: new Decimal(_ETHFee)
           })

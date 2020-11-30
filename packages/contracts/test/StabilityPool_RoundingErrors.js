@@ -35,7 +35,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
   })
 
   // skipped to not slow down CI
-  it.skip("Rounding errors: 100 deposits of 100CLV into SP, then 200 liquidations of 49CLV", async () => {
+  it.skip("Rounding errors: 100 deposits of 100LUSD into SP, then 200 liquidations of 49LUSD", async () => {
     const owner = accounts[0]
     const depositors = accounts.slice(1, 101)
     const defaulters = accounts.slice(101, 301)
@@ -59,9 +59,9 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
       await troveManager.liquidate(defaulter, { from: owner });
     }
 
-    const SP_TotalDeposits = await stabilityPool.getTotalCLVDeposits()
+    const SP_TotalDeposits = await stabilityPool.getTotalLUSDDeposits()
     const SP_ETH = await stabilityPool.getETH()
-    const compoundedDeposit = await stabilityPool.getCompoundedCLVDeposit(depositors[0])
+    const compoundedDeposit = await stabilityPool.getCompoundedLUSDDeposit(depositors[0])
     const ETH_Gain = await stabilityPool.getCurrentETHGain(depositors[0])
 
     // Check depostiors receive their share without too much error

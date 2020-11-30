@@ -459,7 +459,7 @@
           "type": "address"
         }
       ],
-      "name": "getPendingCLVDebtReward",
+      "name": "getPendingLUSDDebtReward",
       "outputs": [
         {
           "internalType": "uint256",
@@ -600,7 +600,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLVAmount",
+          "name": "_LUSDAmount",
           "type": "uint256"
         },
         {

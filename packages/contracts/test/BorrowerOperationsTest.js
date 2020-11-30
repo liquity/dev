@@ -43,7 +43,7 @@ contract('BorrowerOperations', async accounts => {
 
   let contracts
 
-  let CLV_GAS_COMPENSATION
+  let LUSD_GAS_COMPENSATION
 
   before(async () => {
 
@@ -74,7 +74,7 @@ contract('BorrowerOperations', async accounts => {
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
-    CLV_GAS_COMPENSATION = await borrowerOperations.CLV_GAS_COMPENSATION()
+    LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
   })
 
   it("addColl(): Increases the activePool ETH and raw ether balance by correct amount", async () => {
@@ -160,23 +160,23 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(totalStakes_After, '3000000000000000000')
   })
 
-  it("addColl(), active CDP: applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
+  it("addColl(), active CDP: applies pending rewards and updates user's L_ETH, L_LUSDDebt snapshots", async () => {
     // --- SETUP ---
-    // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether.  Withdraw 90/90/170 CLV (+ 10 CLV for gas compensation)
-    const CLVwithdrawal_A = toBN(dec(90, 18))
-    const CLVwithdrawal_B = toBN(dec(90, 18))
-    const CLVwithdrawal_C = toBN(dec(170, 18))
+    // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether.  Withdraw 90/90/170 LUSD (+ 10 LUSD for gas compensation)
+    const LUSDwithdrawal_A = toBN(dec(90, 18))
+    const LUSDwithdrawal_B = toBN(dec(90, 18))
+    const LUSDwithdrawal_C = toBN(dec(170, 18))
 
-    await borrowerOperations.openTrove(CLVwithdrawal_A, alice, { from: alice, value: dec(15, 'ether') })
-    await borrowerOperations.openTrove(CLVwithdrawal_B, bob, { from: bob, value: dec(5, 'ether') })
-    await borrowerOperations.openTrove(CLVwithdrawal_C, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(LUSDwithdrawal_A, alice, { from: alice, value: dec(15, 'ether') })
+    await borrowerOperations.openTrove(LUSDwithdrawal_B, bob, { from: bob, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(LUSDwithdrawal_C, carol, { from: carol, value: dec(1, 'ether') })
 
     // --- TEST ---
 
-    // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
+    // price drops to 1ETH:100LUSD, reducing Carol's ICR below MCR
     await priceFeed.setPrice('100000000000000000000');
 
-    // Close Carol's CDP, liquidating her 1 ether and 180CLV.
+    // Close Carol's CDP, liquidating her 1 ether and 180LUSD.
     const tx = await troveManager.liquidate(carol, { from: owner });
     const liquidatedDebt_C = th.getEmittedLiquidatedDebt(tx)
     const liquidatedColl_C = th.getEmittedLiquidatedColl(tx)
@@ -184,21 +184,21 @@ contract('BorrowerOperations', async accounts => {
     assert.isFalse(await sortedCDPs.contains(carol))
 
     const L_ETH = await troveManager.L_ETH()
-    const L_CLVDebt = await troveManager.L_CLVDebt()
+    const L_LUSDDebt = await troveManager.L_LUSDDebt()
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
     const alice_rewardSnapshot_Before = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_Before = alice_rewardSnapshot_Before[0]
-    const alice_CLVDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
+    const alice_LUSDDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
 
     const bob_rewardSnapshot_Before = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_Before = bob_rewardSnapshot_Before[0]
-    const bob_CLVDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
+    const bob_LUSDDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
 
     assert.equal(alice_ETHrewardSnapshot_Before, 0)
-    assert.equal(alice_CLVDebtRewardSnapshot_Before, 0)
+    assert.equal(alice_LUSDDebtRewardSnapshot_Before, 0)
     assert.equal(bob_ETHrewardSnapshot_Before, 0)
-    assert.equal(bob_CLVDebtRewardSnapshot_Before, 0)
+    assert.equal(bob_LUSDDebtRewardSnapshot_Before, 0)
 
     // Alice and Bob top up their CDPs
     await borrowerOperations.addColl(alice, { from: alice, value: dec(5, 'ether') })
@@ -215,42 +215,42 @@ contract('BorrowerOperations', async accounts => {
     const expectedDebtReward_B = liquidatedDebt_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
 
     const alice_CDP_After = await troveManager.CDPs(alice)
-    const alice_CLVDebt_After = alice_CDP_After[0]
+    const alice_LUSDDebt_After = alice_CDP_After[0]
     const alice_Coll_After = alice_CDP_After[1]
 
     const bob_CDP_After = await troveManager.CDPs(bob)
-    const bob_CLVDebt_After = bob_CDP_After[0]
+    const bob_LUSDDebt_After = bob_CDP_After[0]
     const bob_Coll_After = bob_CDP_After[1]
 
     // Expect Alice coll = 15 + 5  + reward
     // Expect Bob coll = 5 + 1 + reward
     assert.isAtMost(th.getDifference(alice_Coll_After, toBN(dec(20, 'ether')).add(expectedCollReward_A)), 100)
-    assert.isAtMost(th.getDifference(alice_CLVDebt_After, CLVwithdrawal_A.add(expectedDebtReward_A).add(toBN(dec(10, 18)))), 100)
+    assert.isAtMost(th.getDifference(alice_LUSDDebt_After, LUSDwithdrawal_A.add(expectedDebtReward_A).add(toBN(dec(10, 18)))), 100)
 
     assert.isAtMost(th.getDifference(bob_Coll_After, toBN(dec(6, 'ether')).add(expectedCollReward_B)), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebt_After, CLVwithdrawal_B.add(expectedDebtReward_B).add(toBN(dec(10, 18)))), 100)
+    assert.isAtMost(th.getDifference(bob_LUSDDebt_After, LUSDwithdrawal_B.add(expectedDebtReward_B).add(toBN(dec(10, 18)))), 100)
 
     /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be updated
-    to the latest values of L_ETH and L_CLVDebt */
+    to the latest values of L_ETH and L_LUSDDebt */
     const alice_rewardSnapshot_After = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0]
-    const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
+    const alice_LUSDDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
 
     const bob_rewardSnapshot_After = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0]
-    const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
+    const bob_LUSDDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
 
     assert.isAtMost(th.getDifference(alice_ETHrewardSnapshot_After, L_ETH), 100)
-    assert.isAtMost(th.getDifference(alice_CLVDebtRewardSnapshot_After, L_CLVDebt), 100)
+    assert.isAtMost(th.getDifference(alice_LUSDDebtRewardSnapshot_After, L_LUSDDebt), 100)
     assert.isAtMost(th.getDifference(bob_ETHrewardSnapshot_After, L_ETH), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot_After, L_CLVDebt), 100)
+    assert.isAtMost(th.getDifference(bob_LUSDDebtRewardSnapshot_After, L_LUSDDebt), 100)
   })
 
   // it("addColl(), active CDP: adds the right corrected stake after liquidations have occured", async () => {
   //  // TODO - check stake updates for addColl/withdrawColl/adustTrove ---
 
   //   // --- SETUP ---
-  //   // A,B,C add 15/5/5 ETH, withdraw 100/100/900 CLV
+  //   // A,B,C add 15/5/5 ETH, withdraw 100/100/900 LUSD
   //   await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(15, 'ether') })
   //   await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(4, 'ether') })
   //   await borrowerOperations.openTrove(dec(900, 18), carol, { from: carol, value: dec(5, 'ether') })
@@ -258,10 +258,10 @@ contract('BorrowerOperations', async accounts => {
   //   await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(1, 'ether') })
   //   // --- TEST ---
 
-  //   // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
+  //   // price drops to 1ETH:100LUSD, reducing Carol's ICR below MCR
   //   await priceFeed.setPrice('100000000000000000000');
 
-  //   // close Carol's CDP, liquidating her 5 ether and 900CLV.
+  //   // close Carol's CDP, liquidating her 5 ether and 900LUSD.
   //   await troveManager.liquidate(carol, { from: owner });
 
   //   // dennis tops up his trove by 1 ETH
@@ -321,7 +321,7 @@ contract('BorrowerOperations', async accounts => {
 
   it('addColl(): can add collateral in Recovery Mode', async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
     assert.isFalse(await troveManager.checkRecoveryMode())
 
@@ -360,8 +360,8 @@ contract('BorrowerOperations', async accounts => {
   it("withdrawColl(): reverts when system is in Recovery Mode", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
-    await borrowerOperations.withdrawCLV(dec(100, 18), bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), bob, { from: bob })
 
     assert.isFalse(await troveManager.checkRecoveryMode())
 
@@ -411,10 +411,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
 
-    const CLVwithdrawal_A = await dec(40, 18)
-    const CLVwithdrawal_B = await dec(40, 18)
-    await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
-    await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
+    const LUSDwithdrawal_A = await dec(40, 18)
+    const LUSDwithdrawal_B = await dec(40, 18)
+    await borrowerOperations.withdrawLUSD(LUSDwithdrawal_A, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(LUSDwithdrawal_B, bob, { from: bob })
 
 
     // Alice withdraws 0.45 ether, leaving 0.55 remaining. Her ICR = (0.55*100)/50 = 110%.
@@ -436,15 +436,15 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(3, 'ether') })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
 
-    // price drops to 1ETH:150CLV, reducing TCR below 150%
+    // price drops to 1ETH:150LUSD, reducing TCR below 150%
     await priceFeed.setPrice('150000000000000000000');
 
     //Alice tries to withdraw collateral during Recovery Mode
@@ -575,47 +575,47 @@ contract('BorrowerOperations', async accounts => {
     //   assert.equal(balanceDiff.toString(), dec(1, 'ether'))
   })
 
-  it("withdrawColl(): applies pending rewards and updates user's L_ETH, L_CLVDebt snapshots", async () => {
+  it("withdrawColl(): applies pending rewards and updates user's L_ETH, L_LUSDDebt snapshots", async () => {
     // --- SETUP ---
     // Alice adds 15 ether, Bob adds 5 ether, Carol adds 1 ether
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(15, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: carol, value: dec(1, 'ether') })
 
-    // Alice and Bob withdraw 90CLV, Carol withdraws 170CLV (+10 CLV for gas compensation)
-    const CLVwithdrawal_A = await toBN(dec(90, 18))
-    const CLVwithdrawal_B = await toBN(dec(90, 18))
-    const CLVwithdrawal_C = await toBN(dec(170, 18))
+    // Alice and Bob withdraw 90LUSD, Carol withdraws 170LUSD (+10 LUSD for gas compensation)
+    const LUSDwithdrawal_A = await toBN(dec(90, 18))
+    const LUSDwithdrawal_B = await toBN(dec(90, 18))
+    const LUSDwithdrawal_C = await toBN(dec(170, 18))
 
-    await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
-    await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
-    await borrowerOperations.withdrawCLV(CLVwithdrawal_C, carol, { from: carol })
+    await borrowerOperations.withdrawLUSD(LUSDwithdrawal_A, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(LUSDwithdrawal_B, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(LUSDwithdrawal_C, carol, { from: carol })
 
     // --- TEST ---
 
-    // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
+    // price drops to 1ETH:100LUSD, reducing Carol's ICR below MCR
     await priceFeed.setPrice('100000000000000000000');
 
-    // close Carol's CDP, liquidating her 1 ether and 180CLV.
+    // close Carol's CDP, liquidating her 1 ether and 180LUSD.
     const liquidationTx_C = await troveManager.liquidate(carol, { from: owner });
     const [liquidatedDebt_C, liquidatedColl_C, gasComp_C] = th.getEmittedLiquidationValues(liquidationTx_C)
 
     const L_ETH = await troveManager.L_ETH()
-    const L_CLVDebt = await troveManager.L_CLVDebt()
+    const L_LUSDDebt = await troveManager.L_LUSDDebt()
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
     const alice_rewardSnapshot_Before = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_Before = alice_rewardSnapshot_Before[0]
-    const alice_CLVDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
+    const alice_LUSDDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
 
     const bob_rewardSnapshot_Before = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_Before = bob_rewardSnapshot_Before[0]
-    const bob_CLVDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
+    const bob_LUSDDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
 
     assert.equal(alice_ETHrewardSnapshot_Before, 0)
-    assert.equal(alice_CLVDebtRewardSnapshot_Before, 0)
+    assert.equal(alice_LUSDDebtRewardSnapshot_Before, 0)
     assert.equal(bob_ETHrewardSnapshot_Before, 0)
-    assert.equal(bob_CLVDebtRewardSnapshot_Before, 0)
+    assert.equal(bob_LUSDDebtRewardSnapshot_Before, 0)
 
     // Alice and Bob withdraw from their CDPs
     await borrowerOperations.withdrawColl(dec(5, 'ether'), alice, { from: alice })
@@ -631,40 +631,40 @@ contract('BorrowerOperations', async accounts => {
     const expectedDebtReward_B = liquidatedDebt_C.mul(toBN(dec(5, 'ether'))).div(toBN(dec(20, 'ether')))
 
     const alice_CDP_After = await troveManager.CDPs(alice)
-    const alice_CLVDebt_After = alice_CDP_After[0]
+    const alice_LUSDDebt_After = alice_CDP_After[0]
     const alice_Coll_After = alice_CDP_After[1]
 
     const bob_CDP_After = await troveManager.CDPs(bob)
-    const bob_CLVDebt_After = bob_CDP_After[0]
+    const bob_LUSDDebt_After = bob_CDP_After[0]
     const bob_Coll_After = bob_CDP_After[1]
 
     // Expect Alice coll = 15 - 5  + reward
     // Expect Bob coll = 5 - 1 + reward
     assert.isAtMost(th.getDifference(alice_Coll_After, toBN(dec(10, 'ether')).add(expectedCollReward_A)), 100)
-    assert.isAtMost(th.getDifference(alice_CLVDebt_After, CLVwithdrawal_A.add(expectedDebtReward_A).add(toBN(dec(10, 18)))), 100)
+    assert.isAtMost(th.getDifference(alice_LUSDDebt_After, LUSDwithdrawal_A.add(expectedDebtReward_A).add(toBN(dec(10, 18)))), 100)
 
     assert.isAtMost(th.getDifference(bob_Coll_After, toBN(dec(4, 'ether')).add(expectedCollReward_B)), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebt_After, CLVwithdrawal_B.add(expectedDebtReward_B).add(toBN(dec(10, 18)))), 100)
+    assert.isAtMost(th.getDifference(bob_LUSDDebt_After, LUSDwithdrawal_B.add(expectedDebtReward_B).add(toBN(dec(10, 18)))), 100)
 
     /* After top up, both Alice and Bob's snapshots of the rewards-per-unit-staked metrics should be updated
-    to the latest values of L_ETH and L_CLVDebt */
+    to the latest values of L_ETH and L_LUSDDebt */
     const alice_rewardSnapshot_After = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_After = alice_rewardSnapshot_After[0]
-    const alice_CLVDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
+    const alice_LUSDDebtRewardSnapshot_After = alice_rewardSnapshot_After[1]
 
     const bob_rewardSnapshot_After = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_After = bob_rewardSnapshot_After[0]
-    const bob_CLVDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
+    const bob_LUSDDebtRewardSnapshot_After = bob_rewardSnapshot_After[1]
 
     assert.isAtMost(th.getDifference(alice_ETHrewardSnapshot_After, L_ETH), 100)
-    assert.isAtMost(th.getDifference(alice_CLVDebtRewardSnapshot_After, L_CLVDebt), 100)
+    assert.isAtMost(th.getDifference(alice_LUSDDebtRewardSnapshot_After, L_LUSDDebt), 100)
     assert.isAtMost(th.getDifference(bob_ETHrewardSnapshot_After, L_ETH), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot_After, L_CLVDebt), 100)
+    assert.isAtMost(th.getDifference(bob_LUSDDebtRewardSnapshot_After, L_LUSDDebt), 100)
   })
 
-  // --- withdrawCLV() ---
+  // --- withdrawLUSD() ---
 
-  it("withdrawCLV(): decays a non-zero base rate", async () => {
+  it("withdrawLUSD(): decays a non-zero base rate", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -675,10 +675,10 @@ contract('BorrowerOperations', async accounts => {
     // console.log(`activePool ETH tracker: ${await activePool.getETH()}`)
     // console.log(`activePool in TroveManager: ${await troveManager.activePool()}`)
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -688,9 +688,9 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // D withdraws CLV
+    // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+    await borrowerOperations.withdrawLUSD(dec(37, 18), D, { from: D })
 
     // Check baseRate has decreased
     const baseRate_2 = await troveManager.baseRate()
@@ -706,7 +706,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
-  it("withdrawCLV(): doesn't change base rate if it is already zero", async () => {
+  it("withdrawLUSD(): doesn't change base rate if it is already zero", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -720,9 +720,9 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // D withdraws CLV
+    // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+    await borrowerOperations.withdrawLUSD(dec(37, 18), D, { from: D })
 
     // Check baseRate is still 0
     const baseRate_2 = await troveManager.baseRate()
@@ -738,17 +738,17 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(baseRate_3, '0')
   })
 
-  it("withdrawCLV(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
+  it("withdrawLUSD(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -761,7 +761,7 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(50, web3.currentProvider)
 
     // Borrower C triggers a fee
-    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
+    await borrowerOperations.withdrawLUSD(dec(1, 18), C, { from: C })
 
     const lastFeeOpTime_2 = await troveManager.lastFeeOperationTime()
 
@@ -777,7 +777,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(toBN(timeNow).sub(lastFeeOpTime_1).gte(60))
 
     // Borrower C triggers a fee
-    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
+    await borrowerOperations.withdrawLUSD(dec(1, 18), C, { from: C })
 
     const lastFeeOpTime_3 = await troveManager.lastFeeOperationTime()
 
@@ -787,17 +787,17 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("withdrawCLV(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => {
+  it("withdrawLUSD(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -808,13 +808,13 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers a fee, before decay interval has passed
-    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
+    await borrowerOperations.withdrawLUSD(dec(1, 18), C, { from: C })
 
     // 1 minute pass
     th.fastForwardTime(3540, web3.currentProvider)
 
     // Borrower C triggers another fee
-    await borrowerOperations.withdrawCLV(dec(1, 18), C, { from: C })
+    await borrowerOperations.withdrawLUSD(dec(1, 18), C, { from: C })
 
     // Check base rate has decreased even though Borrower tried to stop it decaying
     const baseRate_2 = await troveManager.baseRate()
@@ -822,7 +822,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("withdrawCLV(): borrowing at non-zero base rate sends CLV fee to LQTY staking contract", async () => {
+  it("withdrawLUSD(): borrowing at non-zero base rate sends LUSD fee to LQTY staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -834,10 +834,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -847,20 +847,20 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_Before, '0')
+    // Check LQTY LUSD balance before == 0
+    const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
-    // D withdraws CLV
+    // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+    await borrowerOperations.withdrawLUSD(dec(37, 18), D, { from: D })
 
-    // Check LQTY CLV balance after has increased
-    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
+    // Check LQTY LUSD balance after has increased
+    const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
   })
 
-  it("withdrawCLV(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
+  it("withdrawLUSD(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -872,10 +872,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -885,11 +885,11 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // D withdraws CLV
+    // D withdraws LUSD
     const withdrawal_D = toBN(dec(37, 18))
 
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    const withdrawalTx = await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+    const withdrawalTx = await borrowerOperations.withdrawLUSD(dec(37, 18), D, { from: D })
 
     const emittedFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(withdrawalTx))
     assert.isTrue(emittedFee.gt(toBN('0')))
@@ -907,7 +907,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
   })
 
-  it("withdrawCLV(): Borrowing at non-zero base rate increases the LQTY staking contract CLV fees-per-unit-staked", async () => {
+  it("withdrawLUSD(): Borrowing at non-zero base rate increases the LQTY staking contract LUSD fees-per-unit-staked", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -919,10 +919,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -932,20 +932,20 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY contract CLV fees-per-unit-staked is zero
+    // Check LQTY contract LUSD fees-per-unit-staked is zero
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
-    // D withdraws CLV
+    // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+    await borrowerOperations.withdrawLUSD(dec(37, 18), D, { from: D })
 
-    // Check LQTY contract CLV fees-per-unit-staked has increased
+    // Check LQTY contract LUSD fees-per-unit-staked has increased
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
   })
 
-  it("withdrawCLV(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
+  it("withdrawLUSD(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -957,14 +957,14 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check LQTY Staking contract balance before == 0
-    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_Before, '0')
+    const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -974,21 +974,21 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // D withdraws CLV
+    // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    const CLVRequest_D = toBN(dec(40, 18))
-    await borrowerOperations.withdrawCLV(CLVRequest_D, D, { from: D })
+    const LUSDRequest_D = toBN(dec(40, 18))
+    await borrowerOperations.withdrawLUSD(LUSDRequest_D, D, { from: D })
 
-    // Check LQTY staking CLV balance has increased
-    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
+    // Check LQTY staking LUSD balance has increased
+    const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
 
-    // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await lusdToken.balanceOf(D)
-    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
+    // Check D's LUSD balance now equals their requested LUSD
+    const LUSDBalance_D = await lusdToken.balanceOf(D)
+    assert.isTrue(LUSDRequest_D.eq(LUSDBalance_D))
   })
 
-  it("withdrawCLV(): Borrowing at zero base rate does not change CLV balance of LQTY staking contract", async () => {
+  it("withdrawLUSD(): Borrowing at zero base rate does not change LUSD balance of LQTY staking contract", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1002,20 +1002,20 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_Before, '0')
+    // Check LQTY LUSD balance before == 0
+    const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
-    // D withdraws CLV
+    // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+    await borrowerOperations.withdrawLUSD(dec(37, 18), D, { from: D })
 
-    // Check LQTY CLV balance after == 0
-    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_After, '0')
+    // Check LQTY LUSD balance after == 0
+    const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_After, '0')
   })
 
-  it("withdrawCLV(): Borrowing at zero base rate does not change LQTY staking contract CLV fees-per-unit-staked", async () => {
+  it("withdrawLUSD(): Borrowing at zero base rate does not change LQTY staking contract LUSD fees-per-unit-staked", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1029,20 +1029,20 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY CLV balance before == 0
+    // Check LQTY LUSD balance before == 0
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
-    // D withdraws CLV
+    // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(37, 18), D, { from: D })
+    await borrowerOperations.withdrawLUSD(dec(37, 18), D, { from: D })
 
-    // Check LQTY CLV balance after == 0
+    // Check LQTY LUSD balance after == 0
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_After, '0')
   })
 
-  it("withdrawCLV(): Borrowing at zero base rate sends total requested CLV to the user", async () => {
+  it("withdrawLUSD(): Borrowing at zero base rate sends total requested LUSD to the user", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1057,68 +1057,68 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
 
-    // D withdraws CLV
+    // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    const CLVRequest_D = toBN(dec(40, 18))
-    await borrowerOperations.withdrawCLV(CLVRequest_D, D, { from: D })
+    const LUSDRequest_D = toBN(dec(40, 18))
+    await borrowerOperations.withdrawLUSD(LUSDRequest_D, D, { from: D })
 
-    // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await lusdToken.balanceOf(D)
+    // Check D's LUSD balance now equals their requested LUSD
+    const LUSDBalance_D = await lusdToken.balanceOf(D)
 
-    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
+    assert.isTrue(LUSDRequest_D.eq(LUSDBalance_D))
   })
 
-  it("withdrawCLV(): reverts when calling address does not have active trove", async () => {
+  it("withdrawLUSD(): reverts when calling address does not have active trove", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
 
-    // Bob successfully withdraws CLV
-    const txBob = await borrowerOperations.withdrawCLV(dec(100, 18), bob, { from: bob })
+    // Bob successfully withdraws LUSD
+    const txBob = await borrowerOperations.withdrawLUSD(dec(100, 18), bob, { from: bob })
     assert.isTrue(txBob.receipt.status)
 
-    // Carol with no active trove attempts to withdraw CLV
+    // Carol with no active trove attempts to withdraw LUSD
     try {
-      const txCarol = await borrowerOperations.withdrawCLV(dec(100, 18), carol, { from: carol })
+      const txCarol = await borrowerOperations.withdrawLUSD(dec(100, 18), carol, { from: carol })
       assert.isFalse(txCarol.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
     }
   })
 
-  it("withdrawCLV(): reverts when requested withdrawal amount is zero CLV", async () => {
+  it("withdrawLUSD(): reverts when requested withdrawal amount is zero LUSD", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
 
-    // Bob successfully withdraws 1e-18 CLV
-    const txBob = await borrowerOperations.withdrawCLV(1, bob, { from: bob })
+    // Bob successfully withdraws 1e-18 LUSD
+    const txBob = await borrowerOperations.withdrawLUSD(1, bob, { from: bob })
     assert.isTrue(txBob.receipt.status)
 
-    // Alice attempts to withdraw 0 CLV
+    // Alice attempts to withdraw 0 LUSD
     try {
-      const txAlice = await borrowerOperations.withdrawCLV(0, alice, { from: alice })
+      const txAlice = await borrowerOperations.withdrawLUSD(0, alice, { from: alice })
       assert.isFalse(txAlice.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
     }
   })
 
-  it("withdrawCLV(): reverts when system is in Recovery Mode", async () => {
+  it("withdrawLUSD(): reverts when system is in Recovery Mode", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
 
     assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Withdrawal possible when recoveryMode == false
-    const txAlice = await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    const txAlice = await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
     assert.isTrue(txAlice.receipt.status)
 
     await priceFeed.setPrice('50000000000000000000')
 
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    //Check CLV withdrawal impossible when recoveryMode == true
+    //Check LUSD withdrawal impossible when recoveryMode == true
     try {
-      const txBob = await borrowerOperations.withdrawCLV(1, bob, { from: bob })
+      const txBob = await borrowerOperations.withdrawLUSD(1, bob, { from: bob })
       assert.isFalse(txBob.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1126,13 +1126,13 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("withdrawCLV(): reverts when withdrawal would bring the trove's ICR < MCR", async () => {
+  it("withdrawLUSD(): reverts when withdrawal would bring the trove's ICR < MCR", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
 
-    // Alice withdraws to a composite debt of 171 CLV (+10 CLV for gas compensation)
-    const CLVwithdrawal_A = "171000000000000000000"
-    const txAlice = await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
+    // Alice withdraws to a composite debt of 171 LUSD (+10 LUSD for gas compensation)
+    const LUSDwithdrawal_A = "171000000000000000000"
+    const txAlice = await borrowerOperations.withdrawLUSD(LUSDwithdrawal_A, alice, { from: alice })
     assert.isTrue(txAlice.receipt.status)
 
     const price = await priceFeed.getPrice()
@@ -1141,20 +1141,20 @@ contract('BorrowerOperations', async accounts => {
     // Check Alice ICR > MCR
     assert.isTrue(aliceICR.gte(web3.utils.toBN("1100000000000000000")))
 
-    // Bob tries to withdraw CLV that would bring his ICR < MCR
+    // Bob tries to withdraw LUSD that would bring his ICR < MCR
     try {
-      const txBob = await borrowerOperations.withdrawCLV("172000000000000000000", bob, { from: bob })
+      const txBob = await borrowerOperations.withdrawLUSD("172000000000000000000", bob, { from: bob })
       assert.isFalse(txBob.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
     }
   })
 
-  it("withdrawCLV(): reverts when the withdrawal would cause the TCR of the system to fall below the CCR", async () => {
+  it("withdrawLUSD(): reverts when the withdrawal would cause the TCR of the system to fall below the CCR", async () => {
     await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
 
-    // Alice and Bob creates troves with 3 ETH / 200 CLV, and 150% ICR.  System TCR = 150%.
+    // Alice and Bob creates troves with 3 ETH / 200 LUSD, and 150% ICR.  System TCR = 150%.
     const txAlice = await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
     const aliceICR = await troveManager.getCurrentICR(alice, price)
 
@@ -1164,10 +1164,10 @@ contract('BorrowerOperations', async accounts => {
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
-    // Bob attempts to withdraw 1 CLV.
+    // Bob attempts to withdraw 1 LUSD.
     // System TCR would be: ((3+3) * 100 ) / (200+201) = 600/401 = 149.62%, i.e. below CCR of 150%.
     try {
-      const txBob = await borrowerOperations.withdrawCLV(dec(1, 18), bob, { from: bob })
+      const txBob = await borrowerOperations.withdrawLUSD(dec(1, 18), bob, { from: bob })
       assert.isFalse(txBob.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1175,45 +1175,45 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("withdrawCLV(): reverts if withdrawal would pull TCR below CCR", async () => {
+  it("withdrawLUSD(): reverts if withdrawal would pull TCR below CCR", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(3, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(3, 'ether') })
 
     //  Alice and Bob withdraw such that the TCR is 150%
-    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
 
     // --- TEST ---
 
-    // Alice attempts to withdraw 10 CLV, which would reducing TCR below 150%
+    // Alice attempts to withdraw 10 LUSD, which would reducing TCR below 150%
     try {
-      const txData = await borrowerOperations.withdrawCLV('10000000000000000000', alice, { from: alice })
+      const txData = await borrowerOperations.withdrawLUSD('10000000000000000000', alice, { from: alice })
       assert.isFalse(txData.receipt.status)
     } catch (err) {
       assert.include(err.message, 'revert')
     }
   })
 
-  it("withdrawCLV(): reverts if system is in recovery mode", async () => {
+  it("withdrawLUSD(): reverts if system is in recovery mode", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(3, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(3, 'ether') })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
 
     // const TCR = (await troveManager.getTCR()).toString()
     // assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
 
-    // price drops to 1ETH:150CLV, reducing TCR below 150%
+    // price drops to 1ETH:150LUSD, reducing TCR below 150%
     await priceFeed.setPrice('150000000000000000000');
 
     try {
-      const txData = await borrowerOperations.withdrawCLV('200', alice, { from: alice })
+      const txData = await borrowerOperations.withdrawLUSD('200', alice, { from: alice })
       assert.isFalse(txData.receipt.status)
     } catch (err) {
       assert.include(err.message, 'revert')
@@ -1222,7 +1222,7 @@ contract('BorrowerOperations', async accounts => {
 
 
 
-  it("withdrawCLV(): increases the CDP's CLV debt by the correct amount", async () => {
+  it("withdrawLUSD(): increases the CDP's LUSD debt by the correct amount", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
@@ -1230,7 +1230,7 @@ contract('BorrowerOperations', async accounts => {
     const debt_Before = alice_CDP_Before[0]
     assert.equal(debt_Before, dec(10, 18))
 
-    await borrowerOperations.withdrawCLV(100, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(100, alice, { from: alice })
 
     // check after
     const alice_CDP_After = await troveManager.CDPs(alice)
@@ -1238,7 +1238,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debt_After.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
   })
 
-  it("withdrawCLV(): increases CLV debt in ActivePool by correct amount", async () => {
+  it("withdrawLUSD(): increases LUSD debt in ActivePool by correct amount", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
@@ -1246,7 +1246,7 @@ contract('BorrowerOperations', async accounts => {
     const debt_Before = alice_CDP_Before[0]
     assert.equal(debt_Before, dec(10, 18))
 
-    await borrowerOperations.withdrawCLV(100, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(100, alice, { from: alice })
 
     // check after
     const alice_CDP_After = await troveManager.CDPs(alice)
@@ -1254,54 +1254,54 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debt_After.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
   })
 
-  it("withdrawCLV(): increases user LUSDToken balance by correct amount", async () => {
+  it("withdrawLUSD(): increases user LUSDToken balance by correct amount", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
     const alice_LUSDTokenBalance_Before = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_Before, 0)
 
-    await borrowerOperations.withdrawCLV(100, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(100, alice, { from: alice })
 
     // check after
     const alice_LUSDTokenBalance_After = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_After, 100)
   })
 
-  // --- repayCLV() ---
+  // --- repayLUSD() ---
 
-  it("repayCLV(): reverts when calling address does not have active trove", async () => {
+  it("repayLUSD(): reverts when calling address does not have active trove", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
-    await borrowerOperations.withdrawCLV(dec(100, 18), bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), bob, { from: bob })
 
-    // Bob successfully repays some CLV
-    const txBob = await borrowerOperations.repayCLV(dec(10, 18), bob, { from: bob })
+    // Bob successfully repays some LUSD
+    const txBob = await borrowerOperations.repayLUSD(dec(10, 18), bob, { from: bob })
     assert.isTrue(txBob.receipt.status)
 
-    // Carol with no active trove attempts to repayCLV
+    // Carol with no active trove attempts to repayLUSD
     try {
-      const txCarol = await borrowerOperations.repayCLV(dec(10, 18), carol, { from: carol })
+      const txCarol = await borrowerOperations.repayLUSD(dec(10, 18), carol, { from: carol })
       assert.isFalse(txCarol.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
     }
   })
 
-  it("repayCLV(): reverts when attempted repayment is > the debt of the trove", async () => {
+  it("repayLUSD(): reverts when attempted repayment is > the debt of the trove", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
-    await borrowerOperations.withdrawCLV(dec(100, 18), bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), bob, { from: bob })
 
-    // Bob successfully repays some CLV
-    const txBob = await borrowerOperations.repayCLV(dec(10, 18), bob, { from: bob })
+    // Bob successfully repays some LUSD
+    const txBob = await borrowerOperations.repayLUSD(dec(10, 18), bob, { from: bob })
     assert.isTrue(txBob.receipt.status)
 
     // Alice attempts to repay more than her debt
     try {
-      const txAlice = await borrowerOperations.repayCLV('101000000000000000000', alice, { from: alice })
+      const txAlice = await borrowerOperations.repayLUSD('101000000000000000000', alice, { from: alice })
       assert.isFalse(txAlice.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1310,17 +1310,17 @@ contract('BorrowerOperations', async accounts => {
 
 
 
-  //repayCLV: reduces CLV debt in CDP
-  it("repayCLV(): reduces the CDP's CLV debt by the correct amount", async () => {
+  //repayLUSD: reduces LUSD debt in CDP
+  it("repayLUSD(): reduces the CDP's LUSD debt by the correct amount", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
-    await borrowerOperations.withdrawCLV(100, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(100, alice, { from: alice })
     const alice_CDP_Before = await troveManager.CDPs(alice)
     const debt_Before = alice_CDP_Before[0]
     assert.equal(debt_Before.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
 
-    await borrowerOperations.repayCLV(100, alice, { from: alice })
+    await borrowerOperations.repayLUSD(100, alice, { from: alice })
 
     // check after
     const alice_CDP_After = await troveManager.CDPs(alice)
@@ -1328,39 +1328,39 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debt_After, dec(10, 18))
   })
 
-  it("repayCLV(): decreases CLV debt in ActivePool by correct amount", async () => {
+  it("repayLUSD(): decreases LUSD debt in ActivePool by correct amount", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
 
     //check before
-    await borrowerOperations.withdrawCLV(100, alice, { from: alice })
-    const activePool_CLV_Before = await activePool.getCLVDebt()
-    assert.equal(activePool_CLV_Before.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
+    await borrowerOperations.withdrawLUSD(100, alice, { from: alice })
+    const activePool_LUSD_Before = await activePool.getLUSDDebt()
+    assert.equal(activePool_LUSD_Before.toString(), toBN(dec(10, 18)).add(toBN(100)).toString())
 
-    await borrowerOperations.repayCLV(100, alice, { from: alice })
+    await borrowerOperations.repayLUSD(100, alice, { from: alice })
 
     // check after
-    const activePool_CLV_After = await activePool.getCLVDebt()
-    assert.equal(activePool_CLV_After, dec(10, 18))
+    const activePool_LUSD_After = await activePool.getLUSDDebt()
+    assert.equal(activePool_LUSD_After, dec(10, 18))
   })
 
-  it("repayCLV(): decreases user LUSDToken balance by correct amount", async () => {
+  it("repayLUSD(): decreases user LUSDToken balance by correct amount", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
 
     // check before
-    await borrowerOperations.withdrawCLV(100, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(100, alice, { from: alice })
     const alice_LUSDTokenBalance_Before = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_Before, 100)
 
-    await borrowerOperations.repayCLV(100, alice, { from: alice })
+    await borrowerOperations.repayLUSD(100, alice, { from: alice })
 
     // check after
     const alice_LUSDTokenBalance_After = await lusdToken.balanceOf(alice)
     assert.equal(alice_LUSDTokenBalance_After, 0)
   })
 
-  it('repayCLV(): can repay debt in Recovery Mode', async () => {
+  it('repayLUSD(): can repay debt in Recovery Mode', async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(90, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(90, 18), alice, { from: alice })
 
     assert.isFalse(await troveManager.checkRecoveryMode())
 
@@ -1368,7 +1368,7 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    await borrowerOperations.repayCLV(dec(50, 18), alice, { from: alice })
+    await borrowerOperations.repayLUSD(dec(50, 18), alice, { from: alice })
 
     // Check Alice's debt: 90 (withdrawn) + 10 (gas comp) - 50 (repaid)
     const alice_debt = (await troveManager.CDPs(alice))[0].toString()
@@ -1384,10 +1384,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -1456,10 +1456,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -1505,10 +1505,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -1532,7 +1532,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
-  it("adjustTrove(): borrowing at non-zero base rate sends CLV fee to LQTY staking contract", async () => {
+  it("adjustTrove(): borrowing at non-zero base rate sends LUSD fee to LQTY staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -1544,10 +1544,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -1557,17 +1557,17 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_Before, '0')
+    // Check LQTY LUSD balance before == 0
+    const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
     // D adjusts trove
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.adjustTrove(0, dec(37, 18), true, D, { from: D })
 
-    // Check LQTY CLV balance after has increased
-    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
+    // Check LQTY LUSD balance after has increased
+    const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
   })
 
   it("adjustTrove(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
@@ -1582,10 +1582,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -1597,7 +1597,7 @@ contract('BorrowerOperations', async accounts => {
 
     const withdrawal_D = toBN(dec(37, 18))
 
-    // D withdraws CLV
+    // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
     const adjustmentTx = await borrowerOperations.adjustTrove(0, withdrawal_D, true, D, { from: D })
 
@@ -1612,7 +1612,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
   })
 
-  it("adjustTrove(): Borrowing at non-zero base rate increases the LQTY staking contract CLV fees-per-unit-staked", async () => {
+  it("adjustTrove(): Borrowing at non-zero base rate increases the LQTY staking contract LUSD fees-per-unit-staked", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -1624,10 +1624,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -1637,7 +1637,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY contract CLV fees-per-unit-staked is zero
+    // Check LQTY contract LUSD fees-per-unit-staked is zero
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
@@ -1645,7 +1645,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.adjustTrove(0, dec(37, 18), true, D, { from: D })
 
-    // Check LQTY contract CLV fees-per-unit-staked has increased
+    // Check LQTY contract LUSD fees-per-unit-staked has increased
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
   })
@@ -1662,14 +1662,14 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check LQTY Staking contract balance before == 0
-    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_Before, '0')
+    const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -1681,19 +1681,19 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts trove
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    const CLVRequest_D = toBN(dec(40, 18))
-    await borrowerOperations.adjustTrove(0, CLVRequest_D, true, D, { from: D })
+    const LUSDRequest_D = toBN(dec(40, 18))
+    await borrowerOperations.adjustTrove(0, LUSDRequest_D, true, D, { from: D })
 
-    // Check LQTY staking CLV balance has increased
-    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
+    // Check LQTY staking LUSD balance has increased
+    const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
 
-    // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await lusdToken.balanceOf(D)
-    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
+    // Check D's LUSD balance now equals their requested LUSD
+    const LUSDBalance_D = await lusdToken.balanceOf(D)
+    assert.isTrue(LUSDRequest_D.eq(LUSDBalance_D))
   })
 
-  it("adjustTrove(): Borrowing at zero base rate does not change CLV balance of LQTY staking contract", async () => {
+  it("adjustTrove(): Borrowing at zero base rate does not change LUSD balance of LQTY staking contract", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1707,20 +1707,20 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_Before, '0')
+    // Check LQTY LUSD balance before == 0
+    const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
     // D adjusts trove
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.adjustTrove(0, dec(37, 18), true, D, { from: D })
 
-    // Check LQTY CLV balance after == 0
-    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_After, '0')
+    // Check LQTY LUSD balance after == 0
+    const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_After, '0')
   })
 
-  it("adjustTrove(): Borrowing at zero base rate does not change LQTY staking contract CLV fees-per-unit-staked", async () => {
+  it("adjustTrove(): Borrowing at zero base rate does not change LQTY staking contract LUSD fees-per-unit-staked", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1734,7 +1734,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY CLV balance before == 0
+    // Check LQTY LUSD balance before == 0
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
@@ -1742,12 +1742,12 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.adjustTrove(0, dec(37, 18), true, D, { from: D })
 
-    // Check LQTY CLV balance after == 0
+    // Check LQTY LUSD balance after == 0
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_After, '0')
   })
 
-  it("adjustTrove(): Borrowing at zero base rate sends total requested CLV to the user", async () => {
+  it("adjustTrove(): Borrowing at zero base rate sends total requested LUSD to the user", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -1763,20 +1763,20 @@ contract('BorrowerOperations', async accounts => {
 
     // D adjusts trove
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
-    const CLVRequest_D = toBN(dec(40, 18))
-    await borrowerOperations.adjustTrove(0, CLVRequest_D, true, D, { from: D })
+    const LUSDRequest_D = toBN(dec(40, 18))
+    await borrowerOperations.adjustTrove(0, LUSDRequest_D, true, D, { from: D })
 
-    // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await lusdToken.balanceOf(D)
+    // Check D's LUSD balance now equals their requested LUSD
+    const LUSDBalance_D = await lusdToken.balanceOf(D)
 
-    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
+    assert.isTrue(LUSDRequest_D.eq(LUSDBalance_D))
   })
 
   it("adjustTrove(): reverts when calling address has no active trove", async () => {
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
-    // Alice coll and debt increase(+1 ETH, +50CLV)
+    // Alice coll and debt increase(+1 ETH, +50LUSD)
     await borrowerOperations.adjustTrove(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     try {
@@ -1829,7 +1829,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("adjustTrove(): reverts when CLV repaid is > debt of the trove", async () => {
+  it("adjustTrove(): reverts when LUSD repaid is > debt of the trove", async () => {
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
@@ -1875,12 +1875,12 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
     await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
 
-    // Alice decreases coll by 1 ETH and increass debt by 100 CLV. 
+    // Alice decreases coll by 1 ETH and increass debt by 100 LUSD. 
     // New ICR would be: ((2+1) * 100) / (100 + 100) = 300/200 = 150%, 
     const txAlice = await borrowerOperations.adjustTrove(0, dec(100, 18), true, alice, { from: alice, value: dec(1, 'ether') })
     assert.isTrue(txAlice.receipt.status)
 
-    // Bob attempts to decrease coll  by 1 ETH and increase debt by 200 CLV. 
+    // Bob attempts to decrease coll  by 1 ETH and increase debt by 200 LUSD. 
     // New ICR would be: ((2+1) * 100) / (100 + 200) = 300/300 = 100%, below the MCR.
     try {
       const txBob = await borrowerOperations.adjustTrove(0, dec(200, 18), true, bob, { from: bob, value: dec(1, 'ether') })
@@ -1901,7 +1901,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(collBefore, dec(10, 'ether'))
     assert.equal(activePoolCollBefore, '110000000000000000000')
 
-    // Alice adjusts trove. No coll change, and a debt increase (+50CLV)
+    // Alice adjusts trove. No coll change, and a debt increase (+50LUSD)
     await borrowerOperations.adjustTrove(0, dec(50, 18), true, alice, { from: alice, value: 0 })
 
     const collAfter = ((await troveManager.CDPs(alice))[1]).toString()
@@ -1917,7 +1917,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
 
     const debtBefore = ((await troveManager.CDPs(alice))[0]).toString()
-    const activePoolDebtBefore = (await activePool.getCLVDebt()).toString()
+    const activePoolDebtBefore = (await activePool.getLUSDDebt()).toString()
 
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(activePoolDebtBefore, dec(120, 18))
@@ -1927,7 +1927,7 @@ contract('BorrowerOperations', async accounts => {
 
     const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
     const collAfter = ((await troveManager.CDPs(alice))[1]).toString()
-    const activePoolDebtAfter = (await activePool.getCLVDebt()).toString()
+    const activePoolDebtAfter = (await activePool.getLUSDDebt()).toString()
 
     assert.equal(debtAfter, debtBefore)
     assert.equal(activePoolDebtAfter, activePoolDebtBefore)
@@ -1944,7 +1944,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(collBefore, dec(1, 'ether'))
 
-    // Alice adjusts trove. Coll and debt increase(+1 ETH, +50CLV)
+    // Alice adjusts trove. Coll and debt increase(+1 ETH, +50LUSD)
     await borrowerOperations.adjustTrove(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
@@ -1966,7 +1966,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(collBefore, dec(1, 'ether'))
 
-    // Alice adjusts trove coll and debt decrease (-0.5 ETH, -50CLV)
+    // Alice adjusts trove coll and debt decrease (-0.5 ETH, -50LUSD)
     await borrowerOperations.adjustTrove(dec(500, 'finney'), dec(50, 18), false, alice, { from: alice })
 
     const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
@@ -1987,7 +1987,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(collBefore, dec(1, 'ether'))
 
-    // Alice adjusts trove - coll increase and debt decrease (+0.5 ETH, -50CLV)
+    // Alice adjusts trove - coll increase and debt decrease (+0.5 ETH, -50LUSD)
     await borrowerOperations.adjustTrove(0, dec(50, 18), false, alice, { from: alice, value: dec(500, 'finney') })
 
     const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
@@ -2009,7 +2009,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(collBefore, dec(1, 'ether'))
 
-    // Alice adjusts trove - coll decrease and debt increase (0.1 ETH, 10CLV)
+    // Alice adjusts trove - coll decrease and debt increase (0.1 ETH, 10LUSD)
     await borrowerOperations.adjustTrove('100000000000000000', dec(10, 18), true, alice, { from: alice })
 
     const debtAfter = ((await troveManager.CDPs(alice))[0]).toString()
@@ -2030,7 +2030,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(stakeBefore, dec(1, 'ether'))
     assert.equal(totalStakesBefore, '101000000000000000000')
 
-    // Alice adjusts trove - coll and debt increase (+1 ETH, +50 CLV)
+    // Alice adjusts trove - coll and debt increase (+1 ETH, +50 LUSD)
     await borrowerOperations.adjustTrove(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
     const stakeAfter = ((await troveManager.CDPs(alice))[2]).toString()
@@ -2131,34 +2131,34 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_RawEther_After, '102000000000000000000')
   })
 
-  it("adjustTrove(): Changes the CLV debt in ActivePool by requested decrease", async () => {
+  it("adjustTrove(): Changes the LUSD debt in ActivePool by requested decrease", async () => {
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const activePool_CLVDebt_Before = (await activePool.getCLVDebt()).toString()
-    assert.equal(activePool_CLVDebt_Before, dec(120, 18))
+    const activePool_LUSDDebt_Before = (await activePool.getLUSDDebt()).toString()
+    assert.equal(activePool_LUSDDebt_Before, dec(120, 18))
 
     // Alice adjusts trove - coll increase and debt decrease
     await borrowerOperations.adjustTrove(0, dec(50, 18), false, alice, { from: alice, value: dec(1, 'ether') })
 
-    const activePool_CLVDebt_After = (await activePool.getCLVDebt()).toString()
-    assert.equal(activePool_CLVDebt_After, dec(70, 18))
+    const activePool_LUSDDebt_After = (await activePool.getLUSDDebt()).toString()
+    assert.equal(activePool_LUSDDebt_After, dec(70, 18))
   })
 
-  it("adjustTrove():Changes the CLV debt in ActivePool by requested increase", async () => {
+  it("adjustTrove():Changes the LUSD debt in ActivePool by requested increase", async () => {
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const activePool_CLVDebt_Before = (await activePool.getCLVDebt()).toString()
-    assert.equal(activePool_CLVDebt_Before, dec(120, 18))
+    const activePool_LUSDDebt_Before = (await activePool.getLUSDDebt()).toString()
+    assert.equal(activePool_LUSDDebt_Before, dec(120, 18))
 
     // Alice adjusts trove - coll increase and debt increase
     await borrowerOperations.adjustTrove(0, dec(100, 18), true, alice, { from: alice, value: dec(1, 'ether') })
 
-    const activePool_CLVDebt_After = (await activePool.getCLVDebt()).toString()
-    assert.equal(activePool_CLVDebt_After, dec(220, 18))
+    const activePool_LUSDDebt_After = (await activePool.getLUSDDebt()).toString()
+    assert.equal(activePool_LUSDDebt_After, dec(220, 18))
   })
 
   it("adjustTrove(): new coll = 0 and new debt = 0 is not allowed, as gas compensation still counts toward ICR", async () => {
@@ -2250,10 +2250,10 @@ contract('BorrowerOperations', async accounts => {
 
   it("closeTrove(): reduces a CDP's collateral to zero", async () => {
     await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(10, 'ether') })
-    // await borrowerOperations.withdrawCLV(dec(100, 18), dennis, { from: dennis })
+    // await borrowerOperations.withdrawLUSD(dec(100, 18), dennis, { from: dennis })
 
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
     const collBefore = ((await troveManager.CDPs(alice))[1]).toString()
     assert.equal(collBefore, dec(1, 'ether'))
@@ -2270,7 +2270,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(10, 'ether') })
 
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
     const debtBefore = ((await troveManager.CDPs(alice))[0]).toString()
     assert.equal(debtBefore, dec(110, 18))
@@ -2287,7 +2287,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(10, 'ether') })
 
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
     const stakeBefore = ((await troveManager.CDPs(alice))[2]).toString()
     assert.equal(stakeBefore, dec(1, 'ether'))
@@ -2326,10 +2326,10 @@ contract('BorrowerOperations', async accounts => {
 
     // Get Alice's pending reward snapshots 
     const L_ETH_A_Snapshot = (await troveManager.rewardSnapshots(alice))[0]
-    const L_CLVDebt_A_Snapshot = (await troveManager.rewardSnapshots(alice))[1]
+    const L_LUSDDebt_A_Snapshot = (await troveManager.rewardSnapshots(alice))[1]
 
     assert.isTrue(L_ETH_A_Snapshot.gt(toBN('0')))
-    assert.isTrue(L_CLVDebt_A_Snapshot.gt(toBN('0')))
+    assert.isTrue(L_LUSDDebt_A_Snapshot.gt(toBN('0')))
 
     // Liquidate Carol
     await troveManager.liquidate(carol)
@@ -2337,27 +2337,27 @@ contract('BorrowerOperations', async accounts => {
 
     // Get Alice's pending reward snapshots after Carol's liquidation. Check above 0
     const L_ETH_Snapshot_A_AfterLiquidation = (await troveManager.rewardSnapshots(alice))[0]
-    const L_CLVDebt_Snapshot_A_AfterLiquidation = (await troveManager.rewardSnapshots(alice))[1]
+    const L_LUSDDebt_Snapshot_A_AfterLiquidation = (await troveManager.rewardSnapshots(alice))[1]
 
     assert.isTrue(L_ETH_Snapshot_A_AfterLiquidation.gt(toBN('0')))
-    assert.isTrue(L_CLVDebt_Snapshot_A_AfterLiquidation.gt(toBN('0')))
+    assert.isTrue(L_LUSDDebt_Snapshot_A_AfterLiquidation.gt(toBN('0')))
 
     // Alice closes trove
     await borrowerOperations.closeTrove({ from: alice })
 
     // Check Alice's pending reward snapshots are zero
     const L_ETH_Snapshot_A_afterAliceCloses = (await troveManager.rewardSnapshots(alice))[0]
-    const L_CLVDebt_Snapshot_A_afterAliceCloses = (await troveManager.rewardSnapshots(alice))[1]
+    const L_LUSDDebt_Snapshot_A_afterAliceCloses = (await troveManager.rewardSnapshots(alice))[1]
 
     assert.equal(L_ETH_Snapshot_A_afterAliceCloses, '0')
-    assert.equal(L_CLVDebt_Snapshot_A_afterAliceCloses, '0')
+    assert.equal(L_LUSDDebt_Snapshot_A_afterAliceCloses, '0')
   })
 
   it("closeTrove(): closes the CDP", async () => {
     await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(10, 'ether') })
 
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
     // Check CDP is active
     const alice_CDP_Before = await troveManager.CDPs(alice)
@@ -2380,7 +2380,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(10, 'ether') })
 
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
     // Check before
     const activePool_ETH_before = await activePool.getETH()
@@ -2402,7 +2402,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(10, 'ether') })
 
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
     // Check before
     const activePool_Debt_before = (await activePool.getETH()).toString()
@@ -2412,7 +2412,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.closeTrove({ from: alice })
 
     // Check after
-    const activePool_Debt_After = (await activePool.getCLVDebt()).toString()
+    const activePool_Debt_After = (await activePool.getLUSDDebt()).toString()
     assert.equal(activePool_Debt_After, dec(10, 18))
   })
 
@@ -2458,18 +2458,18 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(10, 'ether') })
 
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.withdrawCLV(dec(100, 18), alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, { from: alice })
 
-    const alice_CLVBalance_Before = await lusdToken.balanceOf(alice)
-    assert.equal(alice_CLVBalance_Before, dec(100, 18))
+    const alice_LUSDBalance_Before = await lusdToken.balanceOf(alice)
+    assert.equal(alice_LUSDBalance_Before, dec(100, 18))
 
     // close trove
     await borrowerOperations.closeTrove({ from: alice })
 
-    //   // check alive CLV balance after
+    //   // check alive LUSD balance after
 
-    const alice_CLVBalance_After = await lusdToken.balanceOf(alice)
-    assert.equal(alice_CLVBalance_After, 0)
+    const alice_LUSDBalance_After = await lusdToken.balanceOf(alice)
+    assert.equal(alice_LUSDBalance_After, 0)
   })
 
   it("closeTrove(): applies pending rewards", async () => {
@@ -2479,54 +2479,54 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openTrove(0, carol, { from: carol, value: dec(1, 'ether') })
 
-    // Alice and Bob withdraw 90CLV, Carol withdraws 170CLV
-    const CLVwithdrawal_A = dec(90, 18)
-    const CLVwithdrawal_B = dec(90, 18)
-    const CLVwithdrawal_C = dec(170, 18)
-    await borrowerOperations.withdrawCLV(CLVwithdrawal_A, alice, { from: alice })
-    await borrowerOperations.withdrawCLV(CLVwithdrawal_B, bob, { from: bob })
-    await borrowerOperations.withdrawCLV(CLVwithdrawal_C, carol, { from: carol })
+    // Alice and Bob withdraw 90LUSD, Carol withdraws 170LUSD
+    const LUSDwithdrawal_A = dec(90, 18)
+    const LUSDwithdrawal_B = dec(90, 18)
+    const LUSDwithdrawal_C = dec(170, 18)
+    await borrowerOperations.withdrawLUSD(LUSDwithdrawal_A, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(LUSDwithdrawal_B, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(LUSDwithdrawal_C, carol, { from: carol })
 
     // --- TEST ---
 
-    // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
+    // price drops to 1ETH:100LUSD, reducing Carol's ICR below MCR
     await priceFeed.setPrice('100000000000000000000');
     const price = await priceFeed.getPrice()
 
-    // close Carol's CDP, liquidating her 1 ether and 180CLV. Alice and Bob earn rewards.
+    // close Carol's CDP, liquidating her 1 ether and 180LUSD. Alice and Bob earn rewards.
     const liquidationTx = await troveManager.liquidate(carol, { from: owner });
     const [liquidatedDebt_C, liquidatedColl_C, gasComp_C] = th.getEmittedLiquidationValues(liquidationTx)
-    // Dennis opens a new CDP with 10 Ether, withdraws CLV and sends 135 CLV to Alice, and 45 CLV to Bob.
+    // Dennis opens a new CDP with 10 Ether, withdraws LUSD and sends 135 LUSD to Alice, and 45 LUSD to Bob.
 
     await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(100, 'ether') })
-    const CLVwithdrawal_D = await dec(200, 18)
-    await borrowerOperations.withdrawCLV(CLVwithdrawal_D, dennis, { from: dennis })
+    const LUSDwithdrawal_D = await dec(200, 18)
+    await borrowerOperations.withdrawLUSD(LUSDwithdrawal_D, dennis, { from: dennis })
     await lusdToken.transfer(alice, '135000000000000000000', { from: dennis })
     await lusdToken.transfer(bob, '45000000000000000000', { from: dennis })
 
     // check Alice and Bob's reward snapshots are zero before they alter their CDPs
     alice_rewardSnapshot_Before = await troveManager.rewardSnapshots(alice)
     const alice_ETHrewardSnapshot_Before = alice_rewardSnapshot_Before[0]
-    const alice_CLVDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
+    const alice_LUSDDebtRewardSnapshot_Before = alice_rewardSnapshot_Before[1]
 
     const bob_rewardSnapshot_Before = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot_Before = bob_rewardSnapshot_Before[0]
-    const bob_CLVDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
+    const bob_LUSDDebtRewardSnapshot_Before = bob_rewardSnapshot_Before[1]
 
     assert.equal(alice_ETHrewardSnapshot_Before, 0)
-    assert.equal(alice_CLVDebtRewardSnapshot_Before, 0)
+    assert.equal(alice_LUSDDebtRewardSnapshot_Before, 0)
     assert.equal(bob_ETHrewardSnapshot_Before, 0)
-    assert.equal(bob_CLVDebtRewardSnapshot_Before, 0)
+    assert.equal(bob_LUSDDebtRewardSnapshot_Before, 0)
 
     const L_ETH = await troveManager.L_ETH()
-    const L_CLVDebt = await troveManager.L_CLVDebt()
+    const L_LUSDDebt = await troveManager.L_LUSDDebt()
 
     const defaultPool_ETH = await defaultPool.getETH()
-    const defaultPool_CLVDebt = await defaultPool.getCLVDebt()
+    const defaultPool_LUSDDebt = await defaultPool.getLUSDDebt()
 
     // Carol's liquidated coll (1 ETH) and drawn debt should have entered the Default Pool
     assert.isAtMost(th.getDifference(defaultPool_ETH, liquidatedColl_C), 100)
-    assert.isAtMost(th.getDifference(defaultPool_CLVDebt, liquidatedDebt_C), 100)
+    assert.isAtMost(th.getDifference(defaultPool_LUSDDebt, liquidatedDebt_C), 100)
 
     // Close Alice's trove. Alice's pending rewards should be removed from the DefaultPool when she close.
     await borrowerOperations.closeTrove({ from: alice })
@@ -2535,21 +2535,21 @@ contract('BorrowerOperations', async accounts => {
     const expectedDebtReward_A = liquidatedDebt_C.mul(toBN(dec(15, 'ether'))).div(toBN(dec(20, 'ether')))
 
     const defaultPool_ETH_afterAliceCloses = await defaultPool.getETH()
-    const defaultPool_CLVDebt_afterAliceCloses = await defaultPool.getCLVDebt()
+    const defaultPool_LUSDDebt_afterAliceCloses = await defaultPool.getLUSDDebt()
 
     assert.isAtMost(th.getDifference(defaultPool_ETH_afterAliceCloses,
       defaultPool_ETH.sub(expectedCollReward_A)), 100)
-    assert.isAtMost(th.getDifference(defaultPool_CLVDebt_afterAliceCloses,
-      defaultPool_CLVDebt.sub(expectedDebtReward_A)), 100)
+    assert.isAtMost(th.getDifference(defaultPool_LUSDDebt_afterAliceCloses,
+      defaultPool_LUSDDebt.sub(expectedDebtReward_A)), 100)
 
     // Close Bob's trove. Expect DefaultPool coll and debt to drop to 0, since closing pulls his rewards out.
     await borrowerOperations.closeTrove({ from: bob })
 
     const defaultPool_ETH_afterBobCloses = await defaultPool.getETH()
-    const defaultPool_CLVDebt_afterBobCloses = await defaultPool.getCLVDebt()
+    const defaultPool_LUSDDebt_afterBobCloses = await defaultPool.getLUSDDebt()
 
     assert.isAtMost(th.getDifference(defaultPool_ETH_afterBobCloses, 0), 100)
-    assert.isAtMost(th.getDifference(defaultPool_CLVDebt_afterBobCloses, 0), 100)
+    assert.isAtMost(th.getDifference(defaultPool_LUSDDebt_afterBobCloses, 0), 100)
   })
 
   // --- openTrove() ---
@@ -2560,10 +2560,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -2597,10 +2597,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -2656,10 +2656,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -2705,10 +2705,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -2733,7 +2733,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_2.lt(baseRate_1))
   })
 
-  it("openTrove(): borrowing at non-zero base rate sends CLV fee to LQTY staking contract", async () => {
+  it("openTrove(): borrowing at non-zero base rate sends LUSD fee to LQTY staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -2745,10 +2745,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -2758,16 +2758,16 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_Before, '0')
+    // Check LQTY LUSD balance before == 0
+    const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
     // D opens trove 
     await borrowerOperations.openTrove(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
-    // Check LQTY CLV balance after has increased
-    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
+    // Check LQTY LUSD balance after has increased
+    const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
   })
 
   it("openTrove(): borrowing at non-zero base records the (drawn debt + fee) on the CDP struct", async () => {
@@ -2782,10 +2782,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -2799,7 +2799,7 @@ contract('BorrowerOperations', async accounts => {
 
     gasComp = toBN(dec(10, 18))
 
-    // D withdraws CLV
+    // D withdraws LUSD
     const openTroveTx = await borrowerOperations.openTrove(withdrawal_D, D, { from: D, value: dec(5, 'ether') })
     
     const emittedFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(openTroveTx))
@@ -2811,7 +2811,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(newDebt.eq(withdrawal_D.add(emittedFee).add(gasComp)))
   })
 
-  it("openTrove(): Borrowing at non-zero base rate increases the LQTY staking contract CLV fees-per-unit-staked", async () => {
+  it("openTrove(): Borrowing at non-zero base rate increases the LQTY staking contract LUSD fees-per-unit-staked", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -2823,10 +2823,10 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -2836,14 +2836,14 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY contract CLV fees-per-unit-staked is zero
+    // Check LQTY contract LUSD fees-per-unit-staked is zero
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
     // D opens trove 
     await borrowerOperations.openTrove(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
-    // Check LQTY contract CLV fees-per-unit-staked has increased
+    // Check LQTY contract LUSD fees-per-unit-staked has increased
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
   })
@@ -2860,14 +2860,14 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 CLV
+    // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
     // Check LQTY Staking contract balance before == 0
-    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_Before, '0')
+    const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
-    // Check A's balance has decreased by 10 CLV
+    // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
     // Check baseRate is now non-zero
@@ -2878,19 +2878,19 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
     // D opens trove 
-    const CLVRequest_D = toBN(dec(40, 18))
-    await borrowerOperations.openTrove(CLVRequest_D, D, { from: D, value: dec(5, 'ether') })
+    const LUSDRequest_D = toBN(dec(40, 18))
+    await borrowerOperations.openTrove(LUSDRequest_D, D, { from: D, value: dec(5, 'ether') })
 
-    // Check LQTY staking CLV balance has increased
-    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.isTrue(lqtyStaking_CLVBalance_After.gt(lqtyStaking_CLVBalance_Before))
+    // Check LQTY staking LUSD balance has increased
+    const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
 
-    // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await lusdToken.balanceOf(D)
-    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
+    // Check D's LUSD balance now equals their requested LUSD
+    const LUSDBalance_D = await lusdToken.balanceOf(D)
+    assert.isTrue(LUSDRequest_D.eq(LUSDBalance_D))
   })
 
-  it("openTrove(): Borrowing at zero base rate does not change CLV balance of LQTY staking contract", async () => {
+  it("openTrove(): Borrowing at zero base rate does not change LUSD balance of LQTY staking contract", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2904,19 +2904,19 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY CLV balance before == 0
-    const lqtyStaking_CLVBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_Before, '0')
+    // Check LQTY LUSD balance before == 0
+    const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
     // D opens trove 
     await borrowerOperations.openTrove(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
-    // Check LQTY CLV balance after == 0
-    const lqtyStaking_CLVBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_CLVBalance_After, '0')
+    // Check LQTY LUSD balance after == 0
+    const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStaking_LUSDBalance_After, '0')
   })
 
-  it("openTrove(): Borrowing at zero base rate does not change LQTY staking contract CLV fees-per-unit-staked", async () => {
+  it("openTrove(): Borrowing at zero base rate does not change LQTY staking contract LUSD fees-per-unit-staked", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2930,19 +2930,19 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY CLV balance before == 0
+    // Check LQTY LUSD balance before == 0
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_Before, '0')
 
     // D opens trove 
     await borrowerOperations.openTrove(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
-    // Check LQTY CLV balance after == 0
+    // Check LQTY LUSD balance after == 0
     const F_LUSD_After = await lqtyStaking.F_LUSD()
     assert.equal(F_LUSD_After, '0')
   })
 
-  it("openTrove(): Borrowing at zero base rate sends total requested CLV to the user", async () => {
+  it("openTrove(): Borrowing at zero base rate sends total requested LUSD to the user", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
@@ -2957,13 +2957,13 @@ contract('BorrowerOperations', async accounts => {
     th.fastForwardTime(7200, web3.currentProvider)
 
     // D opens trove 
-    const CLVRequest_D = toBN(dec(40, 18))
-    await borrowerOperations.openTrove(CLVRequest_D, D, { from: D, value: dec(5, 'ether') })
+    const LUSDRequest_D = toBN(dec(40, 18))
+    await borrowerOperations.openTrove(LUSDRequest_D, D, { from: D, value: dec(5, 'ether') })
 
-    // Check D's CLV balance now equals their requested CLV
-    const CLVBalance_D = await lusdToken.balanceOf(D)
+    // Check D's LUSD balance now equals their requested LUSD
+    const LUSDBalance_D = await lusdToken.balanceOf(D)
 
-    assert.isTrue(CLVRequest_D.eq(CLVBalance_D))
+    assert.isTrue(LUSDRequest_D.eq(LUSDBalance_D))
   })
 
 
@@ -2995,7 +2995,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(txAlice.receipt.status)
     assert.isTrue(aliceICR.gte(web3.utils.toBN('110000000000000000')))
 
-    // Bob attempts to open a trove with coll = 1 ETH, debt = 182 CLV. At ETH:USD price = 200, his ICR = 1 * 200 / 182 =   109.8%.
+    // Bob attempts to open a trove with coll = 1 ETH, debt = 182 LUSD. At ETH:USD price = 200, his ICR = 1 * 200 / 182 =   109.8%.
     try {
       const txBob = await borrowerOperations.openTrove('182000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
       assert.isFalse(txBob.receipt.status)
@@ -3007,14 +3007,14 @@ contract('BorrowerOperations', async accounts => {
   it("openTrove(): reverts when opening the trove causes the TCR of the system to fall below the CCR", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
-    // Alice creates trove with 3 ETH / 200 CLV, and 150% ICR.  System TCR = 150%.
+    // Alice creates trove with 3 ETH / 200 LUSD, and 150% ICR.  System TCR = 150%.
     const txAlice = await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
     const price = await priceFeed.getPrice()
 
     const TCR = await troveManager.getTCR()
     assert.equal(TCR, '1500000000000000000')
 
-    // Bob attempts to open a trove with coll = 1 ETH, actual debt = 201 CLV. At ETH:USD price = 1, his ICR = 300 / 201 =   149.25%`
+    // Bob attempts to open a trove with coll = 1 ETH, actual debt = 201 LUSD. At ETH:USD price = 1, his ICR = 300 / 201 =   149.25%`
 
     // System TCR would be: ((3+3) * 100 ) / (200+201) = 600/401 = 149.62%, i.e. below CCR of 150%.
     try {
@@ -3031,8 +3031,8 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(3, 'ether') })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -3054,15 +3054,15 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(3, 'ether') })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
     // --- TEST ---
 
-    // price drops to 1ETH:150CLV, reducing TCR below 150%
+    // price drops to 1ETH:150LUSD, reducing TCR below 150%
     await priceFeed.setPrice('150000000000000000000');
 
     try {                                                
@@ -3101,13 +3101,13 @@ contract('BorrowerOperations', async accounts => {
     //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(3, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(3, 'ether') })
-    await borrowerOperations.withdrawCLV('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawCLV('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
-    // price drops to 1ETH:100CLV, reducing TCR below 150%
+    // price drops to 1ETH:100LUSD, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000');
     
 
@@ -3216,47 +3216,47 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePool_RawEther_After, dec(1, 'ether'))
   })
 
-  it("openTrove(): records up-to-date initial snapshots of L_ETH and L_CLVDebt", async () => {
+  it("openTrove(): records up-to-date initial snapshots of L_ETH and L_LUSDDebt", async () => {
     // --- SETUP ---
     /* Alice adds 10 ether
     Carol adds 1 ether */
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(10, 'ether') })
     await borrowerOperations.openTrove(0, carol, { from: carol, value: dec(1, 'ether') })
 
-    // Alice withdraws 90CLV, Carol withdraws 170CLV
-    const A_CLVWithdrawal = dec(90, 18)
-    const C_CLVWithdrawal = dec(170, 18)
-    await borrowerOperations.withdrawCLV(A_CLVWithdrawal, alice, { from: alice })
-    await borrowerOperations.withdrawCLV(C_CLVWithdrawal, carol, { from: carol })
+    // Alice withdraws 90LUSD, Carol withdraws 170LUSD
+    const A_LUSDWithdrawal = dec(90, 18)
+    const C_LUSDWithdrawal = dec(170, 18)
+    await borrowerOperations.withdrawLUSD(A_LUSDWithdrawal, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(C_LUSDWithdrawal, carol, { from: carol })
 
     // --- TEST ---
 
-    // price drops to 1ETH:100CLV, reducing Carol's ICR below MCR
+    // price drops to 1ETH:100LUSD, reducing Carol's ICR below MCR
     await priceFeed.setPrice(dec(100, 18));
 
-    // close Carol's CDP, liquidating her 1 ether and 180CLV.
+    // close Carol's CDP, liquidating her 1 ether and 180LUSD.
     const liquidationTx = await troveManager.liquidate(carol, { from: owner });
     const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
     /* with total stakes = 10 ether, after liquidation, L_ETH should equal 1/10 ether per-ether-staked,
-     and L_CLV should equal 18 CLV per-ether-staked. */
+     and L_LUSD should equal 18 LUSD per-ether-staked. */
 
     const L_ETH = await troveManager.L_ETH()
-    const L_CLV = await troveManager.L_CLVDebt()
+    const L_LUSD = await troveManager.L_LUSDDebt()
 
     assert.isAtMost(th.getDifference(L_ETH, liquidatedColl.div(toBN('10'))), 100)
-    assert.isAtMost(th.getDifference(L_CLV, liquidatedDebt.div(toBN('10'))), 100)
+    assert.isAtMost(th.getDifference(L_LUSD, liquidatedDebt.div(toBN('10'))), 100)
 
     // Bob opens trove
     await borrowerOperations.openTrove('50000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
 
-    // check Bob's snapshots of L_ETH and L_CLV equal the respective current values
+    // check Bob's snapshots of L_ETH and L_LUSD equal the respective current values
     const bob_rewardSnapshot = await troveManager.rewardSnapshots(bob)
     const bob_ETHrewardSnapshot = bob_rewardSnapshot[0]
-    const bob_CLVDebtRewardSnapshot = bob_rewardSnapshot[1]
+    const bob_LUSDDebtRewardSnapshot = bob_rewardSnapshot[1]
 
     assert.isAtMost(th.getDifference(bob_ETHrewardSnapshot, L_ETH), 100)
-    assert.isAtMost(th.getDifference(bob_CLVDebtRewardSnapshot, L_CLV), 100)
+    assert.isAtMost(th.getDifference(bob_LUSDDebtRewardSnapshot, L_LUSD), 100)
   })
 
   it("openTrove(): allows a user to open a CDP, then close it, then re-open it", async () => {
@@ -3273,7 +3273,7 @@ contract('BorrowerOperations', async accounts => {
     // Repay and close CDP
     await borrowerOperations.closeTrove({ from: alice })
     /*
-    await borrowerOperations.repayCLV('50000000000000000000', alice, { from: alice })
+    await borrowerOperations.repayLUSD('50000000000000000000', alice, { from: alice })
     await borrowerOperations.withdrawColl(dec(1, 'ether'), alice, { from: alice })
     */
 
@@ -3293,7 +3293,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(await sortedCDPs.contains(alice))
   })
 
-  it("openTrove(): increases the CDP's CLV debt by the correct amount", async () => {
+  it("openTrove(): increases the CDP's LUSD debt by the correct amount", async () => {
     // check before
     const alice_CDP_Before = await troveManager.CDPs(alice)
     const debt_Before = alice_CDP_Before[0]
@@ -3307,14 +3307,14 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debt_After, '60000000000000000000')
   })
 
-  it("openTrove(): increases CLV debt in ActivePool by (drawn debt + gas comp)", async () => {
-    const activePool_CLVDebt_Before = await activePool.getCLVDebt()
-    assert.equal(activePool_CLVDebt_Before, 0)
+  it("openTrove(): increases LUSD debt in ActivePool by (drawn debt + gas comp)", async () => {
+    const activePool_LUSDDebt_Before = await activePool.getLUSDDebt()
+    assert.equal(activePool_LUSDDebt_Before, 0)
 
     await borrowerOperations.openTrove(dec(50, 18), alice, { from: alice, value: dec(1, 'ether') })
 
-    const activePool_CLVDebt_After = await activePool.getCLVDebt()
-    assert.equal(activePool_CLVDebt_After, dec(60, 18))
+    const activePool_LUSDDebt_After = await activePool.getLUSDDebt()
+    assert.equal(activePool_LUSDDebt_After, dec(60, 18))
   })
 
   it("openTrove(): increases user LUSDToken balance by correct amount", async () => {
@@ -3485,7 +3485,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price)
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
-                          .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt))
+                          .div(troveDebt.add(LUSD_GAS_COMPENSATION).add(liquidatedDebt))
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3514,7 +3514,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
-      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).add(toBN(debtChange)))
+      .div(troveDebt.add(LUSD_GAS_COMPENSATION).add(liquidatedDebt).add(toBN(debtChange)))
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3542,7 +3542,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl)).mul(price)
-      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).sub(toBN(dec(100, 18))))
+      .div(troveDebt.add(LUSD_GAS_COMPENSATION).add(liquidatedDebt).sub(toBN(dec(100, 18))))
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3570,7 +3570,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(toBN(collChange))).mul(price)
-      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt))
+      .div(troveDebt.add(LUSD_GAS_COMPENSATION).add(liquidatedDebt))
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3599,7 +3599,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, false, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(toBN(dec(1, 'ether')))).mul(price)
-                          .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt))
+                          .div(troveDebt.add(LUSD_GAS_COMPENSATION).add(liquidatedDebt))
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3628,7 +3628,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, false, debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(toBN(dec(1, 'ether')))).mul(price)
-      .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).sub(toBN(dec(100, 18)))) 
+      .div(troveDebt.add(LUSD_GAS_COMPENSATION).add(liquidatedDebt).sub(toBN(dec(100, 18)))) 
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3657,7 +3657,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(toBN(dec(1, 'ether')))).mul(price)
-                          .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).add(toBN(dec(100, 18)))) 
+                          .div(troveDebt.add(LUSD_GAS_COMPENSATION).add(liquidatedDebt).add(toBN(dec(100, 18)))) 
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3686,7 +3686,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, true, debtChange, false, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).add(toBN(dec(1, 'ether')))).mul(price)
-                          .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).sub(toBN(dec(100, 18)))) 
+                          .div(troveDebt.add(LUSD_GAS_COMPENSATION).add(liquidatedDebt).sub(toBN(dec(100, 18)))) 
 
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3715,7 +3715,7 @@ contract('BorrowerOperations', async accounts => {
       const newTCR = (await borrowerOperations.getNewTCRFromTroveChange(collChange, false, debtChange, true, price))
 
       const expectedTCR = (troveColl.add(liquidatedColl).sub(toBN(dec(1, 18)))).mul(price)
-            .div(troveDebt.add(CLV_GAS_COMPENSATION).add(liquidatedDebt).add(toBN(debtChange)))  
+            .div(troveDebt.add(LUSD_GAS_COMPENSATION).add(liquidatedDebt).add(toBN(debtChange)))  
   
       assert.isTrue(newTCR.eq(expectedTCR))
     })
@@ -3744,7 +3744,7 @@ contract('Reset chain state', async accounts => { })
 /* TODO:
 
 1) Test SortedList re-ordering by ICR. ICR ratio
-changes with addColl, withdrawColl, withdrawCLV, repayCLV, etc. Can split them up and put them with
+changes with addColl, withdrawColl, withdrawLUSD, repayLUSD, etc. Can split them up and put them with
 individual functions, or give ordering it's own 'describe' block.
 
 2)In security phase:

@@ -1784,9 +1784,9 @@
                                                         "subdenomination": null,
                                                         "typeDescriptions": {
                                                             "typeIdentifier": "t_stringliteral_752bd75e7e6fe80f835be398506111c5d20749d3247f83e786c77a37adfc47a6",
-                                                            "typeString": "literal_string \"Only the pool is authorized to mint CLV\""
+                                                            "typeString": "literal_string \"Only the pool is authorized to mint LUSD\""
                                                         },
-                                                        "value": "Only the pool is authorized to mint CLV"
+                                                        "value": "Only the pool is authorized to mint LUSD"
                                                     }
                                                 ],
                                                 "expression": {
@@ -1797,7 +1797,7 @@
                                                         },
                                                         {
                                                             "typeIdentifier": "t_stringliteral_752bd75e7e6fe80f835be398506111c5d20749d3247f83e786c77a37adfc47a6",
-                                                            "typeString": "literal_string \"Only the pool is authorized to mint CLV\""
+                                                            "typeString": "literal_string \"Only the pool is authorized to mint LUSD\""
                                                         }
                                                     ],
                                                     "id": 53,
@@ -2120,9 +2120,9 @@
                                                         "subdenomination": null,
                                                         "typeDescriptions": {
                                                             "typeIdentifier": "t_stringliteral_08a22957e876a62d2709e20d43fbacad16e83c3e2c1a08c48a303b026bee2268",
-                                                            "typeString": "literal_string \"Only the pool is authorized to burn CLV\""
+                                                            "typeString": "literal_string \"Only the pool is authorized to burn LUSD\""
                                                         },
-                                                        "value": "Only the pool is authorized to burn CLV"
+                                                        "value": "Only the pool is authorized to burn LUSD"
                                                     }
                                                 ],
                                                 "expression": {
@@ -2133,7 +2133,7 @@
                                                         },
                                                         {
                                                             "typeIdentifier": "t_stringliteral_08a22957e876a62d2709e20d43fbacad16e83c3e2c1a08c48a303b026bee2268",
-                                                            "typeString": "literal_string \"Only the pool is authorized to burn CLV\""
+                                                            "typeString": "literal_string \"Only the pool is authorized to burn LUSD\""
                                                         }
                                                     ],
                                                     "id": 78,
@@ -2456,9 +2456,9 @@
                                                         "subdenomination": null,
                                                         "typeDescriptions": {
                                                             "typeIdentifier": "t_stringliteral_deedd4a50ff4cbb955ccab35e2c9e2720d89342f0eec6b7d4091a42f5acfaa5a",
-                                                            "typeString": "literal_string \"Only the pool is authorized to deposit CLV\""
+                                                            "typeString": "literal_string \"Only the pool is authorized to deposit LUSD\""
                                                         },
-                                                        "value": "Only the pool is authorized to deposit CLV"
+                                                        "value": "Only the pool is authorized to deposit LUSD"
                                                     }
                                                 ],
                                                 "expression": {
@@ -2469,7 +2469,7 @@
                                                         },
                                                         {
                                                             "typeIdentifier": "t_stringliteral_deedd4a50ff4cbb955ccab35e2c9e2720d89342f0eec6b7d4091a42f5acfaa5a",
-                                                            "typeString": "literal_string \"Only the pool is authorized to deposit CLV\""
+                                                            "typeString": "literal_string \"Only the pool is authorized to deposit LUSD\""
                                                         }
                                                     ],
                                                     "id": 103,
@@ -2809,9 +2809,9 @@
                                                         "subdenomination": null,
                                                         "typeDescriptions": {
                                                             "typeIdentifier": "t_stringliteral_f1e9dac79b3d682f41e51727101c23309ae50f5a633cca0562e95d8cce6722ac",
-                                                            "typeString": "literal_string \"Only the pool is authorized to return CLV\""
+                                                            "typeString": "literal_string \"Only the pool is authorized to return LUSD\""
                                                         },
-                                                        "value": "Only the pool is authorized to return CLV"
+                                                        "value": "Only the pool is authorized to return LUSD"
                                                     }
                                                 ],
                                                 "expression": {
@@ -2822,7 +2822,7 @@
                                                         },
                                                         {
                                                             "typeIdentifier": "t_stringliteral_f1e9dac79b3d682f41e51727101c23309ae50f5a633cca0562e95d8cce6722ac",
-                                                            "typeString": "literal_string \"Only the pool is authorized to return CLV\""
+                                                            "typeString": "literal_string \"Only the pool is authorized to return LUSD\""
                                                         }
                                                     ],
                                                     "id": 129,

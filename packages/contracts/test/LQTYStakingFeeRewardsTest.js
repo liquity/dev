@@ -150,7 +150,7 @@ contract('Fee arithmetic tests', async accounts => {
     assert.isTrue(baseRate.gt(toBN('0')))
 
     // D draws debt
-    const tx = await borrowerOperations.withdrawCLV(dec(27, 18), D, {from: D})
+    const tx = await borrowerOperations.withdrawLUSD(dec(27, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(tx))
@@ -191,7 +191,7 @@ contract('Fee arithmetic tests', async accounts => {
     assert.isTrue(baseRate.gt(toBN('0')))
 
     // D draws debt
-    const tx = await borrowerOperations.withdrawCLV(dec(27, 18), D, {from: D})
+    const tx = await borrowerOperations.withdrawLUSD(dec(27, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(tx))
@@ -237,14 +237,14 @@ contract('Fee arithmetic tests', async accounts => {
      assert.isTrue(emittedETHFee_2.gt(toBN('0')))
 
     // D draws debt
-    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), D, {from: D})
+    const borrowingTx_1 = await borrowerOperations.withdrawLUSD(dec(104, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
     assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
 
     // B draws debt
-    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), B, {from: B})
+    const borrowingTx_2 = await borrowerOperations.withdrawLUSD(dec(17, 18), B, {from: B})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
@@ -304,14 +304,14 @@ contract('Fee arithmetic tests', async accounts => {
      assert.isTrue(emittedETHFee_2.gt(toBN('0')))
 
     // D draws debt
-    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), D, {from: D})
+    const borrowingTx_1 = await borrowerOperations.withdrawLUSD(dec(104, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
     assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
 
     // B draws debt
-    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), B, {from: B})
+    const borrowingTx_2 = await borrowerOperations.withdrawLUSD(dec(17, 18), B, {from: B})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
@@ -410,14 +410,14 @@ contract('Fee arithmetic tests', async accounts => {
      assert.isTrue(emittedETHFee_2.gt(toBN('0')))
 
     // D draws debt
-    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), D, {from: D})
+    const borrowingTx_1 = await borrowerOperations.withdrawLUSD(dec(104, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
     assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
 
     // B draws debt
-    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), B, {from: B})
+    const borrowingTx_2 = await borrowerOperations.withdrawLUSD(dec(17, 18), B, {from: B})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
@@ -473,12 +473,12 @@ contract('Fee arithmetic tests', async accounts => {
      assert.isTrue(emittedETHFee_2.gt(toBN('0')))
 
     // F draws debt
-    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), F, {from: F})
+    const borrowingTx_1 = await borrowerOperations.withdrawLUSD(dec(104, 18), F, {from: F})
     const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
     assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
 
     // G draws debt
-    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), G, {from: G})
+    const borrowingTx_2 = await borrowerOperations.withdrawLUSD(dec(17, 18), G, {from: G})
     const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
     assert.isTrue(emittedLUSDFee_2.gt(toBN('0')))
 
@@ -497,7 +497,7 @@ contract('Fee arithmetic tests', async accounts => {
      assert.isTrue(emittedETHFee_3.gt(toBN('0')))
 
      // G draws debt
-    const borrowingTx_3 = await borrowerOperations.withdrawCLV(dec(17, 18), G, {from: G})
+    const borrowingTx_3 = await borrowerOperations.withdrawLUSD(dec(17, 18), G, {from: G})
     const emittedLUSDFee_3 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_3))
     assert.isTrue(emittedLUSDFee_3.gt(toBN('0')))
      

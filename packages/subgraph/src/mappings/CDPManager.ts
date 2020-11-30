@@ -81,17 +81,17 @@ export function handleLiquidation(event: Liquidation): void {
     event.params._liquidatedColl,
     event.params._liquidatedDebt,
     event.params._collGasCompensation,
-    event.params._CLVGasCompensation
+    event.params._LUSDGasCompensation
   );
 
-  updateTotalRedistributed(troveManager.L_ETH(), troveManager.L_CLVDebt());
+  updateTotalRedistributed(troveManager.L_ETH(), troveManager.L_LUSDDebt());
 }
 
 export function handleRedemption(event: Redemption): void {
   finishCurrentRedemption(
     event,
-    event.params._attemptedCLVAmount,
-    event.params._actualCLVAmount,
+    event.params._attemptedLUSDAmount,
+    event.params._actualLUSDAmount,
     event.params._ETHSent
   );
 }

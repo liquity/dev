@@ -24,7 +24,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   async getTotalRedistributed(overrides?: EthersCallOverrides) {
     const [collateral, debt] = await Promise.all([
       this.contracts.troveManager.L_ETH({ ...overrides }).then(decimalify),
-      this.contracts.troveManager.L_CLVDebt({ ...overrides }).then(decimalify)
+      this.contracts.troveManager.L_LUSDDebt({ ...overrides }).then(decimalify)
     ]);
 
     return new Trove({ collateral, debt });
@@ -44,7 +44,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 
         snapshotOfTotalRedistributed: {
           collateral: new Decimal(snapshot.ETH),
-          debt: new Decimal(snapshot.CLVDebt)
+          debt: new Decimal(snapshot.LUSDDebt)
         }
       });
     } else {
@@ -73,9 +73,9 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
       [
         this.contracts.activePool.getETH({ ...overrides }),
-        this.contracts.activePool.getCLVDebt({ ...overrides }),
+        this.contracts.activePool.getLUSDDebt({ ...overrides }),
         this.contracts.defaultPool.getETH({ ...overrides }),
-        this.contracts.defaultPool.getCLVDebt({ ...overrides })
+        this.contracts.defaultPool.getLUSDDebt({ ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
@@ -89,7 +89,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     const [depositStruct, depositAfterLoss, pendingCollateralGain] = await Promise.all([
       this.contracts.stabilityPool.deposits(address, { ...overrides }),
       this.contracts.stabilityPool
-        .getCompoundedCLVDeposit(address, { ...overrides })
+        .getCompoundedLUSDDeposit(address, { ...overrides })
         .then(decimalify),
       this.contracts.stabilityPool.getDepositorETHGain(address, { ...overrides }).then(decimalify)
     ]);
@@ -100,7 +100,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getQuiInStabilityPool(overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.stabilityPool.getTotalCLVDeposits({ ...overrides }));
+    return new Decimal(await this.contracts.stabilityPool.getTotalLUSDDeposits({ ...overrides }));
   }
 
   async getQuiBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
@@ -133,7 +133,7 @@ type MultipleSortedCDPs = Resolved<ReturnType<MultiCDPGetter["getMultipleSortedC
 
 const mapMultipleSortedCDPsToTroves = (cdps: MultipleSortedCDPs) =>
   cdps.map(
-    ({ owner, coll, debt, stake, snapshotCLVDebt, snapshotETH }) =>
+    ({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) =>
       [
         owner,
 
@@ -144,7 +144,7 @@ const mapMultipleSortedCDPsToTroves = (cdps: MultipleSortedCDPs) =>
 
           snapshotOfTotalRedistributed: {
             collateral: new Decimal(snapshotETH),
-            debt: new Decimal(snapshotCLVDebt)
+            debt: new Decimal(snapshotLUSDDebt)
           }
         })
       ] as const

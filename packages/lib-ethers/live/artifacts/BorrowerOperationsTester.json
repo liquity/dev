@@ -172,7 +172,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "CLV_GAS_COMPENSATION",
+      "name": "LUSD_GAS_COMPENSATION",
       "outputs": [
         {
           "internalType": "uint256",
@@ -482,7 +482,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLVAmount",
+          "name": "_LUSDAmount",
           "type": "uint256"
         },
         {
@@ -556,7 +556,7 @@
           "type": "address"
         }
       ],
-      "name": "repayCLV",
+      "name": "repayLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -631,7 +631,7 @@
           "type": "address"
         }
       ],
-      "name": "withdrawCLV",
+      "name": "withdrawLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

@@ -23,7 +23,7 @@ contract ActivePool is Ownable, IPool {
     address public stabilityPoolAddress;
     address public defaultPoolAddress;
     uint256 internal ETH;  // deposited ether tracker
-    uint256 internal CLVDebt;
+    uint256 internal LUSDDebt;
 
     // --- Events ---
 
@@ -65,8 +65,8 @@ contract ActivePool is Ownable, IPool {
         return ETH;
     }
 
-    function getCLVDebt() external view override returns (uint) {
-        return CLVDebt;
+    function getLUSDDebt() external view override returns (uint) {
+        return LUSDDebt;
     }
 
     // --- Pool functionality ---
@@ -80,14 +80,14 @@ contract ActivePool is Ownable, IPool {
         require(success, "ActivePool: sending ETH failed");
     }
 
-    function increaseCLVDebt(uint _amount) external override {
+    function increaseLUSDDebt(uint _amount) external override {
         _requireCallerIsBOorCDPM();
-        CLVDebt  = CLVDebt.add(_amount);
+        LUSDDebt  = LUSDDebt.add(_amount);
     }
 
-    function decreaseCLVDebt(uint _amount) external override {
+    function decreaseLUSDDebt(uint _amount) external override {
         _requireCallerIsBOorCDPMorSP();
-        CLVDebt = CLVDebt.sub(_amount);
+        LUSDDebt = LUSDDebt.sub(_amount);
     }
 
     // --- 'require' functions ---

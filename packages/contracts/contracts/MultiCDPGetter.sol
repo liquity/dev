@@ -16,7 +16,7 @@ contract MultiCDPGetter {
         uint stake;
 
         uint snapshotETH;
-        uint snapshotCLVDebt;
+        uint snapshotLUSDDebt;
     }
 
     TroveManager public troveManager; // XXX CDPs missing from ITroveManager?
@@ -82,7 +82,7 @@ contract MultiCDPGetter {
             ) = troveManager.CDPs(currentCDPowner);
             (
                 _cdps[idx].snapshotETH,
-                _cdps[idx].snapshotCLVDebt
+                _cdps[idx].snapshotLUSDDebt
             ) = troveManager.rewardSnapshots(currentCDPowner);
 
             currentCDPowner = sortedCDPs.getNext(currentCDPowner);
@@ -111,7 +111,7 @@ contract MultiCDPGetter {
             ) = troveManager.CDPs(currentCDPowner);
             (
                 _cdps[idx].snapshotETH,
-                _cdps[idx].snapshotCLVDebt
+                _cdps[idx].snapshotLUSDDebt
             ) = troveManager.rewardSnapshots(currentCDPowner);
 
             currentCDPowner = sortedCDPs.getPrev(currentCDPowner);

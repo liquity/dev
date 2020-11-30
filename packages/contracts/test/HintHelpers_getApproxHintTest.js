@@ -21,19 +21,19 @@ contract('TroveManager', async accounts => {
   let numAccounts;
   let price;
 
-  /* Open a CDP for each account. CLV debt is 200 CLV each, with collateral beginning at 
+  /* Open a CDP for each account. LUSD debt is 200 LUSD each, with collateral beginning at 
   1.5 ether, and rising by 0.01 ether per CDP.  Hence, the ICR of account (i + 1) is always 1% greater than the ICR of account i. 
  */
 
- // Open CDPs in parallel, then withdraw CLV in parallel
+ // Open CDPs in parallel, then withdraw LUSD in parallel
  const makeCDPsInParallel = async (accounts, n) => {
   activeAccounts = accounts.slice(0,n)
   // console.log(`number of accounts used is: ${activeAccounts.length}`)
   // console.time("makeCDPsInParallel")
   const openCDPpromises = activeAccounts.map((account, index) => openCDP(account, index))
   await Promise.all(openCDPpromises)
-  const withdrawCLVpromises = activeAccounts.map(account => withdrawCLVfromCDP(account))
-  await Promise.all(withdrawCLVpromises)
+  const withdrawLUSDpromises = activeAccounts.map(account => withdrawLUSDfromCDP(account))
+  await Promise.all(withdrawLUSDpromises)
   // console.timeEnd("makeCDPsInParallel")
  }
 
@@ -43,11 +43,11 @@ contract('TroveManager', async accounts => {
    await borrowerOperations.openTrove(0, account, { from: account, value: coll })
  }
 
- const withdrawCLVfromCDP = async (account) => {
-  await borrowerOperations.withdrawCLV('200000000000000000000', account, { from: account })
+ const withdrawLUSDfromCDP = async (account) => {
+  await borrowerOperations.withdrawLUSD('200000000000000000000', account, { from: account })
  }
 
- // Sequentially add coll and withdraw CLV, 1 account at a time
+ // Sequentially add coll and withdraw LUSD, 1 account at a time
    const makeCDPsInSequence = async (accounts, n) => {
     activeAccounts = accounts.slice(0,n)
     // console.log(`number of accounts used is: ${activeAccounts.length}`)
@@ -58,7 +58,7 @@ contract('TroveManager', async accounts => {
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
       await borrowerOperations.openTrove(0, account, { from: account, value: coll })
-      await borrowerOperations.withdrawCLV('190000000000000000000', account, { from: account })
+      await borrowerOperations.withdrawLUSD('190000000000000000000', account, { from: account })
   
       amountFinney += 10
     }

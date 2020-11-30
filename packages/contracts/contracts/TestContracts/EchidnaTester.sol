@@ -25,7 +25,7 @@ contract EchidnaTester {
     uint constant private INITIAL_BALANCE = 1e24;
     uint private MCR;
     uint private CCR;
-    uint private CLV_GAS_COMPENSATION;
+    uint private LUSD_GAS_COMPENSATION;
     address public GAS_POOL_ADDRESS;
 
     TroveManager public troveManager;
@@ -76,7 +76,7 @@ contract EchidnaTester {
 
         MCR = borrowerOperations.MCR();
         CCR = borrowerOperations.CCR();
-        CLV_GAS_COMPENSATION = borrowerOperations.CLV_GAS_COMPENSATION();
+        LUSD_GAS_COMPENSATION = borrowerOperations.LUSD_GAS_COMPENSATION();
         require(MCR > 0);
         require(CCR > 0);
 
@@ -105,13 +105,13 @@ contract EchidnaTester {
 
     function redeemCollateralExt(
         uint _i,
-        uint _CLVAmount,
+        uint _LUSDAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
         uint _partialRedemptionHintICR
     ) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].redeemCollateralPrx(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, 0);
+        echidnaProxies[actor].redeemCollateralPrx(_LUSDAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, 0);
     }
 
     // Borrower Operations
@@ -119,37 +119,37 @@ contract EchidnaTester {
     function getAdjustedETH(uint actorBalance, uint _ETH, uint ratio) internal view returns (uint) {
         uint price = priceFeed.getPrice();
         require(price > 0);
-        uint minETH = ratio.mul(CLV_GAS_COMPENSATION).div(price);
+        uint minETH = ratio.mul(LUSD_GAS_COMPENSATION).div(price);
         require(actorBalance > minETH);
         uint ETH = minETH + _ETH % (actorBalance - minETH);
         return ETH;
     }
 
-    function getAdjustedCLV(uint ETH, uint _CLVAmount, uint ratio) internal view returns (uint) {
+    function getAdjustedLUSD(uint ETH, uint _LUSDAmount, uint ratio) internal view returns (uint) {
         uint price = priceFeed.getPrice();
-        uint CLVAmount = _CLVAmount;
-        uint compositeDebt = CLVAmount.add(CLV_GAS_COMPENSATION);
+        uint LUSDAmount = _LUSDAmount;
+        uint compositeDebt = LUSDAmount.add(LUSD_GAS_COMPENSATION);
         uint ICR = LiquityMath._computeCR(ETH, compositeDebt, price);
         if (ICR < ratio) {
             compositeDebt = ETH.mul(price).div(ratio);
-            CLVAmount = compositeDebt.sub(CLV_GAS_COMPENSATION);
+            LUSDAmount = compositeDebt.sub(LUSD_GAS_COMPENSATION);
         }
-        return CLVAmount;
+        return LUSDAmount;
     }
 
-    function openTroveExt(uint _i, uint _ETH, uint _CLVAmount) public payable {
+    function openTroveExt(uint _i, uint _ETH, uint _LUSDAmount) public payable {
         uint actor = _i % NUMBER_OF_ACTORS;
         EchidnaProxy echidnaProxy = echidnaProxies[actor];
         uint actorBalance = address(echidnaProxy).balance;
 
         // we pass in CCR instead of MCR in case it’s the first one
         uint ETH = getAdjustedETH(actorBalance, _ETH, CCR);
-        uint CLVAmount = getAdjustedCLV(ETH, _CLVAmount, CCR);
+        uint LUSDAmount = getAdjustedLUSD(ETH, _LUSDAmount, CCR);
 
         //console.log('ETH', ETH);
-        //console.log('CLVAmount', CLVAmount);
+        //console.log('LUSDAmount', LUSDAmount);
 
-        echidnaProxy.openTrovePrx(ETH, CLVAmount, address(0));
+        echidnaProxy.openTrovePrx(ETH, LUSDAmount, address(0));
 
         numberOfTroves = troveManager.getCDPOwnersCount();
         assert(numberOfTroves > 0);
@@ -157,9 +157,9 @@ contract EchidnaTester {
         //assert(numberOfTroves == 0);
     }
 
-    function openTroveRawExt(uint _i, uint _ETH, uint _CLVAmount, address _hint) public payable {
+    function openTroveRawExt(uint _i, uint _ETH, uint _LUSDAmount, address _hint) public payable {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].openTrovePrx(_ETH, _CLVAmount, _hint);
+        echidnaProxies[actor].openTrovePrx(_ETH, _LUSDAmount, _hint);
     }
 
     function addCollExt(uint _i, uint _ETH) external payable {
@@ -182,14 +182,14 @@ contract EchidnaTester {
         echidnaProxies[actor].withdrawCollPrx(_amount, _hint);
     }
 
-    function withdrawCLVExt(uint _i, uint _amount, address _hint) external {
+    function withdrawLUSDExt(uint _i, uint _amount, address _hint) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].withdrawCLVPrx(_amount, _hint);
+        echidnaProxies[actor].withdrawLUSDPrx(_amount, _hint);
     }
 
-    function repayCLVExt(uint _i, uint _amount, address _hint) external {
+    function repayLUSDExt(uint _i, uint _amount, address _hint) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].repayCLVPrx(_amount, _hint);
+        echidnaProxies[actor].repayLUSDPrx(_amount, _hint);
     }
 
     function closeTroveExt(uint _i) external {
@@ -206,7 +206,7 @@ contract EchidnaTester {
         uint debtChange = _debtChange;
         if (_isDebtIncrease) {
             // TODO: add current amount already withdrawn:
-            debtChange = getAdjustedCLV(ETH, uint(_debtChange), MCR);
+            debtChange = getAdjustedLUSD(ETH, uint(_debtChange), MCR);
         }
         // TODO: collWithdrawal, debtChange
         echidnaProxy.adjustTrovePrx(ETH, _collWithdrawal, debtChange, _isDebtIncrease, address(0));
@@ -229,7 +229,7 @@ contract EchidnaTester {
         echidnaProxies[actor].withdrawFromSPPrx(_amount);
     }
 
-    // CLV Token
+    // LUSD Token
 
     function transferExt(uint _i, address recipient, uint256 amount) external returns (bool) {
         uint actor = _i % NUMBER_OF_ACTORS;
@@ -318,7 +318,7 @@ contract EchidnaTester {
             //else return false;
 
             // Minimum debt (gas compensation)
-            if (troveManager.getCDPDebt(currentTrove) < CLV_GAS_COMPENSATION) {
+            if (troveManager.getCDPDebt(currentTrove) < LUSD_GAS_COMPENSATION) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful
@@ -384,18 +384,18 @@ contract EchidnaTester {
         return true;
     }
 
-    // total CLV matches
-    function echidna_CLV_global_balances() public view returns(bool) {
+    // total LUSD matches
+    function echidna_LUSD_global_balances() public view returns(bool) {
         uint totalSupply = lusdToken.totalSupply();
         uint gasPoolBalance = lusdToken.balanceOf(GAS_POOL_ADDRESS);
 
-        uint activePoolBalance = activePool.getCLVDebt();
-        uint defaultPoolBalance = defaultPool.getCLVDebt();
+        uint activePoolBalance = activePool.getLUSDDebt();
+        uint defaultPoolBalance = defaultPool.getLUSDDebt();
         if (totalSupply != activePoolBalance + defaultPoolBalance) {
             return false;
         }
 
-        uint stabilityPoolBalance = stabilityPool.getTotalCLVDeposits();
+        uint stabilityPoolBalance = stabilityPool.getTotalLUSDDeposits();
         address currentTrove = sortedCDPs.getFirst();
         uint trovesBalance;
         while (currentTrove != address(0)) {

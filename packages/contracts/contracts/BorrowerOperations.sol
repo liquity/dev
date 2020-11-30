@@ -52,7 +52,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint debt;
         uint coll;
         uint newICR;
-        uint CLVFee;
+        uint LUSDFee;
         uint newDebt;
         uint newColl;
         uint stake;
@@ -63,14 +63,14 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         closeTrove,
         addColl,
         withdrawColl,
-        withdrawCLV,
-        repayCLV,
+        withdrawLUSD,
+        repayLUSD,
         adjustTrove
     }
 
     event CDPCreated(address indexed _borrower, uint arrayIndex);
     event CDPUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
-    event LUSDBorrowingFeePaid(address indexed _borrower, uint _CLVFee);
+    event LUSDBorrowingFeePaid(address indexed _borrower, uint _LUSDFee);
 
     // --- Dependency setters ---
 
@@ -116,15 +116,15 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Borrower Trove Operations ---
 
-    function openTrove(uint _CLVAmount, address _hint) external payable override {
+    function openTrove(uint _LUSDAmount, address _hint) external payable override {
         uint price = priceFeed.getPrice();
 
         _requireCDPisNotActive(msg.sender);
 
         // Decay the base rate, and calculate the borrowing fee
         troveManager.decayBaseRateFromBorrowing();
-        uint CLVFee = troveManager.getBorrowingFee(_CLVAmount);
-        uint rawDebt = _CLVAmount.add(CLVFee);
+        uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
+        uint rawDebt = _LUSDAmount.add(LUSDFee);
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
@@ -151,17 +151,17 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit CDPCreated(msg.sender, arrayIndex);
 
         // Send the LUSD borrowing fee to the staking contract
-        lusdToken.mint(lqtyStakingAddress, CLVFee);
-        lqtyStaking.increaseF_LUSD(CLVFee);
+        lusdToken.mint(lqtyStakingAddress, LUSDFee);
+        lqtyStaking.increaseF_LUSD(LUSDFee);
 
-        // Move the ether to the Active Pool, and mint the CLVAmount to the borrower
+        // Move the ether to the Active Pool, and mint the LUSDAmount to the borrower
         _activePoolAddColl(msg.value);
-        _withdrawCLV(msg.sender, _CLVAmount, rawDebt);
-        // Move the CLV gas compensation to the Gas Pool
-        _withdrawCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION, CLV_GAS_COMPENSATION);
+        _withdrawLUSD(msg.sender, _LUSDAmount, rawDebt);
+        // Move the LUSD gas compensation to the Gas Pool
+        _withdrawLUSD(GAS_POOL_ADDRESS, LUSD_GAS_COMPENSATION, LUSD_GAS_COMPENSATION);
 
         emit CDPUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openTrove);
-        emit LUSDBorrowingFeePaid(msg.sender, CLVFee);
+        emit LUSDBorrowingFeePaid(msg.sender, LUSDFee);
     }
 
     // Send ETH as collateral to a trove
@@ -180,14 +180,14 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _adjustTrove(msg.sender, _collWithdrawal, 0, false, _hint);
     }
 
-    // Withdraw CLV tokens from a trove: mint new CLV tokens to the owner, and increase the trove's debt accordingly
-    function withdrawCLV(uint _CLVAmount, address _hint) external override {
-        _adjustTrove(msg.sender, 0, _CLVAmount, true, _hint);
+    // Withdraw LUSD tokens from a trove: mint new LUSD tokens to the owner, and increase the trove's debt accordingly
+    function withdrawLUSD(uint _LUSDAmount, address _hint) external override {
+        _adjustTrove(msg.sender, 0, _LUSDAmount, true, _hint);
     }
 
-    // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the trove's debt accordingly
-    function repayCLV(uint _CLVAmount, address _hint) external override {
-        _adjustTrove(msg.sender, 0, _CLVAmount, false, _hint);
+    // Repay LUSD tokens to a CDP: Burn the repaid LUSD tokens, and reduce the trove's debt accordingly
+    function repayLUSD(uint _LUSDAmount, address _hint) external override {
+        _adjustTrove(msg.sender, 0, _LUSDAmount, false, _hint);
     }
 
     /*
@@ -220,14 +220,14 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         if (_isDebtIncrease && _debtChange > 0) {
             // Decay the baseRate and get the fee
             troveManager.decayBaseRateFromBorrowing();
-            L.CLVFee = troveManager.getBorrowingFee(_debtChange);
+            L.LUSDFee = troveManager.getBorrowingFee(_debtChange);
 
             // The raw debt change includes the fee, if there was one
-            L.rawDebtChange = L.rawDebtChange.add(L.CLVFee);
+            L.rawDebtChange = L.rawDebtChange.add(L.LUSDFee);
 
             // Send fee to LQTY staking contract
-            lqtyStaking.increaseF_LUSD(L.CLVFee);
-            lusdToken.mint(lqtyStakingAddress, L.CLVFee);
+            lqtyStaking.increaseF_LUSD(L.LUSDFee);
+            lusdToken.mint(lqtyStakingAddress, L.LUSDFee);
         }
 
         L.debt = troveManager.getCDPDebt(_borrower);
@@ -240,7 +240,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
         }
         if (!L.isCollIncrease) {_requireCollAmountIsWithdrawable(L.coll, L.collChange);}
-        if (!_isDebtIncrease && _debtChange > 0) {_requireCLVRepaymentAllowed(L.debt, L.rawDebtChange);}
+        if (!_isDebtIncrease && _debtChange > 0) {_requireLUSDRepaymentAllowed(L.debt, L.rawDebtChange);}
 
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
         L.stake = troveManager.updateStakeAndTotalStakes(_borrower);
@@ -252,7 +252,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
 
         emit CDPUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustTrove);
-        emit LUSDBorrowingFeePaid(msg.sender,  L.CLVFee);
+        emit LUSDBorrowingFeePaid(msg.sender,  L.LUSDFee);
     }
 
     function closeTrove() external override {
@@ -268,10 +268,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         troveManager.closeCDP(msg.sender);
 
         // Burn the debt from the user's balance, and send the collateral back to the user
-        _repayCLV(msg.sender, debt.sub(CLV_GAS_COMPENSATION));
+        _repayLUSD(msg.sender, debt.sub(LUSD_GAS_COMPENSATION));
         activePool.sendETH(msg.sender, coll);
         // Refund gas compensation
-        _repayCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION);
+        _repayLUSD(GAS_POOL_ADDRESS, LUSD_GAS_COMPENSATION);
 
         emit CDPUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
     }
@@ -341,9 +341,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
     {
         if (_isDebtIncrease) {
-            _withdrawCLV(_borrower, _debtChange, _rawDebtChange);
+            _withdrawLUSD(_borrower, _debtChange, _rawDebtChange);
         } else {
-            _repayCLV(_borrower, _debtChange);
+            _repayLUSD(_borrower, _debtChange);
         }
 
         if (_isCollIncrease) {
@@ -359,16 +359,16 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         assert(success == true);
     }
 
-    // Issue the specified amount of CLV to _account and increases the total active debt (_rawDebtIncrease potentially includes a CLVFee)
-    function _withdrawCLV(address _account, uint _CLVAmount, uint _rawDebtIncrease) internal {
-        activePool.increaseCLVDebt(_rawDebtIncrease);
-        lusdToken.mint(_account, _CLVAmount);
+    // Issue the specified amount of LUSD to _account and increases the total active debt (_rawDebtIncrease potentially includes a LUSDFee)
+    function _withdrawLUSD(address _account, uint _LUSDAmount, uint _rawDebtIncrease) internal {
+        activePool.increaseLUSDDebt(_rawDebtIncrease);
+        lusdToken.mint(_account, _LUSDAmount);
     }
 
-    // Burn the specified amount of CLV from _account and decreases the total active debt
-    function _repayCLV(address _account, uint _CLV) internal {
-        activePool.decreaseCLVDebt(_CLV);
-        lusdToken.burn(_account, _CLV);
+    // Burn the specified amount of LUSD from _account and decreases the total active debt
+    function _repayLUSD(address _account, uint _LUSD) internal {
+        activePool.decreaseLUSDDebt(_LUSD);
+        lusdToken.burn(_account, _LUSD);
     }
 
     // --- 'Require' wrapper functions ---
@@ -410,8 +410,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(newTCR >= CCR, "BorrowerOps: An operation that would result in TCR < CCR is not permitted");
     }
 
-    function _requireCLVRepaymentAllowed(uint _currentDebt, uint _debtRepayment) internal pure {
-        require(_debtRepayment <= _currentDebt.sub(CLV_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the CDP's debt");
+    function _requireLUSDRepaymentAllowed(uint _currentDebt, uint _debtRepayment) internal pure {
+        require(_debtRepayment <= _currentDebt.sub(LUSD_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the CDP's debt");
     }
 
     function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)
@@ -465,7 +465,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         returns (uint)
     {
         uint totalColl = activePool.getETH().add(defaultPool.getETH());
-        uint totalDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());
+        uint totalDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
 
         totalColl = _isCollIncrease ? totalColl.add(_collChange) : totalColl.sub(_collChange);
         totalDebt = _isDebtIncrease ? totalDebt.add(_debtChange) : totalDebt = totalDebt.sub(_debtChange);
@@ -493,9 +493,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     function _getTCR() internal view returns (uint TCR) {
         uint price = priceFeed.getPrice();
         uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getCLVDebt();
+        uint activeDebt = activePool.getLUSDDebt();
         uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getCLVDebt();
+        uint closedDebt = defaultPool.getLUSDDebt();
 
         uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt);

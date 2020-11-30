@@ -256,7 +256,7 @@ contract('LUSDToken', async accounts => {
     })
 
     it('returnFromPool(): changes balances of Stability pool and user by the correct amounts', async () => {
-      /// --- SETUP --- give pool 100 CLV
+      /// --- SETUP --- give pool 100 LUSD
       await lusdTokenTester.unprotectedMint(stabilityPool.address, 100)
       
       /// --- TEST --- 

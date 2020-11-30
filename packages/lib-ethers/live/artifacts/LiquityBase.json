@@ -19,7 +19,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "CLV_GAS_COMPENSATION",
+      "name": "LUSD_GAS_COMPENSATION",
       "outputs": [
         {
           "internalType": "uint256",
