@@ -202,7 +202,7 @@ The LQTY contracts consist of:
 
 `CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability depositors as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the CommunityIssuance automatically receives a supply of LQTY - the “community issuance” supply, provisionally set to one third of the total supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
 
-`GrowthToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
+`LQTYToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
 
 ### LQTY Lockup contracts and token vesting
 
