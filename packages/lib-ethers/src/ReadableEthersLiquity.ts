@@ -31,16 +31,16 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getTroveWithoutRewards(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    const [cdp, snapshot] = await Promise.all([
+    const [trove, snapshot] = await Promise.all([
       this.contracts.troveManager.Troves(address, { ...overrides }),
       this.contracts.troveManager.rewardSnapshots(address, { ...overrides })
     ]);
 
-    if (cdp.status === TroveStatus.active) {
+    if (trove.status === TroveStatus.active) {
       return new TroveWithPendingRewards({
-        collateral: new Decimal(cdp.coll),
-        debt: new Decimal(cdp.debt),
-        stake: new Decimal(cdp.stake),
+        collateral: new Decimal(trove.coll),
+        debt: new Decimal(trove.debt),
+        stake: new Decimal(trove.stake),
 
         snapshotOfTotalRedistributed: {
           collateral: new Decimal(snapshot.ETH),

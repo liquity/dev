@@ -41,13 +41,15 @@ const deployContracts = async (
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   overrides?: Overrides
 ): Promise<LiquityContractAddresses> => {
-  let addresses
-  addresses = {
+  const addresses = {
     activePool: await deployContract(deployer, getContractFactory, "ActivePool", { ...overrides }),
     borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations", {
       ...overrides
     }),
     troveManager: await deployContract(deployer, getContractFactory, "TroveManager", { ...overrides }),
+    collSurplusPool: await deployContract(deployer, getContractFactory, "CollSurplusPool", {
+      ...overrides
+    }),
     communityIssuance: await deployContract(deployer, getContractFactory, "CommunityIssuance", {
       ...overrides
     }),
@@ -64,20 +66,21 @@ const deployContracts = async (
     sortedTroves: await deployContract(deployer, getContractFactory, "SortedTroves", { ...overrides }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
-    }),
-    collSurplusPool: await deployContract(deployer, getContractFactory, "CollSurplusPool", {
-      ...overrides
     })
   };
 
   return {
     ...addresses,
-    lusdToken: await deployContract(deployer, getContractFactory, "LUSDToken",
+    lusdToken: await deployContract(
+      deployer,
+      getContractFactory,
+      "CLVToken",
       addresses.troveManager,
       addresses.stabilityPool,
       addresses.borrowerOperations,
-    { ...overrides }),
-    
+      { ...overrides }
+    ),
+
     lqtyToken: await deployContract(
       deployer,
       getContractFactory,
@@ -105,6 +108,7 @@ const connectContracts = async (
     borrowerOperations,
     troveManager,
     lusdToken,
+    collSurplusPool,
     communityIssuance,
     defaultPool,
     lqtyToken,
@@ -113,8 +117,7 @@ const connectContracts = async (
     lqtyStaking,
     priceFeed,
     sortedTroves,
-    stabilityPool,
-    collSurplusPool
+    stabilityPool
   }: LiquityContracts,
   deployer: Signer,
   overrides?: Overrides
@@ -208,7 +211,7 @@ const connectContracts = async (
       ),
 
     nonce =>
-      hintHelpers.setAddresses(priceFeed.address, sortedTroves.address, troveManager.address, {
+      hintHelpers.setAddresses(sortedTroves.address, troveManager.address, {
         ...overrides,
         nonce
       }),
@@ -216,8 +219,8 @@ const connectContracts = async (
     nonce =>
       lqtyStaking.setAddresses(
         lqtyToken.address,
-        lusdToken.address,
-        troveManager.address, 
+        clvToken.address,
+        troveManager.address,
         borrowerOperations.address,
         activePool.address,
         { ...overrides, nonce }
@@ -230,11 +233,10 @@ const connectContracts = async (
       }),
 
     nonce =>
-      communityIssuance.setAddresses(
-        lqtyToken.address,
-        stabilityPool.address,
-        { ...overrides, nonce }
-      )
+      communityIssuance.setAddresses(lqtyToken.address, stabilityPool.address, {
+        ...overrides,
+        nonce
+      })
   ];
 
   const txs = await Promise.all(connections.map((connect, i) => connect(txCount + i)));

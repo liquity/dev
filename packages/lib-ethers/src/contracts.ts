@@ -13,7 +13,8 @@ import {
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import troveManagerAbi from "../abi/TroveManager.json";
-import lusdTokenAbi from "../abi/LUSDToken.json";
+import lusdTokenAbi from "../abi/CLVToken.json";
+import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
 import lqtyTokenAbi from "../abi/LQTYToken.json";
@@ -24,7 +25,6 @@ import multiTrovegetterAbi from "../abi/MultiTroveGetter.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
-import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 
 import dev from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
@@ -37,6 +37,7 @@ import {
   BorrowerOperations,
   TroveManager,
   LUSDToken,
+  CollSurplusPool,
   CommunityIssuance,
   DefaultPool,
   LQTYToken,
@@ -46,8 +47,7 @@ import {
   MultiTroveGetter,
   PriceFeed,
   SortedTroves,
-  StabilityPool,
-  CollSurplusPool
+  StabilityPool
 } from "../types";
 
 export const abi: { [name: string]: JsonFragment[] } = {
@@ -157,6 +157,7 @@ export interface LiquityContractAddresses {
   borrowerOperations: string;
   troveManager: string;
   lusdToken: string;
+  collSurplusPool: string;
   communityIssuance: string;
   defaultPool: string;
   lqtyToken: string;
@@ -167,7 +168,6 @@ export interface LiquityContractAddresses {
   priceFeed: string;
   sortedTroves: string;
   stabilityPool: string;
-  collSurplusPool: string;
 }
 
 export interface LiquityContracts {
@@ -177,6 +177,7 @@ export interface LiquityContracts {
   borrowerOperations: BorrowerOperations;
   troveManager: TroveManager;
   lusdToken: LUSDToken;
+  collSurplusPool: CollSurplusPool;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
   lqtyToken: LQTYToken;
@@ -187,7 +188,6 @@ export interface LiquityContracts {
   priceFeed: PriceFeed;
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
-  collSurplusPool: CollSurplusPool;
 }
 
 export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses => ({
@@ -195,6 +195,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   borrowerOperations: contracts.borrowerOperations.address,
   troveManager: contracts.troveManager.address,
   lusdToken: contracts.lusdToken.address,
+  collSurplusPool: contracts.collSurplusPool.address,
   communityIssuance: contracts.communityIssuance.address,
   defaultPool: contracts.defaultPool.address,
   lqtyToken: contracts.lqtyToken.address,
@@ -204,8 +205,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   multiTrovegetter: contracts.multiTrovegetter.address,
   priceFeed: contracts.priceFeed.address,
   sortedTroves: contracts.sortedTroves.address,
-  stabilityPool: contracts.stabilityPool.address,
-  collSurplusPool: contracts.collSurplusPool.address
+  stabilityPool: contracts.stabilityPool.address
 });
 
 const create = <T extends TypedContract<LiquityContract, unknown>>(
