@@ -1330,7 +1330,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal(listSize_Before, listSize_After)
   })
 
-  it.only("liquidate(): reverts if trove is non-existent", async () => {
+  it("liquidate(): reverts if trove is non-existent", async () => {
     await borrowerOperations.openTrove(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
 
@@ -1352,7 +1352,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     }
   })
 
-  it.only("liquidate(): reverts if trove has been closed", async () => {
+  it("liquidate(): reverts if trove has been closed", async () => {
     await borrowerOperations.openTrove(dec(90, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(140, 18), carol, { from: carol, value: dec(1, 'ether') })
@@ -1453,7 +1453,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal((await troveManager.Troves(carol))[3].toString(), '2')
   })
 
-  it.only("liquidate(): does not affect the SP deposit or ETH gain when called on an SP depositor's address that has no trove", async () => {
+  it("liquidate(): does not affect the SP deposit or ETH gain when called on an SP depositor's address that has no trove", async () => {
     await borrowerOperations.openTrove(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
     await borrowerOperations.openTrove(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
