@@ -206,7 +206,7 @@ class TestHelper {
 
   static async logActiveAccounts(contracts, n) {
     const count = await contracts.sortedTroves.getSize()
-    const price = await contracts.priceFeedTestnetTestnet.getPrice()
+    const price = await contracts.priceFeedTestnet.getPrice()
 
     n = (typeof n == 'undefined') ? count : n
 

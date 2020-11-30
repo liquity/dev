@@ -24,7 +24,7 @@ contract('CollSUrplusPool', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     collSurplusPool = contracts.collSurplusPool
     borrowerOperations = contracts.borrowerOperations
 

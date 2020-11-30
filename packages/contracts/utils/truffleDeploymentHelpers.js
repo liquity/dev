@@ -54,7 +54,7 @@ const deployLiquity = async () => {
 const getAddresses = (contracts) => {
   return {
     BorrowerOperations: contracts.borrowerOperations.address,
-    PriceFeed: contracts.priceFeed.address,
+    PriceFeed: contracts.priceFeedTestnet.address,
     PriceFeedTestnet: contracts.priceFeedTestnet.address,
     LUSDToken: contracts.lusdToken.address,
     SortedTroves: contracts.sortedTroves.address,
@@ -76,7 +76,7 @@ const connectContracts = async (contracts, addresses) => {
   await contracts.functionCaller.setSortedTrovesAddress(addresses.SortedTroves)
 
   // set TroveManager addr in PriceFeed
-  await contracts.priceFeed.setTroveManagerAddress(addresses.TroveManager)
+  await contracts.priceFeedTestnet.setTroveManagerAddress(addresses.TroveManager)
 
   // set contracts in the Trove Manager
   await contracts.troveManager.setLUSDToken(addresses.LUSDToken)
