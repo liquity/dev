@@ -192,7 +192,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     /*
     * If ETH is sent, the operation is considered as a collateral increase, and the first parameter
-    * _collWithdrawal must be zero 
+    * _collWithdrawal must be zero
     */
     function adjustTrove(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable override {
         _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
@@ -247,7 +247,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         // Re-insert trove it in the sorted list
         sortedTroves.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
-  
+
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
 
@@ -277,8 +277,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     function claimRedeemedCollateral(address _user) external override {
-        _requireTroveisNotActive(_user);
-
         // send ETH from CollSurplus Pool to owner
         collSurplusPool.claimColl(_user);
 
