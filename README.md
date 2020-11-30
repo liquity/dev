@@ -175,6 +175,7 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 - `packages/contracts/contracts/` - The core back end smart contracts written in Solidity
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
 - `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Liquity operations under various scenarios
+- `packages/contracts/fuzzTests/` - Echidna tests, and naive "random operation" tests 
 - `packages/contracts/migrations/` - contains Buidler script for deploying the smart contracts to the blockchain
 - `packages/contracts/utils/` - external Buidler and node scripts - deployment helpers, gas calculators, etc
 - `packages/contracts/mathProofs/` - core mathematical proofs of Liquity properties, and a derivation of the scalable Stability Pool staking formula
@@ -413,8 +414,8 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | Function                 | LUSD Quantity            | ERC20 Operation                                  |
 |--------------------------|--------------------------|--------------------------------------------------|
 | liquidate (offset)       | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
-| liquidateCDPs (offset)   | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
-| liquidateTroves (offset) | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
+| liquidateTroves (offset)   | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
+| batchLiquidateTroves (offset) | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
 | redeemCollateral         | LUSD to redeem           | LUSD._burn(msg.sender, _LUSD)                    |
 
 **Pool Manager**
