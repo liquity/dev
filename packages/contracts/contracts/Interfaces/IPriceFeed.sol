@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 
-import "../Dependencies/IPriceFeedBase.sol";
-
 pragma solidity 0.6.11;
 
-interface IPriceFeed is IPriceFeedBase {
+interface IPriceFeed {
+    
+    function setAddresses(
+        address _priceAggregatorAddress
+    ) external;
 
-    function getLatestAnswerID() external view returns (uint256);
-
-    function getLatestTimestamp() external view returns (uint256);
+    function getPrice() external view returns (uint);
+    
+    function getLatestPrice() external view returns (uint, uint8);  
 }

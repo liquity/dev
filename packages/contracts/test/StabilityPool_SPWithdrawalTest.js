@@ -60,7 +60,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       contracts.cdpManager = await CDPManagerTester.new()
       contracts = await deploymentHelper.deployCLVToken(contracts)
   
-      priceFeed = contracts.priceFeed
+      priceFeed = contracts.priceFeedTestnet
       clvToken = contracts.clvToken
       sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
@@ -72,6 +72,8 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+      await priceFeed.setPrice(dec(200, 18))
     })
 
     // --- Compounding tests ---
@@ -1756,7 +1758,6 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openLoan(dec(100, 18), alice, { from: alice, value: dec(100, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
-
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
       const txL1 = await cdpManager.liquidate(defaulter_1, { from: owner });
       assert.isTrue(txL1.receipt.status)
@@ -1805,7 +1806,6 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // ETH:USD price is $2 billion per ETH
       await priceFeed.setPrice(dec(2, 27));
-      const price = await priceFeed.getPrice()
 
       const depositors = [alice, bob]
       for (account of depositors) {

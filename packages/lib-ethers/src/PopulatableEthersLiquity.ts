@@ -442,14 +442,11 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async updatePrice(overrides?: EthersTransactionOverrides) {
-    return this.wrapSimpleTransaction(
-      await this.contracts.priceFeedTestnet.estimateAndPopulate.updatePrice(
-        { ...overrides },
-        gas => gas
-      )
-    );
-  }
+  // async updatePrice(overrides?: EthersTransactionOverrides) {
+  //   return this.wrapSimpleTransaction(
+  //     await this.contracts.priceFeed.estimateAndPopulate.updatePrice({ ...overrides }, id)
+  //   );
+  // }
 
   async liquidate(address: string, overrides?: EthersTransactionOverrides) {
     return this.wrapLiquidation(

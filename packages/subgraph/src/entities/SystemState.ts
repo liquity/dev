@@ -75,19 +75,19 @@ function finishPriceChange(priceChange: PriceChange): void {
   priceChange.save();
 }
 
-export function updatePrice(event: ethereum.Event, _newPrice: BigInt): void {
-  let priceChange = createPriceChange(event);
+// export function updatePrice(event: ethereum.Event, _newPrice: BigInt): void {
+//   let priceChange = createPriceChange(event);
 
-  let systemState = getCurrentSystemState();
-  let oldPrice = systemState.price;
-  let newPrice = decimalize(_newPrice);
+//   let systemState = getCurrentSystemState();
+//   let oldPrice = systemState.price;
+//   let newPrice = decimalize(_newPrice);
 
-  systemState.price = newPrice;
-  bumpSystemState(systemState);
+//   systemState.price = newPrice;
+//   bumpSystemState(systemState);
 
-  priceChange.priceChange = newPrice - oldPrice;
-  finishPriceChange(priceChange);
-}
+//   priceChange.priceChange = newPrice - oldPrice;
+//   finishPriceChange(priceChange);
+// }
 
 function tryToOffsetWithTokensFromStabilityPool(
   systemState: SystemState,

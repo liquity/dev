@@ -59,7 +59,7 @@ export interface TransactableLiquity {
   changeTrove(change: TroveChange): Promise<void>;
 
   setPrice(price: Decimalish): Promise<void>;
-  updatePrice(): Promise<void>;
+  // updatePrice(): Promise<void>;
 
   liquidate(address: string): Promise<LiquidationDetails>;
   liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDetails>;

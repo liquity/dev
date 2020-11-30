@@ -9,6 +9,14 @@ const toBN = th.toBN
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
+
+/* NOTE: Some tests involving ETH redemption fees do not test for specific fee values.
+ * Some only test that the fees are non-zero when they should occur.
+ *
+ * Specific ETH gain values will depend on the final fee schedule used, and the final choices for
+ * the parameter BETA in the CDPManager, which is still TBD based on economic modelling.
+ * 
+ */ 
 contract('CDPManager', async accounts => {
 
   const _18_zeros = '000000000000000000'
@@ -63,7 +71,7 @@ contract('CDPManager', async accounts => {
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
-    priceFeed.setPrice(dec(200, 18))
+    await priceFeed.setPrice(dec(200, 18))
   })
 
   it('liquidate(): closes a CDP that has ICR < MCR', async () => {
@@ -3697,24 +3705,6 @@ contract('CDPManager', async accounts => {
     assert.equal(A_Status, '1')  // active
     assert.equal(B_Status, '2')  // closed
     assert.equal(C_Status, '0')  // non-existent
-  })
-
-  // --- CollSurplusPool ---
-
-  it.only("CollSurplusPool::getETH(): Returns the ETH balance of the CollSurplusPool after redemption", async () => {
-    const ETH_1 = await collSurplusPool.getETH()
-    assert.equal(ETH_1, '0')
-
-    await priceFeed.setPrice(dec(100, 18))
-
-    await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
-    await borrowerOperations.openLoan(dec(50, 18), B, { from: B, value: dec(1, 'ether') })
-
-    // At ETH:USD = 100, this redemption should leave 50% coll surplus for B, i.e. 0.5 ether
-    await th.redeemCollateralAndGetTxObject(A, contracts, dec(50, 18))
-
-    const ETH_2 = await collSurplusPool.getETH()
-    assert.equal(ETH_2, dec(5, 17))
   })
 })
 

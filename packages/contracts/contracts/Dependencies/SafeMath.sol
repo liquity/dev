@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.5.0;
+pragma solidity 0.6.11;
 
 /**
+ * Based on OpenZeppelin's SafeMath:
+ * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/math/SafeMath.sol
+ *
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
  * checks.
  *

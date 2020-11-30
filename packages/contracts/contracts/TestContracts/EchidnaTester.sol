@@ -104,8 +104,8 @@ contract EchidnaTester {
             address(cdpManager), 
             address(activePool)
         );
-        priceFeed.setAddresses(address(cdpManager), address(0));
-        priceFeedTestnet.setAddresses(address(cdpManager), address(0));
+        priceFeed.setAddresses(address(0));
+        priceFeedTestnet.setAddresses(address(0));
         sortedCDPs.setParams(1e18, address(cdpManager), address(borrowerOperations));
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
@@ -171,7 +171,7 @@ contract EchidnaTester {
         uint price = priceFeedTestnet.getPrice();
         uint CLVAmount = _CLVAmount;
         uint compositeDebt = CLVAmount.add(CLV_GAS_COMPENSATION);
-        uint ICR = Math._computeCR(ETH, compositeDebt, price);
+        uint ICR = LiquityMath._computeCR(ETH, compositeDebt, price);
         if (ICR < ratio) {
             compositeDebt = ETH.mul(price).div(ratio);
             CLVAmount = compositeDebt.sub(CLV_GAS_COMPENSATION);

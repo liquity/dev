@@ -407,19 +407,6 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
   })
 
-  describe('PriceFeed', async accounts => {
-    it("updatePrice(): reverts when called by an account that is not CDPManager", async () => {
-      // Attempt call from alice
-      try {
-        const txAlice = await priceFeed.updatePrice({ from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not CDPManager")
-      }
-    })
-  })
-
   describe('LockupContractFactory', async accounts => {
     it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
       try {

@@ -142,6 +142,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         address partialAddr;
         uint partialNewDebt;
         uint partialNewColl;
+        address partialUpperHint;
+        address partialLowerHint;
     }
 
     struct LiquidationTotals {
@@ -156,7 +158,8 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         address partialAddr;
         uint partialNewDebt;
         uint partialNewColl;
-
+        address partialUpperHint;
+        address partialLowerHint;
     }
 
     // --- Variable container structs for redemptions ---
@@ -312,7 +315,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _closeCDP(_borrower);
             emit CDPLiquidated(_borrower, V.entireCDPDebt, V.entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
 
-        // if 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
+        // If 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > _100pct) && (_ICR < MCR)) {
             _removeStake(_borrower);
 
@@ -326,13 +329,15 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         /* 
         * If 110% <= ICR < current TCR (accounting for the preceding liquidations in the current sequence)
-        * and there is CLV in the Stability Pool, only offset it as much as possible (no redistribution) 
+        * and there is CLV in the Stability Pool, only offset it as much as possible, with no redistribution.
         */
         } else if ((_ICR >= MCR) && (_ICR < _TCR)) {
             assert(_CLVInStabPool != 0);
 
             _removeStake(_borrower);
-            V = _getPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
+            
+            V = _getFullOrPartialOffsetVals(_borrower, V.entireCDPDebt, V.entireCDPColl, _CLVInStabPool);
+
             _closeCDP(_borrower);
         }
         else if (_ICR >= _TCR) {
@@ -343,7 +348,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         return V;
     }
 
-    // In a full liquidation, returns the values for a trove's coll and debt to be offset, and coll and debt to be distributed.
+    /* In a full liquidation, returns the values for a trove's coll and debt to be offset, and coll and debt to be 
+    * redistributed to active troves. 
+    */
     function _getOffsetAndRedistributionVals
     (
         uint _debt,
@@ -356,13 +363,16 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     {
         if (_CLVInStabPool > 0) {
         /* 
-        * Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder.
+        * Offset as much debt & collateral as possible against the Stability Pool, and redistribute the remainder
+        * between all active troves.
+        *
         *  If the trove's debt is larger than the deposited CLV in the Stability Pool:
         *
         *  - Offset an amount of the trove's debt equal to the CLV in the Stability Pool
         *  - Send a fraction of the trove's collateral to the Stability Pool, equal to the fraction of its offset debt
+        *
         */
-            debtToOffset = Math._min(_debt, _CLVInStabPool);
+            debtToOffset = LiquityMath._min(_debt, _CLVInStabPool);
             collToSendToSP = _coll.mul(debtToOffset).div(_debt);
             debtToRedistribute = _debt.sub(debtToOffset);
             collToRedistribute = _coll.sub(collToSendToSP);
@@ -374,11 +384,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         }
     }
 
-    /* 
-    * In a partial liquidation, returns the values for a trove's offset coll and debt, along with it's new debt and coll,
-    * and the ETH gas compensation.
+    /*
+    *  If it is a full offset, get its offset coll/debt and ETH gas comp, and close the trove.
+    *
+    * If it is a partial liquidation, get its offset coll/debt and ETH gas comp, and its new coll/debt, and its re-insertion hints.
     */
-    function _getPartialOffsetVals
+    function _getFullOrPartialOffsetVals
     (
         address _borrower,
         uint _entireCDPDebt,
@@ -404,8 +415,9 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             emit CDPLiquidated(_borrower, _entireCDPDebt, _entireCDPColl, CDPManagerOperation.liquidateInRecoveryMode);
         }
         /* 
-        * When trove's debt is greater than the Pool, perform a partial liquidation: offset as much as possible,
+        * When trove's debt is greater than the Stability Pool, perform a partial liquidation: offset as much as possible,
         * and do not redistribute the remainder. The trove remains active, with a reduced collateral and debt.
+        *
         * ETH gas compensation is based on and drawn from the collateral fraction that corresponds to the partial offset. 
         * CLV gas compensation is left untouched. 
         *
@@ -414,7 +426,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         */
         else if (_entireCDPDebt > _CLVInStabPool) {
             // Remaining debt in the trove is lower-bounded by the trove's gas compensation
-            V.partialNewDebt = Math._max(_entireCDPDebt.sub(_CLVInStabPool), CLV_GAS_COMPENSATION);
+            V.partialNewDebt = LiquityMath._max(_entireCDPDebt.sub(_CLVInStabPool), CLV_GAS_COMPENSATION);
           
             V.debtToOffset = _entireCDPDebt.sub(V.partialNewDebt);
 
@@ -429,6 +441,10 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
             V.partialAddr = _borrower;
             V.partialNewColl = _entireCDPColl.sub(collFraction);
+
+            // Get the partial trove's neighbours, so we can re-insert it later to the same position
+            V.partialUpperHint = sortedCDPs.getPrev(_borrower);  
+            V.partialLowerHint = sortedCDPs.getNext(_borrower);
         }
     }
 
@@ -458,7 +474,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         // Update system snapshots and the final partially liquidated trove, if there is one
         _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl.add(T.totalCollGasCompensation));
-        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, L.price);
+        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, T.partialUpperHint, T. partialLowerHint, L.price);
 
         L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
         L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
@@ -498,7 +514,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Break the loop if ICR is greater than MCR and Stability Pool is empty
                 if (L.ICR >= MCR && L.remainingCLVInStabPool == 0) { break; }
 
-                uint TCR = Math._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
+                uint TCR = LiquityMath._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
         
                 V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInStabPool, TCR);
 
@@ -594,7 +610,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         // Update system snapshots and the final partially liquidated trove, if there is one
         _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl.add(T.totalCollGasCompensation));
-        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, L.price);
+        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, T.partialUpperHint, T. partialLowerHint, L.price);
 
         L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
         L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
@@ -634,7 +650,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
                 // Skip this trove if ICR is greater than MCR and Stability Pool is empty
                 if (L.ICR >= MCR && L.remainingCLVInStabPool == 0) { continue; }
 
-                uint TCR = Math._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
+                uint TCR = LiquityMath._computeCR(L.entireSystemColl, L.entireSystemDebt, _price);
 
                 V = _liquidateRecoveryMode(L.user, L.ICR, L.remainingCLVInStabPool, TCR);
 
@@ -709,12 +725,24 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         T2.partialAddr = V.partialAddr;
         T2.partialNewDebt = V.partialNewDebt;
         T2.partialNewColl = V.partialNewColl;
+        T2.partialUpperHint = V.partialUpperHint;
+        T2.partialLowerHint = V.partialLowerHint;
 
         return T2;
     }
 
     // Update the properties of the partially liquidated trove, and insert it back to the list
-    function _updatePartiallyLiquidatedTrove(address _borrower, uint _newDebt, uint _newColl, uint _price) internal {
+    function _updatePartiallyLiquidatedTrove
+    (
+        address _borrower, 
+        uint _newDebt, 
+        uint _newColl, 
+        address _upperHint,
+        address _lowerHint,
+        uint _price
+    ) 
+        internal 
+    {
         if ( _borrower == address(0)) { return; }
 
         CDPs[_borrower].debt = _newDebt;
@@ -728,11 +756,12 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
         /* 
         * Insert to sorted list and add to CDPOwners array. The partially liquidated trove has the same
-        * ICR as it did before the liquidation, so insertion is O(1). 
+        * ICR as it did before the liquidation, so insertion is O(1): in principle, its ICR does not change.
+        * In practice, due to rounding error, its ICR can change slightly - so re-insert, with its previous neighbours
+        * as hints.
         */
-        sortedCDPs.insert(_borrower, ICR, _price, _borrower, _borrower);
+        sortedCDPs.insert(_borrower, ICR, _price, _upperHint, _lowerHint);
         _addCDPOwnerToArray(_borrower);
-
         emit CDPUpdated(_borrower, _newDebt, _newColl, CDPs[_borrower].stake, CDPManagerOperation.partiallyLiquidateInRecoveryMode);
     }
 
@@ -766,7 +795,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         internal returns (SingleRedemptionValues memory V)
     {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the CDP minus the gas compensation
-        V.CLVLot = Math._min(_maxCLVamount, CDPs[_borrower].debt.sub(CLV_GAS_COMPENSATION));
+        V.CLVLot = LiquityMath._min(_maxCLVamount, CDPs[_borrower].debt.sub(CLV_GAS_COMPENSATION));
 
         // Get the ETHLot of equivalent value in USD
         V.ETHLot = V.CLVLot.mul(1e18).div(_price);
@@ -782,7 +811,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
             _redeemCloseLoan(_borrower, CLV_GAS_COMPENSATION, newColl);
 
         } else {
-            uint newICR = Math._computeCR(newColl, newDebt, _price);
+            uint newICR = LiquityMath._computeCR(newColl, newDebt, _price);
 
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
             // certainly result in running out of gas.
@@ -954,7 +983,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint currentETH = CDPs[_borrower].coll.add(pendingETHReward);
         uint currentCLVDebt = CDPs[_borrower].debt.add(pendingCLVDebtReward);
 
-        uint ICR = Math._computeCR(currentETH, currentCLVDebt, _price);
+        uint ICR = LiquityMath._computeCR(currentETH, currentCLVDebt, _price);
         return ICR;
     }
 
@@ -1152,11 +1181,20 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
     }
 
     /* 
-    * Updates snapshots of system stakes and system collateral, excluding a given collateral remainder from the calculation.
+    * Updates snapshots of system total stakes and total collateral, excluding a given collateral remainder from the calculation. 
+    * Used in a liquidation sequence.
     *
-    * This is used in a liquidation sequence, when we need to calculate the system stakes & collateral before making a new stake for
-    * the partially liquidated trove. Rather than moving the partially liquidated trove's remaining collateral out and back to
-    * to the Active Pool, we simply exclude it from the calculation.
+    * The calculation excludes two portions of collateral that are in the ActivePool: 
+    *
+    * 1) the total ETH gas compensation from the liquidation sequence
+    * 2) The remaining collateral in a partially liquidated trove (if one occurred)
+    *
+    * The ETH as compensation must be excluded as it is always sent out at the very end of the liquidation sequence.
+    *
+    * The partially liquidated trove's remaining collateral stays in the ActivePool, but it is excluded here so the system 
+    * can take snapshots before the partially liquidated trove's stake is updated (based on these snapshots). This ensures
+    * the partial's new stake doesn't double-count its own remaining collateral.
+    *
     */
     function _updateSystemSnapshots_excludeCollRemainder(uint _collRemainder) internal {
         totalStakesSnapshot = totalStakes;
@@ -1227,7 +1265,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         pure
     returns (bool)
     {
-        uint TCR = Math._computeCR(_entireSystemColl, _entireSystemDebt, _price);
+        uint TCR = LiquityMath._computeCR(_entireSystemColl, _entireSystemDebt, _price);
         if (TCR < CCR) {
             return true;
         } else {
@@ -1240,7 +1278,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
         uint entireSystemColl = getEntireSystemColl();
         uint entireSystemDebt = getEntireSystemDebt();
 
-        TCR = Math._computeCR(entireSystemColl, entireSystemDebt, price);
+        TCR = LiquityMath._computeCR(entireSystemColl, entireSystemDebt, price);
 
         return TCR;
     }
@@ -1322,7 +1360,7 @@ contract CDPManager is LiquityBase, Ownable, ICDPManager {
 
     function _calcDecayedBaseRate() internal view returns (uint) {
         uint minutesPassed = _minutesPassedSinceLastFeeOp();
-        uint decayFactor = Math._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
+        uint decayFactor = LiquityMath._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
 
         return baseRate.mul(decayFactor).div(1e18);
     }

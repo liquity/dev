@@ -4,7 +4,7 @@ pragma solidity 0.6.11;
 
 import "../Interfaces/IGrowthToken.sol";
 import "../Interfaces/ICommunityIssuance.sol";
-import "../Dependencies/Math.sol";
+import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/SafeMath.sol";
 
@@ -101,7 +101,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
         uint timePassedInMinutes = block.timestamp.sub(deploymentTime).div(SECONDS_IN_ONE_MINUTE);
 
         // f^t
-        uint power = Math._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
+        uint power = LiquityMath._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
 
         //  (1 - f^t)
         uint cumulativeIssuanceFraction = (uint(1e18).sub(power));

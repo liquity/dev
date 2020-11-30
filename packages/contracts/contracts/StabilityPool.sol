@@ -12,9 +12,8 @@ import './Interfaces/ISortedCDPs.sol';
 import './Interfaces/IPriceFeed.sol';
 import "./Interfaces/ICommunityIssuance.sol";
 import "./Dependencies/LiquityBase.sol";
-import "./Dependencies/Math.sol";
 import "./Dependencies/SafeMath.sol";
-import "./Dependencies/SafeMath128.sol";
+import "./Dependencies/LiquitySafeMath128.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
@@ -32,7 +31,7 @@ import "./Dependencies/console.sol";
  * of the total LUSD in the Stability Pool, depletes 40% of each deposit.
  *
  * A deposit that has experienced a series of liquidations is termed a "compounded deposit": each liquidation depletes the deposit,
- * multiplying it by some factor in range [0,1[
+ * multiplying it by some factor in range ]0,1[
  *
  *
  * --- IMPLEMENTATION ---
@@ -50,7 +49,7 @@ import "./Dependencies/console.sol";
  * https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf
  *
  * For a given deposit d_t, the ratio P/P_t tells us the factor by which a deposit has decreased since it joined the Stability Pool, 
- * and the term (S - S_t)/P_t gives us the deposit's total accumulated ETH gain.
+ * and the term d_t * (S - S_t)/P_t gives us the deposit's total accumulated ETH gain.
  *
  * Each liquidation updates the product P and sum S. After a series of liquidations, a compounded deposit and corresponding ETH gain 
  * can be calculated using the initial deposit, the depositor’s snapshots of P and S, and the latest values of P and S.
@@ -62,7 +61,7 @@ import "./Dependencies/console.sol";
  *
  * --- SCALE FACTOR ---
  *
- * Since P is a product in range [0,1] that is always-decreasing, it should never reach 0 when multiplied by a number in range ]0,1[. 
+ * Since P is a running product in range ]0,1] that is always-decreasing, it should never reach 0 when multiplied by a number in range ]0,1[. 
  * Unfortunately, Solidity floor division always reaches 0, sooner or later.
  *
  * A series of liquidations that nearly empty the Pool (and thus each multiply P by a very small number in range ]0,1[ ) may push P 
@@ -84,11 +83,11 @@ import "./Dependencies/console.sol";
  * When a deposit is made, it gets snapshots of the currentEpoch and the currentScale.  
  *
  * When calculating a compounded deposit, we compare the current epoch to the deposit's epoch snapshot. If the current epoch is newer, 
- * then that the deposit was present during a pool-emptying liquidation, and necessarily has been depleted to 0. 
+ * then the deposit was present during a pool-emptying liquidation, and necessarily has been depleted to 0. 
  *
  * Otherwise, we then compare the current scale to the deposit's scale snapshot. If they're equal, the compounded deposit is given by d_t * P/P_t.
- * If it spans one scale change, is given by d_t * P/(P_t * 1e18). If it spans more than one scale change, we define the compounded deposit 
- * as 0, since it is now less than 1e-18'th of it's initial value (e.g. a deposit of 1 billion LUSD has depleted to 1 billionth of an LUSD).
+ * If it spans one scale change, it is given by d_t * P/(P_t * 1e18). If it spans more than one scale change, we define the compounded deposit 
+ * as 0, since it is now less than 1e-18'th of its initial value (e.g. a deposit of 1 billion LUSD has depleted to 1 billionth of an LUSD).
  *
  *
  *  --- TRACKING DEPOSITOR'S ETH GAIN OVER SCALE CHANGES AND EPOCHS ---
@@ -116,7 +115,7 @@ import "./Dependencies/console.sol";
  *
  * --- LQTY ISSUANCE TO STABILITY POOL DEPOSITORS --- 
  *
- *  An LQTY issuance event occurs at every deposit operation, and every liquidation. 
+ * An LQTY issuance event occurs at every deposit operation, and every liquidation. 
  *
  * Each deposit is tagged with the address of the front end through which it was made.
  *
@@ -131,8 +130,7 @@ import "./Dependencies/console.sol";
  *
  */
 contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
-    using SafeMath for uint256;
-    using SafeMath128 for uint128;
+    using LiquitySafeMath128 for uint128;
 
     IBorrowerOperations public borrowerOperations;
 
@@ -332,7 +330,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         uint depositorETHGain = getDepositorETHGain(msg.sender);
 
         uint compoundedCLVDeposit = getCompoundedCLVDeposit(msg.sender);
-        uint CLVtoWithdraw = Math._min(_amount, compoundedCLVDeposit);
+        uint CLVtoWithdraw = LiquityMath._min(_amount, compoundedCLVDeposit);
         uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
 
         // First pay out any LQTY gains
@@ -776,10 +774,6 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // --- Stability Pool Deposit Functionality ---
 
-    function getFrontEndTag(address _depositor) external view override returns (address) {
-        return deposits[_depositor].frontEndTag;
-    }
-
     function _setFrontEndTag(address _depositor, address _frontEndTag) internal {
         deposits[_depositor].frontEndTag = _frontEndTag;
     }
@@ -866,7 +860,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         uint price = priceFeed.getPrice();
         address lowestTrove = sortedCDPs.getLast();
         uint ICR = cdpManager.getCurrentICR(lowestTrove, price);
-        require(ICR >= MCR, "StabilityPool: Cannot withdraw while pending liquidations");
+        require(ICR >= MCR, "StabilityPool: Cannot withdraw while there are troves with ICR < MCR");
     }
 
     function _requireUserHasDeposit(uint _initialDeposit) internal pure {

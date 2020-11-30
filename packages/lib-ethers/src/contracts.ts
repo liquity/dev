@@ -14,6 +14,7 @@ import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import cdpManagerAbi from "../abi/CDPManager.json";
 import clvTokenAbi from "../abi/CLVToken.json";
+import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
 import growthTokenAbi from "../abi/GrowthToken.json";
@@ -25,7 +26,6 @@ import priceFeedAbi from "../abi/PriceFeed.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedCDPsAbi from "../abi/SortedCDPs.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
-import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 
 import dev from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
@@ -38,6 +38,7 @@ import {
   BorrowerOperations,
   CDPManager,
   CLVToken,
+  CollSurplusPool,
   CommunityIssuance,
   DefaultPool,
   GrowthToken,
@@ -48,8 +49,7 @@ import {
   PriceFeed,
   PriceFeedTestnet,
   SortedCDPs,
-  StabilityPool,
-  CollSurplusPool
+  StabilityPool
 } from "../types";
 
 export const abi: { [name: string]: JsonFragment[] } = {
@@ -160,6 +160,7 @@ export interface LiquityContractAddresses {
   borrowerOperations: string;
   cdpManager: string;
   clvToken: string;
+  collSurplusPool: string;
   communityIssuance: string;
   defaultPool: string;
   growthToken: string;
@@ -171,7 +172,6 @@ export interface LiquityContractAddresses {
   priceFeedTestnet: string;
   sortedCDPs: string;
   stabilityPool: string;
-  collSurplusPool: string;
 }
 
 export interface LiquityContracts {
@@ -181,6 +181,7 @@ export interface LiquityContracts {
   borrowerOperations: BorrowerOperations;
   cdpManager: CDPManager;
   clvToken: CLVToken;
+  collSurplusPool: CollSurplusPool;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
   growthToken: GrowthToken;
@@ -192,7 +193,6 @@ export interface LiquityContracts {
   priceFeedTestnet: PriceFeedTestnet;
   sortedCDPs: SortedCDPs;
   stabilityPool: StabilityPool;
-  collSurplusPool: CollSurplusPool;
 }
 
 export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses => ({
@@ -200,6 +200,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   borrowerOperations: contracts.borrowerOperations.address,
   cdpManager: contracts.cdpManager.address,
   clvToken: contracts.clvToken.address,
+  collSurplusPool: contracts.collSurplusPool.address,
   communityIssuance: contracts.communityIssuance.address,
   defaultPool: contracts.defaultPool.address,
   growthToken: contracts.growthToken.address,
@@ -210,8 +211,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   priceFeed: contracts.priceFeed.address,
   priceFeedTestnet: contracts.priceFeedTestnet.address,
   sortedCDPs: contracts.sortedCDPs.address,
-  stabilityPool: contracts.stabilityPool.address,
-  collSurplusPool: contracts.collSurplusPool.address
+  stabilityPool: contracts.stabilityPool.address
 });
 
 const create = <T extends TypedContract<LiquityContract, unknown>>(

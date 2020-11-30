@@ -24,7 +24,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
   beforeEach(async () => {
     contracts = await deployLiquity()
     
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     clvToken = contracts.clvToken
     stabilityPool = contracts.stabilityPool
     cdpManager = contracts.cdpManager
@@ -32,6 +32,8 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
+    
+    await priceFeed.setPrice(dec(200, 18))
   })
 
   // skipped to not slow down CI

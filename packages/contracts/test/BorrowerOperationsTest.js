@@ -1,6 +1,7 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
+const NonPayable = artifacts.require('NonPayable.sol')
 
 const th = testHelpers.TestHelper
 
@@ -11,6 +12,15 @@ const timeValues = testHelpers.TimeValues
 
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const assertRevert = th.assertRevert
+
+/* NOTE: Some of the borrowing tests do not test for specific LUSD fee values. They only test that the 
+ * fees are non-zero when they should occur, and that they decay over time.
+ *
+ * Specific LUSD fee values will depend on the final fee schedule used, and the final choice for
+ *  the parameter MINUTE_DECAY_FACTOR in the CDPManager, which is still TBD based on economic
+ * modelling.
+ * 
+ */ 
 
 contract('BorrowerOperations', async accounts => {
 
@@ -45,7 +55,7 @@ contract('BorrowerOperations', async accounts => {
     contracts = await deploymentHelper.deployCLVToken(contracts)
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
@@ -65,6 +75,8 @@ contract('BorrowerOperations', async accounts => {
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
     CLV_GAS_COMPENSATION = await borrowerOperations.CLV_GAS_COMPENSATION()
+
+    await priceFeed.setPrice(dec(200, 18))
   })
 
   it("addColl(): Increases the activePool ETH and raw ether balance by correct amount", async () => {
@@ -3709,6 +3721,21 @@ contract('BorrowerOperations', async accounts => {
   
       assert.isTrue(newTCR.eq(expectedTCR))
     })
+  })
+
+  it('closeLoan(): fails if owner cannot receive ETH', async () => {
+    const nonPayable = await NonPayable.new()
+
+    // we need 2 troves to be able to close 1 and have 1 remaining in the system
+    await borrowerOperations.openLoan(0, alice, { from: alice, value: dec(10, 18) })
+    // open loan from NonPayable proxy contract
+    const openLoanData = th.getTransactionData('openLoan(uint256,address)', ['0x0', '0x0'])
+    await nonPayable.forward(borrowerOperations.address, openLoanData, { value: dec(1, 'ether') })
+    assert.equal((await cdpManager.getCDPStatus(nonPayable.address)).toString(), '1', 'NonPayable proxy should have a trove')
+    assert.isFalse(await cdpManager.checkRecoveryMode(), 'System should not be in Recovery Mode')
+    // open loan from NonPayable proxy contract
+    const closeLoanData = th.getTransactionData('closeLoan()', [])
+    await th.assertRevert(nonPayable.forward(borrowerOperations.address, closeLoanData), 'ActivePool: sending ETH failed')
   })
 })
 

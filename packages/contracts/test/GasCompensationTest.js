@@ -46,7 +46,7 @@ contract('Gas compensation tests', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
@@ -58,6 +58,8 @@ contract('Gas compensation tests', async accounts => {
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts) 
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+    await priceFeed.setPrice(dec(200, 18))
   })
 
   // --- Raw gas compensation calculations ---

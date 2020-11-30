@@ -22,17 +22,23 @@ const CommunityIssuanceTester = artifacts.require("./CommunityIssuanceTester.sol
 const StabilityPoolTester = artifacts.require("./StabilityPoolTester.sol")
 const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
-const MathTester = artifacts.require("./MathTester.sol")
+const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
 const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
 
 /* "Liquity core" consists of all contracts in the core Liquity system.
 
-LQTY contracts consist of only those contracts related to the Growth Token:the token itself, 
-and lockup, staking and community issuance coreContracts. */
+LQTY contracts consist of only those contracts related to the LQTY Token:
+
+-the LQTY token
+-the Lockup factory and lockup contracts
+-the LQTYStaking contract
+-the CommunityIssuance contract 
+*/
 
 const ZERO_ADDRESS = '0x' + '0'.repeat(40)
+const maxBytes32 = '0x' + 'f'.repeat(64)
 
 class DeploymentHelper {
 
@@ -122,7 +128,7 @@ class DeploymentHelper {
     testerContracts.defaultPool = await DefaultPoolTester.new()
     testerContracts.stabilityPool = await StabilityPoolTester.new()
     testerContracts.collSurplusPool = await CollSurplusPool.new()
-    testerContracts.math = await MathTester.new()
+    testerContracts.math = await LiquityMathTester.new()
     testerContracts.borrowerOperations = await BorrowerOperationsTester.new()
     testerContracts.cdpManager = await CDPManagerTester.new()
     testerContracts.functionCaller = await FunctionCaller.new()
@@ -257,7 +263,7 @@ class DeploymentHelper {
 
     // set CDPManager addr in SortedCDPs
     await contracts.sortedCDPs.setParams(
-      1e6,
+      maxBytes32,
       contracts.cdpManager.address,
       contracts.borrowerOperations.address
     )
@@ -268,13 +274,11 @@ class DeploymentHelper {
 
     // set contract addresses in PriceFeed
     await contracts.priceFeed.setAddresses(
-      contracts.cdpManager.address,
       ZERO_ADDRESS,
     )
 
     // set contract addresses in PriceFeedTestnet
     await contracts.priceFeedTestnet.setAddresses(
-      contracts.cdpManager.address,
       ZERO_ADDRESS,
     )
 
@@ -335,7 +339,6 @@ class DeploymentHelper {
 
     // set contracts in HintHelpers
     await contracts.hintHelpers.setAddresses(
-      contracts.priceFeed.address,
       contracts.sortedCDPs.address,
       contracts.cdpManager.address
     )

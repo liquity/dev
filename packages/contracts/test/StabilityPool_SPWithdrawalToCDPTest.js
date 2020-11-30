@@ -54,7 +54,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       contracts.cdpManager = await CDPManagerTester.new()
       contracts = await deploymentHelper.deployCLVToken(contracts)
   
-      priceFeed = contracts.priceFeed
+      priceFeed = contracts.priceFeedTestnet
       clvToken = contracts.clvToken
       sortedCDPs = contracts.sortedCDPs
       cdpManager = contracts.cdpManager
@@ -66,6 +66,8 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+      await priceFeed.setPrice(dec(200, 18))
     })
 
     // --- withdrawETHGainToTrove() ---

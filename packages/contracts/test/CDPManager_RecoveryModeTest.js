@@ -42,7 +42,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
@@ -55,6 +55,8 @@ contract('CDPManager - in Recovery Mode', async accounts => {
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+    await priceFeed.setPrice(dec(200, 18))
   })
 
   it("checkRecoveryMode(): Returns true if TCR falls below CCR", async () => {
@@ -868,7 +870,7 @@ contract('CDPManager - in Recovery Mode', async accounts => {
 
     // Liquidate Bob
     await cdpManager.liquidate(bob, { from: owner })
-
+    
     /* Since the pool only contains 100 CLV, and Bob's pre-liquidation debt was 250 CLV, 
     expect Bob's loan to only be partially offset, and remain active after liquidation */
 

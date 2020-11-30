@@ -22,7 +22,8 @@ interface AggregatorV3Interface {
       uint256 updatedAt,
       uint80 answeredInRound
     );
-  function latestRoundData() // TODO unused? 
+
+  function latestRoundData()
     external
     view
     returns (
