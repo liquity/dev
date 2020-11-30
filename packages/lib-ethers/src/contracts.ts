@@ -13,7 +13,7 @@ import {
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import troveManagerAbi from "../abi/TroveManager.json";
-import lusdTokenAbi from "../abi/CLVToken.json";
+import lusdTokenAbi from "../abi/LUSDToken.json";
 import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";

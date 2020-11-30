@@ -51,7 +51,7 @@ const timeValues = testHelpers.TimeValues
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const assertRevert = th.assertRevert
 
-contract('Growth Token', async accounts => {
+contract('LQTY Token', async accounts => {
   const [owner, A, B, C, D] = accounts
 
   // the second account our buidlerenv creates (for EOA A)

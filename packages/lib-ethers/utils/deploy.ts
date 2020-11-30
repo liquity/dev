@@ -74,7 +74,7 @@ const deployContracts = async (
     lusdToken: await deployContract(
       deployer,
       getContractFactory,
-      "CLVToken",
+      "LUSDToken",
       addresses.troveManager,
       addresses.stabilityPool,
       addresses.borrowerOperations,

@@ -145,7 +145,7 @@ class DeploymentHelper {
     LockupContractFactory.setAsDeployed(lockupContractFactory)
     CommunityIssuance.setAsDeployed(communityIssuance)
 
-    // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
+    // Deploy LQTY Token, passing Community Issuance and Factory addresses to the constructor 
     const lqtyToken = await LQTYToken.new(
       communityIssuance.address, 
       lqtyStaking.address,
@@ -171,7 +171,7 @@ class DeploymentHelper {
     LockupContractFactory.setAsDeployed(lockupContractFactory)
     CommunityIssuanceTester.setAsDeployed(communityIssuance)
 
-    // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
+    // Deploy LQTY Token, passing Community Issuance and Factory addresses to the constructor 
     const lqtyToken = await LQTYTokenTester.new(
       communityIssuance.address, 
       lqtyStaking.address,
@@ -225,7 +225,7 @@ class DeploymentHelper {
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
 
-    /* Deploy Growth Token, passing Community Issuance,  LQTYStaking, and Factory addresses 
+    /* Deploy LQTY Token, passing Community Issuance,  LQTYStaking, and Factory addresses 
     to the constructor  */
     const lqtyToken = await LQTYToken.new(
       communityIssuance.address, 
