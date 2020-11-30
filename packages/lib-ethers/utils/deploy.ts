@@ -62,7 +62,7 @@ const deployContracts = async (
       { ...overrides }
     ),
     lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
-    priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
+    // priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
     priceFeedTestnet: await deployContract(deployer, getContractFactory, "PriceFeedTestnet", { ...overrides }),
     sortedTroves: await deployContract(deployer, getContractFactory, "SortedTroves", { ...overrides }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
@@ -116,7 +116,7 @@ const connectContracts = async (
     hintHelpers,
     lockupContractFactory,
     lqtyStaking,
-    priceFeed,
+    // priceFeed,
     priceFeedTestnet,
     sortedTroves,
     stabilityPool
@@ -138,11 +138,11 @@ const connectContracts = async (
         nonce
       }),
 
-    nonce =>
-      priceFeed.setAddresses(
-        AddressZero,
-        { ...overrides, nonce }
-      ),
+    // nonce =>
+    //   priceFeed.setAddresses(
+    //     AddressZero,
+    //     { ...overrides, nonce }
+    //   ),
 
     nonce =>
       priceFeedTestnet.setAddresses(
@@ -157,7 +157,7 @@ const connectContracts = async (
         defaultPool.address,
         stabilityPool.address,
         collSurplusPool.address,
-        priceFeed.address,
+        priceFeedTestnet.address,
         lusdToken.address,
         sortedTroves.address,
         lqtyStaking.address,
@@ -171,7 +171,7 @@ const connectContracts = async (
         defaultPool.address,
         stabilityPool.address,
         collSurplusPool.address,
-        priceFeed.address,
+        priceFeedTestnet.address,
         sortedTroves.address,
         lusdToken.address,
         lqtyStaking.address,
@@ -185,7 +185,7 @@ const connectContracts = async (
         activePool.address,
         lusdToken.address,
         sortedTroves.address,
-        priceFeed.address,
+        priceFeedTestnet.address,
         communityIssuance.address,
         { ...overrides, nonce }
       ),

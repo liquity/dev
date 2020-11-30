@@ -1,4 +1,4 @@
-import { JsonFragment, LogDescription, Result } from "@ethersproject/abi";
+import { JsonFragment, LogDescription } from "@ethersproject/abi";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 import { Provider, Log } from "@ethersproject/abstract-provider";
@@ -168,7 +168,7 @@ export interface LiquityContractAddresses {
   lockupContractFactory: string;
   lqtyStaking: string;
   multiTrovegetter: string;
-  priceFeed: string;
+  // priceFeed: string;
   priceFeedTestnet: string;
   sortedTroves: string;
   stabilityPool: string;
@@ -189,7 +189,7 @@ export interface LiquityContracts {
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
   multiTrovegetter: MultiTroveGetter;
-  priceFeed: PriceFeed;
+  // priceFeed: PriceFeed;
   priceFeedTestnet: PriceFeedTestnet;
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
@@ -208,7 +208,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   lockupContractFactory: contracts.lockupContractFactory.address,
   lqtyStaking: contracts.lqtyStaking.address,
   multiTrovegetter: contracts.multiTrovegetter.address,
-  priceFeed: contracts.priceFeed.address,
+  // priceFeed: contracts.priceFeed.address,
   priceFeedTestnet: contracts.priceFeedTestnet.address,
   sortedTroves: contracts.sortedTroves.address,
   stabilityPool: contracts.stabilityPool.address
@@ -268,7 +268,7 @@ export const connectToContracts = (
     signerOrProvider
   ),
 
-  priceFeed: create<PriceFeed>(addresses.priceFeed, priceFeedAbi, signerOrProvider),
+  // priceFeed: create<PriceFeed>(addresses.priceFeed, priceFeedAbi, signerOrProvider),
   
   priceFeedTestnet: create<PriceFeedTestnet>(addresses.priceFeedTestnet, priceFeedTestnetAbi, signerOrProvider),
 
