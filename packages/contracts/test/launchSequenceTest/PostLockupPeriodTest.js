@@ -58,7 +58,7 @@ contract('After the initial lockup period has passed', async accounts => {
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 
@@ -82,13 +82,13 @@ contract('After the initial lockup period has passed', async accounts => {
     OYLC_I3 = await th.getOYLCFromDeploymentTx(deployedOYLCtx_I3)
 
     // LiquityAG transfers initial LQTY entitlements to OYLCs
-    await growthToken.transfer(OYLC_T1.address, teamMemberInitialEntitlement_1, { from: liquityAG })
-    await growthToken.transfer(OYLC_T2.address, teamMemberInitialEntitlement_2, { from: liquityAG })
-    await growthToken.transfer(OYLC_T3.address, teamMemberInitialEntitlement_3, { from: liquityAG })
+    await lqtyToken.transfer(OYLC_T1.address, teamMemberInitialEntitlement_1, { from: liquityAG })
+    await lqtyToken.transfer(OYLC_T2.address, teamMemberInitialEntitlement_2, { from: liquityAG })
+    await lqtyToken.transfer(OYLC_T3.address, teamMemberInitialEntitlement_3, { from: liquityAG })
 
-    await growthToken.transfer(OYLC_I1.address, investorInitialEntitlement_1, { from: liquityAG })
-    await growthToken.transfer(OYLC_I2.address, investorInitialEntitlement_2, { from: liquityAG })
-    await growthToken.transfer(OYLC_I3.address, investorInitialEntitlement_3, { from: liquityAG })
+    await lqtyToken.transfer(OYLC_I1.address, investorInitialEntitlement_1, { from: liquityAG })
+    await lqtyToken.transfer(OYLC_I2.address, investorInitialEntitlement_2, { from: liquityAG })
+    await lqtyToken.transfer(OYLC_I3.address, investorInitialEntitlement_3, { from: liquityAG })
 
     const OYLCsToLock = [
       // Team
@@ -109,9 +109,9 @@ contract('After the initial lockup period has passed', async accounts => {
     for (i = 0; i < 12; i++) {
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      await growthToken.transfer(OYLC_T1.address, teamMemberMonthlyVesting_1, { from: liquityAG })
-      await growthToken.transfer(OYLC_T2.address, teamMemberMonthlyVesting_2, { from: liquityAG })
-      await growthToken.transfer(OYLC_T3.address, teamMemberMonthlyVesting_3, { from: liquityAG })
+      await lqtyToken.transfer(OYLC_T1.address, teamMemberMonthlyVesting_1, { from: liquityAG })
+      await lqtyToken.transfer(OYLC_T2.address, teamMemberMonthlyVesting_2, { from: liquityAG })
+      await lqtyToken.transfer(OYLC_T3.address, teamMemberMonthlyVesting_3, { from: liquityAG })
     }
 
     // After Since only 360 days have passed, fast forward 5 more days, until OYLCs unlock
@@ -343,14 +343,14 @@ contract('After the initial lockup period has passed', async accounts => {
     it("A beneficiary can withdraw their full entitlement from their OYLC", async () => {
 
       // Check LQTY balances of investors' OYLCs are equal to their initial entitlements
-      assert.equal(await growthToken.balanceOf(OYLC_I1.address), investorInitialEntitlement_1)
-      assert.equal(await growthToken.balanceOf(OYLC_I2.address), investorInitialEntitlement_2)
-      assert.equal(await growthToken.balanceOf(OYLC_I3.address), investorInitialEntitlement_3)
+      assert.equal(await lqtyToken.balanceOf(OYLC_I1.address), investorInitialEntitlement_1)
+      assert.equal(await lqtyToken.balanceOf(OYLC_I2.address), investorInitialEntitlement_2)
+      assert.equal(await lqtyToken.balanceOf(OYLC_I3.address), investorInitialEntitlement_3)
 
       // Check LQTY balances of investors are 0
-      assert.equal(await growthToken.balanceOf(investor_1), '0')
-      assert.equal(await growthToken.balanceOf(investor_2), '0')
-      assert.equal(await growthToken.balanceOf(investor_3), '0')
+      assert.equal(await lqtyToken.balanceOf(investor_1), '0')
+      assert.equal(await lqtyToken.balanceOf(investor_2), '0')
+      assert.equal(await lqtyToken.balanceOf(investor_3), '0')
 
       // All investors withdraw from their respective OYLCs
       await OYLC_I1.withdrawLQTY({ from: investor_1 })
@@ -358,21 +358,21 @@ contract('After the initial lockup period has passed', async accounts => {
       await OYLC_I3.withdrawLQTY({ from: investor_3 })
 
       // Check LQTY balances of investors now equal their entitlements
-      assert.equal(await growthToken.balanceOf(investor_1), investorInitialEntitlement_1)
-      assert.equal(await growthToken.balanceOf(investor_2), investorInitialEntitlement_2)
-      assert.equal(await growthToken.balanceOf(investor_3), investorInitialEntitlement_3)
+      assert.equal(await lqtyToken.balanceOf(investor_1), investorInitialEntitlement_1)
+      assert.equal(await lqtyToken.balanceOf(investor_2), investorInitialEntitlement_2)
+      assert.equal(await lqtyToken.balanceOf(investor_3), investorInitialEntitlement_3)
 
       // Check LQTY balances of investors' OYLCs are now 0
-      assert.equal(await growthToken.balanceOf(OYLC_I1.address), '0')
-      assert.equal(await growthToken.balanceOf(OYLC_I2.address), '0')
-      assert.equal(await growthToken.balanceOf(OYLC_I3.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_I1.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_I2.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_I3.address), '0')
     })
 
     it("A beneficiary on a vesting schedule can withdraw their total vested amount from their OYLC", async () => {
       // Get LQTY balances of OYLCs for beneficiaries (team members) on vesting schedules
-      const LQTYBalanceOfOYLC_T1_Before = await growthToken.balanceOf(OYLC_T1.address)
-      const LQTYBalanceOfOYLC_T2_Before = await growthToken.balanceOf(OYLC_T2.address)
-      const LQTYBalanceOfOYLC_T3_Before = await growthToken.balanceOf(OYLC_T3.address)
+      const LQTYBalanceOfOYLC_T1_Before = await lqtyToken.balanceOf(OYLC_T1.address)
+      const LQTYBalanceOfOYLC_T2_Before = await lqtyToken.balanceOf(OYLC_T2.address)
+      const LQTYBalanceOfOYLC_T3_Before = await lqtyToken.balanceOf(OYLC_T3.address)
 
       // Check LQTY balances of vesting beneficiaries' OYLCs are greater than their initial entitlements
       assert.isTrue(LQTYBalanceOfOYLC_T1_Before.gt(th.toBN(teamMemberInitialEntitlement_1)))
@@ -380,9 +380,9 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.isTrue(LQTYBalanceOfOYLC_T3_Before.gt(th.toBN(teamMemberInitialEntitlement_3)))
 
       // Check LQTY balances of beneficiaries are 0
-      assert.equal(await growthToken.balanceOf(teamMember_1), '0')
-      assert.equal(await growthToken.balanceOf(teamMember_2), '0')
-      assert.equal(await growthToken.balanceOf(teamMember_3), '0')
+      assert.equal(await lqtyToken.balanceOf(teamMember_1), '0')
+      assert.equal(await lqtyToken.balanceOf(teamMember_2), '0')
+      assert.equal(await lqtyToken.balanceOf(teamMember_3), '0')
 
       // All beneficiaries withdraw from their respective OYLCs
       await OYLC_T1.withdrawLQTY({ from: teamMember_1 })
@@ -390,44 +390,44 @@ contract('After the initial lockup period has passed', async accounts => {
       await OYLC_T3.withdrawLQTY({ from: teamMember_3 })
 
       // Check beneficiaries' LQTY balances now equal their accumulated vested entitlements
-      assert.isTrue((await growthToken.balanceOf(teamMember_1)).eq(LQTYBalanceOfOYLC_T1_Before))
-      assert.isTrue((await growthToken.balanceOf(teamMember_2)).eq(LQTYBalanceOfOYLC_T2_Before))
-      assert.isTrue((await growthToken.balanceOf(teamMember_3)).eq(LQTYBalanceOfOYLC_T3_Before))
+      assert.isTrue((await lqtyToken.balanceOf(teamMember_1)).eq(LQTYBalanceOfOYLC_T1_Before))
+      assert.isTrue((await lqtyToken.balanceOf(teamMember_2)).eq(LQTYBalanceOfOYLC_T2_Before))
+      assert.isTrue((await lqtyToken.balanceOf(teamMember_3)).eq(LQTYBalanceOfOYLC_T3_Before))
 
       // Check LQTY balances of beneficiaries' OYLCs are now 0
-      assert.equal(await growthToken.balanceOf(OYLC_T1.address), '0')
-      assert.equal(await growthToken.balanceOf(OYLC_T2.address), '0')
-      assert.equal(await growthToken.balanceOf(OYLC_T3.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_T1.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_T2.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_T3.address), '0')
     })
 
     it("Beneficiaries can withraw full LQTY balance of OYLC if it has increased since lockup period ended", async () => {
       // Check LQTY balances of investors' OYLCs are equal to their initial entitlements
-      assert.equal(await growthToken.balanceOf(OYLC_I1.address), investorInitialEntitlement_1)
-      assert.equal(await growthToken.balanceOf(OYLC_I2.address), investorInitialEntitlement_2)
-      assert.equal(await growthToken.balanceOf(OYLC_I3.address), investorInitialEntitlement_3)
+      assert.equal(await lqtyToken.balanceOf(OYLC_I1.address), investorInitialEntitlement_1)
+      assert.equal(await lqtyToken.balanceOf(OYLC_I2.address), investorInitialEntitlement_2)
+      assert.equal(await lqtyToken.balanceOf(OYLC_I3.address), investorInitialEntitlement_3)
 
       // Check LQTY balances of investors are 0
-      assert.equal(await growthToken.balanceOf(investor_1), '0')
-      assert.equal(await growthToken.balanceOf(investor_2), '0')
-      assert.equal(await growthToken.balanceOf(investor_3), '0')
+      assert.equal(await lqtyToken.balanceOf(investor_1), '0')
+      assert.equal(await lqtyToken.balanceOf(investor_2), '0')
+      assert.equal(await lqtyToken.balanceOf(investor_3), '0')
 
       // LQTY deployer sends extra LQTY to investor OYLCs
-      await growthToken.transfer(OYLC_I1.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_I2.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_I3.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_I1.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_I2.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_I3.address, dec(1, 24), { from: liquityAG })
 
       // 1 month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // LQTY deployer again sends extra LQTY to investor OYLCs
-      await growthToken.transfer(OYLC_I1.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_I2.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_I3.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_I1.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_I2.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_I3.address, dec(1, 24), { from: liquityAG })
 
       // Get LQTY balances of OYLCs for investors 
-      const LQTYBalanceOfOYLC_I1_Before = await growthToken.balanceOf(OYLC_I1.address)
-      const LQTYBalanceOfOYLC_I2_Before = await growthToken.balanceOf(OYLC_I2.address)
-      const LQTYBalanceOfOYLC_I3_Before = await growthToken.balanceOf(OYLC_I3.address)
+      const LQTYBalanceOfOYLC_I1_Before = await lqtyToken.balanceOf(OYLC_I1.address)
+      const LQTYBalanceOfOYLC_I2_Before = await lqtyToken.balanceOf(OYLC_I2.address)
+      const LQTYBalanceOfOYLC_I3_Before = await lqtyToken.balanceOf(OYLC_I3.address)
 
       // Check LQTY balances of investors' OYLCs are greater than their initial entitlements
       assert.isTrue(LQTYBalanceOfOYLC_I1_Before.gt(th.toBN(investorInitialEntitlement_1)))
@@ -440,14 +440,14 @@ contract('After the initial lockup period has passed', async accounts => {
       await OYLC_I3.withdrawLQTY({ from: investor_3 })
 
       // Check LQTY balances of investors now equal their OYLC balances prior to withdrawal
-      assert.isTrue((await growthToken.balanceOf(investor_1)).eq(LQTYBalanceOfOYLC_I1_Before))
-      assert.isTrue((await growthToken.balanceOf(investor_2)).eq(LQTYBalanceOfOYLC_I2_Before))
-      assert.isTrue((await growthToken.balanceOf(investor_3)).eq(LQTYBalanceOfOYLC_I3_Before))
+      assert.isTrue((await lqtyToken.balanceOf(investor_1)).eq(LQTYBalanceOfOYLC_I1_Before))
+      assert.isTrue((await lqtyToken.balanceOf(investor_2)).eq(LQTYBalanceOfOYLC_I2_Before))
+      assert.isTrue((await lqtyToken.balanceOf(investor_3)).eq(LQTYBalanceOfOYLC_I3_Before))
 
       // Check LQTY balances of investors' OYLCs are now 0
-      assert.equal(await growthToken.balanceOf(OYLC_I1.address), '0')
-      assert.equal(await growthToken.balanceOf(OYLC_I2.address), '0')
-      assert.equal(await growthToken.balanceOf(OYLC_I3.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_I1.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_I2.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_I3.address), '0')
     })
   })
 
@@ -468,7 +468,7 @@ contract('After the initial lockup period has passed', async accounts => {
       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
       //LQTY deployer fund the newly deployed OYLCs
-      await growthToken.transfer(OYLC_B.address, dec(2, 18), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_B.address, dec(2, 18), { from: liquityAG })
 
       // D locks their deployed OYLC
       await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: D })
@@ -513,22 +513,22 @@ contract('After the initial lockup period has passed', async accounts => {
 
   describe('Transferring LQTY', async accounts => {
     it("LQTY deployer can transfer LQTY to OYLCs they deployed", async () => {
-      const initialLQTYBalanceOfOYLC_T1 = await growthToken.balanceOf(OYLC_T1.address)
-      const initialLQTYBalanceOfOYLC_T2 = await growthToken.balanceOf(OYLC_T2.address)
-      const initialLQTYBalanceOfOYLC_T3 = await growthToken.balanceOf(OYLC_T3.address)
+      const initialLQTYBalanceOfOYLC_T1 = await lqtyToken.balanceOf(OYLC_T1.address)
+      const initialLQTYBalanceOfOYLC_T2 = await lqtyToken.balanceOf(OYLC_T2.address)
+      const initialLQTYBalanceOfOYLC_T3 = await lqtyToken.balanceOf(OYLC_T3.address)
 
       // One month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // LQTY deployer transfers vesting amount
-      await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
 
       // Get new OYLC LQTY balances
-      const LQTYBalanceOfOYLC_T1_1 = await growthToken.balanceOf(OYLC_T1.address)
-      const LQTYBalanceOfOYLC_T2_1 = await growthToken.balanceOf(OYLC_T2.address)
-      const LQTYBalanceOfOYLC_T3_1 = await growthToken.balanceOf(OYLC_T3.address)
+      const LQTYBalanceOfOYLC_T1_1 = await lqtyToken.balanceOf(OYLC_T1.address)
+      const LQTYBalanceOfOYLC_T2_1 = await lqtyToken.balanceOf(OYLC_T2.address)
+      const LQTYBalanceOfOYLC_T3_1 = await lqtyToken.balanceOf(OYLC_T3.address)
 
       // // Check team member OYLC balances have increased 
       assert.isTrue(LQTYBalanceOfOYLC_T1_1.eq(th.toBN(initialLQTYBalanceOfOYLC_T1).add(th.toBN(dec(1, 24)))))
@@ -539,14 +539,14 @@ contract('After the initial lockup period has passed', async accounts => {
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // LQTY deployer transfers vesting amount
-      await growthToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_T1.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_T2.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_T3.address, dec(1, 24), { from: liquityAG })
 
       // Get new OYLC LQTY balances
-      const LQTYBalanceOfOYLC_T1_2 = await growthToken.balanceOf(OYLC_T1.address)
-      const LQTYBalanceOfOYLC_T2_2 = await growthToken.balanceOf(OYLC_T2.address)
-      const LQTYBalanceOfOYLC_T3_2 = await growthToken.balanceOf(OYLC_T3.address)
+      const LQTYBalanceOfOYLC_T1_2 = await lqtyToken.balanceOf(OYLC_T1.address)
+      const LQTYBalanceOfOYLC_T2_2 = await lqtyToken.balanceOf(OYLC_T2.address)
+      const LQTYBalanceOfOYLC_T3_2 = await lqtyToken.balanceOf(OYLC_T3.address)
 
       // Check team member OYLC balances have increased again
       assert.isTrue(LQTYBalanceOfOYLC_T1_2.eq(LQTYBalanceOfOYLC_T1_1.add(th.toBN(dec(1, 24)))))
@@ -565,39 +565,39 @@ contract('After the initial lockup period has passed', async accounts => {
       const OYLC_C = await th.getOYLCFromDeploymentTx(deployedOYLCtx_C)
 
       // Check balances of OYLCs are 0
-      assert.equal(await growthToken.balanceOf(OYLC_A.address), '0')
-      assert.equal(await growthToken.balanceOf(OYLC_B.address), '0')
-      assert.equal(await growthToken.balanceOf(OYLC_C.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_A.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_B.address), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLC_C.address), '0')
 
       // One month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // LQTY deployer transfers LQTY to OYLCs deployed by other accounts
-      await growthToken.transfer(OYLC_A.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_B.address, dec(2, 24), { from: liquityAG })
-      await growthToken.transfer(OYLC_C.address, dec(3, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_A.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_B.address, dec(2, 24), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_C.address, dec(3, 24), { from: liquityAG })
 
       // Check balances of OYLCs have increased
-      assert.equal(await growthToken.balanceOf(OYLC_A.address), dec(1, 24))
-      assert.equal(await growthToken.balanceOf(OYLC_B.address), dec(2, 24))
-      assert.equal(await growthToken.balanceOf(OYLC_C.address), dec(3, 24))
+      assert.equal(await lqtyToken.balanceOf(OYLC_A.address), dec(1, 24))
+      assert.equal(await lqtyToken.balanceOf(OYLC_B.address), dec(2, 24))
+      assert.equal(await lqtyToken.balanceOf(OYLC_C.address), dec(3, 24))
     })
 
     it("LQTY deployer can transfer LQTY directly to any externally owned account", async () => {
       // Check LQTY balances of EOAs
-      assert.equal(await growthToken.balanceOf(A), '0')
-      assert.equal(await growthToken.balanceOf(B), '0')
-      assert.equal(await growthToken.balanceOf(C), '0')
+      assert.equal(await lqtyToken.balanceOf(A), '0')
+      assert.equal(await lqtyToken.balanceOf(B), '0')
+      assert.equal(await lqtyToken.balanceOf(C), '0')
 
       // LQTY deployer transfers LQTY to EOAs
-      const txA = await growthToken.transfer(A, dec(1, 24), { from: liquityAG })
-      const txB = await growthToken.transfer(B, dec(2, 24), { from: liquityAG })
-      const txC = await growthToken.transfer(C, dec(3, 24), { from: liquityAG })
+      const txA = await lqtyToken.transfer(A, dec(1, 24), { from: liquityAG })
+      const txB = await lqtyToken.transfer(B, dec(2, 24), { from: liquityAG })
+      const txC = await lqtyToken.transfer(C, dec(3, 24), { from: liquityAG })
 
       // Check new balances have increased by correct amount
-      assert.equal(await growthToken.balanceOf(A), dec(1, 24))
-      assert.equal(await growthToken.balanceOf(B), dec(2, 24))
-      assert.equal(await growthToken.balanceOf(C), dec(3, 24))
+      assert.equal(await lqtyToken.balanceOf(A), dec(1, 24))
+      assert.equal(await lqtyToken.balanceOf(B), dec(2, 24))
+      assert.equal(await lqtyToken.balanceOf(C), dec(3, 24))
     })
 
     it("LQTY deployer can transfer LQTY to CDLCs they deployed", async () => {
@@ -612,19 +612,19 @@ contract('After the initial lockup period has passed', async accounts => {
       const CDLCAddress_C = await th.getLCAddressFromDeploymentTx(deployedCDLCtx_C)
 
       // Check CDLC balances before
-      assert.equal(await growthToken.balanceOf(CDLCAddress_A), '0')
-      assert.equal(await growthToken.balanceOf(CDLCAddress_B), '0')
-      assert.equal(await growthToken.balanceOf(CDLCAddress_C), '0')
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_A), '0')
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_B), '0')
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_C), '0')
 
       // LQTY deployer transfers LQTY to CDLCs
-      await growthToken.transfer(CDLCAddress_A, LQTYEntitlement_A, { from: liquityAG })
-      await growthToken.transfer(CDLCAddress_B, LQTYEntitlement_B, { from: liquityAG })
-      await growthToken.transfer(CDLCAddress_C, LQTYEntitlement_C, { from: liquityAG })
+      await lqtyToken.transfer(CDLCAddress_A, LQTYEntitlement_A, { from: liquityAG })
+      await lqtyToken.transfer(CDLCAddress_B, LQTYEntitlement_B, { from: liquityAG })
+      await lqtyToken.transfer(CDLCAddress_C, LQTYEntitlement_C, { from: liquityAG })
 
       // Check CDLC balances after
-      assert.equal(await growthToken.balanceOf(CDLCAddress_A), LQTYEntitlement_A)
-      assert.equal(await growthToken.balanceOf(CDLCAddress_B), LQTYEntitlement_B)
-      assert.equal(await growthToken.balanceOf(CDLCAddress_C), LQTYEntitlement_C)
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_A), LQTYEntitlement_A)
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_B), LQTYEntitlement_B)
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_C), LQTYEntitlement_C)
     })
 
     it("LQTY deployer can transfer LQTY to CDLCs deployed by anyone", async () => {
@@ -639,26 +639,26 @@ contract('After the initial lockup period has passed', async accounts => {
       const CDLCAddress_C = await th.getLCAddressFromDeploymentTx(deployedCDLCtx_C)
 
       // Check CDLC balances before
-      assert.equal(await growthToken.balanceOf(CDLCAddress_A), '0')
-      assert.equal(await growthToken.balanceOf(CDLCAddress_B), '0')
-      assert.equal(await growthToken.balanceOf(CDLCAddress_C), '0')
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_A), '0')
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_B), '0')
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_C), '0')
 
       // LQTY deployer transfers LQTY to CDLCs
-      await growthToken.transfer(CDLCAddress_A, LQTYEntitlement_A, { from: liquityAG })
-      await growthToken.transfer(CDLCAddress_B, LQTYEntitlement_B, { from: liquityAG })
-      await growthToken.transfer(CDLCAddress_C, LQTYEntitlement_C, { from: liquityAG })
+      await lqtyToken.transfer(CDLCAddress_A, LQTYEntitlement_A, { from: liquityAG })
+      await lqtyToken.transfer(CDLCAddress_B, LQTYEntitlement_B, { from: liquityAG })
+      await lqtyToken.transfer(CDLCAddress_C, LQTYEntitlement_C, { from: liquityAG })
 
       // Check CDLC balances after
-      assert.equal(await growthToken.balanceOf(CDLCAddress_A), LQTYEntitlement_A)
-      assert.equal(await growthToken.balanceOf(CDLCAddress_B), LQTYEntitlement_B)
-      assert.equal(await growthToken.balanceOf(CDLCAddress_C), LQTYEntitlement_C)
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_A), LQTYEntitlement_A)
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_B), LQTYEntitlement_B)
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_C), LQTYEntitlement_C)
     })
 
     it("Anyone can transfer LQTY to OYLCs deployed by anyone", async () => {
       // Start D, E, F with some LQTY
-      await growthToken.transfer(D, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(E, dec(2, 24), { from: liquityAG })
-      await growthToken.transfer(F, dec(3, 24), { from: liquityAG })
+      await lqtyToken.transfer(D, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(E, dec(2, 24), { from: liquityAG })
+      await lqtyToken.transfer(F, dec(3, 24), { from: liquityAG })
 
       // H, I, J deploy lockup contracts with A, B, C as beneficiaries, respectively
       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 24), { from: H })
@@ -671,26 +671,26 @@ contract('After the initial lockup period has passed', async accounts => {
       const OYLCAddress_C = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_C)
 
       // Check balances of OYLCs are 0
-      assert.equal(await growthToken.balanceOf(OYLCAddress_A), '0')
-      assert.equal(await growthToken.balanceOf(OYLCAddress_B), '0')
-      assert.equal(await growthToken.balanceOf(OYLCAddress_C), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLCAddress_A), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLCAddress_B), '0')
+      assert.equal(await lqtyToken.balanceOf(OYLCAddress_C), '0')
 
       // D, E, F transfer LQTY to OYLCs
-      await growthToken.transfer(OYLCAddress_A, dec(1, 24), { from: D })
-      await growthToken.transfer(OYLCAddress_B, dec(2, 24), { from: E })
-      await growthToken.transfer(OYLCAddress_C, dec(3, 24), { from: F })
+      await lqtyToken.transfer(OYLCAddress_A, dec(1, 24), { from: D })
+      await lqtyToken.transfer(OYLCAddress_B, dec(2, 24), { from: E })
+      await lqtyToken.transfer(OYLCAddress_C, dec(3, 24), { from: F })
 
       // Check balances of OYLCs has increased
-      assert.equal(await growthToken.balanceOf(OYLCAddress_A), dec(1, 24))
-      assert.equal(await growthToken.balanceOf(OYLCAddress_B), dec(2, 24))
-      assert.equal(await growthToken.balanceOf(OYLCAddress_C), dec(3, 24))
+      assert.equal(await lqtyToken.balanceOf(OYLCAddress_A), dec(1, 24))
+      assert.equal(await lqtyToken.balanceOf(OYLCAddress_B), dec(2, 24))
+      assert.equal(await lqtyToken.balanceOf(OYLCAddress_C), dec(3, 24))
     })
 
     it("Anyone can transfer LQTY to CDLCs deployed by anyone", async () => {
       // Start D, E, F with some LQTY
-      await growthToken.transfer(D, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(E, dec(2, 24), { from: liquityAG })
-      await growthToken.transfer(F, dec(3, 24), { from: liquityAG })
+      await lqtyToken.transfer(D, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(E, dec(2, 24), { from: liquityAG })
+      await lqtyToken.transfer(F, dec(3, 24), { from: liquityAG })
 
       // H, I, J deploy lockup contracts with A, B, C as beneficiaries, respectively
       const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: H })
@@ -703,19 +703,19 @@ contract('After the initial lockup period has passed', async accounts => {
       const CDLCAddress_C = await th.getLCAddressFromDeploymentTx(deployedCDLCtx_C)
 
       // Check balances of OYLCs are 0
-      assert.equal(await growthToken.balanceOf(CDLCAddress_A), '0')
-      assert.equal(await growthToken.balanceOf(CDLCAddress_B), '0')
-      assert.equal(await growthToken.balanceOf(CDLCAddress_C), '0')
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_A), '0')
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_B), '0')
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_C), '0')
 
       // D, E, F transfer LQTY to OYLCs
-      await growthToken.transfer(CDLCAddress_A, dec(1, 24), { from: D })
-      await growthToken.transfer(CDLCAddress_B, dec(2, 24), { from: E })
-      await growthToken.transfer(CDLCAddress_C, dec(3, 24), { from: F })
+      await lqtyToken.transfer(CDLCAddress_A, dec(1, 24), { from: D })
+      await lqtyToken.transfer(CDLCAddress_B, dec(2, 24), { from: E })
+      await lqtyToken.transfer(CDLCAddress_C, dec(3, 24), { from: F })
 
       // Check balances of OYLCs has increased
-      assert.equal(await growthToken.balanceOf(CDLCAddress_A), dec(1, 24))
-      assert.equal(await growthToken.balanceOf(CDLCAddress_B), dec(2, 24))
-      assert.equal(await growthToken.balanceOf(CDLCAddress_C), dec(3, 24))
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_A), dec(1, 24))
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_B), dec(2, 24))
+      assert.equal(await lqtyToken.balanceOf(CDLCAddress_C), dec(3, 24))
     })
   })
 
@@ -735,9 +735,9 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.isFalse(await CDLC_C.active())
 
       // LQTY deployer transfers LQTY entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -766,9 +766,9 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.isFalse(await CDLC_C.active())
 
       // LQTY deployer transfers LQTY entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       // D, E, F lock their resppective deployed CDLCs, through the Factory
       await lockupContractFactory.lockCustomDurationContracts([CDLC_A.address], { from: D })
@@ -793,9 +793,9 @@ contract('After the initial lockup period has passed', async accounts => {
       const CDLC_C = await th.getCDLCFromDeploymentTx(deployedCDLCtx_C)
 
       // LQTY deployer transfers LQTY entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -805,9 +805,9 @@ contract('After the initial lockup period has passed', async accounts => {
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Check A, B, C LQTY balances before
-      assert.equal(await growthToken.balanceOf(A), '0')
-      assert.equal(await growthToken.balanceOf(B), '0')
-      assert.equal(await growthToken.balanceOf(C), '0')
+      assert.equal(await lqtyToken.balanceOf(A), '0')
+      assert.equal(await lqtyToken.balanceOf(B), '0')
+      assert.equal(await lqtyToken.balanceOf(C), '0')
 
       // A, B, C withdraw from their CDLCs
       await CDLC_A.withdrawLQTY({ from: A })
@@ -815,9 +815,9 @@ contract('After the initial lockup period has passed', async accounts => {
       await CDLC_C.withdrawLQTY({ from: C })
 
       // Check A, B, C LQTY balances after withdrawal
-      assert.equal(await growthToken.balanceOf(A), dec(1, 24))
-      assert.equal(await growthToken.balanceOf(B), dec(2, 24))
-      assert.equal(await growthToken.balanceOf(C), dec(3, 24))
+      assert.equal(await lqtyToken.balanceOf(A), dec(1, 24))
+      assert.equal(await lqtyToken.balanceOf(B), dec(2, 24))
+      assert.equal(await lqtyToken.balanceOf(C), dec(3, 24))
     })
 
     it("After a CDLC lockup period has passed, Beneficiary can withdraw full LQTY balance of CDLC when it exceeds their initial entitlement", async () => {
@@ -830,9 +830,9 @@ contract('After the initial lockup period has passed', async accounts => {
       const CDLC_C = await th.getCDLCFromDeploymentTx(deployedCDLCtx_C)
 
       // LQTY deployer transfers LQTY entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -842,19 +842,19 @@ contract('After the initial lockup period has passed', async accounts => {
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
       // Transfer more LQTY, such that CDLC balances exceed their respective entitlements
-      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_B.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_C.address, dec(1, 24), { from: liquityAG })
 
       // Check A, B, C LQTY balances before
-      assert.equal(await growthToken.balanceOf(A), '0')
-      assert.equal(await growthToken.balanceOf(B), '0')
-      assert.equal(await growthToken.balanceOf(C), '0')
+      assert.equal(await lqtyToken.balanceOf(A), '0')
+      assert.equal(await lqtyToken.balanceOf(B), '0')
+      assert.equal(await lqtyToken.balanceOf(C), '0')
 
       // Confirm CDLC balances before withdrawal
-      assert.equal(await growthToken.balanceOf(CDLC_A.address), dec(2, 24))
-      assert.equal(await growthToken.balanceOf(CDLC_B.address), dec(3, 24))
-      assert.equal(await growthToken.balanceOf(CDLC_C.address), dec(4, 24))
+      assert.equal(await lqtyToken.balanceOf(CDLC_A.address), dec(2, 24))
+      assert.equal(await lqtyToken.balanceOf(CDLC_B.address), dec(3, 24))
+      assert.equal(await lqtyToken.balanceOf(CDLC_C.address), dec(4, 24))
 
       // A, B, C withdraw from their CDLCs
       await CDLC_A.withdrawLQTY({ from: A })
@@ -862,9 +862,9 @@ contract('After the initial lockup period has passed', async accounts => {
       await CDLC_C.withdrawLQTY({ from: C })
 
       // Check A, B, C LQTY balances after withdrawal
-      assert.equal(await growthToken.balanceOf(A), dec(2, 24))
-      assert.equal(await growthToken.balanceOf(B), dec(3, 24))
-      assert.equal(await growthToken.balanceOf(C), dec(4, 24))
+      assert.equal(await lqtyToken.balanceOf(A), dec(2, 24))
+      assert.equal(await lqtyToken.balanceOf(B), dec(3, 24))
+      assert.equal(await lqtyToken.balanceOf(C), dec(4, 24))
     })
   })
 
@@ -879,9 +879,9 @@ contract('After the initial lockup period has passed', async accounts => {
       const CDLC_C = await th.getCDLCFromDeploymentTx(deployedCDLCtx_C)
 
       // LQTY deployer transfers LQTY entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -912,9 +912,9 @@ contract('After the initial lockup period has passed', async accounts => {
       const CDLC_C = await th.getCDLCFromDeploymentTx(deployedCDLCtx_C)
 
       // LQTY deployer transfers LQTY entitlements to the contracts
-      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
-      await growthToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_B.address, dec(2, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_C.address, dec(3, 24), { from: liquityAG })
 
       const CDLCsToLock = [CDLC_A.address, CDLC_B.address, CDLC_C.address]
 
@@ -942,7 +942,7 @@ contract('After the initial lockup period has passed', async accounts => {
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
 
       // LQTY deployer transfers LQTY entitlements to the contract
-      await growthToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
+      await lqtyToken.transfer(CDLC_A.address, dec(1, 24), { from: liquityAG })
 
       // LQTY deployer locks the CDLCs they deployed
       await lockupContractFactory.lockCustomDurationContracts([CDLC_A.address], { from: D })

@@ -17,26 +17,26 @@ import "./Dependencies/console.sol";
 contract DefaultPool is Ownable, IPool {
     using SafeMath for uint256;
 
-    address public cdpManagerAddress;
+    address public troveManagerAddress;
     address public activePoolAddress;
     uint256 internal ETH;  // deposited ETH tracker
-    uint256 internal CLVDebt;  // debt 
+    uint256 internal LUSDDebt;  // debt 
 
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event TroveManagerAddressChanged(address _newTroveManagerAddress);
 
     // --- Dependency setters ---
 
     function setAddresses(
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress
     )
         external
         onlyOwner
     {
-        cdpManagerAddress = _cdpManagerAddress;
+        troveManagerAddress = _troveManagerAddress;
         activePoolAddress = _activePoolAddress;
 
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
 
         _renounceOwnership();
@@ -53,14 +53,14 @@ contract DefaultPool is Ownable, IPool {
         return ETH;
     }
 
-    function getCLVDebt() external view override returns (uint) {
-        return CLVDebt;
+    function getLUSDDebt() external view override returns (uint) {
+        return LUSDDebt;
     }
 
     // --- Pool functionality ---
 
     function sendETH(address _account, uint _amount) external override {
-        _requireCallerIsCDPMananger();
+        _requireCallerIsTroveManager();
         ETH = ETH.sub(_amount);
         emit EtherSent(_account, _amount);
 
@@ -68,14 +68,14 @@ contract DefaultPool is Ownable, IPool {
         require(success, "DefaultPool: sending ETH failed");
     }
 
-    function increaseCLVDebt(uint _amount) external override {
-        _requireCallerIsCDPMananger();
-        CLVDebt = CLVDebt.add(_amount);
+    function increaseLUSDDebt(uint _amount) external override {
+        _requireCallerIsTroveManager();
+        LUSDDebt = LUSDDebt.add(_amount);
     }
 
-    function decreaseCLVDebt(uint _amount) external override {
-        _requireCallerIsCDPMananger();
-        CLVDebt = CLVDebt.sub(_amount);
+    function decreaseLUSDDebt(uint _amount) external override {
+        _requireCallerIsTroveManager();
+        LUSDDebt = LUSDDebt.sub(_amount);
     }
 
     // --- 'require' functions ---
@@ -84,8 +84,8 @@ contract DefaultPool is Ownable, IPool {
         require(msg.sender == activePoolAddress, "DefaultPool: Caller is not the ActivePool");
     }
 
-    function _requireCallerIsCDPMananger() internal view {
-        require(msg.sender == cdpManagerAddress, "DefaultPool: Caller is not the CDPManager");
+    function _requireCallerIsTroveManager() internal view {
+        require(msg.sender == troveManagerAddress, "DefaultPool: Caller is not the TroveManager");
     }
 
     // --- Fallback function ---

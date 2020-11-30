@@ -2,60 +2,60 @@
 
 pragma solidity 0.6.11;
 
-import "../CDPManager.sol";
+import "../TroveManager.sol";
 import "../BorrowerOperations.sol";
 import "../StabilityPool.sol";
-import "../CLVToken.sol";
+import "../LUSDToken.sol";
 
 contract EchidnaProxy {
-    CDPManager cdpManager;
+    TroveManager troveManager;
     BorrowerOperations borrowerOperations;
     StabilityPool stabilityPool;
-    CLVToken clvToken;
+    LUSDToken lusdToken;
 
     constructor(
-        CDPManager _cdpManager,
+        TroveManager _troveManager,
         BorrowerOperations _borrowerOperations,
         StabilityPool _stabilityPool,
-        CLVToken _clvToken
+        LUSDToken _lusdToken
     ) public {
-        cdpManager = _cdpManager;
+        troveManager = _troveManager;
         borrowerOperations = _borrowerOperations;
         stabilityPool = _stabilityPool;
-        clvToken = _clvToken;
+        lusdToken = _lusdToken;
     }
 
     receive() external payable {
         // do nothing
     }
 
-    // CDPManager
+    // TroveManager
 
     function liquidatePrx(address _user) external {
-        cdpManager.liquidate(_user);
+        troveManager.liquidate(_user);
     }
 
-    function liquidateCDPsPrx(uint _n) external {
-        cdpManager.liquidateCDPs(_n);
+    function liquidateTrovesPrx(uint _n) external {
+        troveManager.liquidateTroves(_n);
     }
 
     function batchLiquidateTrovesPrx(address[] calldata _troveArray) external {
-        cdpManager.batchLiquidateTroves(_troveArray);
+        troveManager.batchLiquidateTroves(_troveArray);
     }
 
     function redeemCollateralPrx(
-        uint _CLVAmount,
+        uint _LUSDAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
         uint _partialRedemptionHintICR,
         uint _maxIterations
     ) external {
-        cdpManager.redeemCollateral(_CLVAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, _maxIterations);
+        troveManager.redeemCollateral(_LUSDAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, _maxIterations);
     }
 
     // Borrower Operations
-    function openLoanPrx(uint _ETH, uint _CLVAmount, address _hint) external payable {
-        borrowerOperations.openLoan{value: _ETH}(_CLVAmount, _hint);
+    function openTrovePrx(uint _ETH, uint _LUSDAmount, address _hint) external payable {
+        borrowerOperations.openTrove{value: _ETH}(_LUSDAmount, _hint);
     }
 
     function addCollPrx(uint _ETH, address _hint) external payable {
@@ -66,20 +66,20 @@ contract EchidnaProxy {
         borrowerOperations.withdrawColl(_amount, _hint);
     }
 
-    function withdrawCLVPrx(uint _amount, address _hint) external {
-        borrowerOperations.withdrawCLV(_amount, _hint);
+    function withdrawLUSDPrx(uint _amount, address _hint) external {
+        borrowerOperations.withdrawLUSD(_amount, _hint);
     }
 
-    function repayCLVPrx(uint _amount, address _hint) external {
-        borrowerOperations.repayCLV(_amount, _hint);
+    function repayLUSDPrx(uint _amount, address _hint) external {
+        borrowerOperations.repayLUSD(_amount, _hint);
     }
 
-    function closeLoanPrx() external {
-        borrowerOperations.closeLoan();
+    function closeTrovePrx() external {
+        borrowerOperations.closeTrove();
     }
 
-    function adjustLoanPrx(uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable {
-        borrowerOperations.adjustLoan{value: _ETH}(_collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+    function adjustTrovePrx(uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable {
+        borrowerOperations.adjustTrove{value: _ETH}(_collWithdrawal, _debtChange, _isDebtIncrease, _hint);
     }
 
     // Pool Manager
@@ -91,25 +91,25 @@ contract EchidnaProxy {
         stabilityPool.withdrawFromSP(_amount);
     }
 
-    // CLV Token
+    // LUSD Token
 
     function transferPrx(address recipient, uint256 amount) external returns (bool) {
-        return clvToken.transfer(recipient, amount);
+        return lusdToken.transfer(recipient, amount);
     }
 
     function approvePrx(address spender, uint256 amount) external returns (bool) {
-        return clvToken.approve(spender, amount);
+        return lusdToken.approve(spender, amount);
     }
 
     function transferFromPrx(address sender, address recipient, uint256 amount) external returns (bool) {
-        return clvToken.transferFrom(sender, recipient, amount);
+        return lusdToken.transferFrom(sender, recipient, amount);
     }
 
     function increaseAllowancePrx(address spender, uint256 addedValue) external returns (bool) {
-        return clvToken.increaseAllowance(spender, addedValue);
+        return lusdToken.increaseAllowance(spender, addedValue);
     }
 
     function decreaseAllowancePrx(address spender, uint256 subtractedValue) external returns (bool) {
-        return clvToken.decreaseAllowance(spender, subtractedValue);
+        return lusdToken.decreaseAllowance(spender, subtractedValue);
     }
 }

@@ -1,7 +1,7 @@
 const fs = require('fs')
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
+const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 
 const th = testHelpers.TestHelper
@@ -11,12 +11,12 @@ const timeValues = testHelpers.TimeValues
 /* Script that logs gas costs for Liquity math functions. */
 contract('Gas costs for math functions', async accounts => {
   let contracts
-  let cdpManagerTester
+  let troveManagerTester
   let mathTester
 
   before(async () => {
-    cdpManagerTester = await CDPManagerTester.new()
-    CDPManagerTester.setAsDeployed(cdpManagerTester)
+    troveManagerTester = await TroveManagerTester.new()
+    TroveManagerTester.setAsDeployed(troveManagerTester)
 
     mathTester = await LiquityMathTester.new()
     LiquityMathTester.setAsDeployed(mathTester)
@@ -27,9 +27,9 @@ contract('Gas costs for math functions', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
-    sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    lusdToken = contracts.lusdToken
+    sortedTroves = contracts.sortedTroves
+    troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
@@ -37,7 +37,7 @@ contract('Gas costs for math functions', async accounts => {
     hintHelpers = contracts.hintHelpers
 
     gtStaking = LQTYContracts.gtStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 

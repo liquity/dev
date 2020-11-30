@@ -8,11 +8,11 @@ import {
   TroveWithPendingRewards
 } from "@liquity/lib-base";
 
-import { MultiCDPGetter } from "../types";
+import { MultiTroveGetter } from "../types";
 import { EthersCallOverrides } from "./types";
 import { EthersLiquityBase } from "./EthersLiquityBase";
 
-enum CDPStatus {
+enum TroveStatus {
   nonExistent,
   active,
   closed
@@ -23,28 +23,28 @@ const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 export class ReadableEthersLiquity extends EthersLiquityBase implements ReadableLiquity {
   async getTotalRedistributed(overrides?: EthersCallOverrides) {
     const [collateral, debt] = await Promise.all([
-      this.contracts.cdpManager.L_ETH({ ...overrides }).then(decimalify),
-      this.contracts.cdpManager.L_CLVDebt({ ...overrides }).then(decimalify)
+      this.contracts.troveManager.L_ETH({ ...overrides }).then(decimalify),
+      this.contracts.troveManager.L_LUSDDebt({ ...overrides }).then(decimalify)
     ]);
 
     return new Trove({ collateral, debt });
   }
 
   async getTroveWithoutRewards(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    const [cdp, snapshot] = await Promise.all([
-      this.contracts.cdpManager.CDPs(address, { ...overrides }),
-      this.contracts.cdpManager.rewardSnapshots(address, { ...overrides })
+    const [trove, snapshot] = await Promise.all([
+      this.contracts.troveManager.Troves(address, { ...overrides }),
+      this.contracts.troveManager.rewardSnapshots(address, { ...overrides })
     ]);
 
-    if (cdp.status === CDPStatus.active) {
+    if (trove.status === TroveStatus.active) {
       return new TroveWithPendingRewards({
-        collateral: new Decimal(cdp.coll),
-        debt: new Decimal(cdp.debt),
-        stake: new Decimal(cdp.stake),
+        collateral: new Decimal(trove.coll),
+        debt: new Decimal(trove.debt),
+        stake: new Decimal(trove.stake),
 
         snapshotOfTotalRedistributed: {
           collateral: new Decimal(snapshot.ETH),
-          debt: new Decimal(snapshot.CLVDebt)
+          debt: new Decimal(snapshot.LUSDDebt)
         }
       });
     } else {
@@ -62,7 +62,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getNumberOfTroves(overrides?: EthersCallOverrides) {
-    return (await this.contracts.cdpManager.getCDPOwnersCount({ ...overrides })).toNumber();
+    return (await this.contracts.troveManager.getTroveOwnersCount({ ...overrides })).toNumber();
   }
 
   async getPrice(overrides?: EthersCallOverrides) {
@@ -73,9 +73,9 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
       [
         this.contracts.activePool.getETH({ ...overrides }),
-        this.contracts.activePool.getCLVDebt({ ...overrides }),
+        this.contracts.activePool.getLUSDDebt({ ...overrides }),
         this.contracts.defaultPool.getETH({ ...overrides }),
-        this.contracts.defaultPool.getCLVDebt({ ...overrides })
+        this.contracts.defaultPool.getLUSDDebt({ ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
@@ -89,7 +89,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     const [depositStruct, depositAfterLoss, pendingCollateralGain] = await Promise.all([
       this.contracts.stabilityPool.deposits(address, { ...overrides }),
       this.contracts.stabilityPool
-        .getCompoundedCLVDeposit(address, { ...overrides })
+        .getCompoundedLUSDDeposit(address, { ...overrides })
         .then(decimalify),
       this.contracts.stabilityPool.getDepositorETHGain(address, { ...overrides }).then(decimalify)
     ]);
@@ -100,40 +100,40 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getQuiInStabilityPool(overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.stabilityPool.getTotalCLVDeposits({ ...overrides }));
+    return new Decimal(await this.contracts.stabilityPool.getTotalLUSDDeposits({ ...overrides }));
   }
 
   async getQuiBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.clvToken.balanceOf(address, { ...overrides }));
+    return new Decimal(await this.contracts.lusdToken.balanceOf(address, { ...overrides }));
   }
 
   async getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
-    const cdps = await this.contracts.multiCDPgetter.getMultipleSortedCDPs(
+    const troves = await this.contracts.multiTrovegetter.getMultipleSortedTroves(
       -(startIdx + 1),
       numberOfTroves,
       { ...overrides }
     );
 
-    return mapMultipleSortedCDPsToTroves(cdps);
+    return mapMultipleSortedTrovesToTroves(troves);
   }
 
   async getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
-    const cdps = await this.contracts.multiCDPgetter.getMultipleSortedCDPs(
+    const troves = await this.contracts.multiTrovegetter.getMultipleSortedTroves(
       startIdx,
       numberOfTroves,
       { ...overrides }
     );
 
-    return mapMultipleSortedCDPsToTroves(cdps);
+    return mapMultipleSortedTrovesToTroves(troves);
   }
 }
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
-type MultipleSortedCDPs = Resolved<ReturnType<MultiCDPGetter["getMultipleSortedCDPs"]>>;
+type MultipleSortedTroves = Resolved<ReturnType<MultiTroveGetter["getMultipleSortedTroves"]>>;
 
-const mapMultipleSortedCDPsToTroves = (cdps: MultipleSortedCDPs) =>
-  cdps.map(
-    ({ owner, coll, debt, stake, snapshotCLVDebt, snapshotETH }) =>
+const mapMultipleSortedTrovesToTroves = (troves: MultipleSortedTroves) =>
+  troves.map(
+    ({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) =>
       [
         owner,
 
@@ -144,7 +144,7 @@ const mapMultipleSortedCDPsToTroves = (cdps: MultipleSortedCDPs) =>
 
           snapshotOfTotalRedistributed: {
             collateral: new Decimal(snapshotETH),
-            debt: new Decimal(snapshotCLVDebt)
+            debt: new Decimal(snapshotLUSDDebt)
           }
         })
       ] as const

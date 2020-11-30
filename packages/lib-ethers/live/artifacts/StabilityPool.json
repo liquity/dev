@@ -24,7 +24,7 @@
           "type": "uint256"
         }
       ],
-      "name": "CLVBalanceUpdated",
+      "name": "LUSDBalanceUpdated",
       "type": "event"
     },
     {
@@ -146,7 +146,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseCLV",
+      "name": "decreaseLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -185,7 +185,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getTotalCLVDeposits",
+      "name": "getTotalLUSDDeposits",
       "outputs": [
         {
           "internalType": "uint256",
@@ -206,7 +206,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseCLV",
+      "name": "increaseLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

@@ -1,29 +1,29 @@
 enum BorrowerOperation {
-  openLoan,
-  closeLoan,
+  openTrove,
+  closeTrove,
   addColl,
   withdrawColl,
-  withdrawCLV,
-  repayCLV,
-  adjustLoan
+  withdrawLUSD,
+  repayLUSD,
+  adjustTrove
 }
 
 export function getTroveOperationFromBorrowerOperation(operation: BorrowerOperation): string {
   switch (operation) {
-    case BorrowerOperation.openLoan:
-      return "openLoan";
-    case BorrowerOperation.closeLoan:
-      return "closeLoan";
+    case BorrowerOperation.openTrove:
+      return "openTrove";
+    case BorrowerOperation.closeTrove:
+      return "closeTrove";
     case BorrowerOperation.addColl:
       return "depositCollateral";
     case BorrowerOperation.withdrawColl:
       return "withdrawCollateral";
-    case BorrowerOperation.withdrawCLV:
+    case BorrowerOperation.withdrawLUSD:
       return "mint";
-    case BorrowerOperation.repayCLV:
+    case BorrowerOperation.repayLUSD:
       return "repay";
-    case BorrowerOperation.adjustLoan:
-      return "adjustLoan";
+    case BorrowerOperation.adjustTrove:
+      return "adjustTrove";
   }
 
   // AssemblyScript can't tell we will never reach this, so it insists on a return statement
@@ -32,17 +32,17 @@ export function getTroveOperationFromBorrowerOperation(operation: BorrowerOperat
 
 export function isBorrowerOperation(troveOperation: string): boolean {
   return (
-    troveOperation == "openLoan" ||
-    troveOperation == "closeLoan" ||
+    troveOperation == "openTrove" ||
+    troveOperation == "closeTrove" ||
     troveOperation == "depositCollateral" ||
     troveOperation == "withdrawCollateral" ||
     troveOperation == "mint" ||
     troveOperation == "repay" ||
-    troveOperation == "adjustLoan"
+    troveOperation == "adjustTrove"
   );
 }
 
-enum CDPManagerOperation {
+enum TroveManagerOperation {
   applyPendingRewards,
   liquidateInNormalMode,
   liquidateInRecoveryMode,
@@ -50,17 +50,17 @@ enum CDPManagerOperation {
   redeemCollateral
 }
 
-export function getTroveOperationFromCDPManagerOperation(operation: CDPManagerOperation): string {
+export function getTroveOperationFromTroveManagerOperation(operation: TroveManagerOperation): string {
   switch (operation) {
-    case CDPManagerOperation.applyPendingRewards:
+    case TroveManagerOperation.applyPendingRewards:
       return "accrueRewards";
-    case CDPManagerOperation.liquidateInNormalMode:
+    case TroveManagerOperation.liquidateInNormalMode:
       return "liquidateInNormalMode";
-    case CDPManagerOperation.liquidateInRecoveryMode:
+    case TroveManagerOperation.liquidateInRecoveryMode:
       return "liquidateInRecoveryMode";
-    case CDPManagerOperation.partiallyLiquidateInRecoveryMode:
+    case TroveManagerOperation.partiallyLiquidateInRecoveryMode:
       return "partiallyLiquidateInRecoveryMode";
-    case CDPManagerOperation.redeemCollateral:
+    case TroveManagerOperation.redeemCollateral:
       return "redeemCollateral";
   }
 

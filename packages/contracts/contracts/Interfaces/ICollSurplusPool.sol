@@ -7,14 +7,14 @@ interface ICollSurplusPool {
     event CollBalanceUpdated(address _account, uint _newBalance);
     event EtherSent(address _to, uint _amount);
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event TroveManagerAddressChanged(address _newTroveManagerAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
 
     // --- Contract setters ---
 
     function setAddresses(
         address _borrowerOperationsAddress,
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress
     ) external;
 

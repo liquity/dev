@@ -2,9 +2,9 @@
 
 pragma solidity 0.6.11;
 
-import "../LQTY/GrowthToken.sol";
+import "../LQTY/LQTYToken.sol";
 
-contract GrowthTokenTester is GrowthToken {
+contract LQTYTokenTester is LQTYToken {
     constructor
     (
         address _communityIssuanceAddress, 
@@ -12,7 +12,7 @@ contract GrowthTokenTester is GrowthToken {
         address _lockupFactoryAddress
     ) 
         public 
-        GrowthToken 
+        LQTYToken 
     (
         _communityIssuanceAddress,
         _lqtyStakingAddress,

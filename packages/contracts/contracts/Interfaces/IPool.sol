@@ -9,7 +9,7 @@ interface IPool {
     
     event ETHBalanceUpdated(uint _newBalance);
 
-    event CLVBalanceUpdated(uint _newBalance);
+    event LUSDBalanceUpdated(uint _newBalance);
 
     event ActivePoolAddressChanged(address _newActivePoolAddress);
 
@@ -23,11 +23,11 @@ interface IPool {
     
     function getETH() external view returns (uint);
 
-    function getCLVDebt() external view returns (uint);
+    function getLUSDDebt() external view returns (uint);
 
     function sendETH(address _account, uint _amount) external;
 
-    function increaseCLVDebt(uint _amount) external;
+    function increaseLUSDDebt(uint _amount) external;
 
-    function decreaseCLVDebt(uint _amount) external;
+    function decreaseLUSDDebt(uint _amount) external;
 }

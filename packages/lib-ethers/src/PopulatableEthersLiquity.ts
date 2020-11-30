@@ -32,7 +32,7 @@ import { LiquityContracts } from "./contracts";
 import { EthersTransactionOverrides } from "./types";
 import { EthersLiquityBase } from "./EthersLiquityBase";
 
-enum CDPManagerOperation {
+enum TroveManagerOperation {
   applyPendingRewards,
   liquidateInNormalMode,
   liquidateInRecoveryMode,
@@ -182,26 +182,26 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return new PopulatedEthersTransaction(
       rawPopulatedTransaction,
       ({ logs }: TransactionReceipt): LiquidationDetails => {
-        const fullyLiquidated = this.contracts.cdpManager
-          .extractEvents(logs, "CDPLiquidated")
+        const fullyLiquidated = this.contracts.troveManager
+          .extractEvents(logs, "TroveLiquidated")
           .map(({ args: { _borrower } }) => _borrower);
 
-        const [partiallyLiquidated] = this.contracts.cdpManager
-          .extractEvents(logs, "CDPUpdated")
+        const [partiallyLiquidated] = this.contracts.troveManager
+          .extractEvents(logs, "TroveUpdated")
           .filter(
             ({ args: { _operation } }) =>
-              _operation === CDPManagerOperation.partiallyLiquidateInRecoveryMode
+              _operation === TroveManagerOperation.partiallyLiquidateInRecoveryMode
           )
           .map(({ args: { _borrower } }) => _borrower);
 
-        const [totals] = this.contracts.cdpManager
+        const [totals] = this.contracts.troveManager
           .extractEvents(logs, "Liquidation")
           .map(
             ({
-              args: { _CLVGasCompensation, _collGasCompensation, _liquidatedColl, _liquidatedDebt }
+              args: { _LUSDGasCompensation, _collGasCompensation, _liquidatedColl, _liquidatedDebt }
             }) => ({
               collateralGasCompensation: new Decimal(_collGasCompensation),
-              tokenGasCompensation: new Decimal(_CLVGasCompensation),
+              tokenGasCompensation: new Decimal(_LUSDGasCompensation),
 
               totalLiquidated: new Trove({
                 collateral: new Decimal(_liquidatedColl),
@@ -224,12 +224,12 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return new PopulatedEthersTransaction(
       rawPopulatedTransaction,
       ({ logs }) =>
-        this.contracts.cdpManager.extractEvents(logs, "Redemption").map(
+        this.contracts.troveManager.extractEvents(logs, "Redemption").map(
           ({
-            args: { _ETHSent, _ETHFee, _actualCLVAmount, _attemptedCLVAmount }
+            args: { _ETHSent, _ETHFee, _actualLUSDAmount, _attemptedLUSDAmount }
           }): RedemptionDetails => ({
-            attemptedTokenAmount: new Decimal(_attemptedCLVAmount),
-            actualTokenAmount: new Decimal(_actualCLVAmount),
+            attemptedTokenAmount: new Decimal(_attemptedLUSDAmount),
+            actualTokenAmount: new Decimal(_actualLUSDAmount),
             collateralReceived: new Decimal(_ETHSent),
             fee: new Decimal(_ETHFee)
           })
@@ -280,7 +280,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
     // Picking the second address as hint results in better gas cost, especially when having to
     // traverse the list due to interference
-    const [, hint] = await this.contracts.sortedCDPs.findInsertPosition(
+    const [, hint] = await this.contracts.sortedTroves.findInsertPosition(
       collateralRatio.bigNumber,
       price.bigNumber,
       hintAddress,
@@ -345,7 +345,7 @@ export class PopulatableEthersLiquity
     }
 
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.openLoan(
+      await this.contracts.borrowerOperations.estimateAndPopulate.openTrove(
         { value: trove.collateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
         trove.netDebt.bigNumber,
@@ -356,7 +356,7 @@ export class PopulatableEthersLiquity
 
   async closeTrove(overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.closeLoan({ ...overrides }, id)
+      await this.contracts.borrowerOperations.estimateAndPopulate.closeTrove({ ...overrides }, id)
     );
   }
 
@@ -415,7 +415,7 @@ export class PopulatableEthersLiquity
     const isDebtIncrease = !!change.debtDifference?.positive;
 
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.adjustLoan(
+      await this.contracts.borrowerOperations.estimateAndPopulate.adjustTrove(
         {
           ...overrides,
           value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
@@ -450,7 +450,7 @@ export class PopulatableEthersLiquity
 
   async liquidate(address: string, overrides?: EthersTransactionOverrides) {
     return this.wrapLiquidation(
-      await this.contracts.cdpManager.estimateAndPopulate.liquidate({ ...overrides }, id, address)
+      await this.contracts.troveManager.estimateAndPopulate.liquidate({ ...overrides }, id, address)
     );
   }
 
@@ -459,7 +459,7 @@ export class PopulatableEthersLiquity
     overrides?: EthersTransactionOverrides
   ) {
     return this.wrapLiquidation(
-      await this.contracts.cdpManager.estimateAndPopulate.liquidateCDPs(
+      await this.contracts.troveManager.estimateAndPopulate.liquidateTroves(
         { ...overrides },
         id,
         maximumNumberOfTrovesToLiquidate
@@ -516,7 +516,7 @@ export class PopulatableEthersLiquity
 
   async sendQui(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.clvToken.estimateAndPopulate.transfer(
+      await this.contracts.lusdToken.estimateAndPopulate.transfer(
         { ...overrides },
         id,
         toAddress,
@@ -539,7 +539,7 @@ export class PopulatableEthersLiquity
     ] = await this.findRedemptionHints(exchangedQui, optionalParams);
 
     return this.wrapRedemption(
-      await this.contracts.cdpManager.estimateAndPopulate.redeemCollateral(
+      await this.contracts.troveManager.estimateAndPopulate.redeemCollateral(
         { ...overrides },
         addGasForPotentialLastFeeOperationTimeUpdate,
         exchangedQui.bigNumber,

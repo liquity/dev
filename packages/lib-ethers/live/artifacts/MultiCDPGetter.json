@@ -1,16 +1,16 @@
 {
-  "contractName": "MultiCDPGetter",
+  "contractName": "MultiTroveGetter",
   "abi": [
     {
       "inputs": [
         {
-          "internalType": "contract CDPManager",
-          "name": "_cdpManager",
+          "internalType": "contract TroveManager",
+          "name": "_troveManager",
           "type": "address"
         },
         {
-          "internalType": "contract ISortedCDPs",
-          "name": "_sortedCDPs",
+          "internalType": "contract ISortedTroves",
+          "name": "_sortedTroves",
           "type": "address"
         }
       ],
@@ -21,10 +21,10 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "cdpManager",
+      "name": "troveManager",
       "outputs": [
         {
-          "internalType": "contract CDPManager",
+          "internalType": "contract TroveManager",
           "name": "",
           "type": "address"
         }
@@ -47,7 +47,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getMultipleSortedCDPs",
+      "name": "getMultipleSortedTroves",
       "outputs": [
         {
           "components": [
@@ -78,12 +78,12 @@
             },
             {
               "internalType": "uint256",
-              "name": "snapshotCLVDebt",
+              "name": "snapshotLUSDDebt",
               "type": "uint256"
             }
           ],
-          "internalType": "struct MultiCDPGetter.CombinedCDPData[]",
-          "name": "_cdps",
+          "internalType": "struct MultiTroveGetter.CombinedTroveData[]",
+          "name": "_troves",
           "type": "tuple[]"
         }
       ],
@@ -94,10 +94,10 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "sortedCDPs",
+      "name": "sortedTroves",
       "outputs": [
         {
-          "internalType": "contract ISortedCDPs",
+          "internalType": "contract ISortedTroves",
           "name": "",
           "type": "address"
         }

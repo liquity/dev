@@ -1,5 +1,5 @@
 {
-  "contractName": "CDPManagerTester",
+  "contractName": "TroveManagerTester",
   "abi": [
     {
       "anonymous": false,
@@ -43,7 +43,7 @@
           "type": "uint256"
         }
       ],
-      "name": "CDPCreated",
+      "name": "TroveCreated",
       "type": "event"
     },
     {
@@ -69,12 +69,12 @@
         },
         {
           "indexed": false,
-          "internalType": "enum CDPManager.CDPManagerOperation",
+          "internalType": "enum TroveManager.TroveManagerOperation",
           "name": "operation",
           "type": "uint8"
         }
       ],
-      "name": "CDPLiquidated",
+      "name": "TroveLiquidated",
       "type": "event"
     },
     {
@@ -106,12 +106,12 @@
         },
         {
           "indexed": false,
-          "internalType": "enum CDPManager.CDPManagerOperation",
+          "internalType": "enum TroveManager.TroveManagerOperation",
           "name": "operation",
           "type": "uint8"
         }
       ],
-      "name": "CDPUpdated",
+      "name": "TroveUpdated",
       "type": "event"
     },
     {
@@ -120,11 +120,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newCLVTokenAddress",
+          "name": "_newLUSDTokenAddress",
           "type": "address"
         }
       ],
-      "name": "CLVTokenAddressChanged",
+      "name": "LUSDTokenAddressChanged",
       "type": "event"
     },
     {
@@ -164,7 +164,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_CLVGasCompensation",
+          "name": "_LUSDGasCompensation",
           "type": "uint256"
         }
       ],
@@ -222,13 +222,13 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_attemptedCLVAmount",
+          "name": "_attemptedLUSDAmount",
           "type": "uint256"
         },
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_actualCLVAmount",
+          "name": "_actualLUSDAmount",
           "type": "uint256"
         },
         {
@@ -266,11 +266,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],
-      "name": "SortedCDPsAddressChanged",
+      "name": "SortedTrovesAddressChanged",
       "type": "event"
     },
     {
@@ -310,7 +310,7 @@
           "type": "uint256"
         }
       ],
-      "name": "CDPOwners",
+      "name": "TroveOwners",
       "outputs": [
         {
           "internalType": "address",
@@ -331,7 +331,7 @@
           "type": "address"
         }
       ],
-      "name": "CDPs",
+      "name": "Troves",
       "outputs": [
         {
           "internalType": "uint256",
@@ -349,7 +349,7 @@
           "type": "uint256"
         },
         {
-          "internalType": "enum CDPManager.Status",
+          "internalType": "enum TroveManager.Status",
           "name": "status",
           "type": "uint8"
         },
@@ -366,7 +366,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "CLV_GAS_COMPENSATION",
+      "name": "LUSD_GAS_COMPENSATION",
       "outputs": [
         {
           "internalType": "uint256",
@@ -381,7 +381,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "L_CLVDebt",
+      "name": "L_LUSDDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -492,7 +492,7 @@
           "type": "address"
         }
       ],
-      "name": "addCDPOwnerToArray",
+      "name": "addTroveOwnerToArray",
       "outputs": [
         {
           "internalType": "uint256",
@@ -573,7 +573,7 @@
           "type": "address"
         }
       ],
-      "name": "closeCDP",
+      "name": "closeTrove",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -582,10 +582,10 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "clvToken",
+      "name": "lusdToken",
       "outputs": [
         {
-          "internalType": "contract ICLVToken",
+          "internalType": "contract ILUSDToken",
           "name": "",
           "type": "address"
         }
@@ -639,7 +639,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseCDPColl",
+      "name": "decreaseTroveColl",
       "outputs": [
         {
           "internalType": "uint256",
@@ -665,7 +665,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseCDPDebt",
+      "name": "decreaseTroveDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -722,7 +722,7 @@
           "type": "address"
         }
       ],
-      "name": "getCDPColl",
+      "name": "getTroveColl",
       "outputs": [
         {
           "internalType": "uint256",
@@ -743,7 +743,7 @@
           "type": "address"
         }
       ],
-      "name": "getCDPDebt",
+      "name": "getTroveDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -758,7 +758,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getCDPOwnersCount",
+      "name": "getTroveOwnersCount",
       "outputs": [
         {
           "internalType": "uint256",
@@ -779,7 +779,7 @@
           "type": "address"
         }
       ],
-      "name": "getCDPStake",
+      "name": "getTroveStake",
       "outputs": [
         {
           "internalType": "uint256",
@@ -800,7 +800,7 @@
           "type": "address"
         }
       ],
-      "name": "getCDPStatus",
+      "name": "getTroveStatus",
       "outputs": [
         {
           "internalType": "uint256",
@@ -815,7 +815,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getCLVGasCompensation",
+      "name": "getLUSDGasCompensation",
       "outputs": [
         {
           "internalType": "uint256",
@@ -934,7 +934,7 @@
           "type": "address"
         }
       ],
-      "name": "getPendingCLVDebtReward",
+      "name": "getPendingLUSDDebtReward",
       "outputs": [
         {
           "internalType": "uint256",
@@ -991,7 +991,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getTroveFromCDPOwnersArray",
+      "name": "getTroveFromTroveOwnersArray",
       "outputs": [
         {
           "internalType": "address",
@@ -1038,7 +1038,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseCDPColl",
+      "name": "increaseTroveColl",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1064,7 +1064,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseCDPDebt",
+      "name": "increaseTroveDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1094,7 +1094,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "lastCLVDebtError_Redistribution",
+      "name": "lastLUSDDebtError_Redistribution",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1145,7 +1145,7 @@
           "type": "uint256"
         }
       ],
-      "name": "liquidateCDPs",
+      "name": "liquidateTroves",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -1201,7 +1201,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLVamount",
+          "name": "_LUSDamount",
           "type": "uint256"
         },
         {
@@ -1259,7 +1259,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "CLVDebt",
+          "name": "LUSDDebt",
           "type": "uint256"
         }
       ],
@@ -1302,12 +1302,12 @@
         },
         {
           "internalType": "address",
-          "name": "_clvTokenAddress",
+          "name": "_lusdTokenAddress",
           "type": "address"
         },
         {
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],
@@ -1331,7 +1331,7 @@
           "type": "uint256"
         }
       ],
-      "name": "setCDPStatus",
+      "name": "setTroveStatus",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -1340,10 +1340,10 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "sortedCDPs",
+      "name": "sortedTroves",
       "outputs": [
         {
-          "internalType": "contract ISortedCDPs",
+          "internalType": "contract ISortedTroves",
           "name": "",
           "type": "address"
         }
@@ -1421,7 +1421,7 @@
           "type": "address"
         }
       ],
-      "name": "updateCDPRewardSnapshots",
+      "name": "updateTroveRewardSnapshots",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

@@ -1,5 +1,5 @@
 {
-  "contractName": "ISortedCDPs",
+  "contractName": "ISortedTroves",
   "abi": [
     {
       "anonymous": false,
@@ -24,7 +24,7 @@
           "type": "address"
         }
       ],
-      "name": "SortedCDPsAddressChanged",
+      "name": "SortedTrovesAddressChanged",
       "type": "event"
     },
     {
@@ -316,7 +316,7 @@
         },
         {
           "internalType": "address",
-          "name": "_CDPManagerAddress",
+          "name": "_TroveManagerAddress",
           "type": "address"
         },
         {

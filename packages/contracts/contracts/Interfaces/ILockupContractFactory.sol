@@ -6,11 +6,11 @@ interface ILockupContractFactory {
     
     // --- Events ---
 
-    event GrowthTokenAddressSet(address _growthTokenAddress);
+    event LQTYTokenAddressSet(address _lqtyTokenAddress);
 
     // --- Functions ---
 
-    function setGrowthTokenAddress(address _growthTokenAddress) external;
+    function setLQTYTokenAddress(address _lqtyTokenAddress) external;
 
     function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external;
 

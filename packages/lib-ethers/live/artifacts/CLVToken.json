@@ -1,5 +1,5 @@
 {
-  "contractName": "CLVToken",
+  "contractName": "LUSDToken",
   "abi": [
     {
       "anonymous": false,
@@ -42,7 +42,7 @@
           "type": "uint256"
         }
       ],
-      "name": "CLVTokenBalanceUpdated",
+      "name": "LUSDTokenBalanceUpdated",
       "type": "event"
     },
     {

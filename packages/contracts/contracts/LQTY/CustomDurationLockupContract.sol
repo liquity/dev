@@ -3,7 +3,7 @@
 pragma solidity 0.6.11;
 
 import "../Dependencies/SafeMath.sol";
-import "../Interfaces/IGrowthToken.sol";
+import "../Interfaces/ILQTYToken.sol";
 
 contract CustomDurationLockupContract {
     using SafeMath for uint;
@@ -12,7 +12,7 @@ contract CustomDurationLockupContract {
     address public deployer;
     address public beneficiary;
 
-    IGrowthToken public growthToken;
+    ILQTYToken public lqtyToken;
 
     uint public initialEntitlement;
 
@@ -32,7 +32,7 @@ contract CustomDurationLockupContract {
 
     constructor 
     (
-    address _growthTokenAddress, 
+    address _lqtyTokenAddress, 
     address _beneficiary, 
     uint _initialEntitlement,
     uint _lockupDurationInSeconds
@@ -41,7 +41,7 @@ contract CustomDurationLockupContract {
     {
         deployer = msg.sender;
 
-        growthToken = IGrowthToken(_growthTokenAddress);
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
 
         beneficiary =  _beneficiary;
         initialEntitlement = _initialEntitlement;
@@ -64,8 +64,8 @@ contract CustomDurationLockupContract {
         _requireContractIsActive();
         _requireLockupDurationHasPassed();
         
-        uint LQTYBalance = growthToken.balanceOf(address(this));
-        growthToken.transfer(msg.sender, LQTYBalance);
+        uint LQTYBalance = lqtyToken.balanceOf(address(this));
+        lqtyToken.transfer(msg.sender, LQTYBalance);
         
         active = false;
         emit CDLCUnlockedAndEmptied(block.timestamp);
@@ -94,7 +94,7 @@ contract CustomDurationLockupContract {
     }
 
     function _requireLQTYBalanceAtLeastEqualsEntitlement() internal view {
-        uint LQTYBalance = growthToken.balanceOf(address(this));
+        uint LQTYBalance = lqtyToken.balanceOf(address(this));
         require(LQTYBalance >= initialEntitlement, "CDLC: LQTY balance of this CDLC must cover the initial entitlement");
     }
 }

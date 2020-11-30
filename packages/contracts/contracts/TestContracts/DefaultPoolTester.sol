@@ -6,8 +6,8 @@ import "../DefaultPool.sol";
 
 contract DefaultPoolTester is DefaultPool {
     
-    function unprotectedIncreaseCLVDebt(uint _amount) external {
-        CLVDebt  = CLVDebt.add(_amount);
+    function unprotectedIncreaseLUSDDebt(uint _amount) external {
+        LUSDDebt  = LUSDDebt.add(_amount);
     }
 
     function unprotectedPayable() external payable {

@@ -1,12 +1,12 @@
 // Buidler-Truffle fixture for deployment to Buidler EVM
 
-const SortedCDPs = artifacts.require("./SortedCDPs.sol")
+const SortedTroves = artifacts.require("./SortedTroves.sol")
 const ActivePool = artifacts.require("./ActivePool.sol")
 const DefaultPool = artifacts.require("./DefaultPool.sol")
 const StabilityPool = artifacts.require("./StabilityPool.sol")
-const CDPManager = artifacts.require("./CDPManager.sol")
+const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
-const CLVToken = artifacts.require("./CLVToken.sol")
+const LUSDToken = artifacts.require("./LUSDToken.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
@@ -18,33 +18,33 @@ const connectContracts = deploymentHelpers.connectContracts
 module.exports = async () => {
   const borrowerOperations = await BorrowerOperations.new()
   const priceFeed = await PriceFeed.new()
-  const sortedCDPs = await SortedCDPs.new()
-  const cdpManager = await CDPManager.new()
+  const sortedTroves = await SortedTroves.new()
+  const troveManager = await TroveManager.new()
   const activePool = await ActivePool.new()
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
-  const clvToken = await CLVToken.new(
-    cdpManager.address,
+  const lusdToken = await LUSDToken.new(
+    troveManager.address,
     stabilityPool.address,
     borrowerOperations.address
   )
   BorrowerOperations.setAsDeployed(borrowerOperations)
   PriceFeed.setAsDeployed(priceFeed)
-  SortedCDPs.setAsDeployed(sortedCDPs)
-  CDPManager.setAsDeployed(cdpManager)
+  SortedTroves.setAsDeployed(sortedTroves)
+  TroveManager.setAsDeployed(troveManager)
   ActivePool.setAsDeployed(activePool)
   StabilityPool.setAsDeployed(stabilityPool)
   DefaultPool.setAsDeployed(defaultPool)
   FunctionCaller.setAsDeployed(functionCaller)
-  CLVToken.setAsDeployed(clvToken)
+  LUSDToken.setAsDeployed(lusdToken)
 
   const contracts = {
     borrowerOperations,
     priceFeed,
-    clvToken,
-    sortedCDPs,
-    cdpManager,
+    lusdToken,
+    sortedTroves,
+    troveManager,
     activePool,
     stabilityPool,
     defaultPool,

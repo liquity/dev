@@ -7,14 +7,14 @@ interface IStabilityPool {
     // --- Events ---
     
     event ETHBalanceUpdated(uint _newBalance);
-    event CLVBalanceUpdated(uint _newBalance);
+    event LUSDBalanceUpdated(uint _newBalance);
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event TroveManagerAddressChanged(address _newTroveManagerAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    event CLVTokenAddressChanged(address _newCLVTokenAddress);
-    event SortedCDPsAddressChanged(address _newSortedCDPsAddress);
+    event LUSDTokenAddressChanged(address _newLUSDTokenAddress);
+    event SortedTrovesAddressChanged(address _newSortedTrovesAddress);
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
 
@@ -30,7 +30,7 @@ interface IStabilityPool {
     event UserDepositChanged(address indexed _depositor, uint _newDeposit);
     event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
 
-    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _CLVLoss);
+    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _LUSDLoss);
     event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
     event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
 
@@ -40,10 +40,10 @@ interface IStabilityPool {
     
     function setAddresses(
         address _borrowerOperationsAddress,
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress,
-        address _clvTokenAddress,
-        address _sortedCDPsAddress,
+        address _lusdTokenAddress,
+        address _sortedTrovesAddress,
         address _priceFeedAddress,
         address _communityIssuanceAddress
     ) external;
@@ -57,12 +57,12 @@ interface IStabilityPool {
     function offset(uint _debt, uint _coll) external payable;
 
     function getETH() external view returns (uint);
-    function getTotalCLVDeposits() external view returns (uint);
+    function getTotalLUSDDeposits() external view returns (uint);
 
     function getDepositorETHGain(address _depositor) external view returns (uint);
     function getDepositorLQTYGain(address _depositor) external view returns (uint);
     function getFrontEndLQTYGain(address _frontEnd) external view returns (uint);
 
-    function getCompoundedCLVDeposit(address _depositor) external view returns (uint);
+    function getCompoundedLUSDDeposit(address _depositor) external view returns (uint);
     function getCompoundedFrontEndStake(address _frontEnd) external view returns (uint);
 }

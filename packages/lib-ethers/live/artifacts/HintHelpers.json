@@ -7,11 +7,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         }
       ],
-      "name": "CDPManagerAddressChanged",
+      "name": "TroveManagerAddressChanged",
       "type": "event"
     },
     {
@@ -52,11 +52,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],
-      "name": "SortedCDPsAddressChanged",
+      "name": "SortedTrovesAddressChanged",
       "type": "event"
     },
     {
@@ -77,7 +77,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "CLV_GAS_COMPENSATION",
+      "name": "LUSD_GAS_COMPENSATION",
       "outputs": [
         {
           "internalType": "uint256",
@@ -152,10 +152,10 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "cdpManager",
+      "name": "troveManager",
       "outputs": [
         {
-          "internalType": "contract ICDPManager",
+          "internalType": "contract ITroveManager",
           "name": "",
           "type": "address"
         }
@@ -226,7 +226,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLVamount",
+          "name": "_LUSDamount",
           "type": "uint256"
         },
         {
@@ -307,12 +307,12 @@
         },
         {
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         },
         {
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         }
       ],
@@ -325,10 +325,10 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "sortedCDPs",
+      "name": "sortedTroves",
       "outputs": [
         {
-          "internalType": "contract ISortedCDPs",
+          "internalType": "contract ISortedTroves",
           "name": "",
           "type": "address"
         }

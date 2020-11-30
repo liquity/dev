@@ -17,6 +17,6 @@ export function handleETHGainWithdrawn(event: ETHGainWithdrawn): void {
     event,
     event.params._depositor,
     event.params._ETH,
-    event.params._CLVLoss
+    event.params._LUSDLoss
   );
 }

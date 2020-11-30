@@ -2,12 +2,12 @@
 
 pragma solidity 0.6.11;
 
-// Common interface for the CDP Manager.
+// Common interface for the Trove Manager.
 interface IBorrowerOperations {
 
     // --- Events ---
 
-    event CDPManagerAddressChanged(address _newCDPManagerAddress);
+    event TroveManagerAddressChanged(address _newTroveManagerAddress);
 
     event ActivePoolAddressChanged(address _activePoolAddress);
 
@@ -19,9 +19,9 @@ interface IBorrowerOperations {
 
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
 
-    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
+    event SortedTrovesAddressChanged(address _sortedTrovesAddress);
 
-    event CLVTokenAddressChanged(address _clvTokenAddress);
+    event LUSDTokenAddressChanged(address _lusdTokenAddress);
 
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
@@ -30,18 +30,18 @@ interface IBorrowerOperations {
     // --- Functions ---
 
     function setAddresses(
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
-        address _sortedCDPsAddress,
-        address _clvTokenAddress,
+        address _sortedTrovesAddress,
+        address _lusdTokenAddress,
         address _lqtyStakingAddress
     ) external;
 
-    function openLoan(uint _CLVAmount, address _hint) external payable;
+    function openTrove(uint _LUSDAmount, address _hint) external payable;
 
     function addColl(address _hint) external payable;
 
@@ -49,13 +49,13 @@ interface IBorrowerOperations {
 
     function withdrawColl(uint _amount, address _hint) external;
 
-    function withdrawCLV(uint _amount, address _hint) external;
+    function withdrawLUSD(uint _amount, address _hint) external;
 
-    function repayCLV(uint _amount, address _hint) external;
+    function repayLUSD(uint _amount, address _hint) external;
 
-    function closeLoan() external;
+    function closeTrove() external;
 
-    function adjustLoan(uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _hint) external payable;
+    function adjustTrove(uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _hint) external payable;
 
     function claimRedeemedCollateral(address _user) external;
 

@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/IDeployedAggregator.sol";
 import "./Interfaces/AggregatorInterface.sol";
@@ -23,17 +23,17 @@ contract PriceFeed is Ownable, IPriceFeed {
 
     uint256 public price = 200 * 1e18;  // initial ETH:USD price of 200
 
-    address public cdpManagerAddress;
+    address public troveManagerAddress;
     address public priceAggregatorAddress; // unused  
     address public priceAggregatorAddressTestnet; // unused
 
     event PriceUpdated(uint256 _newPrice);
-    event CDPManagerAddressChanged(address _cdpManagerAddress);
+    event TroveManagerAddressChanged(address _troveManagerAddress);
 
     // --- Dependency setters ---
 
     function setAddresses(
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _priceAggregatorAddress, // passed 0x0 in tests
         address _priceAggregatorAddressTestnet // passed 0x0 in tests
     )
@@ -41,11 +41,11 @@ contract PriceFeed is Ownable, IPriceFeed {
         override
         onlyOwner
     {
-        cdpManagerAddress = _cdpManagerAddress;
+        troveManagerAddress = _troveManagerAddress;
         priceAggregatorAddress = _priceAggregatorAddress;
         priceAggregatorAddressTestnet = _priceAggregatorAddressTestnet;
       
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
 
         _renounceOwnership();
     }

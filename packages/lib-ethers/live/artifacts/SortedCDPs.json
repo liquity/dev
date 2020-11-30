@@ -1,5 +1,5 @@
 {
-  "contractName": "SortedCDPs",
+  "contractName": "SortedTroves",
   "abi": [
     {
       "anonymous": false,
@@ -20,11 +20,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newCDPlManagerAddress",
+          "name": "_newTrovelManagerAddress",
           "type": "address"
         }
       ],
-      "name": "CDPManagerAddressChanged",
+      "name": "TroveManagerAddressChanged",
       "type": "event"
     },
     {
@@ -56,13 +56,13 @@
           "type": "address"
         }
       ],
-      "name": "SortedCDPsAddressChanged",
+      "name": "SortedTrovesAddressChanged",
       "type": "event"
     },
     {
       "constant": true,
       "inputs": [],
-      "name": "CDPManagerAddress",
+      "name": "TroveManagerAddress",
       "outputs": [
         {
           "internalType": "address",
@@ -92,10 +92,10 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "cdpManager",
+      "name": "troveManager",
       "outputs": [
         {
-          "internalType": "contract ICDPManager",
+          "internalType": "contract ITroveManager",
           "name": "",
           "type": "address"
         }
@@ -453,7 +453,7 @@
         },
         {
           "internalType": "address",
-          "name": "_CDPManagerAddress",
+          "name": "_TroveManagerAddress",
           "type": "address"
         },
         {

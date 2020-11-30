@@ -2,36 +2,36 @@
 
 pragma solidity 0.6.11;
 
-import "./Interfaces/ICDPManager.sol";
+import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/ISortedCDPs.sol";
+import "./Interfaces/ISortedTroves.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
 
 contract HintHelpers is LiquityBase, Ownable {
 
-    ISortedCDPs public sortedCDPs;
-    ICDPManager public cdpManager;
+    ISortedTroves public sortedTroves;
+    ITroveManager public troveManager;
 
     // --- Events ---
 
-    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
-    event CDPManagerAddressChanged(address _cdpManagerAddress);
+    event SortedTrovesAddressChanged(address _sortedTrovesAddress);
+    event TroveManagerAddressChanged(address _troveManagerAddress);
 
     // --- Dependency setters ---
 
     function setAddresses(
-        address _sortedCDPsAddress,
-        address _cdpManagerAddress
+        address _sortedTrovesAddress,
+        address _troveManagerAddress
     )
         external
         onlyOwner
     {
-        sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        cdpManager = ICDPManager(_cdpManagerAddress);
+        sortedTroves = ISortedTroves(_sortedTrovesAddress);
+        troveManager = ITroveManager(_troveManagerAddress);
 
-        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit SortedTrovesAddressChanged(_sortedTrovesAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
 
         _renounceOwnership();
     }
@@ -40,51 +40,51 @@ contract HintHelpers is LiquityBase, Ownable {
 
     /* getRedemptionHints() - Helper function for redeemCollateral().
      *
-     * Find the first and last CDPs that will modified by calling redeemCollateral() with the same _CLVamount and _price,
+     * Find the first and last Troves that will modified by calling redeemCollateral() with the same _LUSDamount and _price,
      * and return the address of the first one and the final ICR of the last one.
      */
 
     function getRedemptionHints(
-        uint _CLVamount, 
+        uint _LUSDamount, 
         uint _price
     )
         external
         view
         returns (address firstRedemptionHint, uint partialRedemptionHintICR)
     {
-        uint remainingCLV = _CLVamount;
-        address currentCDPuser = sortedCDPs.getLast();
+        uint remainingLUSD = _LUSDamount;
+        address currentTroveuser = sortedTroves.getLast();
 
-        while (currentCDPuser != address(0) && cdpManager.getCurrentICR(currentCDPuser, _price) < MCR) {
-            currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
+        while (currentTroveuser != address(0) && troveManager.getCurrentICR(currentTroveuser, _price) < MCR) {
+            currentTroveuser = sortedTroves.getPrev(currentTroveuser);
         }
 
-        firstRedemptionHint = currentCDPuser;
+        firstRedemptionHint = currentTroveuser;
 
-        while (currentCDPuser != address(0) && remainingCLV > 0) {
-            uint CLVDebt = _getNetDebt(cdpManager.getCDPDebt(currentCDPuser))
-                                     .add(cdpManager.getPendingCLVDebtReward(currentCDPuser));
+        while (currentTroveuser != address(0) && remainingLUSD > 0) {
+            uint LUSDDebt = _getNetDebt(troveManager.getTroveDebt(currentTroveuser))
+                                     .add(troveManager.getPendingLUSDDebtReward(currentTroveuser));
 
-            if (CLVDebt > remainingCLV) {
-                uint ETH = cdpManager.getCDPColl(currentCDPuser)
-                                     .add(cdpManager.getPendingETHReward(currentCDPuser));
+            if (LUSDDebt > remainingLUSD) {
+                uint ETH = troveManager.getTroveColl(currentTroveuser)
+                                     .add(troveManager.getPendingETHReward(currentTroveuser));
                 
-                uint newColl = ETH.sub(remainingCLV.mul(1e18).div(_price));
-                uint newDebt = CLVDebt.sub(remainingCLV);
+                uint newColl = ETH.sub(remainingLUSD.mul(1e18).div(_price));
+                uint newDebt = LUSDDebt.sub(remainingLUSD);
                 
                 uint compositeDebt = _getCompositeDebt(newDebt);
                 partialRedemptionHintICR = LiquityMath._computeCR(newColl, compositeDebt, _price);
 
                 break;
             } else {
-                remainingCLV = remainingCLV.sub(CLVDebt);
+                remainingLUSD = remainingLUSD.sub(LUSDDebt);
             }
-            currentCDPuser = sortedCDPs.getPrev(currentCDPuser);
+            currentTroveuser = sortedTroves.getPrev(currentTroveuser);
         }
     }
 
-    /* getApproxHint() - return address of a CDP that is, on average, (length / numTrials) positions away in the 
-    sortedCDPs list from the correct insert position of the CDP to be inserted. 
+    /* getApproxHint() - return address of a Trove that is, on average, (length / numTrials) positions away in the 
+    sortedTroves list from the correct insert position of the Trove to be inserted. 
     
     Note: The output address is worst-case O(n) positions away from the correct insert position, however, the function 
     is probabilistic. Input can be tuned to guarantee results to a high degree of confidence, e.g:
@@ -97,14 +97,14 @@ contract HintHelpers is LiquityBase, Ownable {
         view
         returns (address hintAddress, uint diff, uint latestRandomSeed)
     {
-        uint arrayLength = cdpManager.getCDPOwnersCount();
+        uint arrayLength = troveManager.getTroveOwnersCount();
 
         if (arrayLength == 0) {
             return (address(0), 0, _inputRandomSeed);
         }
 
-        hintAddress = sortedCDPs.getLast();
-        diff = LiquityMath._getAbsoluteDifference(_CR, cdpManager.getCurrentICR(hintAddress, _price));
+        hintAddress = sortedTroves.getLast();
+        diff = LiquityMath._getAbsoluteDifference(_CR, troveManager.getCurrentICR(hintAddress, _price));
         latestRandomSeed = _inputRandomSeed;
 
         uint i = 1;
@@ -113,8 +113,8 @@ contract HintHelpers is LiquityBase, Ownable {
             latestRandomSeed = uint(keccak256(abi.encodePacked(latestRandomSeed)));
 
             uint arrayIndex = latestRandomSeed % arrayLength;
-            address currentAddress = cdpManager.getTroveFromCDPOwnersArray(arrayIndex);
-            uint currentICR = cdpManager.getCurrentICR(currentAddress, _price);
+            address currentAddress = troveManager.getTroveFromTroveOwnersArray(arrayIndex);
+            uint currentICR = troveManager.getCurrentICR(currentAddress, _price);
 
             // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer
             uint currentDiff = LiquityMath._getAbsoluteDifference(currentICR, _CR);

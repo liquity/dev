@@ -37,7 +37,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   let contracts
   let borrowerOperations
   let communityIssuanceTester
-  let growthToken
+  let lqtyToken
   let stabilityPool
 
   const [owner, alice, frontEnd_1] = accounts;
@@ -50,12 +50,12 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
     contracts.stabilityPool = await StabilityPool.new()
-    contracts = await deploymentHelper.deployCLVToken(contracts)
+    contracts = await deploymentHelper.deployLUSDToken(contracts)
 
     stabilityPool = contracts.stabilityPool
     borrowerOperations = contracts.borrowerOperations
 
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuanceTester = LQTYContracts.communityIssuance
 
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
@@ -839,8 +839,8 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
-    // Alice opens loan and deposits to SP
-    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    // Alice opens trove and deposits to SP
+    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
@@ -853,7 +853,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Depositor withdraws their deposit and accumulated LQTY
     await stabilityPool.withdrawFromSP(dec(1, 18), { from: alice })
 
-    const LQTYBalance_A = await growthToken.balanceOf(alice)
+    const LQTYBalance_A = await lqtyToken.balanceOf(alice)
     const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
     const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
@@ -875,8 +875,8 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
-    // Alice opens loan and deposits to SP
-    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    // Alice opens trove and deposits to SP
+    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
@@ -889,7 +889,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Depositor withdraws their deposit and accumulated LQTY
     await stabilityPool.withdrawFromSP(dec(1, 18), { from: alice })
 
-    const LQTYBalance_A = await growthToken.balanceOf(alice)
+    const LQTYBalance_A = await lqtyToken.balanceOf(alice)
     const expectedLQTYBalance_A = th.toBN('33333333302289200000000000')
     const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
@@ -910,8 +910,8 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
-    // Alice opens loan and deposits to SP
-    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    // Alice opens trove and deposits to SP
+    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
@@ -924,7 +924,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Depositor withdraws their deposit and accumulated LQTY
     await stabilityPool.withdrawFromSP(dec(1, 18), { from: alice })
 
-    const LQTYBalance_A = await growthToken.balanceOf(alice)
+    const LQTYBalance_A = await lqtyToken.balanceOf(alice)
     const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')
     const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 
@@ -946,8 +946,8 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
-    // Alice opens loan and deposits to SP
-    await borrowerOperations.openLoan(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    // Alice opens trove and deposits to SP
+    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
@@ -960,7 +960,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Depositor withdraws their deposit and accumulated LQTY
     await stabilityPool.withdrawFromSP(dec(1, 18), { from: alice })
 
-    const LQTYBalance_A = await growthToken.balanceOf(alice)
+    const LQTYBalance_A = await lqtyToken.balanceOf(alice)
     const expectedLQTYBalance_A = th.toBN('1845951269598880000000000')
     const diff = expectedLQTYBalance_A.sub(LQTYBalance_A)
 

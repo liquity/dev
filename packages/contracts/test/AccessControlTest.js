@@ -17,9 +17,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
   const [owner, alice, bob, carol] = accounts;
   let priceFeed
-  let clvToken
-  let sortedCDPs
-  let cdpManager
+  let lusdToken
+  let sortedTroves
+  let troveManager
   let nameRegistry
   let activePool
   let stabilityPool
@@ -32,9 +32,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = coreContracts.priceFeed
-    clvToken = coreContracts.clvToken
-    sortedCDPs = coreContracts.sortedCDPs
-    cdpManager = coreContracts.cdpManager
+    lusdToken = coreContracts.lusdToken
+    sortedTroves = coreContracts.sortedTroves
+    troveManager = coreContracts.troveManager
     nameRegistry = coreContracts.nameRegistry
     activePool = coreContracts.activePool
     stabilityPool = coreContracts.stabilityPool
@@ -43,7 +43,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     borrowerOperations = coreContracts.borrowerOperations
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 
@@ -51,15 +51,15 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
-    await th.openLoan_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
+    await th.openTrove_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
   })
 
-  describe('CDPManager', async accounts => {
+  describe('TroveManager', async accounts => {
     // applyPendingRewards
     it("applyPendingRewards(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.applyPendingRewards(bob, { from: alice })
+        const txAlice = await troveManager.applyPendingRewards(bob, { from: alice })
         
       } catch (err) {
          assert.include(err.message, "revert")
@@ -71,7 +71,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("updateRewardSnapshots(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.updateCDPRewardSnapshots(bob, { from: alice })
+        const txAlice = await troveManager.updateTroveRewardSnapshots(bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert" )
@@ -83,7 +83,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("removeStake(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.removeStake(bob, { from: alice })
+        const txAlice = await troveManager.removeStake(bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -95,7 +95,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("updateStakeAndTotalStakes(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.updateStakeAndTotalStakes(bob, { from: alice })
+        const txAlice = await troveManager.updateStakeAndTotalStakes(bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -103,11 +103,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    // closeCDP
-    it("closeCDP(): reverts when called by an account that is not BorrowerOperations", async () => {
+    // closeTrove
+    it("closeTrove(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.closeCDP(bob, { from: alice })
+        const txAlice = await troveManager.closeTrove(bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -116,11 +116,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
 
 
-    // addCDPOwnerToArray
-    it("addCDPOwnerToArray(): reverts when called by an account that is not BorrowerOperations", async () => {
+    // addTroveOwnerToArray
+    it("addTroveOwnerToArray(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.addCDPOwnerToArray(bob, { from: alice })
+        const txAlice = await troveManager.addTroveOwnerToArray(bob, { from: alice })
         
       } catch (err) {
          assert.include(err.message, "revert")
@@ -129,11 +129,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
 
 
-    // setCDPStatus
-    it("setCDPStatus(): reverts when called by an account that is not BorrowerOperations", async () => {
+    // setTroveStatus
+    it("setTroveStatus(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.setCDPStatus(bob, 1, { from: alice })
+        const txAlice = await troveManager.setTroveStatus(bob, 1, { from: alice })
         
       } catch (err) {
          assert.include(err.message, "revert")
@@ -141,11 +141,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    // increaseCDPColl
-    it("increaseCDPColl(): reverts when called by an account that is not BorrowerOperations", async () => {
+    // increaseTroveColl
+    it("increaseTroveColl(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.increaseCDPColl(bob, 100, { from: alice })
+        const txAlice = await troveManager.increaseTroveColl(bob, 100, { from: alice })
         
       } catch (err) {
          assert.include(err.message, "revert")
@@ -153,11 +153,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    // decreaseCDPColl
-    it("decreaseCDPColl(): reverts when called by an account that is not BorrowerOperations", async () => {
+    // decreaseTroveColl
+    it("decreaseTroveColl(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.decreaseCDPColl(bob, 100, { from: alice })
+        const txAlice = await troveManager.decreaseTroveColl(bob, 100, { from: alice })
         
       } catch (err) {
          assert.include(err.message, "revert")
@@ -165,11 +165,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    // increaseCDPDebt
-    it("increaseCDPDebt(): reverts when called by an account that is not BorrowerOperations", async () => {
+    // increaseTroveDebt
+    it("increaseTroveDebt(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.increaseCDPDebt(bob, 100, { from: alice })
+        const txAlice = await troveManager.increaseTroveDebt(bob, 100, { from: alice })
         
       } catch (err) {
          assert.include(err.message, "revert")
@@ -177,11 +177,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    // decreaseCDPDebt
-    it("decreaseCDPDebt(): reverts when called by an account that is not BorrowerOperations", async () => {
+    // decreaseTroveDebt
+    it("decreaseTroveDebt(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await cdpManager.decreaseCDPDebt(bob, 100, { from: alice })
+        const txAlice = await troveManager.decreaseTroveDebt(bob, 100, { from: alice })
         
       } catch (err) {
          assert.include(err.message, "revert")
@@ -192,38 +192,38 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
   describe('ActivePool', async accounts => {
     // sendETH
-    it("sendETH(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
+    it("sendETH(): reverts when called by an account that is not BO nor TroveM nor SP", async () => {
       // Attempt call from alice
       try {
         const txAlice = await activePool.sendETH(alice, 100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager nor StabilityPool")
+        assert.include(err.message, "Caller is neither BorrowerOperations nor TroveManager nor StabilityPool")
       }
     })
 
-    // increaseCLV	
-    it("increaseCLVDebt(): reverts when called by an account that is not BO nor CDPM", async () => {
+    // increaseLUSD	
+    it("increaseLUSDDebt(): reverts when called by an account that is not BO nor TroveM", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await activePool.increaseCLVDebt(100, { from: alice })
+        const txAlice = await activePool.increaseLUSDDebt(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager")
+        assert.include(err.message, "Caller is neither BorrowerOperations nor TroveManager")
       }
     })
 
-    // decreaseCLV
-    it("decreaseCLVDebt(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
+    // decreaseLUSD
+    it("decreaseLUSDDebt(): reverts when called by an account that is not BO nor TroveM nor SP", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await activePool.decreaseCLVDebt(100, { from: alice })
+        const txAlice = await activePool.decreaseLUSDDebt(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager nor StabilityPool")
+        assert.include(err.message, "Caller is neither BorrowerOperations nor TroveManager nor StabilityPool")
       }
     })
 
@@ -242,38 +242,38 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
   describe('DefaultPool', async accounts => {
     // sendETH
-    it("sendETH(): reverts when called by an account that is not CDPManager", async () => {
+    it("sendETH(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
         const txAlice = await defaultPool.sendETH(alice, 100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CDPManager")
+        assert.include(err.message, "Caller is not the TroveManager")
       }
     })
 
-    // increaseCLV	
-    it("increaseCLVDebt(): reverts when called by an account that is not CDPManager", async () => {
+    // increaseLUSD	
+    it("increaseLUSDDebt(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await defaultPool.increaseCLVDebt(100, { from: alice })
+        const txAlice = await defaultPool.increaseLUSDDebt(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CDPManager")
+        assert.include(err.message, "Caller is not the TroveManager")
       }
     })
 
-    // decreaseCLV	
-    it("decreaseCLV(): reverts when called by an account that is not CDPManager", async () => {
+    // decreaseLUSD	
+    it("decreaseLUSD(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await defaultPool.decreaseCLVDebt(100, { from: alice })
+        const txAlice = await defaultPool.decreaseLUSDDebt(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the CDPManager")
+        assert.include(err.message, "Caller is not the TroveManager")
       }
     })
 
@@ -291,17 +291,17 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   })
 
   describe('StabilityPool', async accounts => {
-    // --- onlyCDPManager --- 
+    // --- onlyTroveManager --- 
 
     // offset
-    it("offset(): reverts when called by an account that is not CDPManager", async () => {
+    it("offset(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
         txAlice = await stabilityPool.offset(100, 10, { from: alice })
         assert.fail(txAlice)
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not CDPManager")
+        assert.include(err.message, "Caller is not TroveManager")
       }
     })
 
@@ -320,24 +320,24 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
   })
 
-  describe('CLVToken', async accounts => {
+  describe('LUSDToken', async accounts => {
 
     //    mint
     it("mint(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
-      const txAlice = clvToken.mint(bob, 100, { from: alice })
+      const txAlice = lusdToken.mint(bob, 100, { from: alice })
       await th.assertRevert(txAlice, "Caller is not BorrowerOperations")
     })
 
     // burn
-    it("burn(): reverts when called by an account that is not BO nor CDPM nor SP", async () => {
+    it("burn(): reverts when called by an account that is not BO nor TroveM nor SP", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await clvToken.burn(bob, 100, { from: alice })
+        const txAlice = await lusdToken.burn(bob, 100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither BorrowerOperations nor CDPManager nor StabilityPool")
+        assert.include(err.message, "Caller is neither BorrowerOperations nor TroveManager nor StabilityPool")
       }
     })
 
@@ -345,7 +345,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("sendToPool(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await clvToken.sendToPool(bob, activePool.address, 100, { from: alice })
+        const txAlice = await lusdToken.sendToPool(bob, activePool.address, 100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -354,71 +354,71 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
 
     // returnFromPool
-    it("returnFromPool(): reverts when called by an account that is not CDPManager nor StabilityPool", async () => {
+    it("returnFromPool(): reverts when called by an account that is not TroveManager nor StabilityPool", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await clvToken.returnFromPool(activePool.address, bob, 100, { from: alice })
+        const txAlice = await lusdToken.returnFromPool(activePool.address, bob, 100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is neither CDPManager nor StabilityPool")
+        // assert.include(err.message, "Caller is neither TroveManager nor StabilityPool")
       }
     })
   })
 
-  describe('SortedCDPs', async accounts => {
+  describe('SortedTroves', async accounts => {
     // --- onlyBorrowerOperations ---
     //     insert
-    it("insert(): reverts when called by an account that is not BorrowerOps or CDPM", async () => {
+    it("insert(): reverts when called by an account that is not BorrowerOps or TroveM", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedCDPs.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        const txAlice = await sortedTroves.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, " Caller is neither BO nor CDPM")
+        assert.include(err.message, " Caller is neither BO nor TroveM")
       }
     })
 
-    // --- onlyCDPManager ---
+    // --- onlyTroveManager ---
     // remove
-    it("remove(): reverts when called by an account that is not CDPManager", async () => {
+    it("remove(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedCDPs.remove(bob, { from: alice })
+        const txAlice = await sortedTroves.remove(bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, " Caller is not the CDPManager")
+        assert.include(err.message, " Caller is not the TroveManager")
       }
     })
 
-    // --- onlyCDPMorBM ---
+    // --- onlyTroveMorBM ---
     // reinsert
-    it("reinsert(): reverts when called by an account that is neither BorrowerOps nor CDPManager", async () => {
+    it("reinsert(): reverts when called by an account that is neither BorrowerOps nor TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedCDPs.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        const txAlice = await sortedTroves.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither BO nor CDPM")
+        assert.include(err.message, "Caller is neither BO nor TroveM")
       }
     })
   })
 
   describe('LockupContractFactory', async accounts => {
-    it("setGrowthTokenAddress(): reverts when caller is not deployer", async () => {
+    it("setLQTYTokenAddress(): reverts when caller is not deployer", async () => {
       try {
-        const txAlice = await lockupContractFactory.setGrowthTokenAddress(growthToken.address, { from: alice })
+        const txAlice = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
       }
 
       // Owner can successfully set any address
-      const txOwner1 = await lockupContractFactory.setGrowthTokenAddress(bob, { from: owner })
-      const txOwner2 = await lockupContractFactory.setGrowthTokenAddress(growthToken.address, { from: owner })
+      const txOwner1 = await lockupContractFactory.setLQTYTokenAddress(bob, { from: owner })
+      const txOwner2 = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: owner })
     })
   })
 
@@ -433,7 +433,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       assert.equal(await OYLC.deployer(), lockupContractFactory.address)
 
       // Deployer funds the OYLC
-      await growthToken.transfer(OYLC.address, dec(100, 18), { from: owner })
+      await lqtyToken.transfer(OYLC.address, dec(100, 18), { from: owner })
 
       try {
         const txAlice = await OYLC.lockContract({ from: alice })
@@ -454,7 +454,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
 
       // Deployer funds the OYLC
-      await growthToken.transfer(OYLC.address, dec(100, 18), { from: owner })
+      await lqtyToken.transfer(OYLC.address, dec(100, 18), { from: owner })
 
       // Deployer locks contract via the factory
       await lockupContractFactory.lockOneYearContracts([OYLC.address], { from: owner })
@@ -497,7 +497,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       assert.equal(await CDLC.deployer(), lockupContractFactory.address)
 
       // Deployer funds the CDLC
-      await growthToken.transfer(CDLC.address, dec(100, 18), { from: owner })
+      await lqtyToken.transfer(CDLC.address, dec(100, 18), { from: owner })
 
       try {
         const txAlice = await CDLC.lockContract({ from: alice })
@@ -525,7 +525,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
 
       // Deployer funds the CDLC
-      await growthToken.transfer(CDLC.address, dec(100, 18), { from: owner })
+      await lqtyToken.transfer(CDLC.address, dec(100, 18), { from: owner })
 
       // Deployer locks contract via the factory
       await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
@@ -549,7 +549,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   })
 
   describe('LQTYStaking', async accounts => {
-    it("addETHFee(): reverts when caller is not CDPManager", async () => {
+    it("addETHFee(): reverts when caller is not TroveManager", async () => {
       try {
         const txAlice = await lqtyStaking.increaseF_ETH(dec(1, 'ether'), { from: alice })
         
@@ -558,7 +558,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-    it("addLQTYFee(): reverts when caller is not CDPManager", async () => {
+    it("addLQTYFee(): reverts when caller is not TroveManager", async () => {
       try {
         const txAlice = await lqtyStaking.increaseF_LUSD(dec(1, 18), { from: alice })
         
@@ -568,14 +568,14 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
   })
 
-  describe('GrowthToken', async accounts => {
+  describe('LQTYToken', async accounts => {
     it("sendToLQTYStaking(): reverts when caller is not the LQTYSstaking", async () => {
       // Check owner has some LQTY
-      assert.isTrue((await growthToken.balanceOf(owner)).gt(toBN('0')))
+      assert.isTrue((await lqtyToken.balanceOf(owner)).gt(toBN('0')))
 
       // Owner tries to call it
       try {
-        const tx = await growthToken.sendToLQTYStaking(owner, 1, { from: owner })
+        const tx = await lqtyToken.sendToLQTYStaking(owner, 1, { from: owner })
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -584,12 +584,12 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // Owner transfers 1 LQTY to bob
-      await growthToken.transfer(bob, dec(1, 18), { from: owner })
-      assert.equal((await growthToken.balanceOf(bob)), dec(1, 18))
+      await lqtyToken.transfer(bob, dec(1, 18), { from: owner })
+      assert.equal((await lqtyToken.balanceOf(bob)), dec(1, 18))
 
       // Bob tries to call it
       try {
-        const tx = await growthToken.sendToLQTYStaking(bob, dec(1, 18), { from: bob })
+        const tx = await lqtyToken.sendToLQTYStaking(bob, dec(1, 18), { from: bob })
       } catch (err) {
         assert.include(err.message, "revert")
       }

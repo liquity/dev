@@ -1,4 +1,4 @@
 {
   "detectors_to_exclude": "naming-convention",
-  "filter_paths": "TestContracts|Dependencies|Migrations.sol|MultiCDPGetter.sol"
+  "filter_paths": "TestContracts|Dependencies|Migrations.sol|MultiTroveGetter.sol"
 }

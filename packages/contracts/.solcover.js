@@ -10,11 +10,11 @@ module.exports = {
   measureStatementCoverage: false,
   measureFunctionCoverage: false,
 
-  testfiles: "test/CLVTokenTest.js",
+  testfiles: "test/LUSDTokenTest.js",
 
   skipFiles: [
     "TestContracts/",
-    "MultiCDPGetter.sol",
+    "MultiTroveGetter.sol",
     "Migrations.sol",
     "Interfaces/",
     "Dependencies/Context.sol",

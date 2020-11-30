@@ -3,13 +3,13 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/IBorrowerOperations.sol";
-import "./Interfaces/ICDPManager.sol";
-import "./Interfaces/ICLVToken.sol";
+import "./Interfaces/ITroveManager.sol";
+import "./Interfaces/ILUSDToken.sol";
 import "./Interfaces/IPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
-import './Interfaces/ICLVToken.sol';
+import './Interfaces/ILUSDToken.sol';
 import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/ISortedCDPs.sol";
+import "./Interfaces/ISortedTroves.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
@@ -19,7 +19,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Connected contract declarations ---
 
-    ICDPManager public cdpManager;
+    ITroveManager public troveManager;
 
     IPool public activePool;
 
@@ -34,17 +34,17 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     ILQTYStaking public lqtyStaking;
     address public lqtyStakingAddress;
 
-    ICLVToken public clvToken;
+    ILUSDToken public lusdToken;
 
-    // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
-    ISortedCDPs public sortedCDPs;
+    // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
+    ISortedTroves public sortedTroves;
 
     /* --- Variable container structs  ---
 
     Used to hold, return and assign variables inside a function, in order to avoid the error:
     "CompilerError: Stack too deep". */
 
-     struct LocalVariables_adjustLoan {
+     struct LocalVariables_adjustTrove {
         uint price;
         uint collChange;
         uint rawDebtChange;
@@ -52,63 +52,63 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint debt;
         uint coll;
         uint newICR;
-        uint CLVFee;
+        uint LUSDFee;
         uint newDebt;
         uint newColl;
         uint stake;
     }
 
     enum BorrowerOperation {
-        openLoan,
-        closeLoan,
+        openTrove,
+        closeTrove,
         addColl,
         withdrawColl,
-        withdrawCLV,
-        repayCLV,
-        adjustLoan
+        withdrawLUSD,
+        repayLUSD,
+        adjustTrove
     }
 
-    event CDPCreated(address indexed _borrower, uint arrayIndex);
-    event CDPUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
-    event LUSDBorrowingFeePaid(address indexed _borrower, uint _CLVFee);
+    event TroveCreated(address indexed _borrower, uint arrayIndex);
+    event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
+    event LUSDBorrowingFeePaid(address indexed _borrower, uint _LUSDFee);
 
     // --- Dependency setters ---
 
     function setAddresses(
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
-        address _sortedCDPsAddress,
-        address _clvTokenAddress,
+        address _sortedTrovesAddress,
+        address _lusdTokenAddress,
         address _lqtyStakingAddress
     )
         external
         override
         onlyOwner
     {
-        cdpManager = ICDPManager(_cdpManagerAddress);
+        troveManager = ITroveManager(_troveManagerAddress);
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
-        sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
-        clvToken = ICLVToken(_clvTokenAddress);
+        sortedTroves = ISortedTroves(_sortedTrovesAddress);
+        lusdToken = ILUSDToken(_lusdTokenAddress);
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
-        emit CLVTokenAddressChanged(_clvTokenAddress);
+        emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
-        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
-        emit CLVTokenAddressChanged(_clvTokenAddress);
+        emit SortedTrovesAddressChanged(_sortedTrovesAddress);
+        emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
         _renounceOwnership();
@@ -116,15 +116,15 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Borrower Trove Operations ---
 
-    function openLoan(uint _CLVAmount, address _hint) external payable override {
+    function openTrove(uint _LUSDAmount, address _hint) external payable override {
         uint price = priceFeed.getPrice();
 
-        _requireCDPisNotActive(msg.sender);
+        _requireTroveisNotActive(msg.sender);
 
         // Decay the base rate, and calculate the borrowing fee
-        cdpManager.decayBaseRateFromBorrowing();
-        uint CLVFee = cdpManager.getBorrowingFee(_CLVAmount);
-        uint rawDebt = _CLVAmount.add(CLVFee);
+        troveManager.decayBaseRateFromBorrowing();
+        uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
+        uint rawDebt = _LUSDAmount.add(LUSDFee);
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
@@ -139,99 +139,99 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
 
         // Set the trove struct's properties
-        cdpManager.setCDPStatus(msg.sender, 1);
-        cdpManager.increaseCDPColl(msg.sender, msg.value);
-        cdpManager.increaseCDPDebt(msg.sender, compositeDebt);
+        troveManager.setTroveStatus(msg.sender, 1);
+        troveManager.increaseTroveColl(msg.sender, msg.value);
+        troveManager.increaseTroveDebt(msg.sender, compositeDebt);
 
-        cdpManager.updateCDPRewardSnapshots(msg.sender);
-        uint stake = cdpManager.updateStakeAndTotalStakes(msg.sender);
+        troveManager.updateTroveRewardSnapshots(msg.sender);
+        uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
 
-        sortedCDPs.insert(msg.sender, ICR, price, _hint, _hint);
-        uint arrayIndex = cdpManager.addCDPOwnerToArray(msg.sender);
-        emit CDPCreated(msg.sender, arrayIndex);
+        sortedTroves.insert(msg.sender, ICR, price, _hint, _hint);
+        uint arrayIndex = troveManager.addTroveOwnerToArray(msg.sender);
+        emit TroveCreated(msg.sender, arrayIndex);
 
         // Send the LUSD borrowing fee to the staking contract
-        clvToken.mint(lqtyStakingAddress, CLVFee);
-        lqtyStaking.increaseF_LUSD(CLVFee);
+        lusdToken.mint(lqtyStakingAddress, LUSDFee);
+        lqtyStaking.increaseF_LUSD(LUSDFee);
 
-        // Move the ether to the Active Pool, and mint the CLVAmount to the borrower
+        // Move the ether to the Active Pool, and mint the LUSDAmount to the borrower
         _activePoolAddColl(msg.value);
-        _withdrawCLV(msg.sender, _CLVAmount, rawDebt);
-        // Move the CLV gas compensation to the Gas Pool
-        _withdrawCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION, CLV_GAS_COMPENSATION);
+        _withdrawLUSD(msg.sender, _LUSDAmount, rawDebt);
+        // Move the LUSD gas compensation to the Gas Pool
+        _withdrawLUSD(GAS_POOL_ADDRESS, LUSD_GAS_COMPENSATION, LUSD_GAS_COMPENSATION);
 
-        emit CDPUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openLoan);
-        emit LUSDBorrowingFeePaid(msg.sender, CLVFee);
+        emit TroveUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openTrove);
+        emit LUSDBorrowingFeePaid(msg.sender, LUSDFee);
     }
 
     // Send ETH as collateral to a trove
     function addColl(address _hint) external payable override {
-        _adjustLoan(msg.sender, 0, 0, false, _hint);
+        _adjustTrove(msg.sender, 0, 0, false, _hint);
     }
 
     // Send ETH as collateral to a trove. Called by only the Stability Pool.
     function moveETHGainToTrove(address _borrower, address _hint) external payable override {
         _requireCallerIsStabilityPool();
-        _adjustLoan(_borrower, 0, 0, false, _hint);
+        _adjustTrove(_borrower, 0, 0, false, _hint);
     }
 
     // Withdraw ETH collateral from a trove
     function withdrawColl(uint _collWithdrawal, address _hint) external override {
-        _adjustLoan(msg.sender, _collWithdrawal, 0, false, _hint);
+        _adjustTrove(msg.sender, _collWithdrawal, 0, false, _hint);
     }
 
-    // Withdraw CLV tokens from a trove: mint new CLV tokens to the owner, and increase the trove's debt accordingly
-    function withdrawCLV(uint _CLVAmount, address _hint) external override {
-        _adjustLoan(msg.sender, 0, _CLVAmount, true, _hint);
+    // Withdraw LUSD tokens from a trove: mint new LUSD tokens to the owner, and increase the trove's debt accordingly
+    function withdrawLUSD(uint _LUSDAmount, address _hint) external override {
+        _adjustTrove(msg.sender, 0, _LUSDAmount, true, _hint);
     }
 
-    // Repay CLV tokens to a CDP: Burn the repaid CLV tokens, and reduce the trove's debt accordingly
-    function repayCLV(uint _CLVAmount, address _hint) external override {
-        _adjustLoan(msg.sender, 0, _CLVAmount, false, _hint);
+    // Repay LUSD tokens to a Trove: Burn the repaid LUSD tokens, and reduce the trove's debt accordingly
+    function repayLUSD(uint _LUSDAmount, address _hint) external override {
+        _adjustTrove(msg.sender, 0, _LUSDAmount, false, _hint);
     }
 
     /*
     * If ETH is sent, the operation is considered as a collateral increase, and the first parameter
     * _collWithdrawal must be zero 
     */
-    function adjustLoan(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable override {
-        _adjustLoan(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+    function adjustTrove(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable override {
+        _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
     }
 
-    function _adjustLoan(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) internal {
+    function _adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) internal {
         require(msg.value == 0 || _collWithdrawal == 0, "BorrowerOperations: Cannot withdraw and add coll");
         // The operation "isWithdrawal" if it removes collateral or LUSD, i.e. it removes funds and lowers the ICR
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease;
         require(msg.sender == _borrower || !isWithdrawal, "BorrowerOps: User must be sender for withdrawals");
         require(msg.value != 0 || _collWithdrawal != 0 || _debtChange != 0, "BorrowerOps: There must be either a collateral change or a debt change");
 
-        LocalVariables_adjustLoan memory L;
+        LocalVariables_adjustTrove memory L;
 
-        _requireCDPisActive(_borrower);
+        _requireTroveisActive(_borrower);
         if (isWithdrawal) {_requireNotInRecoveryMode();}
 
         L.price = priceFeed.getPrice();
 
-        cdpManager.applyPendingRewards(_borrower);
+        troveManager.applyPendingRewards(_borrower);
 
         (L.collChange, L.isCollIncrease) = _getCollChange(msg.value, _collWithdrawal);
 
         L.rawDebtChange = _debtChange;
         if (_isDebtIncrease && _debtChange > 0) {
             // Decay the baseRate and get the fee
-            cdpManager.decayBaseRateFromBorrowing();
-            L.CLVFee = cdpManager.getBorrowingFee(_debtChange);
+            troveManager.decayBaseRateFromBorrowing();
+            L.LUSDFee = troveManager.getBorrowingFee(_debtChange);
 
             // The raw debt change includes the fee, if there was one
-            L.rawDebtChange = L.rawDebtChange.add(L.CLVFee);
+            L.rawDebtChange = L.rawDebtChange.add(L.LUSDFee);
 
             // Send fee to LQTY staking contract
-            lqtyStaking.increaseF_LUSD(L.CLVFee);
-            clvToken.mint(lqtyStakingAddress, L.CLVFee);
+            lqtyStaking.increaseF_LUSD(L.LUSDFee);
+            lusdToken.mint(lqtyStakingAddress, L.LUSDFee);
         }
 
-        L.debt = cdpManager.getCDPDebt(_borrower);
-        L.coll = cdpManager.getCDPColl(_borrower);
+        L.debt = troveManager.getTroveDebt(_borrower);
+        L.coll = troveManager.getTroveColl(_borrower);
 
         L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
 
@@ -240,44 +240,44 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
         }
         if (!L.isCollIncrease) {_requireCollAmountIsWithdrawable(L.coll, L.collChange);}
-        if (!_isDebtIncrease && _debtChange > 0) {_requireCLVRepaymentAllowed(L.debt, L.rawDebtChange);}
+        if (!_isDebtIncrease && _debtChange > 0) {_requireLUSDRepaymentAllowed(L.debt, L.rawDebtChange);}
 
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
-        L.stake = cdpManager.updateStakeAndTotalStakes(_borrower);
+        L.stake = troveManager.updateStakeAndTotalStakes(_borrower);
 
         // Re-insert trove it in the sorted list
-        sortedCDPs.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
+        sortedTroves.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
   
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
 
-        emit CDPUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustLoan);
-        emit LUSDBorrowingFeePaid(msg.sender,  L.CLVFee);
+        emit TroveUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustTrove);
+        emit LUSDBorrowingFeePaid(msg.sender,  L.LUSDFee);
     }
 
-    function closeLoan() external override {
-        _requireCDPisActive(msg.sender);
+    function closeTrove() external override {
+        _requireTroveisActive(msg.sender);
         _requireNotInRecoveryMode();
 
-        cdpManager.applyPendingRewards(msg.sender);
+        troveManager.applyPendingRewards(msg.sender);
 
-        uint coll = cdpManager.getCDPColl(msg.sender);
-        uint debt = cdpManager.getCDPDebt(msg.sender);
+        uint coll = troveManager.getTroveColl(msg.sender);
+        uint debt = troveManager.getTroveDebt(msg.sender);
 
-        cdpManager.removeStake(msg.sender);
-        cdpManager.closeCDP(msg.sender);
+        troveManager.removeStake(msg.sender);
+        troveManager.closeTrove(msg.sender);
 
         // Burn the debt from the user's balance, and send the collateral back to the user
-        _repayCLV(msg.sender, debt.sub(CLV_GAS_COMPENSATION));
+        _repayLUSD(msg.sender, debt.sub(LUSD_GAS_COMPENSATION));
         activePool.sendETH(msg.sender, coll);
         // Refund gas compensation
-        _repayCLV(GAS_POOL_ADDRESS, CLV_GAS_COMPENSATION);
+        _repayLUSD(GAS_POOL_ADDRESS, LUSD_GAS_COMPENSATION);
 
-        emit CDPUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeLoan);
+        emit TroveUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
     }
 
     function claimRedeemedCollateral(address _user) external override {
-        _requireCDPisNotActive(_user);
+        _requireTroveisNotActive(_user);
 
         // send ETH from CollSurplus Pool to owner
         collSurplusPool.claimColl(_user);
@@ -321,10 +321,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
         returns (uint, uint)
     {
-        uint newColl = (_isCollIncrease) ? cdpManager.increaseCDPColl(_borrower, _collChange)
-                                        : cdpManager.decreaseCDPColl(_borrower, _collChange);
-        uint newDebt = (_isDebtIncrease) ? cdpManager.increaseCDPDebt(_borrower, _debtChange)
-                                        : cdpManager.decreaseCDPDebt(_borrower, _debtChange);
+        uint newColl = (_isCollIncrease) ? troveManager.increaseTroveColl(_borrower, _collChange)
+                                        : troveManager.decreaseTroveColl(_borrower, _collChange);
+        uint newDebt = (_isDebtIncrease) ? troveManager.increaseTroveDebt(_borrower, _debtChange)
+                                        : troveManager.decreaseTroveDebt(_borrower, _debtChange);
 
         return (newColl, newDebt);
     }
@@ -341,9 +341,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
     {
         if (_isDebtIncrease) {
-            _withdrawCLV(_borrower, _debtChange, _rawDebtChange);
+            _withdrawLUSD(_borrower, _debtChange, _rawDebtChange);
         } else {
-            _repayCLV(_borrower, _debtChange);
+            _repayLUSD(_borrower, _debtChange);
         }
 
         if (_isCollIncrease) {
@@ -359,28 +359,28 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         assert(success == true);
     }
 
-    // Issue the specified amount of CLV to _account and increases the total active debt (_rawDebtIncrease potentially includes a CLVFee)
-    function _withdrawCLV(address _account, uint _CLVAmount, uint _rawDebtIncrease) internal {
-        activePool.increaseCLVDebt(_rawDebtIncrease);
-        clvToken.mint(_account, _CLVAmount);
+    // Issue the specified amount of LUSD to _account and increases the total active debt (_rawDebtIncrease potentially includes a LUSDFee)
+    function _withdrawLUSD(address _account, uint _LUSDAmount, uint _rawDebtIncrease) internal {
+        activePool.increaseLUSDDebt(_rawDebtIncrease);
+        lusdToken.mint(_account, _LUSDAmount);
     }
 
-    // Burn the specified amount of CLV from _account and decreases the total active debt
-    function _repayCLV(address _account, uint _CLV) internal {
-        activePool.decreaseCLVDebt(_CLV);
-        clvToken.burn(_account, _CLV);
+    // Burn the specified amount of LUSD from _account and decreases the total active debt
+    function _repayLUSD(address _account, uint _LUSD) internal {
+        activePool.decreaseLUSDDebt(_LUSD);
+        lusdToken.burn(_account, _LUSD);
     }
 
     // --- 'Require' wrapper functions ---
 
-    function _requireCDPisActive(address _borrower) internal view {
-        uint status = cdpManager.getCDPStatus(_borrower);
-        require(status == 1, "BorrowerOps: CDP does not exist or is closed");
+    function _requireTroveisActive(address _borrower) internal view {
+        uint status = troveManager.getTroveStatus(_borrower);
+        require(status == 1, "BorrowerOps: Trove does not exist or is closed");
     }
 
-    function _requireCDPisNotActive(address _borrower) internal view {
-        uint status = cdpManager.getCDPStatus(_borrower);
-        require(status != 1, "BorrowerOps: CDP is active");
+    function _requireTroveisNotActive(address _borrower) internal view {
+        uint status = troveManager.getTroveStatus(_borrower);
+        require(status != 1, "BorrowerOps: Trove is active");
     }
 
     function _requireNotInRecoveryMode() internal view {
@@ -392,7 +392,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     function _requireICRisAboveR_MCR(uint _newICR) internal pure {
-        require(_newICR >= R_MCR, "BorrowerOps: In Recovery Mode new loans must have ICR >= R_MCR");
+        require(_newICR >= R_MCR, "BorrowerOps: In Recovery Mode new troves must have ICR >= R_MCR");
     }
 
     function _requireNewTCRisAboveCCR
@@ -410,8 +410,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(newTCR >= CCR, "BorrowerOps: An operation that would result in TCR < CCR is not permitted");
     }
 
-    function _requireCLVRepaymentAllowed(uint _currentDebt, uint _debtRepayment) internal pure {
-        require(_debtRepayment <= _currentDebt.sub(CLV_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the CDP's debt");
+    function _requireLUSDRepaymentAllowed(uint _currentDebt, uint _debtRepayment) internal pure {
+        require(_debtRepayment <= _currentDebt.sub(LUSD_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the Trove's debt");
     }
 
     function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)
@@ -465,7 +465,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         returns (uint)
     {
         uint totalColl = activePool.getETH().add(defaultPool.getETH());
-        uint totalDebt = activePool.getCLVDebt().add(defaultPool.getCLVDebt());
+        uint totalDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
 
         totalColl = _isCollIncrease ? totalColl.add(_collChange) : totalColl.sub(_collChange);
         totalDebt = _isDebtIncrease ? totalDebt.add(_debtChange) : totalDebt = totalDebt.sub(_debtChange);
@@ -493,9 +493,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     function _getTCR() internal view returns (uint TCR) {
         uint price = priceFeed.getPrice();
         uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getCLVDebt();
+        uint activeDebt = activePool.getLUSDDebt();
         uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getCLVDebt();
+        uint closedDebt = defaultPool.getLUSDDebt();
 
         uint totalCollateral = activeColl.add(liquidatedColl);
         uint totalDebt = activeDebt.add(closedDebt);
