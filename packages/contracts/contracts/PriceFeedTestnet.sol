@@ -11,7 +11,7 @@ import "./Dependencies/console.sol";
 contract PriceFeedTestnet is Ownable, IPriceFeedTestnet {
     using SafeMath for uint256;
     
-    uint256 private _price;
+    uint256 private _price = 200 * DIGITS;
     uint256 constant DIGITS = 1e18;
     
     address public priceAggregatorAddress;
