@@ -80,7 +80,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
     // --- Identical deposits, identical liquidation amounts---
     it("withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after one liquidation", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
@@ -119,7 +119,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     })
 
     it("withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two identical liquidations", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
@@ -161,7 +161,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     })
 
     it("withdrawFromSP():  Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three identical liquidations", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
@@ -207,7 +207,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
     // --- Identical deposits, increasing liquidation amounts ---
     it("withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two liquidations of increasing LUSD", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
@@ -248,7 +248,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     })
 
     it("withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three liquidations of increasing LUSD", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
@@ -295,7 +295,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
     // --- Increasing deposits, identical liquidation amounts ---
     it("withdrawFromSP(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after two identical liquidations", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // Alice deposits 100, Bob deposits 200, Carol deposits 300 LUSD
@@ -341,7 +341,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     })
 
     it("withdrawFromSP(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three identical liquidations", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // Alice deposits 100, Bob deposits 200, Carol deposits 300 LUSD
@@ -391,7 +391,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
     // --- Varied depoosits and varied liquidation amount ---
     it("withdrawFromSP(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three varying liquidations", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       /* Depositors provide:-
@@ -451,7 +451,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // --- Deposit enters at t > 0
 
     it("withdrawFromSP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 1 liquidation. All deposits and liquidations = 100 LUSD.  A, B, C, D withdraw correct LUSD deposit and ETH Gain", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
@@ -507,7 +507,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     })
 
     it("withdrawFromSP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. All deposits and liquidations = 100 LUSD.  A, B, C, D withdraw correct LUSD deposit and ETH Gain", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol]
@@ -564,7 +564,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     })
 
     it("withdrawFromSP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. Various deposit and liquidation vals.  A, B, C, D withdraw correct LUSD deposit and ETH Gain", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       /* Depositors open troves and make SP deposit:
@@ -638,7 +638,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // --- Depositor leaves ---
 
     it("withdrawFromSP(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. All deposits and liquidations = 100 LUSD.  A, B, C, D withdraw correct LUSD deposit and ETH Gain", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, carol, dennis]
@@ -697,7 +697,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     })
 
     it("withdrawFromSP(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. Various deposit and liquidation vals. A, B, C, D withdraw correct LUSD deposit and ETH Gain", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       /* Initial deposits:
@@ -776,7 +776,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
     // --- One deposit enters at t > 0, and another leaves later ---
     it("withdrawFromSP(): A, B, D deposit -> 2 liquidations -> C makes deposit -> 1 liquidation -> D withdraws -> 1 liquidation. All deposits: 100 LUSD. Liquidations: 100,100,100,50.  A, B, C, D withdraw correct LUSD deposit and ETH Gain", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const depositors = [alice, bob, dennis]
@@ -848,7 +848,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // A, B withdraw 0c & 1e
     // C, D withdraw 50c  & 0.5e
     it("withdrawFromSP(): Depositor withdraws correct compounded deposit after liquidation empties the pool", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // Alice, Bob each deposit 100 LUSD
@@ -917,7 +917,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // L3 cancels 100, 1 
     // L2 200, 2 empties Pool
     it("withdrawFromSP(): Pool-emptying liquidation increases epoch by one, resets scaleFactor to 0, and resets P to 1e18", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // Alice, Bob each deposit 100 LUSD
@@ -1016,7 +1016,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // A, B withdraw 0c & 1e
     // C, D withdraw 50c  & 0.5e
     it("withdrawFromSP(): Depositors withdraw correct compounded deposit after liquidation empties the pool", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // Alice, Bob each deposit 100 LUSD
@@ -1088,7 +1088,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // A withdraws all
     // Expect A to withdraw 0 deposit and ether only from reward L1
     it("withdrawFromSP(): single deposit fully offset. After subsequent liquidations, depositor withdraws 0 deposit and *only* the ETH Gain from one liquidation", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
@@ -1137,7 +1137,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // Expect all depositors withdraw 0 LUSD and 1 ETH
 
     it("withdrawFromSP(): Depositor withdraws correct compounded deposit after liquidation empties the pool", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // 4 Defaulters open trove with 200% ICR
@@ -1250,7 +1250,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // expect d(B) = d0(B)/10
     // expect correct ETH gain, i.e. all of the reward
     it("withdrawFromSP(): deposit spans one scale factor change: Single depositor withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
@@ -1302,7 +1302,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // expect d(B) = d0(B)/10
     // expect correct ETH gain, i.e. all of the reward
     it("withdrawFromSP(): Several deposits of varying amounts span one scale factor change. Depositors withdraw correct compounded deposit and ETH Gain after one liquidation", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
@@ -1378,7 +1378,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // expect d(B) = d0(B) * (1e-10)
     // expect B gets entire ETH gain from L2
     it("withdrawFromSP(): deposit spans one scale factor change: Single depositor withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
@@ -1427,7 +1427,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // expect d(B) = d0(B) * (1e-10)
     // expect B gets entire ETH gain from L2
     it("withdrawFromSP(): Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(2, 'ether') })
@@ -1490,7 +1490,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // L1 brings P to (~1e-10)*P. L1:  99.999999999000000000 LUSD
     // Expect A to withdraw 0 deposit
     it("withdrawFromSP(): Deposit that decreases to less than 1e-9 of it's original value is reduced to 0", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // Defaulters 1 withdraws 89.999999999 LUSD
@@ -1524,7 +1524,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     expect A, B, C, D each withdraw ~1 Ether
     */
     it("withdrawFromSP(): Several deposits of 100 LUSD span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // Defaulters 1-4 each withdraw 89.999999999 LUSD
@@ -1598,7 +1598,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     })
 
     it("withdrawFromSP(): 2 depositors can withdraw after each receiving half of a pool-emptying liquidation", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       // Defaulters 1-2 each withdraw 200 LUSD (inc gas comp)
@@ -1728,7 +1728,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
 
     it("withdrawFromSP(): Depositor's ETH gain stops increasing after two scale changes", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 27) })
 
       // Defaulters 1-4 each withdraw 89.999999999 LUSD
@@ -1800,7 +1800,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // --- Extreme values, confirm no overflows ---
 
     it("withdrawFromSP(): Large liquidated coll/debt, deposits and ETH price", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 29) })
 
       // ETH:USD price is $2 billion per ETH
@@ -1857,7 +1857,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     })
 
     it("withdrawFromSP(): Tiny liquidated coll/debt, large deposits and ETH price", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 29) })
 
       // ETH:USD price is $2 billion per ETH

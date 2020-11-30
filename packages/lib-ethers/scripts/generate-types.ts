@@ -13,7 +13,7 @@ import LQTYToken from "../../contracts/artifacts/LQTYToken.json";
 import HintHelpers from "../../contracts/artifacts/HintHelpers.json";
 import LockupContractFactory from "../../contracts/artifacts/LockupContractFactory.json";
 import LQTYStaking from "../../contracts/artifacts/LQTYStaking.json";
-import MultiCDPGetter from "../../contracts/artifacts/MultiCDPGetter.json";
+import MultiTroveGetter from "../../contracts/artifacts/MultiTroveGetter.json";
 import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
 import SortedTroves from "../../contracts/artifacts/SortedTroves.json";
 import StabilityPool from "../../contracts/artifacts/StabilityPool.json";
@@ -128,7 +128,7 @@ const contractArtifacts = [
   HintHelpers,
   LockupContractFactory,
   LQTYStaking,
-  MultiCDPGetter,
+  MultiTroveGetter,
   PriceFeed,
   SortedTroves,
   StabilityPool,

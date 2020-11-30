@@ -72,7 +72,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  // ActivePool in CDPM
+  // ActivePool in TroveM
   it('Sets the correct ActivePool address in TroveManager', async () => {
     const activePoolAddress = activePool.address
 
@@ -81,7 +81,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(activePoolAddress, recordedActivePoolAddresss)
   })
 
-  // DefaultPool in CDPM
+  // DefaultPool in TroveM
   it('Sets the correct DefaultPool address in TroveManager', async () => {
     const defaultPoolAddress = defaultPool.address
 
@@ -90,7 +90,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(defaultPoolAddress, recordedDefaultPoolAddresss)
   })
 
-  // StabilityPool in CDPM
+  // StabilityPool in TroveM
   it('Sets the correct StabilityPool address in TroveManager', async () => {
     const stabilityPoolAddress = stabilityPool.address
 
@@ -99,7 +99,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(stabilityPoolAddress, recordedStabilityPoolAddresss)
   })
 
-  // LQTY Staking in CDPM
+  // LQTY Staking in TroveM
   it('Sets the correct LQTYStaking address in TroveManager', async () => {
     const lqtyStakingAddress = lqtyStaking.address
 

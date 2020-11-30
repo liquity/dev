@@ -6,9 +6,9 @@ pragma experimental ABIEncoderV2;
 import "./TroveManager.sol";
 import "./SortedTroves.sol";
 
-/*  Helper contract for grabbing CDP data for the front end. Not part of the core Liquity system. */
-contract MultiCDPGetter {
-    struct CombinedCDPData {
+/*  Helper contract for grabbing Trove data for the front end. Not part of the core Liquity system. */
+contract MultiTroveGetter {
+    struct CombinedTroveData {
         address owner;
 
         uint debt;
@@ -28,7 +28,7 @@ contract MultiCDPGetter {
     }
 
     function getMultipleSortedTroves(int _startIdx, uint _count)
-        external view returns (CombinedCDPData[] memory _troves)
+        external view returns (CombinedTroveData[] memory _troves)
     {
         uint startIdx;
         bool descend;
@@ -44,7 +44,7 @@ contract MultiCDPGetter {
         uint sortedTrovesSize = sortedTroves.getSize();
 
         if (startIdx >= sortedTrovesSize) {
-            _troves = new CombinedCDPData[](0);
+            _troves = new CombinedTroveData[](0);
         } else {
             uint maxCount = sortedTrovesSize - startIdx;
 
@@ -61,60 +61,60 @@ contract MultiCDPGetter {
     }
 
     function _getMultipleSortedTrovesFromHead(uint _startIdx, uint _count)
-        internal view returns (CombinedCDPData[] memory _troves)
+        internal view returns (CombinedTroveData[] memory _troves)
     {
-        address currentCDPowner = sortedTroves.getFirst();
+        address currentTroveowner = sortedTroves.getFirst();
 
         for (uint idx = 0; idx < _startIdx; ++idx) {
-            currentCDPowner = sortedTroves.getNext(currentCDPowner);
+            currentTroveowner = sortedTroves.getNext(currentTroveowner);
         }
 
-        _troves = new CombinedCDPData[](_count);
+        _troves = new CombinedTroveData[](_count);
 
         for (uint idx = 0; idx < _count; ++idx) {
-            _troves[idx].owner = currentCDPowner;
+            _troves[idx].owner = currentTroveowner;
             (
                 _troves[idx].debt,
                 _troves[idx].coll,
                 _troves[idx].stake,
                 /* status */,
                 /* arrayIndex */
-            ) = troveManager.Troves(currentCDPowner);
+            ) = troveManager.Troves(currentTroveowner);
             (
                 _troves[idx].snapshotETH,
                 _troves[idx].snapshotLUSDDebt
-            ) = troveManager.rewardSnapshots(currentCDPowner);
+            ) = troveManager.rewardSnapshots(currentTroveowner);
 
-            currentCDPowner = sortedTroves.getNext(currentCDPowner);
+            currentTroveowner = sortedTroves.getNext(currentTroveowner);
         }
     }
 
     function _getMultipleSortedTrovesFromTail(uint _startIdx, uint _count)
-        internal view returns (CombinedCDPData[] memory _troves)
+        internal view returns (CombinedTroveData[] memory _troves)
     {
-        address currentCDPowner = sortedTroves.getLast();
+        address currentTroveowner = sortedTroves.getLast();
 
         for (uint idx = 0; idx < _startIdx; ++idx) {
-            currentCDPowner = sortedTroves.getPrev(currentCDPowner);
+            currentTroveowner = sortedTroves.getPrev(currentTroveowner);
         }
 
-        _troves = new CombinedCDPData[](_count);
+        _troves = new CombinedTroveData[](_count);
 
         for (uint idx = 0; idx < _count; ++idx) {
-            _troves[idx].owner = currentCDPowner;
+            _troves[idx].owner = currentTroveowner;
             (
                 _troves[idx].debt,
                 _troves[idx].coll,
                 _troves[idx].stake,
                 /* status */,
                 /* arrayIndex */
-            ) = troveManager.Troves(currentCDPowner);
+            ) = troveManager.Troves(currentTroveowner);
             (
                 _troves[idx].snapshotETH,
                 _troves[idx].snapshotLUSDDebt
-            ) = troveManager.rewardSnapshots(currentCDPowner);
+            ) = troveManager.rewardSnapshots(currentTroveowner);
 
-            currentCDPowner = sortedTroves.getPrev(currentCDPowner);
+            currentTroveowner = sortedTroves.getPrev(currentTroveowner);
         }
     }
 }

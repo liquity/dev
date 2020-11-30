@@ -272,7 +272,7 @@ class DeploymentHelper {
       ZERO_ADDRESS
     )
 
-    // set contracts in the CDP Manager
+    // set contracts in the Trove Manager
     await contracts.troveManager.setAddresses(
       contracts.borrowerOperations.address,
       contracts.activePool.address,

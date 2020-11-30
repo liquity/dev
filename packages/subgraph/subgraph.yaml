@@ -36,10 +36,10 @@ dataSources:
           handler: handleStabilityPoolAddressChanged
         - event: PriceFeedAddressChanged(address)
           handler: handlePriceFeedAddressChanged
-        - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
-          handler: handleCDPUpdated
-        - event: CDPLiquidated(indexed address,uint256,uint256,uint8)
-          handler: handleCDPLiquidated
+        - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
+          handler: handleTroveUpdated
+        - event: TroveLiquidated(indexed address,uint256,uint256,uint8)
+          handler: handleTroveLiquidated
         - event: Liquidation(uint256,uint256,uint256,uint256)
           handler: handleLiquidation
         - event: Redemption(uint256,uint256,uint256,uint256)
@@ -68,8 +68,8 @@ templates:
         - name: TroveManager
           file: ../lib-ethers/abi/TroveManager.json
       eventHandlers:
-        - event: CDPUpdated(indexed address,uint256,uint256,uint256,uint8)
-          handler: handleCDPUpdated
+        - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
+          handler: handleTroveUpdated
   - name: StabilityPool
     kind: ethereum/contract
     network: ropsten

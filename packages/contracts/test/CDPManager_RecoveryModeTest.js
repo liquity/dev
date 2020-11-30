@@ -237,7 +237,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isAtMost(th.getDifference(totalCollateralSnapshot_After, '8962537499999999820'), 1000) // 3 + 4.5*0.995 + 1.5*0.995^2
   })
 
-  it("liquidate(), with ICR < 100%: closes the CDP and removes it from the CDP array", async () => {
+  it("liquidate(), with ICR < 100%: closes the Trove and removes it from the Trove array", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, alice, { from: alice, value: _3_Ether })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: _3_Ether })
@@ -249,11 +249,11 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
 
-    const bob_CDPStatus_Before = (await troveManager.Troves(bob))[3]
-    const bob_CDP_isInSortedList_Before = await sortedTroves.contains(bob)
+    const bob_TroveStatus_Before = (await troveManager.Troves(bob))[3]
+    const bob_Trove_isInSortedList_Before = await sortedTroves.contains(bob)
 
-    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
-    assert.isTrue(bob_CDP_isInSortedList_Before)
+    assert.equal(bob_TroveStatus_Before, 1) // status enum element 1 corresponds to "Active"
+    assert.isTrue(bob_Trove_isInSortedList_Before)
 
     // --- TEST ---
     // price drops to 1ETH:100LUSD, reducing TCR below 150%
@@ -270,11 +270,11 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     // Liquidate Bob
     await troveManager.liquidate(bob, { from: owner })
 
-    // check Bob's CDP is successfully closed, and removed from sortedList
-    const bob_CDPStatus_After = (await troveManager.Troves(bob))[3]
-    const bob_CDP_isInSortedList_After = await sortedTroves.contains(bob)
-    assert.equal(bob_CDPStatus_After, 2)  // status enum element 2 corresponds to "Closed"
-    assert.isFalse(bob_CDP_isInSortedList_After)
+    // check Bob's Trove is successfully closed, and removed from sortedList
+    const bob_TroveStatus_After = (await troveManager.Troves(bob))[3]
+    const bob_Trove_isInSortedList_After = await sortedTroves.contains(bob)
+    assert.equal(bob_TroveStatus_After, 2)  // status enum element 2 corresponds to "Closed"
+    assert.isFalse(bob_Trove_isInSortedList_After)
   })
 
   it("liquidate(), with ICR < 100%: only redistributes to active Troves - no offset to Stability Pool", async () => {
@@ -420,7 +420,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isAtMost(th.getDifference(totalCollateralSnapshot_3, '26866940624999998021'), 2000) // 3 + 3*3/24*0.995 + (21+3*21/24*0.995)*0.995
   })
 
-  it("liquidate(), with 100% < ICR < 110%: closes the CDP and removes it from the CDP array", async () => {
+  it("liquidate(), with 100% < ICR < 110%: closes the Trove and removes it from the Trove array", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, alice, { from: alice, value: _3_Ether })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: _21_Ether })
@@ -428,11 +428,11 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     //  Bob withdraws 1990 LUSD, bringing his ICR to 210%
     await borrowerOperations.withdrawLUSD('1990000000000000000000', bob, { from: bob })
 
-    const bob_CDPStatus_Before = (await troveManager.Troves(bob))[3]
-    const bob_CDP_isInSortedList_Before = await sortedTroves.contains(bob)
+    const bob_TroveStatus_Before = (await troveManager.Troves(bob))[3]
+    const bob_Trove_isInSortedList_Before = await sortedTroves.contains(bob)
 
-    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
-    assert.isTrue(bob_CDP_isInSortedList_Before)
+    assert.equal(bob_TroveStatus_Before, 1) // status enum element 1 corresponds to "Active"
+    assert.isTrue(bob_Trove_isInSortedList_Before)
 
     // --- TEST ---
     // price drops to 1ETH:100LUSD, reducing TCR below 150%
@@ -450,11 +450,11 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     // Liquidate Bob
     await troveManager.liquidate(bob, { from: owner })
 
-    // check Bob's CDP is successfully closed, and removed from sortedList
-    const bob_CDPStatus_After = (await troveManager.Troves(bob))[3]
-    const bob_CDP_isInSortedList_After = await sortedTroves.contains(bob)
-    assert.equal(bob_CDPStatus_After, 2)  // status enum element 2 corresponds to "Closed"
-    assert.isFalse(bob_CDP_isInSortedList_After)
+    // check Bob's Trove is successfully closed, and removed from sortedList
+    const bob_TroveStatus_After = (await troveManager.Troves(bob))[3]
+    const bob_Trove_isInSortedList_After = await sortedTroves.contains(bob)
+    assert.equal(bob_TroveStatus_After, 2)  // status enum element 2 corresponds to "Closed"
+    assert.isFalse(bob_Trove_isInSortedList_After)
   })
 
   it("liquidate(), with 100% < ICR < 110%: offsets as much debt as possible with the Stability Pool, then redistributes the remainder coll and debt", async () => {
@@ -575,18 +575,18 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal(L_LUSDDebt, '0')
     assert.equal(L_ETH, '0')
 
-    // Check that Bob's CDP and stake remains active with unchanged coll and debt
-    const bob_CDP = await troveManager.Troves(bob);
-    const bob_Debt = bob_CDP[0].toString()
-    const bob_Coll = bob_CDP[1].toString()
-    const bob_Stake = bob_CDP[2].toString()
-    const bob_CDPStatus = bob_CDP[3].toString()
+    // Check that Bob's Trove and stake remains active with unchanged coll and debt
+    const bob_Trove = await troveManager.Troves(bob);
+    const bob_Debt = bob_Trove[0].toString()
+    const bob_Coll = bob_Trove[1].toString()
+    const bob_Stake = bob_Trove[2].toString()
+    const bob_TroveStatus = bob_Trove[3].toString()
     const bob_isInSortedTrovesList = await sortedTroves.contains(bob)
 
     assert.equal(bob_Debt, '250000000000000000000')
     assert.equal(bob_Coll, '3000000000000000000')
     assert.equal(bob_Stake, '3000000000000000000')
-    assert.equal(bob_CDPStatus, '1')
+    assert.equal(bob_TroveStatus, '1')
     assert.isTrue(bob_isInSortedTrovesList)
   })
 
@@ -728,7 +728,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal(totalCollateralSnapshot_After, _22_Ether)
   })
 
-  it("liquidate(), with 110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: closes the CDP", async () => {
+  it("liquidate(), with 110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: closes the Trove", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: _3_Ether })
@@ -751,12 +751,12 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const recoveryMode = await troveManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
-    // Check Bob's CDP is active
-    const bob_CDPStatus_Before = (await troveManager.Troves(bob))[3]
-    const bob_CDP_isInSortedList_Before = await sortedTroves.contains(bob)
+    // Check Bob's Trove is active
+    const bob_TroveStatus_Before = (await troveManager.Troves(bob))[3]
+    const bob_Trove_isInSortedList_Before = await sortedTroves.contains(bob)
 
-    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
-    assert.isTrue(bob_CDP_isInSortedList_Before)
+    assert.equal(bob_TroveStatus_Before, 1) // status enum element 1 corresponds to "Active"
+    assert.isTrue(bob_Trove_isInSortedList_Before)
 
     // Check Bob's ICR is between 110 and TCR
     const bob_ICR = await troveManager.getCurrentICR(bob, price)
@@ -765,12 +765,12 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     // Liquidate Bob
     await troveManager.liquidate(bob, { from: owner })
 
-    // Check Bob's CDP is closed after liquidation
-    const bob_CDPStatus_After = (await troveManager.Troves(bob))[3]
-    const bob_CDP_isInSortedList_After = await sortedTroves.contains(bob)
+    // Check Bob's Trove is closed after liquidation
+    const bob_TroveStatus_After = (await troveManager.Troves(bob))[3]
+    const bob_Trove_isInSortedList_After = await sortedTroves.contains(bob)
 
-    assert.equal(bob_CDPStatus_After, 2) // status enum element 2 corresponds to "Closed"
-    assert.isFalse(bob_CDP_isInSortedList_After)
+    assert.equal(bob_TroveStatus_After, 2) // status enum element 2 corresponds to "Closed"
+    assert.isFalse(bob_Trove_isInSortedList_After)
   })
 
   it("liquidate(), with 110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: can liquidate troves out of order", async () => {
@@ -837,7 +837,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
   /* --- liquidate() applied to trove with ICR > 110% that has the lowest ICR, and Stability Pool 
   LUSD is LESS THAN the liquidated debt: a partial liquidation --- */
 
-  it("liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: CDP remains active", async () => {
+  it("liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: Trove remains active", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: _3_Ether })
@@ -859,12 +859,12 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const recoveryMode = await troveManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
-    // Check Bob's CDP is active
-    const bob_CDPStatus_Before = (await troveManager.Troves(bob))[3]
-    const bob_CDP_isInSortedList_Before = await sortedTroves.contains(bob)
+    // Check Bob's Trove is active
+    const bob_TroveStatus_Before = (await troveManager.Troves(bob))[3]
+    const bob_Trove_isInSortedList_Before = await sortedTroves.contains(bob)
 
-    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
-    assert.isTrue(bob_CDP_isInSortedList_Before)
+    assert.equal(bob_TroveStatus_Before, 1) // status enum element 1 corresponds to "Active"
+    assert.isTrue(bob_Trove_isInSortedList_Before)
 
     // Liquidate Bob
     await troveManager.liquidate(bob, { from: owner })
@@ -872,14 +872,14 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     /* Since the pool only contains 100 LUSD, and Bob's pre-liquidation debt was 250 LUSD, 
     expect Bob's trove to only be partially offset, and remain active after liquidation */
 
-    const bob_CDPStatus_After = (await troveManager.Troves(bob))[3]
-    const bob_CDP_isInSortedList_After = await sortedTroves.contains(bob)
+    const bob_TroveStatus_After = (await troveManager.Troves(bob))[3]
+    const bob_Trove_isInSortedList_After = await sortedTroves.contains(bob)
 
-    assert.equal(bob_CDPStatus_After, 1) // status enum element 1 corresponds to "Active"
-    assert.isTrue(bob_CDP_isInSortedList_After)
+    assert.equal(bob_TroveStatus_After, 1) // status enum element 1 corresponds to "Active"
+    assert.isTrue(bob_Trove_isInSortedList_After)
   })
 
-  it("liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: CDP remains in CDPOwners array", async () => {
+  it("liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: Trove remains in TroveOwners array", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, alice, { from: alice, value: _20_Ether })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: _3_Ether })
@@ -901,12 +901,12 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const recoveryMode = await troveManager.checkRecoveryMode()
     assert.isTrue(recoveryMode)
 
-    // Check Bob's CDP is active
-    const bob_CDPStatus_Before = (await troveManager.Troves(bob))[3]
-    const bob_CDP_isInSortedList_Before = await sortedTroves.contains(bob)
+    // Check Bob's Trove is active
+    const bob_TroveStatus_Before = (await troveManager.Troves(bob))[3]
+    const bob_Trove_isInSortedList_Before = await sortedTroves.contains(bob)
 
-    assert.equal(bob_CDPStatus_Before, 1) // status enum element 1 corresponds to "Active"
-    assert.isTrue(bob_CDP_isInSortedList_Before)
+    assert.equal(bob_TroveStatus_Before, 1) // status enum element 1 corresponds to "Active"
+    assert.isTrue(bob_Trove_isInSortedList_Before)
 
     // Liquidate Bob
     await troveManager.liquidate(bob, { from: owner })
@@ -914,13 +914,13 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     /* Since the pool only contains 100 LUSD, and Bob's pre-liquidation debt was 250 LUSD, 
     expect Bob's trove to only be partially offset, and remain active after liquidation */
 
-    // Check Bob is in CDP owners array
-    const arrayLength = (await troveManager.getCDPOwnersCount()).toNumber()
+    // Check Bob is in Trove owners array
+    const arrayLength = (await troveManager.getTroveOwnersCount()).toNumber()
     let addressFound = false;
     let addressIdx = 0;
 
     for (let i = 0; i < arrayLength; i++) {
-      const address = (await troveManager.CDPOwners(i)).toString()
+      const address = (await troveManager.TroveOwners(i)).toString()
       if (address == bob) {
         addressFound = true
         addressIdx = i
@@ -929,7 +929,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
 
     assert.isTrue(addressFound);
 
-    // Check CDPOwners idx on trove struct == idx of address found in CDPOwners array
+    // Check TroveOwners idx on trove struct == idx of address found in TroveOwners array
     const idxOnStruct = (await troveManager.Troves(bob))[4].toString()
     assert.equal(addressIdx.toString(), idxOnStruct)
   })
@@ -960,7 +960,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await troveManager.liquidate(bob, { from: owner })
 
     /*  Since Bob's debt (250 LUSD) is larger than all LUSD in the Stability Pool, Liquidation should offset 
-    a portion Bob's debt and coll with the Stability Pool, and leave remainders of debt and coll in his CDP. Specifically:
+    a portion Bob's debt and coll with the Stability Pool, and leave remainders of debt and coll in his Trove. Specifically:
 
     Offset debt: 100 LUSD
     Offset coll: (100 / 250) * 3  = 1.2 ether
@@ -974,10 +974,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     
     Then, Bob's new reduced coll and stake should each be 1.8 ether, and the updated totalStakes should equal 23.8 ether.
     */
-    const bob_CDP = await troveManager.Troves(bob)
-    const bob_DebtAfter = bob_CDP[0].toString()
-    const bob_CollAfter = bob_CDP[1].toString()
-    const bob_StakeAfter = bob_CDP[2].toString()
+    const bob_Trove = await troveManager.Troves(bob)
+    const bob_DebtAfter = bob_Trove[0].toString()
+    const bob_CollAfter = bob_Trove[1].toString()
+    const bob_StakeAfter = bob_Trove[2].toString()
 
     assert.equal(bob_DebtAfter, '150000000000000000000')
     assert.equal(bob_CollAfter, '1800000000000000000')
@@ -1238,7 +1238,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const alice_ICR = (await troveManager.getCurrentICR(alice, price)).toString()
     assert.equal(alice_ICR, '1050000000000000000')
 
-    const activeTrovesCount_Before = await troveManager.getCDPOwnersCount()
+    const activeTrovesCount_Before = await troveManager.getTroveOwnersCount()
 
     assert.equal(activeTrovesCount_Before, 1)
 
@@ -1246,7 +1246,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await troveManager.liquidate(alice, { from: owner })
 
     // Check Alice's trove has not been removed
-    const activeTrovesCount_After = await troveManager.getCDPOwnersCount()
+    const activeTrovesCount_After = await troveManager.getTroveOwnersCount()
     assert.equal(activeTrovesCount_After, 1)
 
     const alice_isInSortedList = await sortedTroves.contains(alice)
@@ -1274,7 +1274,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const alice_ICR = (await troveManager.getCurrentICR(alice, price)).toString()
     assert.equal(alice_ICR, '1050000000000000000')
 
-    const activeTrovesCount_Before = await troveManager.getCDPOwnersCount()
+    const activeTrovesCount_Before = await troveManager.getTroveOwnersCount()
 
     assert.equal(activeTrovesCount_Before, 2)
 
@@ -1282,7 +1282,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await troveManager.liquidate(alice, { from: owner })
 
     // Check Alice's trove is removed, and bob remains
-    const activeTrovesCount_After = await troveManager.getCDPOwnersCount()
+    const activeTrovesCount_After = await troveManager.getTroveOwnersCount()
     assert.equal(activeTrovesCount_After, 1)
 
     const alice_isInSortedList = await sortedTroves.contains(alice)
@@ -1340,7 +1340,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check Carol does not have an existing trove
-    assert.equal(await troveManager.getCDPStatus(carol), 0)
+    assert.equal(await troveManager.getTroveStatus(carol), 0)
     assert.isFalse(await sortedTroves.contains(carol))
 
     try {
@@ -1372,7 +1372,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
 
     // Check Carol's trove is closed
     assert.isFalse(await sortedTroves.contains(carol))
-    assert.equal(await troveManager.getCDPStatus(carol), 2)
+    assert.equal(await troveManager.getTroveStatus(carol), 2)
 
     try {
       const txCarol_L2 = await troveManager.liquidate(carol)
@@ -1553,7 +1553,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, greta, { from: greta, value: _1_Ether })
     await borrowerOperations.openTrove(0, harry, { from: harry, value: _1_Ether })
 
-    // Everyone withdraws some LUSD from their CDP, resulting in different ICRs
+    // Everyone withdraws some LUSD from their Trove, resulting in different ICRs
     await borrowerOperations.withdrawLUSD('1390000000000000000000', alice, { from: alice })  // 1400 LUSD -> ICR = 400%
     await borrowerOperations.withdrawLUSD('190000000000000000000', bob, { from: bob }) //  200 LUSD -> ICR = 350%
     await borrowerOperations.withdrawLUSD('200000000000000000000', carol, { from: carol }) // 210 LUSD -> ICR = 286%
@@ -1582,7 +1582,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     /* 
    After the price drop and prior to any liquidations, ICR should be:
 
-    CDP         ICR
+    Trove         ICR
     Alice       161%
     Bob         158%
     Carol       129%
@@ -1614,10 +1614,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(greta_ICR.lt(TCR))
     assert.isTrue(harry_ICR.lt(TCR))
 
-    /* Liquidations should occur from the lowest ICR CDP upwards, i.e. 
+    /* Liquidations should occur from the lowest ICR Trove upwards, i.e. 
     1) Harry, 2) Greta, 3) Freddy, etc.
 
-      CDP         ICR
+      Trove         ICR
     Alice       161%
     Bob         158%
     Carol       129%
@@ -1646,37 +1646,37 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(TCR_After.gt(_150percent))
 
     // get all Troves
-    const alice_CDP = await troveManager.Troves(alice)
-    const bob_CDP = await troveManager.Troves(bob)
-    const carol_CDP = await troveManager.Troves(carol)
-    const dennis_CDP = await troveManager.Troves(dennis)
-    const erin_CDP = await troveManager.Troves(erin)
-    const freddy_CDP = await troveManager.Troves(freddy)
-    const greta_CDP = await troveManager.Troves(greta)
-    const harry_CDP = await troveManager.Troves(harry)
+    const alice_Trove = await troveManager.Troves(alice)
+    const bob_Trove = await troveManager.Troves(bob)
+    const carol_Trove = await troveManager.Troves(carol)
+    const dennis_Trove = await troveManager.Troves(dennis)
+    const erin_Trove = await troveManager.Troves(erin)
+    const freddy_Trove = await troveManager.Troves(freddy)
+    const greta_Trove = await troveManager.Troves(greta)
+    const harry_Trove = await troveManager.Troves(harry)
 
     // check that Alice, Bob, Carol, & Dennis' Troves remain active
-    assert.equal(alice_CDP[3], 1)
-    assert.equal(bob_CDP[3], 1)
-    assert.equal(carol_CDP[3], 1)
-    assert.equal(dennis_CDP[3], 1)
+    assert.equal(alice_Trove[3], 1)
+    assert.equal(bob_Trove[3], 1)
+    assert.equal(carol_Trove[3], 1)
+    assert.equal(dennis_Trove[3], 1)
     assert.isTrue(await sortedTroves.contains(alice))
     assert.isTrue(await sortedTroves.contains(bob))
     assert.isTrue(await sortedTroves.contains(carol))
     assert.isTrue(await sortedTroves.contains(dennis))
 
     // check all other Troves are closed
-    assert.equal(erin_CDP[3], 2)
-    assert.equal(freddy_CDP[3], 2)
-    assert.equal(greta_CDP[3], 2)
-    assert.equal(harry_CDP[3], 2)
+    assert.equal(erin_Trove[3], 2)
+    assert.equal(freddy_Trove[3], 2)
+    assert.equal(greta_Trove[3], 2)
+    assert.equal(harry_Trove[3], 2)
     assert.isFalse(await sortedTroves.contains(erin))
     assert.isFalse(await sortedTroves.contains(freddy))
     assert.isFalse(await sortedTroves.contains(greta))
     assert.isFalse(await sortedTroves.contains(harry))
   })
 
-  it("liquidateTroves(): Liquidates Troves until 1) system has left recovery mode AND 2) it reaches a CDP with ICR >= 110%", async () => {
+  it("liquidateTroves(): Liquidates Troves until 1) system has left recovery mode AND 2) it reaches a Trove with ICR >= 110%", async () => {
     // make 6 Troves accordingly
     // --- SETUP ---
 
@@ -1715,7 +1715,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     /* 
    After the price drop and prior to any liquidations, ICR should be:
 
-    CDP         ICR
+    Trove         ICR
     Alice       182%
     Bob         102%
     Carol       102%
@@ -1738,7 +1738,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(erin_ICR.lt(_150percent))
     assert.isTrue(freddy_ICR.lt(_150percent))
 
-    /* Liquidations should occur from the lowest ICR CDP upwards, i.e. 
+    /* Liquidations should occur from the lowest ICR Trove upwards, i.e. 
     1) Freddy, 2) Elisa, 3) Dennis.
 
     After liquidating Freddy and Elisa, the the TCR of the system rises above the CCR, to 154%.  
@@ -1759,23 +1759,23 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(TCR_After.gt(_150percent))
 
     // get all Troves
-    const alice_CDP = await troveManager.Troves(alice)
-    const bob_CDP = await troveManager.Troves(bob)
-    const carol_CDP = await troveManager.Troves(carol)
-    const dennis_CDP = await troveManager.Troves(dennis)
-    const erin_CDP = await troveManager.Troves(erin)
-    const freddy_CDP = await troveManager.Troves(freddy)
+    const alice_Trove = await troveManager.Troves(alice)
+    const bob_Trove = await troveManager.Troves(bob)
+    const carol_Trove = await troveManager.Troves(carol)
+    const dennis_Trove = await troveManager.Troves(dennis)
+    const erin_Trove = await troveManager.Troves(erin)
+    const freddy_Trove = await troveManager.Troves(freddy)
 
-    // check that Alice's CDP remains active
-    assert.equal(alice_CDP[3], 1)
+    // check that Alice's Trove remains active
+    assert.equal(alice_Trove[3], 1)
     assert.isTrue(await sortedTroves.contains(alice))
 
     // check all other Troves are closed
-    assert.equal(bob_CDP[3], 2)
-    assert.equal(carol_CDP[3], 2)
-    assert.equal(dennis_CDP[3], 2)
-    assert.equal(erin_CDP[3], 2)
-    assert.equal(freddy_CDP[3], 2)
+    assert.equal(bob_Trove[3], 2)
+    assert.equal(carol_Trove[3], 2)
+    assert.equal(dennis_Trove[3], 2)
+    assert.equal(erin_Trove[3], 2)
+    assert.equal(freddy_Trove[3], 2)
 
     assert.isFalse(await sortedTroves.contains(bob))
     assert.isFalse(await sortedTroves.contains(carol))
@@ -1812,17 +1812,17 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     // Check system still in Recovery Mode after liquidation tx
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const CDPOwnersArrayLength = await troveManager.getCDPOwnersCount()
-    assert.equal(CDPOwnersArrayLength, '3')
+    const TroveOwnersArrayLength = await troveManager.getTroveOwnersCount()
+    assert.equal(TroveOwnersArrayLength, '3')
 
     // Check Alice, Bob, Carol troves have been closed
-    const aliceCDPStatus = (await troveManager.getCDPStatus(alice)).toString()
-    const bobCDPStatus = (await troveManager.getCDPStatus(bob)).toString()
-    const carolCDPStatus = (await troveManager.getCDPStatus(carol)).toString()
+    const aliceTroveStatus = (await troveManager.getTroveStatus(alice)).toString()
+    const bobTroveStatus = (await troveManager.getTroveStatus(bob)).toString()
+    const carolTroveStatus = (await troveManager.getTroveStatus(carol)).toString()
 
-    assert.equal(aliceCDPStatus, '2')
-    assert.equal(bobCDPStatus, '2')
-    assert.equal(carolCDPStatus, '2')
+    assert.equal(aliceTroveStatus, '2')
+    assert.equal(bobTroveStatus, '2')
+    assert.equal(carolTroveStatus, '2')
 
     //  Check Alice, Bob, and Carol's trove are no longer in the sorted list
     const alice_isInSortedList = await sortedTroves.contains(alice)
@@ -1834,11 +1834,11 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isFalse(carol_isInSortedList)
 
     // Check Dennis, Erin still have active troves
-    const dennisCDPStatus = (await troveManager.getCDPStatus(dennis)).toString()
-    const erinCDPStatus = (await troveManager.getCDPStatus(erin)).toString()
+    const dennisTroveStatus = (await troveManager.getTroveStatus(dennis)).toString()
+    const erinTroveStatus = (await troveManager.getTroveStatus(erin)).toString()
 
-    assert.equal(dennisCDPStatus, '1')
-    assert.equal(erinCDPStatus, '1')
+    assert.equal(dennisTroveStatus, '1')
+    assert.equal(erinTroveStatus, '1')
 
     // Check Dennis, Erin still in sorted list
     const dennis_isInSortedList = await sortedTroves.contains(dennis)
@@ -1883,7 +1883,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal(TCR_Before, TCR_After)
   })
 
-  it('liquidateTroves(): closes every CDP with ICR < MCR, when n > number of undercollateralized troves', async () => {
+  it('liquidateTroves(): closes every Trove with ICR < MCR, when n > number of undercollateralized troves', async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(10, 'ether') })
 
@@ -2542,7 +2542,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal((await troveManager.Troves(carol))[3].toString(), '1') // check Status is active
   })
 
-  it("liquidateTroves() with a partial liquidation: partially liquidated trove remains in CDPOwners Array", async () => {
+  it("liquidateTroves() with a partial liquidation: partially liquidated trove remains in TroveOwners Array", async () => {
     // Whale provides 253 LUSD to the SP
     await borrowerOperations.openTrove('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await stabilityPool.provideToSP('253000000000000000000', ZERO_ADDRESS, { from: whale })
@@ -2576,13 +2576,13 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     That leaves 50 LUSD in the Pool to absorb exactly half of Carol's debt (100) */
     await troveManager.liquidateTroves(10)
 
-    // Check C is in CDP owners array
-    const arrayLength = (await troveManager.getCDPOwnersCount()).toNumber()
+    // Check C is in Trove owners array
+    const arrayLength = (await troveManager.getTroveOwnersCount()).toNumber()
     let addressFound = false;
     let addressIdx = 0;
 
     for (let i = 0; i < arrayLength; i++) {
-      const address = (await troveManager.CDPOwners(i)).toString()
+      const address = (await troveManager.TroveOwners(i)).toString()
       if (address == carol) {
         addressFound = true
         addressIdx = i
@@ -2591,7 +2591,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
 
     assert.isTrue(addressFound);
 
-    // Check CDPOwners idx on trove struct == idx of address found in CDPOwners array
+    // Check TroveOwners idx on trove struct == idx of address found in TroveOwners array
     const idxOnStruct = (await troveManager.Troves(carol))[4].toString()
     assert.equal(addressIdx.toString(), idxOnStruct)
   })
@@ -2814,7 +2814,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     /* 
    After the price drop and prior to any liquidations, ICR should be:
 
-    CDP         ICR
+    Trove         ICR
     Alice       182%
     Bob         102%
     Carol       102%
@@ -2837,7 +2837,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(erin_ICR.lt(_150percent))
     assert.isTrue(freddy_ICR.lt(_150percent))
 
-    /* Liquidations should occur from the lowest ICR CDP upwards, i.e. 
+    /* Liquidations should occur from the lowest ICR Trove upwards, i.e. 
     1) Freddy, 2) Elisa, 3) Dennis.
 
     After liquidating Freddy and Elisa, the the TCR of the system rises above the CCR, to 154%.  
@@ -2858,23 +2858,23 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(TCR_After.gt(_150percent))
 
     // get all Troves
-    const alice_CDP = await troveManager.Troves(alice)
-    const bob_CDP = await troveManager.Troves(bob)
-    const carol_CDP = await troveManager.Troves(carol)
-    const dennis_CDP = await troveManager.Troves(dennis)
-    const erin_CDP = await troveManager.Troves(erin)
-    const freddy_CDP = await troveManager.Troves(freddy)
+    const alice_Trove = await troveManager.Troves(alice)
+    const bob_Trove = await troveManager.Troves(bob)
+    const carol_Trove = await troveManager.Troves(carol)
+    const dennis_Trove = await troveManager.Troves(dennis)
+    const erin_Trove = await troveManager.Troves(erin)
+    const freddy_Trove = await troveManager.Troves(freddy)
 
-    // check that Alice's CDP remains active
-    assert.equal(alice_CDP[3], 1)
+    // check that Alice's Trove remains active
+    assert.equal(alice_Trove[3], 1)
     assert.isTrue(await sortedTroves.contains(alice))
 
     // check all other Troves are closed
-    assert.equal(bob_CDP[3], 2)
-    assert.equal(carol_CDP[3], 2)
-    assert.equal(dennis_CDP[3], 2)
-    assert.equal(erin_CDP[3], 2)
-    assert.equal(freddy_CDP[3], 2)
+    assert.equal(bob_Trove[3], 2)
+    assert.equal(carol_Trove[3], 2)
+    assert.equal(dennis_Trove[3], 2)
+    assert.equal(erin_Trove[3], 2)
+    assert.equal(freddy_Trove[3], 2)
 
     assert.isFalse(await sortedTroves.contains(bob))
     assert.isFalse(await sortedTroves.contains(carol))
@@ -2924,7 +2924,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal((await troveManager.Troves(carol))[3].toString(), '1') // check Status is active
   })
 
-  it("batchLiquidateTroves() with a partial liquidation: partially liquidated trove remains in CDP Owners array", async () => {
+  it("batchLiquidateTroves() with a partial liquidation: partially liquidated trove remains in Trove Owners array", async () => {
     // Whale provides 253 LUSD to the SP
     await borrowerOperations.openTrove('253000000000000000000', whale, { from: whale, value: dec(3, 'ether') })
     await stabilityPool.provideToSP('253000000000000000000', ZERO_ADDRESS, { from: whale })
@@ -2956,13 +2956,13 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const trovesToLiquidate = [alice, bob, carol]
     await troveManager.batchLiquidateTroves(trovesToLiquidate)
 
-    // Check C is in CDP owners array
-    const arrayLength = (await troveManager.getCDPOwnersCount()).toNumber()
+    // Check C is in Trove owners array
+    const arrayLength = (await troveManager.getTroveOwnersCount()).toNumber()
     let addressFound = false;
     let addressIdx = 0;
 
     for (let i = 0; i < arrayLength; i++) {
-      const address = (await troveManager.CDPOwners(i)).toString()
+      const address = (await troveManager.TroveOwners(i)).toString()
       if (address == carol) {
         addressFound = true
         addressIdx = i
@@ -2971,7 +2971,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
 
     assert.isTrue(addressFound);
 
-    // Check CDPOwners idx on trove struct == idx of address found in CDPOwners array
+    // Check TroveOwners idx on trove struct == idx of address found in TroveOwners array
     const idxOnStruct = (await troveManager.Troves(carol))[4].toString()
     assert.equal(addressIdx.toString(), idxOnStruct)
   })

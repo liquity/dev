@@ -150,7 +150,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     uint256 internal ETH;  // deposited ether tracker
 
-    // Tracker for LUSD held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.
+    // Tracker for LUSD held in the pool. Changes when users deposit/withdraw, and when Trove debt is offset.
     uint256 internal totalLUSDDeposits;
 
    // --- Data structures ---
@@ -387,9 +387,9 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
         _updateDepositAndSnapshots(msg.sender, compoundedLUSDDeposit);
 
-        /* Emit events before transferring ETH gain to CDP.
+        /* Emit events before transferring ETH gain to Trove.
          This lets the event log make more sense (i.e. so it appears that first the ETH gain is withdrawn
-        and then it is deposited into the CDP, not the other way around). */
+        and then it is deposited into the Trove, not the other way around). */
         emit ETHGainWithdrawn(msg.sender, depositorETHGain, LUSDLoss);
         emit UserDepositChanged(msg.sender, compoundedLUSDDeposit);
 
@@ -436,7 +436,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     /* 
     * Cancel out the specified debt against the LUSD contained in the Stability Pool (as far as possible)
-    * and transfers the CDP's ETH collateral from ActivePool to StabilityPool.
+    * and transfers the Trove's ETH collateral from ActivePool to StabilityPool.
     * Only called by liquidation functions in the TroveManager. 
     */
     function offset(uint _debtToOffset, uint _collToAdd) external payable override {
@@ -877,7 +877,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     }
 
     function _requireUserHasTrove(address _depositor) internal view {
-        require(troveManager.getCDPStatus(_depositor) == 1, "StabilityPool: caller must have an active trove to withdraw ETHGain to");
+        require(troveManager.getTroveStatus(_depositor) == 1, "StabilityPool: caller must have an active trove to withdraw ETHGain to");
     }
 
     function _requireUserHasETHGain(address _depositor) internal view {

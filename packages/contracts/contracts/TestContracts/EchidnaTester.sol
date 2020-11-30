@@ -151,7 +151,7 @@ contract EchidnaTester {
 
         echidnaProxy.openTrovePrx(ETH, LUSDAmount, address(0));
 
-        numberOfTroves = troveManager.getCDPOwnersCount();
+        numberOfTroves = troveManager.getTroveOwnersCount();
         assert(numberOfTroves > 0);
         // canary
         //assert(numberOfTroves == 0);
@@ -311,21 +311,21 @@ contract EchidnaTester {
         address currentTrove = sortedTroves.getFirst();
         while (currentTrove != address(0)) {
             // Status
-            if (TroveManager.Status(troveManager.getCDPStatus(currentTrove)) != TroveManager.Status.active) {
+            if (TroveManager.Status(troveManager.getTroveStatus(currentTrove)) != TroveManager.Status.active) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful
             //else return false;
 
             // Minimum debt (gas compensation)
-            if (troveManager.getCDPDebt(currentTrove) < LUSD_GAS_COMPENSATION) {
+            if (troveManager.getTroveDebt(currentTrove) < LUSD_GAS_COMPENSATION) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful
             //else return false;
 
             // Stake > 0
-            if (troveManager.getCDPStake(currentTrove) == 0) {
+            if (troveManager.getTroveStake(currentTrove) == 0) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful

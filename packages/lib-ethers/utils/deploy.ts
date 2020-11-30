@@ -88,10 +88,10 @@ const deployContracts = async (
       { ...overrides }
     ),
 
-    multiCDPgetter: await deployContract(
+    multiTrovegetter: await deployContract(
       deployer,
       getContractFactory,
-      "MultiCDPGetter",
+      "MultiTroveGetter",
       addresses.troveManager,
       addresses.sortedTroves,
       { ...overrides }

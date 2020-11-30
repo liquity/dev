@@ -45,7 +45,7 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
 
     // --- Ropsten Testnet ---
 
-   // Set the CDP Manager address in the testnet PriceFeed
+   // Set the Trove Manager address in the testnet PriceFeed
     // const res = await testnetPriceFeed.setTroveManagerAddress('0x405143dAe9a8a703a1fE82ad4B65BBFE5505AF63')
     // res.wait()
     const recordedTroveManagerAddressTestnet = await testnetPriceFeed.troveManagerAddress()
@@ -124,7 +124,7 @@ const testnetPriceFeed = new ethers.Contract(priceFeedAddressTestnet, TestnetPri
 
     /* updatePrice() is a tx (21k) + SStore (5k) + emit event (1.5k) = 27.5k gas
 
-    Therefore, expected gas cost of a getLatestPrice() call is within a CDP function is (35k - 27.5k) 
+    Therefore, expected gas cost of a getLatestPrice() call is within a Trove function is (35k - 27.5k) 
     = 7500 gas upper bound.
     
     To check, deploy an instance of FunctionCaller contract to ropsten and mainnet, 

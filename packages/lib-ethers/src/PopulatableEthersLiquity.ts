@@ -183,11 +183,11 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
       rawPopulatedTransaction,
       ({ logs }: TransactionReceipt): LiquidationDetails => {
         const fullyLiquidated = this.contracts.troveManager
-          .extractEvents(logs, "CDPLiquidated")
+          .extractEvents(logs, "TroveLiquidated")
           .map(({ args: { _borrower } }) => _borrower);
 
         const [partiallyLiquidated] = this.contracts.troveManager
-          .extractEvents(logs, "CDPUpdated")
+          .extractEvents(logs, "TroveUpdated")
           .filter(
             ({ args: { _operation } }) =>
               _operation === TroveManagerOperation.partiallyLiquidateInRecoveryMode

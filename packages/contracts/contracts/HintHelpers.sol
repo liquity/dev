@@ -58,21 +58,21 @@ contract HintHelpers is LiquityBase, Ownable {
         returns (address firstRedemptionHint, uint partialRedemptionHintICR)
     {
         uint remainingLUSD = _LUSDamount;
-        address currentCDPuser = sortedTroves.getLast();
+        address currentTroveuser = sortedTroves.getLast();
 
-        while (currentCDPuser != address(0) && troveManager.getCurrentICR(currentCDPuser, _price) < MCR) {
-            currentCDPuser = sortedTroves.getPrev(currentCDPuser);
+        while (currentTroveuser != address(0) && troveManager.getCurrentICR(currentTroveuser, _price) < MCR) {
+            currentTroveuser = sortedTroves.getPrev(currentTroveuser);
         }
 
-        firstRedemptionHint = currentCDPuser;
+        firstRedemptionHint = currentTroveuser;
 
-        while (currentCDPuser != address(0) && remainingLUSD > 0) {
-            uint LUSDDebt = _getNetDebt(troveManager.getCDPDebt(currentCDPuser))
-                                     .add(troveManager.getPendingLUSDDebtReward(currentCDPuser));
+        while (currentTroveuser != address(0) && remainingLUSD > 0) {
+            uint LUSDDebt = _getNetDebt(troveManager.getTroveDebt(currentTroveuser))
+                                     .add(troveManager.getPendingLUSDDebtReward(currentTroveuser));
 
             if (LUSDDebt > remainingLUSD) {
-                uint ETH = troveManager.getCDPColl(currentCDPuser)
-                                     .add(troveManager.getPendingETHReward(currentCDPuser));
+                uint ETH = troveManager.getTroveColl(currentTroveuser)
+                                     .add(troveManager.getPendingETHReward(currentTroveuser));
                 
                 uint newColl = ETH.sub(remainingLUSD.mul(1e18).div(_price));
                 uint newDebt = LUSDDebt.sub(remainingLUSD);
@@ -84,12 +84,12 @@ contract HintHelpers is LiquityBase, Ownable {
             } else {
                 remainingLUSD = remainingLUSD.sub(LUSDDebt);
             }
-            currentCDPuser = sortedTroves.getPrev(currentCDPuser);
+            currentTroveuser = sortedTroves.getPrev(currentTroveuser);
         }
     }
 
-    /* getApproxHint() - return address of a CDP that is, on average, (length / numTrials) positions away in the 
-    sortedTroves list from the correct insert position of the CDP to be inserted. 
+    /* getApproxHint() - return address of a Trove that is, on average, (length / numTrials) positions away in the 
+    sortedTroves list from the correct insert position of the Trove to be inserted. 
     
     Note: The output address is worst-case O(n) positions away from the correct insert position, however, the function 
     is probabilistic. Input can be tuned to guarantee results to a high degree of confidence, e.g:
@@ -102,7 +102,7 @@ contract HintHelpers is LiquityBase, Ownable {
         view
         returns (address hintAddress, uint diff, uint latestRandomSeed)
     {
-        uint arrayLength = troveManager.getCDPOwnersCount();
+        uint arrayLength = troveManager.getTroveOwnersCount();
 
         if (arrayLength == 0) {
             return (address(0), 0, _inputRandomSeed);
@@ -118,7 +118,7 @@ contract HintHelpers is LiquityBase, Ownable {
             latestRandomSeed = uint(keccak256(abi.encodePacked(latestRandomSeed)));
 
             uint arrayIndex = latestRandomSeed % arrayLength;
-            address currentAddress = troveManager.getTroveFromCDPOwnersArray(arrayIndex);
+            address currentAddress = troveManager.getTroveFromTroveOwnersArray(arrayIndex);
             uint currentICR = troveManager.getCurrentICR(currentAddress, _price);
 
             // check if abs(current - CR) > abs(closest - CR), and update closest if current is closer

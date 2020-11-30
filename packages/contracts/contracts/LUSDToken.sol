@@ -72,7 +72,7 @@ contract LUSDToken is ILUSDToken {
     }
 
     function burn(address _account, uint256 _amount) external override {
-        _requireCallerIsBOorCDPMorSP();
+        _requireCallerIsBOorTroveMorSP();
         _burn(_account, _amount);
     }
 
@@ -82,7 +82,7 @@ contract LUSDToken is ILUSDToken {
     }
 
     function returnFromPool(address _poolAddress, address _receiver, uint256 _amount) external override {
-        _requireCallerIsCDPMorSP();
+        _requireCallerIsTroveMorSP();
         _transfer(_poolAddress, _receiver, _amount);
     }
 
@@ -227,7 +227,7 @@ contract LUSDToken is ILUSDToken {
         require(msg.sender == borrowerOperationsAddress, "LUSDToken: Caller is not BorrowerOperations");
     }
 
-    function _requireCallerIsBOorCDPMorSP() internal view {
+    function _requireCallerIsBOorTroveMorSP() internal view {
         require(
             msg.sender == borrowerOperationsAddress ||
             msg.sender == troveManagerAddress ||
@@ -240,7 +240,7 @@ contract LUSDToken is ILUSDToken {
         require(msg.sender == stabilityPoolAddress, "LUSD: Caller is not the StabilityPool");
     }
 
-    function _requireCallerIsCDPMorSP() internal view {
+    function _requireCallerIsTroveMorSP() internal view {
         require(
             msg.sender == troveManagerAddress || msg.sender == stabilityPoolAddress,
             "LUSD: Caller is neither TroveManager nor StabilityPool");

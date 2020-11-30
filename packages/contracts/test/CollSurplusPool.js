@@ -79,7 +79,7 @@ contract('CollSUrplusPool', async accounts => {
     await th.assertRevert(web3.eth.sendTransaction({ from: A, to: collSurplusPool.address, value: 1 }), 'CollSurplusPool: Caller is not Active Pool')
   })
 
-  it('CollSurplusPool: accountSurplus: reverts if caller is not CDP Manager', async () => {
+  it('CollSurplusPool: accountSurplus: reverts if caller is not Trove Manager', async () => {
     await th.assertRevert(collSurplusPool.accountSurplus(A, 1), 'CollSurplusPool: Caller is not TroveManager')
   })
 })

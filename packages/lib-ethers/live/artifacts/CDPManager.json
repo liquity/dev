@@ -43,7 +43,7 @@
           "type": "uint256"
         }
       ],
-      "name": "CDPCreated",
+      "name": "TroveCreated",
       "type": "event"
     },
     {
@@ -74,7 +74,7 @@
           "type": "uint8"
         }
       ],
-      "name": "CDPLiquidated",
+      "name": "TroveLiquidated",
       "type": "event"
     },
     {
@@ -111,7 +111,7 @@
           "type": "uint8"
         }
       ],
-      "name": "CDPUpdated",
+      "name": "TroveUpdated",
       "type": "event"
     },
     {
@@ -310,7 +310,7 @@
           "type": "uint256"
         }
       ],
-      "name": "CDPOwners",
+      "name": "TroveOwners",
       "outputs": [
         {
           "internalType": "address",
@@ -492,7 +492,7 @@
           "type": "address"
         }
       ],
-      "name": "addCDPOwnerToArray",
+      "name": "addTroveOwnerToArray",
       "outputs": [
         {
           "internalType": "uint256",
@@ -573,7 +573,7 @@
           "type": "address"
         }
       ],
-      "name": "closeCDP",
+      "name": "closeTrove",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -608,7 +608,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseCDPColl",
+      "name": "decreaseTroveColl",
       "outputs": [
         {
           "internalType": "uint256",
@@ -634,7 +634,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseCDPDebt",
+      "name": "decreaseTroveDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -670,7 +670,7 @@
           "type": "address"
         }
       ],
-      "name": "getCDPColl",
+      "name": "getTroveColl",
       "outputs": [
         {
           "internalType": "uint256",
@@ -691,7 +691,7 @@
           "type": "address"
         }
       ],
-      "name": "getCDPDebt",
+      "name": "getTroveDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -706,7 +706,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getCDPOwnersCount",
+      "name": "getTroveOwnersCount",
       "outputs": [
         {
           "internalType": "uint256",
@@ -727,7 +727,7 @@
           "type": "address"
         }
       ],
-      "name": "getCDPStake",
+      "name": "getTroveStake",
       "outputs": [
         {
           "internalType": "uint256",
@@ -748,7 +748,7 @@
           "type": "address"
         }
       ],
-      "name": "getCDPStatus",
+      "name": "getTroveStatus",
       "outputs": [
         {
           "internalType": "uint256",
@@ -882,7 +882,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getTroveFromCDPOwnersArray",
+      "name": "getTroveFromTroveOwnersArray",
       "outputs": [
         {
           "internalType": "address",
@@ -929,7 +929,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseCDPColl",
+      "name": "increaseTroveColl",
       "outputs": [
         {
           "internalType": "uint256",
@@ -955,7 +955,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseCDPDebt",
+      "name": "increaseTroveDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1222,7 +1222,7 @@
           "type": "uint256"
         }
       ],
-      "name": "setCDPStatus",
+      "name": "setTroveStatus",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -1312,7 +1312,7 @@
           "type": "address"
         }
       ],
-      "name": "updateCDPRewardSnapshots",
+      "name": "updateTroveRewardSnapshots",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

@@ -73,7 +73,7 @@ const connectContracts = async (contracts, addresses) => {
   // set TroveManager addr in PriceFeed
   await contracts.priceFeed.setTroveManagerAddress(addresses.TroveManager)
 
-  // set contracts in the CDP Manager
+  // set contracts in the Trove Manager
   await contracts.troveManager.setLUSDToken(addresses.LUSDToken)
   await contracts.troveManager.setSortedTroves(addresses.SortedTroves)
   await contracts.troveManager.setPriceFeed(addresses.PriceFeed)

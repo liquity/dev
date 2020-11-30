@@ -8,11 +8,11 @@ import {
   TroveWithPendingRewards
 } from "@liquity/lib-base";
 
-import { MultiCDPGetter } from "../types";
+import { MultiTroveGetter } from "../types";
 import { EthersCallOverrides } from "./types";
 import { EthersLiquityBase } from "./EthersLiquityBase";
 
-enum CDPStatus {
+enum TroveStatus {
   nonExistent,
   active,
   closed
@@ -36,7 +36,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
       this.contracts.troveManager.rewardSnapshots(address, { ...overrides })
     ]);
 
-    if (cdp.status === CDPStatus.active) {
+    if (cdp.status === TroveStatus.active) {
       return new TroveWithPendingRewards({
         collateral: new Decimal(cdp.coll),
         debt: new Decimal(cdp.debt),
@@ -62,7 +62,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getNumberOfTroves(overrides?: EthersCallOverrides) {
-    return (await this.contracts.troveManager.getCDPOwnersCount({ ...overrides })).toNumber();
+    return (await this.contracts.troveManager.getTroveOwnersCount({ ...overrides })).toNumber();
   }
 
   async getPrice(overrides?: EthersCallOverrides) {
@@ -108,7 +108,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
-    const troves = await this.contracts.multiCDPgetter.getMultipleSortedTroves(
+    const troves = await this.contracts.multiTrovegetter.getMultipleSortedTroves(
       -(startIdx + 1),
       numberOfTroves,
       { ...overrides }
@@ -118,7 +118,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
-    const troves = await this.contracts.multiCDPgetter.getMultipleSortedTroves(
+    const troves = await this.contracts.multiTrovegetter.getMultipleSortedTroves(
       startIdx,
       numberOfTroves,
       { ...overrides }
@@ -129,7 +129,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 }
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
-type MultipleSortedTroves = Resolved<ReturnType<MultiCDPGetter["getMultipleSortedTroves"]>>;
+type MultipleSortedTroves = Resolved<ReturnType<MultiTroveGetter["getMultipleSortedTroves"]>>;
 
 const mapMultipleSortedTrovesToTroves = (troves: MultipleSortedTroves) =>
   troves.map(

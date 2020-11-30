@@ -182,7 +182,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     // --- 'require' functions ---
 
     function _requireCallerIsTroveManager() internal view {
-        require(msg.sender == troveManagerAddress, "LQTYStaking: caller is not CDPM");
+        require(msg.sender == troveManagerAddress, "LQTYStaking: caller is not TroveM");
     }
 
     function _requireCallerIsBorrowerOperations() internal view {

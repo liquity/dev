@@ -79,7 +79,7 @@ library LiquityMath {
 
             return newCollRatio;
         }
-        // Return the maximal value for uint256 if the CDP has a debt of 0. Represents "infinite" CR.
+        // Return the maximal value for uint256 if the Trove has a debt of 0. Represents "infinite" CR.
         else if (_debt == 0) {
             return 2**256 - 1; 
         }

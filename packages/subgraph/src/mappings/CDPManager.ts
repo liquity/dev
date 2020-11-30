@@ -1,7 +1,7 @@
 import {
   TroveManager,
-  CDPUpdated,
-  CDPLiquidated,
+  TroveUpdated,
+  TroveLiquidated,
   Liquidation,
   Redemption,
   BorrowerOperationsAddressChanged,
@@ -33,7 +33,7 @@ export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): v
   PriceFeed.create(event.params._newPriceFeedAddress);
 }
 
-export function handleCDPUpdated(event: CDPUpdated): void {
+export function handleTroveUpdated(event: TroveUpdated): void {
   let troveManager = TroveManager.bind(event.address);
   let snapshots = troveManager.rewardSnapshots(event.params._borrower);
 
@@ -49,7 +49,7 @@ export function handleCDPUpdated(event: CDPUpdated): void {
   );
 }
 
-export function handleCDPLiquidated(event: CDPLiquidated): void {
+export function handleTroveLiquidated(event: TroveLiquidated): void {
   updateTrove(
     event,
     "accrueRewards",

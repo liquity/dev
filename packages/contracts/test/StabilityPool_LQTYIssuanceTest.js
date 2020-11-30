@@ -92,7 +92,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -170,7 +170,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(2, 'ether') })
@@ -267,7 +267,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(2, 'ether') })
@@ -402,7 +402,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const allDepositors = [A, B, C, D, E, F, G, H]
@@ -629,7 +629,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
     expect A, B, C, D each withdraw ~1 month's worth of LQTY */
     it("withdrawFromSP(): Several deposits of 100 LUSD span one scale factor change. Depositors withdraw correct LQTY gains", async () => {
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       const fiveDefaulters = [defaulter_1, defaulter_2, defaulter_3, defaulter_4, defaulter_5]
@@ -784,7 +784,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
@@ -929,7 +929,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(2, 'ether') })
@@ -1309,7 +1309,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const kickbackRate = toBN(dec(80, 16)) // F1 kicks 80% back to depositor
       await stabilityPool.registerFrontEnd(kickbackRate, { from: frontEnd_1 })
       
-      // Whale opens CDP with 100 ETH
+      // Whale opens Trove with 100 ETH
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
 

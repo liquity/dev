@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-// Common interface for the CDP Manager.
+// Common interface for the Trove Manager.
 interface ITroveManager {
     
     // --- Events ---
@@ -25,11 +25,11 @@ interface ITroveManager {
 
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
-    event CDPCreated(address indexed _borrower, uint arrayIndex);
+    event TroveCreated(address indexed _borrower, uint arrayIndex);
 
-    event CDPUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, uint8 operation);
+    event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, uint8 operation);
 
-    event CDPLiquidated(address indexed _borrower, uint _debt, uint _coll, uint8 operation);
+    event TroveLiquidated(address indexed _borrower, uint _debt, uint _coll, uint8 operation);
 
     // --- Functions ---
 
@@ -45,9 +45,9 @@ interface ITroveManager {
         address _lqtyStakingAddress
     ) external;
 
-    function getCDPOwnersCount() external view returns (uint);
+    function getTroveOwnersCount() external view returns (uint);
 
-    function getTroveFromCDPOwnersArray(uint _index) external view returns (address);
+    function getTroveFromTroveOwnersArray(uint _index) external view returns (address);
 
     function getCurrentICR(address _borrower, uint _price) external view returns (uint);
 
@@ -69,9 +69,9 @@ interface ITroveManager {
 
     function updateStakeAndTotalStakes(address _borrower) external returns (uint);
 
-    function updateCDPRewardSnapshots(address _borrower) external;
+    function updateTroveRewardSnapshots(address _borrower) external;
 
-    function addCDPOwnerToArray(address _borrower) external returns (uint index);
+    function addTroveOwnerToArray(address _borrower) external returns (uint index);
 
     function applyPendingRewards(address _borrower) external;
 
@@ -94,7 +94,7 @@ interface ITroveManager {
 
     function getTCR() external view returns (uint TCR);
 
-    function closeCDP(address _borrower) external;
+    function closeTrove(address _borrower) external;
 
     function removeStake(address _borrower) external;
 
@@ -102,21 +102,21 @@ interface ITroveManager {
 
     function decayBaseRateFromBorrowing() external;
 
-    function getCDPStatus(address _borrower) external view returns (uint);
+    function getTroveStatus(address _borrower) external view returns (uint);
     
-    function getCDPStake(address _borrower) external view returns (uint);
+    function getTroveStake(address _borrower) external view returns (uint);
 
-    function getCDPDebt(address _borrower) external view returns (uint);
+    function getTroveDebt(address _borrower) external view returns (uint);
 
-    function getCDPColl(address _borrower) external view returns (uint);
+    function getTroveColl(address _borrower) external view returns (uint);
 
-    function setCDPStatus(address _borrower, uint num) external;
+    function setTroveStatus(address _borrower, uint num) external;
 
-    function increaseCDPColl(address _borrower, uint _collIncrease) external returns (uint);
+    function increaseTroveColl(address _borrower, uint _collIncrease) external returns (uint);
 
-    function decreaseCDPColl(address _borrower, uint _collDecrease) external returns (uint); 
+    function decreaseTroveColl(address _borrower, uint _collDecrease) external returns (uint); 
 
-    function increaseCDPDebt(address _borrower, uint _debtIncrease) external returns (uint); 
+    function increaseTroveDebt(address _borrower, uint _debtIncrease) external returns (uint); 
 
-    function decreaseCDPDebt(address _borrower, uint _collDecrease) external returns (uint); 
+    function decreaseTroveDebt(address _borrower, uint _collDecrease) external returns (uint); 
 }

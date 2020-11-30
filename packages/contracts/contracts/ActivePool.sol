@@ -72,7 +72,7 @@ contract ActivePool is Ownable, IPool {
     // --- Pool functionality ---
 
     function sendETH(address _account, uint _amount) external override {
-        _requireCallerIsBOorCDPMorSP();
+        _requireCallerIsBOorTroveMorSP();
         ETH = ETH.sub(_amount);
         emit EtherSent(_account, _amount);
 
@@ -81,12 +81,12 @@ contract ActivePool is Ownable, IPool {
     }
 
     function increaseLUSDDebt(uint _amount) external override {
-        _requireCallerIsBOorCDPM();
+        _requireCallerIsBOorTroveM();
         LUSDDebt  = LUSDDebt.add(_amount);
     }
 
     function decreaseLUSDDebt(uint _amount) external override {
-        _requireCallerIsBOorCDPMorSP();
+        _requireCallerIsBOorTroveMorSP();
         LUSDDebt = LUSDDebt.sub(_amount);
     }
 
@@ -99,7 +99,7 @@ contract ActivePool is Ownable, IPool {
             "ActivePool: Caller is neither BO nor Default Pool");
     }
 
-    function _requireCallerIsBOorCDPMorSP() internal view {
+    function _requireCallerIsBOorTroveMorSP() internal view {
         require(
             msg.sender == borrowerOperationsAddress ||
             msg.sender == troveManagerAddress ||
@@ -107,7 +107,7 @@ contract ActivePool is Ownable, IPool {
             "ActivePool: Caller is neither BorrowerOperations nor TroveManager nor StabilityPool");
     }
 
-    function _requireCallerIsBOorCDPM() internal view {
+    function _requireCallerIsBOorTroveM() internal view {
         require(
             msg.sender == borrowerOperationsAddress ||
             msg.sender == troveManagerAddress,

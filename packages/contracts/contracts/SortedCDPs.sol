@@ -12,7 +12,7 @@ import "./Dependencies/console.sol";
 /* 
 * A sorted doubly linked list with nodes sorted in descending order.
 * 
-* Nodes map to active Troves in the system - the ID property is the address of a CDP owner. 
+* Nodes map to active Troves in the system - the ID property is the address of a Trove owner. 
 * Nodes are ordered according to their current individual collateral ratio (ICR).
 * 
 * The list optionally accepts insert position hints.
@@ -25,7 +25,7 @@ import "./Dependencies/console.sol";
 * relative to it's peers, as rewards accumulate, as long as it's raw collateral and debt have not changed.
 * Thus, Nodes remain sorted by current ICR.
 * 
-* Nodes need only be re-inserted upon a CDP operation - when the owner adds or removes collateral or debt 
+* Nodes need only be re-inserted upon a Trove operation - when the owner adds or removes collateral or debt 
 * to their position.
 *
 * The list is a modification of the following audited SortedDoublyLinkedList:
@@ -44,7 +44,7 @@ import "./Dependencies/console.sol";
 contract SortedTroves is Ownable, ISortedTroves {
     using SafeMath for uint256;
 
-    event TroveManagerAddressChanged(address _newCDPlManagerAddress);
+    event TroveManagerAddressChanged(address _newTrovelManagerAddress);
     event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
 
     address public borrowerOperationsAddress;
@@ -96,7 +96,7 @@ contract SortedTroves is Ownable, ISortedTroves {
      */
 
     function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external override {
-        _requireCallerIsBOorCDPM();
+        _requireCallerIsBOorTroveM();
         _insert (_id, _ICR, _price, _prevId, _nextId);
     }
     
@@ -199,7 +199,7 @@ contract SortedTroves is Ownable, ISortedTroves {
      * @param _nextId Id of next node for the new insert position
      */
     function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external override {
-        _requireCallerIsBOorCDPM();
+        _requireCallerIsBOorTroveM();
         // List must contain the node
         require(contains(_id));
 
@@ -392,8 +392,8 @@ contract SortedTroves is Ownable, ISortedTroves {
         require(msg.sender == TroveManagerAddress, "SortedTroves: Caller is not the TroveManager");
     }
 
-    function _requireCallerIsBOorCDPM() internal view {
+    function _requireCallerIsBOorTroveM() internal view {
         require(msg.sender == borrowerOperationsAddress || msg.sender == TroveManagerAddress,
-                "SortedTroves: Caller is neither BO nor CDPM");
+                "SortedTroves: Caller is neither BO nor TroveM");
     }
 }

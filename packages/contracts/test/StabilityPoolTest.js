@@ -132,7 +132,7 @@ contract('StabilityPool', async accounts => {
     it("provideToSP(): increases totalLUSDDeposits by correct amount", async () => {
       // --- SETUP ---
 
-      // Whale opens CDP with 50 ETH, adds 2000 LUSD to StabilityPool
+      // Whale opens Trove with 50 ETH, adds 2000 LUSD to StabilityPool
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawLUSD('2000000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('2000000000000000000000', frontEnd_1, { from: whale })
@@ -144,7 +144,7 @@ contract('StabilityPool', async accounts => {
     it('provideToSP(): Correctly updates user snapshots of accumulated rewards per unit staked', async () => {
       // --- SETUP ---
 
-      // Whale opens CDP with 50 ETH, adds 2000 LUSD to StabilityPool
+      // Whale opens Trove with 50 ETH, adds 2000 LUSD to StabilityPool
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawLUSD('2000000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('2000000000000000000000', frontEnd_1, { from: whale })
@@ -154,7 +154,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_1, { from: defaulter_1 })
       await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_2, { from: defaulter_2 })
 
-      // Alice makes CDP and withdraws 100 LUSD
+      // Alice makes Trove and withdraws 100 LUSD
       await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(100, alice, { from: alice })
 
@@ -221,10 +221,10 @@ contract('StabilityPool', async accounts => {
       assert.equal(alice_Snapshot_S_0, 0)
       assert.equal(alice_Snapshot_P_0, '1000000000000000000')
 
-      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // 2 users with CDP with 180 LUSD drawn are closed
+      // 2 users with Trove with 180 LUSD drawn are closed
       await troveManager.liquidate(defaulter_1, { from: owner })  // 180 LUSD closed
       await troveManager.liquidate(defaulter_2, { from: owner }) // 180 LUSD closed
 
@@ -254,7 +254,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD('427000000000000000000', bob, { from: bob })
       await stabilityPool.provideToSP('427000000000000000000', frontEnd_1, { from: bob })
 
-      // Defaulter 3 CDP is closed
+      // Defaulter 3 Trove is closed
       await troveManager.liquidate(defaulter_3, { from: owner })
 
       const alice_compoundedDeposit_2 = await stabilityPool.getCompoundedLUSDDeposit(alice)
@@ -532,7 +532,7 @@ contract('StabilityPool', async accounts => {
 
       // Confirm Bob has an active trove in the system
       assert.isTrue(await sortedTroves.contains(bob))
-      assert.equal((await troveManager.getCDPStatus(bob)).toString(), '1')  // Confirm Bob's trove status is active
+      assert.equal((await troveManager.getTroveStatus(bob)).toString(), '1')  // Confirm Bob's trove status is active
 
       // Confirm Bob has a Stability deposit
       assert.equal((await stabilityPool.getCompoundedLUSDDeposit(bob)).toString(), dec(100, 18))
@@ -546,7 +546,7 @@ contract('StabilityPool', async accounts => {
 
       // Check Bob's trove has been removed from the system
       assert.isFalse(await sortedTroves.contains(bob))
-      assert.equal((await troveManager.getCDPStatus(bob)).toString(), '2')  // check Bob's trove status is closed
+      assert.equal((await troveManager.getTroveStatus(bob)).toString(), '2')  // check Bob's trove status is closed
     })
 
     it("provideToSP(): providing 0 LUSD reverts", async () => {
@@ -1441,10 +1441,10 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD(dec(150, 18), alice, { from: alice })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
-      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // 2 users with CDP with 170 LUSD drawn are closed
+      // 2 users with Trove with 170 LUSD drawn are closed
       const liquidationTX_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 170 LUSD closed
       const liquidationTX_2 = await troveManager.liquidate(defaulter_2, { from: owner }) // 170 LUSD closed
 
@@ -1497,10 +1497,10 @@ contract('StabilityPool', async accounts => {
       const SP_LUSD_Before = await stabilityPool.getTotalLUSDDeposits()
       assert.equal(SP_LUSD_Before, dec(2000, 18))
 
-      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // 2 users with CDP with 170 LUSD drawn are closed
+      // 2 users with Trove with 170 LUSD drawn are closed
       const liquidationTX_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 170 LUSD closed
       const liquidationTX_2 = await troveManager.liquidate(defaulter_2, { from: owner }) // 170 LUSD closed
 
@@ -1540,10 +1540,10 @@ contract('StabilityPool', async accounts => {
       const SP_LUSD_Before = await stabilityPool.getTotalLUSDDeposits()
       assert.equal(SP_LUSD_Before, dec(2000, 18))
 
-      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // 2 users with CDP with 170 LUSD drawn are closed
+      // 2 users with Trove with 170 LUSD drawn are closed
       const liquidationTX_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 170 LUSD closed
       const liquidationTX_2 = await troveManager.liquidate(defaulter_2, { from: owner }) // 170 LUSD closed
 
@@ -1586,10 +1586,10 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(dec(150, 18), alice, { from: alice, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
-      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // 2 users with CDP with 180 LUSD drawn are closed
+      // 2 users with Trove with 180 LUSD drawn are closed
       await troveManager.liquidate(defaulter_1, { from: owner })  // 180 LUSD closed
       await troveManager.liquidate(defaulter_2, { from: owner }) // 180 LUSD closed
 
@@ -1613,7 +1613,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP('100000000000000000000', frontEnd_1, { from: alice })
       assert.equal(await stabilityPool.getDepositorETHGain(alice), 0)
 
-      // Alice attempts third withdrawal (this time, frm SP to CDP)
+      // Alice attempts third withdrawal (this time, frm SP to Trove)
       const txPromise_A = stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
       await th.assertRevert(txPromise_A)
     })
@@ -1645,10 +1645,10 @@ contract('StabilityPool', async accounts => {
       assert.equal(alice_snapshot_S_Before, 0)
       assert.equal(alice_snapshot_P_Before, '1000000000000000000')
 
-      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // 2 users with CDP with 180 LUSD drawn are closed
+      // 2 users with Trove with 180 LUSD drawn are closed
       await troveManager.liquidate(defaulter_1, { from: owner })  // 180 LUSD closed
       await troveManager.liquidate(defaulter_2, { from: owner }); // 180 LUSD closed
 
@@ -1672,7 +1672,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD('1850000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 1 CDP opened, 150 LUSD withdrawn
+      // 1 Trove opened, 150 LUSD withdrawn
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(dec(150, 18), defaulter_1, { from: defaulter_1 })
 
@@ -1683,10 +1683,10 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD(dec(150, 18), alice, { from: alice })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
-      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      // price drops: defaulter's Trove falls below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // defaulter's CDP is closed.
+      // defaulter's Trove is closed.
 
       const liquidationTx_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 180 LUSD closed
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx_1)
@@ -2857,14 +2857,14 @@ contract('StabilityPool', async accounts => {
       await th.assertRevert(txPromise_B)
     })
 
-    it("withdrawETHGainToTrove(): Applies LUSDLoss to user's deposit, and redirects ETH reward to user's CDP", async () => {
+    it("withdrawETHGainToTrove(): Applies LUSDLoss to user's deposit, and redirects ETH reward to user's Trove", async () => {
       // --- SETUP ---
       // Whale deposits 1850 LUSD in StabilityPool
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawLUSD('1850000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 1 CDP opened, 180 LUSD withdrawn
+      // 1 Trove opened, 180 LUSD withdrawn
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(dec(170, 18), defaulter_1, { from: defaulter_1 })
 
@@ -2875,15 +2875,15 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD(dec(150, 18), alice, { from: alice })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
-      // check Alice's CDP recorded ETH Before:
-      const aliceCDP_Before = await troveManager.Troves(alice)
-      const aliceCDP_ETH_Before = aliceCDP_Before[1]
-      assert.equal(aliceCDP_ETH_Before, dec(10, 'ether'))
+      // check Alice's Trove recorded ETH Before:
+      const aliceTrove_Before = await troveManager.Troves(alice)
+      const aliceTrove_ETH_Before = aliceTrove_Before[1]
+      assert.equal(aliceTrove_ETH_Before, dec(10, 'ether'))
 
-      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      // price drops: defaulter's Trove falls below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // Defaulter's CDP is closed
+      // Defaulter's Trove is closed
       const liquidationTx_1 = await troveManager.liquidate(defaulter_1, { from: owner })  // 180 LUSD closed
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx_1)
 
@@ -2897,20 +2897,20 @@ contract('StabilityPool', async accounts => {
 
       assert.isAtMost(th.getDifference(expectedCompoundedDeposit_A, compoundedDeposit_A), 1000)
 
-      // Alice sends her ETH Gains to her CDP
+      // Alice sends her ETH Gains to her Trove
       await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
 
       // check Alice's LUSDLoss has been applied to her deposit expectedCompoundedDeposit_A
       alice_deposit_afterDefault = ((await stabilityPool.deposits(alice))[0])
       assert.isAtMost(th.getDifference(alice_deposit_afterDefault, expectedCompoundedDeposit_A), 1000)
 
-      // check alice's CDP recorded ETH has increased by the expected reward amount
-      const aliceCDP_After = await troveManager.Troves(alice)
-      const aliceCDP_ETH_After = aliceCDP_After[1]
+      // check alice's Trove recorded ETH has increased by the expected reward amount
+      const aliceTrove_After = await troveManager.Troves(alice)
+      const aliceTrove_ETH_After = aliceTrove_After[1]
 
-      const CDP_ETH_Increase = (aliceCDP_ETH_After.sub(aliceCDP_ETH_Before)).toString()
+      const Trove_ETH_Increase = (aliceTrove_ETH_After.sub(aliceTrove_ETH_Before)).toString()
 
-      assert.equal(CDP_ETH_Increase, ETHGain_A)
+      assert.equal(Trove_ETH_Increase, ETHGain_A)
     })
 
     it("withdrawETHGainToTrove(): Subsequent deposit and withdrawal attempt from same account, with no intermediate liquidations, withdraws zero ETH", async () => {
@@ -2919,7 +2919,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove('1850000000000000000000', whale, { from: whale, value: dec(50, 'ether') })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 1 CDP opened, 180 LUSD withdrawn
+      // 1 Trove opened, 180 LUSD withdrawn
       await borrowerOperations.openTrove(dec(170, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // --- TEST ---
@@ -2929,25 +2929,25 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD(dec(150, 18), alice, { from: alice })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
-      // check alice's CDP recorded ETH Before:
-      const aliceCDP_Before = await troveManager.Troves(alice)
-      const aliceCDP_ETH_Before = aliceCDP_Before[1]
-      assert.equal(aliceCDP_ETH_Before, dec(10, 'ether'))
+      // check alice's Trove recorded ETH Before:
+      const aliceTrove_Before = await troveManager.Troves(alice)
+      const aliceTrove_ETH_Before = aliceTrove_Before[1]
+      assert.equal(aliceTrove_ETH_Before, dec(10, 'ether'))
 
-      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      // price drops: defaulter's Trove falls below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // defaulter's CDP is closed.
+      // defaulter's Trove is closed.
       await troveManager.liquidate(defaulter_1, { from: owner })
 
-      // Alice sends her ETH Gains to her CDP
+      // Alice sends her ETH Gains to her Trove
       await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
 
       assert.equal(await stabilityPool.getDepositorETHGain(alice), 0)
 
       const ETHinSP_Before = (await stabilityPool.getETH()).toString()
 
-      // Alice attempts second withdrawal from SP to CDP - reverts, due to 0 ETH Gain
+      // Alice attempts second withdrawal from SP to Trove - reverts, due to 0 ETH Gain
       const txPromise_A = stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
       await th.assertRevert(txPromise_A)
 
@@ -2971,7 +2971,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD('1850000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 1 CDP opened, 160 LUSD withdrawn
+      // 1 Trove opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_1, { from: defaulter_1 })
 
@@ -2982,10 +2982,10 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD(dec(150, 18), alice, { from: alice })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
-      // price drops: defaulter's CDP falls below MCR, alice and whale CDP remain active
+      // price drops: defaulter's Trove falls below MCR, alice and whale Trove remain active
       await priceFeed.setPrice('100000000000000000000');
 
-      // defaulter's CDP is closed.
+      // defaulter's Trove is closed.
 
       const liquidationTx = await troveManager.liquidate(defaulter_1)
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
@@ -2999,7 +2999,7 @@ contract('StabilityPool', async accounts => {
       const active_ETH_Before = await activePool.getETH()
       const stability_ETH_Before = await stabilityPool.getETH()
 
-      // Alice retrieves all of her deposit, 150LUSD, choosing to redirect to her CDP
+      // Alice retrieves all of her deposit, 150LUSD, choosing to redirect to her Trove
       await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
 
       const active_ETH_After = await activePool.getETH()
@@ -3013,7 +3013,7 @@ contract('StabilityPool', async accounts => {
       assert.isAtMost(th.getDifference(stability_ETH_Difference, aliceETHGain), 100)
     })
 
-    it("withdrawETHGainToTrove(): All depositors are able to withdraw their ETH gain from the SP to their CDP", async () => {
+    it("withdrawETHGainToTrove(): All depositors are able to withdraw their ETH gain from the SP to their Trove", async () => {
       // Whale opens trove 
       await borrowerOperations.openTrove(0, accounts[999], { from: whale, value: dec(100, 'ether') })
 
@@ -3064,7 +3064,7 @@ contract('StabilityPool', async accounts => {
       const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
 
-      /* All depositors attempt to withdraw their ETH gain to their CDP. Each depositor 
+      /* All depositors attempt to withdraw their ETH gain to their Trove. Each depositor 
       receives (liquidatedColl/ 6).
 
       Thus, expected new collateral for each depositor with 1 Ether in their trove originally, is 
@@ -3183,7 +3183,7 @@ contract('StabilityPool', async accounts => {
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
-      // D attempts to withdraw his ETH gain to CDP
+      // D attempts to withdraw his ETH gain to Trove
       try {
         const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
         assert.isFalse(txD.receipt.status)

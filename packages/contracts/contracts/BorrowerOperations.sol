@@ -68,8 +68,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         adjustTrove
     }
 
-    event CDPCreated(address indexed _borrower, uint arrayIndex);
-    event CDPUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
+    event TroveCreated(address indexed _borrower, uint arrayIndex);
+    event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, BorrowerOperation operation);
     event LUSDBorrowingFeePaid(address indexed _borrower, uint _LUSDFee);
 
     // --- Dependency setters ---
@@ -119,7 +119,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     function openTrove(uint _LUSDAmount, address _hint) external payable override {
         uint price = priceFeed.getPrice();
 
-        _requireCDPisNotActive(msg.sender);
+        _requireTroveisNotActive(msg.sender);
 
         // Decay the base rate, and calculate the borrowing fee
         troveManager.decayBaseRateFromBorrowing();
@@ -139,16 +139,16 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         }
 
         // Set the trove struct's properties
-        troveManager.setCDPStatus(msg.sender, 1);
-        troveManager.increaseCDPColl(msg.sender, msg.value);
-        troveManager.increaseCDPDebt(msg.sender, compositeDebt);
+        troveManager.setTroveStatus(msg.sender, 1);
+        troveManager.increaseTroveColl(msg.sender, msg.value);
+        troveManager.increaseTroveDebt(msg.sender, compositeDebt);
 
-        troveManager.updateCDPRewardSnapshots(msg.sender);
+        troveManager.updateTroveRewardSnapshots(msg.sender);
         uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
 
         sortedTroves.insert(msg.sender, ICR, price, _hint, _hint);
-        uint arrayIndex = troveManager.addCDPOwnerToArray(msg.sender);
-        emit CDPCreated(msg.sender, arrayIndex);
+        uint arrayIndex = troveManager.addTroveOwnerToArray(msg.sender);
+        emit TroveCreated(msg.sender, arrayIndex);
 
         // Send the LUSD borrowing fee to the staking contract
         lusdToken.mint(lqtyStakingAddress, LUSDFee);
@@ -160,7 +160,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // Move the LUSD gas compensation to the Gas Pool
         _withdrawLUSD(GAS_POOL_ADDRESS, LUSD_GAS_COMPENSATION, LUSD_GAS_COMPENSATION);
 
-        emit CDPUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openTrove);
+        emit TroveUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openTrove);
         emit LUSDBorrowingFeePaid(msg.sender, LUSDFee);
     }
 
@@ -185,7 +185,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _adjustTrove(msg.sender, 0, _LUSDAmount, true, _hint);
     }
 
-    // Repay LUSD tokens to a CDP: Burn the repaid LUSD tokens, and reduce the trove's debt accordingly
+    // Repay LUSD tokens to a Trove: Burn the repaid LUSD tokens, and reduce the trove's debt accordingly
     function repayLUSD(uint _LUSDAmount, address _hint) external override {
         _adjustTrove(msg.sender, 0, _LUSDAmount, false, _hint);
     }
@@ -207,7 +207,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         LocalVariables_adjustTrove memory L;
 
-        _requireCDPisActive(_borrower);
+        _requireTroveisActive(_borrower);
         if (isWithdrawal) {_requireNotInRecoveryMode();}
 
         L.price = priceFeed.getPrice();
@@ -230,8 +230,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             lusdToken.mint(lqtyStakingAddress, L.LUSDFee);
         }
 
-        L.debt = troveManager.getCDPDebt(_borrower);
-        L.coll = troveManager.getCDPColl(_borrower);
+        L.debt = troveManager.getTroveDebt(_borrower);
+        L.coll = troveManager.getTroveColl(_borrower);
 
         L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
 
@@ -251,21 +251,21 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
 
-        emit CDPUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustTrove);
+        emit TroveUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustTrove);
         emit LUSDBorrowingFeePaid(msg.sender,  L.LUSDFee);
     }
 
     function closeTrove() external override {
-        _requireCDPisActive(msg.sender);
+        _requireTroveisActive(msg.sender);
         _requireNotInRecoveryMode();
 
         troveManager.applyPendingRewards(msg.sender);
 
-        uint coll = troveManager.getCDPColl(msg.sender);
-        uint debt = troveManager.getCDPDebt(msg.sender);
+        uint coll = troveManager.getTroveColl(msg.sender);
+        uint debt = troveManager.getTroveDebt(msg.sender);
 
         troveManager.removeStake(msg.sender);
-        troveManager.closeCDP(msg.sender);
+        troveManager.closeTrove(msg.sender);
 
         // Burn the debt from the user's balance, and send the collateral back to the user
         _repayLUSD(msg.sender, debt.sub(LUSD_GAS_COMPENSATION));
@@ -273,11 +273,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // Refund gas compensation
         _repayLUSD(GAS_POOL_ADDRESS, LUSD_GAS_COMPENSATION);
 
-        emit CDPUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
+        emit TroveUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
     }
 
     function claimRedeemedCollateral(address _user) external override {
-        _requireCDPisNotActive(_user);
+        _requireTroveisNotActive(_user);
 
         // send ETH from CollSurplus Pool to owner
         collSurplusPool.claimColl(_user);
@@ -321,10 +321,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
         returns (uint, uint)
     {
-        uint newColl = (_isCollIncrease) ? troveManager.increaseCDPColl(_borrower, _collChange)
-                                        : troveManager.decreaseCDPColl(_borrower, _collChange);
-        uint newDebt = (_isDebtIncrease) ? troveManager.increaseCDPDebt(_borrower, _debtChange)
-                                        : troveManager.decreaseCDPDebt(_borrower, _debtChange);
+        uint newColl = (_isCollIncrease) ? troveManager.increaseTroveColl(_borrower, _collChange)
+                                        : troveManager.decreaseTroveColl(_borrower, _collChange);
+        uint newDebt = (_isDebtIncrease) ? troveManager.increaseTroveDebt(_borrower, _debtChange)
+                                        : troveManager.decreaseTroveDebt(_borrower, _debtChange);
 
         return (newColl, newDebt);
     }
@@ -373,14 +373,14 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- 'Require' wrapper functions ---
 
-    function _requireCDPisActive(address _borrower) internal view {
-        uint status = troveManager.getCDPStatus(_borrower);
-        require(status == 1, "BorrowerOps: CDP does not exist or is closed");
+    function _requireTroveisActive(address _borrower) internal view {
+        uint status = troveManager.getTroveStatus(_borrower);
+        require(status == 1, "BorrowerOps: Trove does not exist or is closed");
     }
 
-    function _requireCDPisNotActive(address _borrower) internal view {
-        uint status = troveManager.getCDPStatus(_borrower);
-        require(status != 1, "BorrowerOps: CDP is active");
+    function _requireTroveisNotActive(address _borrower) internal view {
+        uint status = troveManager.getTroveStatus(_borrower);
+        require(status != 1, "BorrowerOps: Trove is active");
     }
 
     function _requireNotInRecoveryMode() internal view {
@@ -411,7 +411,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     function _requireLUSDRepaymentAllowed(uint _currentDebt, uint _debtRepayment) internal pure {
-        require(_debtRepayment <= _currentDebt.sub(LUSD_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the CDP's debt");
+        require(_debtRepayment <= _currentDebt.sub(LUSD_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the Trove's debt");
     }
 
     function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)

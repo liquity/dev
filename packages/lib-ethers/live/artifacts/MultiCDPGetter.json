@@ -1,5 +1,5 @@
 {
-  "contractName": "MultiCDPGetter",
+  "contractName": "MultiTroveGetter",
   "abi": [
     {
       "inputs": [
@@ -82,7 +82,7 @@
               "type": "uint256"
             }
           ],
-          "internalType": "struct MultiCDPGetter.CombinedCDPData[]",
+          "internalType": "struct MultiTroveGetter.CombinedTroveData[]",
           "name": "_troves",
           "type": "tuple[]"
         }

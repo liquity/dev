@@ -74,8 +74,8 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     onTroveChanged: (trove: TroveWithPendingRewards) => void,
     address = this.requireAddress()
   ) {
-    const { CDPCreated, CDPUpdated } = this.contracts.troveManager.filters;
-    const cdpEventFilters = [CDPCreated(address), CDPUpdated(address)];
+    const { TroveCreated, TroveUpdated } = this.contracts.troveManager.filters;
+    const cdpEventFilters = [TroveCreated(address), TroveUpdated(address)];
 
     const troveListener = debounce((blockTag: number) => {
       this.readableLiquity.getTroveWithoutRewards(address, { blockTag }).then(onTroveChanged);
@@ -91,8 +91,8 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void) {
-    const { CDPUpdated } = this.contracts.troveManager.filters;
-    const cdpUpdated = CDPUpdated();
+    const { TroveUpdated } = this.contracts.troveManager.filters;
+    const cdpUpdated = TroveUpdated();
 
     const cdpUpdatedListener = debounce((blockTag: number) => {
       this.readableLiquity.getNumberOfTroves({ blockTag }).then(onNumberOfTrovesChanged);
@@ -121,8 +121,8 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   }
 
   watchTotal(onTotalChanged: (total: Trove) => void) {
-    const { CDPUpdated } = this.contracts.troveManager.filters;
-    const cdpUpdated = CDPUpdated();
+    const { TroveUpdated } = this.contracts.troveManager.filters;
+    const cdpUpdated = TroveUpdated();
 
     const totalListener = debounce((blockTag: number) => {
       this.readableLiquity.getTotal({ blockTag }).then(onTotalChanged);

@@ -20,7 +20,7 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newCDPlManagerAddress",
+          "name": "_newTrovelManagerAddress",
           "type": "address"
         }
       ],

@@ -1,14 +1,14 @@
 import { TroveManager } from "../../generated/TroveManager/TroveManager";
 import {
   BorrowerOperations,
-  CDPUpdated
+  TroveUpdated
 } from "../../generated/templates/BorrowerOperations/BorrowerOperations";
 
 import { getTroveOperationFromBorrowerOperation } from "../types/TroveOperation";
 
 import { updateTrove } from "../entities/Trove";
 
-export function handleCDPUpdated(event: CDPUpdated): void {
+export function handleTroveUpdated(event: TroveUpdated): void {
   let borrowerOperations = BorrowerOperations.bind(event.address);
   let troveManagerAddress = borrowerOperations.troveManager();
   let troveManager = TroveManager.bind(troveManagerAddress);
