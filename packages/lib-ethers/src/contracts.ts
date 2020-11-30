@@ -22,7 +22,7 @@ import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
-import sortedCDPsAbi from "../abi/SortedCDPs.json";
+import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
 import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 
@@ -45,7 +45,7 @@ import {
   LQTYStaking,
   MultiCDPGetter,
   PriceFeed,
-  SortedCDPs,
+  SortedTroves,
   StabilityPool,
   CollSurplusPool
 } from "../types";
@@ -63,7 +63,7 @@ export const abi: { [name: string]: JsonFragment[] } = {
   lqtyStaking: lqtyStakingAbi,
   multiCDPgetter: multiCDPgetterAbi,
   priceFeed: priceFeedAbi,
-  sortedCDPs: sortedCDPsAbi,
+  sortedTroves: sortedTrovesAbi,
   stabilityPool: stabilityPoolAbi,
   collSurplusPool: collSurplusPoolAbi
 };
@@ -165,7 +165,7 @@ export interface LiquityContractAddresses {
   lqtyStaking: string;
   multiCDPgetter: string;
   priceFeed: string;
-  sortedCDPs: string;
+  sortedTroves: string;
   stabilityPool: string;
   collSurplusPool: string;
 }
@@ -185,7 +185,7 @@ export interface LiquityContracts {
   lqtyStaking: LQTYStaking;
   multiCDPgetter: MultiCDPGetter;
   priceFeed: PriceFeed;
-  sortedCDPs: SortedCDPs;
+  sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
   collSurplusPool: CollSurplusPool;
 }
@@ -203,7 +203,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   lqtyStaking: contracts.lqtyStaking.address,
   multiCDPgetter: contracts.multiCDPgetter.address,
   priceFeed: contracts.priceFeed.address,
-  sortedCDPs: contracts.sortedCDPs.address,
+  sortedTroves: contracts.sortedTroves.address,
   stabilityPool: contracts.stabilityPool.address,
   collSurplusPool: contracts.collSurplusPool.address
 });
@@ -264,7 +264,7 @@ export const connectToContracts = (
 
   priceFeed: create<PriceFeed>(addresses.priceFeed, priceFeedAbi, signerOrProvider),
 
-  sortedCDPs: create<SortedCDPs>(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider),
+  sortedTroves: create<SortedTroves>(addresses.sortedTroves, sortedTrovesAbi, signerOrProvider),
 
   stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider)
 });

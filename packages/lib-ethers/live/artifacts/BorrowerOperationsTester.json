@@ -147,11 +147,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],
-      "name": "SortedCDPsAddressChanged",
+      "name": "SortedTrovesAddressChanged",
       "type": "event"
     },
     {
@@ -592,7 +592,7 @@
         },
         {
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],
@@ -605,10 +605,10 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "sortedCDPs",
+      "name": "sortedTroves",
       "outputs": [
         {
-          "internalType": "contract ISortedCDPs",
+          "internalType": "contract ISortedTroves",
           "name": "",
           "type": "address"
         }

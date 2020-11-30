@@ -172,11 +172,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],
-      "name": "SortedCDPsAddressChanged",
+      "name": "SortedTrovesAddressChanged",
       "type": "event"
     },
     {
@@ -589,7 +589,7 @@
           "type": "uint256"
         }
       ],
-      "name": "liquidateCDPs",
+      "name": "liquidateTroves",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -680,7 +680,7 @@
         },
         {
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],

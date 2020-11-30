@@ -147,7 +147,7 @@ describe("EthersLiquity", () => {
           getApproxHint: (..._args: any) => Promise.resolve(fakeHints.shift())
         }),
 
-        sortedCDPs: chai.spy.interface({
+        sortedTroves: chai.spy.interface({
           findInsertPosition: (..._args: any) => Promise.resolve(["fake insert position"])
         })
       };
@@ -180,8 +180,8 @@ describe("EthersLiquity", () => {
       expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(2222));
       expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(3333));
 
-      expect(fakeContracts.sortedCDPs.findInsertPosition).to.have.been.called.once;
-      expect(fakeContracts.sortedCDPs.findInsertPosition).to.have.been.called.with(
+      expect(fakeContracts.sortedTroves.findInsertPosition).to.have.been.called.once;
+      expect(fakeContracts.sortedTroves.findInsertPosition).to.have.been.called.with(
         collateralRatio.bigNumber,
         price.bigNumber,
         "carol"

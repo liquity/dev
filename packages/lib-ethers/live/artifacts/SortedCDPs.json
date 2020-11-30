@@ -1,5 +1,5 @@
 {
-  "contractName": "SortedCDPs",
+  "contractName": "SortedTroves",
   "abi": [
     {
       "anonymous": false,
@@ -56,7 +56,7 @@
           "type": "address"
         }
       ],
-      "name": "SortedCDPsAddressChanged",
+      "name": "SortedTrovesAddressChanged",
       "type": "event"
     },
     {

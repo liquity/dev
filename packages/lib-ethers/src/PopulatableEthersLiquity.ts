@@ -280,7 +280,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
     // Picking the second address as hint results in better gas cost, especially when having to
     // traverse the list due to interference
-    const [, hint] = await this.contracts.sortedCDPs.findInsertPosition(
+    const [, hint] = await this.contracts.sortedTroves.findInsertPosition(
       collateralRatio.bigNumber,
       price.bigNumber,
       hintAddress,
@@ -459,7 +459,7 @@ export class PopulatableEthersLiquity
     overrides?: EthersTransactionOverrides
   ) {
     return this.wrapLiquidation(
-      await this.contracts.troveManager.estimateAndPopulate.liquidateCDPs(
+      await this.contracts.troveManager.estimateAndPopulate.liquidateTroves(
         { ...overrides },
         id,
         maximumNumberOfTrovesToLiquidate

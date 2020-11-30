@@ -61,7 +61,7 @@ const deployContracts = async (
     ),
     lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
     priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
-    sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs", { ...overrides }),
+    sortedTroves: await deployContract(deployer, getContractFactory, "SortedTroves", { ...overrides }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
     }),
@@ -93,7 +93,7 @@ const deployContracts = async (
       getContractFactory,
       "MultiCDPGetter",
       addresses.troveManager,
-      addresses.sortedCDPs,
+      addresses.sortedTroves,
       { ...overrides }
     )
   };
@@ -112,7 +112,7 @@ const connectContracts = async (
     lockupContractFactory,
     lqtyStaking,
     priceFeed,
-    sortedCDPs,
+    sortedTroves,
     stabilityPool,
     collSurplusPool
   }: LiquityContracts,
@@ -128,7 +128,7 @@ const connectContracts = async (
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce =>
-      sortedCDPs.setParams(1e6, troveManager.address, borrowerOperations.address, {
+      sortedTroves.setParams(1e6, troveManager.address, borrowerOperations.address, {
         ...overrides,
         nonce
       }),
@@ -153,7 +153,7 @@ const connectContracts = async (
         collSurplusPool.address,
         priceFeed.address,
         lusdToken.address,
-        sortedCDPs.address,
+        sortedTroves.address,
         lqtyStaking.address,
         { ...overrides, nonce }
       ),
@@ -166,7 +166,7 @@ const connectContracts = async (
         stabilityPool.address,
         collSurplusPool.address,
         priceFeed.address,
-        sortedCDPs.address,
+        sortedTroves.address,
         lusdToken.address,
         lqtyStaking.address,
         { ...overrides, nonce }
@@ -178,7 +178,7 @@ const connectContracts = async (
         troveManager.address,
         activePool.address,
         lusdToken.address,
-        sortedCDPs.address,
+        sortedTroves.address,
         priceFeed.address,
         communityIssuance.address,
         { ...overrides, nonce }
@@ -208,7 +208,7 @@ const connectContracts = async (
       ),
 
     nonce =>
-      hintHelpers.setAddresses(priceFeed.address, sortedCDPs.address, troveManager.address, {
+      hintHelpers.setAddresses(priceFeed.address, sortedTroves.address, troveManager.address, {
         ...overrides,
         nonce
       }),

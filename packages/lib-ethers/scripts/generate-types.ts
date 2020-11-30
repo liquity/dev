@@ -15,7 +15,7 @@ import LockupContractFactory from "../../contracts/artifacts/LockupContractFacto
 import LQTYStaking from "../../contracts/artifacts/LQTYStaking.json";
 import MultiCDPGetter from "../../contracts/artifacts/MultiCDPGetter.json";
 import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
-import SortedCDPs from "../../contracts/artifacts/SortedCDPs.json";
+import SortedTroves from "../../contracts/artifacts/SortedTroves.json";
 import StabilityPool from "../../contracts/artifacts/StabilityPool.json";
 import CollSurplusPool from "../../contracts/artifacts/CollSurplusPool.json";
 
@@ -130,7 +130,7 @@ const contractArtifacts = [
   LQTYStaking,
   MultiCDPGetter,
   PriceFeed,
-  SortedCDPs,
+  SortedTroves,
   StabilityPool,
   CollSurplusPool
 ];

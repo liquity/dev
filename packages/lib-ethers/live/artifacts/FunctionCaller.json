@@ -92,11 +92,11 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],
-      "name": "setSortedCDPsAddress",
+      "name": "setSortedTrovesAddress",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -105,7 +105,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "sortedCDPsAddress",
+      "name": "sortedTrovesAddress",
       "outputs": [
         {
           "internalType": "address",
@@ -141,7 +141,7 @@
           "type": "address"
         }
       ],
-      "name": "sortedCDPs_findInsertPosition",
+      "name": "sortedTroves_findInsertPosition",
       "outputs": [
         {
           "internalType": "address",
