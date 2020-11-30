@@ -60,7 +60,7 @@ contract DefaultPool is Ownable, IPool {
     // --- Pool functionality ---
 
     function sendETH(address _account, uint _amount) external override {
-        _requireCallerIsTroveMananger();
+        _requireCallerIsTroveManager();
         ETH = ETH.sub(_amount);
         emit EtherSent(_account, _amount);
 
@@ -69,12 +69,12 @@ contract DefaultPool is Ownable, IPool {
     }
 
     function increaseLUSDDebt(uint _amount) external override {
-        _requireCallerIsTroveMananger();
+        _requireCallerIsTroveManager();
         LUSDDebt = LUSDDebt.add(_amount);
     }
 
     function decreaseLUSDDebt(uint _amount) external override {
-        _requireCallerIsTroveMananger();
+        _requireCallerIsTroveManager();
         LUSDDebt = LUSDDebt.sub(_amount);
     }
 
@@ -84,7 +84,7 @@ contract DefaultPool is Ownable, IPool {
         require(msg.sender == activePoolAddress, "DefaultPool: Caller is not the ActivePool");
     }
 
-    function _requireCallerIsTroveMananger() internal view {
+    function _requireCallerIsTroveManager() internal view {
         require(msg.sender == troveManagerAddress, "DefaultPool: Caller is not the TroveManager");
     }
 
