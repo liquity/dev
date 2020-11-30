@@ -219,7 +219,7 @@ const connectContracts = async (
     nonce =>
       lqtyStaking.setAddresses(
         lqtyToken.address,
-        clvToken.address,
+        lusdToken.address,
         troveManager.address,
         borrowerOperations.address,
         activePool.address,
