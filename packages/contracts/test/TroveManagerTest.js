@@ -3444,7 +3444,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(C_balanceAfter.eq(C_balanceBefore.add(toBN(dec(35, 16)))))
   })
 
-  it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to use re-opening trove", async () => {
+  it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner after re-opening trove", async () => {
     await redeemCollateral3Full1Partial()
 
     const A_collSent = toBN(dec(2, 18))
@@ -3466,6 +3466,22 @@ contract('TroveManager', async accounts => {
     assert.isTrue((await collSurplusPool.getCollateral(A)).eq(toBN(dec(5, 17))))
     assert.isTrue((await collSurplusPool.getCollateral(B)).eq(toBN(dec(4, 17))))
     assert.isTrue((await collSurplusPool.getCollateral(C)).eq(toBN(dec(35, 16))))
+
+    const A_balanceBefore = toBN(await web3.eth.getBalance(A))
+    const B_balanceBefore = toBN(await web3.eth.getBalance(B))
+    const C_balanceBefore = toBN(await web3.eth.getBalance(C))
+
+    await borrowerOperations.claimRedeemedCollateral(A)
+    await borrowerOperations.claimRedeemedCollateral(B)
+    await borrowerOperations.claimRedeemedCollateral(C)
+
+    const A_balanceAfter = toBN(await web3.eth.getBalance(A))
+    const B_balanceAfter = toBN(await web3.eth.getBalance(B))
+    const C_balanceAfter = toBN(await web3.eth.getBalance(C))
+
+    assert.isTrue(A_balanceAfter.eq(A_balanceBefore.add(toBN(dec(5, 17)))))
+    assert.isTrue(B_balanceAfter.eq(B_balanceBefore.add(toBN(dec(4, 17)))))
+    assert.isTrue(C_balanceAfter.eq(C_balanceBefore.add(toBN(dec(35, 16)))))
   })
 
   it("getPendingLUSDDebtReward(): Returns 0 if there is no pending LUSDDebt reward", async () => {
