@@ -329,7 +329,6 @@ class DeploymentHelper {
 
     // set contracts in HintHelpers
     await contracts.hintHelpers.setAddresses(
-      contracts.priceFeed.address,
       contracts.sortedCDPs.address,
       contracts.cdpManager.address
     )

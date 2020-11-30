@@ -10,31 +10,26 @@ import "./Dependencies/Ownable.sol";
 
 contract HintHelpers is LiquityBase, Ownable {
 
-    IPriceFeed public priceFeed;
     ISortedCDPs public sortedCDPs;
     ICDPManager public cdpManager;
 
     // --- Events ---
 
-    event PriceFeedAddressChanged(address _priceFeedAddress);
     event SortedCDPsAddressChanged(address _sortedCDPsAddress);
     event CDPManagerAddressChanged(address _cdpManagerAddress);
 
     // --- Dependency setters ---
 
     function setAddresses(
-        address _priceFeedAddress,
         address _sortedCDPsAddress,
         address _cdpManagerAddress
     )
         external
         onlyOwner
     {
-        priceFeed = IPriceFeed(_priceFeedAddress);
         sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
         cdpManager = ICDPManager(_cdpManagerAddress);
 
-        emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedCDPsAddressChanged(_sortedCDPsAddress);
         emit CDPManagerAddressChanged(_cdpManagerAddress);
 
