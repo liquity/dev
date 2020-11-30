@@ -275,7 +275,7 @@ The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Sta
 
 `BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their trove: trove creation, ETH top-up / withdrawal, stablecoin issuance and repayment. It also sends borrowing fees to the `LQTYStaking` contract. BorrowerOperations functions call in to TroveManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to the various Pools, telling them to move Ether/Tokens between Pools or between Pool <> user, where necessary.
 
-`TroveManager.sol` - contains functionality for liquidations and redemptions. It sends redemption fees to the `LQTYStaking` contract. Also contains the state of each trove - i.e. a record of the trove’s collateral and debt. TroveManager does not hold value (i.e. Ether / other tokens). TroveManager functions call in to PooManager to tell it to move Ether/tokens between Pools, where necessary.
+`TroveManager.sol` - contains functionality for liquidations and redemptions. It sends redemption fees to the `LQTYStaking` contract. Also contains the state of each trove - i.e. a record of the trove’s collateral and debt. TroveManager does not hold value (i.e. Ether / other tokens). TroveManager functions call in to the various Pools to tell them to move Ether/tokens between Pools, where necessary.
 
 `LiquityBase.sol` - Both TroveManager and BorrowerOperations inherit from the parent contract LiquityBase, which contains global constants and some common functions.
 
