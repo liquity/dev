@@ -214,7 +214,7 @@ Thus only LQTY made freely available in this first year is the LQTY that is publ
 
 ### Lockup Implementation and admin transfer restriction
 
-A `LockupContractFactory` is used to deploy `OneYearLockupContracts` in the first year. During the first year, the `GrowthToken` checks that any transfer from the Liquity admin address is to a valid `OneYearLockupContract` that is registered in and was deployed through the `LockupContractFactory`.
+A `LockupContractFactory` is used to deploy `OneYearLockupContracts` in the first year. During the first year, the `LQTYToken` checks that any transfer from the Liquity admin address is to a valid `OneYearLockupContract` that is registered in and was deployed through the `LockupContractFactory`.
 
 After the first year, anyone may deploy `CustomDurationLockupContracts` via the factory.
 
@@ -224,10 +224,10 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 1. Liquity admin deploys `LockupContractFactory`
 2. Liquity admin deploys `CommunityIssuance`
 3. Liquity admin deploys `LQTYStaking` 
-4. Liquity admin deploys `GrowthToken`, which upon deployment:
+4. Liquity admin deploys `LQTYToken`, which upon deployment:
 - Stores the `CommunityIssuance` and `LockupContractFactory` addresses
 - Mints LQTY tokens to `CommunityIssuance` and the Liquity admin address
-5. Liquity admin sets `GrowthToken` address in `LockupContractFactory`, `CommunityIssuance`, and `LQTYStaking`
+5. Liquity admin sets `LQTYToken` address in `LockupContractFactory`, `CommunityIssuance`, and `LQTYStaking`
 
 #### Deploy and fund Lockup Contracts
 6. Liquity admin tells `LockupContractFactory` to deploy a `OneYearLockupContract` for each (beneficiary, entitlement) pair, including one for the Liquity admin address
@@ -237,8 +237,8 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 #### Deploy Liquity Core
 9. Liquity admin deploys the Liquity core system
 11. Liquity admin connects Liquity core system internally (with setters)
-12. Liquity admin connects `LQTYStaking` to Liquity core contracts and `GrowthToken`
-12. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `GrowthToken`
+12. Liquity admin connects `LQTYStaking` to Liquity core contracts and `LQTYToken`
+12. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `LQTYToken`
 
 #### During one year lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners’ `OneYearLockupContracts`, as per their vesting schedules
@@ -253,7 +253,7 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 #### Post-lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners, directly to their individual addresses, or to a fresh lockup contract if required.
 
-_NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `GrowthToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
+_NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `LQTYToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
 
 _The current code does not utilize a multi-sig. It implements the launch architecture outlined above._
 
