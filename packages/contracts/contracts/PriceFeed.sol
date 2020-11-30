@@ -35,8 +35,8 @@ contract PriceFeed is Ownable, IPriceFeed {
         onlyOwner
     {
         // Mainnet Chainlink address setter
-        require(_priceAggregatorAddress != address(0), 
-                "Must set a price aggregator address");
+        // require(_priceAggregatorAddress != address(0), 
+        //        "Must set a price aggregator address");
         priceAggregatorAddress = _priceAggregatorAddress;
         priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
 
